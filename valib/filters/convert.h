@@ -4,8 +4,6 @@
   Input formats:   PCMxx, Linear
   Ouptupt formats: PCMxx, Linear
   Format conversions:
-    PCMxx  -> PCMxx
-    Linear -> Linear
     Linear -> PCMxx
     PCMxx  -> Linear
   Timing: Preserve original
@@ -20,23 +18,32 @@
 class Converter : public NullFilter
 {
 protected:
-  DataBuf   buf;          // sample buffer
-  samples_t samples;      // pointers to buf for linear fromat
-  int nsamples;           // sample buffer size (in samples)
+  // format
+  int  format;             // format to convert to
+  int  order[NCHANNELS];   // channel order to convert to when converting from linear format
+                           // channel order to convert from when converting to linear format
 
-  uint8_t   part_buf[12]; // partial sample left from previous call
-  int       part_size;    // partial sample size in bytes
+  // converted samples buffer
+  DataBuf buffer;          // big buffer for converted data
+  size_t  nsamples;        // buffer size in samples
 
-  int format;             // format to convert to
-  int order[NCHANNELS];   // channel order to convert to when converting from linear format;
-                          // channel order to convert from when converting to linear format;
-                          // mean nothing for pcm to pcm conversion and linear to linear
+  // output data pointers
+  uint8_t  *out_buf;       // buffer pointer for pcm data
+  samples_t out_samples;   // buffer pointers for linear data
+  size_t    out_size;      // buffer size in bytes/samples for pcm/linear data
 
-  bool query_format(int format) const;
+  // part of sample from previous call
+  uint8_t   part_buf[12];  // partial sample left from previous call
+  size_t    part_size;     // partial sample size in bytes
 
-  bool linear2pcm(Chunk *out);
-  bool pcm2linear(Chunk *out);
-  bool pcm2pcm(Chunk *out);
+
+  inline bool query_format(int format) const;
+  bool alloc_buffer(); // allocate buffer according to format & number of channels
+
+  void pcm2linear();
+  void pcm2linear(uint8_t *src, samples_t dst, size_t n);
+  void linear2pcm();
+  void linear2pcm(samples_t src, uint8_t *dst, size_t n);
 
 public:
   Converter(int _format = FORMAT_PCM16, int _nsamples = 2048)
@@ -47,59 +54,50 @@ public:
     reset();
   }
 
-  inline bool set_format(int format);
+  inline size_t get_buffer() const
+  {
+    return nsamples;
+  }
 
-  inline void set_buffer(int nsamples = 2048);
-  inline int  get_buffer();
+  inline bool set_buffer(size_t _nsamples)
+  {
+    nsamples = _nsamples;
+    return alloc_buffer();
+  }
 
-  inline void set_order(const int order[NCHANNELS]);
-  inline void get_order(int order[NCHANNELS]);
+  inline int get_format() const
+  {
+    return format;
+  }
+
+  inline bool set_format(int _format)
+  {
+    if (!query_format(_format))
+      return false;
+
+    format = _format;
+    return alloc_buffer();
+  }
+
+  inline void get_order(int _order[NCHANNELS]) const
+  {
+    memcpy(_order, order, sizeof(order));
+  }
+
+  inline void set_order(const int _order[NCHANNELS])
+  {
+    memcpy(order, _order, sizeof(order));
+  }
 
   // Filter interface
   virtual void reset();
+
   virtual bool query_input(Speakers spk) const;
   virtual bool set_input(Speakers spk);
-  virtual Speakers get_output();
+
+  virtual Speakers get_output() const;
   virtual bool get_chunk(Chunk *out);
 };
 
-
-inline bool 
-Converter::set_format(int _format)
-{
-  if (query_format(_format))
-  {
-    spk = Speakers();
-    format = _format;
-    return true;
-  }
-  else
-    return false;
-}
-
-inline void
-Converter::set_buffer(int _nsamples)
-{
-  spk = Speakers();
-  nsamples = _nsamples;
-}
-
-inline int
-Converter::get_buffer()
-{
-  return nsamples;
-}
-
-inline void
-Converter::set_order(const int _order[NCHANNELS])
-{
-  memcpy(order, _order, sizeof(order));
-}
-
-inline void
-Converter::get_order(int _order[NCHANNELS])
-{
-  memcpy(_order, order, sizeof(order));
-}
 
 #endif

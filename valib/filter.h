@@ -90,8 +90,8 @@ public:
 class Source
 {
 public:
-  virtual Speakers get_output() = 0;
-  virtual bool is_empty() = 0;
+  virtual Speakers get_output() const = 0;
+  virtual bool is_empty() const = 0;
   virtual bool get_chunk(Chunk *chunk) = 0;
 };
 
@@ -109,6 +109,14 @@ public:
 //
 // set_input()
 //   Acts like reset().
+//
+// process()
+//   May be used for data processing. Do main processing here if filter 
+//   produces exactly one output chunk for one input chunk.
+//
+// get_chunk()
+//   May be used for data processing. Do main processing here if filter 
+//   may produce many output chunks for one input chunk.
 //
 // Filter have 3 states:
 //
@@ -193,158 +201,11 @@ public:
   virtual bool set_input(Speakers spk) = 0;
   virtual bool process(const Chunk *chunk) = 0;
 
-  virtual Speakers get_output() = 0;
-  virtual bool is_empty() = 0;
+  virtual Speakers get_output() const = 0;
+  virtual bool is_empty() const = 0;
   virtual bool get_chunk(Chunk *chunk) = 0;
 };
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Sync class
-//
-// Helper class to help filter to maintain syncronization.
-//
-// Timestamp received with chunk is applied to:
-// 1) FORMAT_LINEAR: If chunk contains data then to the first sample of 
-//    received data. If chunk is empty then to the first sample received with
-//    any of subsequent chunks. If subsequent chunk has its own timestamp then
-//    previous timestamp is dropped.
-//
-// 2) Other formats: To the first syncpoint that appears after beginning of
-//    chunk data block. If current data block has no syncpoint then it should
-//    be applied to the first syncpoint appeared at subsequent chunks. If 
-//    subsequent chunk has its own timestamp then previous timestamp is 
-//    dropped.
-//
-// For PCM data syncpoint is the first byte of the first channel's sample.
-//
-// Examples:
-//
-//   chunk data:
-//   +---------------------------------------------------------------------+
-//   | syncpoint, block1 ....... | syncpoint, block2 ..................... |
-//   +---------------------------------------------------------------------+
-//   ^
-//   timestamp is applied here
-//
-//   chunk data:
-//   +---------------------------------------------------------------------+
-//   | tail of block1 .... | syncpoint, block2 ...... | syncpoint, block3  |
-//   +---------------------------------------------------------------------+
-//                         ^
-//                         timestamp is applied here
-//
-//   chunk1 data:               chunk2 data:
-//   +------------------------+ +------------------------------------------+
-//   | part of block1 ....... | | tail of block1 .... | syncpoint, block2  |
-//   +------------------------+ +------------------------------------------+
-//                                                    ^
-//                              if chunk2 does not contain time stamp
-//                              timestamp of chunk1 is applied here.
-//                              chunk2 timestamp is applied otherwise
-//
-// This rule is also applied to container streams. So if one stream is we have
-// container with nested stream then timestamp is applied to syncpoint of 
-// container stream and then to the syncpoint of the contained stream (and so 
-// on).
-//
-// receive_sync()
-//   Receives timestamp. Call it at process() to remember timestamp.
-//
-// send_sync(Chunk *chunk, int nsamples)
-//   Sends timstamp. Call it at get_chunk() call to stamp output chunk.
-//   nsamples - number of samples sent with this chunk. Needed for time tracking.
-//
-// get_time() 
-//   Returns timestamp for next output chunk even if next output should not be
-//   stamped. So this function may work as time couter for filters that 
-//   require continious time tracking.
-//
-// set_syncing()
-//   Used to set syncronization state now. Filter that uses syncing state 
-//   should set it explicitly.
-//
-// reset()
-//   Drop syncpoints and go to syncing state.
-
-class Sync
-{
-protected:
-  bool   syncing;       // syncing state
-  bool   sync[2];       // timestamp exists
-  time_t time[2];       // timestamp
-
-public:
-  Sync()
-  {
-    reset();
-  }
-
-  inline void receive_sync(bool _sync, time_t _time)
-  {
-    if (_sync)
-      if (syncing)
-      {
-        sync[0] = true;
-        time[0] = _time;
-        sync[1] = false;
-        time[1] = _time;
-      }
-      else
-      {
-        sync[1] = true;
-        time[1] = _time;
-      }
-  }
-  inline void receive_sync(const Chunk *chunk)
-  {
-    receive_sync(chunk->is_sync(), chunk->get_time());
-  }
-
-  inline void send_sync(Chunk *_chunk)
-  {
-    _chunk->set_sync(sync[0], time[0]);
-    sync[0] = sync[1];
-    time[0] = time[1];
-    sync[1] = false;
-  }
-
-  inline time_t track_time(time_t _time)
-  {
-    if (syncing)
-    {
-      time[0] += _time;
-      time[1] = time[0];
-    }
-    else
-    {
-      if (!sync[1])
-        time[1] += _time;
-    }
-  }
- 
-  inline time_t get_time()
-  {
-    return time[0];
-  }
-
-  inline bool is_syncing()
-  {
-    return syncing;
-  }
-
-  inline void set_syncing(bool _syncing)
-  {
-    syncing = _syncing;
-  }
-
-  inline void reset()
-  {
-    syncing = true;
-    sync[0] = false;
-    sync[1] = false;
-  }
-};
 
 
 
@@ -372,7 +233,8 @@ class NullFilter : public Filter
 protected:
   Speakers  spk;
 
-  Sync      sync;
+  bool      sync;
+  time_t    time;
   bool      flushing;
 
   uint8_t  *buf;
@@ -386,7 +248,11 @@ protected:
       return false;
 
     // remember input chunk info
-    sync.receive_sync(_chunk);
+    if (_chunk->is_sync()) // ignore non-sync chunks
+    {
+      sync     = true;
+      time     = _chunk->get_time();
+    }
     flushing = _chunk->is_eos();
     buf      = _chunk->get_buf();
     samples  = _chunk->get_samples();
@@ -395,47 +261,19 @@ protected:
     return true;
   }
 
-  inline void send_empty_chunk(Chunk *_chunk, bool _drop_flushing)
-  {
-    // fill output chunk
-    _chunk->set_spk(spk);
-    _chunk->set_empty();
-    sync.send_sync(_chunk);
-
-    // flushing
-    _chunk->set_eos(flushing && !size && drop_flushing);
-    flushing = flushing && (size || !drop_flushing);
-  }
-
-  inline void send_chunk_buffer(Chunk *_chunk, samples_t &_samples, size_t _size, bool _drop_flushing)
-  {
-    // fill output chunk
-    _chunk->set_spk(spk);
-    _chunk->set_samples(_samples, _size);
-    sync.send_sync(_chunk);
-
-    // flushing
-    _chunk->set_eos(flushing && !size && drop_flushing);
-    flushing = flushing && (size || !drop_flushing);
-  }
-
-  inline void send_chunk_buffer(Chunk *_chunk, uint8_t *_buf, size_t _size, bool _drop_flushing)
-  {
-    // fill output chunk
-    _chunk->set_spk(spk);
-    _chunk->set_samples(samples, _size);
-    sync.send_sync(_chunk);
-
-    // flushing
-    _chunk->set_eos(flushing && !size && drop_flushing);
-    flushing = flushing && (size || !drop_flushing);
-  }
-
-  inline void send_chunk_inplace(Chunk *_chunk, size_t _size, time_t _time)
+  inline void send_chunk_inplace(Chunk *_chunk, size_t _size)
   {
     // fill output chunk & drop data
-    _chunk->set_spk(spk);
 
+    // chunk flags
+    _chunk->set_spk(spk);
+    _chunk->set_sync(sync, time);
+    _chunk->set_eos(flushing && !size);
+
+    flushing = flushing && size;
+    sync = false;
+
+    // data send & drop
     if (_size > size)
       _size = size;
 
@@ -449,17 +287,11 @@ protected:
       _chunk->set_buf(buf, _size);
       buf += _size;
     }
+
     size -= _size;
-
-    sync.send_sync(_chunk);
-    sync.track_time(_time);
-
-    // flushing
-    _chunk->set_eos(flushing && !size);
-    flushing = flushing && size;
   }
 
-  inline void drop(size_t _size, time_t _time)
+  inline void drop(size_t _size)
   {
     if (_size > size)
       _size = size;
@@ -470,18 +302,42 @@ protected:
       buf += _size;
 
     size -= _size;
+  }
 
-    sync.track_time(_time);
+  inline void drop_buf(size_t _size)
+  {
+    if (_size > size)
+      _size = size;
+
+    buf  += _size;
+    size -= _size;
+  }
+
+  inline void drop_samples(size_t _size)
+  {
+    if (_size > size)
+      _size = size;
+
+    samples += _size;
+    size    -= _size;
   }
 
 public:
-  NullFilter() {}
+  NullFilter() 
+  {
+    spk  = unk_spk;
+    size = 0;
+    time = 0;
+    sync = false;
+    flushing = false;
+  }
 
   virtual void reset()
   {
     size = 0;
+    time = 0;
+    sync = false;
     flushing = false;
-    sync.reset();
   }                            
 
   virtual bool query_input(Speakers _spk) const
@@ -494,14 +350,10 @@ public:
   {
     if (spk != _spk)
     {
-      // use query_spk() because it may be overriten
-      if (!query_input(_spk)) 
+      if (!query_input(_spk)) // may be overriten
         return false;
-
       spk = _spk;
-
-      // use reset() because it may be overriten
-      reset();
+      reset(); // may be overriten
     }
     return true;
   }
@@ -511,12 +363,12 @@ public:
     return receive_chunk(_chunk);
   }
 
-  virtual Speakers get_output()
+  virtual Speakers get_output() const
   {
     return spk;
   }
 
-  virtual bool is_empty()
+  virtual bool is_empty() const
   {
     // must report false in flushing state
     return size && !flushing;
@@ -524,7 +376,7 @@ public:
 
   virtual bool get_chunk(Chunk *_chunk)
   {
-    send_chunk_inplace(_chunk, size, size);
+    send_chunk_inplace(_chunk, size);
     return true;
   };
 };

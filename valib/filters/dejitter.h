@@ -2,53 +2,62 @@
 */
 
 
-#ifndef DEJITTER_H
-#define DEJITTER_H
+#ifndef SYNCFILTER_H
+#define SYNCFILTER_H
 
 #include "filter.h"
 
-class Dejitter : public NullFilter
+class SyncFilter : public NullFilter
 {
 protected:
-  bool   is_resync;
-  time_t time;
-  time_t threshold;
-  float  jitter;     // ms
+  // all values in ms
+  float  time_shift;
+  float  time_factor;
+
+  bool   dejitter;
+  float  threshold;
+  float  jitter;
 
 public:
-  Dejitter()
+  SyncFilter()
   {
-    is_resync = true;
-    threshold = 5000;
-    jitter = 0;
+    time_shift  = 0;
+    time_factor = 1.0;
+
+    dejitter  = true;
+    threshold = 200;
+    jitter    = 0;
   }
-                       
-  inline void   resync();
 
-  inline time_t get_threshold();
-  inline void   set_threshold(time_t _threshold);
-  inline float  get_jitter();
+  inline void resync()
+  {
+    sync = false;
+  }
 
+  inline float get_time_shift() const              { return time_shift; }
+  inline void  set_time_shift(float _time_shift)   { time_shift = _time_shift; }
+
+  inline float get_time_factor() const             { return time_shift_ms; }
+  inline void  set_time_factor(float _time_shift)  { time_shift = _time_shift; }
+
+  inline bool  get_dejitter() const                { return dejitter; }
+  inline void  set_dejitter(bool _dejitter)        { dejitter = _dejitter; }
+
+  inline float get_threshold() const               { return threshold; }
+  inline void  set_threshold(float _threshold)     { threshold = _threshold; }
+
+  inline float get_jitter() const                  { return jitter; }
 
   // Filter interface
   void reset()
   {
-    chunk.set_empty();
-    is_resync = true;
+    NullFilter::reset();
     jitter = 0;
   }
 
   bool process(const Chunk *_chunk);
+  bool get_chunk(Chunk *_chunk);
 };
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Dejitter inlines
-
-inline void   Dejitter::resync()                         { is_resync = true; }
-
-inline time_t Dejitter::get_threshold()                  { return threshold; }
-inline void   Dejitter::set_threshold(time_t _threshold) { threshold = _threshold; }
-inline float  Dejitter::get_jitter()                     { return jitter; }
 
 #endif

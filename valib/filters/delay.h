@@ -30,6 +30,19 @@
 
 class Delay : public NullFilter
 {
+protected:
+  bool  enabled;
+  int   units;                    // delay units
+  float delays[NCHANNELS];        // delay values
+
+  SampleBuf buf;                  // sample buffer
+  bool      first_half;           // first/second buffer half is used
+  int       ch_delays[NCHANNELS]; // delay values in samples (reordered)
+  int       lag;                  // time lag
+  float     delay_ms;             // given time shift in ms
+
+  double    units2samples(int _units);
+
 public:
   Delay();
 
@@ -49,18 +62,6 @@ public:
   virtual void reset();
   virtual bool process(const Chunk *chunk);
 
-protected:
-  bool  enabled;
-  int   units;                    // delay units
-  float delays[NCHANNELS];        // delay values
-
-  SampleBuf buf;                  // sample buffer
-  bool      first_half;           // first/second buffer half is used
-  int       ch_delays[NCHANNELS]; // delay values in samples (reordered)
-  int       lag;                  // time lag
-  float     delay_ms;             // given time shift in ms
-
-  double    units2samples(int _units);
 };
 
 

@@ -181,6 +181,23 @@ AGC::process()
     }
 
   ///////////////////////////////////////
+  // Cache levels
+
+  sample_t levels_std[NCHANNELS];
+
+  const int *order = spk.order();
+  memset(levels_std, 0, sizeof(levels_std));
+  for (ch = 0; ch < nch; ch++)
+    levels_std[order[ch]] = levels_loc[ch];
+
+  input_levels.add_levels(buf_time[block], levels_std);
+
+  for (ch = 0; ch < nch; ch++)
+    levels_std[order[ch]] *= factor;
+
+  output_levels.add_levels(buf_time[block], levels_std);
+
+  ///////////////////////////////////////
   // Switch blocks
 
   block  = next_block();
@@ -228,23 +245,6 @@ AGC::process()
         if (*sptr < -spk_level) 
           *sptr = -spk_level;
     }
-
-  ///////////////////////////////////////
-  // Cache levels
-
-  sample_t levels[NCHANNELS];
-
-  const int *order = spk.order();
-  memset(levels, 0, sizeof(levels));
-  for (ch = 0; ch < nch; ch++)
-    levels[order[ch]] = levels_loc[ch];
-
-  input_levels.add_levels(sync.get_time(), levels);
-
-  for (ch = 0; ch < nch; ch++)
-    levels[order[ch]] *= factor;
-
-  output_levels.add_levels(sync.get_time(), levels);
 }
 
 ///////////////////////////////////////////////////////////
@@ -253,9 +253,15 @@ AGC::process()
 void 
 AGC::reset()
 {
+  NullFilter::reset();
+
   sample = 0;
   block  = 0;
   empty  = true;
+  buf_sync[0] = false;
+  buf_sync[1] = false;
+  buf_time[0] = 0;
+  buf_time[1] = 0;
 
   level  = 0; //?
   factor = 0; //?
@@ -270,29 +276,35 @@ AGC::get_chunk(Chunk *_chunk)
   size_t n;
   int ch;
 
-  // normal processing
-  if (size)
+  // fill sample buffer
+  n = MIN(size_t(nsamples - sample), size);
+  for (ch = 0; ch < spk.nch(); ch++)
+    memcpy(buffer[block][ch] + sample, samples[ch], n * sizeof(sample_t));
+
+  drop_samples(n);
+  sample += n;
+  time += n;
+
+  // process & send chunk
+  if (sample == nsamples)
   {
-    // fill sample buffer
-    n = MIN(size_t(nsamples - sample), size);
-    for (ch = 0; ch < spk.nch(); ch++)
-      memcpy(buffer[block][ch] + sample, samples[ch], n * sizeof(sample_t));
-
-    drop(n, n);
-    sample += n;
-
-    // process
-    if (sample == nsamples)
+    process();
+    sample = 0;
+    if (empty)
+      // skip first empty buffer
+      empty = false;
+    else
     {
-      process();
-      sample = 0;
-      if (empty)
-        // skip first empty buffer
-        empty = false;
-      else
-        send_chunk_buffer(_chunk, buffer[block], nsamples, false);
+      _chunk->set_spk(spk);
+      _chunk->set_sync(buf_sync[block], buf_time[block]);
+      _chunk->set_samples(buffer[block], nsamples);
+      buf_sync[block] = sync;
+      buf_time[block] = time;
+      sync = false;
     }
   }
+
+/*
   // flushing stage 1 - 
   else if (flushing && !empty) 
   {
@@ -320,6 +332,6 @@ AGC::get_chunk(Chunk *_chunk)
   {
 
   }
-
+*/
   return true;
 }

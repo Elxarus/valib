@@ -444,7 +444,7 @@ samples_t::reorder_from_std(Speakers _spk, const int _order[NCHANNELS])
   int i, ch;
   int mask = _spk.mask;
 
-  sample_t * tmp[NCHANNELS];
+  sample_t *tmp[NCHANNELS];
 
   ch = 0;
   for (i = 0; i < NCHANNELS; i++)

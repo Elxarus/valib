@@ -29,6 +29,8 @@ class AGC : public NullFilter
 protected:
   SampleBuf w;
   SampleBuf buffer[2];
+  bool   buf_sync[2];
+  time_t buf_time[2];
 
   LevelsCache input_levels;
   LevelsCache output_levels;
@@ -46,18 +48,18 @@ protected:
 
 public:
   // Options
-  bool auto_gain;                 // automatic gain control
-  bool normalize;                 // one-pass normalize
+  bool auto_gain;                 // [rw] automatic gain control
+  bool normalize;                 // [rw] one-pass normalize
 
   // Gain control
-  sample_t master;                // desired gain
-  sample_t gain;                  // current gain
-  sample_t release;               // release speed (dB/s)
+  sample_t master;                // [rw] desired gain
+  sample_t gain;                  // [r]  current gain
+  sample_t release;               // [rw] release speed (dB/s)
 
   // DRC
-  bool     drc;                   // DRC enabled
-  sample_t drc_power;             // DRC power (dB)
-  sample_t drc_level;             // current DRC gain level (read-only)
+  bool     drc;                   // [rw] DRC enabled
+  sample_t drc_power;             // [rw] DRC power (dB)
+  sample_t drc_level;             // [r]  current DRC gain level (read-only)
 
   AGC(int nsamples = 1024);
 

@@ -5,49 +5,58 @@
 #endif
 
 bool 
-Dejitter::process(const Chunk *_chunk)
+SyncFilter::process(const Chunk *_chunk)
 {
-  if (!NullFilter::process(_chunk))
+  bool   old_sync = sync;
+  time_t old_time = time;
+  time_t samples2ms = 1000 / spk.sample_rate;
+
+  if (!NullFilter::receive_chunk(_chunk))
     return false;
 
-  if (chunk.is_empty())
+  // ignore non-sync chunks
+  if (!_chunk->is_sync())
     return true;
 
   if (is_resync)
   {
-    if (_chunk->timestamp)
-    {
-      is_resync = false;
-      time = _chunk->time + chunk.size;
+    is_resync = false;
 #ifdef DEBUG
-      DbgLog((LOG_TRACE, 3, "resync"));
+    DbgLog((LOG_TRACE, 3, "resync"));
 #endif
-    }
   }
   else
   {
-    if (_chunk->timestamp)
-    {
-      time_t delta;
-      if (_chunk->time > time)
-        delta = _chunk->time - time;
-      else
-        delta = time - _chunk->time;
+    time_t delta;
+    if (old_time > time)
+      delta = old_time - time;
+    else
+      delta = time - old_time;
 
-      jitter = jitter * 9 / 10 + float(delta * 1000 / spk.sample_rate / 10);
+    jitter = jitter * 0.9 + delta * factor * 0.1;
 
 #ifdef DEBUG
-      DbgLog((LOG_TRACE, 3, "time: %.0f\treceived time: %.0f\tdelta: %f", time, _chunk->time, time - _chunk->time));
+    DbgLog((LOG_TRACE, 3, "time: %.0f\treceived time: %.0f\tdelta: %.1f\tjitter: %.0f", old_time, time, old_time - time, jitter));
 #endif
-      if (delta > threshold)
-        // sync lost
-        time = _chunk->time;
-
+    if (delta > threshold)
+    {
+#ifdef DEBUG
+    DbgLog((LOG_TRACE, 3, "sync lost", old_time, time, old_time - time));
+#endif
     }
+    else
+      time = old_time;
 
-    chunk.timestamp = true;
-    chunk.time = time;
-    time += _chunk->size;
+    sync = true;
   }
+  return true;
+}
+
+bool 
+SyncFilter::get_chunk(Chunk *_chunk)
+{
+  time_t add_time = size * time_factor;
+  send_chunk_inplace(_chunk, size);
+  time += add_time;
   return true;
 }

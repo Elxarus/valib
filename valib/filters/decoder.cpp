@@ -3,6 +3,7 @@
 
 AudioDecoder::AudioDecoder()
 {
+  parser = 0;
   reset();
 }
 
@@ -18,17 +19,7 @@ AudioDecoder::get_info(char *_buf, int _len)
 void
 AudioDecoder::reset()
 {
-  chunk.set_empty();
-  sync.reset();
-
-  switch (spk.format)
-  {
-    case FORMAT_MPA: parser = &mpa; break;
-    case FORMAT_AC3: parser = &ac3; break;
-    case FORMAT_DTS: parser = &dts; break;
-    default: parser = 0;
-  }
-
+  NullFilter::reset();
   if (parser)
     parser->reset();
 }
@@ -36,14 +27,31 @@ AudioDecoder::reset()
 bool
 AudioDecoder::query_input(Speakers _spk) const
 {
-  return _spk.format == FORMAT_MPA ||
-         _spk.format == FORMAT_AC3 ||
-         _spk.format == FORMAT_DTS;
+  int format_mask = FORMAT_MPA | FORMAT_AC3 | FORMAT_DTS;
+  return (FORMAT_MASK(_spk.format) & format_mask) != 0;
+}
+
+bool
+AudioDecoder::set_input(Speakers _spk)
+{
+  if (!NullFilter::set_input(_spk))
+    return false;
+
+  switch (_spk.format)
+  {
+    case FORMAT_MPA: parser = &mpa; break;
+    case FORMAT_AC3: parser = &ac3; break;
+    case FORMAT_DTS: parser = &dts; break;
+    default:
+      return false;
+  }
+  parser->reset();
+  return true;
 }
 
 
 Speakers
-AudioDecoder::get_output()
+AudioDecoder::get_output() const
 {
   if (parser)
     return parser->get_spk();
@@ -51,66 +59,45 @@ AudioDecoder::get_output()
     return unk_spk;
 }
 
-bool
-AudioDecoder::is_empty()
-{
-  return chunk.is_empty();
-}
-
 bool 
-AudioDecoder::process(const Chunk *_chunk)
+AudioDecoder::get_chunk(Chunk *_chunk)
 {
-  if (_chunk->is_empty())
-    return true;
-
-  if (!NullFilter::process(_chunk))
-    return false;
-
-  if (!chunk.is_empty())
-    sync.receive_timestamp(chunk.timestamp, chunk.time);
-
-  if (!parser) 
-    return false;
-  else
-    return true;
-}
- 
-bool 
-AudioDecoder::get_chunk(Chunk *_out)
-{
-  _out->set_empty();
-  if (chunk.is_empty())
-    return true;
-
   if (!parser) 
     return false;
 
-  uint8_t *buf = chunk.buf;
-  uint8_t *end = chunk.buf + chunk.size;
-  while (buf < end)
-    if (parser->load_frame(&buf, end))
+  sync_helper.receive_sync(sync, time);
+  sync = false;
+
+  uint8_t *buf_ptr = buf;
+  uint8_t *end_ptr = buf + size;
+
+  while (buf_ptr < end_ptr)
+    if (parser->load_frame(&buf_ptr, end_ptr))
     {
+      drop(buf_ptr - buf);
+
       // decode
       if (!parser->decode_frame())
-      {
-        chunk.drop(buf - chunk.buf);
-        return true;
-      }
-      _out->set_spk(parser->get_spk());
-      _out->set_samples(parser->get_samples(), parser->get_nsamples());
+        return false;
+
+      _chunk->set_spk(parser->get_spk());
+      _chunk->set_samples(parser->get_samples(), parser->get_nsamples());
 
       // timimg
-      sync.syncpoint(true);
-      sync.set_time(_out);
+      sync_helper.send_sync(_chunk);
+      sync_helper.set_syncing(true);
 
       // quick hack to overcome bug in splitters that report incorrect sample rate
-      _out->time *= double(_out->spk.sample_rate) / spk.sample_rate;
+      // _chunk->time *= double(_out->spk.sample_rate) / spk.sample_rate;
 
-      chunk.drop(buf - chunk.buf);
+      // end-of-stream
+      _chunk->set_eos(flushing && !size);
+      flushing = flushing && size;
+
       return true;
     } // if (parser->load_frame(&buf, end))
 
-  sync.syncpoint(false);
-  chunk.drop(buf - chunk.buf);
+  sync_helper.set_syncing(false);
+  drop(buf_ptr - buf);
   return true;
 }

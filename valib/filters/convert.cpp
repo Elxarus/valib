@@ -32,329 +32,266 @@ inline int16_t s2i16(sample_t s)
 }
 #endif
 
+bool 
+Converter::alloc_buffer()
+{
+  if (spk.format == format)
+    return true; // no buffer required
+
+  if (!buffer.allocate(spk.nch() * nsamples * sample_size(format)))
+    return false;
+
+  if (format == FORMAT_LINEAR)
+  {
+    out_samples[0] = (sample_t *)buffer.data();
+    for (int ch = 1; ch < spk.nch(); ch++)
+      out_samples[ch] = out_samples[ch-1] + nsamples;
+    out_buf = 0;
+  }
+  else
+  {
+    out_buf = buffer.data();
+    out_samples.set_null();
+  }
+}
 
 void
-Converter::reset()
+Converter::pcm2linear()
 {
-  chunk.set_empty();
-  part_size = 0;
+  int nch = spk.nch();
+  size_t sample_size = spk.sample_size() * nch;
+
+  out_size = 0;
+
+  // load partial sample
+  if (part_size)
+  {
+    if (sample_size - part_size > size)
+    {
+      memcpy(part_buf + part_size, buf, size);
+      drop_buf(size);
+      part_size += size;
+      return;
+    }
+    else
+    {
+      memcpy(part_buf + part_size, buf, sample_size - part_size);
+      pcm2linear(part_buf, out_samples, 1);
+      drop_buf(sample_size - part_size);
+      out_size++;
+      time -= 1;
+      part_size = 0;
+    }
+  }
+
+  // convert buffer
+  size_t n = size / sample_size;
+  if (n + out_size > nsamples)
+    n = nsamples - out_size;
+
+  pcm2linear(buf, out_samples + out_size, n);
+  drop_buf(n * sample_size);
+  out_size += n;
+
+  // load partial sample
+  if (size)
+  {
+    // assert: size < max_sample_size
+    memcpy(part_buf, buf, size);
+    drop(size);
+  }
 }
 
-bool 
-Converter::query_format(int _format) const
+void
+Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
 {
-  return (_format == FORMAT_LINEAR)   ||
-         (_format == FORMAT_PCM16)    ||
-         (_format == FORMAT_PCM24)    ||
-         (_format == FORMAT_PCM32)    ||
-         (_format == FORMAT_PCMFLOAT) ||
-         (_format == FORMAT_PCM16_LE) ||
-         (_format == FORMAT_PCM24_LE) ||
-         (_format == FORMAT_PCM32_LE) ||
-         (_format == FORMAT_PCMFLOAT_LE);
+  int ch;
+  int nch = spk.nch();
+  size_t s;
+
+  switch (spk.format)
+  {
+    case FORMAT_PCM16:
+    {
+      int16_t *ptr = (int16_t *)src;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          samples[ch][s] = *ptr++;
+      break;
+    }
+
+    case FORMAT_PCM16_LE:
+    {
+      int16_t *ptr = (int16_t *)src;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          samples[ch][s] = (int16_t)swab16(*ptr++);
+      break;
+    }
+
+    case FORMAT_PCM24:
+    {
+      int24_t *ptr = (int24_t *)src;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          samples[ch][s] = *ptr++;
+      break;
+    }
+
+    case FORMAT_PCM24_LE:
+    {
+      int24_t *ptr = (int24_t *)src;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          samples[ch][s] = swab24(*ptr++);
+      break;
+    }
+
+    case FORMAT_PCM32:
+    {
+      int32_t *ptr = (int32_t *)src;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          samples[ch][s] = *ptr++;
+      break;
+    }
+
+    case FORMAT_PCM32_LE:
+    {
+      int32_t *ptr = (int32_t *)src;
+      for ( s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          samples[ch][s] = (int32_t)swab32(*ptr++);
+      break;
+    }
+
+    case FORMAT_PCMFLOAT:
+    {
+      float *ptr = (float *)src;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          samples[ch][s] = *ptr++;
+      break;
+    }
+
+    case FORMAT_PCMFLOAT_LE:
+    {
+      uint32_t *ptr = (uint32_t *)src;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+        {
+          uint32_t i = swab32(*ptr++);
+          samples[ch][s] = *(float*)(&i);
+        }
+      break;
+    }
+  }
 }
 
-bool 
-Converter::linear2pcm(Chunk *out)
+void 
+Converter::linear2pcm()
 {
-  int n = MIN(chunk.size, nsamples);
-  int nch = chunk.spk.nch();
-  int size = ::sample_size(format) * nch;
-  samples_t samples = chunk.samples;
-  samples.reorder_from_std(spk, order);
+  int nch = spk.nch();
+  size_t sample_size = spk.sample_size() * nch;
 
-  // fill chunk chunk
-  Speakers out_spk = chunk.spk;
-  out_spk.format = format;
-  out->set_spk(out_spk);
-  out->set_time(chunk.timestamp, chunk.time);
-  out->set_buf(buf.data(), n * size);
+  size_t n = MIN(size, nsamples);
+  linear2pcm(samples, out_buf, n);
+  drop_samples(n);
+  out_size = n * sample_size;
+}
+
+void
+Converter::linear2pcm(samples_t src, uint8_t *dst, size_t n)
+{
+  int ch;
+  int nch = spk.nch();
+  size_t s;
 
   switch (format)
   {
     case FORMAT_PCM16:
     {
-      int16_t *buf_ptr = (int16_t *)buf.data();
-      for (int s = 0; s < n; s++)
-        for (int ch = 0; ch < nch; ch++)
-          *buf_ptr++ = s2i16(samples[ch][s]);
+      int16_t *ptr = (int16_t *)dst;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          *ptr++ = s2i16(samples[ch][s]);
       break;
     }
-    case FORMAT_PCM24:
-    {
-      int24_t *buf_ptr = (int24_t *)buf.data();
-      for (int s = 0; s < n; s++)
-        for (int ch = 0; ch < nch; ch++)
-          *buf_ptr++ = s2i32(samples[ch][s]);
-      break;
-    }
-    case FORMAT_PCM32:
-    {
-      int32_t *buf_ptr = (int32_t *)buf.data();
-      for (int s = 0; s < n; s++)
-        for (int ch = 0; ch < nch; ch++)
-          *buf_ptr++ = s2i32(samples[ch][s]);
-      break;
-    }
-    case FORMAT_PCMFLOAT:
-    {
-      float *buf_ptr = (float *)buf.data();
-      for (int s = 0; s < n; s++)
-        for (int ch = 0; ch < nch; ch++)
-          *buf_ptr++ = (float)samples[ch][s];
-      break;
-    }
+
     case FORMAT_PCM16_LE:
     {
-      int16_t *buf_ptr = (int16_t *)buf.data();
-      for (int s = 0; s < n; s++)
-        for (int ch = 0; ch < nch; ch++)
-          *buf_ptr++ = swab16(s2i16(samples[ch][s]));
-      break;
-    }
-    case FORMAT_PCM24_LE:
-    {
-      int24_t *buf_ptr = (int24_t *)buf.data();
-      for (int s = 0; s < n; s++)
-        for (int ch = 0; ch < nch; ch++)
-          *buf_ptr++ = swab24(s2i32(samples[ch][s]));
-      break;
-    }
-    case FORMAT_PCM32_LE:
-    {
-      int32_t *buf_ptr = (int32_t *)buf.data();
-      for (int s = 0; s < n; s++)
-        for (int ch = 0; ch < nch; ch++)
-          *buf_ptr++ = swab32(s2i32(samples[ch][s]));
-      break;
-    }
-    case FORMAT_PCMFLOAT_LE:
-    {
-      int32_t *buf_ptr = (int32_t *)buf.data();
-      for (int s = 0; s < n; s++)
-        for (int ch = 0; ch < nch; ch++)
-          *buf_ptr++ = swab32(*(uint32_t *)&samples[ch][s]);
-      break;
-    }
-
-    default:
-      return false;
-  }
-
-  chunk.drop(n);
-  return true;
-}
-
-bool 
-Converter::pcm2linear(Chunk *out)
-{
-  int ch, s;
-  int nch = spk.nch();                 // number of channels
-  int size = spk.sample_size() * nch;  // full sample size
-
-  // fill chunk
-  Speakers out_spk = chunk.spk;
-  out_spk.format = FORMAT_LINEAR;
-  out->set_spk(out_spk);
-  out->set_time(chunk.timestamp, chunk.time);
-
-  // process partial sample
-  if (part_size && part_size < size)
-  {
-    int l = MIN(size - part_size, chunk.size);
-    memcpy(part_buf + part_size, chunk.buf, l);
-    part_size += l;
-    chunk.drop(l);
-  }
-
-  // number of samples
-  int n = chunk.size / size;
-  if (part_size == size) n++;
-  if (n > nsamples) 
-    n = nsamples;
-
-  out->set_samples(samples, n);
-  out->samples.reorder_to_std(spk, order);
-
-  // convert
-  switch (spk.format)
-  {
-    case FORMAT_PCM16:
-    {
-      s = 0; 
-      int16_t *buf;
-      if (part_size == size)
-      {
-        buf = (int16_t *)part_buf;
+      int16_t *ptr = (int16_t *)dst;
+      for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][0] = *buf++;
-        s++;
-      }
-      buf = (int16_t *)chunk.buf;
-      for (; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = *buf++;
+          *ptr++ = swab16(s2i16(samples[ch][s]));
       break;
     }
+
     case FORMAT_PCM24:
     {
-      s = 0; 
-      int24_t *buf;
-      if (part_size == size)
-      {
-        buf = (int24_t *)part_buf;
+      int24_t *ptr = (int24_t *)dst;
+      for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][0] = *buf++;
-        s++;
-      }
-      buf = (int24_t *)chunk.buf;
-      for (; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = *buf++;
+          *ptr++ = s2i32(samples[ch][s]);
       break;
     }
-    case FORMAT_PCM32:
-    {
-      s = 0; 
-      int32_t *buf;
-      if (part_size == size)
-      {
-        buf = (int32_t *)part_buf;
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][0] = *buf++;
-        s++;
-      }
-      buf = (int32_t *)chunk.buf;
-      for (; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = *buf++;
-      break;
-    }
-    case FORMAT_PCMFLOAT:
-    {
-      s = 0; 
-      float *buf;
-      if (part_size == size)
-      {
-        buf = (float *)part_buf;
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][0] = *buf++;
-        s++;
-      }
-      buf = (float *)chunk.buf;
-      for (; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = *buf++;
-      break;
-    }
-    case FORMAT_PCM16_LE:
-    {
-      s = 0; 
-      int16_t *buf;
-      if (part_size == size)
-      {
-        buf = (int16_t *)part_buf;
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][0] = (int16_t)swab16(*buf++);
-        s++;
-      }
-      buf = (int16_t *)chunk.buf;
-      for (; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = (int16_t)swab16(*buf++);
-      break;
-    }
+
     case FORMAT_PCM24_LE:
     {
-      s = 0; 
-      int24_t *buf;
-      if (part_size == size)
-      {
-        buf = (int24_t *)part_buf;
+      int24_t *ptr = (int24_t *)dst;
+      for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][0] = (int24_t)swab24(*buf++);
-        s++;
-      }
-      buf = (int24_t *)chunk.buf;
-      for (; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = (int24_t)swab24(*buf++);
+          *ptr++ = swab24(s2i32(samples[ch][s]));
       break;
     }
+
+    case FORMAT_PCM32:
+    {
+      int32_t *ptr = (int32_t *)dst;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          *ptr++ = s2i32(samples[ch][s]);
+      break;
+    }
+
     case FORMAT_PCM32_LE:
     {
-      s = 0; 
-      int32_t *buf;
-      if (part_size == size)
-      {
-        buf = (int32_t *)part_buf;
+      int32_t *ptr = (int32_t *)dst;
+      for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][0] = (int32_t)swab32(*buf++);
-        s++;
-      }
-      buf = (int32_t *)chunk.buf;
-      for (; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = (int32_t)swab32(*buf++);
+          *ptr++ = swab32(s2i32(samples[ch][s]));
       break;
     }
+
+    case FORMAT_PCMFLOAT:
+    {
+      float *ptr = (float *)dst;
+      for (s = 0; s < n; s++)
+        for (ch = 0; ch < nch; ch++)
+          *ptr++ = (float)samples[ch][s];
+      break;
+    }
+
     case FORMAT_PCMFLOAT_LE:
     {
-      s = 0; 
-      int32_t *buf;
-      int32_t f;
-      if (part_size == size)
-      {
-        buf = (int32_t *)part_buf;
+      int32_t *ptr = (int32_t *)dst;
+      for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-        {
-          f = (int32_t)swab32(*buf++);
-          samples[ch][0] = *(float *)&f;
-        }
-        s++;
-      }
-      buf = (int32_t *)chunk.buf;
-      for (; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-        {
-          f = (int32_t)swab32(*buf++);
-          samples[ch][s] = *(float *)&f;
-        }
+          *ptr++ = swab32(*(uint32_t *)&samples[ch][s]);
       break;
     }
-
-    default:
-      return false;
   }
-
-  // process partial sample
-  if (part_size == size)
-  {
-    chunk.drop(n * size - size);
-    part_size = 0;
-  }
-  else
-    chunk.drop(n * size);
-
-  if (chunk.size && chunk.size < size)
-  {
-    memcpy(part_buf, chunk.buf, chunk.size);
-    part_size = chunk.size;
-    chunk.drop(chunk.size);
-  }
-
-  return true;
 }
-
-bool 
-Converter::pcm2pcm(Chunk *out)
-{
-  return false;
-}
-
 
 ///////////////////////////////////////////////////////////
 // Filter interface
+
+void
+Converter::reset()
+{
+  NullFilter::reset();
+  part_size = 0;
+}
 
 bool 
 Converter::query_input(Speakers _spk) const
@@ -368,16 +305,11 @@ Converter::set_input(Speakers _spk)
   if (!NullFilter::set_input(_spk))
     return false;
 
-  buf.allocate(spk.nch() * nsamples * ::sample_size(format));
-  samples[0] = (sample_t *)buf.data();
-  for (int ch = 1; ch < spk.nch(); ch++)
-    samples[ch] = samples[ch-1] + nsamples;
-
-  return true;
+  return alloc_buffer();
 }
 
 Speakers 
-Converter::get_output()
+Converter::get_output() const
 {
   Speakers out = spk;
   out.format = format;
@@ -385,28 +317,35 @@ Converter::get_output()
 }
 
 bool 
-Converter::get_chunk(Chunk *out)
+Converter::get_chunk(Chunk *_chunk)
 {
-  if (chunk.is_empty())
-  {
-    out->set_empty();
-    return true;
-  }
-
   if (spk.format == format)
   {
-    *out = chunk;
-    chunk.set_empty();
+    send_chunk_inplace(_chunk, size);
     return true;
   }
 
   if (format == FORMAT_LINEAR)
-    return pcm2linear(out);
+    pcm2linear();
+  else if (spk.format == FORMAT_LINEAR)
+    linear2pcm();
+  else
+  {
+    // todo: pcm->pcm
+    return false;
+  }
 
-  if (chunk.spk.format == FORMAT_LINEAR)
-    return linear2pcm(out);
+  _chunk->set_spk(get_output());
+  _chunk->set_sync(sync, time);
+  _chunk->set_eos(flushing && !size);
 
-  // note: never be here
-  return false;
+  if (format == FORMAT_LINEAR)
+    _chunk->set_samples(out_samples, out_size);
+  else
+    _chunk->set_buf(out_buf, out_size);
+
+  flushing = flushing && size;
+  sync = false;
+
+  return true;
 }
-

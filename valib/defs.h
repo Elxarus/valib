@@ -51,8 +51,8 @@
 
 #endif
 
-#define SAMPLE_THRESHOLD 1e-10
-#define EQUAL_SAMPLES(s1, s2) (((s1 - s2) > -SAMPLE_THRESHOLD) && ((s1 - s2) < SAMPLE_THRESHOLD))
+#define SAMPLE_THRESHOLD (1e-10)
+#define EQUAL_SAMPLES(s1, s2) (fabs(s1 - s2) < SAMPLE_THRESHOLD)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Base word types

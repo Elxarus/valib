@@ -23,7 +23,7 @@
 class AudioDecoder : public NullFilter
 {
 protected:
-  Sync    sync;   // sync helper
+  Sync   sync_helper;
   Parser *parser; // current parser;
 
 public:
@@ -40,10 +40,9 @@ public:
   // Filter interface
   virtual void reset();
   virtual bool query_input(Speakers spk) const;
-  virtual bool process(const Chunk *chunk);
+  virtual bool set_input(Speakers _spk);
 
-  virtual Speakers get_output();
-  virtual bool is_empty();
+  virtual Speakers get_output() const;
   virtual bool get_chunk(Chunk *chunk);
 };
 

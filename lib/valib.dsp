@@ -164,10 +164,6 @@ SOURCE=..\valib\spk.cpp
 
 SOURCE=..\valib\spk.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\valib\sync.h
-# End Source File
 # End Group
 # Begin Group "filters"
 
