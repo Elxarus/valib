@@ -134,6 +134,7 @@ public:
   // AGC
   inline bool     get_auto_gain();
   inline bool     get_normalize();
+  inline sample_t get_attack();
   inline sample_t get_release();
   // DRC
   inline bool     get_drc();
@@ -181,6 +182,7 @@ public:
   // AGC
   inline void     set_auto_gain(bool auto_gain);
   inline void     set_normalize(bool normalize);
+  inline void     set_attack(sample_t attack);
   inline void     set_release(sample_t release);
   // DRC
   inline void     set_drc(bool drc);
@@ -234,6 +236,10 @@ AudioProcessor::get_auto_gain()
 inline bool     
 AudioProcessor::get_normalize()
 { return agc.normalize; }
+
+inline sample_t
+AudioProcessor::get_attack()
+{ return agc.attack; }
 
 inline sample_t
 AudioProcessor::get_release()
@@ -374,6 +380,10 @@ AudioProcessor::set_auto_gain(bool _auto_gain)
 inline void     
 AudioProcessor::set_normalize(bool _normalize)
 { agc.normalize = _normalize; }
+
+inline void     
+AudioProcessor::set_attack(sample_t _attack)
+{ agc.attack = _attack; }
 
 inline void     
 AudioProcessor::set_release(sample_t _release)
