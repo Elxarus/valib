@@ -141,53 +141,25 @@ SOURCE=..\liba52\tables.h
 # Begin Group "tests"
 
 # PROP Default_Filter ""
-# Begin Group "test_pes_demux"
-
-# PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\tests\test_pes_demux\demux_ref.cpp
+SOURCE=.\test_crash.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\tests\test_pes_demux\demux_ref.h
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=.\tests\test_ac3_enc.cpp
+SOURCE=.\test_empty.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\tests\test_ac3_parser.cpp
+SOURCE=.\test_float.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\tests\test_buffer.cpp
+SOURCE=.\test_null.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\tests\test_filters.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\tests\test_float.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\tests\test_pcm_pass.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\tests\test_pes_demux.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\tests\test_spdif_pass.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\tests\test_time_pass.cpp
+SOURCE=.\test_proc.cpp
 # End Source File
 # End Group
 # Begin Group "valib"
@@ -518,19 +490,19 @@ SOURCE=..\valib\log.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\mpeg_demux.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\mpeg_demux.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parser.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\parser.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\pes_demux.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\pes_demux.h
 # End Source File
 # Begin Source File
 

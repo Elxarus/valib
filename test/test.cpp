@@ -2,6 +2,36 @@
 #include <stdio.h>
 #include "common.h"
 
+
+int test_float(Log *log);
+int test_empty(Log *log);
+int test_null(Log *log);
+int test_proc(Log *log);
+int test_crash(Log *log);
+
+
+
+int main(int argc, char **argv)
+{
+  Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
+  log.open_group("Test session");
+
+  test_float(&log);
+  test_empty(&log);
+  test_null(&log);
+  test_proc(&log);
+  test_crash(&log);
+
+  log.close_group();
+  log.msg("-----------------------------------------------------------");
+  if (log.get_total_errors())
+    log.msg("There are %i errors!\n", log.get_total_errors());
+  else
+    log.msg("Ok!");
+
+  return log.get_total_errors();
+}
+
 /*
 int test_spdifer(Log *log, Speakers spk, const char *data_file, const char *spdif_file);
 int test_spdifer(Log *log)
@@ -10,7 +40,7 @@ int test_spdifer(Log *log)
   test_spdifer(log, Speakers(FORMAT_AC3, 0, 0), "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif");
   return log->close_group();
 }
-*/
+
 
 extern int test_ac3_parser_compare(const char *filename, const char *desc);
 int test_ac3_parser()
@@ -146,3 +176,4 @@ int main(int argc, char **argv)
 
   return log.get_total_errors();
 }
+*/

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pes_demux.h"
+#include "mpeg_demux.h"
 #include "test_pes_demux\demux_ref.h"
 
 const int buf_size = 8192;
@@ -19,7 +19,7 @@ const int buf_size = 8192;
 class PESDemux2
 {
 protected:
-  PESDemux pes;
+  MPEGDemux pes;
   int stream;
   int substream;
   int payload_size;
