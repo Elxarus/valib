@@ -440,8 +440,16 @@ bool DSoundSink::write(const Chunk *chunk)
     if (cur >= buf_size)
       cur -= buf_size;
 
-    if (size) // buffer is full
-      Sleep(preload_ms);
+    if (size) // buffer is full; sleep 20ms minimum or preload_ms maximum
+      Sleep(
+        max(
+          min(
+            preload_ms, 
+            size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1,
+          ),
+          20
+        )
+      );
   }
 
   size /= wfx.Format.nBlockAlign;
