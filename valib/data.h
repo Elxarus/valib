@@ -29,6 +29,54 @@ struct samples_t
   inline void reorder(Speakers spk, const int input_order[NCHANNELS], const int output_order[NCHANNELS]);
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// Chunk class.
+// A part of audio data being processed.
+//
+// spk - data format. In case of FORMAT_LINEAR 'samples' field is valid, but 
+//   'buf' field is invalid. In all other cases 'samples' field is invalid, but
+//   'buf' field is valid. 
+//
+// timestamp - time field is valid.
+//
+// time - time stamp for data block. Time is measured in samples. Time is 
+//   applied to:
+//   1) first sample of audio data for FORMAT_LINEAR and PCM formats
+//   2) to the first first syncpoint that appears after beginning of this data 
+//      block (i.e. in current or subsequent data blocks):
+//
+//      chunk data block:
+//      +---------------------------------------------------------------------+
+//      | syncpoint, frame 1 ...... | syncpoint, frame2 ..................... |
+//      +---------------------------------------------------------------------+
+//      ^
+//      timestamp is applied here
+//
+//      chunk data block:
+//      +---------------------------------------------------------------------+
+//      | previous frame tail | syncpoint, frame 1 ...... | syncpoint, frame2 |
+//      +---------------------------------------------------------------------+
+//                            ^
+//                            timestamp is applied here
+//
+//      chunk1 data block:         chunk2 data block:
+//      +------------------------+ +------------------------------------------+
+//      | part of previous frame | | previous frame tail | syncpoint, frame 1 |
+//      +------------------------+ +------------------------------------------+
+//                                                       ^
+//                                 if chunk2 does not contain time stamp
+//                                 timestamp of chunk1 is applied here.
+//                                 chunk2 timestamp is applied otherwise
+//
+//      This rule is applied to both comressed and container data streams.
+//
+// size - size of chunk data.
+//   FORMAT_LINEAR: number of samples per channel pointed by 'samples' field.
+//   other formats: size in bytes of raw data buffer pointed by 'buf' field.
+//
+// samples (FORMAT_LINEAR only) - array of channel pointers of size 'size'.
+//
+// buf (non-FORMAT_LINEAR formats) - pointer to raw data buffer of size 'size'.
 
 class Chunk
 {
@@ -87,7 +135,7 @@ public:
   inline bool truncate(int size);
   inline void drop();
 
-  inline void zero()          { if (buf) memset(buf, 0, buf_size); }
+  inline void zero()          { if (buf) memset(buf_aligned, 0, buf_size); }
   inline uint8_t *data()const { return buf_aligned; }
   inline int  size()    const { return buf_size;    }
   inline bool is_null() const { return buf == 0;    } 

@@ -1,3 +1,7 @@
+/*
+  Basic data types, constants and utility finctions
+*/
+
 #ifndef DEFS_H
 #define DEFS_H
 

@@ -1,5 +1,70 @@
 /*
-  Speaker configuration and format definition class
+  Speakers class
+  Audio format definition class. Minimal set of audio parameters we absolutely
+  have to know. Main purpose is to accompany audio data blocks.
+
+  format - audio format. Formats are different only when we have to 
+    distinguish them. For example, format definition have no bit-per-pixel
+    parameter, but we have to distinguish PCM 16bit and PCM 32bit formats. So
+    it is FORMAT_PCM16 and FORMAT_PCM32 formats. On other hand it is several
+    different AC3 format variations: low-endian, big endian and sparse
+    zero-padded format (IEC 61937 aka SPDIF/AC3 aka AC3/AudioCD). But AC3 
+    parser can work properly with all this formats so we may not distinguish 
+    them and it is only one FORMAT_AC3 format. 
+    
+    Format is applied to audio data but not to file format. It means that 
+    stereo 16bit PCM .WAV and .RAW files will be characterized with the same 
+    format.
+
+    There are two special audio formats: FORMAT_UNKNOWN and FORMAT_LINEAR.
+
+    FORMAT_UNKNOWN may have two purposes: 
+    1) to indicate an error happen on previous processing stage, so output 
+       data is erroneous. No other format parameters have meaning in this case.
+    2) to indicate general binary data block with unknown data format. It
+       may be used for automatic format detection. Some other format parameters
+       may have meaning in this case (sample_rate for example, because it may 
+       not be determined in some cases).
+
+    FORMAT_LINEAR: most of internal processing is done with this format.
+
+    Formats are divided into several format classes: PCM formats, compressed 
+    formats, SPDIF'able formats and container formats.
+
+    To specify set of formats format bitmasks are used. To convert format to 
+    bitmask FORMAT_MASK(format) macro is used.
+
+    Formats are defined by FORMAT_X constants. Format masks are defined by 
+    FORMAT_MASK_X constants. Format classes are defined by FORMAT_CLASS_X 
+    constants.
+    
+  mask - channels bitmask. Defines a set of existing channels. Number of bits
+    set defines number of channels so class have no separate field to avoid 
+    ambiguity. But is is nch() function that returns number of channels for
+    current mask. 
+    
+    Format and mask also define channel ordering. Different formats may have 
+    different channel ordering. Channel order for FORMAT_LINEAR is called 
+    'standard channel order'. In this case channel number defined by CH_X 
+    constant have meaning of channel priority (0 - highest priority). It 
+    means that channels with small channel number will be placed before 
+    channels with big channels numbers.
+
+    For compressed formats that allows format
+    
+  sample_rate - sampling rate. this is fundamental parameter we always have to
+    know.
+
+  relation - relation between channels. Format and mask may not always define 
+    audio format. Audio channels may have an internal relation between each 
+    other. For example sum-difference when one channel have meaning of mono
+    channel and other is interchannel difference. Other example is 
+    Dolby-encoded audio source. It is independent audio characteristic and it 
+    required to take it into account.
+
+  level - absolute value for 0dB level. Generally depends on format, i.e.
+    for PCM16 format it id 32767.0, so I'm thinking about to get rid of this 
+    parameter. Now it is used to pre-scale data.
 */
 
 #ifndef SPK_H
@@ -8,31 +73,28 @@
 #include "defs.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Known stream formats
-// note: implied assumption used in Converter class is that
-// sizeof(float) == 4 (32bit float) for FORMAT_PCMFLOAT_LE 
+// Formats
 ///////////////////////////////////////////////////////////////////////////////
 
-// indicates uninitialized configuration
+// special-purpose formats
 #define FORMAT_UNKNOWN     0
-
-// main format for internal processing
 #define FORMAT_LINEAR      1
 
-// PCM formats
+// PCM big-endian formats
 #define FORMAT_PCM16       2
 #define FORMAT_PCM24       3
 #define FORMAT_PCM32       4
 #define FORMAT_PCMFLOAT    5
 
+// PCM low-endian formats
 #define FORMAT_PCM16_LE    6
 #define FORMAT_PCM24_LE    7
 #define FORMAT_PCM32_LE    8
 #define FORMAT_PCMFLOAT_LE 9
 
-// data containers
-#define FORMAT_PES        10
-#define FORMAT_SPDIF      11
+// container formats
+#define FORMAT_PES        10 // MPEG1/2 Program Elementary Stream
+#define FORMAT_SPDIF      11 // IEC 61937 stream
 
 // compressed formats
 #define FORMAT_AC3        12
@@ -41,18 +103,48 @@
 #define FORMAT_AAC        15
 #define FORMAT_OGG        16
 
+///////////////////////////////////////////////////////////////////////////////
+// Format masks
+///////////////////////////////////////////////////////////////////////////////
+
 // macro to convert format number to format mask
-#define FORMAT_MASK(format)  (1 << (format & 0x1f))
+#define FORMAT_MASK(format)  (1 << format)
 
-#define FORMAT_MASK_UNKNOWN  (FORMAT_MASK(FORMAT_UNKNOWN))
-#define FORMAT_MASK_LINEAR   (FORMAT_MASK(FORMAT_LINEAR))
+// special-purpose format masks
+#define FORMAT_MASK_UNKNOWN      FORMAT_MASK(FORMAT_UNKNOWN)
+#define FORMAT_MASK_LINEAR       FORMAT_MASK(FORMAT_LINEAR)
 
-#define FORMAT_MASK_PCM   (0x1e)
-#define FORMAT_MASK_PES   (FORMAT_MASK(FORMAT_PES))
-#define FORMAT_MASK_SPDIF (FORMAT_MASK(FORMAT_SPDIF))
-#define FORMAT_MASK_AC3   (FORMAT_MASK(FORMAT_AC3))
-#define FORMAT_MASK_MPA   (FORMAT_MASK(FORMAT_MPA))
-#define FORMAT_MASK_DTS   (FORMAT_MASK(FORMAT_DTS))
+// PCM big-endian format masks
+#define FORMAT_MASK_PCM16        FORMAT_MASK(FORMAT_PCM16)
+#define FORMAT_MASK_PCM24        FORMAT_MASK(FORMAT_PCM24)
+#define FORMAT_MASK_PCM32        FORMAT_MASK(FORMAT_PCM32)
+#define FORMAT_MASK_PCM_FLOAT    FORMAT_MASK(FORMAT_PCM_FLOAT)
+
+// PCM low-endian format masks
+#define FORMAT_MASK_PCM16_LE     FORMAT_MASK(FORMAT_PCM16_LE)
+#define FORMAT_MASK_PCM24_LE     FORMAT_MASK(FORMAT_PCM24_LE)
+#define FORMAT_MASK_PCM32_LE     FORMAT_MASK(FORMAT_PCM32_LE)
+#define FORMAT_MASK_PCM_FLOAT_LE FORMAT_MASK(FORMAT_PCM_FLOAT_LE)
+
+// container format masks
+#define FORMAT_MASK_PES          FORMAT_MASK(FORMAT_PES)
+#define FORMAT_MASK_SPDIF        FORMAT_MASK(FORMAT_SPDIF)
+
+// compressed format masks
+#define FORMAT_MASK_AC3          FORMAT_MASK(FORMAT_AC3)
+#define FORMAT_MASK_MPA          FORMAT_MASK(FORMAT_MPA)
+#define FORMAT_MASK_DTS          FORMAT_MASK(FORMAT_DTS)
+#define FORMAT_MASK_AAC          FORMAT_MASK(FORMAT_AAC)
+#define FORMAT_MASK_OGG          FORMAT_MASK(FORMAT_OGG)
+
+///////////////////////////////////////////////////////////////////////////////
+// Format classes (bitmasks)
+///////////////////////////////////////////////////////////////////////////////
+
+#define FORMAT_CLASS_PCM         0x003fc
+#define FORMAT_CLASS_CONTAINER   0x00c00
+#define FORMAT_CLASS_COMPRESSED  0x1f000
+#define FORMAT_CLASS_SPDIFABLE   0x07000
 
 ///////////////////////////////////////////////////////////////////////////////
 // Channel numbers (that also define 'standard' channel order)
@@ -186,14 +278,10 @@ extern const Speakers unk_spk;
 // Speakers class inlines
 ///////////////////////////////////////////////////////////////////////////////
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Speakers class inlines
-///////////////////////////////////////////////////////////////////////////////
-
 extern const int sample_size_tbl[32];
 extern const int mask_nch_tbl[64];
 extern const int mask_order_tbl[64][6];
+extern const char *mode_text[64];
 
 inline int sample_size(int format)
 {
@@ -257,7 +345,7 @@ Speakers::is_spdif() const
 inline bool 
 Speakers::is_pcm() const
 {
-  return (FORMAT_MASK(format) & FORMAT_MASK_PCM) != 0;
+  return (FORMAT_MASK(format) & FORMAT_CLASS_PCM) != 0;
 }
 
 inline const int *
@@ -315,6 +403,8 @@ Speakers::format_text() const
     case FORMAT_AC3:         return "AC3";
     case FORMAT_MPA:         return "MPEG Audio";
     case FORMAT_DTS:         return "DTS";
+    case FORMAT_AAC:         return "AAC";
+    case FORMAT_OGG:         return "OGG";
 
     default: return "Unknown";
   };
@@ -330,30 +420,7 @@ Speakers::mode_text() const
     case RELATION_SUMDIFF: return "Sum-difference";
   }
 
-  int nfront  = ((mask >> CH_L)  & 1) + ((mask >> CH_C)  & 1) + ((mask >> CH_R) & 1);
-  int nrear   = ((mask >> CH_SL) & 1) + ((mask >> CH_SR) & 1);
-  int code    = nfront * 100 + nrear * 10 + (lfe()? 1: 0);
-
-  switch (code)
-  {
-    case 000: return "-";
-    case 100: return "1/0 (mono)";
-    case 200: return "2/0 (stereo)";
-    case 300: return "3/0";
-    case 210: return "2/1 (surround)";
-    case 310: return "3/1 (surround)";
-    case 220: return "2/2 (quadro)";
-    case 320: return "3/2 (5 channels)";
-
-    case 101: return "1/0+LFE";
-    case 201: return "2/0+LFE (2.1)";
-    case 301: return "3/0+LFE";
-    case 211: return "2/1+LFE";
-    case 311: return "3/1+LFE";
-    case 221: return "2/2+LFE (4.1)";
-    case 321: return "3/2+LFE (5.1)";
-    default: return "non-standard format";
-  }
+  return ::mode_text[mask];
 }
 
 

@@ -6,4 +6,4 @@ and support classes
 * MPAParser (mpa\mpa_parser.h): Valex MPEG1/2 Layer I/II audio parser
 
 * FileParser (file_parser.h): adapter class to work with compressed files. 
-* RAWFile (file_raw.h) 
+* todo: RAWFile (file_raw.h) 

@@ -1,3 +1,4 @@
+* AC3Enc: remove first 256 samples (encoded stream is shifted by 256 samples)
 * AC3Parser: optimize get_coefs
 * AC3Parser: add properties:
   dither - turn dithering on/off (for debug)

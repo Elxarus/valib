@@ -287,7 +287,7 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
 
     // determine audio mode
     mask = 0;
-    if (format & FORMAT_MASK_PCM)
+    if (FORMAT_MASK(format) & FORMAT_CLASS_PCM)
       switch (wfx->nChannels)
       {
         case 1: mask = MODE_MONO;   break;

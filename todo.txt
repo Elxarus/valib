@@ -1,7 +1,9 @@
 First order
 ===========
 
-* Check Sync class timeing
+* Inherit Parser class from Filter class.
+* Inherit FileParser class from Source class.
+* Check Sync class timing
 * Add def_spk and err_spk global constants
 * CPUMeter may not work in some cases??? See message from SBN 02.04.2004
 * New: Despdifer to demux input SPDIFed stream.

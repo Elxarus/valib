@@ -16,10 +16,10 @@
 // reset()
 //   Resets parser. Parser should go to sync state (may receive new stream or 
 //   stream from new position). But also it should be able to report old stream
-//   information.
+//   information before new stream frame is loaded.
 //
 // frame()
-//   Loads and decode frame.
+//   Loads and decodes frame.
 // 
 // load_frame()
 //   Loads frame into internal frame buffers. It may parse some part of frame 
@@ -30,8 +30,11 @@
 //   parser should report new stream information. get_frame() should return 
 //   either 0 (if parser does not allow direct access to its frame buffer) or 
 //   correct pointer to frame buffer of size reported by get_frame_size().
-//   get_samples() result is undefined. decode_frame() call is allowed. From 
-//   this point resync is possible, and it is no need to call reset().
+//   get_samples() result is undefined. decode_frame() call is allowed. 
+//
+//   Afer load_frame() call resync is always possible, and it is no need to 
+//   call reset() to switch on new stream. It is applied for both successful 
+//   and unsuccessful frame load.
 //
 //   Returns 0 if frame is still not loaded or if it was errors during frame
 //   load. Parser should report old stream information correctly. get_frame()
@@ -66,8 +69,9 @@
 // thread/process) and should be designed carefully. All returned values may 
 // change only after successful load_frame() call. Unsuccessful load_frame() 
 // call (partially loaded frame or frame load error) should not change 
-// anything (get_info() is only exception - it may be changed in case of 
-// errors but it is undesirable). No other functions may change this values.
+// anything with 2 exceptions:
+// 1) get_info() may be changed in case of errors but it is undesirable
+// 2) get_errors() is increased in case of errors
 //
 // get_spk()         Returns speaker configuration of current stream.
 // get_frame_size()  Retruns size of last frame loaded.

@@ -1,5 +1,5 @@
 /*
-  Simple file interface
+  Simple file helper class
 */
 
 #ifndef AUTO_FILE_H

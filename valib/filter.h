@@ -50,7 +50,6 @@ class NullFilter;
 //   shuold be inored without errors. Empty chunks may contain invalid format
 //   (sink should not change format for empty chunks) and invalid timestamp.
 
-
 class Sink
 {
 public:
@@ -66,7 +65,7 @@ public:
 // Abstract audio source.
 //
 // get_output()
-//   Query current output format. Promary purpose of this call is to setup
+//   Query current output format. Primary purpose of this call is to setup
 //   downstream audio sink before processing (because state change may be 
 //   time-consuming operation). But it is no general rules when source may 
 //   change output format (depends completely on implementation). May be 
@@ -82,6 +81,9 @@ public:
 //   Receive data from the source. Should be called only from working thread.
 //   If empty chunk is returned it does not mean that source is empty. Always
 //   check it with is_empty() call.
+//
+//
+//
 
 class Source
 {
@@ -91,18 +93,75 @@ public:
   virtual bool get_chunk(Chunk *chunk) = 0;
 };
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // Filter class
 //
 // Abstract data processing class. It is sink and source at the same time. It 
 // should follow all restrictions for Sink and Source classes.
 //
-// 
-
+// For each data chunk received filter may produce no output, one data chunk or
+// several data chunks.
+//
+// reset()
+//   reset filter state to initial. But after reset() call filter should be 
+//   able to report its state as it was before reset() call for most of its
+//   parameters. 
+//
+// Data processing model (working thread):
+//
+//                   |
+//                   |<-----------------+
+//                   v                  |
+//              ----------              |
+//            (  get data  )            |
+//            ( to process )            |
+//              ----------              |
+//                   |                  |
+//          +--------+--------+         |
+//          |        |        |         |
+//          v        |        v         |
+//   +-------------+ | +-------------+  |
+//   |   reset()   | | | set_input() |  |
+//   +-------------+ | +-------------+  |
+//          |        |        |         |
+//          +------->|<-------+         |
+//                   v                  |
+//             +-----------+            |
+//             | process() |            |
+//             +-----------+            |
+//                   |                  |
+//      +----------->|                  |
+//      |            v                  |
+//      |      /-----------\  true      |
+//      |     < is_empty()? >---------->|<-------------------+
+//      |      \-----------/                                 |
+//      |      false |                                       |
+//      |            |-------------+                         |
+//      |            v             |                         |
+//      |     +-------------+      |                         |
+//      |     | get_chunk() |      |       +-------------+   | 
+//      |     +-------------+      |   +-->|   reset()   | --| 
+//      |            |             v   |   +-------------+   | 
+//      |            |---------------->|                     | 
+//      |            v             ^   |    -------------+   | 
+//      |     ---------------      |   +-->| set_input() | --+ 
+//      |   (  do something   )    |       +-------------+     
+//      |   ( with chunk data )    |
+//      |     ---------------      |
+//      |            |             |
+//      |            v             |
+//      +--------------------------+
+//
+// Other threads may call:
+//   query_input()
+//   get_output()
+//   is_empty()
+//   ...some other functions defined in derived classes
+        
 class Filter: public Sink, public Source
-{ 
+{
 public:
-  // Filter should be able to report its state as it was before reset()
   virtual void reset() = 0;
 
   virtual bool query_input(Speakers spk) const = 0;
@@ -114,12 +173,12 @@ public:
   virtual bool get_chunk(Chunk *chunk) = 0;
 };
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // NullFilter class
 //
 // Simple filter implementation that does nothing (just passthrough all data)
 // and fulfills all requirements.
-
 
 class NullFilter : public Filter
 {
