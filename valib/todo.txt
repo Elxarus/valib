@@ -16,12 +16,9 @@ First order
   [Source::get_output() may return error but filter can still proceed
    see AudioDecoder class as an example]
   current settings (required for FilterChain filter to validate its state)
-* Filter: add push() call: process entire chunk to given sink
-* Filter: add pull() call: receive data from given source
-* Filter: add process_all(): to process entire data from given input to given 
   sink
 * Spdifer: sync only on format specified at input. Autodetect format only
-           if FORMAT_UNKNOWN is specified.
+  if FORMAT_UNKNOWN is specified.
 
 Other
 =====
@@ -29,7 +26,7 @@ Other
 * WriteBS: review class
 * DRC should work on source channels, but we cannot simply place 
   AGC before Mixer and it is a problem.
-* Overall DRC should look like 
+  Overall DRC should look like 
   out = gain + k * level (logarithmic scale)
   But now gain is done in Mixer (before DRC):
   out = k * (level + gain)
@@ -63,3 +60,6 @@ Done
 +* Filter: add method to flush internal buffers. flush() call to flush 
   internal buffers + is_flushed() call to know if filter requires flushing.
 +* AudioRenderer: add flush() call - play till buffer ends
++* Filter: add push() call: process entire chunk to given sink
++* Filter: add pull() call: receive data from given source
++* Filter: add process_all(): to process entire data from given input to given 
