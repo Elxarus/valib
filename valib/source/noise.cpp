@@ -106,7 +106,7 @@ Noise::get_output() const
 bool 
 Noise::is_empty() const
 {
-  return data_size > 0;
+  return data_size <= 0;
 }
 
 bool 
