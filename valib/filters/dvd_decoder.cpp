@@ -292,7 +292,7 @@ DVDDecoder::process_internal()
           PUSH_STATE(state_dec);
         }
 
-        if (state_stack[state_ptr-1] == state_enc)
+        if (state_stack[state_ptr-2] == state_enc)
           spdif_mode = SPDIF_MODE_ENCODE;
         else
           spdif_mode = SPDIF_MODE_PASSTHROUGH;

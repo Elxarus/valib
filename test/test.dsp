@@ -161,6 +161,10 @@ SOURCE=.\test_null.cpp
 
 SOURCE=.\test_proc.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\test_spdifer.cpp
+# End Source File
 # End Group
 # Begin Group "valib"
 

@@ -7,6 +7,8 @@
 #define SPDIF_HEADER_SIZE    8      // SPDIF header size
 #define HEADER_SIZE          16     // header size required
 
+static const int format_mask = FORMAT_MASK_UNKNOWN | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF;
+
 Spdifer::Spdifer()
 {
   stream_spk = unk_spk;
@@ -40,7 +42,6 @@ Spdifer::reset()
 bool
 Spdifer::query_input(Speakers _spk) const
 {
-  int format_mask = FORMAT_MASK_UNKNOWN | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF;
   return (FORMAT_MASK(_spk.format) & format_mask) != 0;
 }
 

@@ -8,13 +8,15 @@ int test_empty(Log *log);
 int test_null(Log *log);
 int test_proc(Log *log);
 int test_crash(Log *log);
-
+int test_spdifer(Log *log);
 
 
 int main(int argc, char **argv)
 {
   Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
   log.open_group("Test session");
+
+  test_spdifer(&log);
 
   test_float(&log);
   test_empty(&log);
