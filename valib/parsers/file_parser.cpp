@@ -113,7 +113,7 @@ FileParser::probe()
   bool failed = false;
 
   /////////////////////////////////////////////////////////
-  // Try as pure ac3
+  // Try as pure stream
 
   seek(old_pos);
   is_pes  = false;
@@ -175,16 +175,21 @@ FileParser::stats(int nframes)
 
   for (int i = 0; i < nframes; i++)
   {
-    int pos = int((double)rand() * filesize / RAND_MAX);
-    seek(pos);
+    int file_pos = int((double)rand() * filesize / RAND_MAX);
+    seek(file_pos);
 
-    if (load_frame() && decode_frame())
-    {
-      frame_size     += parser->get_frame_size();
-      frame_samples  += parser->get_nsamples();
-      sample_rate    += parser->get_spk().sample_rate;
-      cnt++;
-    }
+    if (!load_frame() || !decode_frame())
+      continue;
+
+    file_pos = get_pos();
+
+    if (!load_frame() || !decode_frame())
+      continue;
+
+    frame_size     += get_pos() - file_pos;;
+    frame_samples  += parser->get_nsamples();
+    sample_rate    += parser->get_spk().sample_rate;
+    cnt++;
   }
 
   if (cnt)
@@ -364,20 +369,24 @@ FileParser::get_info(char *buf, int len) const
   int info_len;
 
   int size_bytes = get_size();
-  int size_sec = get_size(ms) / 1000;
-  int size_frames = get_size(frames);
+  int size_sec = int(get_size(ms) / 1000);
+  int size_frames = int(get_size(frames));
 
   sprintf(info,
     "File: %s\n"
-    "size: %i\n"
+    "size: %i bytes\n"
     "frames: %i\n"
     "length: %i:%02i\n"
+    "avg. frame size: %i bytes\n"
+    "avg. samples/frame: %i\n"
     "\n",
 
     get_filename(), 
     size_bytes, 
     size_frames, 
-    int(size_sec / 60), int(size_sec % 60));
+    int(size_sec / 60), int(size_sec % 60),
+    frame_size, 
+    frame_samples);
 
   info_len = MIN(len, strlen(info)+1);
   memcpy(buf, info, info_len);
