@@ -34,7 +34,8 @@ protected:
     vtime_t mean() const;
     int len() const;
   };
-  SyncerStat stat;
+  SyncerStat istat;
+  SyncerStat ostat;
 
 public:
   Syncer()
@@ -65,8 +66,8 @@ public:
   vtime_t get_threshold() const                  { return threshold; }
   void    set_threshold(vtime_t _threshold)      { threshold = _threshold; }
 
-  vtime_t get_jitter() const                     { return stat.stddev() / spk.sample_rate; }
-  vtime_t get_drift() const                      { return stat.mean() ; }
+  vtime_t get_jitter() const                     { return ostat.stddev() / spk.sample_rate; }
+  vtime_t get_drift() const                      { return ostat.mean() / spk.sample_rate; }
 
   /////////////////////////////////////////////////////////
   // Filter interface

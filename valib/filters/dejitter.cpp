@@ -61,7 +61,8 @@ void
 Syncer::reset()
 {
   NullFilter::reset();
-  stat.reset();
+  istat.reset();
+  ostat.reset();
   sync = false;
   time = 0;
 }
@@ -71,6 +72,10 @@ Syncer::process(const Chunk *_chunk)
 {
   bool    old_sync = sync;
   vtime_t old_time = time;
+
+  // resync on format change
+  if (spk != _chunk->get_spk())
+    old_sync = false;
 
   // receive chunk
   FILTER_SAFE(receive_chunk(_chunk));
@@ -82,10 +87,12 @@ Syncer::process(const Chunk *_chunk)
   // resync after reset
   if (!old_sync && dejitter)
   {
+    old_time = time;
+//    istat.reset();
+//    ostat.reset();
 #ifdef SYNCER_LOG_TIMING
     DbgLog((LOG_TRACE, 3, "resync"));
 #endif
-    old_time = time;
   }
 
   // dejitter
@@ -93,23 +100,27 @@ Syncer::process(const Chunk *_chunk)
   {
     if (fabs(time - old_time) / spk.sample_rate > threshold)
     {
-      stat.reset();
+//      istat.reset();
+//      ostat.reset();
 #ifdef SYNCER_LOG_TIMING
       DbgLog((LOG_TRACE, 3, "sync lost"));
 #endif
     }
     else
     {
-      // use continuous time scale, but compensate nearly-constant time shift
-      // (also prevent feedback oscillations)
-      time = old_time + stat.mean() / stat.len() / 2; 
+      // use continuous time scale, but compensate 
+      // nearly-constant time shift and slow time drift
+      time = old_time + istat.mean() / istat.len() / 2; 
     }
   }
 
-  stat.add(time - old_time);
+  istat.add(_chunk->get_time() - old_time);
+  ostat.add(time - old_time);
 
 #ifdef SYNCER_LOG_TIMING
-  DbgLog((LOG_TRACE, 3, "tb: %-7.0f  tin: %-7.0f  dt: %-7.0f  s: %-7.0f  m: %-7.0fsm  tout:%-7.0f", old_time, _chunk->get_time(), (time - old_time), stat.stddev(), stat.mean(), time));
+  DbgLog((LOG_TRACE, 3, "base: %-6.0f", old_time));
+  DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", _chunk->get_time(), (_chunk->get_time() - old_time), istat.stddev(), istat.mean()));
+  DbgLog((LOG_TRACE, 3, "output: %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time, (time - old_time), ostat.stddev(), ostat.mean()));
 #endif
 
   return true;
@@ -119,9 +130,13 @@ bool
 Syncer::get_chunk(Chunk *_chunk)
 {
   _chunk->set(spk, samples, size, sync, time * time_factor + time_shift * spk.sample_rate, flushing);
-  flushing = false;
-  if (!dejitter)
+
+  // do not keep sync if we do not do dejitter
+  // drop sync in case of flushing
+  if (!dejitter || flushing)
     sync = false;
+
+  flushing = false;
   time += size;
   size = 0;
   return true;
