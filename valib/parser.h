@@ -53,18 +53,21 @@
 //   Returns 0 if filter does not provide access to frame buffer. 
 //   (But get_frame_size() should report correct frame size anyway.)
 //
+//   Parser for formats allowed for SPDIF transmission should provide access
+//   to raw frame buffer.
+//
 // get_samples()
 //   Should be called only after successful decode_frame() call. Returns
 //   pointers to decoded samples buffers. Buffer size is reported by 
 //   get_nsamples(). Number of correct buffer pointers returned should be
 //   equal to number of channels (reported by get_spk.nch() ).
 //
-// Following functions may be called asyncronously and should be designed
-// carefully. All returned values may change only after successful load_frame()
-// call. Unsuccessful load_frame() call (partially loaded frame or frame load 
-// error) should not change anything (get_info() is only exception - it may 
-// be changed in case of errors but it is undesirable). No other functions 
-// may change this values.
+// Following functions may be called asyncronously (and possibly from another
+// thread/process) and should be designed carefully. All returned values may 
+// change only after successful load_frame() call. Unsuccessful load_frame() 
+// call (partially loaded frame or frame load error) should not change 
+// anything (get_info() is only exception - it may be changed in case of 
+// errors but it is undesirable). No other functions may change this values.
 //
 // get_spk()         Returns speaker configuration of current stream.
 // get_frame_size()  Retruns size of last frame loaded.
