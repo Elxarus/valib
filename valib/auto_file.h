@@ -41,25 +41,25 @@ public:
     }
     return is_open();
   }
+
   void close()
   {
     if (f)
       fclose(f);
     f = 0;
   }
-  bool is_open() const
-  {
-    return f != 0;
-  }
 
-  void seek(size_t _pos)               { fseek(f, _pos, SEEK_SET);       }
-  int  read(void *buf, unsigned size)  { return fread(buf, 1, size, f);  }
-  int  write(void *buf, unsigned size) { return fwrite(buf, 1, size, f); }
+  inline void seek(size_t _pos)               { fseek(f, _pos, SEEK_SET);       }
+  inline int  read(void *buf, unsigned size)  { return fread(buf, 1, size, f);  }
+  inline int  write(void *buf, unsigned size) { return fwrite(buf, 1, size, f); }
 
-  bool eof()  const { return f? feof(f) != 0: true;  }
-  int  size() const { return filesize;               }
-  FILE *fh()  const { return f;                      }
-  int  pos()  const { return ftell(f);               }
+  inline bool is_open() const { return f != 0;                }
+  inline bool eof()     const { return f? feof(f) != 0: true; }
+  inline int  size()    const { return filesize;              }
+  inline int  pos()     const { return ftell(f);              }
+  inline FILE *fh()     const { return f;                     }
+
+  inline operator FILE *() const { return f; }
 };
 
 #endif

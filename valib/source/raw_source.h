@@ -26,14 +26,13 @@ public:
   bool open(Speakers _spk, const char *_filename, size_t _block_size = 65536);
   void close();
 
-  inline bool is_open() const          { return f.is_open();       }
+  inline void seek(size_t _pos) { f.seek(_pos);       }
 
-  inline void seek(size_t _pos)        { f.seek(_pos);             }
-
-  inline bool eof()  const             { return f.eof();           }
-  inline int  size() const             { return f.size();          }
-  inline int  pos()  const             { return f.pos();           }
-  inline FILE *fh()  const             { return f.fh();            }
+  inline bool is_open() const   { return f.is_open(); }
+  inline bool eof()     const   { return f.eof();     }
+  inline int  size()    const   { return f.size();    }
+  inline int  pos()     const   { return f.pos();     }
+  inline FILE *fh()     const   { return f.fh();      }
 
   /////////////////////////////////////////////////////////
   // Source interface
