@@ -22,20 +22,6 @@ int test_ac3_parser()
   return err;
 }
 
-extern int test_pcm_passthrough_file(Log *log, const char *filename, const char *desc, Speakers spk);
-int test_pcm_passthrough(Log *log)
-{
-  log->open_group("PCM passthrough test");
-  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm16.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_5_1, 48000, 32767));
-  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm16_norm.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767));
-  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm16.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767));
-  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm24.raw", "pcm24", Speakers(FORMAT_PCM24, MODE_STEREO, 48000, 8388607));
-  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm32.raw", "pcm32", Speakers(FORMAT_PCM32, MODE_STEREO, 48000, 2147483647));
-  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcmfloat.raw", "pcm float", Speakers(FORMAT_PCMFLOAT, MODE_STEREO, 48000, 1.0));
-  test_pcm_passthrough_file(log, "f:\\_pes\\lpcm.pes", "crash test",  Speakers(FORMAT_PCM32, MODE_STEREO, 48000, 2147483647));
-  return log->close_group();
-}
-
 extern int test_pes_demux(const char *filename);
 int test_pes_demux()
 {

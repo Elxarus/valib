@@ -55,6 +55,7 @@ protected:
   bool process_internal(Entry *entry);
 
 public:
+
   FilterChain();
   ~FilterChain();
 
