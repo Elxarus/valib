@@ -45,8 +45,8 @@ HPF::update()
   a  = gain * (1 + c) / 2 / (1 + alfa);
   a1 = gain * -(1 + c) / (1 + alfa);
   a2 = gain * (1 + c) / 2 / (1 + alfa);
-  b1 = gain * -(2 * c) / (1 + alfa);
-  b2 = gain * (1 - alfa) / (1 + alfa);
+  b1 = -(2 * c) / (1 + alfa);
+  b2 = (1 - alfa) / (1 + alfa);
 
 }
 
@@ -61,8 +61,8 @@ LPF::update()
   a  = gain * (1 - c) / 2 / (1 + alfa);
   a1 = gain * (1 - c) / (1 + alfa);
   a2 = gain * (1 - c) / 2 / (1 + alfa);
-  b1 = gain * -(2 * c) / (1 + alfa);
-  b2 = gain * (1 - alfa) / (1 + alfa);
+  b1 = -(2 * c) / (1 + alfa);
+  b2 = (1 - alfa) / (1 + alfa);
 }
 
 
