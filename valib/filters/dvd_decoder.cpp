@@ -208,7 +208,7 @@ DVDDecoder::process_internal()
         substream = demux.get_substream();
 
         if ((out_spk.format == FORMAT_SPDIF) && 
-            (chunk.get_spk().format & spdif))
+            (FORMAT_MASK(chunk.get_spk().format) & spdif))
         {
           // state_demux -> state_spdif
           FILTER_SAFE(spdifer.process(&chunk));
