@@ -1,3 +1,6 @@
+// todo: use Log class
+// todo: write log to file option
+
 #include <stdio.h>
 #include <conio.h>
 #include <math.h>
@@ -127,10 +130,10 @@ int main(int argc, char *argv[])
            "      (*) 2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
            "          3 - 3/0 (surround)\n"
            "    -fmt:n - set sample format:\n"
-           "      (*) 0 - PCM 16        4 - PCM 16 (low endian)\n"
-           "          1 - PCM 24        5 - PCM 24 (low endian)\n" 
-           "          2 - PCM 32        6 - PCM 32 (low endian)\n"
-           "          3 - PCM Float     7 - PCM Float (low endian)\n" 
+           "      (*) 0 - PCM 16        4 - PCM 16 (big endian)\n"
+           "          1 - PCM 24        5 - PCM 24 (big endian)\n" 
+           "          2 - PCM 32        6 - PCM 32 (big endian)\n"
+           "          3 - PCM Float     7 - PCM Float (big endian)\n" 
            "  \n"
            "  format selection:\n"
            "    -ac3 - force ac3 (do not autodetect format)\n"

@@ -84,10 +84,6 @@ LINK32=link.exe
 # Name "valdec - Win32 Debug"
 # Begin Source File
 
-SOURCE=..\valib\filters\convert.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\valdec.cpp
 # End Source File
 # End Target
