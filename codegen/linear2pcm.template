@@ -13,7 +13,4 @@
 $convert
     dst += nch;
   }
-
-  send_rawdata(_chunk);
-  return true;
 }

@@ -24,8 +24,7 @@
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      send_empty(_chunk);
-      return true;
+      return;
     }
     else
     {
@@ -84,10 +83,4 @@ $convert
     src += nch;
     dst++;
   }
-
-  /////////////////////////////////////////////////////////
-  // Fill output chunk
-
-  send_samples(_chunk);
-  return true;
 }

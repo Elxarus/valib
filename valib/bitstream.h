@@ -111,7 +111,7 @@ ReadBS::get(uint32_t num_bits)
 {
   uint32_t result;
 
-  if(num_bits < bits_left) 
+  if (num_bits < bits_left) 
   {
     result = (current_word << (32 - bits_left)) >> (32 - num_bits);
     bits_left -= num_bits;
@@ -126,7 +126,7 @@ ReadBS::get_signed(uint32_t num_bits)
 {
   int32_t result;
         
-  if(num_bits < bits_left) 
+  if (num_bits < bits_left) 
   {
     result = (((int32_t)current_word) << (32 - bits_left)) >> (32 - num_bits);
     bits_left -= num_bits;

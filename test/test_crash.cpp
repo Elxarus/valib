@@ -20,10 +20,10 @@ int test_crash(Log *log)
 {
   log->open_group("Raw noise crash test");
 
-  Demux      demux;
-  Spdifer    spdifer;
-  AudioDecoder    dec;
-  DVDDecoder dvd;
+  Demux        demux;
+  Spdifer      spdifer;
+  AudioDecoder dec;
+  DVDDecoder   dvd;
 
   test_crash_filter(log, Speakers(FORMAT_PES,     0, 0), &demux, "Demux");
 
@@ -69,7 +69,7 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
   if (!noise.set_output(spk))
     return log->err("noise.set_input() failed!");
 
-  if (!noise.set_output(spk))
+  if (!noise.set_output(spk, 1024*1024))
     return log->err("noise.set_input() failed!");
 
   while (!noise.is_empty())

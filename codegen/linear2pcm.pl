@@ -27,7 +27,7 @@ foreach $ch (@chs)
 {
   foreach $name (@names)
   {
-    print "  bool linear_".$name."_".$ch."ch(Chunk *);\n";
+    print "  void linear_".$name."_".$ch."ch();\n";
   }
   print "\n";
 }
@@ -35,7 +35,7 @@ foreach $ch (@chs)
 ###############################################################################
 # array of functions
 
-print "typedef bool (Converter::*convert_t)(Chunk *);\n\n";
+print "typedef void (Converter::*convert_t)();\n\n";
 print "static const int formats_tbl[] = {".join(", ", @formats)."}\n\n";
 print "const int formats = ".join(" | ", @formats).";\n\n";
 
@@ -65,8 +65,8 @@ foreach $ch (@chs)
     $text = join('', @template);
     $text =~ s/(\$\w+)/$1/gee;
 
-    print "bool\n";
-    print "Converter::linear_".$name."_".$ch."ch(Chunk *_chunk)\n";
+    print "void\n";
+    print "Converter::linear_".$name."_".$ch."ch()\n";
     print $text;
   }
   print "\n";
