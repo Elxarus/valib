@@ -22,15 +22,15 @@ class NullFilter;
 // query_input()
 //   Check if we can change format now. Returns true if we can and false if we
 //   can't. Sink may have some internal state that may prevent format change, 
-//   so this function should return true only if it can switch format now. 
-//   It is assumed that query result may be changed only as a result of some 
-//   state-change calls and does not change all other time. So we can query 
-//   sink from one thread and then call set_input() from other and be sure 
-//   that set_input() call succeeds. set_input() and process() calls should 
-//   not change query result (?). Should work as fast as possible, because it 
-//   may be used to try numerous formats to find acceptable conversion. Also, 
-//   this function may be called asynchronously from other thread, so it 
-//   should be thread-safe.
+//   so this function should return true only if it can switch format right 
+//   now. It is assumed that query result may be changed only as a result of 
+//   some state-change calls and does not change all other time. So we can 
+//   query sink from one thread and then call set_input() from other and be 
+//   sure that set_input() call succeeds. set_input() and process() calls 
+//   should not change query result (?). Should work as fast as possible, 
+//   because it may be used to try numerous formats to find acceptable 
+//   conversion. Also, this function may be called asynchronously from other 
+//   thread, so it should be thread-safe.
 //
 // set_input()
 //   Change format. Returns true on success and false otherwise. It is 
@@ -66,7 +66,22 @@ public:
 // Abstract audio source.
 //
 // get_output()
-//    Qurey current output format.
+//   Query current output format. Promary purpose of this call is to setup
+//   downstream audio sink before processing (because state change may be 
+//   time-consuming operation). But it is no general rules when source may 
+//   change output format (depends completely on implementation). May be 
+//   called asynchronously.
+//
+// is_empty()
+//   Check if we can get some data from this source. Depending on source type
+//   it may require some explicit actions to be filled (like filters) or it 
+//   may be filled asyncronously (like audio capture). May be called 
+//   asynchronously.
+//
+// get_chunk()
+//   Receive data from the source. Should be called only from working thread.
+//   If empty chunk is returned it does not mean that source is empty. Always
+//   check it with is_empty() call.
 
 class Source
 {
@@ -76,6 +91,13 @@ public:
   virtual bool get_chunk(Chunk *chunk) = 0;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// Filter class
+//
+// Abstract data processing class. It is sink and source at the same time. It 
+// should follow all restrictions for Sink and Source classes.
+//
+// 
 
 class Filter: public Sink, public Source
 { 
@@ -91,6 +113,13 @@ public:
   virtual bool is_empty() = 0;
   virtual bool get_chunk(Chunk *chunk) = 0;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// NullFilter class
+//
+// Simple filter implementation that does nothing (just passthrough all data)
+// and fulfills all requirements.
+
 
 class NullFilter : public Filter
 {

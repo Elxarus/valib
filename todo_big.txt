@@ -16,8 +16,6 @@ First order
   DVDDecoder should support SPDIF output, SPDIF passthrough, and decode modes.
 * Spdifer test: add more ac3, mpa and dts streams
 * clev, slev, lfelev mixing coefs locking
-* BUG: negative DRC gain on positive compression 
-  (beacuse scaling was moved to Mixer?)
 * expand parsers format report
 * ac3 encoder test: what is 'strange sample'?
 * Tests with negative results as normal result (crash tests for example)
@@ -95,21 +93,6 @@ Done
 
 
 -------------------------------
-./ac3dec
--------------------------------
-* BUG: RAW output loses end of audio stream
-* CPU display in playback mode sometimes works incorrectly (at my work computer)
-* Usage: describe spkeaker modes, format, etc
-* test every option
-* Decoder info
-* Option to get mixlevels from bitstream
-* histogram reporting
-+* Add: delay filter
-+* bitstream info
-+* BUG: -spk option does not work with RAW output
-
-
--------------------------------
 ./ac3enc
 -------------------------------
 * Bit counting using BA_BitCount is something bad
@@ -118,6 +101,21 @@ Done
 +* Samples test (old one is commented now)
 +* Convert AC3Enc to Filter
 -* Add SPDIF output support
+
+
+-------------------------------
+./valdec
+-------------------------------
+* BUG: RAW output loses end of audio stream
+* CPU display in playback mode sometimes works incorrectly (at my work computer)
+* Usage: describe spkeaker modes, format, etc
+* test every option
+* Decoder info
+* Option to get mixlevels from bitstream
++* histogram reporting
++* Add: delay filter
++* bitstream info
++* BUG: -spk option does not work with RAW output
 
 
 -------------------------------
@@ -148,11 +146,20 @@ First order
 * Filter: add process_all(): to process entire data from given input to given 
   sink
 * AudioSink: add flush() call - play till buffer ends
+* Spdifer: sync only on format specified at input. Autodetect format only
+           if FORMAT_UNKNOWN is specified.
 
 Other
 =====
 * Parser: scan data block for sync?
 * WriteBS: review class
+* DRC should work on source channels, but we cannot simply place 
+  AGC before Mixer and it is a problem.
+* Overall DRC should look like 
+  out = gain + k * level (logarithmic scale)
+  But now gain is done in Mixer (before DRC):
+  out = k * (level + gain)
+  So DRC level shows something dependent on gain 
 
 
 Done
@@ -202,6 +209,7 @@ Done
 * AGC: clip short bursts (?)
 * AGC: limiter level
 * AGC: per-channel limiter (see ac3filter support page)
+* AGC: per-channel DRC 
 
 * Mixer: throw out null columns
 * Mixer: zero null output channels instead of matrixing
@@ -270,8 +278,6 @@ Done
 -------------------------------
 ./valib/parsers
 -------------------------------
-* AC3Parser: review frame loading 
-  (do not zero frame_size on reset and frame loading)
 * AC3Parser: optimize get_coefs
 * AC3Parser: add properties:
   dither - turn dithering on/off (for debug)
@@ -287,9 +293,7 @@ Done
 * AC3Parser: constraint p.41 s5.4.3.14 (coupling coordinates)
 * AC3Parser: think about error-recovery strategy
 * AC3Parser: think about performance
-+* AC3Parser: support for 8bit & 16bit stream types
 
-* MPAParser: review frame loading
 * MPAParser: intensity_stereo for Layer I/II? (see mode_extension)
 * MPAParser: add mp3 support
 * MPAParser: add multichannel support
@@ -298,17 +302,29 @@ Done
 * MPAParser: think about performance
 * MPAParser: support for 8bit & 16bit stream types
 
+* DTSParser: it is 2 interpretaions about frame size for 14bit streams:
+  as frame size in bytes
+  as frame size * 14/16
+  And we should sync correctly in both cases...
+
+* FileParser: make it Source descendant?
 * FileParser: add timing (get_time() call?):
   Update time according to file position at seek() call
   Update time with each frame decoded? (dejitter can do it)
   (i.e. File parser should be timing generator)
-* FileParser: make it Source descendant?
-+* FileParser: EOF is too early (before last read buffer decoded)
+
 * New: RAWFile class to work with raw PCM files
-* New: DTS parser (just frame load)
+* New: WAVFile class to work with WAV files
 * New: AAC parser (far future)
 * New: OGG parser (far future)
-* New: RAWFile
+
+Done:
+=====
++* AC3Parser: review frame loading 
+   (do not zero frame_size on reset and frame loading)
++* AC3Parser: support for 8bit & 16bit stream types
++* MPAParser: review frame loading
++* FileParser: EOF is too early (before last read buffer decoded)
 
 
 -------------------------------
@@ -327,8 +343,8 @@ Done
 
 
 ----------------------------------------
-Total tasks: 204
-Done: 80
+Total tasks: 207
+Done: 83
 Dubious: 7
 Declined: 4
-Comlete: 41%
+Comlete: 42%
