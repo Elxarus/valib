@@ -1,56 +1,53 @@
-#ifndef PESDEMUX_H
-#define PESDEMUX_H
+#ifndef VALIB_MPEGDEMUX_H
+#define VALIB_MPEGDEMUX_H
+
 #include "defs.h"
-
-
-#define DEMUX_SYNC   0
-#define DEMUX_HEADER 1
-#define DEMUX_DATA   2
-#define DEMUX_DROP   3
+#include "spk.h"
 
 //////////////////////////////////////////////////
-// MPEG1/2 PES demuxer
+// MPEG1/2 Program Stream demuxer
 
-class PESDemux
+class MPEGDemux
 {
 private:
-  int state;
+  enum { demux_sync, demux_header, demux_data, demux_drop } state;
   uint8_t header[268];
+  uint8_t subheader[6];
   int data_size;
 
 public:
   int stream;
   int substream;
-  uint8_t subheader[6];
 
   int frames;
   int errors;
 
-  PESDemux()
+  MPEGDemux()
   {
     frames = 0;
     errors = 0;
     stream = 0;
     substream = 0;
-    state = DEMUX_SYNC;
+    state = demux_sync;
     data_size = 0;
   };
 
   void reset()
   {
-    state = DEMUX_SYNC; 
+    state = demux_sync; 
     data_size = 0; 
   };
 
-/*
-  void reset(int _stream = 0, int _substream = 0)
+  void reset(int _stream, int _substream = 0)
   {
     stream = _stream;
     substream = _substream;
-    state = DEMUX_SYNC; 
+    state = demux_sync; 
     data_size = 0; 
   };
-*/
+
+  bool is_audio();
+  Speakers spk();
 
   /////////////////////////////////////////////////////////
   // Stream-based demux
@@ -63,7 +60,7 @@ public:
   /////////////////////////////////////////////////////////
   // Packet-based demux
   //
-  // finds PES payload data
+  // finds next packet payload data
   // returns payload data size
 
   int packet(uint8_t *buf, int len, int *gone);

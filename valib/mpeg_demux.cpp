@@ -1,10 +1,69 @@
 #include <string.h>
-#include "pes_demux.h"
+#include "mpeg_demux.h"
 
 // todo: check marker bits
 
+
+bool
+MPEGDemux::is_audio()
+{
+  return (((stream    & 0xe0) != 0xc0) ||   // MPEG audio stream
+          ((substream & 0xf8) != 0x80) ||   // AC3 audio substream
+          ((substream & 0xf8) != 0x88) ||   // DTS audio substream
+          ((substream & 0xf8) != 0xA0));    // LPCM audio substream
+}
+
+Speakers 
+MPEGDemux::spk()
+{
+  // convert LPCM number of channels to channel mask
+  static const int nch2mask[8] = 
+  {
+    MODE_MONO, 
+    MODE_STEREO,
+    MODE_3_1,
+    MODE_QUADRO,
+    MODE_3_2, 
+    MODE_5_1,
+    0, 0
+  };
+
+  if      ((stream    & 0xe0) == 0xc0) return Speakers(FORMAT_MPA, 0, 0);   // MPEG audio stream
+  else if ((substream & 0xf8) == 0x80) return Speakers(FORMAT_AC3, 0, 0);   // AC3 audio substream
+  else if ((substream & 0xf8) == 0x88) return Speakers(FORMAT_DTS, 0, 0);   // DTS audio substream
+  else if ((substream & 0xf8) == 0xA0)                                 // LPCM audio substream
+  {
+    // parse LPCM header
+    int format, mask, sample_rate;
+    sample_t level;
+
+    switch (subheader[4] >> 6)
+    {
+      case 0: format = FORMAT_PCM16_LE; level = 32767;    break;
+      case 2: format = FORMAT_PCM24_LE; level = 8388607;  break;
+      default: return unk_spk;
+    }
+
+    mask = nch2mask[subheader[4] & 7];
+    if (!mask) return unk_spk;
+
+    switch ((subheader[4] >> 4) & 3)
+    {
+      case 0: sample_rate = 48000; break;
+      case 1: sample_rate = 96000; break;
+      default: return unk_spk;
+    }
+
+    return Speakers(format, mask, sample_rate, level);
+
+  }
+  else
+    // not an audio format
+    return unk_spk;
+}
+
 int 
-PESDemux::streaming(uint8_t *_buf, int len)
+MPEGDemux::streaming(uint8_t *_buf, int len)
 {
   int size;
   int required_size  = 0;
@@ -26,7 +85,7 @@ PESDemux::streaming(uint8_t *_buf, int len)
   #define DROP(bytes)   \
   {                     \
     data_size = bytes;  \
-    state = DEMUX_DROP; \
+    state = demux_drop; \
     continue;           \
   }
 
@@ -34,7 +93,7 @@ PESDemux::streaming(uint8_t *_buf, int len)
   {                     \
     data_size = 0;      \
     required_size = 4;  \
-    state = DEMUX_SYNC; \
+    state = demux_sync; \
     continue;           \
   }
 
@@ -64,7 +123,7 @@ PESDemux::streaming(uint8_t *_buf, int len)
       /////////////////////////////////////////////////////////////////
       // Drop unneeded data
 
-      case DEMUX_DROP:
+      case demux_drop:
       {
         if (len > data_size)
         {
@@ -77,12 +136,12 @@ PESDemux::streaming(uint8_t *_buf, int len)
           data_size -= len;
           return buf_write - _buf;
         }
-      } // case DEMUX_DROP:
+      } // case demux_drop:
 
       /////////////////////////////////////////////////////////////////
       // Sync
 
-      case DEMUX_SYNC:
+      case demux_sync:
       {
         REQUIRE(4);
         uint32_t sync = swab_u32(*(uint32_t *)header);
@@ -99,17 +158,17 @@ PESDemux::streaming(uint8_t *_buf, int len)
         *(uint32_t *)header = swab_u32(sync);
 
         if ((sync & 0xffffff00) == 0x00000100)
-          state = DEMUX_HEADER;
+          state = demux_header;
         else
           return buf_write - _buf;
 
-        // no break: now we go to DEMUX_HEADER
-      } // case DEMUX_SYNC:
+        // no break: now we go to demux_header
+      } // case demux_sync:
 
       /////////////////////////////////////////////////////////////////
       // Parse header
 
-      case DEMUX_HEADER:
+      case demux_header:
       {
         switch (header[3])
         {
@@ -119,7 +178,7 @@ PESDemux::streaming(uint8_t *_buf, int len)
           case 0xb9:
           {         
             data_size = 0;
-            state = DEMUX_SYNC;
+            state = demux_sync;
             return buf_write - _buf;
           } // case 0xb9
 
@@ -299,15 +358,15 @@ PESDemux::streaming(uint8_t *_buf, int len)
         if (!stream) stream = current_stream;
         if (!substream) substream = current_substream;
 
-        state = DEMUX_DATA;
+        state = demux_data;
         frames++;
-        // no break: now we go to DEMUX_DATA
-      } // case DEMUX_HEADER:
+        // no break: now we go to demux_data
+      } // case demux_header:
 
       /////////////////////////////////////////////////////////////////
       // Extract data
 
-      case DEMUX_DATA:
+      case demux_data:
       {
         if (len > data_size)
         {
@@ -324,14 +383,14 @@ PESDemux::streaming(uint8_t *_buf, int len)
           return buf_write + len - _buf;
         }
         // never be here
-      } // case DEMUX_DATA:
+      } // case demux_data:
     } // switch (state)
   } // while (1)
 }
 
 
 int 
-PESDemux::packet(uint8_t *buf, int len, int *gone)
+MPEGDemux::packet(uint8_t *buf, int len, int *gone)
 {
   *gone = 0;
 
@@ -350,7 +409,7 @@ PESDemux::packet(uint8_t *buf, int len, int *gone)
   #define DROP(bytes)   \
   {                     \
     data_size = bytes;  \
-    state = DEMUX_DROP; \
+    state = demux_drop; \
     continue;           \
   }
 
@@ -358,7 +417,7 @@ PESDemux::packet(uint8_t *buf, int len, int *gone)
   {                     \
     data_size = 0;      \
     required_size = 4;  \
-    state = DEMUX_SYNC; \
+    state = demux_sync; \
     continue;           \
   }
 
@@ -390,7 +449,7 @@ PESDemux::packet(uint8_t *buf, int len, int *gone)
       /////////////////////////////////////////////////////////////////
       // Drop unneeded data
 
-      case DEMUX_DROP:
+      case demux_drop:
       {
         if (len > data_size)
         {
@@ -405,12 +464,12 @@ PESDemux::packet(uint8_t *buf, int len, int *gone)
           data_size -= len;
           return 0;
         }
-      } // case DEMUX_DROP:
+      } // case demux_drop:
 
       /////////////////////////////////////////////////////////////////
       // Sync
 
-      case DEMUX_SYNC:
+      case demux_sync:
       {
         REQUIRE(4);
         uint32_t sync = swab_u32(*(uint32_t *)header);
@@ -428,17 +487,17 @@ PESDemux::packet(uint8_t *buf, int len, int *gone)
         *(uint32_t *)header = swab_u32(sync);
 
         if ((sync & 0xffffff00) == 0x00000100)
-          state = DEMUX_HEADER;
+          state = demux_header;
         else
           return 0;
 
-        // no break: now we go to DEMUX_HEADER
-      } // case DEMUX_SYNC:
+        // no break: now we go to demux_header
+      } // case demux_sync:
 
       /////////////////////////////////////////////////////////////////
       // Parse header
 
-      case DEMUX_HEADER:
+      case demux_header:
       {
         switch (header[3])
         {
@@ -448,7 +507,7 @@ PESDemux::packet(uint8_t *buf, int len, int *gone)
           case 0xb9:
           {         
             data_size = 0;
-            state = DEMUX_SYNC;
+            state = demux_sync;
             return 0;
           } // case 0xb9
 
@@ -615,12 +674,12 @@ PESDemux::packet(uint8_t *buf, int len, int *gone)
 
         data_size = 0;
         required_size = 4;
-        state = DEMUX_SYNC;
+        state = demux_sync;
 
         frames++;
         return size;
         // note: never be here
-      } // case DEMUX_HEADER:
+      } // case demux_header:
 
     } // switch (state)
   } // while (1)

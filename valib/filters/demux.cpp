@@ -7,46 +7,6 @@
 Demux::Demux()
 {}
 
-Speakers 
-Demux::lpcm_spk()
-{
-  // convert LPCM number of channels to channel mask
-  static const int nch2mask[8] = 
-  {
-    MODE_MONO, 
-    MODE_STEREO,
-    MODE_3_1,
-    MODE_QUADRO,
-    MODE_3_2, 
-    MODE_5_1,
-    0, 0
-  };
-
-  // parse LPCM header
-  int format, mask, sample_rate;
-  sample_t level;
-
-  switch (pes.subheader[4] >> 6)
-  {
-    case 0: format = FORMAT_PCM16_LE; level = 32767;    break;
-    case 2: format = FORMAT_PCM24_LE; level = 8388607;  break;
-    default: return Speakers();
-  }
-
-  mask = nch2mask[pes.subheader[4] & 7];
-  if (!mask) return Speakers();
-
-  switch ((pes.subheader[4] >> 4) & 3)
-  {
-    case 0: sample_rate = 48000; break;
-    case 1: sample_rate = 96000; break;
-    default: return Speakers();
-  }
-
-  return Speakers(format, mask, sample_rate, level);
-}
-
-
 void 
 Demux::reset()
 {
@@ -81,10 +41,7 @@ Demux::process(const Chunk *_chunk)
     {
       int l = MIN(read_len, pes_size);
 
-      if (((pes.stream    & 0xe0) != 0xc0) &&   // MPEG audio stream
-          ((pes.substream & 0xf8) != 0x80) &&   // AC3 audio substream
-          ((pes.substream & 0xf8) != 0x88) &&   // DTS audio substream
-          ((pes.substream & 0xf8) != 0xA0))     // LPCM audio substream
+      if (!pes.is_audio())
       {
         // drop all non-audio packets
         pes_size -= l;
@@ -102,12 +59,7 @@ Demux::process(const Chunk *_chunk)
       // update stream info
       stream = pes.stream;
       substream = pes.substream;
-      stream_spk = spk;
-
-      if      ((pes.stream    & 0xe0) == 0xc0) stream_spk.format = FORMAT_MPA;   // MPEG audio stream
-      else if ((pes.substream & 0xf8) == 0x80) stream_spk.format = FORMAT_AC3;   // AC3 audio substream
-      else if ((pes.substream & 0xf8) == 0x88) stream_spk.format = FORMAT_DTS;   // DTS audio substream
-      else if ((pes.substream & 0xf8) == 0xA0) stream_spk = lpcm_spk();          // LPCM audio substream
+      stream_spk = pes.spk();
 
       // demux
       memmove(write_buf, read_buf, l);
@@ -128,7 +80,12 @@ Demux::process(const Chunk *_chunk)
   }
 
   spk     = stream_spk; // get_output() is always right
-  rawdata = read_buf;
   size    = write_len;
   return true;
+}
+
+Speakers 
+Demux::get_output() const
+{
+  return stream_spk;
 }

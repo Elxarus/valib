@@ -27,19 +27,18 @@
 #ifndef DEMUX_H
 #define DEMUX_H
 
-#include "pes_demux.h"
+#include "mpeg_demux.h"
 #include "filter.h"
 
 class Demux : public NullFilter
 {
 protected:
-  Speakers stream_spk;  // speaker configuration of contained stream
+  MPEGDemux pes;        // MPEG demuxer
 
-  PESDemux pes;         // PES demuxer
   int pes_size;         // PES packet payload size
   int stream;           // current stream
   int substream;        // current substream
-  Speakers lpcm_spk();  // parse LPCM subheader
+  Speakers stream_spk;  // speaker configuration of contained stream
 
 public:
   Demux();
@@ -51,6 +50,7 @@ public:
   virtual void reset();
   virtual bool query_input(Speakers spk) const;
   virtual bool process(const Chunk *chunk);
+  virtual Speakers get_output() const;
 };
 
 

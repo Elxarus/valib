@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include "parser.h"
-#include "pes_demux.h"
+#include "mpeg_demux.h"
 
 class FileParser
 {
@@ -24,8 +24,8 @@ protected:
   unsigned frames_overhead;
   unsigned errors_overhead;
 
-  PESDemux demux;
-  Parser  *parser;
+  MPEGDemux demux;
+  Parser   *parser;
 
   uint8_t *buf;
   int buf_size;
