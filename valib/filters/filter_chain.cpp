@@ -1,10 +1,11 @@
 #include "filter_chain.h"
 
+// todo: allocate filter entries statically, 32 elements max to store its state in 32bit word
 
 FilterChain::FilterChain()
 {
-  first   = 0;
-  last    = 0;
+  first = 0;
+  last  = 0;
 }
 
 FilterChain::~FilterChain()
@@ -113,8 +114,6 @@ FilterChain::query_input(Speakers _spk) const
 bool
 FilterChain::set_input(Speakers _spk)
 {
-  // note: set_input() may fail after successful query_input()!
-
   if (!first)
     return NullFilter::set_input(_spk);
 
@@ -149,10 +148,8 @@ FilterChain::process(const Chunk *_chunk)
   if (!first)
     return NullFilter::process(_chunk);
 
-  if (!first->process(_chunk))
-    return false;
-  else
-    return process_internal(first);
+  FILTER_SAFE(first->process(_chunk));
+  return process_internal(first);
 }
 
 bool 
@@ -160,8 +157,15 @@ FilterChain::is_empty() const
 {
   if (!first)
     return NullFilter::is_empty();
-  else
-    return last->is_empty();
+
+  Entry *entry = last;
+  while (entry)
+  {
+    if (!entry->is_empty())
+      return false;
+    entry = entry->source;
+  }
+  return true;
 }
   
 Speakers 
@@ -180,8 +184,10 @@ FilterChain::get_chunk(Chunk *_chunk)
   if (!first)
     return NullFilter::get_chunk(_chunk);
 
-  if (!last->get_chunk(_chunk))
-    return false;
-  else
-    return process_internal(last);
+  // we have no right to call process_internal() after 
+  // last->get_chunk() because it may corrupt internal
+  // data of the last filter that we have to return.
+
+  FILTER_SAFE(process_internal(last));
+  return last->get_chunk(_chunk);
 }
