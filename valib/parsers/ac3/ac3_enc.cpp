@@ -128,13 +128,6 @@ AC3Enc::set_bitrate(int _bitrate)
 bool 
 AC3Enc::fill_buffer()
 {
-  if (sample == 0)
-  {
-    frame_sync = sync;
-    frame_time = time;
-    sync = false;
-  }
-
   size_t n = AC3_FRAME_SAMPLES - sample;
   if (size < n)
   {
@@ -285,53 +278,41 @@ AC3Enc::set_input(Speakers _spk)
 bool
 AC3Enc::get_chunk(Chunk *_chunk)
 {
+  // todo: output partially filled frame on flushing
+
   if (fill_buffer())
   {
-    if (!encode_frame)
+    // encode frame
+    if (!encode_frame())
       return false;
 
-
-    if (empty)
-    {
-      _chunk->set_spk(spk);
-      _chunk->set_sync(buf_sync[block], buf_time[block]);
-      _chunk->set_empty();
-      empty = false;
-    }
-    else
-    {
-      _chunk->set_spk(spk);
-      _chunk->set_sync(buf_sync[block], buf_time[block]);
-      _chunk->set_samples(buf[block], nsamples);
-    }
+    // fill chunk
+    _chunk->set_spk(spk);
+    _chunk->set_sync(sync, time);
+    _chunk->set_samples(frame_samples, AC3_FRAME_SAMPLES);
+    _chunk->set_eos(flushing && !size);
+  }
+  else
+  {
+    // fill chunk
+    _chunk->set_spk(spk);
+    _chunk->set_sync(false, 0);
+    _chunk->set_empty();
+    _chunk->set_eos(flushing && !size);
   }
 
-  /////////////////////////////////////////////////////////////////
-  // Copy input data into sample buffer
-
-  size_t n = MIN(AC3_FRAME_SAMPLES - nsamples, size);
-  for (int ch = 0; ch < spk.nch(); ch++)
-    memcpy(samples[ch] + nsamples, samples[ch], n * sizeof(sample_t));
-
-  chunk.drop_samples(n);
-  nsamples += n;
-  if (nsamples < AC3_FRAME_SAMPLES)
-    return true;
-  else
-    nsamples = 0;
-
-  if (!encode_frame())
-    return false;
-  
-  _out->set_spk(Speakers(FORMAT_AC3, spk.mask, spk.sample_rate, spk.level, spk.relation));
-  _out->set_buf(frame_buf, frame_size);
-  _out->set_time(timestamp, time);
+  // flushing
+  if (flushing && !size)
+  {
+    flushing = false;
+    reset();
+  }
 
   return true;
 }
 
 Speakers 
-AC3Enc::get_output()
+AC3Enc::get_output() const
 {
   return Speakers(FORMAT_AC3, spk.mask, spk.sample_rate, 1.0, spk.relation);
 }

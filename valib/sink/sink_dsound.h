@@ -1,6 +1,5 @@
 /*
-  DirectSound audio sink
-  (win32)
+  DirectSound audio sink (win32)
 */
 
 #ifndef SINK_DS_H
@@ -28,51 +27,62 @@ protected:
   HWND     hwnd;
   CritSec  lock;
 
-  DWORD    buf_size_ms;
-  DWORD    buf_size;
-  DWORD    preload_ms;
-  DWORD    preload_size;
-  DWORD    cur;     // Cursor in sound buffer
-  time_t   time;
+  DWORD    buf_size_ms;   // buffer size in ms
+  DWORD    buf_size;      // buffer size in bytes
+  DWORD    preload_ms;    // preload size in ms
+  DWORD    preload_size;  // preload size in bytes
 
-  Speakers spk;
+  DWORD    cur;           // Cursor in sound buffer
 
-  bool     playing;
-  bool     paused;
+  // AudioSink
+  Speakers spk;           // Configuration
+
+  bool     playing;       // playing state
+  bool     paused;        // paused state
   
-  double   vol;
-  double   pan;
+  double   vol;           // volume
+  double   pan;           // panning
+
+  time_t   time;          // time of last sample received
 
 public:
   DSoundSink(HWND hwnd, int buf_size_ms = 2000, int preload_ms = 500);
   ~DSoundSink();
 
-  // playback control
+public:
+  /////////////////////////////////////////////////////////
+  // AudioSink interface
+
+  // Open/close output device
   virtual bool query(Speakers spk) const;
   virtual bool open(Speakers spk);
   virtual void close();
   virtual bool is_open() const;
 
-  virtual void pause();
-  virtual void unpause();
-  virtual bool is_paused();
-
+  // playback control
+  virtual void stop();
   virtual void flush();
 
+  virtual void pause();
+  virtual void unpause();
+  virtual bool is_paused() const;
+ 
   // timing
-  virtual time_t get_output_time();
-  virtual time_t get_playback_time();
-  virtual time_t get_lag_time();
+  virtual bool   is_time() const;
+  virtual time_t get_time() const;
 
   // volume & pan
-  void   set_vol(double vol);
-  double get_vol();
-  void   set_pan(double pan);
-  double get_pan();
+  virtual bool   is_vol() const;
+  virtual double get_vol() const;
+  virtual void   set_vol(double vol);
+
+  virtual bool   is_pan() const;
+  virtual double get_pan() const;
+  virtual void   set_pan(double pan);
 
   // data write
-  bool can_write_immediate(const Chunk *chunk);
-  bool write(const Chunk *chunk);
+  virtual size_t get_buffer_size() const;
+  virtual bool   write(const Chunk *chunk);
 };
 
 #endif

@@ -72,8 +72,8 @@ LPF::update()
 ///////////////////////////////////////////////////////////////////////////////
 
 BassRedir::BassRedir()
-:NullFilter(def_spk)
 {
+  spk = def_spk;
   enabled = true;
 
   lpf.gain = 1.0 / spk.nch();

@@ -77,8 +77,6 @@ public:
   // Filter interface
 
   virtual bool set_input(Speakers spk);
-  virtual bool process(const Chunk *in);
-
   virtual Speakers get_output() const;
   virtual bool get_chunk(Chunk *out);
 

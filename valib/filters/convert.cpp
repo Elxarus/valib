@@ -54,6 +54,7 @@ Converter::alloc_buffer()
     out_rawdata = buf.data();
     out_samples.set_null();
   }
+  return true;
 }
 
 void
@@ -90,7 +91,9 @@ Converter::pcm2linear()
   if (n + out_size > nsamples)
     n = nsamples - out_size;
 
-  pcm2linear(rawdata, out_samples + out_size, n);
+  samples_t tmp_samples = out_samples;
+  tmp_samples += out_size;
+  pcm2linear(rawdata, tmp_samples, n);
   drop_rawdata(n * sample_size);
   out_size += n;
 

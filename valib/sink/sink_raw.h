@@ -6,66 +6,57 @@
 #define SINK_RAW_H
 
 #include "sink.h"
+#include "auto_file.h"
 
 class RAWSink : public NullSink
 {
 protected:
-  FILE *f;
+  AutoFile f;
 
 public:
-  RAWSink()
-  {
-    f = 0;
-  }
+  RAWSink() 
+  {}
 
-  RAWSink(const char *filename)
-  {
-    f = 0;
-    open_file(filename);
-  }
+  RAWSink(const char *_filename): 
+  f(_filename) 
+  {}
 
-  ~RAWSink()
+  /////////////////////////////////////////////////////////
+  // RAWSink interface
+
+  bool open_file(const char *_filename)
   {
-    close_file();
-  }
-   
-  bool open_file(const char *filename)
-  {
-    close_file();
-    f = fopen(filename, "wb");
-    return f != 0;
+    return f.open(_filename);
   }
 
   void close_file()
   {
     close();
-    if (f) fclose(f);
+    f.close();
   }
 
   bool is_file_open() const
   {
-    return f != 0;
+    return f.is_open();
   }
 
-  // playback control
+  /////////////////////////////////////////////////////////
+  // AudioSink interface
+
+  // Device open/close
   virtual bool query(Speakers _spk) const  
   { 
-    return f != 0 && _spk.format != FORMAT_LINEAR;  
+    // cannot write linear format
+    return _spk.format != FORMAT_LINEAR;
   }
 
   // data write
-  virtual bool write(const Chunk *chunk)               
+  virtual bool write(const Chunk *_chunk)               
   { 
-    if (!f || paused) return false;
+    if (!receive_chunk(_chunk))
+      return false;
 
-    fwrite(chunk->buf, 1, chunk->size, f);
-
-    if (chunk->timestamp)
-      time = chunk->time + chunk->size;
-    else
-      time += chunk->size;
-
-    return true;
+    return f.write(_chunk->get_rawdata(), _chunk->get_size()) != 0;
   }
 };
 

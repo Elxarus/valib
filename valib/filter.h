@@ -19,7 +19,7 @@ class NullFilter;
 //
 // Abstract audio sink.
 // 
-// query_input()
+// query_input() [thread-safe, fast]
 //   Check if we can change format now. Returns true if we can and false if we
 //   can't. Sink may have some internal state that may prevent format change, 
 //   so this function should return true only if it can switch format right 
@@ -32,7 +32,7 @@ class NullFilter;
 //   conversion. Also, this function may be called asynchronously from other 
 //   thread, so it should be thread-safe.
 //
-// set_input()
+// set_input() [working thread, blocking]
 //   Change format. Returns true on success and false otherwise. It is 
 //   expected that it returns true if query_input() returned true just
 //   before set_input() call (no additional verification required).
@@ -42,7 +42,7 @@ class NullFilter;
 //   to produce minimum artifacts. This function should be called only from 
 //   worker thread. 
 //
-// process()
+// process() [working thread, critical path]
 //   Receive data chunk. Returns true on success and false otherwise. Data 
 //   chunk may have different format than specified by set_input() call so 
 //   this function is required to handle format changes correctly (in this
@@ -68,20 +68,20 @@ public:
 //
 // Abstract audio source.
 //
-// get_output()
+// get_output() [thread-safe, fast]
 //   Query current output format. Primary purpose of this call is to setup
 //   downstream audio sink before processing (because state change may be 
 //   time-consuming operation). But it is no general rules when source may 
 //   change output format (depends completely on implementation). May be 
 //   called asynchronously.
 //
-// is_empty()
+// is_empty() [thread-safe]
 //   Check if we can get some data from this source. Depending on source type
 //   it may require some explicit actions to be filled (like filters) or it 
 //   may be filled asyncronously (like audio capture). May be called 
 //   asynchronously.
 //
-// get_chunk()
+// get_chunk() [working thread, critical path]
 //   Receive data from the source. Should be called only from working thread.
 //   If empty chunk is returned it does not mean that source is empty. Always
 //   check it with is_empty() call. This call may block working thread.
@@ -102,19 +102,19 @@ public:
 // Abstract data processing class. It is sink and source at the same time so 
 // it should follow all rules for Sink and Source classes.
 //
-// reset()
+// reset() [working thread]
 //   Reset filter state to empty and drop all internal buffers. But after 
 //   reset() call filter should be able to report its state as it was before 
 //   for most of its parameters.
 //
-// set_input()
+// set_input() [working thread]
 //   Acts like reset().
 //
-// process()
+// process() [working thread, critical path]
 //   May be used for data processing. Do main processing here if filter 
 //   produces exactly one output chunk for one input chunk.
 //
-// get_chunk()
+// get_chunk() [working thread, critical path]
 //   May be used for data processing. Do main processing here if filter 
 //   may produce many output chunks for one input chunk.
 //
@@ -374,7 +374,7 @@ public:
   virtual bool is_empty() const
   {
     // must report false in flushing state
-    return size && !flushing;
+    return !size && !flushing;
   };
 
   virtual bool get_chunk(Chunk *_chunk)

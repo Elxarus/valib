@@ -226,70 +226,97 @@ DSoundSink::close()
   if (ds_buf) SAFE_RELEASE(ds_buf);
 }
 
-void 
-DSoundSink::flush()
-{
-  AutoLock autolock(&lock);
-
-  if (!ds_buf) return;
-
-  ds_buf->Stop();
-  ds_buf->SetCurrentPosition(0);
-  cur = 0;
-
-  playing = false;
-  paused = false;
-  time = 0;
-  return;
-}
-
 bool 
 DSoundSink::is_open() const
 {
   return ds_buf != 0;
 }
 
+
+
+
 bool 
-DSoundSink::is_paused()
+DSoundSink::is_time() const
 {
-  return paused;
+  return true;
 }
 
 time_t
-DSoundSink::get_output_time()
+DSoundSink::get_time() const
 {
-  return time;
-}
-
-time_t
-DSoundSink::get_playback_time()
-{
-  return time - get_lag_time();
-}
-
-time_t
-DSoundSink::get_lag_time()
-{
-  AutoLock autolock(&lock);
-
   if (!ds_buf) return 0;
   DWORD play_cur, write_cur;
   ds_buf->GetCurrentPosition(&play_cur, &write_cur);
   if (play_cur < cur)
-    return (cur - play_cur) / wfx.Format.nBlockAlign;
+    return time - (cur - play_cur) / wfx.Format.nBlockAlign;
   else if (play_cur > cur)
-    return (buf_size - play_cur + cur) / wfx.Format.nBlockAlign;
+    return time - (buf_size - play_cur + cur) / wfx.Format.nBlockAlign;
   else
     return 0;
 }
 
 
 
-void DSoundSink::pause()
+void 
+DSoundSink::stop()
 {
+  if (!ds_buf) return;
   AutoLock autolock(&lock);
 
+  ds_buf->Stop();
+  ds_buf->SetCurrentPosition(0);
+  playing = false;
+  cur = 0;
+}
+
+void 
+DSoundSink::flush()
+{
   if (!ds_buf) return;
+  AutoLock autolock(&lock);
+
+  if (!playing) 
+    return;
+
+  void *data1, *data2;
+  DWORD data1_bytes, data2_bytes;
+  DWORD play_cur;
+  size_t data_size;
+
+  // Zero rest of the buffer
+  if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
+    return;
+
+  data_size = play_cur - cur;
+  if (data_size < 0)
+    data_size += buf_size;
+
+  if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
+    return;
+
+  memset(data1, 0, data1_bytes);
+  if (data2_bytes)
+    memset(data2, 0, data2_bytes);
+
+  if FAILED(ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
+    return;
+
+  // Sleep until end of playback
+  data_size = buf_size - data_size;
+  Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+
+  // Stop the playback
+  ds_buf->Stop();
+  ds_buf->SetCurrentPosition(0);
+  playing = false;
+  cur = 0;
+}
+
+void DSoundSink::pause()
+{
+  if (!ds_buf) return;
+  AutoLock autolock(&lock);
+
   ds_buf->Stop();
   paused = true;
 }
@@ -304,7 +331,25 @@ void DSoundSink::unpause()
   paused = false;
 }
 
+bool 
+DSoundSink::is_paused() const
+{
+  return paused;
+}
 
+
+
+bool
+DSoundSink::is_vol() const
+{
+  return true;
+}
+
+double
+DSoundSink::get_vol() const
+{
+  return vol;
+}
 
 void 
 DSoundSink::set_vol(double _vol)
@@ -327,12 +372,16 @@ DSoundSink::set_vol(double _vol)
   }
 }
 
-double
-DSoundSink::get_vol()
+bool 
+DSoundSink::is_pan() const
 {
-  AutoLock autolock(&lock);
+  return true;
+}
 
-  return vol;
+double 
+DSoundSink::get_pan() const
+{
+  return pan;
 }
 
 void 
@@ -356,37 +405,27 @@ DSoundSink::set_pan(double _pan)
   }
 }
 
-double 
-DSoundSink::get_pan()
+
+size_t 
+DSoundSink::get_buffer_size() const
 {
-  AutoLock autolock(&lock);
-
-  return pan;
-}
-
-
-bool 
-DSoundSink::can_write_immediate(const Chunk *chunk)
-{
-  if (chunk->is_empty()) return true;
-  AutoLock autolock(&lock);
-
   if (!ds_buf) return false;
   DWORD play_cur;
 
-  unsigned size = chunk->size * wfx.Format.nBlockAlign;
   ds_buf->GetCurrentPosition(&play_cur, 0);
   if (play_cur > cur)
-    return play_cur - cur >= size;
+    return play_cur - cur;
   else if (play_cur < cur)
-    return play_cur + buf_size - cur >= size;
+    return play_cur + buf_size - cur;
   else // play_cur = cur
-    return !playing && (size < buf_size);
+    if (!playing) 
+      return 0;
+    else 
+      return buf_size;
 }
 
 bool DSoundSink::write(const Chunk *chunk)
 {
-  if (chunk->is_empty()) return true;
   AutoLock autolock(&lock);
 
   if (!ds_buf) return false;
@@ -394,10 +433,10 @@ bool DSoundSink::write(const Chunk *chunk)
   void *data1, *data2;
   DWORD data1_bytes, data2_bytes;
   DWORD play_cur;
-  int data_size;
+  size_t data_size;
 
-  unsigned size = chunk->size;
-  uint8_t *buf = chunk->buf;
+  size_t  size = chunk->get_size();
+  uint8_t *buf = chunk->get_rawdata();
 
   while (size)
   {
@@ -452,9 +491,9 @@ bool DSoundSink::write(const Chunk *chunk)
       cur -= buf_size;
   }
 
-  size = chunk->size / wfx.Format.nBlockAlign;
-  if (chunk->timestamp)
-    time = chunk->time + size;
+  size = chunk->get_size() / wfx.Format.nBlockAlign;
+  if (chunk->is_sync())
+    time = chunk->get_time() + size;
   else
     time += size;
   return true;

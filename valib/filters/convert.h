@@ -91,6 +91,12 @@ public:
 // Converter inlines
 ///////////////////////////////////////////////////////////////////////////////
 
+inline bool 
+Converter::query_format(int _format) const 
+{
+  return (FORMAT_MASK(_format) & (FORMAT_CLASS_PCM | FORMAT_MASK_LINEAR)) != 0;
+}
+
 inline size_t 
 Converter::get_buffer() const
 {

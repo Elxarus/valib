@@ -310,19 +310,17 @@ AGC::reset()
 bool 
 AGC::get_chunk(Chunk *_chunk)
 {
+  _chunk->set_spk(spk);
+  _chunk->set_sync(false, 0);
+  _chunk->set_empty();
+
   if (fill_buffer())
   {
     process();
     if (empty)
-    {
-      _chunk->set_spk(spk);
-      _chunk->set_sync(false, 0);
-      _chunk->set_empty();
       empty = false;
-    }
     else
     {
-      _chunk->set_spk(spk);
       _chunk->set_sync(buf_sync[block], buf_time[block]);
       _chunk->set_samples(buf[block], nsamples);
     }

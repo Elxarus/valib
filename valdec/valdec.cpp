@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 
   Filter *filter;
 
-  AudioProcessor proc;
+  AudioProcessor proc(2048);
   Spdifer spdifer;
 
   /////////////////////////////////////////////////////////
@@ -718,8 +718,9 @@ int main(int argc, char *argv[])
       {
         // SPDIF
         chunk1.set_spk(Speakers(FORMAT_UNKNOWN, 0, 0));
-        chunk1.set_time(false);
-        chunk1.set_buf(parser->get_frame(), parser->get_frame_size());
+        chunk1.set_sync(false);
+        chunk1.set_rawdata(parser->get_frame(), parser->get_frame_size());
+        chunk1.set_eos(false);
       }
       else
       {
@@ -728,8 +729,9 @@ int main(int argc, char *argv[])
           continue;
 
         chunk1.set_spk(file.get_spk());
-        chunk1.set_time(false);
+        chunk1.set_sync(false);
         chunk1.set_samples(file.get_samples(), file.get_nsamples());
+        chunk1.set_eos(false);
       }
 
       if (!filter->process(&chunk1))
@@ -755,7 +757,7 @@ int main(int argc, char *argv[])
           // Levels
           if (!spdif)
           {
-            proc.get_output_levels(sink->get_playback_time(), levels);
+            proc.get_output_levels(sink->get_time(), levels);
             level = levels[0];
             for (i = 1; i < spk.nch(); i++)
               if (levels[i] > level)
@@ -799,7 +801,7 @@ int main(int argc, char *argv[])
     int dbpb;
     int i, j;
 
-    proc.get_output_histogram(MAX_HISTOGRAM, hist);
+    proc.get_output_histogram(hist, MAX_HISTOGRAM);
     dbpb = proc.get_dbpb();
 
     printf("\nHistogram:\n");

@@ -152,16 +152,16 @@ DShowSink::process(const Chunk *chunk)
     return true;
 
   // Process speaker configuraion changes
-  if (spk != chunk->spk)
+  if (spk != chunk->get_spk())
   {
     CMediaType mt;
     CMediaType mt_wfx;
-    if (!spk2mt(chunk->spk, mt, false) || !spk2mt(chunk->spk, mt_wfx, true))
+    if (!spk2mt(chunk->get_spk(), mt, false) || !spk2mt(chunk->get_spk(), mt_wfx, true))
       return false;
 
     if (m_mt != mt && m_mt != mt_wfx)
     {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz)", this, chunk->spk.mode_text(), chunk->spk.format_text(), chunk->spk.sample_rate));
+      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz)", this, chunk->get_spk().mode_text(), chunk->get_spk().format_text(), chunk->get_spk().sample_rate));
 
       if (query_downstream(&mt_wfx))
       {
@@ -180,7 +180,7 @@ DShowSink::process(const Chunk *chunk)
       }
       send_mt = true;
     }
-    spk = chunk->spk;
+    spk = chunk->get_spk();
   }
 
   if (!m_Connected)
@@ -191,8 +191,8 @@ DShowSink::process(const Chunk *chunk)
   uint8_t *sample_buf;
   int sample_size;
 
-  uint8_t *chunk_buf = chunk->buf;
-  int chunk_size = chunk->size;
+  uint8_t *chunk_buf = chunk->get_rawdata();
+  int chunk_size = chunk->get_size();
 
   while (chunk_size)
   {
@@ -221,12 +221,12 @@ DShowSink::process(const Chunk *chunk)
     }
 
     // Timestamp
-    if (chunk->timestamp)
+    if (chunk->is_sync())
     {
-      REFERENCE_TIME begin = __int64(double(chunk->time) / spk.sample_rate * 10000000);
-      REFERENCE_TIME end   = __int64(double(chunk->time + chunk->size) / spk.sample_rate * 10000000);
+      REFERENCE_TIME begin = __int64(double(chunk->get_time()) / spk.sample_rate * 10000000);
+      REFERENCE_TIME end   = __int64(double(chunk->get_time() + chunk->get_size()) / spk.sample_rate * 10000000);
       sample->SetTime(&begin, &end);
-      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->time));
+      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->get_time()));
     }
     else
       sample->SetTime(0, 0);

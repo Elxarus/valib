@@ -78,7 +78,7 @@
 #include "filters\filter_chain.h"
 
 
-class AudioProcessor : Filter
+class AudioProcessor : public Filter
 {
 protected:
   Speakers in_spk;
