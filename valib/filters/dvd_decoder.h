@@ -41,6 +41,7 @@ class DVDDecoder : public Filter
 protected:
   Speakers in_spk;
   Speakers out_spk;
+  Chunk    chunk;
 
   Demux   demux;
   AC3Enc  encoder;
@@ -52,11 +53,16 @@ protected:
   int stream;
   int substream;
 
-  enum state_t { state_none, state_demux, state_dec, state_proc, state_enc, state_spdif };
-  bool empty;
+  bool process_internal();
 
-  state_t state_stack[4];
+  // stack of states
+  enum state_t { state_none = 0, state_demux, state_dec, state_proc, state_enc, state_spdif };
+  state_t state_stack[8];
   int state_ptr;
+
+  inline state_t state()     { return state_ptr? state_stack[state_ptr-1]: state_none; }
+  inline void push_state(state_t s) { state_stack[state_ptr++] = s; }
+  inline state_t pop_state() { return state_ptr? state_stack[--state_ptr]: state_none; }
 
 public:
   AudioDecoder   dec;

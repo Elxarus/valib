@@ -95,10 +95,14 @@ AudioDecoder::get_chunk(Chunk *_chunk)
   if (!parser) 
     return false;
 
+  // here we may have a frame loaded
+
   if (!parser->is_frame_loaded() || !parser->decode_frame())
   {
     _chunk->set(parser->get_spk(), 0, 0, 0, 0, flushing);
     flushing = false;
+
+    load_frame();
     return true;
   }
   else

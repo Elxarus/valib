@@ -167,7 +167,7 @@ Spdifer::get_chunk(Chunk *_chunk)
       sync_helper.send_sync(_chunk);
       sync_helper.set_syncing(true);
 
-      // end-of-strema
+      // end-of-stream
       flushing = flushing && read_len;
 
       // switch state
