@@ -37,16 +37,16 @@ protected:
     };
 
     // Filter wrapper
-    inline void reset()                       { filter->reset();                  }
+    inline void reset()                      { filter->reset();                         }
 
-    inline bool query_input(Speakers _spk)    { return filter->query_input(_spk); }
-    inline bool set_input(Speakers _spk)      { return filter->set_input(_spk);   }
-    inline Speakers get_input() const         { return filter->get_input();       }
-    inline bool process(const Chunk *_chunk)  { return good = filter->process(_chunk);   }
+    inline bool query_input(Speakers _spk)   { return filter->query_input(_spk);        }
+    inline bool set_input(Speakers _spk)     { return filter->set_input(_spk);          }
+    inline Speakers get_input() const        { return filter->get_input();              }
+    inline bool process(const Chunk *_chunk) { return good = filter->process(_chunk);   }
 
-    inline Speakers get_output() const        { return filter->get_output();      }
-    inline bool is_empty() const              { return filter->is_empty();        }
-    inline bool get_chunk(Chunk *_chunk)      { return good = filter->get_chunk(_chunk); }
+    inline Speakers get_output() const       { return filter->get_output();             }
+    inline bool is_empty() const             { return filter->is_empty();               }
+    inline bool get_chunk(Chunk *_chunk)     { return good = filter->get_chunk(_chunk); }
   };
 
   Entry *first;

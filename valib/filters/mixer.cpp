@@ -146,7 +146,7 @@ Mixer::get_chunk(Chunk *_chunk)
     _chunk->set
     (
       out_spk,
-      buf, n,
+      buf.get_samples(), n,
       sync, time, 
       flushing && !size
     );

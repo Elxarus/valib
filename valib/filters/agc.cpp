@@ -313,7 +313,7 @@ AGC::get_chunk(Chunk *_chunk)
     _chunk->set
     (
       spk, 
-      buf[block], sample[block], 
+      buf[block].get_samples(), sample[block], 
       buf_sync[block], buf_time[block],
       flushing && (sample[next_block()] == 0)
     );

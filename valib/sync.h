@@ -6,7 +6,7 @@
 #ifndef SYNC_H
 #define SYNC_H
 
-#include "data.h"
+#include "filter.h"
 
 
 class Sync

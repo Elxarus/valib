@@ -79,13 +79,9 @@ FilterChain::process_internal(Entry *entry)
       if (!entry->sink)
         return true;
 
-      if (!entry->get_chunk(&chunk))
-        return false;
-
+      FILTER_SAFE(entry->get_chunk(&chunk));
       entry = entry->sink;
-
-      if (!entry->process(&chunk))
-        return false;
+      FILTER_SAFE(entry->process(&chunk));
     }
   }
   return true;
@@ -126,8 +122,7 @@ FilterChain::set_input(Speakers _spk)
 
   while (entry)
   {
-    if (!entry->set_input(_spk))
-      return false;
+    FILTER_SAFE(entry->set_input(_spk));
 
     _spk = entry->get_output();
     if (_spk.format == FORMAT_UNKNOWN)
