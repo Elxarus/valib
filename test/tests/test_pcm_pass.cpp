@@ -6,7 +6,7 @@
 #include "source/raw_source.h"
 #include "source/noise.h"
 #include "filters/proc.h"
-#include "../utils.h"
+#include "..\common.h"
 
 // PCM passthrough test
 // (we cannot test FORMAT_PCMFLOAT because noise generates

@@ -510,6 +510,14 @@ SOURCE=..\valib\filter.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\log.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\log.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parser.cpp
 # End Source File
 # Begin Source File
@@ -572,19 +580,15 @@ SOURCE=..\valib\source\raw_source.h
 # End Group
 # Begin Source File
 
-SOURCE=.\log.h
+SOURCE=.\common.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\common.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\test.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\utils.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\utils.h
 # End Source File
 # End Target
 # End Project

@@ -138,6 +138,14 @@ SOURCE=..\valib\filter.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\log.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\log.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parser.cpp
 # End Source File
 # Begin Source File

@@ -10,7 +10,7 @@
   * Filter should return epmty end-of-stream chunk in flushing state and go to empty state
 */
 
-#include "..\log.h"
+#include "log.h"
 #include "filters\agc.h"
 #include "filters\convert.h"
 #include "filters\decoder.h"

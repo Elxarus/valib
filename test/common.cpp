@@ -1,5 +1,5 @@
 #include <memory.h>
-#include "utils.h"
+#include "common.h"
 #include "source/noise.h"
 #include "source/raw_source.h"
 
@@ -18,9 +18,6 @@ int compare(Log *log, Source *src, Filter *filter, Source *ref)
   size_t isize = 0;
   size_t osize = 0;
   size_t rsize = 0;
-
-  const vtime_t time_delta = 0.1; // statistics updates 10 times/s
-  vtime_t time_new = local_time() + time_delta;
 
   Speakers spk;
   size_t len;
@@ -72,11 +69,8 @@ int compare(Log *log, Source *src, Filter *filter, Source *ref)
     len = MIN(rchunk.get_size(), ochunk.get_size());
     if (spk.format == FORMAT_LINEAR)
     {
-      if (local_time() > time_new)
-      {
-        log->status("Pos: %.3fs (%usm)", double(osize) / spk.sample_rate, osize);
-        time_new = local_time() + time_delta;
-      }
+      log->status("Pos: %.3fs (%usm)", double(osize) / spk.sample_rate, osize);
+
       // compare linear
       for (ch = 0; ch < spk.nch(); ch++)
         if (memcmp(ochunk[ch], rchunk[ch], len * sizeof(sample_t)))
@@ -84,11 +78,8 @@ int compare(Log *log, Source *src, Filter *filter, Source *ref)
     }
     else
     {
-      if (local_time() > time_new)
-      {
-        log->status("Pos: %u", osize);
-        time_new = local_time() + time_delta;
-      }
+      log->status("Pos: %u", osize);
+
       // compare raw data
       if (memcmp(ochunk.get_rawdata(), rchunk.get_rawdata(), len))
         return log->err("Data differs");

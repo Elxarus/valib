@@ -3,7 +3,7 @@
   Compare output of AudioDecoder with reference file
 */
 
-#include "..\utils.h"
+#include "..\common.h"
 #include "filters/spdifer.h"
 
 int test_spdifer(Log *log, Speakers spk, const char *data_file, const char *spdif_file)

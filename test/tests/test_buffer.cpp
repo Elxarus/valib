@@ -28,7 +28,7 @@
 */
 
 #include <stdlib.h>
-#include "..\log.h"
+#include "log.h"
 #include "filter.h"
 
 static const int formats[] = 

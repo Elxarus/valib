@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "utils.h"
+#include "common.h"
 
 int test_spdifer(Log *log, Speakers spk, const char *data_file, const char *spdif_file);
 int test_spdifer(Log *log)
@@ -118,7 +118,7 @@ extern int passthrough_noise(Log *log);
 
 int main(int argc, char **argv)
 {
-  ScreenLog log;
+  Log log;
   log.open_group("Test session");
 
 

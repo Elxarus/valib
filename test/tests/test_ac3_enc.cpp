@@ -13,7 +13,7 @@
 #include "filters\convert.h"
 #include "filters\filter_chain.h"
 #include "auto_file.h"
-#include "..\log.h"
+#include "log.h"
 
 int 
 test_ac3_enc(Log *log, const char *_raw_filename, const char *_desc, Speakers _spk, int _bitrate, int _nframes)
