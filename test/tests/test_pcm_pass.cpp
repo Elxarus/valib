@@ -11,9 +11,10 @@
 // PCM passthrough test
 // (we cannot test FORMAT_PCMFLOAT because noise generates
 // floats > 1.0)
+
 int passthrough_noise(Log *log)
 {
-  log->open_group("Noise passthrough test for AudioProcessor");
+  log->open_group("AudioProcessor PCM Noise passthrough test");
   static const int formats[] = 
   { 
     FORMAT_LINEAR, 
@@ -24,8 +25,8 @@ int passthrough_noise(Log *log)
   static const sample_t levels[] = 
   {
     1.0,
-    32768, 8388608, 2147483648, 1.0,
-    32768, 8388608, 2147483648, 1.0
+    32768, 8388608, 2147483648,
+    32768, 8388608, 2147483648
   };
 
   static const int modes[] = 
@@ -78,22 +79,4 @@ int passthrough_noise(Log *log)
       compare(log, &src, &proc, &ref);
     }
   return log->close_group();
-}
-
-// PCM passthrough test
-int test_pcm_passthrough_file(Log *log, const char *filename, const char *desc, Speakers spk)
-{
-  log->msg("Testing %s %s %iHz file %s (%s)", spk.format_text(), spk.mode_text(), spk.sample_rate, filename, desc);
-
-  RAWSource src1(spk, filename);
-  RAWSource src2(spk, filename);
-
-  if (!src1.is_open() || !src2.is_open())
-    return log->err("Cannot open file '%s'", filename);
-    
-  AudioProcessor proc(2048);
-  if (!proc.set_input(spk) || !proc.set_output(spk))
-    return log->err("Init failed");
-
-  return compare(log, &src1, &proc, &src2);
 }
