@@ -20,6 +20,7 @@ Thread::ThreadProc(LPVOID param)
   {
     Thread *thread = (Thread *)param;
     DWORD exit_code = thread->process();
+    CloseHandle(thread->f_thread);
     thread->f_thread = 0;
     return exit_code;
   }
@@ -29,14 +30,14 @@ Thread::ThreadProc(LPVOID param)
 void
 Thread::suspend()
 {
-  if (SuspendThread(f_thread) != -1)
+  if (f_thread && SuspendThread(f_thread) != -1)
     f_suspended = true;
 }
 
 void
 Thread::resume()
 {
-  if (ResumeThread(f_thread) != -1)
+  if (f_thread && ResumeThread(f_thread) != -1)
     f_suspended = false;
 }
 
@@ -45,6 +46,7 @@ Thread::terminate(int timeout_ms, DWORD exit_code)
 {
   if (!f_thread) return;
 
+  // terminate thread immedaitely
   if (timeout_ms == 0)
   {
     TerminateThread(f_thread, exit_code);
@@ -53,12 +55,16 @@ Thread::terminate(int timeout_ms, DWORD exit_code)
     return;
   }
 
+  // wait until thread to finish correctly
   f_terminate = true;
   WaitForSingleObject(f_thread, timeout_ms);
-  if (f_thread)
-    TerminateThread(f_thread, exit_code);
 
-  CloseHandle(f_thread);
-  f_thread = 0;
+  // terminate it if it was not finished
+  if (f_thread)
+  {
+    TerminateThread(f_thread, exit_code);
+    CloseHandle(f_thread);
+    f_thread = 0;
+  }
   return;
 }

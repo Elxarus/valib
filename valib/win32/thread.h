@@ -21,7 +21,7 @@ private:
   static DWORD WINAPI ThreadProc(LPVOID param);
 
 protected:
-  volatile bool   f_terminate;
+  volatile bool f_terminate;
   virtual DWORD process() = 0;
 
 public:
@@ -53,8 +53,8 @@ public:
   CritSec()     { InitializeCriticalSection(&crit_sec); lock_count = 0; };
   ~CritSec()    { DeleteCriticalSection(&crit_sec);                     };
 
-  void lock()   { EnterCriticalSection(&crit_sec);      lock_count++;   };
-  void unlock() { LeaveCriticalSection(&crit_sec);      lock_count--;   };
+  inline void lock()   { EnterCriticalSection(&crit_sec); lock_count++; };
+  inline void unlock() { LeaveCriticalSection(&crit_sec); lock_count--; };
 };
 
 
