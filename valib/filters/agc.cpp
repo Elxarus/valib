@@ -24,14 +24,14 @@ AGC::AGC(int _nsamples)
   normalize = false;
 
   // Gain control
-  master    = 1.0;
-  gain      = 1.0;
-  release   = db2value(50);
+  master    = 1.0;   // factor
+  gain      = 1.0;   // factor
+  release   = 50.0;  // dB/s
 
   // DRC
   drc       = false;
-  drc_power = 1.0;
-  drc_level = 1.0;
+  drc_power = 0;     // dB; this value has meaning of loudness raise at -50dB level
+  drc_level = 1.0;   // factor
 
   input_levels.reset();
   output_levels.reset();
