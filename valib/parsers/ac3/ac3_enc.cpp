@@ -298,7 +298,7 @@ AC3Enc::get_chunk(Chunk *_chunk)
   else
   {
     // empty chunk
-    _chunk->set(spk, 0, 0, false, 0, flushing && !size);
+    _chunk->set(get_output(), 0, 0, false, 0, flushing && !size);
   }
 
   // reset after flushing
