@@ -118,6 +118,7 @@ public:
   virtual void reset();
 
   virtual bool query_input(Speakers spk) const;
+  virtual Speakers get_input() const;
   virtual bool process(const Chunk *chunk);
 
   virtual Speakers get_output() const;

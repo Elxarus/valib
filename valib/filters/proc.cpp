@@ -116,6 +116,12 @@ AudioProcessor::query_input(Speakers _spk) const
   return query_spk(_spk);
 }
 
+Speakers
+AudioProcessor::get_input() const
+{
+  return chain.get_input();
+}
+
 bool 
 AudioProcessor::process(const Chunk *_chunk)
 {

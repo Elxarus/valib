@@ -42,6 +42,11 @@ class NullFilter;
 //   to produce minimum artifacts. This function should be called only from 
 //   worker thread. 
 //
+// get_input() [thread-safe]
+//   Just report current input format. If function reports FORMAT_UNKNOWN it
+//   means that sink is not initialized. In all other cases it is supposed 
+//   that query_input(get_input()) returns true.
+//
 // process() [working thread, critical path]
 //   Receive data chunk. Returns true on success and false otherwise. Data 
 //   chunk may have different format than specified by set_input() call so 
@@ -59,6 +64,7 @@ class Sink
 public:
   virtual bool query_input(Speakers spk) const = 0;
   virtual bool set_input(Speakers spk) = 0;
+  virtual Speakers get_input() const = 0;
   virtual bool process(const Chunk *chunk) = 0;
 };
 
@@ -75,7 +81,7 @@ public:
 //   change output format (depends completely on implementation). May be 
 //   called asynchronously.
 //
-// is_empty() [thread-safe]
+// is_empty() [thread-safe, critical path]
 //   Check if we can get some data from this source. Depending on source type
 //   it may require some explicit actions to be filled (like filters) or it 
 //   may be filled asyncronously (like audio capture). May be called 
@@ -108,7 +114,8 @@ public:
 //   for most of its parameters.
 //
 // set_input() [working thread]
-//   Acts like reset().
+//   If current and new configuration differs then it acts as reset() call,
+//   in other case nothing happens.
 //
 // process() [working thread, critical path]
 //   May be used for data processing. Do main processing here if filter 
@@ -199,6 +206,7 @@ public:
 
   virtual bool query_input(Speakers spk) const = 0;
   virtual bool set_input(Speakers spk) = 0;
+  virtual Speakers get_input() const = 0;
   virtual bool process(const Chunk *chunk) = 0;
 
   virtual Speakers get_output() const = 0;
@@ -358,6 +366,11 @@ public:
       reset(); // may be overwritten
     }
     return true;
+  }
+
+  virtual Speakers get_input() const
+  {
+    return spk;
   }
 
   virtual bool process(const Chunk *_chunk)

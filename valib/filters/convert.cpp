@@ -60,6 +60,12 @@ Converter::alloc_buffer()
 void
 Converter::pcm2linear()
 {
+  if (spk.format == FORMAT_PCM16)
+  {
+    pcm16_linear();
+    return;
+  }
+
   int nch = spk.nch();
   size_t sample_size = spk.sample_size() * nch;
 
@@ -101,8 +107,8 @@ Converter::pcm2linear()
   if (size)
   {
     // assert: size < max_sample_size
-    memcpy(part_buf, rawdata, size);
-    drop(size);
+    memcpy(part_buf + part_size, rawdata, size);
+    drop_rawdata(size);
   }
 }
 
@@ -120,7 +126,7 @@ Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
       int16_t *ptr = (int16_t *)src;
       for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = *ptr++;
+          dst[ch][s] = *ptr++;
       break;
     }
 
@@ -129,7 +135,7 @@ Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
       int16_t *ptr = (int16_t *)src;
       for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = (int16_t)swab16(*ptr++);
+          dst[ch][s] = (int16_t)swab16(*ptr++);
       break;
     }
 
@@ -138,7 +144,7 @@ Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
       int24_t *ptr = (int24_t *)src;
       for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = *ptr++;
+          dst[ch][s] = *ptr++;
       break;
     }
 
@@ -147,7 +153,7 @@ Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
       int24_t *ptr = (int24_t *)src;
       for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = swab24(*ptr++);
+          dst[ch][s] = swab24(*ptr++);
       break;
     }
 
@@ -156,7 +162,7 @@ Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
       int32_t *ptr = (int32_t *)src;
       for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = *ptr++;
+          dst[ch][s] = *ptr++;
       break;
     }
 
@@ -165,7 +171,7 @@ Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
       int32_t *ptr = (int32_t *)src;
       for ( s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = (int32_t)swab32(*ptr++);
+          dst[ch][s] = (int32_t)swab32(*ptr++);
       break;
     }
 
@@ -174,7 +180,7 @@ Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
       float *ptr = (float *)src;
       for (s = 0; s < n; s++)
         for (ch = 0; ch < nch; ch++)
-          samples[ch][s] = *ptr++;
+          dst[ch][s] = *ptr++;
       break;
     }
 
@@ -185,7 +191,7 @@ Converter::pcm2linear(uint8_t *src, samples_t dst, size_t n)
         for (ch = 0; ch < nch; ch++)
         {
           uint32_t i = swab32(*ptr++);
-          samples[ch][s] = *(float*)(&i);
+          dst[ch][s] = *(float*)(&i);
         }
       break;
     }
@@ -360,4 +366,91 @@ Converter::get_chunk(Chunk *_chunk)
   sync = false;
 
   return true;
+}
+
+
+
+// todo: generate function versions for each number of channels
+void
+Converter::pcm16_linear()
+{
+  // input: spk, nsamples, rawdata, size
+  // output: out_samples, out_size
+  // intermediate: part_buf, part_size
+
+  int ch;
+  int nch = spk.nch();                          // will be const
+  size_t sample_size = sizeof(int16_t) * nch;   // will be const
+
+  int16_t  *src = (int16_t *)rawdata;
+  sample_t *dst = out_samples[0];
+  out_size = 0;
+
+  /////////////////////////////////////////////////////////
+  // Process part of sample
+
+  if (part_size)
+  {
+    // assert: part_size < sample_size
+    size_t delta = sample_size - part_size;
+    if (size < delta)
+    {
+      // not enough data to fill sample buffer
+      memcpy(part_buf + part_size, src, size);
+      part_size += size;
+      size = 0;
+      return;
+    }
+    else
+    {
+      // finish & convert incomplete sample 
+      memcpy(part_buf + part_size, src, delta);
+      drop_rawdata(delta);
+      part_size = 0;
+
+      for (ch = 0; ch < nch; ch++)
+        dst[nsamples * ch] = src[ch];
+      src += nch;
+      dst++;
+
+      out_size++;
+    }   
+  }
+
+  /////////////////////////////////////////////////////////
+  // Find end of buffer & remember remaining part of sample
+
+  int16_t *end;
+  if ((nsamples - out_size) * sample_size < size)
+  {
+    drop_rawdata((nsamples - out_size) * sample_size);
+    end = src + nsamples - out_size;
+    out_size += nsamples - out_size;
+  }
+  else
+  {
+    out_size += size / sample_size;
+    end = src + size / sample_size;
+    drop_rawdata((size / sample_size) * sample_size);
+
+    // remember part of smaple
+    if (size)
+    {
+      memcpy(part_buf, end, size);
+      part_size = size;
+      size = 0;
+    }
+  }
+
+  /////////////////////////////////////////////////////////
+  // Convert
+
+  while (src < end)
+  {
+    for (ch = 0; ch < nch; ch++)
+      dst[nsamples * ch] = src[ch];
+    src += nch;
+    dst++;
+  }
+
 }

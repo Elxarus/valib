@@ -3,6 +3,7 @@
 
 #define MAX_LOG_LEVELS 128
 
+#include <stdio.h>
 #include <stdarg.h>
 
 class Log
@@ -18,14 +19,13 @@ public:
     errors[level] = 0;
   };
 
-  virtual int open_group(const char *msg, ...)
+  virtual void open_group(const char *msg, ...)
   {
     if (level < MAX_LOG_LEVELS)
     {
       level++;
       errors[level] = 0;
     }
-    return level;
   }
 
   virtual int close_group()
@@ -34,8 +34,10 @@ public:
     {
       errors[level-1] += errors[level];
       level--;
+      return errors[level+1];
     }
-    return level;
+    else
+      return errors[0];
   }
 
   virtual int get_level() 
@@ -57,37 +59,56 @@ public:
     return errors[level]; 
   }
 
+  virtual void status(const char *msg, ...) = 0;
   virtual void msg(const char *msg, ...) = 0;
-  virtual void err(const char *msg, ...) = 0;
+  virtual int  err(const char *msg, ...) = 0;
 };
 
+static const char *statuses[] = { "* ", "- ", "\\ ", "| ", "/ " };
 class ScreenLog : public Log
 {
-  inline print_header()
+protected:
+  char current_status;
+  inline print_header(int _level)
   {
+    // erase status line
+    if (current_status)
+    {
+      printf("                                                                               \n");
+      current_status = 0;
+    }
+
     // todo: timestamp
     // indent
-    int i = level;
-    while (i--)
+    while (_level--)
       printf("  ");
   }
 
-public: 
-  int open_group(const char *_msg, ...)
+public:
+  ScreenLog()
   {
-    print_header();
+    current_status = 0;
+  }
+
+  void open_group(const char *_msg, ...)
+  {
+    print_header(level);
     printf("> ", _msg);
     va_list list;
     va_start(list, _msg);
     vprintf(_msg, list);
     va_end(list);
     printf("\n");
-    return Log::open_group(_msg);
+    Log::open_group(_msg);
   }
 
   int close_group()
   {
-    print_header();
+    if (level)
+      print_header(level-1);
+    else
+      print_header(0);
+
     if (!errors[level])
       printf("< Ok\n");
     else
@@ -96,9 +117,23 @@ public:
     return Log::close_group();
   }
 
+  void status(const char *_msg, ...)
+  {
+    current_status++;
+    if (current_status >= (sizeof(statuses) / sizeof(statuses[0])))
+      current_status = 1;
+    printf(statuses[current_status]);
+
+    va_list list;
+    va_start(list, _msg);
+    vprintf(_msg, list);
+    va_end(list);
+    printf("\r");
+  }
+
   void msg(const char *_msg, ...)
   {
-    print_header();
+    print_header(level);
     printf("* ");
     va_list list;
     va_start(list, _msg);
@@ -107,17 +142,18 @@ public:
     printf("\n");
   }
 
-  void err(const char *_msg, ...)
+  int err(const char *_msg, ...)
   {
-    errors[level]++;
-
-    print_header();
+    print_header(level);
     printf("! error: ");
     va_list list;
     va_start(list, _msg);
     vprintf(_msg, list);
     va_end(list);
     printf("\n");
+
+    errors[level]++;
+    return errors[level];
   }
 };
 

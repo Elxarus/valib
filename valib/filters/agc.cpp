@@ -156,11 +156,10 @@ AGC::process()
     if (level < levels_loc[ch]) 
       level = levels_loc[ch];
 
-  // Here 'level' is realtive block level.
-  // Normally, this level should not be greater than 1.0 (0dB level) 
-  // but it is possible that some post-processing made it larger.
-  // Our task is to decrease the global gain to make the relative 
-  // output level <= 1.0.
+  // Here 'level' is block peak-level. Normally, this level should not be 
+  // greater than 1.0 (0dB) but it is possible that some post-processing made
+  // it larger. Our task is to decrease the global gain to make the output 
+  // level <= 1.0.
 
   // adjust gain (release)
 
@@ -326,15 +325,20 @@ AGC::get_chunk(Chunk *_chunk)
     _chunk->set
     (
       spk, 
-      samples, nsamples, 
+      buf[block], nsamples, 
       buf_sync[block], buf_time[block]
     );
     return true;
   }
 
-  // not enough data
-  _chunk->set(spk, 0, 0);
-  return true;
+  if (!flushing)
+  {
+    // not enough data
+    _chunk->set(spk, 0, 0);
+    return true;
+  }
+
+
 
   // todo: flushing
 /*

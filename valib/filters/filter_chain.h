@@ -39,6 +39,7 @@ protected:
 
     inline bool query_input(Speakers _spk)    { return filter->query_input(_spk); }
     inline bool set_input(Speakers _spk)      { return filter->set_input(_spk);   }
+    inline Speakers get_input() const         { return filter->get_input();       }
     inline bool process(const Chunk *_chunk)  { return filter->process(_chunk);   }
 
     inline Speakers get_output() const        { return filter->get_output();      }
@@ -64,6 +65,7 @@ public:
 
   virtual bool query_input(Speakers spk) const;
   virtual bool set_input(Speakers spk);
+  virtual Speakers get_input() const;
   virtual bool process(const Chunk *in);
 
   virtual Speakers get_output() const;

@@ -1,16 +1,36 @@
 /*
-  This test verifies that filter does not alter the data outside of given 
-  range. This test requires 2 identical instances of the same filter.
+  Test subject: ensure that filter does not alter data outside of given 
+  buffer. This test verifies all supported PCM formats in combination with 
+  most common modes and sample rates (1680 combinations). Set of tested 
+  buffer sizes consists of primes (up to 4k), 2^n, 2^n+1, 2^n-1 (up to 1M)
+  (>550 sizes). Each small test processes buffer of 128k samples.
+
+  Method:
+  1) Prepare test buffer. Buffer consists of 3 parts:
+     +----------------------------+----------------------------+----------------------------+
+     |          stuffing          |     test data (noise)      |          stuffing          |
+     +----------------------------+----------------------------+----------------------------+
+     Stuffing is specially filled area, so we can determine when filter changes it.
+
+  2) Process data. Data is processed in small blocks. We must also ensure that
+     filter processes only given data and other data is unchanged. It is done 
+     by comparison with reference buffer (copy that was not processed). After
+     processing changed data os copied to reference buffer to check that data
+     that was already processed will not be changed again. So steps are:
+     2.1) Prepare & process chunk
+     2.2) Compare data outsize of chunk data with reference copy
+     2.3) Copy changed data to reference chunk
+     
+  3) verify that stuffing data was not corrupted
+
+  To ensure that filter does not alter data to the value of stuffing test may
+  be done twice with different stuffing.
 */
 
-#include <stdio.h>
+#include <stdlib.h>
 #include "..\log.h"
 #include "filter.h"
 
-int test_buffer(Log *log, const char *filter_name, Speakers spk, Filter *f1, Filter *f2, size_t buf_size, int nbufs, int ntests);
-int test_buffer_rawdata(Log *log, const char *filter_name, Speakers spk, Filter *f1, Filter *f2, size_t buf_size, int nbufs, int ntests);
-int test_buffer_samples(Log *log, const char *filter_name, Speakers spk, Filter *f1, Filter *f2, size_t buf_size, int nbufs, int ntests);
-                                                                                                                                                               
 static const int formats[] = 
 { 
   FORMAT_PCM16,    FORMAT_PCM24,    FORMAT_PCM32,    FORMAT_PCMFLOAT, 
@@ -30,15 +50,37 @@ static const int sample_rates[] =
   12000, 24000, 48000, 96000, 192000 
 };
 
-static const int buf_sizes[] = 
+static const int step_sizes[] = 
 {
+  // 2^n-1   2^n      2^n+1
+        1,       2, 
+        3,       4,       5, 
+        7,       8,       9, 
+       15,      16,      17, 
+       31,      32,      33, 
+       63,      64,      65, 
+      127,     128,     129, 
+      255,     256,     257, 
+      511,     512,     513, 
+     1023,    1024,    1025, 
+     2047,    2048,    2049, 
+     4095,    4096,    4097, 
+     8191,    8192,    8193, 
+    16383,   16384,   16385, 
+    32767,   32768,   32769, 
+    65535,   65536,   65537, 
+   131071,  131072,  131073, 
+   262143,  262144,  262145, 
+   524287,  524288,  524289, 
+  1048575, 1048576, 1048577, 
+
   // primes
-     1,    2,    3,    5,    7,   11,   13,   17,   19,   23, 
-    29,   31,   37,   41,   43,   47,   53,   59,   61,   67, 
+                                  11,   13,         19,   23, 
+    29,         37,   41,   43,   47,   53,   59,   61,   67, 
     71,   73,   79,   83,   89,   97,  101,  103,  107,  109, 
-   113,  127,  131,  137,  139,  149,  151,  157,  163,  167, 
+   113,        131,  137,  139,  149,  151,  157,  163,  167, 
    173,  179,  181,  191,  193,  197,  199,  211,  223,  227, 
-   229,  233,  239,  241,  251,  257,  263,  269,  271,  277, 
+   229,  233,  239,  241,  251,        263,  269,  271,  277, 
    281,  283,  293,  307,  311,  313,  317,  331,  337,  347, 
    349,  353,  359,  367,  373,  379,  383,  389,  397,  401, 
    409,  419,  421,  431,  433,  439,  443,  449,  457,  461, 
@@ -89,148 +131,158 @@ static const int buf_sizes[] =
   3821, 3823, 3833, 3847, 3851, 3853, 3863, 3877, 3881, 3889, 
   3907, 3911, 3917, 3919, 3923, 3929, 3931, 3943, 3947, 3967, 
   3989, 4001, 4003, 4007, 4013, 4019, 4021, 4027, 4049, 4051, 
-  4057, 4073, 4079, 4091, 4093,
+  4057, 4073, 4079, 4091, 4093
+};
 
-           15,     63,      255, 511, 1023, 2047, 4095, // 2^n - 1
-     4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, // 2^n
-        9,     33, 65, 129,      513, 1025, 2049, 4097, // 2^n + 1
-}
-
+int test_pcm_bounds(Log *log, Filter *filter, const char *filter_name);
+bool test_pcm_bounds_once(Log *log, Filter *filter, Speakers spk, uint8_t *data, uint8_t *copy, size_t buf_size, size_t step_size);
 
 int test_pcm_bounds(Log *log, Filter *filter, const char *filter_name)
 {
   log->open_group("PCM out-of-bounds filter test (samples). Filter: %s", filter_name);
 
-  int format, mode, sample_rate;
+  int iformat, imode, isample_rate, istep_size;
 
   DataBuf data;
   DataBuf copy;
 
-  data.allocate(5 * 48000 * 6 * 4) // 5 buffers (1sec 6ch at 48kHz)
-  data.allocate(5 * 48000 * 6 * 4) // 5 buffers (1sec 6ch at 48kHz)
+  int nsamples = 128 * 1024;  // 128k samples to process
+  data.allocate(3 * nsamples * NCHANNELS * 4);
+  copy.allocate(3 * nsamples * NCHANNELS * 4);
 
-  for (format = 0; format < array_size(formats); format++)
-    for (mode = 0; mode < array_size(modes); mode++)
-      for (sample_rate = 0; array_size(sample_rates); sample_rate++)
+  /////////////////////////////////////////////////////////
+  // enum all formats
+
+  for (iformat = 0; iformat < array_size(formats); iformat++)
+    for (imode = 0; imode < array_size(modes); imode++)
+      for (isample_rate = 0; isample_rate < array_size(sample_rates); isample_rate++)
       {
-        Speakers spk(format, mode, sample_rate);
+        Speakers spk(formats[iformat], modes[imode], sample_rates[isample_rate]);
 
         ///////////////////////////////////////////////////
         // setup filter
 
-        if (!f->query_input(spk))
+        if (!filter->query_input(spk))
           // filter does not support this configuration
           continue;
 
         log->msg("Speakers: %s %s %iHz", spk.format_text(), spk.mode_text(), spk.sample_rate);
 
-        if (!f->set_input(spk))
+        if (!filter->set_input(spk))
         {
           log->err("set_input() returns false after successful query_input()");
           continue;
         }
 
         ///////////////////////////////////////////////////
-        // prepare data
+        // enum all step sizes
 
-        memset(data, 0x55, data.size());
-
-
-
-        for (int buf_size = 1
-        if (format == FORMAT_LINEAR)
-          test_buffer_samples(log, f1, f2, 
+        for (istep_size = 0; istep_size < array_size(step_sizes); istep_size++)
+        {
+          size_t buf_size = nsamples * spk.nch() * spk.sample_size();
+          test_pcm_bounds_once(log, filter, spk, data, copy, buf_size, step_sizes[istep_size]);
+        }
       }
-  }
-
+  return log->close_group();
 }
 
-bool test_buffer(Log *log, Filter *f, Chunk *chunk, Chunk *subchunk, int buf_size)
+
+bool test_pcm_bounds_once(Log *log, Filter *filter, Speakers spk, uint8_t *data, uint8_t *copy, size_t buf_size, size_t step_size)
 {
-  size_t  big_buf_size = buf_size * nbufs * 2 + buf_size;
+  uint8_t *buf;
+  size_t size;
 
-  size_t i;
-  uint8_t *big_buf = new uint8_t[big_buf_size]
-  uint8_t *buf = big_buf1 + buf_size * nbufs;
+  Chunk chunk;
 
-  big_buf1 = new uint8_t[big_buf_size];
+  // fill stuffing
+  memset(data,              0xcc, buf_size);
+  memset(data + buf_size*2, 0xcc, buf_size);
 
-  memset(big_buf1, 0x55, big_buf_size);
-  memset(big_buf2, 0xcc, big_buf_size);
+  // fill test data (noise & silence)
+  buf  = data + buf_size;
+  size = buf_size;
+  while (size--)
+    *buf++ = rand() * 256 / RAND_MAX;
 
-  buf1 = big_buf1 + buf_size * nbufs;
-  buf2 = big_buf2 + buf_size * nbufs;
+  // make a copy
+  memcpy(copy, data, buf_size * 3);
 
-  Chunk ichunk1;
-  Chunk ochunk1;
-
-  ichunk1.set(spk, buf1, buf_size);
-  ichunk2.set(spk, buf2, buf_size);
-
-  while (ntests--)
+  // process & compare the data
+  buf  = data + buf_size;
+  size = buf_size;
+  while (size)
   {
-    // fill processing buffer with noise
-    for (i = 0; i < buf_size; i++)
-      buf2[i] = buf1[i] = rand() * 256 / RAND_MAX;
+    // prepare chunk
+    if (step_size > size) step_size = size;
+    chunk.set(spk, buf, step_size);
 
-    // push data
-    if (!f1->process(&ichunk1) || f2->process(&ichunk2))
+    // process data
+    if (!filter->process(&chunk))
     {
       log->err("process() failed");
       return false;
     }
 
-    // pull data
-    while (!f1->is_empty())
-    {
-      if (f2->is_empty())
-      {
-        log->err("empty status does not match");
-        return false;
-      }
-
-      if (!f1->get_chunk(&ochunk1) || !f2->get_chunk(&ochunk2))
+    while (!filter->is_empty())
+      if (!filter->get_chunk(&chunk))
       {
         log->err("get_chunk() failed");
         return false;
       }
 
-      if (ochunk1.spk != ochunk2.spk || ochunk1.size != ochunk2.size)
-      {
-        log->err("output chunks are different");
-        return false;
-      }
-
-      if (memcmp(ochunk1.get_rawdata(), ochunk2.get_rawdata(), ichunk1.get_size))
-      {
-        log->err("output data differs");
-        return false;
-      }
-    }
-
-    // check that input buffers still equal
-    if (memcmp(buf1, buf2, buf_size))
+    // compare beginning of the data
+    if (memcmp(data + buf_size, copy + buf_size, buf_size - size))
     {
-      log->err("buffers are different");
+      log->err("beginning of buffer was corrupted");
       return false;
     }
 
-    // check stuffing integrity
-    for (i = 0; i < buf_size * nbufs; i++)
-      if (big_buf1[i] != 0x55 || big_buf2[i] != 0xcc)
-      {
-        log->err("buffer is corrupted");
-        return false;
-      }
+    // copy changed data
+    memcpy(copy + buf_size + buf_size - size, buf, step_size);
+    buf += step_size;
+    size -= step_size;
 
-    for (i = buf_size * nbufs + buf_size; i < big_buf_size; i++)
-      if (big_buf1[i] != 0x55 || big_buf2[i] != 0xcc)
-      {
-        log->err("buffer is corrupted");
-        return false;
-      }
+    // compare ending of the data
+    if (memcmp(copy + buf_size + buf_size - size, buf, size))
+    {
+      log->err("ending of buffer was corrupted");
+      return false;
+    }
+  }
+
+  // test stuffing
+  if (memcmp(data, copy, buf_size*3))
+  {
+    log->err("stuffing was corrupted");
+    return false;
   }
 
   return true;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include "filters\convert.h"
+int test_converter(Log *log)
+{
+  log->open_group("Converter filter test");
+
+  Converter conv(2048);
+  conv.set_format(FORMAT_LINEAR);
+  test_pcm_bounds(log, &conv, "Converter");
+
+  return log->close_group();
+}

@@ -139,6 +139,15 @@ FilterChain::set_input(Speakers _spk)
   return true;
 }
 
+Speakers
+FilterChain::get_input() const
+{
+  if (!first)
+    return NullFilter::get_input();
+  else
+    return first->get_input();
+}
+
 bool 
 FilterChain::process(const Chunk *_chunk)
 {

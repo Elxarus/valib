@@ -80,15 +80,19 @@ DVDDecoder::query_input(Speakers _spk) const
 bool 
 DVDDecoder::set_input(Speakers _spk)
 {
-  if (query_input(_spk))
-  {
-    in_spk = _spk;
-    out_spk.sample_rate = in_spk.sample_rate;
-    reset();
-    return true;
-  }
+  if (!query_input(_spk))
+    return false;
 
-  return false;
+  in_spk = _spk;
+  out_spk.sample_rate = in_spk.sample_rate;
+  reset();
+  return true;
+}
+
+Speakers
+DVDDecoder::get_input() const
+{
+  return in_spk;
 }
 
 bool 

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h> 
 #include <math.h>
+#include "..\log.h"
 #include "auto_file.h"
 #include "filters\mixer.h"
 #include "filters\agc.h"
@@ -17,19 +18,109 @@
 
 
 
-// PCM test
-bool test_pcm_passthrough_file(const char *filename, const char *desc, Speakers spk)
+int test_compare_file(Log *log, Filter *filter, const char *data_file, const char *ref_file)
 {
+  const size_t buf_size = 65536;
+
+  AutoFile fdata(data_file);
+  AutoFile fref(ref_file);
+
+  // open files
+  if (!fdata.is_open())
+    return log->err("Cannot open data file %s", data_file);
+
+  if (!fref.is_open())
+    return log->err("Cannot open reference file %s", ref_file);
+
+  // buffers
+  DataBuf data_buf;
+  DataBuf ref_buf;
+  size_t data_size = 0;
+  size_t ref_size = 0;
+  uint8_t *ref_pos;
+  data_buf.allocate(buf_size);
+  ref_buf.allocate(buf_size);
+
+  Chunk chunk;
+  bool flushing = false;
+
+  while (1)
+  {
+    // read input data
+    data_size = fdata.read(data_buf, buf_size);
+
+    if (data_size)
+      chunk.set(filter->get_input(), data_buf, data_size);
+    else
+    {
+      chunk.set(filter->get_input(), 0, 0, 0, 0, true);
+      flushing = true;
+    }
+
+    // process data
+    if (!filter->process(&chunk))
+      return log->err("process() failed");
+
+    if (flushing && filter->is_empty())
+      return log->err("Filter is empty after receiving end-of-stream");
+
+    while (!filter->is_empty())
+    {
+      if (!filter->get_chunk(&chunk))
+        return log->err("get_chunk() failed");
+
+      if (chunk.get_spk().format == FORMAT_LINEAR)
+        return log->err("cannot work with linear output");
+
+      while (!chunk.is_empty())
+      {
+        // read reference data buffer
+        if (!ref_size)
+        {
+          ref_size = fref.read(ref_buf, buf_size);
+          if (!ref_size)
+            return log->err("processed output is longer then reference data");
+          ref_pos = ref_buf;
+        }
+
+        // compare
+        size_t len = MIN(chunk.get_size(), ref_size);
+        if (memcmp(ref_pos, chunk.get_rawdata(), len))
+          return log->err("data differs");
+        chunk.drop(len);
+        ref_pos += len;
+        ref_size -= len;
+      } // while (!chunk.is_empty())
+    } // while (!filter->is_empty())
+
+    if (flushing)
+    {
+      if (!chunk.is_eos())
+        return log->err("Last chunk is not end-of-stream");
+      return 0;
+    }
+  } // while (1)
+};
+
+// PCM passthrough test
+int test_pcm_passthrough_file(Log *log, const char *filename, const char *desc, Speakers spk)
+{
+  log->msg("Testing %s %s %iHz file %s (%s)", spk.format_text(), spk.mode_text(), spk.sample_rate, filename, desc);
+
+  AudioProcessor proc(2048);
+  proc.set_input(spk);
+  proc.set_output(spk);
+
+  return test_compare_file(log, &proc, filename, filename);
+}
+/*  
+
+
+
   int s;
   int nch = spk.nch();
-  switch (spk.format)
-  {
-    case FORMAT_PCM16:    printf("Testing %ich PCM16 file %s (%s)\n", nch, filename, desc); break;
-    case FORMAT_PCM24:    printf("Testing %ich PCM24 file %s (%s)\n", nch, filename, desc); break;
-    case FORMAT_PCM32:    printf("Testing %ich PCM32 file %s (%s)\n", nch, filename, desc); break;
-    case FORMAT_PCMFLOAT: printf("Testing %ich PCM Float file %s (%s)\n", nch, filename, desc); break;
-    default:              printf("Error: unsupported format\n"); return false;
-  }
+
+  printf("Testing %s %s %iHz file %s (%s)\n", spk.format_text(), spk.mode_text(), spk.sample_rate, filename, desc);
 
   AutoFile f(filename);
   if (f.eof())
@@ -51,6 +142,7 @@ bool test_pcm_passthrough_file(const char *filename, const char *desc, Speakers 
   AudioProcessor chain(2048);
   chain.set_input(spk);
   chain.set_output(spk);
+
   // chunks
   Chunk ichunk;
   Chunk ochunk;
@@ -174,3 +266,4 @@ bool test_pcm_passthrough_file(const char *filename, const char *desc, Speakers 
 }
 
 
+*/

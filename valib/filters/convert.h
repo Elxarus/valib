@@ -51,6 +51,8 @@ protected:
   void linear2pcm();
   void linear2pcm(samples_t src, uint8_t *dst, size_t n);
 
+  void pcm16_linear();
+
 public:
   Converter(int _nsamples)
   {

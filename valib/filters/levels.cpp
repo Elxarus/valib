@@ -136,7 +136,7 @@ Levels::process(const Chunk *_chunk)
     }
 
     n -= block_size;
-    samples += block_size;
+    sample += block_size;
     if (time >= 0) 
       time += block_size;
 

@@ -43,3 +43,19 @@ All filters:
 
 * Spdifer (spdifer.h): Encapsulates compressed stream in SPDIF 
   according to IEC 61937
+
+
+                  IP  BUF
+AGC                -   +
+BassRedir          +   -
+Convert            -   -
+AudioDecoder           
+Dejitter           +   -
+Delay              +   +
+Demux
+DVDDecoder
+FilterChain
+Levels             +   -
+Mixer             +/-  +
+AudioProcessor
+Spdifer            -

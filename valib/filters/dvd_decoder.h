@@ -78,6 +78,7 @@ public:
 
   virtual bool query_input(Speakers spk) const;
   virtual bool set_input(Speakers spk);
+  virtual Speakers get_input() const;
   virtual bool process(const Chunk *chunk);
 
   virtual Speakers get_output() const;

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "log.h"
 #include "spk.h"
 
 extern int test_spdifer(const char *fn, const char *fn_spdif, Speakers spk);
@@ -7,7 +8,7 @@ int test_spdifer()
 {
   int err = 0;
   printf("\n* Spdifer test\n");
-  err += test_spdifer("f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.ac3.spdif", Speakers(FORMAT_AC3, 0, 0));
+  err += test_spdifer("f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif", Speakers(FORMAT_AC3, 0, 0));
   return err;
 }
 
@@ -23,20 +24,18 @@ int test_ac3_parser()
   return err;
 }
 
-extern bool test_pcm_passthrough_file(const char *filename, const char *desc, Speakers spk);
-int test_pcm_passthrough()
+extern int test_pcm_passthrough_file(Log *log, const char *filename, const char *desc, Speakers spk);
+int test_pcm_passthrough(Log *log)
 {
-  int err = 0;
-  printf("\n* PCM passthrough test\n");
-  if (!test_pcm_passthrough_file("f:\\ac3\\ac3test_pcm16.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_5_1, 48000, 32767))) err++;
-
-  if (!test_pcm_passthrough_file("f:\\_pes\\lpcm.pes", "crash test",  Speakers(FORMAT_PCM32, MODE_STEREO, 48000, 2147483647))) err++;
-  if (!test_pcm_passthrough_file("f:\\ac3\\ac3test_pcm16_norm.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767))) err++;
-  if (!test_pcm_passthrough_file("f:\\ac3\\ac3test_pcm16.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767))) err++;
-  if (!test_pcm_passthrough_file("f:\\ac3\\ac3test_pcm24.raw", "pcm24", Speakers(FORMAT_PCM24, MODE_STEREO, 48000, 8388607))) err++;
-  if (!test_pcm_passthrough_file("f:\\ac3\\ac3test_pcm32.raw", "pcm32", Speakers(FORMAT_PCM32, MODE_STEREO, 48000, 2147483647))) err++;
-  if (!test_pcm_passthrough_file("f:\\ac3\\ac3test_pcmfloat.raw", "pcm float", Speakers(FORMAT_PCMFLOAT, MODE_STEREO, 48000, 1.0))) err++;
-  return err;
+  log->open_group("PCM passthrough test");
+  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm16.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_5_1, 48000, 32767));
+  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm16_norm.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767));
+  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm16.raw", "pcm16", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767));
+  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm24.raw", "pcm24", Speakers(FORMAT_PCM24, MODE_STEREO, 48000, 8388607));
+  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcm32.raw", "pcm32", Speakers(FORMAT_PCM32, MODE_STEREO, 48000, 2147483647));
+  test_pcm_passthrough_file(log, "f:\\ac3\\ac3test_pcmfloat.raw", "pcm float", Speakers(FORMAT_PCMFLOAT, MODE_STEREO, 48000, 1.0));
+  test_pcm_passthrough_file(log, "f:\\_pes\\lpcm.pes", "crash test",  Speakers(FORMAT_PCM32, MODE_STEREO, 48000, 2147483647));
+  return log->close_group();
 }
 
 extern int test_pes_demux(const char *filename);
@@ -76,23 +75,30 @@ int test_ac3_enc_all()
 
 
 
-extern int test_filters();
+extern int test_filters(Log *log);
 extern int test_float();
+
+
+
+extern int test_converter(Log *log);
+
 
 int main(int argc, char **argv)
 {
+  ScreenLog log;
+
   int errors = 0;
 
-  errors += test_ac3_enc_all();
-
-  errors += test_filters();
+  errors += test_filters(&log);
   errors += test_spdifer();
  
   errors += test_float();
-  errors += test_pcm_passthrough();
+  errors += test_pcm_passthrough(&log);
 
   errors += test_ac3_parser();
   errors += test_pes_demux();
+
+  errors += test_ac3_enc_all();
 
   printf("-----------------------------------------------------------\n");
   if (errors)
