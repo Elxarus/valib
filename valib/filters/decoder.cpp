@@ -23,6 +23,7 @@ void
 AudioDecoder::reset()
 {
   NullFilter::reset();
+  sync_helper.reset();
   if (parser)
     parser->reset();
 }
