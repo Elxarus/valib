@@ -358,7 +358,6 @@ Spdifer::ac3_syncinfo(const uint8_t *_buf)
     bitrate    = bitrate_tbl[frmsizecod >> 1];
 
     bs_type = BITSTREAM_16BE;
-    return true;
   }
   else
     return false;
@@ -504,7 +503,7 @@ Spdifer::dts_syncinfo(const uint8_t *_buf)
   bs_tmp.get(15);                         // Transmission bit rate(5), and other flags....
 
   int lff = bs_tmp.get(2);                // Low frequency effects flag
-  if (lff == 3) return 0;                 // constraint
+  if (lff == 3) return false;             // constraint
 
   if (cpf)
   {
