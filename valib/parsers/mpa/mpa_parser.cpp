@@ -98,7 +98,7 @@ MPAParser::get_info(char *buf, unsigned len) const
   char info[1024];
   sprintf(info, 
     "MPEG Audio\n"
-    "sperakers: %s\n"
+    "speakers: %s\n"
     "ver: %s\n"
     "frame size: %i bytes\n"
     "bitrate: %ikbps\n"
