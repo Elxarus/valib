@@ -7,16 +7,34 @@
 
 #include "filter.h"
 
+
 class Syncer : public NullFilter
 {
 protected:
-  // all time values are in secs
+  // linear time transform
   vtime_t time_shift;
   vtime_t time_factor;
 
+  // jitter correction
   bool    dejitter;
   vtime_t threshold;
-  vtime_t jitter;
+
+  // statistics
+  class SyncerStat
+  {
+  protected:
+    vtime_t stat[32];
+
+  public:
+    SyncerStat();
+
+    void reset();
+    void add(vtime_t);
+    vtime_t stddev() const;
+    vtime_t mean() const;
+    int len() const;
+  };
+  SyncerStat stat;
 
 public:
   Syncer()
@@ -25,38 +43,35 @@ public:
     time_factor = 1.0;
 
     dejitter  = true;
-    threshold = 200;
-    jitter    = 0;
+    threshold = 0.2;
   }
 
-  inline void resync()
-  {
-    sync = false;
-  }
+  /////////////////////////////////////////////////////////
+  // Syncer interface
 
-  inline vtime_t get_time_shift() const                 { return time_shift; }
-  inline void    set_time_shift(vtime_t _time_shift)    { time_shift = _time_shift; }
+  void    resync()                               { sync = false; }
 
-  inline vtime_t get_time_factor() const                { return time_factor; }
-  inline void    set_time_factor(vtime_t _time_factor ) { time_factor = _time_factor; }
+  // Linear time transform
+  vtime_t get_time_shift() const                 { return time_shift; }
+  void    set_time_shift(vtime_t _time_shift)    { time_shift = _time_shift; }
 
-  inline bool    get_dejitter() const                   { return dejitter; }
-  inline void    set_dejitter(bool _dejitter)           { dejitter = _dejitter; }
+  vtime_t get_time_factor() const                { return time_factor; }
+  void    set_time_factor(vtime_t _time_factor ) { time_factor = _time_factor; }
 
-  inline vtime_t get_threshold() const                  { return threshold; }
-  inline void    set_threshold(vtime_t _threshold)      { threshold = _threshold; }
+  // Jitter
+  bool    get_dejitter() const                   { return dejitter; }
+  void    set_dejitter(bool _dejitter)           { dejitter = _dejitter; }
 
-  inline vtime_t get_jitter() const                     { return jitter; }
+  vtime_t get_threshold() const                  { return threshold; }
+  void    set_threshold(vtime_t _threshold)      { threshold = _threshold; }
 
+  vtime_t get_jitter() const                     { return stat.stddev() / spk.sample_rate; }
+  vtime_t get_drift() const                      { return stat.mean() ; }
+
+  /////////////////////////////////////////////////////////
   // Filter interface
-  void reset()
-  {
-    NullFilter::reset();
-    sync = false;
-    time = 0;
-    jitter = 0;
-  }
 
+  void reset();
   bool process(const Chunk *_chunk);
   bool get_chunk(Chunk *_chunk);
 };
