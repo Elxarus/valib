@@ -82,7 +82,7 @@ public:
   virtual unsigned get_frame_size() const { return parser->get_frame_size(); }
   virtual unsigned get_nsamples()   const { return parser->get_nsamples();   }
 
-  virtual void get_info(char *buf, int len) const;
+  virtual void get_info(char *buf, size_t len) const;
   virtual unsigned get_frames()     const { return parser->get_frames() - frames_overhead; }
   virtual unsigned get_errors()     const { return parser->get_errors() + demux.errors - errors_overhead; }
 

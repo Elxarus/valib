@@ -363,10 +363,10 @@ FileParser::fill_buf()
 
 
 void 
-FileParser::get_info(char *buf, int len) const 
+FileParser::get_info(char *buf, size_t len) const 
 {
   char info[1024];
-  int info_len;
+  size_t info_len;
 
   int size_bytes = get_size();
   int size_sec = int(get_size(ms) / 1000);
