@@ -290,7 +290,7 @@ public:
 //   to produce minimum artifacts. This function should be called only from 
 //   worker thread. 
 //
-// get_input() [thread-safe]
+// get_input() [thread-safe, fast]
 //   Just report current input format. If function reports FORMAT_UNKNOWN it
 //   means that sink is not initialized. In all other cases it is supposed 
 //   that query_input(get_input()) returns true.

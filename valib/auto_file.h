@@ -45,6 +45,7 @@ public:
   {
     if (f)
       fclose(f);
+    f = 0;
   }
   bool is_open() const
   {
@@ -59,7 +60,6 @@ public:
   int  size() const { return filesize;               }
   FILE *fh()  const { return f;                      }
   int  pos()  const { return ftell(f);               }
-
 };
 
 #endif
