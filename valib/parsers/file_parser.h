@@ -18,8 +18,8 @@ protected:
 
   // file statistics
   int   sample_rate;    // sample rate
-  int   frame_size;     // mean frame size
-  int   frame_samples;  // mean frame samples
+  int   frame_size;     // average frame size
+  int   frame_samples;  // average frame samples
 
   unsigned frames_overhead;
   unsigned errors_overhead;
@@ -65,6 +65,8 @@ public:
   int    get_size() const;
   double get_size(units_t units) const;
 
+  double get_bitrate() const;
+
   /////////////////////////////////////////////////////////
   // Parser-equivalent functions
 
@@ -80,7 +82,7 @@ public:
   virtual unsigned get_frame_size() const { return parser->get_frame_size(); }
   virtual unsigned get_nsamples()   const { return parser->get_nsamples();   }
 
-  virtual void get_info(char *buf, int len) const { parser->get_info(buf, len); }
+  virtual void get_info(char *buf, int len) const;
   virtual unsigned get_frames()     const { return parser->get_frames() - frames_overhead; }
   virtual unsigned get_errors()     const { return parser->get_errors() + demux.errors - errors_overhead; }
 

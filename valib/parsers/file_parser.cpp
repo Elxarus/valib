@@ -292,6 +292,17 @@ FileParser::get_size(units_t units) const
   return 0;
 }
 
+double 
+FileParser::get_bitrate() const
+{
+  double length = get_size(ms) / 1000;
+  if (length > 0.001)
+    return get_size() * 8 / length;
+  else
+    return 0;
+}
+
+
 
 unsigned 
 FileParser::load_frame()
@@ -343,4 +354,36 @@ FileParser::fill_buf()
   while (!buf_data && sync < max_scan);
 
   return true;
+}
+
+
+void 
+FileParser::get_info(char *buf, int len) const 
+{
+  char info[1024];
+  int info_len;
+
+  int size_bytes = get_size();
+  int size_sec = get_size(ms) / 1000;
+  int size_frames = get_size(frames);
+
+  sprintf(info,
+    "File: %s\n"
+    "size: %i\n"
+    "frames: %i\n"
+    "length: %i:%02i\n"
+    "\n",
+
+    get_filename(), 
+    size_bytes, 
+    size_frames, 
+    int(size_sec / 60), int(size_sec % 60));
+
+  info_len = MIN(len, strlen(info)+1);
+  memcpy(buf, info, info_len);
+
+  buf += info_len - 1;
+  len -= info_len + 1;
+
+  parser->get_info(buf, len); 
 }
