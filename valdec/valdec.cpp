@@ -673,7 +673,7 @@ int main(int argc, char *argv[])
   // spk = output format
 
   /////////////////////////////////////////////////////////
-  // Print decoder config
+  // Print processing options
   /////////////////////////////////////////////////////////
 
   //
@@ -714,69 +714,72 @@ int main(int argc, char *argv[])
     if (file.load_frame())
     {
       if (spdif)
-      {
-        // SPDIF
-        chunk.set
-        (
-          Speakers(FORMAT_UNKNOWN, 0, 0),
-          parser->get_frame(), parser->get_frame_size()
-        );
-      }
+        chunk.set(Speakers(FORMAT_UNKNOWN, 0, 0), parser->get_frame(), parser->get_frame_size());
       else
       {
         // Decode
         if (!file.decode_frame())
           continue;
 
-        chunk.set
-        (
-          file.get_spk(),
-          file.get_samples(), file.get_nsamples()
-        );
+        chunk.set(file.get_spk(), file.get_samples(), file.get_nsamples());
       }
 
-      if (!filter->process(&chunk))
+      /////////////////////////////////////////////////////
+      // Processing & output
+
+      if (!filter->process_to(&chunk, sink))
       {
-        printf("\nError: processing error [process()]\n");
+        printf("\nProcessing error!\n");
         return 1;
       }
 
-      while (!filter->is_empty())
+      /////////////////////////////////////////////////////
+      // Statistics
+
+      ms = double(cpu_total.get_system_time() * 1000);
+      if (ms > old_ms + 100)
       {
-        if (!filter->get_chunk(&chunk))
+        old_ms = ms;
+
+        // Levels
+        if (!spdif)
         {
-          printf("\nError: processing error [get_chunk()]\n");
-          return 1;
+          proc.get_output_levels(sink->get_time(), levels);
+          level = levels[0];
+          for (i = 1; i < NCHANNELS; i++)
+            if (levels[i] > level)
+              level = levels[i];
         }
-        sink->write(&chunk);
 
-        ms = double(cpu_total.get_system_time() * 1000);
-        if (ms > old_ms + 100)
-        {
-          old_ms = ms;
-
-          // Levels
-          if (!spdif)
-          {
-            proc.get_output_levels(sink->get_time(), levels);
-            level = levels[0];
-            for (i = 1; i < spk.nch(); i++)
-              if (levels[i] > level)
-                level = levels[i];
-          }
-
-          // Statistics
-          fprintf(stderr, "%4.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \r", 
-            file.get_pos(file.relative) * 100, 
-            file.get_frames(), file.get_errors(),
-            int(ms/60000), int(ms) % 60000/1000, int(ms) % 1000,
-            int(value2db(level)),
-            int(file.get_frames() * 1000 / (ms+1)),
-            cpu_current.usage() * 100);
-        }
-      } // while (!chain.is_empty())
+        fprintf(stderr, "%4.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \r", 
+          file.get_pos(file.relative) * 100, 
+          file.get_frames(), file.get_errors(),
+          int(ms/60000), int(ms) % 60000/1000, int(ms) % 1000,
+          int(value2db(level)),
+          int(file.get_frames() * 1000 / (ms+1)),
+          cpu_current.usage() * 100);
+      }
     } // if (file.frame())
   // while (!file.eof()) 
+
+  /////////////////////////////////////////////////////
+  // Flushing
+
+  if (spdif)
+    chunk.set(Speakers(FORMAT_UNKNOWN, 0, 0), 0, 0);
+  else
+    chunk.set(file.get_spk(), 0, 0);
+  chunk.set_eos(true);
+
+  if (!filter->process_to(&chunk, sink))
+  {
+    printf("\nProcessing error!\n");
+    return 1;
+  }
+
+  /////////////////////////////////////////////////////
+  // Final statistics
+
   fprintf(stderr, "%2.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \n", 
     file.get_pos(file.relative) * 100, 
     file.get_frames(), file.get_errors(),
