@@ -5,7 +5,7 @@ const float sonic_speed = 330; // [m/s]
 
 Delay::Delay()
 {
-  enabled = true;
+  enabled = false;
   units = DELAY_SP;
   delay_ms = 0;
   memset(delays, 0, sizeof(delays));
