@@ -152,6 +152,35 @@ public:
   /////////////////////////////////////////////////////////
   // Speakers
 
+  inline void set(Speakers _spk, 
+                  samples_t _samples, size_t _size,
+                  bool _sync = false, time_t _time = 0,
+                  bool _eos  = false)
+  {
+    spk = _spk;
+    samples = _samples;
+    size = _size;
+    sync = _sync;
+    time = _time;
+    eos = _eos;
+  }
+
+  inline void set(Speakers _spk, 
+                  uint8_t *_rawdata, size_t _size,
+                  bool _sync = false, time_t _time = 0,
+                  bool _eos  = false)
+  {
+    spk = _spk;
+    rawdata = _rawdata;
+    size = _size;
+    sync = _sync;
+    time = _time;
+    eos = _eos;
+  }
+
+  /////////////////////////////////////////////////////////
+  // Speakers
+
   inline Speakers get_spk() const
   {
     return spk;
@@ -189,9 +218,9 @@ public:
     return eos;
   }
 
-  inline void set_eos(bool eos = true)
+  inline void set_eos(bool _eos)
   {
-    eos = true;
+    eos = _eos;
   }
 
   /////////////////////////////////////////////////////////

@@ -265,32 +265,31 @@ protected:
   {
     // fill output chunk & drop data
 
-    // speakers
-    _chunk->set_spk(spk);
-
-    // sync
-    _chunk->set_sync(sync, time);
-    sync = false;
-
-    // data send & drop
-    if (_size > size)
-      _size = size;
-
     if (spk.format == FORMAT_LINEAR)
     {
-      _chunk->set_samples(samples, _size);
+      _chunk->set
+      (
+        spk, 
+        samples, _size,
+        sync, time,
+        flushing && !size
+      );
       samples += _size;
     }
     else
     {
-      _chunk->set_rawdata(rawdata, _size);
+      _chunk->set
+      (
+        spk, 
+        rawdata, _size,
+        sync, time,
+        flushing && !size
+      );
       rawdata += _size;
     }
 
     size -= _size;
-
-    // end-of-stream
-    _chunk->set_eos(flushing && !size);
+    sync = false;
     flushing = flushing && size;
   }
 

@@ -168,6 +168,10 @@ SOURCE=.\tests\test_ac3_parser.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\tests\test_buffer.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\tests\test_filters.cpp
 # End Source File
 # Begin Source File
@@ -543,6 +547,10 @@ SOURCE=..\valib\sync.h
 # End Source File
 # End Group
 # End Group
+# Begin Source File
+
+SOURCE=.\log.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\test.cpp

@@ -48,7 +48,7 @@ bool test_pcm_passthrough_file(const char *filename, const char *desc, Speakers 
     return false;
   }
 
-  AudioProcessor chain;
+  AudioProcessor chain(2048);
   chain.set_input(spk);
   chain.set_output(spk);
   // chunks
@@ -67,16 +67,12 @@ bool test_pcm_passthrough_file(const char *filename, const char *desc, Speakers 
     if (wpos >= rpos)
     {
       read_size = f.read(ibuf + wpos, buf_size - wpos);
-      ichunk.set_spk(spk);
-      ichunk.set_buf(ibuf + wpos, read_size);
-      ichunk.set_time(false);
+      ichunk.set(spk, ibuf + wpos, read_size); 
     }
     else
     {
       read_size = f.read(ibuf + wpos, rpos - wpos);
-      ichunk.set_spk(spk);
-      ichunk.set_buf(ibuf + wpos, read_size);
-      ichunk.set_time(false);
+      ichunk.set(spk, ibuf + wpos, read_size);
     }
     memcpy(obuf + wpos, ibuf + wpos, read_size);
     wpos += read_size;
@@ -108,8 +104,8 @@ bool test_pcm_passthrough_file(const char *filename, const char *desc, Speakers 
         case FORMAT_PCM16:
         {
           int16_t *refbuf = (int16_t *)(obuf + rpos);
-          int16_t *testbuf = (int16_t *)ochunk.buf;
-          s = ochunk.size / sizeof(int16_t);
+          int16_t *testbuf = (int16_t *)ochunk.get_rawdata();
+          s = ochunk.get_size() / sizeof(int16_t);
           while (s--)
           {
             if (*refbuf++ != *testbuf++)
@@ -118,52 +114,52 @@ bool test_pcm_passthrough_file(const char *filename, const char *desc, Speakers 
               return false;
             }
           }
-          rpos += ochunk.size;
+          rpos += ochunk.get_size();
           break;
         }
 
         case FORMAT_PCM24:
         {
           int24_t *refbuf = (int24_t *)(obuf + rpos);
-          int24_t *testbuf = (int24_t *)ochunk.buf;
-          s = ochunk.size / sizeof(int24_t);
+          int24_t *testbuf = (int24_t *)ochunk.get_rawdata();
+          s = ochunk.get_size() / sizeof(int24_t);
           while (s--)
             if (*refbuf++ != *testbuf++)
             {
               printf("!!!Error: sample difference\n");
               return false;
             }
-          rpos += ochunk.size;
+          rpos += ochunk.get_size();
           break;
         }
 
         case FORMAT_PCM32:
         {
           int32_t *refbuf = (int32_t *)(obuf + rpos);
-          int32_t *testbuf = (int32_t *)ochunk.buf;
-          s = ochunk.size / sizeof (int32_t);
+          int32_t *testbuf = (int32_t *)ochunk.get_rawdata();
+          s = ochunk.get_size() / sizeof (int32_t);
           while (s--)
             if (*refbuf++ != *testbuf++)
             {
               printf("!!!Error: sample difference\n");
               return false;
             }
-          rpos += ochunk.size;
+          rpos += ochunk.get_size();
           break;
         }
 
         case FORMAT_PCMFLOAT:
         {
           float *refbuf = (float *)(obuf + rpos);
-          float *testbuf = (float *)ochunk.buf;
-          s = ochunk.size / sizeof(float);
+          float *testbuf = (float *)ochunk.get_rawdata();
+          s = ochunk.get_size() / sizeof(float);
           while (s--)
             if (*refbuf++ != *testbuf++)
             {
               printf("!!!Error: sample difference\n");
               return false;
             }
-          rpos += ochunk.size;
+          rpos += ochunk.get_size();
           break;
         }
 

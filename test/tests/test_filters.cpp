@@ -24,13 +24,13 @@ int test_filter(Filter *filter, const char *desc);
 int test_filters()
 {
   AGC            agc;
-  Converter      conv;
+  Converter      conv(2048);
   AudioDecoder   dec;
   Delay          delay;
   DVDDecoder     dvd;
   FilterChain    chain;
   Levels         levels;
-  AudioProcessor proc;
+  AudioProcessor proc(2048);
   Demux          demux;
   Spdifer        spdifer;
 

@@ -155,13 +155,19 @@ Spdifer::get_chunk(Chunk *_chunk)
       }
 
       // fill output chunk
-      _chunk->set_spk(get_output());
-      _chunk->set_rawdata(frame_buf.data(), nsamples * 4);
+      _chunk->set
+      (
+        get_output(),
+        frame_buf.data(), nsamples * 4,
+        false, 0, 
+        flushing && !read_len
+      );
+
       // timing
       sync_helper.send_sync(_chunk);
       sync_helper.set_syncing(true);
+
       // end-of-strema
-      _chunk->set_eos(flushing && !read_len);
       flushing = flushing && read_len;
 
       // switch state
@@ -187,8 +193,13 @@ Spdifer::get_chunk(Chunk *_chunk)
       if (frame_data)
       {
         // send frame header
-        _chunk->set_spk(stream_spk);
-        _chunk->set_rawdata(write_buf, frame_data);
+        _chunk->set
+        (
+          stream_spk,
+          write_buf, frame_data,
+          false, 0,
+          flushing && !read_len
+        );
         frame_data = 0;
 
         // timing
@@ -196,7 +207,6 @@ Spdifer::get_chunk(Chunk *_chunk)
         sync_helper.set_syncing(false);
 
         // end-of-strema
-        _chunk->set_eos(flushing && !read_len);
         if (flushing && !read_len)
         {
           // switch to sync state after flushing
@@ -210,18 +220,19 @@ Spdifer::get_chunk(Chunk *_chunk)
 
       // send frame data
       int l = MIN(frame_size, read_len);
-      _chunk->set_spk(stream_spk);
-      _chunk->set_rawdata(read_buf, l);
+      _chunk->set
+      (
+        stream_spk,
+        read_buf, l,
+        false, 0,
+        flushing && !read_len
+      );
 
       read_buf   += l;
       read_len   -= l;
       frame_size -= l;
 
-      // timing
-      _chunk->set_sync(false);
-
       // end-of-strema
-      _chunk->set_eos(flushing && !read_len);
       if (flushing && !read_len)
       {
         // switch to sync state after flushing

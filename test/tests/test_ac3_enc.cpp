@@ -36,13 +36,13 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
   Speakers lin_spk = _spk;
   lin_spk.format = FORMAT_LINEAR;
 
-  Converter conv;
+  Converter conv(2048);
   AC3Enc    enc;
   AC3Parser dec;
 
   FilterChain chain;
-  chain.add(&conv, "Converter");
-  chain.add(&enc,  "Encoder");
+  chain.add_back(&conv, "Converter");
+  chain.add_back(&enc,  "Encoder");
 
   conv.set_buffer(AC3_FRAME_SAMPLES);
   conv.set_format(FORMAT_LINEAR);
@@ -62,9 +62,7 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
   {
     buf_data = f.read(buf, buf_size);
 
-    raw.set_spk(raw_spk);
-    raw.set_buf(buf, buf_data);
-    raw.set_time(false);
+    raw.set(raw_spk, buf, buf_data);
 
     if (!chain.process(&raw))
     {
@@ -83,8 +81,8 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
       if (ac3.is_empty())
         continue;
 
-      frame_pos = ac3.buf;
-      if (!dec.load_frame(&frame_pos, frame_pos + ac3.size))
+      frame_pos = ac3.get_rawdata();
+      if (!dec.load_frame(&frame_pos, frame_pos + ac3.get_size()))
       {
         printf("!!!Error: AC3 parser frame load error!\n");
         return 1;

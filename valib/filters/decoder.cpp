@@ -81,13 +81,18 @@ AudioDecoder::get_chunk(Chunk *_chunk)
         return false;
 
       // fill output chunk
-      _chunk->set_spk(parser->get_spk());
-      _chunk->set_samples(parser->get_samples(), parser->get_nsamples());
+
+      _chunk->set
+      (
+        parser->get_spk(),
+        parser->get_samples(), parser->get_nsamples(),
+        0, 0,
+        flushing && !size
+      );
       // timimg
       sync_helper.send_sync(_chunk);
       sync_helper.set_syncing(true);
       // end-of-stream
-      _chunk->set_eos(flushing && !size);
       flushing = flushing && size;
 
       // quick hack to overcome bug in splitters that report incorrect sample rate

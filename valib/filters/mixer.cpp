@@ -142,20 +142,19 @@ Mixer::get_chunk(Chunk *_chunk)
     io_mixfunc_t mixfunc = io_mix_tbl[spk.nch()-1][out_spk.nch()-1];
     (this->*mixfunc)(samples, samples, n);
 
-    // speakers
-    _chunk->set_spk(out_spk);
+    // fill output chunk
+    _chunk->set
+    (
+      out_spk,
+      buf, n,
+      sync, time, 
+      flushing && !size
+    );
 
-    // sync
-    _chunk->set_sync(sync, time);
-    sync = false;
-
-    // data send & drop
-    _chunk->set_samples(buf, n);
     samples += n;
     size -= n;
 
-    // end-of-stream
-    _chunk->set_eos(flushing && !size);
+    sync = false;
     flushing = flushing && size;
   }
   else
@@ -164,19 +163,17 @@ Mixer::get_chunk(Chunk *_chunk)
     ip_mixfunc_t mixfunc = ip_mix_tbl[spk.nch()-1][out_spk.nch()-1];
     (this->*mixfunc)(samples, size);
 
-    // speakers
-    _chunk->set_spk(out_spk);
+    // fill output chunk
+    _chunk->set
+    (
+      out_spk,
+      samples, size,
+      sync, time,
+      flushing
+    );
 
-    // sync
-    _chunk->set_sync(sync, time);
-    sync = false;
-
-    // data send & drop
-    _chunk->set_samples(samples, size);
     size = 0;
-
-    // end-of-stream
-    _chunk->set_eos(flushing);
+    sync = false;
     flushing = false;
   }
   return true;

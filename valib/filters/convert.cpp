@@ -196,7 +196,7 @@ void
 Converter::linear2pcm()
 {
   int nch = spk.nch();
-  size_t sample_size = spk.sample_size() * nch;
+  size_t sample_size = ::sample_size(format) * nch;
 
   size_t n = MIN(size, nsamples);
   linear2pcm(samples, out_rawdata, n);
@@ -339,14 +339,22 @@ Converter::get_chunk(Chunk *_chunk)
     return false;
   }
 
-  _chunk->set_spk(get_output());
-  _chunk->set_sync(sync, time);
-  _chunk->set_eos(flushing && !size);
-
   if (format == FORMAT_LINEAR)
-    _chunk->set_samples(out_samples, out_size);
+    _chunk->set
+    (
+      get_output(), 
+      out_samples, out_size,
+      sync, time, 
+      flushing && !size
+    );
   else
-    _chunk->set_rawdata(out_rawdata, out_size);
+    _chunk->set
+    (
+      get_output(), 
+      out_rawdata, out_size,
+      sync, time, 
+      flushing && !size
+    );
 
   flushing = flushing && size;
   sync = false;

@@ -112,6 +112,8 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 #define value2db(value) ((value > 0)? log10(value)*20.0: 0)
 #define db2value(db)    pow(10.0, db/20.0)
 
+#define array_size(array) (sizeof(array) / sizeof(array[0]))
+
 ///////////////////////////////////////////////////////////////////////////////
 // Byteorder
 ///////////////////////////////////////////////////////////////////////////////

@@ -287,21 +287,21 @@ AC3Enc::get_chunk(Chunk *_chunk)
       return false;
 
     // fill chunk
-    _chunk->set_spk(spk);
-    _chunk->set_sync(sync, time);
-    _chunk->set_samples(frame_samples, AC3_FRAME_SAMPLES);
-    _chunk->set_eos(flushing && !size);
+    _chunk->set
+    (
+      spk,
+      frame_samples, AC3_FRAME_SAMPLES,
+      sync, time,
+      flushing && !size
+    );
   }
   else
   {
-    // fill chunk
-    _chunk->set_spk(spk);
-    _chunk->set_sync(false, 0);
-    _chunk->set_empty();
-    _chunk->set_eos(flushing && !size);
+    // empty chunk
+    _chunk->set(spk, 0, 0, false, 0, flushing && !size);
   }
 
-  // flushing
+  // reset after flushing
   if (flushing && !size)
   {
     flushing = false;

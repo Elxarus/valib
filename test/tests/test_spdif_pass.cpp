@@ -41,9 +41,7 @@ int test_spdifer(const char *fn, const char *fn_spdif, Speakers spk)
   {
     buf_data = f.read(buf, buf_size);
 
-    input.set_spk(spk);
-    input.set_buf(buf, buf_data);
-    input.set_time(false);
+    input.set(spk, buf, buf_data);
 
     if (!spdifer.process(&input))
     {
@@ -62,14 +60,14 @@ int test_spdifer(const char *fn, const char *fn_spdif, Speakers spk)
       // implicit assumption: output.size < max_spdif_frame_size
       if (!output.is_empty())
       {
-        spdif_data_size += output.size;
-        spdif_data = fspdif.read(spdif_buf, output.size);
-        if (spdif_data != output.size)
+        spdif_data_size += output.get_size();
+        spdif_data = fspdif.read(spdif_buf, output.get_size());
+        if (spdif_data != output.get_size())
         {
           printf("!!!Error: stream length does not match file size (more data returned)\n");
           return 1;
         }
-        if (memcmp(spdif_buf, output.buf, output.size))
+        if (memcmp(spdif_buf, output.get_rawdata(), output.get_size()))
         {
           printf("!!!Error: data difference!\n");
           return 1;
