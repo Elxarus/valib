@@ -1103,5 +1103,3 @@ Quantizer::get_coeff(ReadBS &bs, sample_t *s, int8_t *bap, int8_t *exp, int n, b
     }
   }
 }
-
-

@@ -4,7 +4,8 @@
 First order
 ===========
 
-* Inherit Parser class from Filter class.
+* Write Parser-to-Filter wrapper class, use it instead of AudioDecoder in 
+  DVDDecoder. Remove AudioDecoder class.
 * Inherit FileParser class from Source class.
 * Check Sync class timing
 * Add def_spk and err_spk global constants
@@ -66,6 +67,8 @@ Other
 
 Done
 ====
+-* Inherit Parser class from Filter class.
+  [Parser is not a filter, it requires an external control]
 +* New: valdec - Valex Audio Library based DECoder (AC3Player descendant)
 +* Create script to compile and perform testing
 +* timing: time type
@@ -349,8 +352,8 @@ Done:
 
 
 ----------------------------------------
-Total tasks: 212
+Total tasks: 213
 Done: 84
 Dubious: 7
-Declined: 4
+Declined: 5
 Comlete: 42%

@@ -27,8 +27,8 @@
 class AGC : public NullFilter
 {
 protected:
-  SampleBuf samples[2];
   SampleBuf w;
+  SampleBuf buffer[2];
 
   LevelsCache input_levels;
   LevelsCache output_levels;

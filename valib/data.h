@@ -37,14 +37,14 @@ struct samples_t
 // A part of audio data being processed.
 //
 // There are several types of chunks:
-// 1) Data chunk/empty chunk. Chunk may have some portion of data of may 
-//    have not.
-// 2) Syncronization chunk (sync-chunk). Chunk may contain syncronization 
-//    information.
+// 1) Data chunk/empty chunk. If chunk has data then it's data chunk. 
+//    Otherwise it's empty chunk.
+// 2) Syncronization chunk (sync-chunk). If chunk has syncronization 
+//    information then it's sync-chunk.
 // 3) End-of-steam chunk (eos-chunk). Chunk that ends data transmission.
 //
-// Empty chunk (chunk that contain no data) may be used just to inform 
-// downsteram about some events: format change, syncronization or  end of steram.
+// Empty chunk (chunk that contain no data) may be used to inform downsteram
+// about different events: format change, syncronization or end of steram.
 //
 // Speakers
 // ========
@@ -222,7 +222,7 @@ public:
     size = _size;
   }
 
-  inline void set_samples(samples_t _samples, size_t _size) 
+  inline void set_samples(const samples_t &_samples, size_t _size) 
   {
     samples = _samples; 
     size = _size; 

@@ -251,23 +251,21 @@ public:
 // receive_sync()
 //   Receives timestamp. Call it at process() to remember timestamp.
 //
-// send_sync()
+// send_sync(Chunk *chunk, int nsamples)
 //   Sends timstamp. Call it at get_chunk() call to stamp output chunk.
+//   nsamples - number of samples sent with this chunk. Needed for time tracking.
 //
 // get_time() 
 //   Returns timestamp for next output chunk even if next output should not be
 //   stamped. So this function may work as time couter for filters that 
 //   require continious time tracking.
 //
-// adjust_time()
-//   Adjusts last received timestamp. It may be timestamp meant for first or
-//   second output chunk.
-//
-// syncpoint()
-//   Used to indicate if we're in syncronization state now.
+// set_syncing()
+//   Used to set syncronization state now. Filter that uses syncing state 
+//   should set it explicitly.
 //
 // reset()
-//   Drop all syncpoints and go to syncronization state.
+//   Drop syncpoints and go to syncing state.
 
 class Sync
 {
@@ -282,7 +280,7 @@ public:
     reset();
   }
 
-  void receive_sync(bool _sync, time_t _time)
+  inline void receive_sync(bool _sync, time_t _time)
   {
     if (_sync)
       if (syncing)
@@ -290,7 +288,7 @@ public:
         sync[0] = true;
         time[0] = _time;
         sync[1] = false;
-        time[1] = 0;
+        time[1] = _time;
       }
       else
       {
@@ -298,54 +296,53 @@ public:
         time[1] = _time;
       }
   }
-  void receive_sync(const Chunk *chunk)
+  inline void receive_sync(const Chunk *chunk)
   {
     receive_sync(chunk->is_sync(), chunk->get_time());
   }
 
-  void send_sync(Chunk *_chunk)
+  inline void send_sync(Chunk *_chunk)
   {
     _chunk->set_sync(sync[0], time[0]);
-    if (sync[1])
+    sync[0] = sync[1];
+    time[0] = time[1];
+    sync[1] = false;
+  }
+
+  inline time_t track_time(time_t _time)
+  {
+    if (syncing)
     {
-      sync[0] = sync[1];
-      time[0] = time[1];
-      sync[1] = false;
-      time[1] = 0;
+      time[0] += _time;
+      time[1] = time[0];
+    }
+    else
+    {
+      if (!sync[1])
+        time[1] += _time;
     }
   }
  
-  time_t get_time()
+  inline time_t get_time()
   {
     return time[0];
   }
 
-  time_t adjust_time(time_t time_adj)
-  {
-    if (sync[1])
-      time[1] += time_adj;
-    else
-      time[0] += time_adj;
-  }
-
-
-  bool is_syncing()
+  inline bool is_syncing()
   {
     return syncing;
   }
 
-  void set_syncing(bool _syncing)
+  inline void set_syncing(bool _syncing)
   {
     syncing = _syncing;
   }
 
-  void reset()
+  inline void reset()
   {
     syncing = true;
     sync[0] = false;
-    time[0] = 0;
     sync[1] = false;
-    time[1] = 0;
   }
 };
 
@@ -356,6 +353,19 @@ public:
 //
 // Simple filter implementation that does nothing (just passthrough all data)
 // and fulfills all requirements.
+//
+// NullFilter remembers input data and makes output chunk equal to input data.
+// Following funcitons may be used in descendant classes:
+//
+// receive_chunk()      - remember input chunk data
+// send_empty_chunk()   - fill empty output chunk
+// send_chunk_buffer()  - fill output chunk
+// send_chunk_inplace() - fill output chunk and drop data from input buffer
+// drop()               - drop data from input buffer and track time changes
+//
+// Time tracking:
+// ==============
+// todo...
 
 class NullFilter : public Filter
 {
@@ -364,10 +374,105 @@ protected:
 
   Sync      sync;
   bool      flushing;
-  
+
   uint8_t  *buf;
   samples_t samples;
   size_t    size;
+
+  inline bool receive_chunk(const Chunk *_chunk)
+  {
+    // format change
+    if (spk != _chunk->get_spk() && !set_input(_chunk->get_spk())) 
+      return false;
+
+    // remember input chunk info
+    sync.receive_sync(_chunk);
+    flushing = _chunk->is_eos();
+    buf      = _chunk->get_buf();
+    samples  = _chunk->get_samples();
+    size     = _chunk->get_size();
+
+    return true;
+  }
+
+  inline void send_empty_chunk(Chunk *_chunk, bool _drop_flushing)
+  {
+    // fill output chunk
+    _chunk->set_spk(spk);
+    _chunk->set_empty();
+    sync.send_sync(_chunk);
+
+    // flushing
+    _chunk->set_eos(flushing && !size && drop_flushing);
+    flushing = flushing && (size || !drop_flushing);
+  }
+
+  inline void send_chunk_buffer(Chunk *_chunk, samples_t &_samples, size_t _size, bool _drop_flushing)
+  {
+    // fill output chunk
+    _chunk->set_spk(spk);
+    _chunk->set_samples(_samples, _size);
+    sync.send_sync(_chunk);
+
+    // flushing
+    _chunk->set_eos(flushing && !size && drop_flushing);
+    flushing = flushing && (size || !drop_flushing);
+  }
+
+  inline void send_chunk_buffer(Chunk *_chunk, uint8_t *_buf, size_t _size, bool _drop_flushing)
+  {
+    // fill output chunk
+    _chunk->set_spk(spk);
+    _chunk->set_samples(samples, _size);
+    sync.send_sync(_chunk);
+
+    // flushing
+    _chunk->set_eos(flushing && !size && drop_flushing);
+    flushing = flushing && (size || !drop_flushing);
+  }
+
+  inline void send_chunk_inplace(Chunk *_chunk, size_t _size, time_t _time)
+  {
+    // fill output chunk & drop data
+    _chunk->set_spk(spk);
+
+    if (_size > size)
+      _size = size;
+
+    if (spk.format == FORMAT_LINEAR)
+    {
+      _chunk->set_samples(samples, _size);
+      samples += _size;
+    }
+    else
+    {
+      _chunk->set_buf(buf, _size);
+      buf += _size;
+    }
+    size -= _size;
+
+    sync.send_sync(_chunk);
+    sync.track_time(_time);
+
+    // flushing
+    _chunk->set_eos(flushing && !size);
+    flushing = flushing && size;
+  }
+
+  inline void drop(size_t _size, time_t _time)
+  {
+    if (_size > size)
+      _size = size;
+
+    if (spk.format == FORMAT_LINEAR)
+      samples += _size;
+    else
+      buf += _size;
+
+    size -= _size;
+
+    sync.track_time(_time);
+  }
 
 public:
   NullFilter() {}
@@ -403,18 +508,7 @@ public:
 
   virtual bool process(const Chunk *_chunk)
   {
-    // format change
-    if (spk != _chunk->get_spk() && !set_input(_chunk->get_spk())) 
-      return false;
-
-    // remember unput chunk info
-    sync.receive_sync(_chunk);
-    flushing = _chunk->is_eos();
-    buf = _chunk->get_buf();
-    samples = _chunk->get_samples();
-    size = _chunk->get_size();
-
-    return true;
+    return receive_chunk(_chunk);
   }
 
   virtual Speakers get_output()
@@ -430,19 +524,7 @@ public:
 
   virtual bool get_chunk(Chunk *_chunk)
   {
-    // make output chunk
-    _chunk->set_spk(spk);
-    sync.send_sync(_chunk);
-    _chunk->set_eos(flushing);
-    if (spk.format == FORMAT_LINEAR)
-      _chunk->set_samples(samples, size);
-    else
-      _chunk->set_buf(buf, size);
-
-    // forget everything
-    size = 0;
-    flushing = 0;
-
+    send_chunk_inplace(_chunk, size, size);
     return true;
   };
 };

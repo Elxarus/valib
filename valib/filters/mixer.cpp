@@ -408,7 +408,7 @@ Mixer::calc_matrix()
 
     for (i = 0; i < NCHANNELS; i++)
       for (j = 0; j < NCHANNELS; j++)
-        levels[i] += matrix[j][i];
+        levels[i] += abs(matrix[j][i]);
 
     max_level = levels[0];
     for (i = 1; i < NCHANNELS; i++)
