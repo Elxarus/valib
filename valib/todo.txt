@@ -23,11 +23,20 @@ First order
 * Filter: add process_all(): to process entire data from given input to given 
   sink
 * AudioSink: add flush() call - play till buffer ends
+* Spdifer: sync only on format specified at input. Autodetect format only
+           if FORMAT_UNKNOWN is specified.
 
 Other
 =====
 * Parser: scan data block for sync?
 * WriteBS: review class
+* DRC should work on source channels, but we cannot simply place 
+  AGC before Mixer and it is a problem.
+* Overall DRC should look like 
+  out = gain + k * level (logarithmic scale)
+  But now gain is done in Mixer (before DRC):
+  out = k * (level + gain)
+  So DRC level shows something dependent on gain 
 
 
 Done

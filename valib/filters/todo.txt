@@ -16,6 +16,7 @@
 * AGC: clip short bursts (?)
 * AGC: limiter level
 * AGC: per-channel limiter (see ac3filter support page)
+* AGC: per-channel DRC 
 
 * Mixer: throw out null columns
 * Mixer: zero null output channels instead of matrixing

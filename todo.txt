@@ -13,8 +13,6 @@ First order
   DVDDecoder should support SPDIF output, SPDIF passthrough, and decode modes.
 * Spdifer test: add more ac3, mpa and dts streams
 * clev, slev, lfelev mixing coefs locking
-* BUG: negative DRC gain on positive compression 
-  (beacuse scaling was moved to Mixer?)
 * expand parsers format report
 * ac3 encoder test: what is 'strange sample'?
 * Tests with negative results as normal result (crash tests for example)
