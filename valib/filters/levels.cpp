@@ -149,7 +149,10 @@ Levels::get_chunk(Chunk *_chunk)
       }
       send += 7;
       while (sptr < send)
+      {
         if (fabs(sptr[0]) > max) max = fabs(sptr[0]);
+        sptr++;
+      }
 
       max *= spk_level;
       if (max > levels[spk_order[ch]])

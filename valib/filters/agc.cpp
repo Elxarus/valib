@@ -147,7 +147,10 @@ AGC::process()
     }
     send += 7;
     while (sptr < send)
+    {
       if (fabs(sptr[0]) > max) max = fabs(sptr[0]);
+      sptr++;
+    }
 
     levels_loc[ch] = max / spk_level;
   }
