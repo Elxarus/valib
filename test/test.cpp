@@ -1,13 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "log.h"
-#include "spk.h"
+#include "utils.h"
 
-int test_spdifer(Log *log, const char *data_file, const char *spdif_file, Speakers spk);
+int test_spdifer(Log *log, Speakers spk, const char *data_file, const char *spdif_file);
 int test_spdifer(Log *log)
 {
   log->open_group("Spdifer test");
-  test_spdifer(log, "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif", Speakers(FORMAT_AC3, 0, 0));
+  test_spdifer(log, Speakers(FORMAT_AC3, 0, 0), "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif");
   return log->close_group();
 }
 
@@ -72,13 +71,64 @@ int test_ac3_enc_all(Log *log)
 
 
 
-extern int test_filters(Log *log);
-extern int test_float(Log *log);
-
 
 
 extern int test_converter(Log *log);
 
+#include "source/noise.h"
+
+class PassthroughFilter : public NullFilter
+{
+public:
+  PassthroughFilter() {};
+  bool query_input(Speakers _spk) const { return true; }
+};
+
+int null_test(Log *log)
+{
+  log->open_group("NullFilter noise passthrough test");
+
+  Speakers spk;
+  int seed = 2435346;
+  Noise src;
+  Noise ref;
+  PassthroughFilter filter;
+
+  // Rawdata test
+  log->msg("Rawdata test");
+  spk.set(FORMAT_PCM16, MODE_STEREO, 48000, 65536);
+
+  src.set_seed(seed);
+  ref.set_seed(seed);
+
+  if (src.set_output(spk) &&
+      ref.set_output(spk) &&
+      filter.set_input(spk))
+    compare(log, &src, &filter, &ref);
+  else
+    log->err("Init failed");
+
+  // Linear test
+  log->msg("Linear test");
+  spk.set(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0);
+
+  src.set_seed(seed);
+  ref.set_seed(seed);
+
+  if (src.set_output(spk) &&
+      ref.set_output(spk) &&
+      filter.set_input(spk))
+    compare(log, &src, &filter, &ref);
+  else
+    log->err("Init failed");
+
+  return log->close_group();
+}
+
+
+extern int test_filters(Log *log);
+extern int test_float(Log *log);
+extern int passthrough_noise(Log *log);
 
 int main(int argc, char **argv)
 {
@@ -86,11 +136,13 @@ int main(int argc, char **argv)
   log.open_group("Test session");
 
 
+  test_float(&log);
   test_filters(&log);
+  null_test(&log);
+  passthrough_noise(&log);
+
   test_spdifer(&log);
  
-  test_float(&log);
-  test_pcm_passthrough(&log);
 
   test_ac3_parser();
   test_ac3_enc_all(&log);

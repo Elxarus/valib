@@ -1,5 +1,5 @@
 /*
-  Test sample_mant() and sample_exp() functions
+  Simple test for IEEE floating point format compatibility
 */
 
 #include <stdio.h>
@@ -7,76 +7,10 @@
 #include "..\log.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// sample_t utils
+// Main test
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLOAT_SAMPLE
-
-union double_t 
-{ 
-  double d;
-  uint8_t raw[8];
-  struct 
-  {
-    unsigned mant_low  : 32;
-    unsigned mant_high : 20;
-    unsigned exp       : 11;
-    unsigned sign      : 1;
-  };
-
-  double_t(double _d) { d = _d;   }
-  operator double &() { return d; }
-};
-
-inline int32_t sample_mant(sample_t s)
-{
-  uint32_t mant;
-  double_t d = s;
-
-  mant = 0x40000000 | (d.mant_high << 10) | (d.mant_low >> 22);
-  mant = (mant ^ (unsigned)(-(int)d.sign)) + d.sign;
-  return (int32_t)mant;
-}
-
-inline int16_t sample_exp(sample_t s)
-{
-  double_t d = s;
-  return int16_t(d.exp) - 1023 + 1;
-}
-
-#else
-
-union float_t
-{
-  float f;
-  struct 
-  {
-    unsigned mantissa:23;
-    unsigned exponent:8;
-    unsigned sign:1;
-  };
-};
-
-
-inline int32_t sample_mant(sample_t s);
-{
-  int32_t i32;
-  i32 = float_t(s).mant_high;
-  (uint32_t)i32 |= float_t(s).sign << 31;
-  return i32;
-}
-
-inline int sample_exp(sample_t s)
-{
-  return float_t(s).exp;
-}
-
-#endif
-
-
 int test_one_float(Log * log, sample_t s, int32_t mant, int16_t exp);
-
-
 int test_float(Log *log)
 {
   int err = 0;
@@ -103,6 +37,73 @@ int test_float(Log *log)
   return log->close_group();
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// sample_t utils
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef FLOAT_SAMPLE
+
+  union double_t 
+  { 
+    double d;
+    uint8_t raw[8];
+    struct 
+    {
+      unsigned mant_low  : 32;
+      unsigned mant_high : 20;
+      unsigned exp       : 11;
+      unsigned sign      : 1;
+    };
+
+    double_t(double _d) { d = _d;   }
+    operator double &() { return d; }
+  };
+
+  inline int32_t sample_mant(sample_t s)
+  {
+    uint32_t mant;
+    double_t d = s;
+
+    mant = 0x40000000 | (d.mant_high << 10) | (d.mant_low >> 22);
+    mant = (mant ^ (unsigned)(-(int)d.sign)) + d.sign;
+    return (int32_t)mant;
+  }
+
+  inline int16_t sample_exp(sample_t s)
+  {
+    double_t d = s;
+    return int16_t(d.exp) - 1023 + 1;
+  }
+
+#else // #ifndef FLOAT_SAMPLE
+
+  union float_t
+  {
+    float f;
+    struct 
+    {
+      unsigned mantissa:23;
+      unsigned exponent:8;
+      unsigned sign:1;
+    };
+  };
+
+
+  inline int32_t sample_mant(sample_t s);
+  {
+    int32_t i32;
+    i32 = float_t(s).mant_high;
+    (uint32_t)i32 |= float_t(s).sign << 31;
+    return i32;
+  }
+
+  inline int sample_exp(sample_t s)
+  {
+    return float_t(s).exp;
+  }
+
+#endif // #ifndef FLOAT_SAMPLE ... #else ... 
 
 int test_one_float(Log * log, sample_t s, int32_t mant, int16_t exp)
 {

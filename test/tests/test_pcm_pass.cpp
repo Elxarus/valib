@@ -1,112 +1,99 @@
 /*
-  PCM passthrough test
-  AudioProcessor should not alter regular input stream with default settings
+  AudioProcessor PCM passthrough test
+  AudioProcessor should not alter input stream with default settings
 */
 
-#include "..\log.h"
-#include "auto_file.h"
-#include "filters\proc.h"
+#include "source/raw_source.h"
+#include "source/noise.h"
+#include "filters/proc.h"
+#include "../utils.h"
 
-
-int test_compare_file(Log *log, Filter *filter, const char *data_file, const char *ref_file)
+// PCM passthrough test
+// (we cannot test FORMAT_PCMFLOAT because noise generates
+// floats > 1.0)
+int passthrough_noise(Log *log)
 {
-  const size_t buf_size = 256*1024;
+  log->open_group("Noise passthrough test for AudioProcessor");
+  static const int formats[] = 
+  { 
+    FORMAT_LINEAR, 
+    FORMAT_PCM16,    FORMAT_PCM24,    FORMAT_PCM32,
+    FORMAT_PCM16_LE, FORMAT_PCM24_LE, FORMAT_PCM32_LE,
+  };
 
-  AutoFile fdata(data_file);
-  AutoFile fref(ref_file);
-
-  // open files
-  if (!fdata.is_open())
-    return log->err("Cannot open data file %s", data_file);
-
-  if (!fref.is_open())
-    return log->err("Cannot open reference file %s", ref_file);
-
-  // buffers
-  DataBuf data_buf;
-  DataBuf ref_buf;
-  size_t data_size = 0;
-  size_t ref_size = 0;
-  uint8_t *ref_pos;
-  data_buf.allocate(buf_size);
-  ref_buf.allocate(buf_size);
-
-  Chunk ichunk;
-  Chunk ochunk;
-  bool flushing = false;
-
-  while (1)
+  static const sample_t levels[] = 
   {
-    // read input data
-    data_size = fdata.read(data_buf, buf_size);
+    1.0,
+    32768, 8388608, 2147483648, 1.0,
+    32768, 8388608, 2147483648, 1.0
+  };
 
-    if (data_size)
-      ichunk.set(filter->get_input(), data_buf, data_size);
-    else
+  static const int modes[] = 
+  { 
+    MODE_1_0,     MODE_2_0,     MODE_3_0,     MODE_2_1,     MODE_3_1,     MODE_2_2,
+    MODE_1_0_LFE, MODE_2_0_LFE, MODE_3_0_LFE, MODE_2_1_LFE, MODE_3_1_LFE, MODE_2_2_LFE,
+  };
+
+  int iformat = 0;
+  int imode = 0;
+  const int seed = 345346;
+  const int nsamples = 8192;
+
+  Speakers spk;
+  Noise src;
+  Noise ref;
+  AudioProcessor proc(2048);
+
+  for (iformat = 0; iformat < array_size(formats); iformat++)
+    for (imode = 0; imode < array_size(modes); imode++)
     {
-      ichunk.set(filter->get_input(), 0, 0, 0, 0, true);
-      flushing = true;
-    }
+      spk.set(formats[iformat], modes[imode], 48000, levels[iformat]);
+      log->msg("Testing %s %s %iHz with %iK samples", spk.format_text(), spk.mode_text(), spk.sample_rate, nsamples / 1024);
 
-    // process data
-    if (!filter->process(&ichunk))
-      return log->err("process() failed");
-
-    if (flushing && filter->is_empty())
-      return log->err("Filter is empty after receiving end-of-stream");
-
-    while (!filter->is_empty())
-    {
-      if (!filter->get_chunk(&ochunk))
-        return log->err("get_chunk() failed");
-
-      if (ochunk.get_spk().format == FORMAT_LINEAR)
-        return log->err("cannot work with linear output");
-
-      while (!ochunk.is_empty())
+      if (!src.set_output(spk) || 
+          !ref.set_output(spk) )
       {
-        // read reference data buffer
-        if (!ref_size)
-        {
-          ref_size = fref.read(ref_buf, buf_size);
-          if (!ref_size)
-            return log->err("processed output is longer than reference data");
-          ref_pos = ref_buf;
+        log->err("Cannot init noise source");
+        continue;
+      }
+      if (spk.format == FORMAT_LINEAR)
+      {
+        src.set_data_size(nsamples);
+        ref.set_data_size(nsamples);
+      }
+      else
+      {
+        src.set_data_size(nsamples * spk.nch() * spk.sample_size());
+        ref.set_data_size(nsamples * spk.nch() * spk.sample_size());
+      }
+      src.set_seed(seed);
+      ref.set_seed(seed);
 
-          log->status("File pos: %uKb", fref.pos() >> 10);
-        }
+      if (!proc.set_input(spk) || !proc.set_output(spk))
+      {
+        log->err("Cannot init processor");
+        continue;
+      }
 
-        // compare
-        size_t len = MIN(ochunk.get_size(), ref_size);
-        if (memcmp(ref_pos, ochunk.get_rawdata(), len))
-          return log->err("data differs");
-        ochunk.drop(len);
-        ref_pos += len;
-        ref_size -= len;
-      } // while (!chunk.is_empty())
-    } // while (!filter->is_empty())
-
-    if (flushing)
-    {
-      if (!ochunk.is_eos())
-        return log->err("Last chunk is not end-of-stream");
-
-      if (ref_size)
-        return log->err("processed output is less than reference data");
-
-      return 0;
+      compare(log, &src, &proc, &ref);
     }
-  } // while (1)
-};
+  return log->close_group();
+}
 
 // PCM passthrough test
 int test_pcm_passthrough_file(Log *log, const char *filename, const char *desc, Speakers spk)
 {
   log->msg("Testing %s %s %iHz file %s (%s)", spk.format_text(), spk.mode_text(), spk.sample_rate, filename, desc);
 
-  AudioProcessor proc(2048);
-  proc.set_input(spk);
-  proc.set_output(spk);
+  RAWSource src1(spk, filename);
+  RAWSource src2(spk, filename);
 
-  return test_compare_file(log, &proc, filename, filename);
+  if (!src1.is_open() || !src2.is_open())
+    return log->err("Cannot open file '%s'", filename);
+    
+  AudioProcessor proc(2048);
+  if (!proc.set_input(spk) || !proc.set_output(spk))
+    return log->err("Init failed");
+
+  return compare(log, &src1, &proc, &src2);
 }

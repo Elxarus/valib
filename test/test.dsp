@@ -23,8 +23,8 @@ CFG=test - Win32 Debug
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
-# PROP Scc_ProjName ""
-# PROP Scc_LocalPath ""
+# PROP Scc_ProjName "test"
+# PROP Scc_LocalPath ".."
 CPP=cl.exe
 RSC=rc.exe
 
@@ -153,10 +153,6 @@ SOURCE=.\tests\test_pes_demux\demux_ref.cpp
 SOURCE=.\tests\test_pes_demux\demux_ref.h
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\tests\auto_file.h
-# End Source File
 # Begin Source File
 
 SOURCE=.\tests\test_ac3_enc.cpp
@@ -564,6 +560,14 @@ SOURCE=..\valib\source\noise.cpp
 
 SOURCE=..\valib\source\noise.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\raw_source.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\raw_source.h
+# End Source File
 # End Group
 # End Group
 # Begin Source File
@@ -573,6 +577,14 @@ SOURCE=.\log.h
 # Begin Source File
 
 SOURCE=.\test.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\utils.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\utils.h
 # End Source File
 # End Target
 # End Project
