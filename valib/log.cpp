@@ -44,7 +44,7 @@ Log::clear_status()
   // erase status line (if it is)
   if (istatus)
   {
-    log_print(flags, f, "                                                                               \r");
+    printf("                                                                               \r");
     istatus = 0;
   }
 }
@@ -152,11 +152,11 @@ Log::status(const char *_msg, ...)
       istatus++;
       if (istatus >= (sizeof(statuses) / sizeof(statuses[0])))
         istatus = 1;
-      log_print(flags, f, statuses[istatus]);
+      fprintf(stderr, statuses[istatus]);
   
       va_list list;
       va_start(list, _msg);
-      log_print(flags, f, _msg, list);
+      vfprintf(stderr, _msg, list);
       va_end(list);
       fprintf(stderr, "\r");
     }
