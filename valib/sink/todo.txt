@@ -1,0 +1,4 @@
++* New: DirectShow sink
+* New: WaveOut sink
+* New: WAV file sink
+* New: DirectSound3D audio sink

@@ -1,0 +1,39 @@
+* AC3Parser: review frame loading 
+  (do not zero frame_size on reset and frame loading)
+* AC3Parser: optimize get_coefs
+* AC3Parser: add properties:
+  dither - turn dithering on/off (for debug)
+  drc - turn DRC on/off
+  drc_heavy - turn heavy DRC compression on/off
+  crc - use CRC flag
+* AC3Parser: get rid of warnings in floor_tbl table
+* AC3Parser: add comments to tables, review tables
+* AC3Parser: add block-level decoding support
+* AC3Parser: verify bit allocation conditions:
+  (do we need to make _full_ bit allocation if deltbaie = 1?)
+* AC3Parser: grouped mantissas verification (may be out of range)
+* AC3Parser: constraint p.41 s5.4.3.14 (coupling coordinates)
+* AC3Parser: think about error-recovery strategy
+* AC3Parser: think about performance
++* AC3Parser: support for 8bit & 16bit stream types
+
+* MPAParser: review frame loading
+* MPAParser: intensity_stereo for Layer I/II? (see mode_extension)
+* MPAParser: add mp3 support
+* MPAParser: add multichannel support
+* MPAParser: add free-format support
+* MPAParser: think about error-recovery strategy
+* MPAParser: think about performance
+* MPAParser: support for 8bit & 16bit stream types
+
+* FileParser: add timing (get_time() call?):
+  Update time according to file position at seek() call
+  Update time with each frame decoded? (dejitter can do it)
+  (i.e. File parser should be timing generator)
+* FileParser: make it Source descendant?
++* FileParser: EOF is too early (before last read buffer decoded)
+* New: RAWFile class to work with raw PCM files
+* New: DTS parser (just frame load)
+* New: AAC parser (far future)
+* New: OGG parser (far future)
+* New: RAWFile

@@ -1,0 +1,10 @@
+Valex Audio Library (VALib)
+
+General purpose audio decoding, processing and output library.
+
+Distributed under GNU General Public License version 2.
+
+Contact Author: 
+mailto:xvalex@mail.ru?Subject=valib
+
+Copyright (c) 2004 by Alexander Vigovsky (xvalex@mail.ru)

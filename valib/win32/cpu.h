@@ -1,0 +1,43 @@
+/*
+  CPU usage measurement
+*/
+
+#ifndef CPU_H
+#define CPU_H
+
+#include <windows.h>
+
+class CPUMeter
+{
+private:
+  HANDLE   thread;            // monitored thread handle copy (can be used by other threads)
+  __int64  thread_time;       // thread time spent in between of usage() calls
+  __int64  system_time_begin; // system time of previous usage() call
+  __int64  thread_time_begin; // thread time we start measure
+  __int64  thread_time_total; // total thread time spent
+
+  __int64  system_time_start; // time we start measure
+  __int64  system_time_total; // total system time spent in between of start() and stop() calls
+
+public:
+  CPUMeter();
+
+  // methods to be called by thread measured
+  void    start();  // start measurement
+  void    stop();   // stop measurement
+
+  // methods to be called by monitor thread (may be other thread than thread measured)
+  // can be called at any time, including the time in between start() and stop() calls
+  void    reset();  // reset counters
+  double  usage();  // mean CPU usage since last usage() call (only thread time spent in between start() and stop() 
+                    // calls is counted; this call resets time counters)
+
+  __int64 get_thread_time(); // time used by thread since last reset() or usage() call
+  __int64 get_system_time(); // real time spent since last reset() or usage() call
+
+  // mean CPU usage since last reset() or usage() call (only thread time spent in between start() and stop()
+  // calls is counted; this call does not reset time counters)
+  double  mean_usage() { return double(get_thread_time()) / double(get_system_time()); };
+};
+
+#endif

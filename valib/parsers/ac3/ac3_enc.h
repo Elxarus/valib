@@ -1,0 +1,109 @@
+#ifndef VAC3ENC_H
+#define VAC3ENC_H
+
+#include "filter.h"
+#include "ac3_defs.h"
+#include "ac3_mdct.h"
+#include "bitstream.h"
+
+inline int sym_quant(int m, int levels);
+inline int asym_quant(int m, int bits);
+
+class AC3Enc : public NullFilter
+{
+public:
+  // filter data
+  bool timestamp;
+  time_t time;
+  int nsamples;
+  SampleBuf samples;
+  DataBuf   frame_buf;
+  SampleBuf window;
+
+  // decoder mode
+  int sample_rate;
+  int bitrate;
+  int frame_size;
+  int frames;
+
+  MDCT mdct;
+  WriteBS pb;
+
+  //  stream-level data
+  int  acmod;
+  bool dolby;
+  bool lfe;
+  int  nfchans;
+
+  int bsid;                            // 'bsid' - bitstream identification
+  int fscod;                           // 'fscod' - sample rate code
+  int halfratecod;                     // 'halfratecod' - half-rate code
+  int frmsizecod;                      // 'frmsizecod' - frame size code
+  // bit allocation
+  int sdcycod;                         // 'sdcycod' - slow decay code
+  int fdcycod;                         // 'fdcycod' - fast decay code
+  int sgaincod;                        // 'sgaincod' - slow gain code
+  int dbpbcod;                         // 'dbpbcod' - dB per bit code
+  int floorcod;                        // 'floorcod' - floor code
+  int fgaincod;                        // 'fgaincod' - fast gain code
+
+  int csnroffst;                       // 'csnroffst' - coarse SNR offset
+  int fsnroffst;                       // 'fsnroffst' - fine SNR offset
+
+  int16_t  delay[AC3_NCHANNELS][AC3_BLOCK_SAMPLES]; // delay buffer (not normalized)
+  int      delay_exp[AC3_NCHANNELS];                // delay buffer normalization
+                                           
+  int32_t  mant[AC3_NCHANNELS][AC3_NBLOCKS][AC3_BLOCK_SAMPLES];    // mdct coeffitients
+  int8_t   exp[AC3_NCHANNELS][AC3_NBLOCKS][AC3_BLOCK_SAMPLES];     // exponents
+  int8_t   expcod[AC3_NCHANNELS][AC3_NBLOCKS][AC3_BLOCK_SAMPLES];  // encoded exponents
+  int8_t   bap[AC3_NCHANNELS][AC3_NBLOCKS][AC3_BLOCK_SAMPLES];     // bit allocation pointers
+
+  int      chbwcod[AC3_NCHANNELS-1];                      // 'chbwcod' - channel bandwidth code (fbw only)
+  int      nmant[AC3_NCHANNELS];                          // number of mantissas
+  int      expstr[AC3_NCHANNELS][AC3_NBLOCKS];            // 'expstr'/'lfeexpstr' - exponent strategy
+  int      ngrps[AC3_NCHANNELS][AC3_NBLOCKS];             // number of exponent groups
+
+  inline void output_mant(WriteBS &pb, int8_t bap[AC3_BLOCK_SAMPLES], int32_t mant[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLES], int start, int end) const;
+  inline void compute_expstr(int expstr[AC3_NBLOCKS], int8_t exp[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int endmant) const;
+  inline void restrict_exp(int8_t expcod[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int ngrps[AC3_NBLOCKS], int8_t exp[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int expstr[AC3_NBLOCKS], int endmant) const;
+  inline int  encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLES], int expstr, int endmant) const;
+
+  int  encode_frame();
+
+public:
+  AC3Enc();
+
+  bool set_bitrate(int bitrate);
+  int  get_bitrate();
+
+  // Filter interface
+  virtual void reset();
+
+  virtual bool query_input(Speakers spk);
+  virtual bool set_input(Speakers spk);
+  virtual bool process(const Chunk *chunk);
+
+  virtual Speakers get_output();
+  virtual bool get_chunk(Chunk *chunk);
+};
+
+
+
+// symmetric quantization
+inline int sym_quant(int c, int levels)
+{
+  int v = (c + 32768) * levels >> 16;
+//  _ASSERT(v < levels);
+  return v;
+}
+
+// asymmetric quantization
+inline int asym_quant(int c, int bits)
+{
+  c >>= 16 - bits;
+  c &= (1 << bits) - 1; // truncate unused bits
+  return c;
+}
+
+
+#endif

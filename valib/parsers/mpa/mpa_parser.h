@@ -1,0 +1,144 @@
+/*
+  Valex MPEG Audio parser
+
+  MPEG1/2 LayerI and LayerII audio parser class
+*/
+
+#ifndef MPA_PARSER_H
+#define MPA_PARSER_H
+
+#include "data.h"
+#include "parser.h"
+#include "bitstream.h"
+#include "mpa_defs.h"
+#include "mpa_synth.h"
+
+
+
+class MPAParser : public Parser
+{
+public:
+  // raw frame header struct
+  union Header
+  {
+    Header() {};
+    Header(uint32_t i) { raw = i; }
+
+    uint32_t raw;
+    struct
+    {
+      unsigned emphasis           : 2;
+      unsigned original           : 1;
+      unsigned copyright          : 1;
+      unsigned mode_ext           : 2;
+      unsigned mode               : 2;
+      unsigned extension          : 1;
+      unsigned padding            : 1;
+      unsigned sampling_frequency : 2;
+      unsigned bitrate_index      : 4;
+      unsigned error_protection   : 1;
+      unsigned layer              : 2;
+      unsigned version            : 1;
+      unsigned sync               : 12;
+    };
+  };
+  // bitstream information struct
+  struct BSI
+  {
+    int ver;        // stream version: 0 = MPEG1; 1 = MPEG2 LSF
+    int layer;      // indicate layer (MPA_LAYER_X constants)
+    int mode;       // channel mode (MPA_MODE_X constants)
+    int bitrate;    // bitrate [kbps]
+    int freq;       // sampling frequency [Hz]
+    int nch;        // number of channels
+    int nsamples;   // number of samples in sample buffer (384 for Layer1, 1152 for LayerII)
+
+    int frame_size; // frame size in bytes (not slots!)
+    int jsbound;    // first band of joint stereo coding 
+    int sblimit;    // total number of subbands 
+  };
+
+  Header   hdr; // raw header
+  BSI      bsi; // bitstream information
+  Speakers spk; // speaker configuration
+
+  // just statistics
+  unsigned errors;
+  unsigned frames;
+
+  MPAParser();
+  ~MPAParser();
+
+  // Parser interface
+  virtual void reset();
+
+  // load/decode frame
+  virtual unsigned load_frame(uint8_t **buf, uint8_t *end);
+  virtual bool decode_frame();
+
+  // stream information
+  virtual Speakers get_spk()        const { return spk;            }
+  virtual unsigned get_frame_size() const { return bsi.frame_size; }
+  virtual unsigned get_nsamples()   const { return bsi.nsamples;   }
+  virtual void get_info(char *buf, unsigned len) const;
+  virtual unsigned get_frames()     const { return frames;         }
+  virtual unsigned get_errors()     const { return errors;         }
+
+  // Buffers
+  virtual uint8_t *get_frame()      const { return frame_buf;      }
+  virtual samples_t get_samples()   const { return samples;        }
+
+private:
+  int II_table;            // Layer II allocation table number 
+
+  // buffers
+  DataBuf   frame_buf;     // raw frame buffer
+  int frame_data;          // data size on frame buffer
+  SampleBuf samples;       // samples buffer
+
+  ReadBS       bitstream;  // bitstream 
+  SynthBuffer *synth[MPA_NCH]; // synthesis buffers
+
+  /////////////////////////////////////////////////////////
+  // Common decoding functions
+
+  inline bool sync(Header header);
+  bool decode_header();
+
+  /////////////////////////////////////////////////////////
+  // Layer I
+
+  bool I_decode_frame();
+  void I_decode_fraction(
+         sample_t *fraction[MPA_NCH], // pointers to sample_t[SBLIMIT] arrays
+         int16_t  bit_alloc[MPA_NCH][SBLIMIT],
+         sample_t scale[MPA_NCH][SBLIMIT]);
+
+  /////////////////////////////////////////////////////////
+  // Layer II
+
+  bool II_decode_frame();
+  void II_decode_fraction(
+         sample_t *fraction[MPA_NCH], // pointers to sample_t[SBLIMIT*3] arrays
+         int16_t  bit_alloc[MPA_NCH][SBLIMIT],
+         sample_t scale[MPA_NCH][3][SBLIMIT],
+         int x);
+};
+
+inline bool 
+MPAParser::sync(Header h)
+{
+  // sync check
+  if (h.sync != 0xfff)           return false;
+
+  // integrity check
+  if (h.layer == 0)              return false;
+  if (h.bitrate_index >= 15)     return false;
+  if (h.sampling_frequency >= 3) return false;
+
+  // for now we will not work with free-format
+  if (h.bitrate_index == 0)      return false; 
+  return true;
+}
+
+#endif

@@ -1,0 +1,91 @@
+First order
+===========
+
+* Check Sync class timeing
+* Add def_spk and err_spk global constants
+* CPUMeter may not work in some cases??? See message from SBN 02.04.2004
+* New: Despdifer to demux input SPDIFed stream.
+?* Rewrite AudioDecoder & DVDDecoder classes to reorganide decoding process.
+  AudioDecoder should understand PCM/PES/SPDIF/MPA/AC3/DTS/[other formats].
+  It also should show internal format for containter streams. It should have
+  an option to scan PCM input for SPDIF stream that it can possibly contain
+  (required to directly play WAV/DTS and WAV/AC3 files prepared for DTS(AC3)/CD.
+  DVDDecoder should support SPDIF output, SPDIF passthrough, and decode modes.
+* Spdifer test: add more ac3, mpa and dts streams
+* clev, slev, lfelev mixing coefs locking
+* BUG: negative DRC gain on positive compression 
+  (beacuse scaling was moved to Mixer?)
+* expand parsers format report
+* ac3 encoder test: what is 'strange sample'?
+* Tests with negative results as normal result (crash tests for example)
+* ac3dec: add SPDIF output
+* AudioDecoder SPDIF test: add MPA, DTS, PES/AC3, PES/MPA, PES/DTS
+* New: out-of-bounds test for filters (update PCM passthrough test)
+* Test suite: add logging to file
+* New: Test: correct filter timstamp passthrough
+* PCM passthrough test: Multichannel PCM passthrough test failed
+* Find classes to make tests for
+
+Tests
+=====
+* New: MPAParser test
+* New: FileParser test
+* PESDemux test: add MPEG1 stream test
+* PESDemux test: add DTS-PES test
+
+Think about
+===========
+* think about: cross-platform time measurement (look for liba52 for reference)
+* think about: plugin interface
+  (main problem is how to set external filter's parameters and UI)
+* think about: universal parameter interface
+* think about: how to make customizable user interface
+* think about: how to use the library in other projects 
+  (include directories, required files)
+* think about: what to do with A52Parser class
+* think about: optimal dynamic range compressor based on gathered statistics
+  (after Loudness histogram filter)
+
+Other
+=====
+* pes_demux: add more statistics during processing
+* mpa_iso: add option to disable dithering (for testing purposes)
+* New: valdec - Valex Audio Library based DECoder (AC3Player descendant)
+* New: decoder & processor .dll
+* New: decoder & processor .lib
+* New: platform-independent cpu usage interface 
+       (to make utils to work in non-win32 environment)
+* Modify AC3Enc to use sample_t
+* New FFT for AC3 encoder
+* remove performance-measure compile options from release builds
+  and make special performance-measure builds
+* Rename a52dec project and think about to make performance tests
+?* Add filter counterpart for parser classes?
+
+Done
+====
++* Create script to compile and perform testing
++* timing: time type
++* timing: what to do with AudioSink timing functions?
+  [changed to time_t]
++* DTS support with use of dtslib
++* AC3 encoder: remove old encoder from parsers\ac3 and replace with new one
++* BUG: disabling auto matrix does not work
++* BUG: reorder works incorrectly
++* ac3enc: write encoder app
++* ac3 encoder test: multichannel test
++* add PCM Float little-endian format
++* Rename little-endian formats to PCM16LE (for example)
++* AC3 encoder: move tests from ac3enc project to test project
+?* Demux test: update
++* New: PCM passthrough test (test for Convertor, Mixer, AGC)
++* PESDemux test: add LPCM test
++* New: Test: filter should process empty chunks without errors
++* New: Test: filter should return empty chunk filter is empty
++* Place main test scripts (which test several files) to main test file
++* New: AudioDecoder SPDIF test
++* BUG: incorrect LFE mixing
++* LFE mixing???
++* Remove SPDIF support from AudioDecoder, and use Spdifer in DVDDecoder
++* PCM passthrough test: 32-bit noise passthrough failed
++* Filters test: AudioDecoder test failed
