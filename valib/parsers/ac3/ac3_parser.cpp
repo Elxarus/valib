@@ -231,16 +231,6 @@ AC3Parser::parse_header()
 // Fill AC3Info structure
 {
   /////////////////////////////////////////////////////////////
-  // Check CRC
-
-  if (check_crc)
-  {
-    int crc_frame_size = ((frame_data >> 1) + (frame_data >> 3)) & ~1;
-    int crc = calc_crc(0, frame + 2, crc_frame_size - 2);
-    if (crc) return false;
-  }
-
-  /////////////////////////////////////////////////////////////
   // Init bitstream
 
   int bs_type;
@@ -252,6 +242,26 @@ AC3Parser::parse_header()
   }
   bs.set_ptr(frame, bs_type);
   bs.get(32);
+
+  /////////////////////////////////////////////////////////////
+  // Check CRC
+
+  if (check_crc)
+  {
+    int crc_frame_size = ((frame_data >> 1) + (frame_data >> 3)) & ~1;
+    int crc;
+    switch (bs_type)
+    {
+      case BITSTREAM_8:
+        crc = calc_crc(0, frame + 2, crc_frame_size - 2); break;
+        if (crc) return false;
+        break;
+
+      case BITSTREAM_16BE:
+        // todo: CRC check for big endian
+        break;
+    }
+  }
 
   /////////////////////////////////////////////////////////////
   // Parse bit stream information (BSI)
