@@ -1,6 +1,7 @@
 #include "filter_chain.h"
 
 // todo: allocate filter entries statically, 32 elements max to store its state in 32bit word
+// todo: (maybe)
 
 FilterChain::FilterChain()
 {

@@ -1,12 +1,15 @@
 /*
   Unified audio decoder
 
-  Input formats: AC3, MPA, DTS
+  Input formats: AC3, MPA, DTS, SPDIF
   Ouptupt formats: Linear
   Format conversions:
     AC3 -> Linear
     MPA -> Linear
     DTS -> Linear
+    SPDIF/AC3 -> Linear
+    SPDIF/MPA -> Linear
+    SPDIF/DTS -> Linear
   Timing: apply input timestamp to the first syncpoint found at the input data
   Buffering: no
 */
