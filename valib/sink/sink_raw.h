@@ -1,5 +1,5 @@
 /*
-  RAW file output audio sink
+  RAW file output audio renderer
 */
 
 #ifndef SINK_RAW_H
@@ -8,21 +8,21 @@
 #include "sink.h"
 #include "auto_file.h"
 
-class RAWSink : public NullSink
+class RAWRenderer : public NullRenderer
 {
 protected:
   AutoFile f;
 
 public:
-  RAWSink() 
+  RAWRenderer() 
   {}
 
-  RAWSink(const char *_filename): 
+  RAWRenderer(const char *_filename): 
   f(_filename, "wb") 
   {}
 
   /////////////////////////////////////////////////////////
-  // RAWSink interface
+  // RAWRenderer interface
 
   bool open_file(const char *_filename)
   {
@@ -41,7 +41,7 @@ public:
   }
 
   /////////////////////////////////////////////////////////
-  // AudioSink interface
+  // AudioRenderer interface
 
   // Device open/close
   virtual bool query(Speakers _spk) const  

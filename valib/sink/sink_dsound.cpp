@@ -61,7 +61,7 @@ public:
 SpeakersCache ds_cache;
 
 
-DSoundSink::DSoundSink(HWND _hwnd, int _ds_buf_size_ms, int _preload_ms)
+DSRenderer::DSRenderer(HWND _hwnd, int _ds_buf_size_ms, int _preload_ms)
 {
   hwnd = _hwnd;
   if (!hwnd) hwnd = GetForegroundWindow();
@@ -98,7 +98,7 @@ DSoundSink::DSoundSink(HWND _hwnd, int _ds_buf_size_ms, int _preload_ms)
     SAFE_RELEASE(ds);
     return;
   }
-#ifdef DSoundSink_PRIMARY_BUFFER
+#ifdef DSRenderer_PRIMARY_BUFFER
   DSBUFFERDESC dsbdesc;
   ZeroMemory(&dsbdesc, sizeof(DSBUFFERDESC));
   dsbdesc.dwSize  = sizeof(DSBUFFERDESC);
@@ -112,7 +112,7 @@ DSoundSink::DSoundSink(HWND _hwnd, int _ds_buf_size_ms, int _preload_ms)
 #endif
 }
 
-DSoundSink::~DSoundSink()
+DSRenderer::~DSRenderer()
 {
   close();
   if (ds) ds->Release();
@@ -122,7 +122,7 @@ DSoundSink::~DSoundSink()
 
 
 bool 
-DSoundSink::query(Speakers _spk) const
+DSRenderer::query(Speakers _spk) const
 {
   if (!ds) return false;
 
@@ -159,7 +159,7 @@ DSoundSink::query(Speakers _spk) const
 }
 
 bool 
-DSoundSink::open(Speakers _spk)
+DSRenderer::open(Speakers _spk)
 {
   if (!ds) return false;
   if (!query(_spk)) return false; // update cache
@@ -219,7 +219,7 @@ DSoundSink::open(Speakers _spk)
 }
 
 void 
-DSoundSink::close()
+DSRenderer::close()
 {
   AutoLock autolock(&lock);
 
@@ -227,13 +227,13 @@ DSoundSink::close()
 }
 
 bool 
-DSoundSink::is_open() const
+DSRenderer::is_open() const
 {
   return ds_buf != 0;
 }
 
 Speakers
-DSoundSink::get_spk() const
+DSRenderer::get_spk() const
 {
   return spk;
 }
@@ -242,13 +242,13 @@ DSoundSink::get_spk() const
 
 
 bool 
-DSoundSink::is_time() const
+DSRenderer::is_time() const
 {
   return true;
 }
 
 vtime_t
-DSoundSink::get_time() const
+DSRenderer::get_time() const
 {
   if (!ds_buf) return 0;
   DWORD play_cur, write_cur;
@@ -264,7 +264,7 @@ DSoundSink::get_time() const
 
 
 void 
-DSoundSink::stop()
+DSRenderer::stop()
 {
   if (!ds_buf) return;
   AutoLock autolock(&lock);
@@ -276,7 +276,7 @@ DSoundSink::stop()
 }
 
 void 
-DSoundSink::flush()
+DSRenderer::flush()
 {
   if (!ds_buf) return;
   AutoLock autolock(&lock);
@@ -292,7 +292,7 @@ DSoundSink::flush()
   if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
     return;
 
-  data_size = buf_size + play_cur - cur;
+  data_size = buf_size + cur - play_cur;
   if (data_size >= buf_size)
     data_size -= buf_size;
 
@@ -350,7 +350,7 @@ DSoundSink::flush()
   cur = 0;
 }
 
-void DSoundSink::pause()
+void DSRenderer::pause()
 {
   if (!ds_buf) return;
   AutoLock autolock(&lock);
@@ -359,7 +359,7 @@ void DSoundSink::pause()
   paused = true;
 }
 
-void DSoundSink::unpause()
+void DSRenderer::unpause()
 {
   AutoLock autolock(&lock);
 
@@ -370,7 +370,7 @@ void DSoundSink::unpause()
 }
 
 bool 
-DSoundSink::is_paused() const
+DSRenderer::is_paused() const
 {
   return paused;
 }
@@ -378,19 +378,19 @@ DSoundSink::is_paused() const
 
 
 bool
-DSoundSink::is_vol() const
+DSRenderer::is_vol() const
 {
   return true;
 }
 
 double
-DSoundSink::get_vol() const
+DSRenderer::get_vol() const
 {
   return vol;
 }
 
 void 
-DSoundSink::set_vol(double _vol)
+DSRenderer::set_vol(double _vol)
 {
   AutoLock autolock(&lock);
 
@@ -411,19 +411,19 @@ DSoundSink::set_vol(double _vol)
 }
 
 bool 
-DSoundSink::is_pan() const
+DSRenderer::is_pan() const
 {
   return true;
 }
 
 double 
-DSoundSink::get_pan() const
+DSRenderer::get_pan() const
 {
   return pan;
 }
 
 void 
-DSoundSink::set_pan(double _pan)
+DSRenderer::set_pan(double _pan)
 {
   AutoLock autolock(&lock);
 
@@ -445,7 +445,7 @@ DSoundSink::set_pan(double _pan)
 
 
 size_t 
-DSoundSink::get_buffer_size() const
+DSRenderer::get_buffer_size() const
 {
   if (!ds_buf) return false;
   DWORD play_cur;
@@ -462,7 +462,7 @@ DSoundSink::get_buffer_size() const
       return buf_size;
 }
 
-bool DSoundSink::write(const Chunk *chunk)
+bool DSRenderer::write(const Chunk *chunk)
 {
   AutoLock autolock(&lock);
 

@@ -22,7 +22,7 @@ First order
 * Filter: add pull() call: receive data from given source
 * Filter: add process_all(): to process entire data from given input to given 
   sink
-* AudioSink: add flush() call - play till buffer ends
+* AudioRenderer: add flush() call - play till buffer ends
 * Spdifer: sync only on format specified at input. Autodetect format only
            if FORMAT_UNKNOWN is specified.
 
@@ -61,5 +61,5 @@ Done
 +* GAIN_CMP macro to compare two gains
 +* AudioDecoder does not support bitstream formats for SPDIF formatting
 +* Filter: method to obtain output filter format for given input format and
-+* AudioSink: rewivew timing (for all sinks)
-+* AudioSink: make it Sink descendant?
++* AudioRenderer: rewivew timing (for all sinks)
++* AudioRenderer: make it Sink descendant?

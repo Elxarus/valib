@@ -7,6 +7,10 @@ Project: "noise"=.\noise.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
+    begin source code control
+    noise
+    .
+    end source code control
 }}}
 
 Package=<4>
@@ -18,22 +22,14 @@ Package=<4>
 
 ###############################################################################
 
-Project: "valdec"=..\valdec\valdec.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "valib"=..\lib\valib.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
+    begin source code control
+    valib
+    ..
+    end source code control
 }}}
 
 Package=<4>

@@ -10,7 +10,7 @@ int main()
   Speakers    spk(FORMAT_PCM16, MODE_STEREO, 48000);
 
   Noise       noise(spk, spk.sample_rate * spk.nch() * spk.sample_size() / 10);
-  DSoundSink  ds(0);
+  DSRenderer  ds(0);
   FilterChain filter;
 
   Sink *sink = &ds;

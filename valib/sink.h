@@ -1,6 +1,6 @@
 /*
   Abstract audio sink interface
-  NullSink implementation
+  NullRenderer implementation
 */
 
 #ifndef SINK_H
@@ -9,12 +9,12 @@
 #include "spk.h"
 #include "filter.h"
 
-class AudioSink;
-class NullSink;
+class AudioRenderer;
+class NullRenderer;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// AudioSink class
+// AudioRenderer class
 //
 // Abstract base for audio playback devices.
 //
@@ -107,11 +107,11 @@ class NullSink;
 //   size >= size of received data and it is no format change.
 //
 
-class AudioSink : public Sink
+class AudioRenderer : public Sink
 {
 public:
   /////////////////////////////////////////////////////////
-  // AudioSink interface
+  // AudioRenderer interface
 
   // Open/close output device
   virtual bool query(Speakers spk) const = 0;
@@ -182,7 +182,7 @@ protected:
 };
 
 
-class NullSink : public AudioSink
+class NullRenderer : public AudioRenderer
 {
 protected:
   Speakers spk;
@@ -219,7 +219,7 @@ protected:
   }
 
 public:
-  NullSink()
+  NullRenderer()
   {
     spk    = unk_spk;
 

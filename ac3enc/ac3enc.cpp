@@ -31,14 +31,14 @@ int main(int argc, char *argv[])
   uint8_t buf[buf_size];
   int buf_data;
 
-  Converter conv;
-  AC3Enc    enc;
-  AC3Parser dec;
-  RAWSink   sink;
+  Converter   conv(2048);
+  AC3Enc      enc;
+  AC3Parser   dec;
+  RAWRenderer sink;
 
   FilterChain chain;
-  chain.add(&conv, "Converter");
-  chain.add(&enc,  "Encoder");
+  chain.add_back(&conv, "Converter");
+  chain.add_back(&enc,  "Encoder");
 
   conv.set_buffer(AC3_FRAME_SAMPLES);
   conv.set_format(FORMAT_LINEAR);
@@ -76,9 +76,7 @@ int main(int argc, char *argv[])
   {
     buf_data = f.read(buf, buf_size);
 
-    raw_chunk.set_spk(Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768));
-    raw_chunk.set_buf(buf, buf_data);
-    raw_chunk.set_time(false);
+    raw_chunk.set(Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768), buf, buf_data);
 
     if (!chain.process(&raw_chunk))
     {

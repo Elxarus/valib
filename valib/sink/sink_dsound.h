@@ -1,5 +1,5 @@
 /*
-  DirectSound audio sink (win32)
+  DirectSound audio renderer (win32)
 */
 
 #ifndef SINK_DS_H
@@ -14,7 +14,7 @@
 // uncomment the following string to create primary audio buffer
 //#define DSOUND_SINK_PRIMARY_BUFFER
 
-class DSoundSink : public AudioSink
+class DSRenderer : public AudioRenderer
 {
 protected:
   IDirectSound        *ds;
@@ -34,7 +34,7 @@ protected:
 
   DWORD    cur;           // Cursor in sound buffer
 
-  // AudioSink
+  // AudioRenderer
   Speakers spk;           // Configuration
 
   bool     playing;       // playing state
@@ -46,12 +46,12 @@ protected:
   vtime_t  time;          // time of last sample received
 
 public:
-  DSoundSink(HWND hwnd, int buf_size_ms = 2000, int preload_ms = 500);
-  ~DSoundSink();
+  DSRenderer(HWND hwnd, int buf_size_ms = 2000, int preload_ms = 500);
+  ~DSRenderer();
 
 public:
   /////////////////////////////////////////////////////////
-  // AudioSink interface
+  // AudioRenderer interface
 
   // Open/close output device
   virtual bool query(Speakers spk) const;

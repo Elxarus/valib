@@ -1,4 +1,4 @@
-* AudioSink & flushing. Do we need to stop playback after receiving eos-chunk?
+* AudioRenderer & flushing. Do we need to stop playback after receiving eos-chunk?
 * New: WaveOut sink
 * New: WAV file sink
 * New: DirectSound3D audio sink

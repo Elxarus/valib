@@ -190,10 +190,10 @@ int main(int argc, char *argv[])
   // Sinks
   /////////////////////////////////////////////////////////
 
-  RAWSink    raw;
-  DSoundSink dsound(0);
-  NullSink   null;
-  AudioSink *sink = &dsound;
+  RAWRenderer    raw;
+  DSRenderer     dsound(0);
+  NullRenderer   null;
+  AudioRenderer *sink = &dsound;
 
   /////////////////////////////////////////////////////////
   // Filters
