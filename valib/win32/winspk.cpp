@@ -4,10 +4,6 @@
 #include <ksmedia.h>
 #include "winspk.h"
 
-#ifndef WAVE_FORMAT_DOLBY_AC3_SPDIF 
-#define WAVE_FORMAT_DOLBY_AC3_SPDIF 0x0092
-#endif
-
 const unsigned int ds_channels_tbl[64] = 
 {
   0, 
@@ -108,6 +104,24 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
 
   switch (spk.format)
   {
+    case FORMAT_AC3:
+    case FORMAT_DTS:
+    case FORMAT_MPA:
+      switch (spk.format)
+      {
+        case FORMAT_AC3: wfx->wFormatTag = WAVE_FORMAT_AC3;
+        case FORMAT_DTS: wfx->wFormatTag = WAVE_FORMAT_DTS;
+        case FORMAT_MPA: wfx->wFormatTag = WAVE_FORMAT_MPEG;
+      }
+	
+      wfx->nChannels = nchannels;
+      wfx->nSamplesPerSec = spk.sample_rate;
+      wfx->wBitsPerSample = 0;
+      wfx->nBlockAlign = 1;
+      wfx->nAvgBytesPerSec = 0;
+      wfx->cbSize = 0;
+      break;
+
     case FORMAT_PCM16:
       wfx->wFormatTag = WAVE_FORMAT_PCM;
       wfx->nChannels = nchannels;
@@ -115,9 +129,13 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
       wfx->wBitsPerSample = 16;
       wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
       wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
+      wfx->cbSize = 0;
 
       if (use_extensible)
       {
+        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+        wfx->cbSize = 22;
+
         ext->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 16;
         ext->dwChannelMask = ds_channels_tbl[spk.mask];
@@ -131,9 +149,13 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
       wfx->wBitsPerSample = 24;
       wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
       wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
+      wfx->cbSize = 0;
 
       if (use_extensible)
       {
+        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+        wfx->cbSize = 22;
+
         ext->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 24;
         ext->dwChannelMask = ds_channels_tbl[spk.mask];
@@ -147,9 +169,13 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
       wfx->wBitsPerSample = 32;
       wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
       wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
+      wfx->cbSize = 0;
 
       if (use_extensible)
       {
+        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+        wfx->cbSize = 22;
+
         ext->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 32;
         ext->dwChannelMask = ds_channels_tbl[spk.mask];
@@ -163,9 +189,13 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
       wfx->wBitsPerSample = 32;
       wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
       wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
+      wfx->cbSize = 0;
 
       if (use_extensible)
       {
+        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+        wfx->cbSize = 22;
+
         ext->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
         ext->Samples.wValidBitsPerSample = 32;
         ext->dwChannelMask = ds_channels_tbl[spk.mask];
@@ -175,12 +205,6 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
     default:
       // unknown format
       return false;
-  }
-
-  if (use_extensible)
-  {
-    wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-    wfx->cbSize = 22;
   }
 
   return true;
@@ -229,30 +253,51 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
   else
   {
     // determine sample format
-    if (wfx->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
-      format = FORMAT_PCMFLOAT;
-    else if (wfx->wFormatTag == WAVE_FORMAT_PCM)
-      switch (wfx->wBitsPerSample)
-      {
-        case 16: format = FORMAT_PCM16; level = 32767;      break;
-        case 24: format = FORMAT_PCM24; level = 8388607;    break;
-        case 32: format = FORMAT_PCM32; level = 2147483647; break;
-        default: return false;
-      }
-    else
-      return false;
+    switch (wfx->wFormatTag)
+    {
+      case WAVE_FORMAT_IEEE_FLOAT:
+        format = FORMAT_PCMFLOAT;
+        break;
+
+      case WAVE_FORMAT_PCM:
+        switch (wfx->wBitsPerSample)
+        {
+          case 16: format = FORMAT_PCM16; level = 32767;      break;
+          case 24: format = FORMAT_PCM24; level = 8388607;    break;
+          case 32: format = FORMAT_PCM32; level = 2147483647; break;
+          default: return false;
+        }
+        break;
+
+      case WAVE_FORMAT_AC3:
+        format = FORMAT_AC3;
+        break;
+
+      case WAVE_FORMAT_DTS:
+        format = FORMAT_DTS;
+        break;
+
+      case WAVE_FORMAT_MPEG:
+        format = FORMAT_MPA;
+        break;
+
+      default:
+        return false;
+    }
 
     // determine audio mode
-    switch (wfx->nChannels)
-    {
-      case 1: mask = MODE_MONO;   break;
-      case 2: mask = MODE_STEREO; break;
-      case 3: mask = MODE_3_0;    break;
-      case 4: mask = MODE_QUADRO; break;
-      case 5: mask = MODE_3_2;    break;
-      case 6: mask = MODE_5_1;    break;
-      default: return false;
-    }
+    mask = 0;
+    if (format & FORMAT_MASK_PCM)
+      switch (wfx->nChannels)
+      {
+        case 1: mask = MODE_MONO;   break;
+        case 2: mask = MODE_STEREO; break;
+        case 3: mask = MODE_3_0;    break;
+        case 4: mask = MODE_QUADRO; break;
+        case 5: mask = MODE_3_2;    break;
+        case 6: mask = MODE_5_1;    break;
+        default: return false;
+      }
   }
 
   spk = Speakers(format, mask, wfx->nSamplesPerSec, level);
