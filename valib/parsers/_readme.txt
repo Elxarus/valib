@@ -1,4 +1,4 @@
-This directory contains audio parsers (descendants of Parser) 
+This directory contains audio parsers (descendants of Parser class) 
 and support classes
 
 * AC3Parser (ac3\ac3_parser.h): AC3 parser
