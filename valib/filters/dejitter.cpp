@@ -79,6 +79,15 @@ Syncer::process(const Chunk *_chunk)
   if (!_chunk->is_sync())
     return true;
 
+  // resync after reset
+  if (!old_sync && dejitter)
+  {
+#ifdef SYNCER_LOG_TIMING
+    DbgLog((LOG_TRACE, 3, "resync"));
+#endif
+    old_time = time;
+  }
+
   // dejitter
   if (dejitter)
   {
