@@ -36,7 +36,7 @@ extern const Speakers def_spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0,
 extern const Speakers err_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
 extern const Speakers unk_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
 
-extern const Speakers stereo_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 65535.0, NO_RELATION); // stereo 16bit
+extern const Speakers stereo_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768.0, NO_RELATION); // stereo 16bit
 
 extern const int sample_size_tbl[32] = 
 {
