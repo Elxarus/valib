@@ -85,6 +85,17 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
     wfx->nBlockAlign = 4;
     wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
     wfx->cbSize = 0;
+
+    if (use_extensible)
+    {
+      WAVEFORMATEXTENSIBLE *ext = (WAVEFORMATEXTENSIBLE *)wfx;
+      wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+      wfx->cbSize = 22;
+
+      ext->SubFormat = KSDATAFORMAT_SUBTYPE_AC3_AUDIO;
+      ext->Samples.wValidBitsPerSample = 16;
+      ext->dwChannelMask = ds_channels_tbl[MODE_STEREO];
+    }
     return true;
   }
 
