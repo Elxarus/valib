@@ -76,6 +76,7 @@ Spdifer::get_chunk(Chunk *_out)
   {
     // passthrough spdif data
     *_out = chunk;
+    chunk.drop(chunk.size);
     return true;
   }
   else
