@@ -14,7 +14,7 @@ int test_spdifer_file(Log *log, const char *raw_file, const char *spdif_file);
 int test_spdifer(Log *log)
 {
   log->open_group("Spdifer test");
-  test_spdifer_file(log, "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.ac3");
+  test_spdifer_file(log, "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif");
   return log->close_group();
 }
 
