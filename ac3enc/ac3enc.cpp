@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   conv.set_order(win_order);
 
   if (!enc.set_bitrate(448000) ||
-      !enc.set_input(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 65535)))
+      !enc.set_input(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 32768)))
   {
     printf("Cannot init encoder!\n");
     return 1;
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
   {
     buf_data = f.read(buf, buf_size);
 
-    raw_chunk.set_spk(Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 65535));
+    raw_chunk.set_spk(Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768));
     raw_chunk.set_buf(buf, buf_data);
     raw_chunk.set_time(false);
 
