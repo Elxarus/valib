@@ -2,8 +2,9 @@
 #include <memory.h>
 #include "agc.h"
 
-
 #define LEVEL_MINUS_50DB 0.0031622776601683793319988935444327
+#define LEVEL_MINUS_100DB 0.00001
+#define LEVEL_PLUS_100DB 100000.0
 
 AGC::AGC(int _nsamples)
 {
@@ -143,10 +144,17 @@ AGC::process()
 
   if (drc)
   {
-    sample_t compressed_level = pow(level, -drc_power/50);
+    sample_t compressed_level;
+
+    if (level > LEVEL_MINUS_50DB)
+      compressed_level = pow(level, -drc_power/50.0);
+    else
+      compressed_level = pow(level * LEVEL_PLUS_100DB, drc_power/50.0);
     sample_t released_level = drc_level * release_factor;
 
-    if (released_level > compressed_level)
+    if (level < LEVEL_MINUS_100DB)
+      drc_level = 1.0;
+    else if (released_level > compressed_level)
       drc_level = compressed_level;
     else
       drc_level = released_level;
