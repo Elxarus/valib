@@ -60,23 +60,30 @@ AudioDecoder::is_empty()
 bool 
 AudioDecoder::process(const Chunk *_chunk)
 {
-  if (!NullFilter::process(_chunk))
-    return false;
+  if (_chunk->is_empty())
+    return true;
 
-  if (!parser) 
+  if (!NullFilter::process(_chunk))
     return false;
 
   if (!chunk.is_empty())
     sync.receive_timestamp(chunk.timestamp, chunk.time);
 
-  return true;
+  if (!parser) 
+    return false;
+  else
+    return true;
 }
  
 bool 
 AudioDecoder::get_chunk(Chunk *_out)
 {
   _out->set_empty();
-  if (!parser) return false;
+  if (chunk.is_empty())
+    return true;
+
+  if (!parser) 
+    return false;
 
   uint8_t *buf = chunk.buf;
   uint8_t *end = chunk.buf + chunk.size;
