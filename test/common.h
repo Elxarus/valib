@@ -9,12 +9,12 @@
 // has FORMAT_UNKNOWN then output format is not tested and data is compared binary 
 // (so output should be raw in this case, not FORMAT_LINEAR).
 
-int compare(Log *log, Source *src, Filter *filter, Source *ref);
+int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter = 0);
 
 // Same as compare(), but files are used instead of sources.
 // Input format of filter should be configured!
 
-int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter, const char *fn_ref);
+int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *src_filter, const char *fn_ref);
 
 // Crash test (process 1Mb of noise)
 

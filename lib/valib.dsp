@@ -146,19 +146,19 @@ SOURCE=..\valib\log.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\mpeg_demux.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\mpeg_demux.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parser.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\parser.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\pes_demux.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\pes_demux.h
 # End Source File
 # Begin Source File
 

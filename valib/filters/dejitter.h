@@ -43,7 +43,7 @@ public:
     time_factor = 1.0;
 
     dejitter  = true;
-    threshold = 0.2;
+    threshold = 0.1;
   }
 
   /////////////////////////////////////////////////////////

@@ -10,8 +10,8 @@ cd lib
 call _clear.bat
 cd ..
 
-echo pes_demux...
-cd pes_demux
+echo mpeg_demux...
+cd mpeg_demux
 call _clear.bat
 cd ..
 

@@ -4,8 +4,8 @@ First order
 ?* timing: time conversion functions (time2ms, ms2time, ...)
 * SampleBuf: make version without channels?
   (for more optimal buffer usage, see Delay and AGC filters for example)
-* PESDemux: check marker bits
-* PESDemux: avoid code doubling for packet and streaming operations
+* MPEGDemux: check marker bits
+* MPEGDemux: avoid code doubling for packet and streaming operations
 * Speakers: level: is it a part of speakers configuration? 
            :level may be part of Chunk()
            :do we need compare levels at Speakers::operator == (and !=)?
@@ -16,13 +16,10 @@ First order
   [Source::get_output() may return error but filter can still proceed
    see AudioDecoder class as an example]
   current settings (required for FilterChain filter to validate its state)
-* Filter: add method to flush internal buffers. flush() call to flush 
-  internal buffers + is_flushed() call to know if filter requires flushing.
 * Filter: add push() call: process entire chunk to given sink
 * Filter: add pull() call: receive data from given source
 * Filter: add process_all(): to process entire data from given input to given 
   sink
-* AudioRenderer: add flush() call - play till buffer ends
 * Spdifer: sync only on format specified at input. Autodetect format only
            if FORMAT_UNKNOWN is specified.
 
@@ -63,3 +60,6 @@ Done
 +* Filter: method to obtain output filter format for given input format and
 +* AudioRenderer: rewivew timing (for all sinks)
 +* AudioRenderer: make it Sink descendant?
++* Filter: add method to flush internal buffers. flush() call to flush 
+  internal buffers + is_flushed() call to know if filter requires flushing.
++* AudioRenderer: add flush() call - play till buffer ends

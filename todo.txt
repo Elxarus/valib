@@ -24,15 +24,14 @@ First order
 * New: out-of-bounds test for filters (update PCM passthrough test)
 * Test suite: add logging to file
 * New: Test: correct filter timstamp passthrough
-* PCM passthrough test: Multichannel PCM passthrough test failed
 * Find classes to make tests for
 
 Tests
 =====
 * New: MPAParser test
 * New: FileParser test
-* PESDemux test: add MPEG1 stream test
-* PESDemux test: add DTS-PES test
+* MPEGDemux test: add MPEG1 stream test
+* MPEGDemux test: add DTS-PES test
 
 Think about
 ===========
@@ -92,3 +91,4 @@ Done
 +* Remove SPDIF support from AudioDecoder, and use Spdifer in DVDDecoder
 +* PCM passthrough test: 32-bit noise passthrough failed
 +* Filters test: AudioDecoder test failed
++* PCM passthrough test: Multichannel PCM passthrough test failed

@@ -27,15 +27,14 @@ First order
 * New: out-of-bounds test for filters (update PCM passthrough test)
 * Test suite: add logging to file
 * New: Test: correct filter timstamp passthrough
-* PCM passthrough test: Multichannel PCM passthrough test failed
 * Find classes to make tests for
 
 Tests
 =====
 * New: MPAParser test
 * New: FileParser test
-* PESDemux test: add MPEG1 stream test
-* PESDemux test: add DTS-PES test
+* MPEGDemux test: add MPEG1 stream test
+* MPEGDemux test: add DTS-PES test
 
 Think about
 ===========
@@ -95,6 +94,7 @@ Done
 +* Remove SPDIF support from AudioDecoder, and use Spdifer in DVDDecoder
 +* PCM passthrough test: 32-bit noise passthrough failed
 +* Filters test: AudioDecoder test failed
++* PCM passthrough test: Multichannel PCM passthrough test failed
 
 
 -------------------------------
@@ -132,8 +132,8 @@ First order
 ?* timing: time conversion functions (time2ms, ms2time, ...)
 * SampleBuf: make version without channels?
   (for more optimal buffer usage, see Delay and AGC filters for example)
-* PESDemux: check marker bits
-* PESDemux: avoid code doubling for packet and streaming operations
+* MPEGDemux: check marker bits
+* MPEGDemux: avoid code doubling for packet and streaming operations
 * Speakers: level: is it a part of speakers configuration? 
            :level may be part of Chunk()
            :do we need compare levels at Speakers::operator == (and !=)?
@@ -144,13 +144,10 @@ First order
   [Source::get_output() may return error but filter can still proceed
    see AudioDecoder class as an example]
   current settings (required for FilterChain filter to validate its state)
-* Filter: add method to flush internal buffers. flush() call to flush 
-  internal buffers + is_flushed() call to know if filter requires flushing.
 * Filter: add push() call: process entire chunk to given sink
 * Filter: add pull() call: receive data from given source
 * Filter: add process_all(): to process entire data from given input to given 
   sink
-* AudioSink: add flush() call - play till buffer ends
 * Spdifer: sync only on format specified at input. Autodetect format only
            if FORMAT_UNKNOWN is specified.
 
@@ -189,15 +186,16 @@ Done
 +* GAIN_CMP macro to compare two gains
 +* AudioDecoder does not support bitstream formats for SPDIF formatting
 +* Filter: method to obtain output filter format for given input format and
-+* AudioSink: rewivew timing (for all sinks)
-+* AudioSink: make it Sink descendant?
++* AudioRenderer: rewivew timing (for all sinks)
++* AudioRenderer: make it Sink descendant?
++* Filter: add method to flush internal buffers. flush() call to flush 
+  internal buffers + is_flushed() call to know if filter requires flushing.
++* AudioRenderer: add flush() call - play till buffer ends
 
 
 -------------------------------
 ./valib/filters
 -------------------------------
-* Spdifer: rewrite load_frame() 
-  do not use 2 frame buffers, accurate bitstream conversion for odd frame sizes
 * Spdifer: timing!
 
 * FilterChain: do not process empty intermediate chunks
@@ -229,19 +227,8 @@ Done
 
 * New: Simple gain filter
 * New: Simple parametric filters (low-pass, high-pass, etc)
-* New: Bass redirection filter
 * New: Matrix convolution filter
-* New: Dejitter filter (track time changes, correct and generate timestamps)
-+* New: AC3Encoder filter
-+* New: filter that joins AudioDecoder & AudioProcessor [DVDDecoder]
-?* New: Spdifer class: convert stream to spdif format
-+* New: Levels filter
-+* New: Levels cache filter (to syncronize audio playback and levels reporting)
-+* New: Reorder filter (change channel order)
-+* New: AudioProcessor filter (format conversions, mixer, agc, etc...)
 -* New: Universal parser filter (DVD parser filter)
-+* New: Universal decoder filter (universal parser + post-processing)
-+* New: Loundness histogram filter
 * New: Winamp DSP filters host (far future)
 * New: VST filters host (far future)
 
@@ -280,6 +267,19 @@ Done
 +* Mixer: allocate mixing buffer only if needed
 +* Mixer: add buffer control (set_buffer() call)
 -* Transform AudioProcessor & DVDDecoder to FilterChain descendant?
++* Spdifer: rewrite load_frame() 
+  do not use 2 frame buffers, accurate bitstream conversion for odd frame sizes
++* New: Bass redirection filter
++* New: AC3Encoder filter
++* New: filter that joins AudioDecoder & AudioProcessor [DVDDecoder]
++* New: Spdifer class: convert stream to spdif format
++* New: Levels filter
++* New: Levels cache filter (to syncronize audio playback and levels reporting)
++* New: Reorder filter (change channel order)
++* New: AudioProcessor filter (format conversions, mixer, agc, etc...)
++* New: Universal decoder filter (universal parser + post-processing)
++* New: Loundness histogram filter
++* New: Dejitter filter (track time changes, correct and generate timestamps)
 
 
 -------------------------------
@@ -339,10 +339,11 @@ Done:
 -------------------------------
 ./valib/sink
 -------------------------------
-+* New: DirectShow sink
+* AudioRenderer & flushing. Do we need to stop playback after receiving eos-chunk?
 * New: WaveOut sink
 * New: WAV file sink
 * New: DirectSound3D audio sink
++* New: DirectShow sink
 
 
 -------------------------------
@@ -352,8 +353,8 @@ Done:
 
 
 ----------------------------------------
-Total tasks: 213
-Done: 84
-Dubious: 7
+Total tasks: 214
+Done: 91
+Dubious: 6
 Declined: 5
-Comlete: 42%
+Comlete: 45%

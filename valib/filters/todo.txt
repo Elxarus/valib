@@ -1,5 +1,3 @@
-* Spdifer: rewrite load_frame() 
-  do not use 2 frame buffers, accurate bitstream conversion for odd frame sizes
 * Spdifer: timing!
 
 * FilterChain: do not process empty intermediate chunks
@@ -31,19 +29,8 @@
 
 * New: Simple gain filter
 * New: Simple parametric filters (low-pass, high-pass, etc)
-* New: Bass redirection filter
 * New: Matrix convolution filter
-* New: Dejitter filter (track time changes, correct and generate timestamps)
-+* New: AC3Encoder filter
-+* New: filter that joins AudioDecoder & AudioProcessor [DVDDecoder]
-?* New: Spdifer class: convert stream to spdif format
-+* New: Levels filter
-+* New: Levels cache filter (to syncronize audio playback and levels reporting)
-+* New: Reorder filter (change channel order)
-+* New: AudioProcessor filter (format conversions, mixer, agc, etc...)
 -* New: Universal parser filter (DVD parser filter)
-+* New: Universal decoder filter (universal parser + post-processing)
-+* New: Loundness histogram filter
 * New: Winamp DSP filters host (far future)
 * New: VST filters host (far future)
 
@@ -82,3 +69,16 @@ Done
 +* Mixer: allocate mixing buffer only if needed
 +* Mixer: add buffer control (set_buffer() call)
 -* Transform AudioProcessor & DVDDecoder to FilterChain descendant?
++* Spdifer: rewrite load_frame() 
+  do not use 2 frame buffers, accurate bitstream conversion for odd frame sizes
++* New: Bass redirection filter
++* New: AC3Encoder filter
++* New: filter that joins AudioDecoder & AudioProcessor [DVDDecoder]
++* New: Spdifer class: convert stream to spdif format
++* New: Levels filter
++* New: Levels cache filter (to syncronize audio playback and levels reporting)
++* New: Reorder filter (change channel order)
++* New: AudioProcessor filter (format conversions, mixer, agc, etc...)
++* New: Universal decoder filter (universal parser + post-processing)
++* New: Loundness histogram filter
++* New: Dejitter filter (track time changes, correct and generate timestamps)

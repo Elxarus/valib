@@ -4,7 +4,7 @@
 #include "source/raw_source.h"
 
 
-int compare(Log *log, Source *src, Filter *filter, Source *ref)
+int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter)
 {
   // if reference format is FORMAT_UNKNOWN then filter output
   // format is supposed to be raw format (not FORMAT_LINEAR)
@@ -30,33 +30,53 @@ int compare(Log *log, Source *src, Filter *filter, Source *ref)
     // The following cycle may be rewrited as:
     //
     // while (!ochunk.get_size() && !ochunk.is_eos())
-    //   if (!filter->get_from(&ochunk, src))
-    //     return log->err("filter->get_from()");
+    //   if (!src_filter->get_from(&ochunk, src))
+    //     return log->err("src_filter->get_from()");
 
     while (!ochunk.get_size() && !ochunk.is_eos())
     {
-      while (filter->is_empty())
+      while (src_filter->is_empty())
       {
         ichunk.set_empty();
         while (!ichunk.get_size() && !ichunk.is_eos())
-        {
           if (!src->get_chunk(&ichunk))
             return log->err("src->get_chunk()");
-          isize += ichunk.get_size();
-        }
 
-        if (!filter->process(&ichunk))
-          return log->err("filter->process()");
+        if (!src_filter->process(&ichunk))
+          return log->err("src_filter->process()");
       }
 
-      while (!ochunk.get_size() && !ochunk.is_eos() && !filter->is_empty())
-        if (!filter->get_chunk(&ochunk))
-          return log->err("filter->get_chunk()");
+      while (!ochunk.get_size() && !ochunk.is_eos() && !src_filter->is_empty())
+        if (!src_filter->get_chunk(&ochunk))
+          return log->err("src_filter->get_chunk()");
     }
 
-    while (!rchunk.get_size() && !rchunk.is_eos())
-      if (!ref->get_chunk(&rchunk))
-        return log->err("ref->get_chunk()");
+    if (ref_filter)
+    {
+      while (!rchunk.get_size() && !rchunk.is_eos())
+      {
+        while (src_filter->is_empty())
+        {
+          ichunk.set_empty();
+          while (!ichunk.get_size() && !ichunk.is_eos())
+            if (!ref->get_chunk(&ichunk))
+              return log->err("ref->get_chunk()");
+
+          if (!ref_filter->process(&ichunk))
+            return log->err("ref_filter->process()");
+        }
+
+        while (!rchunk.get_size() && !rchunk.is_eos() && !ref_filter->is_empty())
+          if (!ref_filter->get_chunk(&rchunk))
+            return log->err("ref_filter->get_chunk()");
+      }
+    }
+    else
+    {
+      while (!rchunk.get_size() && !rchunk.is_eos())
+        if (!ref->get_chunk(&rchunk))
+          return log->err("ref->get_chunk()");
+    }
 
     // Now we have both output and reference chunks loaded or 
     // end-of stream signaled

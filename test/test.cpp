@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "common.h"
 
+/*
 int test_spdifer(Log *log, Speakers spk, const char *data_file, const char *spdif_file);
 int test_spdifer(Log *log)
 {
@@ -9,7 +10,7 @@ int test_spdifer(Log *log)
   test_spdifer(log, Speakers(FORMAT_AC3, 0, 0), "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif");
   return log->close_group();
 }
-
+*/
 
 extern int test_ac3_parser_compare(const char *filename, const char *desc);
 int test_ac3_parser()
@@ -115,6 +116,7 @@ int null_test(Log *log)
 extern int test_filters(Log *log);
 extern int test_float(Log *log);
 extern int passthrough_noise(Log *log);
+extern int test_spdifer(Log *log);
 
 int main(int argc, char **argv)
 {
@@ -122,12 +124,13 @@ int main(int argc, char **argv)
   log.open_group("Test session");
 
 
+  test_spdifer(&log);
+
   test_float(&log);
   test_filters(&log);
   null_test(&log);
   passthrough_noise(&log);
 
-  test_spdifer(&log);
  
 
   test_ac3_parser();
