@@ -394,6 +394,7 @@ bool DSoundSink::write(const Chunk *chunk)
   void *data1, *data2;
   DWORD data1_bytes, data2_bytes;
   DWORD play_cur;
+  int data_size;
 
   unsigned size = chunk->size;
   uint8_t *buf = chunk->buf;
@@ -403,16 +404,26 @@ bool DSoundSink::write(const Chunk *chunk)
     if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
       return false;
 
-    if (play_cur > cur)
-    {
-      if FAILED(ds_buf->Lock(cur, MIN(size, play_cur - cur), &data1, &data1_bytes, &data2, &data2_bytes, 0))
-        return false;
-    }
+    data_size = play_cur - cur;
+    if (data_size < 0)
+      data_size += buf_size;
+
+    if (!playing && !data_size)
+      data_size = buf_size;
+
+    if (data_size > size)
+      data_size = size;
     else
-    {
-      if FAILED(ds_buf->Lock(cur, MIN(size, buf_size - (cur - play_cur)), &data1, &data1_bytes, &data2, &data2_bytes, 0))
-        return false;
-    }
+      if (playing && data_size < buf_size / 2)
+      {
+        // now we have no enough space in buffer, so sleep until we have
+        data_size = min(size, buf_size / 2) - data_size;
+        Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+        continue;
+      }
+
+    if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
+      return false;
 
     memcpy(data1, buf, data1_bytes);
     buf += data1_bytes;
@@ -439,20 +450,9 @@ bool DSoundSink::write(const Chunk *chunk)
 
     if (cur >= buf_size)
       cur -= buf_size;
-
-    if (size) // buffer is full; sleep 20ms minimum or preload_ms maximum
-      Sleep(
-        max(
-          min(
-            preload_ms, 
-            size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1,
-          ),
-          20
-        )
-      );
   }
 
-  size /= wfx.Format.nBlockAlign;
+  size = chunk->size / wfx.Format.nBlockAlign;
   if (chunk->timestamp)
     time = chunk->time + size;
   else
