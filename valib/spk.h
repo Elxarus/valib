@@ -50,11 +50,17 @@
     means that channels with small channel number will be placed before 
     channels with big channels numbers.
 
-    For compressed formats that allows format
+    For compressed formats that contain channel configuration in the bitstream
+    so parser may always know it, it is acceptable not to specify mask field at
+    the input of parser. But at output parser must specify correct mask.
     
   sample_rate - sampling rate. this is fundamental parameter we always have to
     know.
 
+    For compressed formats that contain sample rate in the bitstream so parser
+    may always know it, it is acceptable not to specify sample_rate field at
+    the input of parser. But at output parser must specify correct sample rate.
+    
   relation - relation between channels. Format and mask may not always define 
     audio format. Audio channels may have an internal relation between each 
     other. For example sum-difference when one channel have meaning of mono
@@ -62,8 +68,12 @@
     Dolby-encoded audio source. It is independent audio characteristic and it 
     required to take it into account.
 
+    For compressed formats that contain relation in the bitstream so parser
+    may always know it, it is acceptable not to specify relation field at
+    the input of parser. But at output parser must specify correct relation.
+    
   level - absolute value for 0dB level. Generally depends on format, i.e.
-    for PCM16 format it id 32767.0, so I'm thinking about to get rid of this 
+    for PCM16 format it is 32767.0, so I'm thinking about to get rid of this 
     parameter. Now it is used to pre-scale data.
 */
 
