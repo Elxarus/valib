@@ -111,6 +111,9 @@ DShowSink::query_downstream(const CMediaType *mt) const
   if (!m_Connected) 
     return true;
 
+  if (*mt == m_mt)
+    return true;
+
   m_Connected->QueryInterface(IID_IPinConnection, (void **)&connection);
   if (connection) 
   {
@@ -168,24 +171,27 @@ DShowSink::process(const Chunk *chunk)
     if (!spk2mt(chunk->get_spk(), mt, false) || !spk2mt(chunk->get_spk(), mt_wfx, true))
       return false;
 
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz)", this, chunk->get_spk().mode_text(), chunk->get_spk().format_text(), chunk->get_spk().sample_rate));
+    if (m_mt != mt && m_mt != mt_wfx)
+    {
+      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz)", this, chunk->get_spk().mode_text(), chunk->get_spk().format_text(), chunk->get_spk().sample_rate));
 
-    if (query_downstream(&mt_wfx))
-    {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change Ok (extensible)", this));
-      m_mt = mt_wfx;
+      if (query_downstream(&mt_wfx))
+      {
+        DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change Ok (extensible)", this));
+        m_mt = mt_wfx;
+      }
+      else if (query_downstream(&mt))
+      {
+        DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change Ok", this));
+        m_mt = mt;
+      }
+      else
+      {
+        DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change FAILED!", this));
+        return false;
+      }
+      send_mt = true;
     }
-    else if (query_downstream(&mt))
-    {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change Ok", this));
-      m_mt = mt;
-    }
-    else
-    {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change FAILED!", this));
-      return false;
-    }
-    send_mt = true;
     spk = chunk->get_spk();
   }
 
