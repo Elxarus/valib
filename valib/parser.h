@@ -170,7 +170,7 @@ public:
 
   // Frame load operations
   size_t load_frame(uint8_t **buf, uint8_t *end);
-  bool   is_frame_loaded()  const { return frame_data && (frame_data >= frame_size); }
+  bool   is_frame_loaded()  const { return frame_size && (frame_data >= frame_size); }
   void   drop_frame()             { frame_data = 0; new_frame_size = 0; }
 
   // Buffers
