@@ -235,7 +235,7 @@ DShowSink::process(const Chunk *chunk)
       REFERENCE_TIME begin = __int64(double(chunk->get_time()) / spk.sample_rate * 10000000);
       REFERENCE_TIME end   = __int64(double(chunk->get_time() + chunk->get_size()) / spk.sample_rate * 10000000);
       sample->SetTime(&begin, &end);
-#if DIRECT_SHOW_LOG_TIMING
+#ifdef DSHOWSINK_LOG_TIMING
       DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->get_time()));
 #endif
     }
