@@ -104,21 +104,87 @@ bool
 Levels::get_chunk(Chunk *_chunk)
 {
   size_t n = size;
-  int nch = spk.nch();
-  const int *order = spk.order();
 
-  int ch, i, block_size;
-  sample_t *sptr;
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  _chunk->set(spk, samples, size, sync, time, flushing);
+  sync = false;
+  flushing = false;
+
+  /////////////////////////////////////////////////////////
+  // Find peak-levels
+
   sample_t max;
+  sample_t *sptr;
+  sample_t *send;
+
+  int nch = spk.nch();
+  sample_t spk_level = 1 / spk.level;
+  const int *spk_order = spk.order();
+
+  while (n)
+  {
+    size_t block_size = MIN(n, nsamples - sample);
+    n -= block_size;
+    sample += block_size;
+    time += block_size;
+
+    for (int ch = 0; ch < nch; ch++)
+    {
+      max = 0;
+      sptr = samples[ch];
+      send = sptr + block_size - 7;
+      while (sptr < send)
+      {
+        if (fabs(sptr[0]) > max) max = fabs(sptr[0]);
+        if (fabs(sptr[1]) > max) max = fabs(sptr[1]);
+        if (fabs(sptr[2]) > max) max = fabs(sptr[2]);
+        if (fabs(sptr[3]) > max) max = fabs(sptr[3]);
+        if (fabs(sptr[4]) > max) max = fabs(sptr[4]);
+        if (fabs(sptr[5]) > max) max = fabs(sptr[5]);
+        if (fabs(sptr[6]) > max) max = fabs(sptr[6]);
+        if (fabs(sptr[7]) > max) max = fabs(sptr[7]);
+        sptr += 8;
+      }
+      send += 7;
+      while (sptr < send)
+        if (fabs(sptr[0]) > max) max = fabs(sptr[0]);
+
+      max *= spk_level;
+      if (max > levels[spk_order[ch]])
+        levels[spk_order[ch]] = max;
+    }
+
+    if (sample >= nsamples)
+    {
+      add_levels(time, levels);
+      memset(levels, 0, sizeof(sample_t) * NCHANNELS);
+      sample = 0;
+    }
+  }
+
+  size = 0;
+  return true;
+/*
+
+  sample_t levels_loc[NCHANNELS];
+  sample_t max;
+  sample_t *sptr;
+  sample_t *send;
 
   while (n)
   {
     block_size = MIN(n, nsamples - sample);
+
     for (ch = 0; ch < nch; ch++)
     {
-      sptr = samples[ch];
-  
       max = 0;
+      sptr = samples[ch];
+      send = sptr + block_size;
+      while (sptr < send)
+        if *
+
       i = block_size;
       while (i--)
       {
@@ -145,10 +211,8 @@ Levels::get_chunk(Chunk *_chunk)
     }
   }
 
-  _chunk->set(spk, samples, size, sync, time - size, flushing);
-  size = 0;
-  sync = false;
-  flushing = false;
 
+  size = 0;
   return true;
+*/
 }

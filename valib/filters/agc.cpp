@@ -120,6 +120,7 @@ AGC::process()
 
   sample_t max;
   sample_t *sptr;
+  sample_t *send;
 
   sample_t levels_loc[NCHANNELS];
   memset(levels_loc, 0, sizeof(levels_loc));
@@ -127,22 +128,27 @@ AGC::process()
   ///////////////////////////////////////
   // Channel levels
 
-  max = 0;
   for (ch = 0; ch < nch; ch++)
   {
     max = 0;
     sptr = buf[block][ch];
-    for (s = 0; s < nsamples/8; s++)
+    send = sptr + nsamples - 7;
+    while (sptr < send)
     {
-      if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
-      if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
-      if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
-      if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
-      if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
-      if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
-      if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
-      if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
+      if (fabs(sptr[0]) > max) max = fabs(sptr[0]);
+      if (fabs(sptr[1]) > max) max = fabs(sptr[1]);
+      if (fabs(sptr[2]) > max) max = fabs(sptr[2]);
+      if (fabs(sptr[3]) > max) max = fabs(sptr[3]);
+      if (fabs(sptr[4]) > max) max = fabs(sptr[4]);
+      if (fabs(sptr[5]) > max) max = fabs(sptr[5]);
+      if (fabs(sptr[6]) > max) max = fabs(sptr[6]);
+      if (fabs(sptr[7]) > max) max = fabs(sptr[7]);
+      sptr += 8;
     }
+    send += 7;
+    while (sptr < send)
+      if (fabs(sptr[0]) > max) max = fabs(sptr[0]);
+
     levels_loc[ch] = max / spk_level;
   }
 
