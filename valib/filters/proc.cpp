@@ -1,10 +1,12 @@
 #include "proc.h"
 
 
-AudioProcessor::AudioProcessor()
+AudioProcessor::AudioProcessor(size_t _nsamples)
+:conv1(_nsamples), conv2(_nsamples), mixer(_nsamples)
 {
-  in_spk  = Speakers(FORMAT_LINEAR, MODE_STEREO, 44100);
-  out_spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 44100);
+  in_spk  = def_spk;
+  out_spk = def_spk;
+
   rebuild_chain();
 }
 
@@ -27,8 +29,14 @@ AudioProcessor::set_input(Speakers _spk)
 {
   if (in_spk != _spk)
   {
-    if (!query_input(_spk)) return false;
+    if (!query_spk(_spk)) 
+      return false;
+
     in_spk = _spk;
+
+    // todo: add sample rate convertor and remove this
+    out_spk.sample_rate = in_spk.sample_rate;
+
     rebuild_chain();
   }
   return true;
@@ -39,8 +47,14 @@ AudioProcessor::set_output(Speakers _spk)
 {
   if (out_spk != _spk)
   {
-    if (!query_spk(_spk)) return false;
+    if (!query_spk(_spk)) 
+      return false;
+
     out_spk = _spk;
+
+    // todo: add sample rate convertor and remove this
+    out_spk.sample_rate = in_spk.sample_rate;
+
     rebuild_chain();
   }
   return true;
@@ -49,38 +63,43 @@ AudioProcessor::set_output(Speakers _spk)
 void 
 AudioProcessor::rebuild_chain()
 {
-  out_spk.sample_rate = in_spk.sample_rate;
+  // Output configuration
+  Speakers spk = out_spk;
 
+  spk.format = FORMAT_LINEAR;
+
+  if (!spk.mask) 
+    spk.mask = in_spk.mask;
+
+  if (!spk.sample_rate)
+    spk.sample_rate = in_spk.sample_rate;
+
+  // processing chain
   chain.clear();
+  chain.add_back(&in_levels, "Input levels");
+  chain.add_back(&mixer,     "Mixer");
+  chain.add_back(&bass_redir,"Bass redirection");
+  chain.add_back(&agc,       "AGC");
+  chain.add_back(&delay,     "Delay");
+  chain.add_back(&out_levels,"Output levels");
+  chain.add_back(&sync_gen,  "Synchronizer");
 
+  // setup mixer
+  mixer.set_output(spk);
+
+  // format conversion
   if (in_spk.format != FORMAT_LINEAR)
   {
-    chain.add(&conv1, "PCM->Linear converter");
+    chain.add_front(&conv1, "PCM->Linear converter");
     conv1.set_format(FORMAT_LINEAR);
   }
-
-  chain.add(&in_levels, "Input levels");
-  chain.add(&mixer,     "Mixer");
-  chain.add(&bass_redir,"Bass redirection");
-  chain.add(&agc,       "AGC");
-  chain.add(&delay,     "Delay");
-  chain.add(&out_levels,"Output levels");
-  chain.add(&dejitter,  "Dejitter");
-
-  Speakers mixer_spk = out_spk;
-  mixer_spk.format = FORMAT_LINEAR;
-  mixer.set_output(mixer_spk);
-
   if (out_spk.format != FORMAT_LINEAR)
   {
-    chain.add(&conv2, "Linear->PCM converter");
+    chain.add_back(&conv2, "Linear->PCM converter");
     conv2.set_format(out_spk.format);
   }
 
-  chain.reset();
-
   chain.set_input(in_spk);
-  out_spk = chain.get_output();
 }
 
 // Filter interface
@@ -88,7 +107,6 @@ AudioProcessor::rebuild_chain()
 void 
 AudioProcessor::reset()
 {
-  chunk.set_empty();
   chain.reset();
 }
 
@@ -101,23 +119,20 @@ AudioProcessor::query_input(Speakers _spk) const
 bool 
 AudioProcessor::process(const Chunk *_chunk)
 {
-  if (_chunk->is_empty())
-    return true;
-
-  if (_chunk->spk != in_spk && !set_input(_chunk->spk))
+  if (_chunk->get_spk() != in_spk && !set_input(_chunk->get_spk()))
     return false;
   else
     return chain.process(_chunk);
 }
 
 Speakers 
-AudioProcessor::get_output()
+AudioProcessor::get_output() const
 {
   return out_spk;
 }
 
 bool 
-AudioProcessor::is_empty()
+AudioProcessor::is_empty() const
 {
   return chain.is_empty();
 }

@@ -70,8 +70,8 @@ Demux::process(const Chunk *_chunk)
   if (!NullFilter::receive_chunk(_chunk))
     return false;
 
-  uint8_t *read_buf  = buf;
-  uint8_t *write_buf = buf;
+  uint8_t *read_buf  = rawdata;
+  uint8_t *write_buf = rawdata;
   int read_len = size;
   int write_len = 0;
 
@@ -127,8 +127,8 @@ Demux::process(const Chunk *_chunk)
     }
   }
 
-  spk  = stream_spk; // get_output() is always right
-  buf  = read_buf;
-  size = write_len;
+  spk     = stream_spk; // get_output() is always right
+  rawdata = read_buf;
+  size    = write_len;
   return true;
 }

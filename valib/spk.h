@@ -61,11 +61,11 @@
     may always know it, it is acceptable not to specify sample_rate field at
     the input of parser. But at output parser must specify correct sample rate.
     
-  relation - relation between channels. Format and mask may not always define 
-    audio format. Audio channels may have an internal relation between each 
-    other. For example sum-difference when one channel have meaning of mono
-    channel and other is interchannel difference. Other example is 
-    Dolby-encoded audio source. It is independent audio characteristic and it 
+  relation - relation between channels. Format and mask may not always fully 
+    define audio format. Audio channels may have an internal relation between 
+    each other. For example sum-difference when one channel have meaning of 
+    mono channel and other is interchannel difference. Other example is 
+    Dolby-encoded audio source. It is independent audio characteristic and 
     required to take it into account.
 
     For compressed formats that contain relation in the bitstream so decoder
@@ -171,15 +171,19 @@
 
 // synonyms
 #define CH_M    1  // Mono channel = center channel
-#define CH_CH1  0  // Channel 1 in Dual mono mask
-#define CH_CH2  2  // Channel 2 in Dual mono mask
-#define CH_S    3  // Surround channel for x/1 masks
+#define CH_CH1  0  // Channel 1 in Dual mono mode
+#define CH_CH2  2  // Channel 2 in Dual mono mode
+#define CH_S    3  // Surround channel for x/1 modes
 
 ///////////////////////////////////////////////////////////////////////////////
 // Channel masks
 // used as channel presence flag in a mask definition
 ///////////////////////////////////////////////////////////////////////////////
 
+// macro to convert channel number to channel mask
+#define CH_MASK(ch)  (1 << (ch & 0x1f))
+
+// channel masks
 #define CH_MASK_L    1
 #define CH_MASK_C    2
 #define CH_MASK_R    4
@@ -193,9 +197,6 @@
 #define CH_MASK_C2   4
 #define CH_MASK_S    8
 
-// macro to convert channel number to channel mask
-#define CH_MASK(ch)  (1 << (ch & 0x1f))
-
 ///////////////////////////////////////////////////////////////////////////////
 // Common channel configs
 ///////////////////////////////////////////////////////////////////////////////
@@ -203,18 +204,18 @@
 #define MODE_UNDEFINED 0
 #define MODE_1_0     (CH_MASK_M)
 #define MODE_2_0     (CH_MASK_L | CH_MASK_R)
-#define MODE_3_0     (CH_MASK_L | CH_MASK_C | CH_MASK_R)
-#define MODE_2_1     (MODE_2_0 | CH_MASK_S)
-#define MODE_3_1     (MODE_3_0 | CH_MASK_S)
-#define MODE_2_2     (MODE_2_0 | CH_MASK_SL | CH_MASK_SR)
-#define MODE_3_2     (MODE_3_0 | CH_MASK_SL | CH_MASK_SR)
+#define MODE_3_0     (CH_MASK_L | CH_MASK_C  | CH_MASK_R)
+#define MODE_2_1     (MODE_2_0  | CH_MASK_S)
+#define MODE_3_1     (MODE_3_0  | CH_MASK_S)
+#define MODE_2_2     (MODE_2_0  | CH_MASK_SL | CH_MASK_SR)
+#define MODE_3_2     (MODE_3_0  | CH_MASK_SL | CH_MASK_SR)
 #define MODE_1_0_LFE (CH_MASK_M | CH_MASK_LFE)
-#define MODE_2_0_LFE (CH_MASK_L | CH_MASK_R | CH_MASK_LFE)
-#define MODE_3_0_LFE (CH_MASK_L | CH_MASK_C | CH_MASK_R | CH_MASK_LFE)
-#define MODE_2_1_LFE (MODE_2_0 | CH_MASK_S | CH_MASK_LFE)
-#define MODE_3_1_LFE (MODE_3_0 | CH_MASK_S | CH_MASK_LFE)
-#define MODE_2_2_LFE (MODE_2_0 | CH_MASK_SL | CH_MASK_SR | CH_MASK_LFE)
-#define MODE_3_2_LFE (MODE_3_0 | CH_MASK_SL | CH_MASK_SR | CH_MASK_LFE)
+#define MODE_2_0_LFE (CH_MASK_L | CH_MASK_R  | CH_MASK_LFE)
+#define MODE_3_0_LFE (CH_MASK_L | CH_MASK_C  | CH_MASK_R  | CH_MASK_LFE)
+#define MODE_2_1_LFE (MODE_2_0  | CH_MASK_S  | CH_MASK_LFE)
+#define MODE_3_1_LFE (MODE_3_0  | CH_MASK_S  | CH_MASK_LFE)
+#define MODE_2_2_LFE (MODE_2_0  | CH_MASK_SL | CH_MASK_SR | CH_MASK_LFE)
+#define MODE_3_2_LFE (MODE_3_0  | CH_MASK_SL | CH_MASK_SR | CH_MASK_LFE)
 
 // synonyms
 #define MODE_MONO    MODE_1_0

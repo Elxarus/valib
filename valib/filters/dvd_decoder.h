@@ -80,8 +80,8 @@ public:
   virtual bool set_input(Speakers spk);
   virtual bool process(const Chunk *chunk);
 
-  virtual Speakers get_output();
-  virtual bool is_empty();
+  virtual Speakers get_output() const;
+  virtual bool is_empty() const;
   virtual bool get_chunk(Chunk *chunk);
 };
 

@@ -14,7 +14,7 @@ foreach $in_nch (1..$nch)
 {
   foreach $out_nch (1..$nch)
   {
-    print "void io_mix$in_nch$out_nch(samples_t input, samples_t output, int nsamples);\n";
+    print "void io_mix$in_nch$out_nch(samples_t input, samples_t output, size_t nsamples);\n";
   }
 }
 print "\n";
@@ -22,7 +22,7 @@ print "\n";
 ###########################################################
 # lookup table
 
-print "typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t,int); // input-output mixing\n\n";
+print "typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, size_t); // input-output mixing\n\n";
 
 print "const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = {\n";
 
@@ -45,10 +45,10 @@ foreach $in_nch (1..$nch)
 {
   foreach $out_nch (1..$nch)
   {
-    print "void Mixer::io_mix$in_nch$out_nch(samples_t input, samples_t output, int nsamples)\n";
+    print "void Mixer::io_mix$in_nch$out_nch(samples_t input, samples_t output, size_t nsamples)\n";
     print "{\n";
     print "  sample_t buf[$out_nch];\n";
-    print "  for (int s = 0; s < nsamples; s++)\n";
+    print "  for (size_t s = 0; s < nsamples; s++)\n";
     print "  {\n";
 
     for ($out_ch = 0; $out_ch < $out_nch; $out_ch++)

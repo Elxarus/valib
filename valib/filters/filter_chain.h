@@ -55,8 +55,8 @@ public:
   FilterChain();
   ~FilterChain();
 
-  void add_first(Filter *filter, const char *desc);
-  void add_last(Filter *filter, const char *desc);
+  void add_front(Filter *filter, const char *desc);
+  void add_back(Filter *filter, const char *desc);
   void clear();
 
   // Filter interface
@@ -67,7 +67,7 @@ public:
   virtual bool process(const Chunk *in);
 
   virtual Speakers get_output() const;
-  virtual bool is_empty();
+  virtual bool is_empty() const;
   virtual bool get_chunk(Chunk *out);
 }; 
 

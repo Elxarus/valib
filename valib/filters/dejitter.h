@@ -2,12 +2,12 @@
 */
 
 
-#ifndef SYNCFILTER_H
-#define SYNCFILTER_H
+#ifndef SyncGen_H
+#define SyncGen_H
 
 #include "filter.h"
 
-class SyncFilter : public NullFilter
+class SyncGen : public NullFilter
 {
 protected:
   // all values in ms
@@ -19,7 +19,7 @@ protected:
   float  jitter;
 
 public:
-  SyncFilter()
+  SyncGen()
   {
     time_shift  = 0;
     time_factor = 1.0;

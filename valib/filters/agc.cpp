@@ -6,7 +6,7 @@
 #define LEVEL_MINUS_100DB 0.00001
 #define LEVEL_PLUS_100DB 100000.0
 
-AGC::AGC(int _nsamples)
+AGC::AGC(size_t _nsamples)
 {
   nsamples  = 0;
   sample    = 0;
@@ -38,17 +38,17 @@ AGC::AGC(int _nsamples)
 }
 
 void
-AGC::set_buffer(int _nsamples)
+AGC::set_buffer(size_t _nsamples)
 {
   // allocate buffers
   nsamples = _nsamples;
-  buffer[0].allocate(NCHANNELS, nsamples);
-  buffer[1].allocate(NCHANNELS, nsamples);
+  buf[0].allocate(NCHANNELS, nsamples);
+  buf[1].allocate(NCHANNELS, nsamples);
   w.allocate(2, nsamples);
 
   // hann window
   double f = 2.0 * M_PI / (nsamples * 2);
-  for (int i = 0; i < nsamples; i++)
+  for (size_t i = 0; i < nsamples; i++)
   {
     w[0][i] = 0.5 * (1 - cos(i*f));
     w[1][i] = 0.5 * (1 - cos((i+nsamples)*f));
@@ -58,16 +58,52 @@ AGC::set_buffer(int _nsamples)
   reset();
 }
 
-int
-AGC::get_buffer()
+size_t
+AGC::get_buffer() const
 {
   return nsamples;
+}
+
+bool 
+AGC::fill_buffer()
+{
+  if (sample == 0)
+  {
+    buf_sync[block] = sync;
+    buf_time[block] = time;
+    sync = false;
+  }
+
+  size_t n = nsamples - sample;
+  if (size < n)
+  {
+    for (int ch = 0; ch < spk.nch(); ch++)
+      memcpy(buf[block][ch] + sample, samples[ch], size * sizeof(sample_t));
+
+    sample += size;
+    time += size;
+    drop_samples(size);
+
+    return false;
+  }
+  else
+  {
+    for (int ch = 0; ch < spk.nch(); ch++)
+      memcpy(buf[block][ch] + sample, samples[ch], n * sizeof(sample_t));
+
+    sample = 0;
+    time += n;
+    drop_samples(n);
+
+    return true;
+  }
 }
 
 void 
 AGC::process()
 {
-  int ch, s;
+  size_t s;
+  int ch;
   int nch = spk.nch();
   sample_t spk_level = spk.level;
 
@@ -84,7 +120,7 @@ AGC::process()
   for (ch = 0; ch < nch; ch++)
   {
     max = 0;
-    sptr = buffer[block][ch];
+    sptr = buf[block][ch];
     for (s = 0; s < nsamples/8; s++)
     {
       if (fabs(*sptr) > max) max = fabs(*sptr); sptr++;
@@ -214,7 +250,7 @@ AGC::process()
     // windowing
     for (ch = 0; ch < nch; ch++)
     {
-      sptr = buffer[block][ch];
+      sptr = buf[block][ch];
       for (s = 0; s < nsamples; s++, sptr++)
         *sptr = *sptr * old_factor * w[1][s] + 
                 *sptr * factor * w[0][s];
@@ -225,7 +261,7 @@ AGC::process()
     // simple gain
     for (ch = 0; ch < nch; ch++)
     {
-      sptr = buffer[block][ch];
+      sptr = buf[block][ch];
       for (s = 0; s < nsamples; s++, sptr++)
         *sptr *= factor;
     }
@@ -237,7 +273,7 @@ AGC::process()
   if (max > 1.0)
     for (ch = 0; ch < nch; ch++)
     {
-      sptr = buffer[block][ch];
+      sptr = buf[block][ch];
       for (s = 0; s < nsamples; s++, sptr++)
         if (*sptr > +spk_level) 
           *sptr = +spk_level;
@@ -246,6 +282,7 @@ AGC::process()
           *sptr = -spk_level;
     }
 }
+
 
 ///////////////////////////////////////////////////////////
 // Filter interface
@@ -273,37 +310,25 @@ AGC::reset()
 bool 
 AGC::get_chunk(Chunk *_chunk)
 {
-  size_t n;
-  int ch;
-
-  // fill sample buffer
-  n = MIN(size_t(nsamples - sample), size);
-  for (ch = 0; ch < spk.nch(); ch++)
-    memcpy(buffer[block][ch] + sample, samples[ch], n * sizeof(sample_t));
-
-  drop_samples(n);
-  sample += n;
-  time += n;
-
-  // process & send chunk
-  if (sample == nsamples)
+  if (fill_buffer())
   {
     process();
-    sample = 0;
     if (empty)
-      // skip first empty buffer
+    {
+      _chunk->set_spk(spk);
+      _chunk->set_sync(false, 0);
+      _chunk->set_empty();
       empty = false;
+    }
     else
     {
       _chunk->set_spk(spk);
       _chunk->set_sync(buf_sync[block], buf_time[block]);
-      _chunk->set_samples(buffer[block], nsamples);
-      buf_sync[block] = sync;
-      buf_time[block] = time;
-      sync = false;
+      _chunk->set_samples(buf[block], nsamples);
     }
   }
 
+  // todo: flushing
 /*
   // flushing stage 1 - 
   else if (flushing && !empty) 
@@ -311,21 +336,21 @@ AGC::get_chunk(Chunk *_chunk)
     // fill sample buffer
     n = nsamples - sample;
     for (ch = 0; ch < spk.nch(); ch++)
-      memset(buffer[block][ch] + sample, 0, n * sizeof(sample_t));
+      memset(buf[block][ch] + sample, 0, n * sizeof(sample_t));
 
     process();
     empty = true;
-    send_chunk_buffer(_chunk, buffer[block], nsamples, false);
+    send_chunk_buffer(_chunk, buf[block], nsamples, false);
   }
   else if (flushing && empty)
   {
     // fill sample buffer
     n = nsamples;
     for (ch = 0; ch < spk.nch(); ch++)
-      memset(buffer[block][ch] + sample, 0, n * sizeof(sample_t));
+      memset(buf[block][ch] + sample, 0, n * sizeof(sample_t));
 
     process();
-    send_chunk_buffer(_chunk, buffer[block], samples, true);
+    send_chunk_buffer(_chunk, buf[block], samples, true);
     samples = 0;
   }
   else

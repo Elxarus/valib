@@ -5,7 +5,7 @@
 #endif
 
 bool 
-SyncFilter::process(const Chunk *_chunk)
+SyncGen::process(const Chunk *_chunk)
 {
   time_t to_ms      = 1000 / spk.sample_rate;
   time_t to_samples = spk.sample_rate / 1000;
@@ -59,7 +59,7 @@ SyncFilter::process(const Chunk *_chunk)
 }
 
 bool 
-SyncFilter::get_chunk(Chunk *_chunk)
+SyncGen::get_chunk(Chunk *_chunk)
 {
   time_t add_time = size * time_factor;
 

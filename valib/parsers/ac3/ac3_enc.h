@@ -13,10 +13,8 @@ class AC3Enc : public NullFilter
 {
 public:
   // filter data
-  bool timestamp;
-  time_t time;
-  int nsamples;
-  SampleBuf samples;
+  int sample;
+  SampleBuf frame_samples;
   DataBuf   frame_buf;
   SampleBuf window;
 
@@ -29,7 +27,7 @@ public:
   MDCT mdct;
   WriteBS pb;
 
-  //  stream-level data
+  // stream-level data
   int  acmod;
   bool dolby;
   bool lfe;
@@ -68,22 +66,24 @@ public:
   inline void restrict_exp(int8_t expcod[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int ngrps[AC3_NBLOCKS], int8_t exp[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int expstr[AC3_NBLOCKS], int endmant) const;
   inline int  encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLES], int expstr, int endmant) const;
 
+  bool fill_buffer();
   int  encode_frame();
 
 public:
   AC3Enc();
 
+  int  get_bitrate() const;
   bool set_bitrate(int bitrate);
-  int  get_bitrate();
 
+  /////////////////////////////////////////////////////////
   // Filter interface
+
   virtual void reset();
 
-  virtual bool query_input(Speakers spk);
+  virtual bool query_input(Speakers spk) const;
   virtual bool set_input(Speakers spk);
-  virtual bool process(const Chunk *chunk);
 
-  virtual Speakers get_output();
+  virtual Speakers get_output() const;
   virtual bool get_chunk(Chunk *chunk);
 };
 

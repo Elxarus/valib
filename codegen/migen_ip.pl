@@ -14,7 +14,7 @@ foreach $in_nch (1..$nch)
 {
   foreach $out_nch (1..$nch)
   {
-    print "void ip_mix$in_nch$out_nch(samples_t samples, int nsamples);\n";
+    print "void ip_mix$in_nch$out_nch(samples_t samples, size_t nsamples);\n";
   }
 }
 print "\n";
@@ -22,7 +22,7 @@ print "\n";
 ###########################################################
 # lookup table
 
-print "typedef void (Mixer::*ip_mixfunc_t)(samples_t,int); // in-place mixing\n\n";
+print "typedef void (Mixer::*ip_mixfunc_t)(samples_t, size_t); // in-place mixing\n\n";
 
 print "const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {\n";
 
@@ -45,10 +45,10 @@ foreach $in_nch (1..$nch)
 {
   foreach $out_nch (1..$nch)
   {
-    print "void Mixer::ip_mix$in_nch$out_nch(samples_t samples, int nsamples)\n";
+    print "void Mixer::ip_mix$in_nch$out_nch(samples_t samples, size_t nsamples)\n";
     print "{\n";
     print "  sample_t buf[$out_nch];\n";
-    print "  for (int s = 0; s < nsamples; s++)\n";
+    print "  for (size_t s = 0; s < nsamples; s++)\n";
     print "  {\n";
 
     for ($out_ch = 0; $out_ch < $out_nch; $out_ch++)

@@ -78,29 +78,35 @@
 #include "filters\filter_chain.h"
 
 
-class AudioProcessor : public NullFilter
+class AudioProcessor : Filter
 {
 protected:
   Speakers in_spk;
   Speakers out_spk;
 
   // filters
-  Converter conv1;
-  Levels    in_levels;
-  Mixer     mixer;
-  BassRedir bass_redir;
-  AGC       agc;
-  Delay     delay;
-  Dejitter  dejitter;
-  Levels    out_levels;
-  Converter conv2;
+  Converter  conv1;
+  Levels     in_levels;
+  Mixer      mixer;
+  BassRedir  bass_redir;
+  AGC        agc;
+  Delay      delay;
+  SyncGen    sync_gen;
+  Levels     out_levels;
+  Converter  conv2;
 
   FilterChain chain;
   void rebuild_chain();
 
 public:
-  AudioProcessor();
+  AudioProcessor(size_t nsamples);
 
+  /////////////////////////////////////////////////////////
+  // AudioProcessior interface
+
+  size_t get_buffer() const;
+  void   set_buffer(size_t nsamples);
+ 
   bool query_spk(Speakers spk) const;
 
   bool set_input(Speakers spk);
@@ -114,8 +120,8 @@ public:
   virtual bool query_input(Speakers spk) const;
   virtual bool process(const Chunk *chunk);
 
-  virtual Speakers get_output();
-  virtual bool is_empty();
+  virtual Speakers get_output() const;
+  virtual bool is_empty() const;
   virtual bool get_chunk(Chunk *chunk);
 
   /////////////////////////////////////////////////////////
@@ -153,14 +159,17 @@ public:
   inline bool     get_delay();
   inline int      get_delay_units();
   inline void     get_delays(float delays[NCHANNELS]);
-  inline float    get_delay_ms();
+  // Syncronization
+  // todo
   // Input/output levels
   inline void     get_input_levels(time_t time, sample_t input_levels[NCHANNELS]); // r/o
   inline void     get_output_levels(time_t time, sample_t output_levels[NCHANNELS]); // r/o
   // Input/output histogram
   inline int      get_dbpb();
-  inline void     get_input_histogram(int count, double *input_histogram); // r/o
-  inline void     get_output_histogram(int count, double *output_histogram); // r/o
+  inline void     get_input_histogram(double *input_histogram, size_t count); // r/o
+  inline void     get_output_histogram(double *output_histogram, size_t count); // r/o
+
+
   // Channel order
   inline void     set_input_order(const int order[NCHANNELS]);
   inline void     set_output_order(const int order[NCHANNELS]);
@@ -191,7 +200,8 @@ public:
   inline void     set_delay(bool delay);
   inline void     set_delay_units(int delay_units);
   inline void     set_delays(float delays[NCHANNELS]);
-  inline void     set_delay_ms(float delay_ms);
+  // Syncronization
+  // todo
   // Histogram
   inline void     set_dbpb(int dbpb);
 };
@@ -301,10 +311,6 @@ inline void
 AudioProcessor::get_delays(float _delays[NCHANNELS])
 { delay.get_delays(_delays); }
 
-inline float 
-AudioProcessor::get_delay_ms()
-{ return delay.get_delay_ms(); }
-
 inline void     
 AudioProcessor::get_input_levels(time_t _time, sample_t _input_levels[NCHANNELS])
 { in_levels.get_levels(_time, _input_levels); };
@@ -318,12 +324,12 @@ AudioProcessor::get_dbpb()
 { return in_levels.get_dbpb(); }
 
 inline void
-AudioProcessor::get_input_histogram(int _count, double *_input_histogram)
-{ in_levels.get_histogram(_count, _input_histogram); }
+AudioProcessor::get_input_histogram(double *_input_histogram, size_t _count)
+{ in_levels.get_histogram(_input_histogram, _count); }
 
 inline void
-AudioProcessor::get_output_histogram(int _count, double *_output_histogram)
-{ out_levels.get_histogram(_count, _output_histogram); }
+AudioProcessor::get_output_histogram(double *_output_histogram, size_t _count)
+{ out_levels.get_histogram(_output_histogram, _count); }
 
 inline void     
 AudioProcessor::set_input_order (const int _order[NCHANNELS])
@@ -416,10 +422,6 @@ AudioProcessor::set_delay_units(int _delay_units)
 inline void     
 AudioProcessor::set_delays(float _delays[NCHANNELS])
 { delay.set_delays(_delays); }
-
-inline void     
-AudioProcessor::set_delay_ms(float _delay_ms)
-{ delay.set_delay_ms(_delay_ms); }
 
 inline void     
 AudioProcessor::set_dbpb(int _dbpb)

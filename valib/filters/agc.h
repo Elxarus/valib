@@ -1,5 +1,7 @@
 /*
   Automatic Gain control filter
+  todo: remove master gain
+
 
   Speakers: unchanged
   Input formats: Linear
@@ -24,26 +26,33 @@
 #include "filter.h"
 #include "levels.h"
 
+///////////////////////////////////////////////////////////////////////////////
+// AGC class
+///////////////////////////////////////////////////////////////////////////////
+
 class AGC : public NullFilter
 {
 protected:
   SampleBuf w;
-  SampleBuf buffer[2];
+  SampleBuf buf[2];
+  size_t    nsamples;             // number of samples per block
+
   bool   buf_sync[2];
   time_t buf_time[2];
 
   LevelsCache input_levels;
   LevelsCache output_levels;
 
-  int       nsamples;             // number of samples per block
-  int       sample;               // current sample
-  int       block;                // current block
+  size_t    sample;               // current sample
+  size_t    block;                // current block
   bool      empty;                // output sample buffer is empty
 
   sample_t  factor;               // previous block factor
   sample_t  level;                // previous block level (not scaled)
 
-  inline int next_block();
+  inline size_t next_block();
+
+  bool fill_buffer();
   void process();
 
 public:
@@ -61,21 +70,32 @@ public:
   sample_t drc_power;             // [rw] DRC power (dB)
   sample_t drc_level;             // [r]  current DRC gain level (read-only)
 
-  AGC(int nsamples = 1024);
+  AGC(size_t nsamples = 1024);
 
-  void set_buffer(int nsamples = 1024);
-  int  get_buffer();
+  /////////////////////////////////////////////////////////
+  // AGC interface
 
+  // buffer size
+  size_t get_buffer() const;
+  void   set_buffer(size_t nsamples);
+
+  // input/output levels
   inline void get_input_levels(time_t time, sample_t levels[NCHANNELS], bool drop = true);
   inline void get_output_levels(time_t time, sample_t levels[NCHANNELS], bool drop = true);
 
+  /////////////////////////////////////////////////////////
   // Filter interface
+
   virtual void reset();
   virtual bool get_chunk(Chunk *out);
 };
 
 
-int 
+///////////////////////////////////////////////////////////////////////////////
+// AGC inlines
+///////////////////////////////////////////////////////////////////////////////
+
+size_t 
 AGC::next_block()
 {
   return (block + 1) & 1;

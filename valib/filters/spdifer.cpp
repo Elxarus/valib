@@ -9,12 +9,13 @@
 
 Spdifer::Spdifer()
 {
-  spk = unk_spk;
   stream_spk = unk_spk;
-
+  state = state_sync;
+  frame_size = 0;
+  frame_data = 0;
   frames = 0;
+
   frame_buf.allocate(SPDIF_MAX_FRAME_SIZE);
-  reset();
 }
 
 int
@@ -68,7 +69,7 @@ Spdifer::get_chunk(Chunk *_chunk)
     sync = false;
   }
 
-  uint8_t *read_buf = buf;
+  uint8_t *read_buf = rawdata;
   int      read_len = size;
 
   uint8_t *write_buf = frame_buf.data() + SPDIF_HEADER_SIZE;
@@ -155,7 +156,7 @@ Spdifer::get_chunk(Chunk *_chunk)
 
       // fill output chunk
       _chunk->set_spk(get_output());
-      _chunk->set_buf(frame_buf.data(), nsamples * 4);
+      _chunk->set_rawdata(frame_buf.data(), nsamples * 4);
       // timing
       sync_helper.send_sync(_chunk);
       sync_helper.set_syncing(true);
@@ -167,7 +168,7 @@ Spdifer::get_chunk(Chunk *_chunk)
       state = state_sync;
       frame_data = 0;
 
-      drop(read_buf - buf);
+      drop(read_buf - rawdata);
       return true;
     }
 
@@ -187,7 +188,7 @@ Spdifer::get_chunk(Chunk *_chunk)
       {
         // send frame header
         _chunk->set_spk(stream_spk);
-        _chunk->set_buf(write_buf, frame_data);
+        _chunk->set_rawdata(write_buf, frame_data);
         frame_data = 0;
 
         // timing
@@ -203,14 +204,14 @@ Spdifer::get_chunk(Chunk *_chunk)
           state = state_sync;
         }
 
-        drop(read_buf - buf);
+        drop(read_buf - rawdata);
         return true;
       }
 
       // send frame data
       int l = MIN(frame_size, read_len);
       _chunk->set_spk(stream_spk);
-      _chunk->set_buf(read_buf, l);
+      _chunk->set_rawdata(read_buf, l);
 
       read_buf   += l;
       read_len   -= l;
@@ -228,12 +229,12 @@ Spdifer::get_chunk(Chunk *_chunk)
         state = state_sync;
       }
 
-      drop(read_buf - buf);
+      drop(read_buf - rawdata);
       return true;
     }
   } // while (read_len && _out->is_empty()) switch (state)
 
-  drop(read_buf - buf);
+  drop(read_buf - rawdata);
   return true;
 };
 
@@ -299,7 +300,7 @@ Spdifer::ac3_syncinfo(const uint8_t *_buf)
   int sample_rate;
 
   /////////////////////////////////////////////////////////
-  // 8 bit or 16 bit little endian steram sync
+  // 8 bit or 16 bit little endian stream sync
   if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
   {
     fscod      = _buf[4] >> 6;
@@ -318,7 +319,7 @@ Spdifer::ac3_syncinfo(const uint8_t *_buf)
     bs_type = BITSTREAM_8;
   }
   /////////////////////////////////////////////////////////
-  // 16 bit big endian steram sync
+  // 16 bit big endian stream sync
   else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
   {
     fscod      = _buf[5] >> 6;

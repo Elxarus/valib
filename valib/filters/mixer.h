@@ -34,16 +34,19 @@
 
 typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 
-class Mixer : public Filter
+///////////////////////////////////////////////////////////////////////////////
+// Mixer class
+///////////////////////////////////////////////////////////////////////////////
+
+class Mixer : public NullFilter
 {
 protected:
   // Speakers
-  Speakers  in_spk;                  // input speakers config
-  Speakers  out_spk;                 // output speakers config
-  Chunk     chunk;                   // input data
-                                  
-  SampleBuf samples;                 // output sample buffer
-  int nsamples;                      // output sample buffer size (in samples)
+  Speakers out_spk;                  // output speakers config
+
+  // Buffer
+  SampleBuf buf;                     // sample buffer
+  size_t nsamples;                   // buffer size (in samples)
                                   
   // Options                      
   bool     auto_matrix;              // update matrix automatically
@@ -64,34 +67,36 @@ protected:
   // Matrix
   matrix_t matrix;                   // mixing matrix
   matrix_t m;                        // reordered mixing matrix (internal)
-  // add: copy rows
-  // add: gain rows
+
   void prepare_matrix();
 
 public:
-  Mixer(int nsamples = 1024);
+  Mixer(size_t nsamples);
 
-  bool set_output(Speakers spk);
-
-  // Buffer management
-  inline void set_buffer(int nsamples);
-  inline int  get_buffer();
-
+  /////////////////////////////////////////////////////////
   // Filter interface
-  virtual void reset();
 
-  virtual bool query_input(Speakers spk) const;
   virtual bool set_input(Speakers spk);
   virtual bool process(const Chunk *in);
 
-  virtual Speakers get_output();
-  virtual bool is_empty() { return chunk.is_empty(); }
+  virtual Speakers get_output() const;
   virtual bool get_chunk(Chunk *out);
 
-  // Matrix calculation
+  /////////////////////////////////////////////////////////
+  // Mixer interface
+
+  // output format
+  bool set_output(Speakers spk);
+
+  // buffer size
+  inline bool   is_buffered() const;
+  inline size_t get_buffer() const;
+  inline void   set_buffer(size_t nsamples);
+
+  // matrix calculation
   void calc_matrix();
 
-  // Options get/set
+  // options get/set
   inline void     get_matrix(matrix_t *matrix);
   inline bool     get_auto_matrix();
   inline bool     get_normalize_matrix();
@@ -116,104 +121,108 @@ public:
   inline void     set_input_gains(sample_t input_gains[NCHANNELS]);
   inline void     set_output_gains(sample_t output_gains[NCHANNELS]);
 
-  // Mixing functions
-  void io_mix11(samples_t input, samples_t output, int nsamples);
-  void io_mix12(samples_t input, samples_t output, int nsamples);
-  void io_mix13(samples_t input, samples_t output, int nsamples);
-  void io_mix14(samples_t input, samples_t output, int nsamples);
-  void io_mix15(samples_t input, samples_t output, int nsamples);
-  void io_mix16(samples_t input, samples_t output, int nsamples);
-  void io_mix21(samples_t input, samples_t output, int nsamples);
-  void io_mix22(samples_t input, samples_t output, int nsamples);
-  void io_mix23(samples_t input, samples_t output, int nsamples);
-  void io_mix24(samples_t input, samples_t output, int nsamples);
-  void io_mix25(samples_t input, samples_t output, int nsamples);
-  void io_mix26(samples_t input, samples_t output, int nsamples);
-  void io_mix31(samples_t input, samples_t output, int nsamples);
-  void io_mix32(samples_t input, samples_t output, int nsamples);
-  void io_mix33(samples_t input, samples_t output, int nsamples);
-  void io_mix34(samples_t input, samples_t output, int nsamples);
-  void io_mix35(samples_t input, samples_t output, int nsamples);
-  void io_mix36(samples_t input, samples_t output, int nsamples);
-  void io_mix41(samples_t input, samples_t output, int nsamples);
-  void io_mix42(samples_t input, samples_t output, int nsamples);
-  void io_mix43(samples_t input, samples_t output, int nsamples);
-  void io_mix44(samples_t input, samples_t output, int nsamples);
-  void io_mix45(samples_t input, samples_t output, int nsamples);
-  void io_mix46(samples_t input, samples_t output, int nsamples);
-  void io_mix51(samples_t input, samples_t output, int nsamples);
-  void io_mix52(samples_t input, samples_t output, int nsamples);
-  void io_mix53(samples_t input, samples_t output, int nsamples);
-  void io_mix54(samples_t input, samples_t output, int nsamples);
-  void io_mix55(samples_t input, samples_t output, int nsamples);
-  void io_mix56(samples_t input, samples_t output, int nsamples);
-  void io_mix61(samples_t input, samples_t output, int nsamples);
-  void io_mix62(samples_t input, samples_t output, int nsamples);
-  void io_mix63(samples_t input, samples_t output, int nsamples);
-  void io_mix64(samples_t input, samples_t output, int nsamples);
-  void io_mix65(samples_t input, samples_t output, int nsamples);
-  void io_mix66(samples_t input, samples_t output, int nsamples);
+  // mixing functions
+  void io_mix11(samples_t input, samples_t output, size_t nsamples);
+  void io_mix12(samples_t input, samples_t output, size_t nsamples);
+  void io_mix13(samples_t input, samples_t output, size_t nsamples);
+  void io_mix14(samples_t input, samples_t output, size_t nsamples);
+  void io_mix15(samples_t input, samples_t output, size_t nsamples);
+  void io_mix16(samples_t input, samples_t output, size_t nsamples);
+  void io_mix21(samples_t input, samples_t output, size_t nsamples);
+  void io_mix22(samples_t input, samples_t output, size_t nsamples);
+  void io_mix23(samples_t input, samples_t output, size_t nsamples);
+  void io_mix24(samples_t input, samples_t output, size_t nsamples);
+  void io_mix25(samples_t input, samples_t output, size_t nsamples);
+  void io_mix26(samples_t input, samples_t output, size_t nsamples);
+  void io_mix31(samples_t input, samples_t output, size_t nsamples);
+  void io_mix32(samples_t input, samples_t output, size_t nsamples);
+  void io_mix33(samples_t input, samples_t output, size_t nsamples);
+  void io_mix34(samples_t input, samples_t output, size_t nsamples);
+  void io_mix35(samples_t input, samples_t output, size_t nsamples);
+  void io_mix36(samples_t input, samples_t output, size_t nsamples);
+  void io_mix41(samples_t input, samples_t output, size_t nsamples);
+  void io_mix42(samples_t input, samples_t output, size_t nsamples);
+  void io_mix43(samples_t input, samples_t output, size_t nsamples);
+  void io_mix44(samples_t input, samples_t output, size_t nsamples);
+  void io_mix45(samples_t input, samples_t output, size_t nsamples);
+  void io_mix46(samples_t input, samples_t output, size_t nsamples);
+  void io_mix51(samples_t input, samples_t output, size_t nsamples);
+  void io_mix52(samples_t input, samples_t output, size_t nsamples);
+  void io_mix53(samples_t input, samples_t output, size_t nsamples);
+  void io_mix54(samples_t input, samples_t output, size_t nsamples);
+  void io_mix55(samples_t input, samples_t output, size_t nsamples);
+  void io_mix56(samples_t input, samples_t output, size_t nsamples);
+  void io_mix61(samples_t input, samples_t output, size_t nsamples);
+  void io_mix62(samples_t input, samples_t output, size_t nsamples);
+  void io_mix63(samples_t input, samples_t output, size_t nsamples);
+  void io_mix64(samples_t input, samples_t output, size_t nsamples);
+  void io_mix65(samples_t input, samples_t output, size_t nsamples);
+  void io_mix66(samples_t input, samples_t output, size_t nsamples);
 
-  void ip_mix11(samples_t samples, int nsamples);
-  void ip_mix12(samples_t samples, int nsamples);
-  void ip_mix13(samples_t samples, int nsamples);
-  void ip_mix14(samples_t samples, int nsamples);
-  void ip_mix15(samples_t samples, int nsamples);
-  void ip_mix16(samples_t samples, int nsamples);
-  void ip_mix21(samples_t samples, int nsamples);
-  void ip_mix22(samples_t samples, int nsamples);
-  void ip_mix23(samples_t samples, int nsamples);
-  void ip_mix24(samples_t samples, int nsamples);
-  void ip_mix25(samples_t samples, int nsamples);
-  void ip_mix26(samples_t samples, int nsamples);
-  void ip_mix31(samples_t samples, int nsamples);
-  void ip_mix32(samples_t samples, int nsamples);
-  void ip_mix33(samples_t samples, int nsamples);
-  void ip_mix34(samples_t samples, int nsamples);
-  void ip_mix35(samples_t samples, int nsamples);
-  void ip_mix36(samples_t samples, int nsamples);
-  void ip_mix41(samples_t samples, int nsamples);
-  void ip_mix42(samples_t samples, int nsamples);
-  void ip_mix43(samples_t samples, int nsamples);
-  void ip_mix44(samples_t samples, int nsamples);
-  void ip_mix45(samples_t samples, int nsamples);
-  void ip_mix46(samples_t samples, int nsamples);
-  void ip_mix51(samples_t samples, int nsamples);
-  void ip_mix52(samples_t samples, int nsamples);
-  void ip_mix53(samples_t samples, int nsamples);
-  void ip_mix54(samples_t samples, int nsamples);
-  void ip_mix55(samples_t samples, int nsamples);
-  void ip_mix56(samples_t samples, int nsamples);
-  void ip_mix61(samples_t samples, int nsamples);
-  void ip_mix62(samples_t samples, int nsamples);
-  void ip_mix63(samples_t samples, int nsamples);
-  void ip_mix64(samples_t samples, int nsamples);
-  void ip_mix65(samples_t samples, int nsamples);
-  void ip_mix66(samples_t samples, int nsamples);
+  void ip_mix11(samples_t samples, size_t nsamples);
+  void ip_mix12(samples_t samples, size_t nsamples);
+  void ip_mix13(samples_t samples, size_t nsamples);
+  void ip_mix14(samples_t samples, size_t nsamples);
+  void ip_mix15(samples_t samples, size_t nsamples);
+  void ip_mix16(samples_t samples, size_t nsamples);
+  void ip_mix21(samples_t samples, size_t nsamples);
+  void ip_mix22(samples_t samples, size_t nsamples);
+  void ip_mix23(samples_t samples, size_t nsamples);
+  void ip_mix24(samples_t samples, size_t nsamples);
+  void ip_mix25(samples_t samples, size_t nsamples);
+  void ip_mix26(samples_t samples, size_t nsamples);
+  void ip_mix31(samples_t samples, size_t nsamples);
+  void ip_mix32(samples_t samples, size_t nsamples);
+  void ip_mix33(samples_t samples, size_t nsamples);
+  void ip_mix34(samples_t samples, size_t nsamples);
+  void ip_mix35(samples_t samples, size_t nsamples);
+  void ip_mix36(samples_t samples, size_t nsamples);
+  void ip_mix41(samples_t samples, size_t nsamples);
+  void ip_mix42(samples_t samples, size_t nsamples);
+  void ip_mix43(samples_t samples, size_t nsamples);
+  void ip_mix44(samples_t samples, size_t nsamples);
+  void ip_mix45(samples_t samples, size_t nsamples);
+  void ip_mix46(samples_t samples, size_t nsamples);
+  void ip_mix51(samples_t samples, size_t nsamples);
+  void ip_mix52(samples_t samples, size_t nsamples);
+  void ip_mix53(samples_t samples, size_t nsamples);
+  void ip_mix54(samples_t samples, size_t nsamples);
+  void ip_mix55(samples_t samples, size_t nsamples);
+  void ip_mix56(samples_t samples, size_t nsamples);
+  void ip_mix61(samples_t samples, size_t nsamples);
+  void ip_mix62(samples_t samples, size_t nsamples);
+  void ip_mix63(samples_t samples, size_t nsamples);
+  void ip_mix64(samples_t samples, size_t nsamples);
+  void ip_mix65(samples_t samples, size_t nsamples);
+  void ip_mix66(samples_t samples, size_t nsamples);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Mixer inlines
 ///////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////
 // Buffer management
 
-inline int  
-Mixer::get_buffer()
+inline bool
+Mixer::is_buffered() const
+{
+  return out_spk.nch() > spk.nch();
+}
+
+inline size_t
+Mixer::get_buffer() const
 {
   return nsamples;
 }
 
 inline void 
-Mixer::set_buffer(int _nsamples)
+Mixer::set_buffer(size_t _nsamples)
 {
   nsamples = _nsamples;
-  if (in_spk.nch() < out_spk.nch())
-    samples.allocate(out_spk.nch(), nsamples);
+  if (is_buffered())
+    buf.allocate(out_spk.nch(), _nsamples);
 }
 
-///////////////////////////////////////////////////////////
 // Options get/set
 
 inline void 

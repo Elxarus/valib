@@ -237,7 +237,7 @@ protected:
   time_t    time;
   bool      flushing;
 
-  uint8_t  *buf;
+  uint8_t  *rawdata;
   samples_t samples;
   size_t    size;
 
@@ -254,7 +254,7 @@ protected:
       time     = _chunk->get_time();
     }
     flushing = _chunk->is_eos();
-    buf      = _chunk->get_buf();
+    rawdata  = _chunk->get_rawdata();
     samples  = _chunk->get_samples();
     size     = _chunk->get_size();
 
@@ -265,12 +265,11 @@ protected:
   {
     // fill output chunk & drop data
 
-    // chunk flags
+    // speakers
     _chunk->set_spk(spk);
-    _chunk->set_sync(sync, time);
-    _chunk->set_eos(flushing && !size);
 
-    flushing = flushing && size;
+    // sync
+    _chunk->set_sync(sync, time);
     sync = false;
 
     // data send & drop
@@ -284,11 +283,15 @@ protected:
     }
     else
     {
-      _chunk->set_buf(buf, _size);
-      buf += _size;
+      _chunk->set_rawdata(rawdata, _size);
+      rawdata += _size;
     }
 
     size -= _size;
+
+    // end-of-stream
+    _chunk->set_eos(flushing && !size);
+    flushing = flushing && size;
   }
 
   inline void drop(size_t _size)
@@ -299,17 +302,17 @@ protected:
     if (spk.format == FORMAT_LINEAR)
       samples += _size;
     else
-      buf += _size;
+      rawdata += _size;
 
     size -= _size;
   }
 
-  inline void drop_buf(size_t _size)
+  inline void drop_rawdata(size_t _size)
   {
     if (_size > size)
       _size = size;
 
-    buf  += _size;
+    rawdata += _size;
     size -= _size;
   }
 
@@ -350,10 +353,10 @@ public:
   {
     if (spk != _spk)
     {
-      if (!query_input(_spk)) // may be overriten
+      if (!query_input(_spk)) // may be overwritten
         return false;
       spk = _spk;
-      reset(); // may be overriten
+      reset(); // may be overwritten
     }
     return true;
   }

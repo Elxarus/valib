@@ -39,19 +39,19 @@ Converter::alloc_buffer()
   if (spk.format == format)
     return true; // no buffer required
 
-  if (!buffer.allocate(spk.nch() * nsamples * sample_size(format)))
+  if (!buf.allocate(spk.nch() * nsamples * sample_size(format)))
     return false;
 
   if (format == FORMAT_LINEAR)
   {
-    out_samples[0] = (sample_t *)buffer.data();
+    out_samples[0] = (sample_t *)buf.data();
     for (int ch = 1; ch < spk.nch(); ch++)
       out_samples[ch] = out_samples[ch-1] + nsamples;
-    out_buf = 0;
+    out_rawdata = 0;
   }
   else
   {
-    out_buf = buffer.data();
+    out_rawdata = buf.data();
     out_samples.set_null();
   }
 }
@@ -69,16 +69,16 @@ Converter::pcm2linear()
   {
     if (sample_size - part_size > size)
     {
-      memcpy(part_buf + part_size, buf, size);
-      drop_buf(size);
+      memcpy(part_buf + part_size, rawdata, size);
+      drop_rawdata(size);
       part_size += size;
       return;
     }
     else
     {
-      memcpy(part_buf + part_size, buf, sample_size - part_size);
+      memcpy(part_buf + part_size, rawdata, sample_size - part_size);
       pcm2linear(part_buf, out_samples, 1);
-      drop_buf(sample_size - part_size);
+      drop_rawdata(sample_size - part_size);
       out_size++;
       time -= 1;
       part_size = 0;
@@ -90,15 +90,15 @@ Converter::pcm2linear()
   if (n + out_size > nsamples)
     n = nsamples - out_size;
 
-  pcm2linear(buf, out_samples + out_size, n);
-  drop_buf(n * sample_size);
+  pcm2linear(rawdata, out_samples + out_size, n);
+  drop_rawdata(n * sample_size);
   out_size += n;
 
   // load partial sample
   if (size)
   {
     // assert: size < max_sample_size
-    memcpy(part_buf, buf, size);
+    memcpy(part_buf, rawdata, size);
     drop(size);
   }
 }
@@ -196,7 +196,7 @@ Converter::linear2pcm()
   size_t sample_size = spk.sample_size() * nch;
 
   size_t n = MIN(size, nsamples);
-  linear2pcm(samples, out_buf, n);
+  linear2pcm(samples, out_rawdata, n);
   drop_samples(n);
   out_size = n * sample_size;
 }
@@ -343,7 +343,7 @@ Converter::get_chunk(Chunk *_chunk)
   if (format == FORMAT_LINEAR)
     _chunk->set_samples(out_samples, out_size);
   else
-    _chunk->set_buf(out_buf, out_size);
+    _chunk->set_rawdata(out_rawdata, out_size);
 
   flushing = flushing && size;
   sync = false;

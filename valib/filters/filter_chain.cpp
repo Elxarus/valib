@@ -13,7 +13,7 @@ FilterChain::~FilterChain()
 }
 
 void 
-FilterChain::add_first(Filter *_filter, const char *_desc)
+FilterChain::add_front(Filter *_filter, const char *_desc)
 {
   Entry *new_entry = new Entry(_filter, _desc);
 
@@ -31,7 +31,7 @@ FilterChain::add_first(Filter *_filter, const char *_desc)
 }
 
 void 
-FilterChain::add_last(Filter *_filter, const char *_desc)
+FilterChain::add_back(Filter *_filter, const char *_desc)
 {
   Entry *new_entry = new Entry(_filter, _desc);
 
@@ -152,7 +152,7 @@ FilterChain::process(const Chunk *_chunk)
 }
 
 bool 
-FilterChain::is_empty()
+FilterChain::is_empty() const
 {
   if (!first)
     return NullFilter::is_empty();

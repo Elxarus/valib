@@ -96,10 +96,16 @@ AC3Enc::AC3Enc()
 {
   frames = 0;
   bitrate = 640000;
-  samples.allocate(AC3_NCHANNELS, AC3_FRAME_SAMPLES);
+  frame_samples.allocate(AC3_NCHANNELS, AC3_FRAME_SAMPLES);
   frame_buf.allocate(AC3_MAX_FRAME_SIZE);
   window.allocate(1, AC3_BLOCK_SAMPLES);
   reset();
+}
+
+int  
+AC3Enc::get_bitrate() const
+{
+  return bitrate;
 }
 
 bool 
@@ -118,19 +124,46 @@ AC3Enc::set_bitrate(int _bitrate)
   return false;
 }
 
-int  
-AC3Enc::get_bitrate()
-{
-  return bitrate;
-}
 
+bool 
+AC3Enc::fill_buffer()
+{
+  if (sample == 0)
+  {
+    frame_sync = sync;
+    frame_time = time;
+    sync = false;
+  }
+
+  size_t n = AC3_FRAME_SAMPLES - sample;
+  if (size < n)
+  {
+    for (int ch = 0; ch < spk.nch(); ch++)
+      memcpy(frame_samples[ch] + sample, samples[ch], size * sizeof(sample_t));
+
+    sample += size;
+    time += size;
+    drop_samples(size);
+
+    return false;
+  }
+  else
+  {
+    for (int ch = 0; ch < spk.nch(); ch++)
+      memcpy(frame_samples[ch] + sample, samples[ch], n * sizeof(sample_t));
+
+    sample = 0;
+    time += n;
+    drop_samples(n);
+
+    return true;
+  }
+}
 
 void 
 AC3Enc::reset()
 {
-  timestamp = false;
-  time      = 0;
-  nsamples  = 0;
+  sample = 0;
 
   memset(delay, 0, sizeof(delay));
   for (int ch = 0; ch < NCHANNELS; ch++)
@@ -149,7 +182,7 @@ AC3Enc::reset()
 }
 
 bool 
-AC3Enc::query_input(Speakers _spk)
+AC3Enc::query_input(Speakers _spk) const
 {
   if (_spk.format != FORMAT_LINEAR)
     return false;
@@ -249,33 +282,39 @@ AC3Enc::set_input(Speakers _spk)
   return true;
 }
 
-bool 
-AC3Enc::process(const Chunk *_chunk)
-{
-  if (_chunk->is_empty())
-    return true;
-
-  if (!NullFilter::process(_chunk))
-    return false;
-
-  timestamp = chunk.timestamp;
-  time = chunk.time - nsamples;
-  return true;
-}
-
 bool
-AC3Enc::get_chunk(Chunk *_out)
+AC3Enc::get_chunk(Chunk *_chunk)
 {
-  _out->set_empty();
+  if (fill_buffer())
+  {
+    if (!encode_frame)
+      return false;
+
+
+    if (empty)
+    {
+      _chunk->set_spk(spk);
+      _chunk->set_sync(buf_sync[block], buf_time[block]);
+      _chunk->set_empty();
+      empty = false;
+    }
+    else
+    {
+      _chunk->set_spk(spk);
+      _chunk->set_sync(buf_sync[block], buf_time[block]);
+      _chunk->set_samples(buf[block], nsamples);
+    }
+  }
 
   /////////////////////////////////////////////////////////////////
   // Copy input data into sample buffer
 
-  int n = MIN(AC3_FRAME_SAMPLES - nsamples, chunk.size);
+  size_t n = MIN(AC3_FRAME_SAMPLES - nsamples, size);
   for (int ch = 0; ch < spk.nch(); ch++)
-    memcpy(samples[ch] + nsamples, chunk.samples[ch], n * sizeof(sample_t));
+    memcpy(samples[ch] + nsamples, samples[ch], n * sizeof(sample_t));
+
+  chunk.drop_samples(n);
   nsamples += n;
-  chunk.drop(n);
   if (nsamples < AC3_FRAME_SAMPLES)
     return true;
   else
@@ -317,10 +356,10 @@ AC3Enc::encode_frame()
 
 
   // channel-wide data
-  int      exp_norm[AC3_NBLOCKS];                     // normalization
+  int exp_norm[AC3_NBLOCKS]; // normalization
 
   // block-wide data
-  int16_t  mdct_buf[AC3_BLOCK_SAMPLES * 2];
+  int16_t mdct_buf[AC3_BLOCK_SAMPLES * 2];
 
   for (ch = 0; ch < nch; ch++)
   {

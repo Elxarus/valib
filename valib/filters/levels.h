@@ -27,6 +27,10 @@ class Levels;
 #define MAX_LEVELS_CACHE 256
 #define MAX_HISTOGRAM    128
 
+///////////////////////////////////////////////////////////////////////////////
+// LevelsCache calss
+///////////////////////////////////////////////////////////////////////////////
+
 class LevelsCache
 {
 protected:
@@ -37,15 +41,21 @@ protected:
   int end;
 
   inline int next_pos(int p);
+  inline int prev_pos(int p);
 
 public:
   LevelsCache()
   { reset(); }
 
   inline void reset();
+
   void add_levels(time_t time, sample_t levels[NCHANNELS]);
   void get_levels(time_t time, sample_t levels[NCHANNELS], bool drop = true);
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// LevelsHistogram calss
+///////////////////////////////////////////////////////////////////////////////
 
 class LevelsHistogram
 {
@@ -62,13 +72,17 @@ public:
   };
 
   inline void reset();
+
+  inline int  get_dbpb() const;
   inline void set_dbpb(int dbpb);
-  inline int  get_dbpb();
 
   void add_levels(sample_t levels[NCHANNELS]);
-  void get_histogram(int count, double *histogram);
+  void get_histogram(double *histogram, size_t count) const;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// Levels filter calss
+///////////////////////////////////////////////////////////////////////////////
 
 class Levels : public NullFilter
 {
@@ -77,9 +91,9 @@ protected:
   LevelsHistogram hist;
 
   sample_t levels[NCHANNELS]; // currently filling 
-  int nsamples; // number of samples per measure block
-  int samples;  // current sample
-  time_t time;
+
+  size_t nsamples; // number of samples per measure block
+  size_t sample;   // current sample
  
 public:
   Levels(int _nsamples = 1024, int _dbpb = 5)
@@ -89,17 +103,22 @@ public:
     reset();
   }
 
-  inline void set_nsamples(int nsamples);
-  inline int  get_nsamples();
+  /////////////////////////////////////////////////////////
+  // Levels interface
 
+  inline int  get_nsamples() const;
+  inline void set_nsamples(int);
+
+  inline int  get_dbpb() const;
   inline void set_dbpb(int dbpb);
-  inline int  get_dbpb();
 
   inline void add_levels(time_t time, sample_t levels[NCHANNELS]);
   inline void get_levels(time_t time, sample_t levels[NCHANNELS], bool drop = true);
-  inline void get_histogram(int count, double *histogram);
+  inline void get_histogram(double *histogram, size_t count) const;
 
+  /////////////////////////////////////////////////////////
   // Filter interface
+
   virtual void reset();
   virtual bool process(const Chunk *chunk);
 };
@@ -137,7 +156,7 @@ LevelsHistogram::reset()
 }
 
 int 
-LevelsHistogram::get_dbpb()
+LevelsHistogram::get_dbpb() const
 {
   return dbpb;
 }
@@ -152,28 +171,28 @@ LevelsHistogram::set_dbpb(int _dbpb)
 ///////////////////////////////////////////////////////////
 // Levels inlines
 
+int
+Levels::get_nsamples() const
+{
+  return nsamples;
+}
+
 void
 Levels::set_nsamples(int _nsamples)
 {
   nsamples = _nsamples;
 }
 
-int
-Levels::get_nsamples()
+int 
+Levels::get_dbpb() const
 {
-  return nsamples;
+  return hist.get_dbpb();
 }
 
 void 
 Levels::set_dbpb(int _dbpb)
 {
   hist.set_dbpb(_dbpb);
-}
-
-int 
-Levels::get_dbpb()
-{
-  return hist.get_dbpb();
 }
 
 void 
@@ -190,9 +209,9 @@ Levels::get_levels(time_t _time, sample_t _levels[NCHANNELS], bool _drop)
 }
 
 void 
-Levels::get_histogram(int _count, double *_histogram)
+Levels::get_histogram(double *_histogram, size_t _count) const
 {
-  hist.get_histogram(_count, _histogram);
+  hist.get_histogram(_histogram, _count);
 }
 
 

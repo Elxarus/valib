@@ -2,8 +2,8 @@
 #include <memory.h>
 #include "mixer.h"
 
-typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, int); // input-output mixing
-typedef void (Mixer::*ip_mixfunc_t)(samples_t, int);            // in-place mixing
+typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, size_t); // input-output mixing
+typedef void (Mixer::*ip_mixfunc_t)(samples_t, size_t);            // in-place mixing
 
 static const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = 
 {
@@ -25,10 +25,10 @@ const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] =
   { Mixer::ip_mix61, Mixer::ip_mix62, Mixer::ip_mix63, Mixer::ip_mix64, Mixer::ip_mix65, Mixer::ip_mix66 }
 };
 
-Mixer::Mixer(int _nsamples)
+Mixer::Mixer(size_t _nsamples)
 {
-  in_spk   = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0);
-  out_spk  = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0);
+  spk      = def_spk;
+  out_spk  = def_spk;
   nsamples = _nsamples;
 
   // Options
@@ -51,9 +51,7 @@ Mixer::Mixer(int _nsamples)
   }
 
   // Matrix
-  memset(&matrix, 0, sizeof(matrix_t));
   calc_matrix();
-  prepare_matrix();
 
   // We don't allocate sample buffer 
   // because we may not need it
@@ -72,11 +70,11 @@ Mixer::prepare_matrix()
   // todo: do not touch pass-through channels
   // todo: gain channel if possible instead of matrixing
 
-  const int *in_order = in_spk.order();
+  const int *in_order = spk.order();
   const int *out_order = out_spk.order();
 
-  sample_t factor = out_spk.level / in_spk.level * gain;
-  for (int ch1 = 0; ch1 < in_spk.nch(); ch1++)
+  sample_t factor = out_spk.level / spk.level * gain;
+  for (int ch1 = 0; ch1 < spk.nch(); ch1++)
     for (int ch2 = 0; ch2 < out_spk.nch(); ch2++)
       m[ch1][ch2] = 
         matrix[in_order[ch1]][out_order[ch2]] * 
@@ -88,15 +86,18 @@ Mixer::prepare_matrix()
 bool
 Mixer::set_output(Speakers _spk)
 {
-  if (!query_input(_spk)) return false;
+  if (!query_input(_spk)) 
+    return false;
 
   out_spk = _spk;
-  out_spk.sample_rate = in_spk.sample_rate;
+  out_spk.sample_rate = spk.sample_rate;
 
-  set_buffer(nsamples);
+  if (is_buffered())
+    buf.allocate(out_spk.nch(), nsamples);
 
   if (auto_matrix)
     calc_matrix();
+
   prepare_matrix();
 
   return true;
@@ -105,87 +106,79 @@ Mixer::set_output(Speakers _spk)
 ///////////////////////////////////////////////////////////
 // Filter interface
 
-void 
-Mixer::reset()
-{
-  chunk.set_empty();
-}
-
-bool 
-Mixer::query_input(Speakers _spk) const
-{
-  return _spk.format == FORMAT_LINEAR;
-}
-
 bool 
 Mixer::set_input(Speakers _spk)
 {
-  if (in_spk != _spk)
-  {
-    if (!query_input(_spk)) 
-      return false;
-
-    in_spk = _spk;
-    out_spk.sample_rate = in_spk.sample_rate;
-
-    set_buffer(nsamples);
-
-    if (auto_matrix)
-      calc_matrix();
-    prepare_matrix();
-  }
-  return true;
-}
-
-bool
-Mixer::process(const Chunk *in)
-{
-  if (in->is_empty())
-  {
-    chunk.set_empty();
-    return true;
-  }
-
-  if (in_spk != in->spk && !set_input(in->spk)) 
+  if (!NullFilter::set_input(_spk))
     return false;
 
-  chunk = *in;
+  out_spk.sample_rate = spk.sample_rate;
+
+  if (is_buffered())
+    buf.allocate(out_spk.nch(), nsamples);
+
+  if (auto_matrix)
+    calc_matrix();
+
+  prepare_matrix();
+
   return true;
 }
 
 Speakers 
-Mixer::get_output()
+Mixer::get_output() const
 {
   return out_spk;
 }
 
 
 bool 
-Mixer::get_chunk(Chunk *out)
+Mixer::get_chunk(Chunk *_chunk)
 {
-  int n;
-  if (in_spk.nch() < out_spk.nch())
+  if (is_buffered())
   {
     // buffered mixing
-    n = MIN(nsamples, chunk.size);
-    io_mixfunc_t mixfunc = io_mix_tbl[in_spk.nch()-1][out_spk.nch()-1];
-    (this->*mixfunc)(chunk.samples, samples, n);
-    out->set_spk(out_spk);
-    out->set_samples(samples, n);
-    out->set_time(chunk.timestamp, chunk.time);
+    size_t n = MIN(nsamples, size);
+    io_mixfunc_t mixfunc = io_mix_tbl[spk.nch()-1][out_spk.nch()-1];
+    (this->*mixfunc)(samples, samples, n);
+
+    // speakers
+    _chunk->set_spk(out_spk);
+
+    // sync
+    _chunk->set_sync(sync, time);
+    sync = false;
+
+    // data send & drop
+    _chunk->set_samples(buf, n);
+    samples += n;
+    size -= n;
+
+    // end-of-stream
+    _chunk->set_eos(flushing && !size);
+    flushing = flushing && size;
   }
   else
   {
     // in-place mixing
-    n = chunk.size;
-    ip_mixfunc_t mixfunc = ip_mix_tbl[in_spk.nch()-1][out_spk.nch()-1];
-    (this->*mixfunc)(chunk.samples, n);
-    out->set_spk(out_spk);
-    out->set_samples(chunk.samples, n);
-    out->set_time(chunk.timestamp, chunk.time);
-  }
+    ip_mixfunc_t mixfunc = ip_mix_tbl[spk.nch()-1][out_spk.nch()-1];
+    (this->*mixfunc)(samples, size);
 
-  chunk.drop(n);
+    // speakers
+    _chunk->set_spk(out_spk);
+
+    // sync
+    _chunk->set_sync(sync, time);
+    sync = false;
+
+    // data send & drop
+    _chunk->set_samples(samples, size);
+    size = 0;
+
+    // end-of-stream
+    _chunk->set_eos(flushing);
+    flushing = false;
+  }
   return true;
 }
 
@@ -196,7 +189,7 @@ Mixer::get_chunk(Chunk *out)
 void 
 Mixer::calc_matrix()
 {
-  int in_mask    = in_spk.mask;
+  int in_mask    = spk.mask;
   int out_mask   = out_spk.mask;
 
   int in_nfront  = ((in_mask >> CH_L)  & 1) + ((in_mask >> CH_C)  & 1) + ((in_mask >> CH_R) & 1);
@@ -208,9 +201,9 @@ Mixer::calc_matrix()
   int in_dolby  = NO_RELATION;
   int out_dolby = NO_RELATION;
 
-  if (in_spk.relation == RELATION_DOLBY ||
-      in_spk.relation == RELATION_DOLBY2)
-    in_dolby = in_spk.relation;
+  if (spk.relation == RELATION_DOLBY ||
+      spk.relation == RELATION_DOLBY2)
+    in_dolby = spk.relation;
 
   if (out_spk.relation == RELATION_DOLBY ||
       out_spk.relation == RELATION_DOLBY2)
@@ -395,7 +388,7 @@ Mixer::calc_matrix()
     if (out_spk.mask & CH_MASK_SL) matrix[CH_LFE][CH_SL] = lfelev;
     if (out_spk.mask & CH_MASK_SR) matrix[CH_LFE][CH_SR] = lfelev;
 
-    if (in_spk.mask & CH_MASK_C && out_nfront == 1)  
+    if (in_mask & CH_MASK_C && out_nfront == 1)  
       matrix[CH_LFE][CH_C]  = lfelev;
   }
 
@@ -408,7 +401,7 @@ Mixer::calc_matrix()
 
     for (i = 0; i < NCHANNELS; i++)
       for (j = 0; j < NCHANNELS; j++)
-        levels[i] += abs(matrix[j][i]);
+        levels[i] += fabs(matrix[j][i]);
 
     max_level = levels[0];
     for (i = 1; i < NCHANNELS; i++)
@@ -434,22 +427,20 @@ Mixer::calc_matrix()
 // Mixing functions
 ///////////////////////////////////////////////////////////////////////////////
 
-
-
-void Mixer::io_mix11(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix11(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     output[0][s] = buf[0];
   }
 }
 
-void Mixer::io_mix12(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix12(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[1]  = input[0][s] * m[0][1];
@@ -458,10 +449,10 @@ void Mixer::io_mix12(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix13(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix13(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[1]  = input[0][s] * m[0][1];
@@ -472,10 +463,10 @@ void Mixer::io_mix13(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix14(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix14(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[1]  = input[0][s] * m[0][1];
@@ -488,10 +479,10 @@ void Mixer::io_mix14(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix15(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix15(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[1]  = input[0][s] * m[0][1];
@@ -506,10 +497,10 @@ void Mixer::io_mix15(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix16(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix16(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[1]  = input[0][s] * m[0][1];
@@ -526,10 +517,10 @@ void Mixer::io_mix16(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix21(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix21(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -537,10 +528,10 @@ void Mixer::io_mix21(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix22(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix22(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -551,10 +542,10 @@ void Mixer::io_mix22(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix23(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix23(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -568,10 +559,10 @@ void Mixer::io_mix23(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix24(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix24(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -588,10 +579,10 @@ void Mixer::io_mix24(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix25(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix25(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -611,10 +602,10 @@ void Mixer::io_mix25(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix26(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix26(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -637,10 +628,10 @@ void Mixer::io_mix26(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix31(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix31(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -649,10 +640,10 @@ void Mixer::io_mix31(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix32(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix32(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -665,10 +656,10 @@ void Mixer::io_mix32(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix33(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix33(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -685,10 +676,10 @@ void Mixer::io_mix33(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix34(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix34(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -709,10 +700,10 @@ void Mixer::io_mix34(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix35(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix35(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -737,10 +728,10 @@ void Mixer::io_mix35(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix36(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix36(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -769,10 +760,10 @@ void Mixer::io_mix36(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix41(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix41(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -782,10 +773,10 @@ void Mixer::io_mix41(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix42(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix42(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -800,10 +791,10 @@ void Mixer::io_mix42(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix43(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix43(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -823,10 +814,10 @@ void Mixer::io_mix43(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix44(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix44(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -851,10 +842,10 @@ void Mixer::io_mix44(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix45(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix45(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -884,10 +875,10 @@ void Mixer::io_mix45(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix46(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix46(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -922,10 +913,10 @@ void Mixer::io_mix46(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix51(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix51(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -936,10 +927,10 @@ void Mixer::io_mix51(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix52(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix52(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -956,10 +947,10 @@ void Mixer::io_mix52(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix53(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix53(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -982,10 +973,10 @@ void Mixer::io_mix53(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix54(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix54(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1014,10 +1005,10 @@ void Mixer::io_mix54(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix55(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix55(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1052,10 +1043,10 @@ void Mixer::io_mix55(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix56(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix56(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1096,10 +1087,10 @@ void Mixer::io_mix56(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix61(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix61(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1111,10 +1102,10 @@ void Mixer::io_mix61(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix62(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix62(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1133,10 +1124,10 @@ void Mixer::io_mix62(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix63(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix63(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1162,10 +1153,10 @@ void Mixer::io_mix63(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix64(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix64(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1198,10 +1189,10 @@ void Mixer::io_mix64(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix65(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix65(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1241,10 +1232,10 @@ void Mixer::io_mix65(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::io_mix66(samples_t input, samples_t output, int nsamples)
+void Mixer::io_mix66(samples_t input, samples_t output, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = input[0][s] * m[0][0];
     buf[0] += input[1][s] * m[1][0];
@@ -1291,20 +1282,20 @@ void Mixer::io_mix66(samples_t input, samples_t output, int nsamples)
   }
 }
 
-void Mixer::ip_mix11(samples_t samples, int nsamples)
+void Mixer::ip_mix11(samples_t samples, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     samples[0][s] = buf[0];
   }
 }
 
-void Mixer::ip_mix12(samples_t samples, int nsamples)
+void Mixer::ip_mix12(samples_t samples, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[1]  = samples[0][s] * m[0][1];
@@ -1313,10 +1304,10 @@ void Mixer::ip_mix12(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix13(samples_t samples, int nsamples)
+void Mixer::ip_mix13(samples_t samples, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[1]  = samples[0][s] * m[0][1];
@@ -1327,10 +1318,10 @@ void Mixer::ip_mix13(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix14(samples_t samples, int nsamples)
+void Mixer::ip_mix14(samples_t samples, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[1]  = samples[0][s] * m[0][1];
@@ -1343,10 +1334,10 @@ void Mixer::ip_mix14(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix15(samples_t samples, int nsamples)
+void Mixer::ip_mix15(samples_t samples, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[1]  = samples[0][s] * m[0][1];
@@ -1361,10 +1352,10 @@ void Mixer::ip_mix15(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix16(samples_t samples, int nsamples)
+void Mixer::ip_mix16(samples_t samples, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[1]  = samples[0][s] * m[0][1];
@@ -1381,10 +1372,10 @@ void Mixer::ip_mix16(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix21(samples_t samples, int nsamples)
+void Mixer::ip_mix21(samples_t samples, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1392,10 +1383,10 @@ void Mixer::ip_mix21(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix22(samples_t samples, int nsamples)
+void Mixer::ip_mix22(samples_t samples, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1406,10 +1397,10 @@ void Mixer::ip_mix22(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix23(samples_t samples, int nsamples)
+void Mixer::ip_mix23(samples_t samples, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1423,10 +1414,10 @@ void Mixer::ip_mix23(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix24(samples_t samples, int nsamples)
+void Mixer::ip_mix24(samples_t samples, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1443,10 +1434,10 @@ void Mixer::ip_mix24(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix25(samples_t samples, int nsamples)
+void Mixer::ip_mix25(samples_t samples, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1466,10 +1457,10 @@ void Mixer::ip_mix25(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix26(samples_t samples, int nsamples)
+void Mixer::ip_mix26(samples_t samples, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1492,10 +1483,10 @@ void Mixer::ip_mix26(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix31(samples_t samples, int nsamples)
+void Mixer::ip_mix31(samples_t samples, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1504,10 +1495,10 @@ void Mixer::ip_mix31(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix32(samples_t samples, int nsamples)
+void Mixer::ip_mix32(samples_t samples, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1520,10 +1511,10 @@ void Mixer::ip_mix32(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix33(samples_t samples, int nsamples)
+void Mixer::ip_mix33(samples_t samples, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1540,10 +1531,10 @@ void Mixer::ip_mix33(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix34(samples_t samples, int nsamples)
+void Mixer::ip_mix34(samples_t samples, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1564,10 +1555,10 @@ void Mixer::ip_mix34(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix35(samples_t samples, int nsamples)
+void Mixer::ip_mix35(samples_t samples, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1592,10 +1583,10 @@ void Mixer::ip_mix35(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix36(samples_t samples, int nsamples)
+void Mixer::ip_mix36(samples_t samples, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1624,10 +1615,10 @@ void Mixer::ip_mix36(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix41(samples_t samples, int nsamples)
+void Mixer::ip_mix41(samples_t samples, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1637,10 +1628,10 @@ void Mixer::ip_mix41(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix42(samples_t samples, int nsamples)
+void Mixer::ip_mix42(samples_t samples, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1655,10 +1646,10 @@ void Mixer::ip_mix42(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix43(samples_t samples, int nsamples)
+void Mixer::ip_mix43(samples_t samples, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1678,10 +1669,10 @@ void Mixer::ip_mix43(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix44(samples_t samples, int nsamples)
+void Mixer::ip_mix44(samples_t samples, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1706,10 +1697,10 @@ void Mixer::ip_mix44(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix45(samples_t samples, int nsamples)
+void Mixer::ip_mix45(samples_t samples, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1739,10 +1730,10 @@ void Mixer::ip_mix45(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix46(samples_t samples, int nsamples)
+void Mixer::ip_mix46(samples_t samples, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1777,10 +1768,10 @@ void Mixer::ip_mix46(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix51(samples_t samples, int nsamples)
+void Mixer::ip_mix51(samples_t samples, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1791,10 +1782,10 @@ void Mixer::ip_mix51(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix52(samples_t samples, int nsamples)
+void Mixer::ip_mix52(samples_t samples, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1811,10 +1802,10 @@ void Mixer::ip_mix52(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix53(samples_t samples, int nsamples)
+void Mixer::ip_mix53(samples_t samples, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1837,10 +1828,10 @@ void Mixer::ip_mix53(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix54(samples_t samples, int nsamples)
+void Mixer::ip_mix54(samples_t samples, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1869,10 +1860,10 @@ void Mixer::ip_mix54(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix55(samples_t samples, int nsamples)
+void Mixer::ip_mix55(samples_t samples, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1907,10 +1898,10 @@ void Mixer::ip_mix55(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix56(samples_t samples, int nsamples)
+void Mixer::ip_mix56(samples_t samples, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1951,10 +1942,10 @@ void Mixer::ip_mix56(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix61(samples_t samples, int nsamples)
+void Mixer::ip_mix61(samples_t samples, size_t nsamples)
 {
   sample_t buf[1];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1966,10 +1957,10 @@ void Mixer::ip_mix61(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix62(samples_t samples, int nsamples)
+void Mixer::ip_mix62(samples_t samples, size_t nsamples)
 {
   sample_t buf[2];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -1988,10 +1979,10 @@ void Mixer::ip_mix62(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix63(samples_t samples, int nsamples)
+void Mixer::ip_mix63(samples_t samples, size_t nsamples)
 {
   sample_t buf[3];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -2017,10 +2008,10 @@ void Mixer::ip_mix63(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix64(samples_t samples, int nsamples)
+void Mixer::ip_mix64(samples_t samples, size_t nsamples)
 {
   sample_t buf[4];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -2053,10 +2044,10 @@ void Mixer::ip_mix64(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix65(samples_t samples, int nsamples)
+void Mixer::ip_mix65(samples_t samples, size_t nsamples)
 {
   sample_t buf[5];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -2096,10 +2087,10 @@ void Mixer::ip_mix65(samples_t samples, int nsamples)
   }
 }
 
-void Mixer::ip_mix66(samples_t samples, int nsamples)
+void Mixer::ip_mix66(samples_t samples, size_t nsamples)
 {
   sample_t buf[6];
-  for (int s = 0; s < nsamples; s++)
+  for (size_t s = 0; s < nsamples; s++)
   {
     buf[0]  = samples[0][s] * m[0][0];
     buf[0] += samples[1][s] * m[1][0];
@@ -2145,7 +2136,4 @@ void Mixer::ip_mix66(samples_t samples, int nsamples)
     samples[5][s] = buf[5];
   }
 }
-
-
-
 

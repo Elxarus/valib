@@ -7,8 +7,6 @@
 void
 LevelsCache::add_levels(time_t _time, sample_t _levels[NCHANNELS])
 {
-  if (_time < _time) return;
-
   pos = next_pos(pos);
   if (pos == end)
     end = next_pos(end);
@@ -58,7 +56,11 @@ LevelsHistogram::add_levels(sample_t levels[NCHANNELS])
   for (int ch = 0; ch < NCHANNELS; ch++)
     if (levels[ch] > 1e-50)
     {
-      int level = -int(value2db(levels[ch])) / dbpb;
+      int level = -int(value2db(levels[ch]) / dbpb);
+
+      if (level < 0) 
+        level = 0;
+
       if (level < MAX_HISTOGRAM)
         histogram[ch][level]++;
     }
@@ -66,13 +68,13 @@ LevelsHistogram::add_levels(sample_t levels[NCHANNELS])
 }
 
 void 
-LevelsHistogram::get_histogram(int _count, double *_histogram)
+LevelsHistogram::get_histogram(double *_histogram, size_t _count) const
 {
   memset(_histogram, 0, sizeof(double) * _count);
   if (n)
   {
     double inv_n = 1.0 / n;
-    for (int i = 0; i < MAX_HISTOGRAM && i < _count; i++)
+    for (size_t i = 0; i < MAX_HISTOGRAM && i < _count; i++)
     {
       for (int ch = 0; ch < NCHANNELS; ch++)
         _histogram[i] += double(histogram[ch][i]);
@@ -88,11 +90,11 @@ LevelsHistogram::get_histogram(int _count, double *_histogram)
 void
 Levels::reset()
 {
-  chunk.set_empty();
+  NullFilter::reset();
 
-  samples = 0;
+  sample = 0;
   memset(levels, 0, sizeof(sample_t) * NCHANNELS);
-  time = -1;
+  time = 0;
 
   cache.reset();
   hist.reset();
@@ -101,15 +103,12 @@ Levels::reset()
 bool
 Levels::process(const Chunk *_chunk)
 {
-  if (!NullFilter::process(_chunk))
+  if (!NullFilter::receive_chunk(_chunk))
     return false;
 
-  if (chunk.timestamp)
-    time = chunk.time;
-
-  int n = chunk.size;
-  int nch = chunk.spk.nch();
-  const int *order = chunk.spk.order();
+  size_t n = size;
+  int nch = spk.nch();
+  const int *order = spk.order();
 
   int ch, i, block_size;
   sample_t *sptr;
@@ -117,10 +116,10 @@ Levels::process(const Chunk *_chunk)
 
   while (n)
   {
-    block_size = MIN(n, nsamples - samples);
+    block_size = MIN(n, nsamples - sample);
     for (ch = 0; ch < nch; ch++)
     {
-      sptr = chunk.samples[ch];
+      sptr = samples[ch];
   
       max = 0;
       i = block_size;
@@ -131,7 +130,7 @@ Levels::process(const Chunk *_chunk)
         sptr++;
       }
 
-      max /= chunk.spk.level;
+      max /= spk.level;
       if (max > levels[order[ch]])
         levels[order[ch]] = max;
     }
@@ -141,13 +140,12 @@ Levels::process(const Chunk *_chunk)
     if (time >= 0) 
       time += block_size;
 
-    if (samples >= nsamples)
+    if (sample >= nsamples)
     {
       add_levels(time, levels);
       memset(levels, 0, sizeof(sample_t) * NCHANNELS);
-      samples = 0;
+      sample = 0;
     }
   }
-
   return true;
 }

@@ -85,34 +85,56 @@ protected:
 public:
   BassRedir();
 
-  inline bool get_enabled() const
-  {
-    return enabled;
-  }
+  /////////////////////////////////////////////////////////
+  // BassRedir interface
 
-  inline void set_enabled(bool _enabled)
-  {
-    if (_enabled && !enabled)
-      lpf.reset();
-    enabled = _enabled;
-  }
+  // filter is enabled
+  inline bool get_enabled() const;
+  inline void set_enabled(bool _enabled);
 
-  inline double get_freq() const
-  {
-    return lpf.freq;
-  }
+  // cutoff frequency
+  inline double get_freq() const;
+  inline void   set_freq(double _freq);
 
-  inline void set_freq(double _freq)
-  {
-    if (_freq < 10) _freq = 10; // fool protection
-    lpf.freq = _freq;
-    lpf.update();
-  }
-
+  /////////////////////////////////////////////////////////
   // Filter interface
+
   virtual void reset();
   virtual bool set_input(Speakers spk);
   virtual bool process(const Chunk *chunk);
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// Bass Redir inlines
+///////////////////////////////////////////////////////////////////////////////
+
+inline bool 
+BassRedir::get_enabled() const
+{
+  return enabled;
+}
+
+inline void 
+BassRedir::set_enabled(bool _enabled)
+{
+  if (_enabled && !enabled)
+    lpf.reset();
+  enabled = _enabled;
+}
+
+inline double 
+BassRedir::get_freq() const
+{
+  return lpf.freq;
+}
+
+inline void 
+BassRedir::set_freq(double _freq)
+{
+  if (_freq < 10) _freq = 10; // fool protection
+  lpf.freq = _freq;
+  lpf.update();
+}
+
 
 #endif

@@ -32,9 +32,11 @@ extern const int std_order[NCHANNELS] =
 extern const int win_order[NCHANNELS] = 
 { CH_L, CH_R, CH_C, CH_LFE, CH_SL, CH_SR };
 
-extern const Speakers def_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767, NO_RELATION);
+extern const Speakers def_spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0, NO_RELATION);
 extern const Speakers err_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
 extern const Speakers unk_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
+
+extern const Speakers stereo_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 65535.0, NO_RELATION); // stereo 16bit
 
 extern const int sample_size_tbl[32] = 
 {
@@ -172,20 +174,20 @@ extern const char *mode_text[64] =
   "3/2 (5 channels)",
   "{ LFE }",
   "{ L, LFE }",
-  "1/0+LFE",
+  "1/0.1",
   "{ L, C, LFE }",
   "{ R, LFE }",
-  "2/0+LFE (2.1)",
+  "2/0.1 (2.1)",
   "{ C, R, LFE }",
-  "3/0+LFE",
+  "3/0.1",
   "{ SL, LFE }",
   "{ L, SL, LFE }",
   "{ C, SL, LFE }",
   "{ L, C, SL, LFE }",
   "{ R, SL, LFE }",
-  "2/1+LFE",
+  "2/1.1",
   "{ C, R, SL, LFE }",
-  "3/1+LFE",
+  "3/1.1",
   "{ SR, LFE }",
   "{ L, SR, LFE }",
   "{ C, SR, LFE }",
@@ -199,7 +201,7 @@ extern const char *mode_text[64] =
   "{ C, SL, SR, LFE }",
   "{ L, C, SL, SR, LFE }",
   "{ R, SL, SR, LFE }",
-  "2/2+LFE (4.1)",
+  "2/2.1 (4.1)",
   "{ C, R, SL, SR, LFE }",
-  "3/2+LFE (5.1)"
+  "3/2.1 (5.1)"
 };

@@ -68,13 +68,13 @@ AudioDecoder::get_chunk(Chunk *_chunk)
   sync_helper.receive_sync(sync, time);
   sync = false;
 
-  uint8_t *buf_ptr = buf;
-  uint8_t *end_ptr = buf + size;
+  uint8_t *buf_ptr = rawdata;
+  uint8_t *end_ptr = rawdata + size;
 
   while (buf_ptr < end_ptr)
     if (parser->load_frame(&buf_ptr, end_ptr))
     {
-      drop(buf_ptr - buf);
+      drop(buf_ptr - rawdata);
 
       // decode
       if (!parser->decode_frame())
@@ -98,6 +98,6 @@ AudioDecoder::get_chunk(Chunk *_chunk)
     } // if (parser->load_frame(&buf, end))
 
   sync_helper.set_syncing(false);
-  drop(buf_ptr - buf);
+  drop(buf_ptr - rawdata);
   return true;
 }

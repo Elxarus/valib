@@ -113,7 +113,7 @@ protected:
 
   bool      eos;
 
-  uint8_t  *buf;
+  uint8_t  *rawdata;
   samples_t samples;
   size_t    size;
 
@@ -191,7 +191,6 @@ public:
 
   inline void set_eos(bool eos = true)
   {
-    size = 0;
     eos = true;
   }
 
@@ -211,14 +210,14 @@ public:
   /////////////////////////////////////////////////////////
   // Buffers
 
-  inline size_t get_size() const                 { return size;         }
-  inline uint8_t *get_buf() const                { return buf;          }
+  inline uint8_t  *get_rawdata() const           { return rawdata;      }
   inline samples_t get_samples() const           { return samples;      }
+  inline size_t    get_size() const              { return size;         }
   inline sample_t *operator[](int _ch) const     { return samples[_ch]; }
 
-  inline void set_buf(uint8_t *_buf, size_t _size)
+  inline void set_rawdata(uint8_t *_rawdata, size_t _size)
   { 
-    buf = _buf; 
+    rawdata = _rawdata; 
     size = _size;
   }
 
@@ -236,7 +235,7 @@ public:
     if (spk.format == FORMAT_LINEAR)
       samples += _size;
     else
-      buf += _size;
+      rawdata += _size;
 
     size -= _size;
     sync = false;
