@@ -83,7 +83,7 @@ ReadBS::fill_current()
     case BITSTREAM_8:
     case BITSTREAM_16LE: 
     case BITSTREAM_32LE: 
-      current_word = swab32(tmp);
+      current_word = swab_u32(tmp);
       bits_left = 32;
       break;
 
@@ -93,7 +93,7 @@ ReadBS::fill_current()
       break;
 
     case BITSTREAM_14LE:
-      tmp = swab32(tmp);
+      tmp = swab_u32(tmp);
       current_word = (tmp & 0x3fff) | ((tmp & 0x3fff0000) >> 2);
       bits_left = 28;
       break;
@@ -158,7 +158,7 @@ WriteBS::put_bits(int bits, int value)
   {
     bit_buf <<= bit_left;
     bit_buf |= value >> (bits - bit_left);
-    *(uint32_t *)buf_ptr = swab32(bit_buf);
+    *(uint32_t *)buf_ptr = swab_u32(bit_buf);
     buf_ptr  += 4;
     bit_left += 32 - bits;
     bit_buf   = value;
@@ -177,7 +177,7 @@ WriteBS::put_bool(bool value)
   else 
   {
     bit_buf = (bit_buf << 1) | v;
-    *(uint32_t *)buf_ptr = swab32(bit_buf);
+    *(uint32_t *)buf_ptr = swab_u32(bit_buf);
     buf_ptr  += 4;
     bit_left += 31;
     bit_buf   = value;

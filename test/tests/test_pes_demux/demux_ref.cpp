@@ -85,7 +85,7 @@ PESDemux_ref::streaming(uint8_t *_buf, int len)
       case DEMUX_SYNC:
       {
         REQUIRE(4);
-        uint32_t sync = swab32(*(uint32_t *)header);
+        uint32_t sync = swab_u32(*(uint32_t *)header);
 
         while ((sync & 0xffffff00) != 0x00000100 && len)
         {
@@ -96,7 +96,7 @@ PESDemux_ref::streaming(uint8_t *_buf, int len)
         }
 
         data_size = 4;
-        *(uint32_t *)header = swab32(sync);
+        *(uint32_t *)header = swab_u32(sync);
 
         if ((sync & 0xffffff00) == 0x00000100)
           state = DEMUX_HEADER;
@@ -413,7 +413,7 @@ PESDemux_ref::packet(uint8_t *buf, int len, int *gone)
       case DEMUX_SYNC:
       {
         REQUIRE(4);
-        uint32_t sync = swab32(*(uint32_t *)header);
+        uint32_t sync = swab_u32(*(uint32_t *)header);
 
         while ((sync & 0xffffff00) != 0x00000100 && len)
         {
@@ -425,7 +425,7 @@ PESDemux_ref::packet(uint8_t *buf, int len, int *gone)
         }
 
         data_size = 4;
-        *(uint32_t *)header = swab32(sync);
+        *(uint32_t *)header = swab_u32(sync);
 
         if ((sync & 0xffffff00) == 0x00000100)
           state = DEMUX_HEADER;

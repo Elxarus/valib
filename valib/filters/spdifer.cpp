@@ -149,7 +149,7 @@ Spdifer::get_chunk(Chunk *_chunk)
         uint16_t *end = (uint16_t *)(write_buf + frame_size + 1);
         while (pos < end)
         {
-          *pos = swab16(*pos);
+          *pos = swab_u16(*pos);
           pos++;
         }
       }
@@ -409,7 +409,7 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
   };
   static const int slots_tbl[3] = { 12, 144, 144 };
 
-  MPAHeader h = swab32(*(int32_t *)_buf);
+  MPAHeader h = swab_u32(*(int32_t *)_buf);
 
   // common information
   int ver = 1 - h.version;

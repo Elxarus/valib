@@ -139,7 +139,7 @@ inline bool Spdifer::ac3_sync(const uint8_t *_buf) const
 
 inline bool Spdifer::mpa_sync(const uint8_t *_buf) const
 {
-  MPAHeader h = swab32(*(uint32_t *)_buf);
+  MPAHeader h = swab_u32(*(uint32_t *)_buf);
 
   if (h.sync != 0xfff)           return false;
   if (h.layer == 0)              return false;
