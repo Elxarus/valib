@@ -50,6 +50,8 @@ public:
 
 AC3Parser::AC3Parser()
 {
+  check_crc = true;
+
   // constant number of samples per frame
   nsamples = AC3_FRAME_SAMPLES;
 
@@ -230,11 +232,13 @@ AC3Parser::parse_header()
 {
   /////////////////////////////////////////////////////////////
   // Check CRC
-/*
-  int crc_frame_size = ((frame_data >> 1) + (frame_data >> 3)) & ~1;
-  int crc = calc_crc(2, frame+2, crc_frame_size);
-  if (crc) return false;
-*/
+
+  if (check_crc)
+  {
+    int crc_frame_size = ((frame_data >> 1) + (frame_data >> 3)) & ~1;
+    int crc = calc_crc(0, frame + 2, crc_frame_size - 2);
+    if (crc) return false;
+  }
 
   /////////////////////////////////////////////////////////////
   // Init bitstream

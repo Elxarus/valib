@@ -138,6 +138,8 @@ public:
 class AC3Parser : public BaseParser, public AC3Info, public AC3FrameState
 {
 public:
+  bool check_crc;
+
   AC3Parser();
   ~AC3Parser();
 
@@ -154,7 +156,6 @@ protected:
   // BaseParser overrides
 
   unsigned sync(uint8_t **buf, uint8_t *end);
-  bool check_crc();
   bool start_decode();
 
 #ifndef AC3_DEBUG 
