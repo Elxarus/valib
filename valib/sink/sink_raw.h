@@ -18,7 +18,7 @@ public:
   {}
 
   RAWSink(const char *_filename): 
-  f(_filename) 
+  f(_filename, "wb") 
   {}
 
   /////////////////////////////////////////////////////////
@@ -26,7 +26,7 @@ public:
 
   bool open_file(const char *_filename)
   {
-    return f.open(_filename);
+    return f.open(_filename, "wb");
   }
 
   void close_file()

@@ -289,8 +289,8 @@ AC3Enc::get_chunk(Chunk *_chunk)
     // fill chunk
     _chunk->set
     (
-      spk,
-      frame_samples, AC3_FRAME_SAMPLES,
+      get_output(),
+      frame_buf, frame_size,
       sync, time,
       flushing && !size
     );
@@ -372,7 +372,7 @@ AC3Enc::encode_frame()
       //
 
       sample_t v;
-      sample_t *sptr = samples[ch];
+      sample_t *sptr = frame_samples[ch];
       sptr += b * AC3_BLOCK_SAMPLES;
 
       // * copy samples from input buffer to mdct and delay 

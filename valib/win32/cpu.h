@@ -6,6 +6,7 @@
 #define CPU_H
 
 #include <windows.h>
+#include "vtime.h"
 
 class CPUMeter
 {
@@ -32,12 +33,12 @@ public:
   double  usage();  // mean CPU usage since last usage() call (only thread time spent in between start() and stop() 
                     // calls is counted; this call resets time counters)
 
-  __int64 get_thread_time(); // time used by thread since last reset() or usage() call
-  __int64 get_system_time(); // real time spent since last reset() or usage() call
+  vtime_t get_thread_time(); // time used by thread since last reset() or usage() call
+  vtime_t get_system_time(); // real time spent since last reset() or usage() call
 
   // mean CPU usage since last reset() or usage() call (only thread time spent in between start() and stop()
   // calls is counted; this call does not reset time counters)
-  double  mean_usage() { return double(get_thread_time()) / double(get_system_time()); };
+  double  mean_usage() { return get_thread_time() / get_system_time(); };
 };
 
 #endif

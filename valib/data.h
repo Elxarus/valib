@@ -34,14 +34,12 @@ struct samples_t
 
 ///////////////////////////////////////////////////////////////////////////////
 // Chunk class.
-// A part of audio data being processed.
+// A part of audio data.
 //
 // There are several types of chunks:
-// 1) Data chunk/empty chunk. If chunk has data then it's data chunk. 
-//    Otherwise it's empty chunk.
-// 2) Syncronization chunk (sync-chunk). If chunk has syncronization 
-//    information then it's sync-chunk.
-// 3) End-of-steam chunk (eos-chunk). Chunk that ends data transmission.
+// 1) Data chunk/empty chunk. A chunk that has data/has no data.
+// 2) Syncronization chunk (sync-chunk). A chunk that has syncronization info.
+// 3) End-of-steam chunk (eos-chunk). A chunk that ends data transmission.
 //
 // Empty chunk (chunk that contain no data) may be used to inform downsteram
 // about different events: format change, syncronization or end of steram.
@@ -52,7 +50,6 @@ struct samples_t
 //
 // get_spk() - get data format
 // set_spk() - set data format
-//
 //
 // Syncronization
 // ==============
@@ -70,7 +67,7 @@ struct samples_t
 // This chunk may contain data and stream is assumed to end after last 
 // byte/sample of this chunk. Empty end-of-stream chunk is used just to end 
 // the stream correctly. After receiving eos-chunk filter should flush all 
-// internal data buffers.
+// internal data buffers and mark last chunk sent as eos-chunk.
 //
 // is_eos()  - chunk is end-of-stream chunk
 // set_eos() - set chunk as end-of-stream and empty
@@ -78,7 +75,7 @@ struct samples_t
 // Empty chunk
 // ===========
 // Empty chunk may be used to deliver special events to the processing chain
-// (format change, syncronization, end-of-stream). Both data buffers may be 
+// (format change, syncronization, end-of-stream). Both data buffers may be
 // invalid in this case.
 //
 // is_empty()  - chunk is empty
@@ -87,17 +84,17 @@ struct samples_t
 // Buffers
 // =======
 // Chunk has 2 types of buffer pointers: raw buffer and linear 
-// splitted-channels buffer. Most of internal data processing is done on
+// (splitted-channels) buffer. Most of internal data processing is done on
 // linear format, but data from external sources may be in any format. Some 
 // filters works with both raw and linear data so for interface universality 
 // it is only one type of chunk with both raw and linear buffers.
 //
 // get_size()    - number of samples in case of linear data farmat and size of
 //                 raw buffer in bytes otherwise.       
-// get_buf()     - raw buffer pointer (only for raw data)
+// get_rawdata() - raw buffer pointer (only for raw data)
 // get_samples() - pointers to linear channel buffers (only for linear firmat)
 // operator []   - pointer to channel buffer
-// set_buf()     - set raw buffer
+// set_rawdata() - set raw buffer
 // set_samples() - set linear buffers
 // drop()        - drop data from raw or linear buffer (bytes or samples).
 //
@@ -109,8 +106,8 @@ protected:
   Speakers  spk;
 
   bool      sync;
-  time_t    time;
-
+  vtime_t   time;
+            
   bool      eos;
 
   uint8_t  *rawdata;
@@ -126,8 +123,8 @@ public:
 
   // Syncronization
   // inline bool is_sync() const
-  // inline time_t get_time() const
-  // inline void set_sync(bool _sync, time_t _time = 0)
+  // inline vtime_t get_time() const
+  // inline void set_sync(bool _sync, vtime_t _time = 0)
 
   // End-of-stream
   // inline bool is_eos() const;
@@ -138,13 +135,19 @@ public:
   // inline void set_empty()
 
   // Buffers
-  // inline size_t get_size() const
-  // inline uint8_t *get_buf() const
+  // inline size_t    get_size() const
+  // inline uint8_t  *get_rawdata() const
   // inline samples_t get_samples() const
+
+  // inline operator uint8_t *() const
+  // inline operator samples_t() const
   // inline sample_t *operator[](int _ch) const
+
   // inline void set_buf(uint8_t *_buf, size_t _size);
   // inline void set_samples(samples_t _samples, size_t _size) 
   // inline void drop(size_t _size)
+  
+
 
   Chunk(): spk(unk_spk), time(false), sync(false), size(0)
   {}
@@ -154,7 +157,7 @@ public:
 
   inline void set(Speakers _spk, 
                   samples_t _samples, size_t _size,
-                  bool _sync = false, time_t _time = 0,
+                  bool _sync = false, vtime_t _time = 0,
                   bool _eos  = false)
   {
     spk = _spk;
@@ -167,7 +170,7 @@ public:
 
   inline void set(Speakers _spk, 
                   uint8_t *_rawdata, size_t _size,
-                  bool _sync = false, time_t _time = 0,
+                  bool _sync = false, vtime_t _time = 0,
                   bool _eos  = false)
   {
     spk = _spk;
@@ -199,12 +202,12 @@ public:
     return sync;
   }
 
-  inline time_t get_time() const
+  inline vtime_t get_time() const
   {
     return time;
   }
 
-  inline void set_sync(bool _sync, time_t _time = 0)
+  inline void set_sync(bool _sync, vtime_t _time = 0)
   { 
     sync = _sync;
     time = _time;
@@ -239,9 +242,11 @@ public:
   /////////////////////////////////////////////////////////
   // Buffers
 
+  inline size_t    get_size() const              { return size;         }
   inline uint8_t  *get_rawdata() const           { return rawdata;      }
   inline samples_t get_samples() const           { return samples;      }
-  inline size_t    get_size() const              { return size;         }
+  inline operator uint8_t *() const              { return rawdata;      }
+  inline operator samples_t() const              { return samples;      }
   inline sample_t *operator[](int _ch) const     { return samples[_ch]; }
 
   inline void set_rawdata(uint8_t *_rawdata, size_t _size)
@@ -269,48 +274,43 @@ public:
     size -= _size;
     sync = false;
   };
-
 };
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // DataBuf
-// Method of allocating data buffers.
+// Method of allocating BIG data buffers.
 // Now it's just simple aliged data block
 
 class DataBuf
 {
 protected:
-  uint8_t *buf;
-  uint8_t *buf_aligned;
-  size_t   buf_size;
+  uint8_t  *buf;
+  uint8_t  *buf_aligned;
+
+  size_t    size;
+  size_t    allocated;
 
 public:
   // DataBuf()
-  // DataBuf(int _size)
 
-  // inline bool allocate(int _size)
-  // inline bool truncate(int _size)
+  // inline bool allocate(size_t _size)
+  // inline bool truncate(size_t _size)
+
   // inline void drop()
   // inline void zero()
 
-  // inline uint8_t *data() const 
-  // inline int size() const 
-  // inline bool is_null() const 
-  // inline operator uint8_t *() const 
+  // inline size_t    get_size() const
+  // inline uint8_t  *get_data() const
+  // inline uint8_t  *operator()() const
 
   DataBuf()
   {
     buf = 0;
-    buf_size = 0;
-  }
+    buf_aligned = 0;
 
-  DataBuf(size_t _size)
-  { 
-    buf = 0;
-    buf_size = 0;
-    allocate(_size);
+    allocated = 0;
+    size = 0;
   }
 
   ~DataBuf()
@@ -320,10 +320,13 @@ public:
 
   inline bool allocate(size_t _size)
   {
-    if (buf_size < _size)
+    if (allocated < _size)
       return truncate(_size);
     else
+    {
+      size = _size;
       return true;
+    }
   }
 
   inline bool truncate(size_t _size)
@@ -334,8 +337,10 @@ public:
     {
       buf = new uint8_t[_size + 7];
       if (!buf) return false;
-      buf_size = _size;
       buf_aligned = (uint8_t*)(unsigned(buf + 7) & ~7);
+
+      allocated = _size;
+      size = _size;
     }
     return true;
   }
@@ -346,27 +351,158 @@ public:
 
     buf = 0;
     buf_aligned = 0;
-    buf_size = 0;
+
+    allocated = 0;
+    size = 0;
   }
 
   inline void zero()          
   { 
     if (buf) 
-      memset(buf_aligned, 0, buf_size); 
+      memset(buf_aligned, 0, size);
   }
 
-  inline uint8_t *data() const       { return buf_aligned; }
-  inline size_t size() const         { return buf_size;    }
-  inline bool is_null() const        { return buf == 0;    } 
-  inline operator uint8_t *() const  { return buf_aligned; }
+  inline size_t   get_size()   const { return size;        }
+  inline uint8_t *get_data()   const { return buf_aligned; }
+  inline operator uint8_t *()  const { return buf_aligned; }
 };
 
-
-
+/*
 ///////////////////////////////////////////////////////////////////////////////
 // SampleBuf
-// Method of allocating sample buffers for linear format.
-// Implemented using DataBuf.
+// Buffer to store both rawdata and linear data.
+
+class SampleBuf
+{
+protected:
+  DataBuf   buf;
+
+  size_t    nch;
+  size_t    size;
+
+  uint8_t  *rawdata;
+  samples_t samples;
+
+  inline void set_pointers()
+  {
+    samples[0] = (sample_t *)buf.get_data();
+
+    size_t ch = 1;
+    for (ch = 1; ch < nch; ch++)
+      samples[ch] = samples.samples[ch-1] + size;
+
+    while (ch < NCHANNELS)
+      samples[ch++] = 0;
+  }
+
+public:
+  // SampleBuf()
+  // SampleBuf(int _size)
+
+  // Raw data allocation
+  // inline bool allocate(size_t _size)
+  // inline bool truncate(size_t _size)
+
+  // Linear buffer allocation
+  // inline bool allocate(size_t nch, size_t _size)
+  // inline bool truncate(size_t nch, size_t _size)
+
+  // inline void drop()
+  // inline void zero()
+
+  // inline size_t    get_size() const
+  // inline uint8_t  *get_rawdata() const
+  // inline samples_t get_samples() const
+
+  // inline operator uint8_t *() const
+  // inline operator samples_t() const
+  // inline sample_t *operator[](int _ch) const
+
+  SampleBuf()
+  {
+    nch  = 0;
+    size = 0;
+    rawdata = 0;
+    samples.set_null();
+  }
+
+  ~SampleBuf()
+  {
+    drop();
+  }
+
+  inline bool allocate(size_t _size)
+  {
+    if (!buf.allocate(_size))
+      return false;
+
+    nch = 0;
+    size = _size;
+    rawdata = buf;
+    samples.set_null();
+    return true;
+  }
+
+  inline bool truncate(size_t _size)
+  {
+    if (!buf.truncate(_size))
+      return false;
+
+    nch = 0;
+    size = _size;
+    rawdata = buf.get_data();
+    samples.set_null();
+    return true;
+  }
+
+  inline bool allocate(size_t _nch, size_t _size)
+  {
+    if (!buf.allocate(_size * sizeof(sample_t) * nch))
+      return false;
+
+    nch = _nch;
+    size = _size;
+    rawdata = 0;
+    set_pointers();
+    return true;
+  }
+
+  inline bool truncate(size_t _nch, size_t _size)
+  {
+    if (!buf.truncate(_size * sizeof(sample_t) * nch))
+      return false;
+
+    nch = _nch;
+    size = _size;
+    rawdata = 0;
+    set_pointers();
+    return true;
+  }
+
+  inline void drop()
+  {
+    buf.drop();
+
+    nch  = 0;
+    size = 0;
+    rawdata = 0;
+    samples.set_null();
+  }
+
+  inline void zero()          
+  { 
+    buf.zero();
+  }
+
+  inline size_t    get_size() const              { return size;         }
+  inline uint8_t  *get_rawdata() const           { return rawdata;      }
+  inline samples_t get_samples() const           { return samples;      }
+
+  inline operator uint8_t *() const              { return rawdata;      }
+  inline operator samples_t() const              { return samples;      }
+  inline sample_t *operator[](int _ch) const     { return samples[_ch]; }
+};
+*/
 
 class SampleBuf
 {
@@ -397,7 +533,7 @@ public:
   inline bool truncate(int nch, int nsamples);
 
   inline void zero()           { buf.zero();           }
-  inline bool is_null() const  { return buf.is_null(); } 
+//  inline bool is_null() const  { return buf.is_null(); } 
 
   inline int  nch() const      { return buf_nch;       }
   inline int  nsamples() const { return buf_nsamples;  }
@@ -405,7 +541,6 @@ public:
   inline operator samples_t () const         { return samples; }
   inline sample_t *operator [](int ch) const { return samples[ch]; }
 };
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // samples_t inlines
@@ -513,7 +648,7 @@ SampleBuf::allocate(int _nch, int _nsamples)
 {
   buf_nch = _nch;
   buf_nsamples = _nsamples;
-  if (buf.size() < _nch * _nsamples * sizeof(sample_t))
+  if (buf.get_size() < _nch * _nsamples * sizeof(sample_t))
     return truncate(_nch, _nsamples);
 
   set_pointers();
@@ -539,14 +674,14 @@ SampleBuf::truncate(int _nch, int _nsamples)
   }
 }
 
-inline void
+inline void 
 SampleBuf::set_pointers()
 {
-  samples[0] = (sample_t *)(uint8_t *)buf;
+  samples[0] = (sample_t *)buf.get_data();
 
-  int ch;
+  int ch = 1;
   for (ch = 1; ch < buf_nch; ch++)
-    samples[ch] = samples.samples[ch-1] + buf_nsamples;
+    samples[ch] = samples[ch-1] + buf_nsamples;
 
   while (ch < NCHANNELS)
     samples[ch++] = 0;

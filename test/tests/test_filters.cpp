@@ -28,6 +28,7 @@
 int test_filter(Log *log, Filter *filter, const char *desc);
 int test_filters(Log *log)
 {
+  NullFilter     null;
   AGC            agc;
   Converter      conv(2048);
   AudioDecoder   dec;
@@ -40,6 +41,7 @@ int test_filters(Log *log)
   Spdifer        spdifer;
 
   log->open_group("Empty filters test");
+  test_filter(log, &agc,     "NullFilter");
   test_filter(log, &agc,     "AGC");
   test_filter(log, &conv,    "Converter");
   test_filter(log, &dec,     "AudioDecoder");

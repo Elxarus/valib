@@ -135,7 +135,7 @@ static const int step_sizes[] =
 };
 
 int test_pcm_bounds(Log *log, Filter *filter, const char *filter_name);
-bool test_pcm_bounds_once(Log *log, Filter *filter, Speakers spk, uint8_t *data, uint8_t *copy, size_t buf_size, size_t step_size);
+int test_pcm_bounds_once(Log *log, Filter *filter, uint8_t *data, uint8_t *copy, size_t buf_size, size_t step_size);
 
 int test_pcm_bounds(Log *log, Filter *filter, const char *filter_name)
 {
@@ -146,7 +146,7 @@ int test_pcm_bounds(Log *log, Filter *filter, const char *filter_name)
   DataBuf data;
   DataBuf copy;
 
-  int nsamples = 128 * 1024;  // 128k samples to process
+  int nsamples = 16 * 1024;  // 16k samples to process
   data.allocate(3 * nsamples * NCHANNELS * 4);
   copy.allocate(3 * nsamples * NCHANNELS * 4);
 
@@ -180,15 +180,16 @@ int test_pcm_bounds(Log *log, Filter *filter, const char *filter_name)
         for (istep_size = 0; istep_size < array_size(step_sizes); istep_size++)
         {
           size_t buf_size = nsamples * spk.nch() * spk.sample_size();
-          test_pcm_bounds_once(log, filter, spk, data, copy, buf_size, step_sizes[istep_size]);
+          test_pcm_bounds_once(log, filter, data, copy, buf_size, step_sizes[istep_size]);
         }
       }
   return log->close_group();
 }
 
 
-bool test_pcm_bounds_once(Log *log, Filter *filter, Speakers spk, uint8_t *data, uint8_t *copy, size_t buf_size, size_t step_size)
+int test_pcm_bounds_once(Log *log, Filter *filter, uint8_t *data, uint8_t *copy, size_t buf_size, size_t step_size)
 {
+  vtime_t time = local_time();
   uint8_t *buf;
   size_t size;
 
@@ -210,32 +211,30 @@ bool test_pcm_bounds_once(Log *log, Filter *filter, Speakers spk, uint8_t *data,
   // process & compare the data
   buf  = data + buf_size;
   size = buf_size;
+
+  log->status("Step size: %i                                    ", step_size);
   while (size)
   {
     // prepare chunk
-    if (step_size > size) step_size = size;
-    chunk.set(spk, buf, step_size);
+    if (step_size >= size) 
+    {
+      step_size = size;
+      chunk.set(filter->get_input(), buf, size, false, 0, true);
+    }
+    else
+      chunk.set(filter->get_input(), buf, step_size);
 
     // process data
     if (!filter->process(&chunk))
-    {
-      log->err("process() failed");
-      return false;
-    }
+      return log->err("process() failed");
 
     while (!filter->is_empty())
       if (!filter->get_chunk(&chunk))
-      {
-        log->err("get_chunk() failed");
-        return false;
-      }
+        return log->err("get_chunk() failed");
 
     // compare beginning of the data
     if (memcmp(data + buf_size, copy + buf_size, buf_size - size))
-    {
-      log->err("beginning of buffer was corrupted");
-      return false;
-    }
+      return log->err("beginning of buffer was corrupted");
 
     // copy changed data
     memcpy(copy + buf_size + buf_size - size, buf, step_size);
@@ -244,20 +243,20 @@ bool test_pcm_bounds_once(Log *log, Filter *filter, Speakers spk, uint8_t *data,
 
     // compare ending of the data
     if (memcmp(copy + buf_size + buf_size - size, buf, size))
+      return log->err("ending of buffer was corrupted");
+
+    if (local_time() - time > 0.5)
     {
-      log->err("ending of buffer was corrupted");
-      return false;
+      log->status("Step size: %i\tCompleted: %i/%i (%i%%)           ", step_size, buf_size - size, buf_size, (buf_size - size) * 100 / buf_size);
+      time = local_time();
     }
   }
 
   // test stuffing
   if (memcmp(data, copy, buf_size*3))
-  {
-    log->err("stuffing was corrupted");
-    return false;
-  }
+    return log->err("data was corrupted");
 
-  return true;
+  return 0;
 }
 
 

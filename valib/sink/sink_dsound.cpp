@@ -232,6 +232,12 @@ DSoundSink::is_open() const
   return ds_buf != 0;
 }
 
+Speakers
+DSoundSink::get_spk() const
+{
+  return spk;
+}
+
 
 
 
@@ -241,7 +247,7 @@ DSoundSink::is_time() const
   return true;
 }
 
-time_t
+vtime_t
 DSoundSink::get_time() const
 {
   if (!ds_buf) return 0;
@@ -443,9 +449,9 @@ bool DSoundSink::write(const Chunk *chunk)
     if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
       return false;
 
-    data_size = play_cur - cur;
-    if (data_size < 0)
-      data_size += buf_size;
+    data_size = buf_size + play_cur - cur;
+    if (data_size >= buf_size)
+      data_size -= buf_size;
 
     if (!playing && !data_size)
       data_size = buf_size;

@@ -5,7 +5,7 @@
 // LevelsCache
 
 void
-LevelsCache::add_levels(time_t _time, sample_t _levels[NCHANNELS])
+LevelsCache::add_levels(vtime_t _time, sample_t _levels[NCHANNELS])
 {
   pos = next_pos(pos);
   if (pos == end)
@@ -16,7 +16,7 @@ LevelsCache::add_levels(time_t _time, sample_t _levels[NCHANNELS])
 }
 
 void 
-LevelsCache::get_levels(time_t _time, sample_t _levels[NCHANNELS], bool drop)
+LevelsCache::get_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool drop)
 {
   memcpy(_levels, levels_cache[end], sizeof(sample_t) * NCHANNELS);
   if (_time < 0)

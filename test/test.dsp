@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /Ob2 /I "..\valib" /I "..\liba52" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "LIBA52_DOUBLE" /D "AC3_DEBUG" /D "AC3_DEBUG_NODITHER" /D "AC3_DEBUG_NOIMDCT" /FAs /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /Ob2 /I "..\valib" /I "..\liba52" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "LIBA52_DOUBLE" /D "AC3_DEBUG" /D "AC3_DEBUG_NODITHER" /D "AC3_DEBUG_NOIMDCT" /D "TIME_WIN32" /FAs /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -66,7 +66,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /GX /ZI /Od /I "..\valib" /I "..\liba52" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "LIBA52_DOUBLE" /D "AC3_DEBUG" /D "AC3_DEBUG_NODITHER" /D "AC3_DEBUG_NOIMDCT" /FAs /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /GX /ZI /Od /I "..\valib" /I "..\liba52" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "LIBA52_DOUBLE" /D "AC3_DEBUG" /D "AC3_DEBUG_NODITHER" /D "AC3_DEBUG_NOIMDCT" /D "TIME_WIN32" /FAs /YX /FD /GZ /c
 # SUBTRACT CPP /Fr
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
@@ -544,6 +544,22 @@ SOURCE=..\valib\spk.h
 # Begin Source File
 
 SOURCE=..\valib\sync.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\vtime.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\vtime.h
+# End Source File
+# End Group
+# Begin Group "source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\valib\source\noise.h
 # End Source File
 # End Group
 # End Group

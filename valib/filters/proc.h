@@ -163,8 +163,8 @@ public:
   // Syncronization
   // todo
   // Input/output levels
-  inline void     get_input_levels(time_t time, sample_t input_levels[NCHANNELS]); // r/o
-  inline void     get_output_levels(time_t time, sample_t output_levels[NCHANNELS]); // r/o
+  inline void     get_input_levels(vtime_t time, sample_t input_levels[NCHANNELS]); // r/o
+  inline void     get_output_levels(vtime_t time, sample_t output_levels[NCHANNELS]); // r/o
   // Input/output histogram
   inline int      get_dbpb();
   inline void     get_input_histogram(double *input_histogram, size_t count); // r/o
@@ -313,11 +313,11 @@ AudioProcessor::get_delays(float _delays[NCHANNELS])
 { delay.get_delays(_delays); }
 
 inline void     
-AudioProcessor::get_input_levels(time_t _time, sample_t _input_levels[NCHANNELS])
+AudioProcessor::get_input_levels(vtime_t _time, sample_t _input_levels[NCHANNELS])
 { in_levels.get_levels(_time, _input_levels); };
 
 inline void     
-AudioProcessor::get_output_levels(time_t _time, sample_t _output_levels[NCHANNELS])
+AudioProcessor::get_output_levels(vtime_t _time, sample_t _output_levels[NCHANNELS])
 { out_levels.get_levels(_time, _output_levels); }
 
 inline int 

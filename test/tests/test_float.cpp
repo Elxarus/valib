@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "defs.h"
+#include "..\log.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // sample_t utils
@@ -73,44 +74,41 @@ inline int sample_exp(sample_t s)
 #endif
 
 
-int test_one_float(sample_t s, int32_t mant, int16_t exp);
+int test_one_float(Log * log, sample_t s, int32_t mant, int16_t exp);
 
 
-int test_float()
+int test_float(Log *log)
 {
   int err = 0;
-  printf("\n* Floating-point consistency test\n");
+  log->open_group("Floating-point consistency test");
 
-  sample_t s;
-  s = 1.0;
+  test_one_float(log, +2.00, +0x40000000, +2);
+  test_one_float(log, -2.00, -0x40000000, +2);
 
-  err += test_one_float(+2.00, +0x40000000, +2);
-  err += test_one_float(-2.00, -0x40000000, +2);
+  test_one_float(log, +1.00, +0x40000000, +1);
+  test_one_float(log, -1.00, -0x40000000, +1);
 
-  err += test_one_float(+1.00, +0x40000000, +1);
-  err += test_one_float(-1.00, -0x40000000, +1);
+  test_one_float(log, +0.50, +0x40000000, 0);
+  test_one_float(log, -0.50, -0x40000000, 0);
 
-  err += test_one_float(+0.50, +0x40000000, 0);
-  err += test_one_float(-0.50, -0x40000000, 0);
+  test_one_float(log, +0.25, +0x40000000, -1);
+  test_one_float(log, -0.25, -0x40000000, -1);
 
-  err += test_one_float(+0.25, +0x40000000, -1);
-  err += test_one_float(-0.25, -0x40000000, -1);
+  test_one_float(log, +0.125, +0x40000000, -2);
+  test_one_float(log, -0.125, -0x40000000, -2);
 
-  err += test_one_float(+0.125, +0x40000000, -2);
-  err += test_one_float(-0.125, -0x40000000, -2);
+  test_one_float(log, +0.75, +0x60000000, 0);
+  test_one_float(log, -0.75, -0x60000000, 0);
 
-  err += test_one_float(+0.75, +0x60000000, 0);
-  err += test_one_float(-0.75, -0x60000000, 0);
-
-  return err;
+  return log->close_group();
 }
 
 
-int test_one_float(sample_t s, int32_t mant, int16_t exp)
+int test_one_float(Log * log, sample_t s, int32_t mant, int16_t exp)
 {
   if (sample_mant(s) != mant || sample_exp(s) != exp)
   {
-    printf("!!!Error: s = %0.4f; mant = %.4f (%.4f), exp = %i (%i)\n", 
+    log->err("s = %0.4f; mant = %.4f (%.4f), exp = %i (%i)", 
       s, 
       double(sample_mant(s))/2147483648, 
       double(mant)/2147483648, 

@@ -35,7 +35,7 @@ class LevelsCache
 {
 protected:
   sample_t levels_cache[MAX_LEVELS_CACHE][NCHANNELS];
-  time_t   levels_time[MAX_LEVELS_CACHE];
+  vtime_t  levels_time[MAX_LEVELS_CACHE];
 
   int pos;
   int end;
@@ -49,8 +49,8 @@ public:
 
   inline void reset();
 
-  void add_levels(time_t time, sample_t levels[NCHANNELS]);
-  void get_levels(time_t time, sample_t levels[NCHANNELS], bool drop = true);
+  void add_levels(vtime_t time, sample_t levels[NCHANNELS]);
+  void get_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,8 +112,8 @@ public:
   inline int  get_dbpb() const;
   inline void set_dbpb(int dbpb);
 
-  inline void add_levels(time_t time, sample_t levels[NCHANNELS]);
-  inline void get_levels(time_t time, sample_t levels[NCHANNELS], bool drop = true);
+  inline void add_levels(vtime_t time, sample_t levels[NCHANNELS]);
+  inline void get_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
   inline void get_histogram(double *histogram, size_t count) const;
 
   /////////////////////////////////////////////////////////
@@ -196,14 +196,14 @@ Levels::set_dbpb(int _dbpb)
 }
 
 void 
-Levels::add_levels(time_t _time, sample_t _levels[NCHANNELS])
+Levels::add_levels(vtime_t _time, sample_t _levels[NCHANNELS])
 {
   cache.add_levels(_time, _levels);
   hist.add_levels(_levels);
 }
 
 void 
-Levels::get_levels(time_t _time, sample_t _levels[NCHANNELS], bool _drop)
+Levels::get_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool _drop)
 {
   cache.get_levels(_time, _levels, _drop);
 }

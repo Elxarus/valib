@@ -7,11 +7,11 @@
 bool 
 SyncGen::process(const Chunk *_chunk)
 {
-  time_t to_ms      = 1000 / spk.sample_rate;
-  time_t to_samples = spk.sample_rate / 1000;
+  vtime_t to_ms      = 1000 / spk.sample_rate;
+  vtime_t to_samples = spk.sample_rate / 1000;
 
-  bool   old_sync = sync;
-  time_t old_time = time;
+  bool    old_sync = sync;
+  vtime_t old_time = time;
 
   // receive chunk
   if (!NullFilter::receive_chunk(_chunk))
@@ -34,7 +34,7 @@ SyncGen::process(const Chunk *_chunk)
   }
   else if (dejitter)
   {
-    time_t delta;
+    vtime_t delta;
     if (old_time > time)
       delta = old_time - time;
     else
@@ -61,7 +61,7 @@ SyncGen::process(const Chunk *_chunk)
 bool 
 SyncGen::get_chunk(Chunk *_chunk)
 {
-  time_t add_time = size * time_factor;
+  vtime_t add_time = size * time_factor;
 
   send_chunk_inplace(_chunk, size);
 

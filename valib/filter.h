@@ -14,6 +14,7 @@ class Filter;
 class NullFilter;
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // Sink class
 //
@@ -242,7 +243,7 @@ protected:
   Speakers  spk;
 
   bool      sync;
-  time_t    time;
+  vtime_t   time;
   bool      flushing;
 
   uint8_t  *rawdata;
@@ -273,6 +274,9 @@ protected:
   {
     // fill output chunk & drop data
 
+    if (_size > size)
+      _size = size;
+
     if (spk.format == FORMAT_LINEAR)
     {
       _chunk->set
@@ -280,7 +284,7 @@ protected:
         spk, 
         samples, _size,
         sync, time,
-        flushing && !size
+        flushing && (size == _size)
       );
       samples += _size;
     }
@@ -291,7 +295,7 @@ protected:
         spk, 
         rawdata, _size,
         sync, time,
-        flushing && !size
+        flushing && (size == _size)
       );
       rawdata += _size;
     }

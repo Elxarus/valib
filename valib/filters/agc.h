@@ -39,7 +39,7 @@ protected:
   size_t    block;                // current block
   size_t    sample[2];            // number of samples filled
   bool      buf_sync[2];          // beginning of the buffer is syncpoint
-  time_t    buf_time[2];          // timestamp at beginning of the buffer
+  vtime_t   buf_time[2];          // timestamp at beginning of the buffer
 
   size_t    nsamples;             // number of samples per block
 
@@ -80,8 +80,8 @@ public:
   void   set_buffer(size_t nsamples);
 
   // input/output levels
-  inline void get_input_levels(time_t time, sample_t levels[NCHANNELS], bool drop = true);
-  inline void get_output_levels(time_t time, sample_t levels[NCHANNELS], bool drop = true);
+  inline void get_input_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
+  inline void get_output_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
 
   /////////////////////////////////////////////////////////
   // Filter interface
@@ -102,13 +102,13 @@ AGC::next_block()
 }
 
 void 
-AGC::get_input_levels(time_t _time, sample_t _levels[NCHANNELS], bool _drop)
+AGC::get_input_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool _drop)
 {
   input_levels.get_levels(_time, _levels, _drop);
 }
 
 void 
-AGC::get_output_levels(time_t _time, sample_t _levels[NCHANNELS], bool _drop)
+AGC::get_output_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool _drop)
 {
   output_levels.get_levels(_time, _levels, _drop);
 }

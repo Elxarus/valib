@@ -3,13 +3,12 @@
 #include "log.h"
 #include "spk.h"
 
-extern int test_spdifer(const char *fn, const char *fn_spdif, Speakers spk);
-int test_spdifer()
+int test_spdifer(Log *log, const char *data_file, const char *spdif_file, Speakers spk);
+int test_spdifer(Log *log)
 {
-  int err = 0;
-  printf("\n* Spdifer test\n");
-  err += test_spdifer("f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif", Speakers(FORMAT_AC3, 0, 0));
-  return err;
+  log->open_group("Spdifer test");
+  test_spdifer(log, "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif", Speakers(FORMAT_AC3, 0, 0));
+  return log->close_group();
 }
 
 
@@ -60,15 +59,13 @@ int test_pes_demux()
 }
 
 
-extern int test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _bitrate, int _nframes);
-int test_ac3_enc_all()
+extern int test_ac3_enc(Log *log, const char *_raw_filename, const char *_desc, Speakers _spk, int _bitrate, int _nframes);
+int test_ac3_enc_all(Log *log)
 {
-  int err = 0;
-  printf("\n* AC3Enc test\n");
-
-  err += test_ac3_enc("f:\\ac3\\ac3test_pcm16.raw", "stereo, 448kbps", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 65535), 448000, 1875);
-  err += test_ac3_enc("f:\\ac3\\ac3test_pcm16_6ch.raw", "5.1, 448kbps", Speakers(FORMAT_PCM16, MODE_5_1, 48000, 65535), 448000, 1874);
-  return err;
+  log->open_group("AC3Enc test");
+  test_ac3_enc(log, "f:\\ac3\\ac3test_pcm16.raw", "stereo, 448kbps", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 65535), 448000, 1875);
+  test_ac3_enc(log, "f:\\ac3\\ac3test_pcm16_6ch.raw", "5.1, 448kbps", Speakers(FORMAT_PCM16, MODE_5_1, 48000, 65535), 448000, 1874);
+  return log->close_group();
 }
 
 
@@ -76,7 +73,7 @@ int test_ac3_enc_all()
 
 
 extern int test_filters(Log *log);
-extern int test_float();
+extern int test_float(Log *log);
 
 
 
@@ -86,24 +83,25 @@ extern int test_converter(Log *log);
 int main(int argc, char **argv)
 {
   ScreenLog log;
+  log.open_group("Test session");
 
-  int errors = 0;
+  test_ac3_enc_all(&log);
 
-  errors += test_filters(&log);
-  errors += test_spdifer();
+  test_filters(&log);
+  test_spdifer(&log);
  
-  errors += test_float();
-  errors += test_pcm_passthrough(&log);
+  test_float(&log);
+  test_pcm_passthrough(&log);
 
-  errors += test_ac3_parser();
-  errors += test_pes_demux();
+  test_ac3_parser();
+  test_pes_demux();
 
-  errors += test_ac3_enc_all();
-
-  printf("-----------------------------------------------------------\n");
-  if (errors)
-    printf("There are %i errors!\n", errors);
+  log.close_group();
+  log.msg("-----------------------------------------------------------");
+  if (log.get_total_errors())
+    log.msg("There are %i errors!\n", log.get_total_errors());
   else
-    printf("Ok!");
-  return errors;
+    log.msg("Ok!");
+
+  return log.get_total_errors();
 }

@@ -13,18 +13,16 @@
 #include "filters\convert.h"
 #include "filters\filter_chain.h"
 #include "auto_file.h"
+#include "..\log.h"
 
 int 
-test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _bitrate, int _nframes)
+test_ac3_enc(Log *log, const char *_raw_filename, const char *_desc, Speakers _spk, int _bitrate, int _nframes)
 {
-  printf("Testing file %s (%s)...\n", _raw_filename, _desc);
+  log->msg("Testing file %s (%s)...", _raw_filename, _desc);
 
   AutoFile f(_raw_filename);
   if (!f.is_open())
-  {
-    printf("!!!Error: cannot open file '%s'\n", _raw_filename);
-    return 1;
-  }
+    return log->err("Cannot open file '%s'", _raw_filename);
 
   const int buf_size = 32000;
   uint8_t buf[buf_size];
@@ -50,10 +48,7 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
 
   if (!enc.set_bitrate(_bitrate) ||
       !enc.set_input(lin_spk))
-  {
-    printf("!!!Error: cannot init encoder!\n");
-    return 1;
-  }
+    return log->err("Cannot init encoder!");
 
   Chunk raw;
   Chunk ac3;
@@ -65,43 +60,28 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
     raw.set(raw_spk, buf, buf_data);
 
     if (!chain.process(&raw))
-    {
-      printf("!!!Error: chain.process()!\n");
-      return 1;
-    }
+      return log->err("error in chain.process()");
 
     while (!chain.is_empty())
     {
       if (!chain.get_chunk(&ac3))
-      {
-        printf("!!!Error: chain.get_chunk()!\n");
-        return 1;
-      }
+        return log->err("error in chain.get_chunk()");
 
       if (ac3.is_empty())
         continue;
 
       frame_pos = ac3.get_rawdata();
       if (!dec.load_frame(&frame_pos, frame_pos + ac3.get_size()))
-      {
-        printf("!!!Error: AC3 parser frame load error!\n");
-        return 1;
-      }
+        return log->err("AC3 parser frame load error!");
 
       for (int b = 0; b < AC3_NBLOCKS; b++)
       {
         if (!dec.decode_block())
-        {
-          printf("!!!Error: block %i decode error!\n", b);
-          return 1;
-        }
+          return log->err("block %i decode error!", b);
 
         if (memcmp(enc.exp[0][b], dec.exps[0], 223) || 
             memcmp(enc.exp[1][b], dec.exps[1], 223))
-        {
-          printf("!!!Error: exponents error!\n");
-          return 1;
-        }
+          return log->err("exponents error!", b);
 
         for (int ch = 0; ch < _spk.nch(); ch++)
         {
@@ -112,10 +92,7 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
           else
             // fbw channel
             if (enc.nmant[ch] != dec.endmant[ch])
-            {
-              printf("!!!Error: number of mantissas does not match!\n");
-              return 1;
-            }
+              return log->err("number of mantissas does not match!", b);
             else
               endmant = enc.nmant[ch];
 
@@ -152,20 +129,18 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
 
             v1 = dec.get_samples()[ch][s + b * AC3_BLOCK_SAMPLES] * (1 << e);
             if (fabs(v - v1) > 1e-6)
-              printf("strange sample f=%i ch=%i b=%i s=%i; bap=%i, mant=%i, exp=%i, v=%e, s=%e, v-s=%e...\n", frames, ch, b, s, bap, m, e, double(sym_quant(m, 11)) * 2.0/11.0 - 10.0/11.0, dec.get_samples()[ch][s + b * AC3_BLOCK_SAMPLES], fabs(v - v1));
+              log->msg("strange sample f=%i ch=%i b=%i s=%i; bap=%i, mant=%i, exp=%i, v=%e, s=%e, v-s=%e...", frames, ch, b, s, bap, m, e, double(sym_quant(m, 11)) * 2.0/11.0 - 10.0/11.0, dec.get_samples()[ch][s + b * AC3_BLOCK_SAMPLES], fabs(v - v1));
           }
         } // for (int ch = 0; ch < _spk.nch(); ch++)
       } // for (int b = 0; b < AC3_NBLOCKS; b++)
 
       frames++;
-      printf("Frame %i    \r", frames);
+      log->status("Frame %i", frames);
     }
   }
 
   if (_nframes && _nframes != frames)
-  {
-    printf("!!!Error: number of encoded frames (%i) does not match correct number (%i)!\n", frames, _nframes);
-    return 1;
-  }
+    return log->err("number of encoded frames (%i) does not match correct number (%i)!", frames, _nframes);
+
   return 0;
 }

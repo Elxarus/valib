@@ -132,7 +132,7 @@ CPUMeter::usage()
   return result;
 }
 
-__int64
+vtime_t
 CPUMeter::get_thread_time()
 {
   __int64 creation_time;
@@ -159,10 +159,10 @@ CPUMeter::get_thread_time()
     }
   }
 
-  return thread_time_total;
+  return vtime_t(thread_time_total) / 10000000;
 }
 
-__int64
+vtime_t
 CPUMeter::get_system_time()
 {
   if (thread)
@@ -171,8 +171,8 @@ CPUMeter::get_system_time()
     __int64 system_time;
     GetSystemTime(&systime);
     SystemTimeToFileTime(&systime, (FILETIME *)&system_time);
-    return system_time_total +  system_time - system_time_start;
+    return vtime_t(system_time_total +  system_time - system_time_start) / 10000000;
   }
   else
-    return system_time_total;
+    return vtime_t(system_time_total) / 10000000;
 }

@@ -12,9 +12,9 @@
 class Sync
 {
 protected:
-  bool   syncing; // syncing state
-  bool   sync[2]; // timestamp exists
-  time_t time[2]; // timestamp
+  bool    syncing; // syncing state
+  bool    sync[2]; // timestamp exists
+  vtime_t time[2]; // timestamp
 
 public:
   Sync()
@@ -22,7 +22,7 @@ public:
     reset();
   }
 
-  inline void receive_sync(bool _sync, time_t _time)
+  inline void receive_sync(bool _sync, vtime_t _time)
   {
     if (_sync)
       if (syncing)

@@ -43,7 +43,7 @@ protected:
   double   vol;           // volume
   double   pan;           // panning
 
-  time_t   time;          // time of last sample received
+  vtime_t  time;          // time of last sample received
 
 public:
   DSoundSink(HWND hwnd, int buf_size_ms = 2000, int preload_ms = 500);
@@ -58,6 +58,7 @@ public:
   virtual bool open(Speakers spk);
   virtual void close();
   virtual bool is_open() const;
+  virtual Speakers get_spk() const;
 
   // playback control
   virtual void stop();
@@ -68,8 +69,8 @@ public:
   virtual bool is_paused() const;
  
   // timing
-  virtual bool   is_time() const;
-  virtual time_t get_time() const;
+  virtual bool    is_time() const;
+  virtual vtime_t get_time() const;
 
   // volume & pan
   virtual bool   is_vol() const;

@@ -7,6 +7,7 @@
   const size_t sample_size = sizeof($type) * $ch;
 
   $type *src;
+  $type *end;
   sample_t *dst = out_samples[0];
   out_size = 0;
 
@@ -32,32 +33,37 @@
       drop_rawdata(delta);
       part_size = 0;
 
-      src = ($type *)part_size;
-
+      src = ($type *)part_buf;
 $convert
-
       dst++;
       out_size++;
     }   
   }
 
   /////////////////////////////////////////////////////////
-  // Find end of buffer & remember remaining part of sample
+  // Set processing buffer start & end and remember 
+  // remaining part of sample
 
   src = ($type *)rawdata;
-  $type *end;
 
-  if ((nsamples - out_size) * sample_size < size)
+  // integral number of samples (and its size in bytes)
+  size_t n = nsamples - out_size;
+  size_t n_size = n * sample_size;
+
+  if (n_size < size)
   {
-    drop_rawdata((nsamples - out_size) * sample_size);
-    end = src + nsamples - out_size;
-    out_size += nsamples - out_size;
+    drop_rawdata(n_size);
+    end = ($type *)(((uint8_t *)src) + n_size);
+    out_size += n;
   }
   else
   {
-    out_size += size / sample_size;
-    end = src + size / sample_size;
-    drop_rawdata((size / sample_size) * sample_size);
+    n = size / sample_size;
+    n_size = n * sample_size;
+
+    drop_rawdata(n_size);
+    end = ($type *)(((uint8_t *)src) + n_size);
+    out_size += n;
 
     // remember part of sample
     if (size)
@@ -78,4 +84,3 @@ $convert
     dst++;
   }
 }
-

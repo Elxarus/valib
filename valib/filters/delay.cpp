@@ -91,7 +91,7 @@ Delay::reset()
 bool 
 Delay::process(const Chunk *_chunk)
 {
-  if (!NullFilter::process(_chunk))
+  if (!receive_chunk(_chunk))
     return false;
 
   if (!enabled)
@@ -134,4 +134,3 @@ Delay::process(const Chunk *_chunk)
   first_half = !first_half;
   return true;
 }
-

@@ -32,12 +32,18 @@ public:
   DTSParser dts;
 
   AudioDecoder();
-  inline int get_frames();
-  inline int get_errors();
+
+  /////////////////////////////////////////////////////////
+  // AudioDecoder interface
 
   void get_info(char *buf, int len);
 
+  inline int get_frames();
+  inline int get_errors();
+
+  /////////////////////////////////////////////////////////
   // Filter interface
+
   virtual void reset();
   virtual bool query_input(Speakers spk) const;
   virtual bool set_input(Speakers _spk);

@@ -5,12 +5,15 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
+#include "vtime.h"
 
 class Log
 {
 protected:
   int level;
   int errors[MAX_LOG_LEVELS];
+  vtime_t time[MAX_LOG_LEVELS];
 
 public:
   Log()
@@ -25,6 +28,7 @@ public:
     {
       level++;
       errors[level] = 0;
+      time[level] = local_time();
     }
   }
 
@@ -71,14 +75,21 @@ protected:
   char current_status;
   inline print_header(int _level)
   {
-    // erase status line
+    // erase status line (if it is)
     if (current_status)
     {
-      printf("                                                                               \n");
+      fprintf(stderr, "                                                                               \r");
       current_status = 0;
     }
 
-    // todo: timestamp
+    // timestamp
+    time_t t = (time_t)local_time();
+    tm *pt = gmtime(&t);
+    if (pt)
+      printf("%04i/%02i/%02i %02i:%02i:%02i | ", pt->tm_year + 1900, pt->tm_mon + 1, pt->tm_mday, pt->tm_hour, pt->tm_min, pt->tm_sec);
+    else
+      printf("0000/00/00 00:00:00 | ");
+
     // indent
     while (_level--)
       printf("  ");
@@ -109,10 +120,12 @@ public:
     else
       print_header(0);
 
+    vtime_t elapsed = local_time() - time[level];
+
     if (!errors[level])
-      printf("< Ok\n");
+      printf("< Ok (%i:%02i)\n", int(elapsed) / 60, int(elapsed) % 60);
     else
-      printf("< Errors: %i\n",  errors[level]);
+      printf("< Errors: %i (%i:%02i)\n", errors[level], int(elapsed) / 60, int(elapsed) % 60);
 
     return Log::close_group();
   }
@@ -122,13 +135,16 @@ public:
     current_status++;
     if (current_status >= (sizeof(statuses) / sizeof(statuses[0])))
       current_status = 1;
-    printf(statuses[current_status]);
+    fprintf(stderr, statuses[current_status]);
+
+    vtime_t elapsed = local_time() - time[level];
+    fprintf(stderr, "%i:%02i ", int(elapsed) / 60, int(elapsed) % 60);
 
     va_list list;
     va_start(list, _msg);
-    vprintf(_msg, list);
+    vfprintf(stderr, _msg, list);
     va_end(list);
-    printf("\r");
+    fprintf(stderr, "\r");
   }
 
   void msg(const char *_msg, ...)

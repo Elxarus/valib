@@ -118,6 +118,7 @@ public:
   virtual bool open(Speakers spk) = 0;
   virtual void close() = 0;
   virtual bool is_open() const = 0;
+  virtual Speakers get_spk() const = 0;
 
   // playback control
   virtual void stop() = 0;
@@ -128,8 +129,8 @@ public:
   virtual bool is_paused() const = 0;
  
   // timing
-  virtual bool   is_time() const = 0;
-  virtual time_t get_time() const = 0;
+  virtual bool is_time() const = 0;
+  virtual vtime_t get_time() const = 0;
 
   // volume & pan
   virtual bool   is_vol() const = 0;
@@ -153,12 +154,25 @@ protected:
     return query(_spk);
   }
 
+  virtual Speakers get_input() const
+  {
+    return get_spk();
+  }
+
   virtual bool set_input(Speakers _spk)
   {
     if (is_open())
-      flush();
-
-    return open(_spk);
+    {
+      if (_spk != get_spk())
+      {
+        flush();
+        return open(_spk);
+      }
+      else
+        return true;
+    }
+    else
+      return open(_spk);
   }
 
   virtual bool process(const Chunk *_chunk)
@@ -173,25 +187,23 @@ class NullSink : public AudioSink
 protected:
   Speakers spk;
 
-  bool     opened;
-  bool     paused;
+  bool opened;
+  bool paused;
 
-  double   vol;
-  double   pan;
+  double vol;
+  double pan;
 
-  time_t   time;
+  vtime_t time;
 
   inline bool receive_chunk(const Chunk *_chunk)
   {
-    if (!opened)
+    // Open device
+    if (!opened && !open(_chunk->get_spk()))
       return false;
 
     // Format change
     if (spk != _chunk->get_spk())
     {
-      if (!query(_chunk->get_spk()))
-        return false;
-
       if (opened)
         flush();
       
@@ -238,6 +250,7 @@ public:
 
   virtual void close()                { opened = false; }
   virtual bool is_open() const        { return opened;  }
+  virtual Speakers get_spk() const    { return spk;     }
 
   // Playback control
   virtual void stop()                 { /* does nothing */ }
@@ -248,8 +261,8 @@ public:
   virtual bool is_paused() const      { return paused;  }
 
   // Timing
-  virtual bool   is_time() const      { return false;   }
-  virtual time_t get_time() const     { return time;    }
+  virtual bool    is_time() const     { return false;   }
+  virtual vtime_t get_time() const    { return time;    }
 
   // Volume & panning
   virtual bool   is_vol() const       { return false;   }

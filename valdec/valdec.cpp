@@ -695,8 +695,7 @@ int main(int argc, char *argv[])
   // Process
   /////////////////////////////////////////////////////////
 
-  Chunk chunk1;
-  Chunk chunk2;
+  Chunk chunk;
 
   CPUMeter cpu_current;
   CPUMeter cpu_total;
@@ -717,10 +716,11 @@ int main(int argc, char *argv[])
       if (spdif)
       {
         // SPDIF
-        chunk1.set_spk(Speakers(FORMAT_UNKNOWN, 0, 0));
-        chunk1.set_sync(false);
-        chunk1.set_rawdata(parser->get_frame(), parser->get_frame_size());
-        chunk1.set_eos(false);
+        chunk.set
+        (
+          Speakers(FORMAT_UNKNOWN, 0, 0),
+          parser->get_frame(), parser->get_frame_size()
+        );
       }
       else
       {
@@ -728,13 +728,14 @@ int main(int argc, char *argv[])
         if (!file.decode_frame())
           continue;
 
-        chunk1.set_spk(file.get_spk());
-        chunk1.set_sync(false);
-        chunk1.set_samples(file.get_samples(), file.get_nsamples());
-        chunk1.set_eos(false);
+        chunk.set
+        (
+          file.get_spk(),
+          file.get_samples(), file.get_nsamples()
+        );
       }
 
-      if (!filter->process(&chunk1))
+      if (!filter->process(&chunk))
       {
         printf("\nError: processing error [process()]\n");
         return 1;
@@ -742,14 +743,14 @@ int main(int argc, char *argv[])
 
       while (!filter->is_empty())
       {
-        if (!filter->get_chunk(&chunk2))
+        if (!filter->get_chunk(&chunk))
         {
           printf("\nError: processing error [get_chunk()]\n");
           return 1;
         }
-        sink->write(&chunk2);
+        sink->write(&chunk);
 
-        ms = double(cpu_total.get_system_time() / 10000);
+        ms = double(cpu_total.get_system_time() * 1000);
         if (ms > old_ms + 100)
         {
           old_ms = ms;
@@ -787,9 +788,9 @@ int main(int argc, char *argv[])
   cpu_current.stop();
   cpu_total.stop();
 
-  printf("System time: %ims\n", int(cpu_total.get_system_time() / 10000));
-  printf("Process time: %ims\n", int(cpu_total.get_thread_time() / 10000));
-  printf("Approx. %.2f%% realtime CPU usage\n", double(cpu_total.get_thread_time() / 100) / file.get_size(file.ms));
+  printf("System time: %ims\n", int(cpu_total.get_system_time() * 1000));
+  printf("Process time: %ims\n", int(cpu_total.get_thread_time() * 1000 ));
+  printf("Approx. %.2f%% realtime CPU usage\n", double(cpu_total.get_thread_time() * 100000) / file.get_size(file.ms));
 
   /////////////////////////////////////////////////////////
   // Print levels histogram

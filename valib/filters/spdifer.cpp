@@ -72,8 +72,8 @@ Spdifer::get_chunk(Chunk *_chunk)
   uint8_t *read_buf = rawdata;
   int      read_len = size;
 
-  uint8_t *write_buf = frame_buf.data() + SPDIF_HEADER_SIZE;
-  int      write_len = frame_buf.size() - SPDIF_HEADER_SIZE;
+  uint8_t *write_buf = frame_buf.get_data() + SPDIF_HEADER_SIZE;
+  int      write_len = frame_buf.get_size() - SPDIF_HEADER_SIZE;
 
   while (read_len) switch (state)
   {
@@ -104,7 +104,7 @@ Spdifer::get_chunk(Chunk *_chunk)
 
       {
         // init spdif header
-        uint16_t *hdr = (uint16_t *)frame_buf.data();
+        uint16_t *hdr = (uint16_t *)frame_buf.get_data();
         hdr[0] = 0xf872;          // Pa  sync word 1 
         hdr[1] = 0x4e1f;          // Pb  sync word 2 
         hdr[2] = magic;           // Pc  data type
@@ -158,7 +158,7 @@ Spdifer::get_chunk(Chunk *_chunk)
       _chunk->set
       (
         get_output(),
-        frame_buf.data(), nsamples * 4,
+        frame_buf.get_data(), nsamples * 4,
         false, 0, 
         flushing && !read_len
       );
@@ -244,6 +244,17 @@ Spdifer::get_chunk(Chunk *_chunk)
       return true;
     }
   } // while (read_len && _out->is_empty()) switch (state)
+
+  // fill output chunk
+  _chunk->set
+  (
+    get_output(), 
+    0, 0, 
+    false, 0, 
+    flushing
+  );
+
+  flushing = false;
 
   drop(read_buf - rawdata);
   return true;

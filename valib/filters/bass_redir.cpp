@@ -74,7 +74,7 @@ LPF::update()
 BassRedir::BassRedir()
 {
   spk = def_spk;
-  enabled = true;
+  enabled = false;
 
   lpf.gain = 1.0 / spk.nch();
   lpf.freq = 120;

@@ -56,7 +56,7 @@
 //   Returns 0 if filter does not provide access to frame buffer. 
 //   (But get_frame_size() should report correct frame size anyway.)
 //
-//   Parser for formats allowed for SPDIF transmission should provide access
+//   Parsers for formats allowed for SPDIF transmission should provide access
 //   to raw frame buffer.
 //
 // get_samples()

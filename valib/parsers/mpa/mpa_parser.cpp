@@ -129,7 +129,7 @@ MPAParser::load_frame(uint8_t **buf, uint8_t *end)
     header = 0;
   }
   else
-    header = swab32(*(uint32_t *)frame_buf.data());
+    header = swab32(*(uint32_t *)frame_buf.get_data());
 
   // sync
   pos = *buf;
@@ -137,7 +137,7 @@ MPAParser::load_frame(uint8_t **buf, uint8_t *end)
   {
     while (pos < end && !sync(header))
       header = (header << 8) | (*pos++);
-    *(uint32_t *)frame_buf.data() = swab32(header);
+    *(uint32_t *)frame_buf.get_data() = swab32(header);
     frame_data = 4;
     if (pos == end)
     {
@@ -192,7 +192,7 @@ MPAParser::decode_frame()
 bool 
 MPAParser::decode_header()
 {
-  hdr.raw = swab32(*(uint32_t *)frame_buf.data());
+  hdr.raw = swab32(*(uint32_t *)frame_buf.get_data());
   hdr.error_protection = ~hdr.error_protection;
 
   // integrity check
