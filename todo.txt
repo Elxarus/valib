@@ -50,7 +50,6 @@ Other
 =====
 * pes_demux: add more statistics during processing
 * mpa_iso: add option to disable dithering (for testing purposes)
-* New: valdec - Valex Audio Library based DECoder (AC3Player descendant)
 * New: decoder & processor .dll
 * New: decoder & processor .lib
 * New: platform-independent cpu usage interface 
@@ -64,6 +63,7 @@ Other
 
 Done
 ====
++* New: valdec - Valex Audio Library based DECoder (AC3Player descendant)
 +* Create script to compile and perform testing
 +* timing: time type
 +* timing: what to do with AudioSink timing functions?

@@ -17,6 +17,8 @@
 * AGC: limiter level
 * AGC: per-channel limiter (see ac3filter support page)
 * AGC: per-channel DRC 
+* AGC: remove 'master' gain (it is gain control filter, not an amplifier)
+       moreover 'master' gain consumes CPU power...
 
 * Mixer: throw out null columns
 * Mixer: zero null output channels instead of matrixing

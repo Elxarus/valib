@@ -4,7 +4,9 @@
 First order
 ===========
 
-* Check Sync class timeing
+* Inherit Parser class from Filter class.
+* Inherit FileParser class from Source class.
+* Check Sync class timing
 * Add def_spk and err_spk global constants
 * CPUMeter may not work in some cases??? See message from SBN 02.04.2004
 * New: Despdifer to demux input SPDIFed stream.
@@ -51,7 +53,6 @@ Other
 =====
 * pes_demux: add more statistics during processing
 * mpa_iso: add option to disable dithering (for testing purposes)
-* New: valdec - Valex Audio Library based DECoder (AC3Player descendant)
 * New: decoder & processor .dll
 * New: decoder & processor .lib
 * New: platform-independent cpu usage interface 
@@ -65,6 +66,7 @@ Other
 
 Done
 ====
++* New: valdec - Valex Audio Library based DECoder (AC3Player descendant)
 +* Create script to compile and perform testing
 +* timing: time type
 +* timing: what to do with AudioSink timing functions?
@@ -210,6 +212,8 @@ Done
 * AGC: limiter level
 * AGC: per-channel limiter (see ac3filter support page)
 * AGC: per-channel DRC 
+* AGC: remove 'master' gain (it is gain control filter, not an amplifier)
+       moreover 'master' gain consumes CPU power...
 
 * Mixer: throw out null columns
 * Mixer: zero null output channels instead of matrixing
@@ -278,12 +282,14 @@ Done
 -------------------------------
 ./valib/parsers
 -------------------------------
+* AC3Enc: remove first 256 samples (encoded stream is shifted by 256 samples)
 * AC3Parser: optimize get_coefs
 * AC3Parser: add properties:
   dither - turn dithering on/off (for debug)
   drc - turn DRC on/off
   drc_heavy - turn heavy DRC compression on/off
   crc - use CRC flag
+* AC3Parser: CRC check for big endian
 * AC3Parser: get rid of warnings in floor_tbl table
 * AC3Parser: add comments to tables, review tables
 * AC3Parser: add block-level decoding support
@@ -343,8 +349,8 @@ Done:
 
 
 ----------------------------------------
-Total tasks: 207
-Done: 83
+Total tasks: 212
+Done: 84
 Dubious: 7
 Declined: 4
 Comlete: 42%
