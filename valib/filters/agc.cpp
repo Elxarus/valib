@@ -143,7 +143,7 @@ AGC::process()
 
   if (drc)
   {
-    sample_t compressed_level = pow(level, -log10(drc_power)*20/50);
+    sample_t compressed_level = pow(level, -drc_power/50);
     sample_t released_level = drc_level * release_factor;
 
     if (released_level > compressed_level)
@@ -183,7 +183,10 @@ AGC::process()
 
   ///////////////////////////////////////
   // Windowing
-  // todo: enable windowing only on gain change
+  //
+  // * full windowing on gain change
+  // * simple gain when gain is applied
+  // * no windowing if it is no gain applied
 
   if (!EQUAL_SAMPLES(old_factor, factor))
   {
