@@ -7,19 +7,19 @@
 
 #include "filter.h"
 
-class SyncGen : public NullFilter
+class Syncer : public NullFilter
 {
 protected:
-  // all values in ms
-  float  time_shift;
-  float  time_factor;
+  // all time values are in secs
+  vtime_t time_shift;
+  vtime_t time_factor;
 
-  bool   dejitter;
-  float  threshold;
-  float  jitter;
+  bool    dejitter;
+  vtime_t threshold;
+  vtime_t jitter;
 
 public:
-  SyncGen()
+  Syncer()
   {
     time_shift  = 0;
     time_factor = 1.0;
@@ -34,24 +34,26 @@ public:
     sync = false;
   }
 
-  inline float get_time_shift() const              { return time_shift; }
-  inline void  set_time_shift(float _time_shift)   { time_shift = _time_shift; }
+  inline vtime_t get_time_shift() const                 { return time_shift; }
+  inline void    set_time_shift(vtime_t _time_shift)    { time_shift = _time_shift; }
 
-  inline float get_time_factor() const             { return time_shift; }
-  inline void  set_time_factor(float _time_shift)  { time_shift = _time_shift; }
+  inline vtime_t get_time_factor() const                { return time_factor; }
+  inline void    set_time_factor(vtime_t _time_factor ) { time_factor = _time_factor; }
 
-  inline bool  get_dejitter() const                { return dejitter; }
-  inline void  set_dejitter(bool _dejitter)        { dejitter = _dejitter; }
+  inline bool    get_dejitter() const                   { return dejitter; }
+  inline void    set_dejitter(bool _dejitter)           { dejitter = _dejitter; }
 
-  inline float get_threshold() const               { return threshold; }
-  inline void  set_threshold(float _threshold)     { threshold = _threshold; }
+  inline vtime_t get_threshold() const                  { return threshold; }
+  inline void    set_threshold(vtime_t _threshold)      { threshold = _threshold; }
 
-  inline float get_jitter() const                  { return jitter; }
+  inline vtime_t get_jitter() const                     { return jitter; }
 
   // Filter interface
   void reset()
   {
     NullFilter::reset();
+    sync = false;
+    time = 0;
     jitter = 0;
   }
 

@@ -36,9 +36,6 @@ AGC::AGC(size_t _nsamples)
   drc_power = 0;     // dB; this value has meaning of loudness raise at -50dB level
   drc_level = 1.0;   // factor
 
-  input_levels.reset();
-  output_levels.reset();
-
   // rebuild window
   set_buffer(_nsamples);
 }
@@ -230,23 +227,6 @@ AGC::process()
     }
 
   ///////////////////////////////////////
-  // Cache levels
-
-  sample_t levels_std[NCHANNELS];
-
-  const int *order = spk.order();
-  memset(levels_std, 0, sizeof(levels_std));
-  for (ch = 0; ch < nch; ch++)
-    levels_std[order[ch]] = levels_loc[ch];
-
-  input_levels.add_levels(buf_time[block], levels_std);
-
-  for (ch = 0; ch < nch; ch++)
-    levels_std[order[ch]] *= factor;
-
-  output_levels.add_levels(buf_time[block], levels_std);
-
-  ///////////////////////////////////////
   // Switch blocks
 
   block  = next_block();
@@ -316,9 +296,6 @@ AGC::reset()
 
   level  = 0; //?
   factor = 0; //?
-
-  input_levels.reset();
-  output_levels.reset();
 }
 
 bool 
@@ -340,6 +317,7 @@ AGC::get_chunk(Chunk *_chunk)
       buf_sync[block], buf_time[block],
       flushing && (sample[next_block()] == 0)
     );
+    buf_sync[block] = false;
     sample[block] = 0; // drop block just sent
     flushing = flushing && (sample[next_block()] != 0); // drop flushing state
     return true;

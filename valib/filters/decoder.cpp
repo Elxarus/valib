@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "decoder.h"
 
+// Decoder should be empty after process() if it was no frame loaded.
+// (because it should report right output format at get_chunk())
+
 AudioDecoder::AudioDecoder()
 {
   parser = 0;
@@ -27,7 +30,7 @@ AudioDecoder::reset()
 bool
 AudioDecoder::query_input(Speakers _spk) const
 {
-  int format_mask = FORMAT_MPA | FORMAT_AC3 | FORMAT_DTS;
+  int format_mask = FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS;
   return (FORMAT_MASK(_spk.format) & format_mask) != 0;
 }
 
@@ -49,6 +52,23 @@ AudioDecoder::set_input(Speakers _spk)
   return true;
 }
 
+bool 
+AudioDecoder::process(const Chunk *_chunk)
+{
+  if (!NullFilter::process(_chunk))
+    return false;
+
+  if (!parser)
+    return false;
+
+  sync_helper.receive_sync(sync, time);
+  sync = false;
+
+  load_frame();
+  return true;
+}
+
+
 
 Speakers
 AudioDecoder::get_output() const
@@ -59,6 +79,64 @@ AudioDecoder::get_output() const
     return unk_spk;
 }
 
+bool
+AudioDecoder::is_empty() const
+{
+  if (parser)
+    return !parser->is_frame_loaded() && !flushing;
+  else
+    return !flushing;
+}
+
+bool 
+AudioDecoder::get_chunk(Chunk *_chunk)
+{
+  if (!parser) 
+    return false;
+
+  if (!parser->is_frame_loaded() || !parser->decode_frame())
+  {
+    _chunk->set(parser->get_spk(), 0, 0, 0, 0, flushing);
+    flushing = false;
+    return true;
+  }
+  else
+  {
+    // fill output chunk
+    _chunk->set(parser->get_spk(), parser->get_samples(), parser->get_nsamples());
+    // timimg
+    sync_helper.send_sync(_chunk);
+
+    // quick hack to overcome bug in splitters that report incorrect sample rate
+    // _chunk->time *= double(_out->spk.sample_rate) / spk.sample_rate;
+
+    load_frame();
+    return true;
+  }
+}
+
+bool
+AudioDecoder::load_frame()
+{
+  uint8_t *buf_ptr = rawdata;
+  uint8_t *end_ptr = rawdata + size;
+
+  if (parser->load_frame(&buf_ptr, end_ptr))
+  {
+    sync_helper.set_syncing(true);
+    drop(buf_ptr - rawdata);
+    return true;
+  }
+  else
+  {
+    sync_helper.set_syncing(false);
+    drop(buf_ptr - rawdata);
+    return false;
+  }
+}
+
+
+/*
 bool 
 AudioDecoder::get_chunk(Chunk *_chunk)
 {
@@ -81,7 +159,6 @@ AudioDecoder::get_chunk(Chunk *_chunk)
         return false;
 
       // fill output chunk
-
       _chunk->set
       (
         parser->get_spk(),
@@ -106,3 +183,4 @@ AudioDecoder::get_chunk(Chunk *_chunk)
   drop(buf_ptr - rawdata);
   return true;
 }
+*/

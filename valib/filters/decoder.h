@@ -26,6 +26,8 @@ protected:
   Sync   sync_helper;
   Parser *parser; // current parser;
 
+  bool load_frame();
+
 public:
   MPAParser mpa;
   AC3Parser ac3;
@@ -47,8 +49,10 @@ public:
   virtual void reset();
   virtual bool query_input(Speakers spk) const;
   virtual bool set_input(Speakers _spk);
+  virtual bool process(const Chunk *chunk);
 
   virtual Speakers get_output() const;
+  virtual bool is_empty() const;
   virtual bool get_chunk(Chunk *chunk);
 };
 

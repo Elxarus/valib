@@ -122,7 +122,7 @@ MPAParser::load_frame(uint8_t **buf, uint8_t *end)
   int l;
 
   // drop previous frame
-  if (frame_data == bsi.frame_size)
+  if (frame_data >= bsi.frame_size)
   {
     frame_data = 0;
     bsi.frame_size = 0;

@@ -72,8 +72,12 @@ public:
   // Parser interface
   virtual void reset();
 
-  // load/decode frame
+  // Frame load operations
   virtual unsigned load_frame(uint8_t **buf, uint8_t *end);
+  virtual bool     is_frame_loaded() const { return frame_data && (frame_data >= bsi.frame_size); };
+  virtual void     drop_frame()            { frame_data = 0; bsi.frame_size = 0; }
+
+  // Frame decode
   virtual bool decode_frame();
 
   // stream information

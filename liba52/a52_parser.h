@@ -32,6 +32,8 @@ public:
 
   // load/decode frame
   virtual unsigned load_frame(uint8_t **buf, uint8_t *end);
+  virtual void     drop_frame() { frame_data = 0; state = state_sync; }
+  virtual bool     is_frame_loaded() const { return frame_data && (frame_data >= frame_size); }
   virtual bool     decode_frame();
 
   // Stream information

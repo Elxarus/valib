@@ -101,11 +101,8 @@ Levels::reset()
 }
 
 bool
-Levels::process(const Chunk *_chunk)
+Levels::get_chunk(Chunk *_chunk)
 {
-  if (!NullFilter::receive_chunk(_chunk))
-    return false;
-
   size_t n = size;
   int nch = spk.nch();
   const int *order = spk.order();
@@ -147,5 +144,11 @@ Levels::process(const Chunk *_chunk)
       sample = 0;
     }
   }
+
+  _chunk->set(spk, samples, size, sync, time - size, flushing);
+  size = 0;
+  sync = false;
+  flushing = false;
+
   return true;
 }

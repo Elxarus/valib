@@ -120,7 +120,7 @@ public:
   // Filter interface
 
   virtual void reset();
-  virtual bool process(const Chunk *chunk);
+  virtual bool get_chunk(Chunk *chunk);
 };
 
 ///////////////////////////////////////////////////////////

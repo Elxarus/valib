@@ -88,10 +88,14 @@ class Parser
 public:
   virtual void reset() = 0;
 
+  // Frame load operations
+  virtual size_t load_frame(uint8_t **buf, uint8_t *end) = 0;
+  virtual bool   is_frame_loaded() const = 0;
+  virtual void   drop_frame() = 0;
+
   // Frame decode
-  inline  bool     frame(uint8_t **buf, uint8_t *end);
-  virtual unsigned load_frame(uint8_t **buf, uint8_t *end) = 0;
-  virtual bool     decode_frame() = 0;
+  inline  bool   frame(uint8_t **buf, uint8_t *end);
+  virtual bool   decode_frame() = 0;
 
   // Buffers
   virtual uint8_t *get_frame() const = 0;
@@ -101,7 +105,7 @@ public:
   virtual Speakers get_spk() const = 0;
   virtual unsigned get_frame_size() const = 0;
   virtual unsigned get_nsamples() const = 0;
-  virtual void     get_info(char *buf, unsigned len) const = 0;
+  virtual void     get_info(char *buf, size_t len) const = 0;
 
   virtual unsigned get_frames() const = 0;
   virtual unsigned get_errors() const = 0;
@@ -130,19 +134,19 @@ protected:
   DataBuf   frame;
   SampleBuf samples;
 
-  unsigned  frame_data;
-  unsigned  new_frame_size;
+  size_t    frame_data;
+  size_t    new_frame_size;
   
   // Stream information currently reported
   Speakers  spk;
-  unsigned  frame_size;
-  unsigned  nsamples;
+  size_t    frame_size;
+  size_t    nsamples;
 
-  unsigned  frames;
-  unsigned  errors;
+  size_t    frames;
+  size_t    errors;
 
   // Functions to override
-  virtual unsigned sync(uint8_t **buf, uint8_t *end) = 0;
+  virtual size_t sync(uint8_t **buf, uint8_t *end) = 0;
   virtual bool start_decode() = 0;
 
 public:
@@ -159,15 +163,15 @@ public:
     // constant params as needed in constructor
   }
 
-  inline bool is_frame_loaded() const { return frame_data == frame_size; }
-
   /////////////////////////////////////////////////////////
   // Parser interface
 
   void reset();
 
-  // Frame decode
-  unsigned load_frame(uint8_t **buf, uint8_t *end);
+  // Frame load operations
+  size_t load_frame(uint8_t **buf, uint8_t *end);
+  bool   is_frame_loaded()  const { return frame_data && (frame_data >= frame_size); }
+  void   drop_frame()             { frame_data = 0; new_frame_size = 0; }
 
   // Buffers
   uint8_t *get_frame()      const { return frame;      }
@@ -186,9 +190,13 @@ public:
 inline bool 
 Parser::frame(uint8_t **buf, uint8_t *end)
 {
+  if (is_frame_loaded())
+    drop_frame();
+
   while (*buf < end)
     if (load_frame(buf, end) && decode_frame())
       return true;
+
   return false;
 }
 

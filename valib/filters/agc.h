@@ -1,22 +1,24 @@
 /*
-  Automatic Gain control filter
-  todo: remove master gain
-
+  Automatic Gain Control filter
+  todo: remove master gain?
 
   Speakers: unchanged
   Input formats: Linear
-  Buffering: yes
+  Output formats: Linear
+  Buffer: +
+  Inline: -
+  Delay: nsamples
   Timing: unchanged
   Paramters:
-    buffer       // buffer size
-    auto_gain    // automatic gain control
-    normalize    // one-pass normalize
-    master       // desired gain
-    gain         // current gain
-    release      // release speed (dB/s)
-    drc          // DRC enabled
-    drc_power    // DRC power (dB)
-    drc_level    // current DRC gain level (read-only)
+    buffer       // processing buffer length in samples [offline]
+    auto_gain    // automatic gain control [online]
+    normalize    // one-pass normalize [online]
+    master       // desired gain [online]
+    gain         // current gain [online]
+    release      // release speed (dB/s) [online]
+    drc          // DRC enabled [online]
+    drc_power    // DRC power (dB) [online]
+    drc_level    // current DRC gain level (read-only) [read-only]
 */
 
 
@@ -24,7 +26,6 @@
 #define AGC_H
 
 #include "filter.h"
-#include "levels.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // AGC class
@@ -42,10 +43,6 @@ protected:
   vtime_t   buf_time[2];          // timestamp at beginning of the buffer
 
   size_t    nsamples;             // number of samples per block
-
-  LevelsCache input_levels;
-  LevelsCache output_levels;
-
 
   sample_t  factor;               // previous block factor
   sample_t  level;                // previous block level (not scaled)
@@ -79,10 +76,6 @@ public:
   size_t get_buffer() const;
   void   set_buffer(size_t nsamples);
 
-  // input/output levels
-  inline void get_input_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
-  inline void get_output_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
-
   /////////////////////////////////////////////////////////
   // Filter interface
 
@@ -99,18 +92,6 @@ size_t
 AGC::next_block()
 {
   return (block + 1) & 1;
-}
-
-void 
-AGC::get_input_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool _drop)
-{
-  input_levels.get_levels(_time, _levels, _drop);
-}
-
-void 
-AGC::get_output_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool _drop)
-{
-  output_levels.get_levels(_time, _levels, _drop);
 }
 
 #endif

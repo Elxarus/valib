@@ -284,6 +284,7 @@ extern const int win_order[NCHANNELS];
 extern const Speakers def_spk;
 extern const Speakers err_spk;
 extern const Speakers unk_spk;
+extern const Speakers stereo_spk;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class inlines

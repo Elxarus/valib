@@ -5,8 +5,9 @@
 #endif
 
 bool 
-SyncGen::process(const Chunk *_chunk)
+Syncer::process(const Chunk *_chunk)
 {
+  vtime_t to_sec     = 1 / spk.sample_rate;
   vtime_t to_ms      = 1000 / spk.sample_rate;
   vtime_t to_samples = spk.sample_rate / 1000;
 
@@ -40,10 +41,10 @@ SyncGen::process(const Chunk *_chunk)
     else
       delta = time - old_time;
 
-    jitter = (float)(jitter * 0.9 + delta * to_ms * 0.1);
+    jitter = (float)(jitter * 0.9 + delta * to_sec * 0.1);
 
 #ifdef DEBUG
-    DbgLog((LOG_TRACE, 3, "time: %.0f\treceived: %.0f\tdelta: %.0f\tjitter: %.0f", old_time * to_ms, time * to_ms, (old_time - time) * to_ms, jitter));
+    DbgLog((LOG_TRACE, 3, "time: %.0fms\treceived: %.0fms\tdelta: %.0fms\tjitter: %.0fms", old_time * to_ms, time * to_ms, (old_time - time) * to_ms, jitter * 1000));
 #endif
     if (delta > threshold)
     {
@@ -59,14 +60,15 @@ SyncGen::process(const Chunk *_chunk)
 }
 
 bool 
-SyncGen::get_chunk(Chunk *_chunk)
+Syncer::get_chunk(Chunk *_chunk)
 {
+  bool    old_sync = sync;
   vtime_t add_time = size * time_factor;
 
   send_chunk_inplace(_chunk, size);
 
   time += add_time;
-  if (dejitter)
+  if (old_sync && dejitter)
     sync = true;
 
   return true;

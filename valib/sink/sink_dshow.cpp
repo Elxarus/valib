@@ -145,6 +145,12 @@ DShowSink::set_input(Speakers _spk)
   return query_downstream(_spk);
 };
 
+Speakers
+DShowSink::get_input() const
+{
+  return spk;
+};
+
 bool 
 DShowSink::process(const Chunk *chunk)
 {

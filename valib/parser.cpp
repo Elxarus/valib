@@ -10,11 +10,11 @@ BaseParser::reset()
   // samples.zero()?
 }
 
-unsigned
+size_t
 BaseParser::load_frame(uint8_t **buf, uint8_t *end)
 {
-  // Drop old frame
-  if (frame_data == frame_size)
+  // Drop old frame if loaded
+  if (frame_data >= frame_size)
   {
     frame_data = 0;
     new_frame_size = 0;

@@ -82,7 +82,7 @@ AudioProcessor::rebuild_chain()
   chain.add_back(&agc,       "AGC");
   chain.add_back(&delay,     "Delay");
   chain.add_back(&out_levels,"Output levels");
-  chain.add_back(&sync_gen,  "Synchronizer");
+  chain.add_back(&syncer,    "Synchronizer");
 
   // setup mixer
   mixer.set_output(spk);
