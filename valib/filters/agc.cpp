@@ -161,13 +161,14 @@ AGC::process()
   sample_t old_factor = factor;
   sample_t old_level = level;
   sample_t release_factor;
+  sample_t attack_factor;
 
-  // release factor
- 
-  if (release < 1.0)
-    release = 1.0;
+  // attack/release factor
+  if (attack  < 0) attack  = 0;
+  if (release < 0) release = 0;
 
-  release_factor = pow(release, double(nsamples) / spk.sample_rate);
+  attack_factor  = pow(10, attack  * nsamples / spk.sample_rate / 20);
+  release_factor = pow(10, release * nsamples / spk.sample_rate / 20);
 
   // block level
 
@@ -222,17 +223,19 @@ AGC::process()
 
   max = MAX(level, old_level) * factor;
   if (auto_gain && max > 1.0)
-    if (gain / max > LEVEL_MINUS_50DB)
+    if (max < attack_factor)
     {
+      // no overflow
       factor /= max;
       gain   /= max;
       max     = 1.0;
     }
     else
     {
-      factor *= LEVEL_MINUS_50DB / gain;
-      max *= LEVEL_MINUS_50DB / gain;
-      gain = LEVEL_MINUS_50DB;
+      // overflow, will be clipped
+      factor /= attack_factor;
+      gain   /= attack_factor;
+      max    /= attack_factor;
     }
 
   ///////////////////////////////////////

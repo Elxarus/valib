@@ -60,6 +60,8 @@ public:
   // Gain control
   sample_t master;                // [rw] desired gain
   sample_t gain;                  // [r]  current gain
+
+  sample_t attack;                // [rw] attack speed (dB/s)
   sample_t release;               // [rw] release speed (dB/s)
 
   // DRC
