@@ -12,6 +12,8 @@ class Chunk;
 class Sink;
 class Source;
 class Filter;
+
+class NullSink;
 class NullFilter;
 
 // safe call to filtering functions
@@ -134,8 +136,24 @@ public:
   
 
 
-  Chunk(): spk(unk_spk), time(false), sync(false), size(0)
+  Chunk(): spk(unk_spk), sync(false), time(0), eos(false), size(0), rawdata(0)
   {}
+
+  Chunk(Speakers _spk, 
+                  samples_t _samples, size_t _size,
+                  bool _sync = false, vtime_t _time = 0,
+                  bool _eos  = false)
+  {
+    set(_spk, _samples, _size, _sync, _time, _eos);
+  }
+
+  Chunk(Speakers _spk, 
+                  uint8_t *_rawdata, size_t _size,
+                  bool _sync = false, vtime_t _time = 0,
+                  bool _eos  = false)
+  {
+    set(_spk, _rawdata, _size, _sync, _time, _eos);
+  }
 
   /////////////////////////////////////////////////////////
   // Speakers
@@ -316,6 +334,20 @@ public:
   virtual bool process(const Chunk *chunk) = 0;
 };
 
+class NullSink : public Sink
+{
+protected:
+  Speakers spk;
+
+public:
+  NullSink() {};
+
+  virtual bool query_input(Speakers _spk) const { return true; }
+  virtual bool set_input(Speakers _spk)         { spk = _spk; return true; }
+  virtual Speakers get_input() const            { return spk;  }
+  virtual bool process(const Chunk *_chunk)     { spk = _chunk->get_spk(); return true; }
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Source class
@@ -357,9 +389,9 @@ public:
 // it should follow all rules for Sink and Source classes.
 //
 // reset() [working thread]
-//   Reset filter state to empty and drop all internal buffers. But after 
-//   reset() call filter should be able to report its state as it was before 
-//   for most of its parameters.
+//   Reset filter state to empty, drop all internal buffers and all external 
+//   references. But after reset() call filter should be able to report its 
+//   state as it was before for most of its parameters.
 //
 // set_input() [working thread]
 //   If current and new configuration differs then it acts as reset() call,
@@ -377,7 +409,9 @@ public:
 //
 // * empty
 //   Filter have no data to output and waits for more data to input. In this 
-//   state filter may have some data locked at internal buffes.
+//   state filter may have some data locked at internal buffes. But it is 
+//   guaranteed that filter has no references to any external data received
+//   with process() call.
 //
 //   is_empty() returns true.
 //   process() with non-eof chunk may switch filter to full state.
@@ -385,7 +419,9 @@ public:
 //   get_chunk() returns empty chunk with no state change.
 //
 // * full
-//   Filter have some data to output. In this state it cannot receive data.
+//   Filter have some data to output. In this state it cannot receive data
+//   and may have references to the data received with process() call, so 
+//   external procedures should not alter this data.
 //
 //   is_empty() returns false.
 //   get_chunk() may return empty and non-empty chunks.
@@ -394,6 +430,7 @@ public:
 //
 // * flushing
 //   In this state filter releases data blocked in its internal buffers.
+//   After this call all external references of the filter are dropped.
 //
 //   is_empty() returns false.
 //   get_chunk() may return empty and non-empty chunks without state change.
@@ -467,7 +504,6 @@ public:
 };
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // NullFilter class
 //
@@ -486,6 +522,7 @@ public:
 // Time tracking:
 // ==============
 // todo...
+
 
 class NullFilter : public Filter
 {
