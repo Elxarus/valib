@@ -8,6 +8,8 @@
 #include "parsers\file_parser.h"
 
 #include "filters\proc.h"
+#include "filters\spdifer.h"
+
 #include "sink.h"
 #include "sink\sink_raw.h"
 #include "sink\sink_dsound.h"
@@ -85,26 +87,31 @@ int main(int argc, char *argv[])
     printf("AC3Player (c) 2004 by Alexander Vigovsky\n"
            "usage: ac3player some_file.ac3 [mode] [options]\n"
            "\n"
-           "mode:\n"
+           "output mode:\n"
            "  -d[ecode] - just decode (used for testing and performance measurements)\n"
-           "  -p[lay] - play file (default)\n"
-           "  -r[aw] - decode to RAW file\n"
+           "  -p[lay]   - play file (default)\n"
+           "  -r[aw]    - decode to RAW file\n"
+           "\n"
+           "output options:\n"
+           "  -spdif - spdif output (no other options will work in this mode)\n"
+           "  -spk:n - set number of output channels:\n"
+           "        0 - from file     4 - 2/2 (quadro)\n" 
+           "        1 - 1/0 (mono)    5 - 3/2 (5 ch)\n"
+           "        2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
+           "        3 - 3/0\n"
+           "  -fmt:n - set sample format:\n"
+           "        0 - PCM 16        2 - PCM 32\n"
+           "        1 - PCM 24        3 - PCM Float \n" 
+           "\n"
+           "format selection:\n"
+           "  -ac3 - force ac3 parser (do not autodetect format)\n"
+           "  -dts - force dts parser (do not autodetect format)\n"
+           "  -mpa - force mpa parser (do not autodetect format)\n"
            "\n"
            "info:\n"
            "  -i    - print bitstream info\n"
 //           "  -opt  - print decoding options\n"
            "  -hist - print levels histogram\n"
-           "\n"
-           "output options:\n"
-           "  -spk:n  - set number of output channels:\n"
-           "        0 - from file     4 - 2/2 (quadro)\n" 
-           "        1 - 1/0 (mono)    5 - 3/2 (5 ch)\n"
-           "        2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
-           "        3 - 3/0\n"
-           "  -fmt:n  - set sample format:\n"
-           "        0 - PCM 16        2 - PCM 32\n"
-           "        1 - PCM 24        3 - PCM Float \n" 
-//           "  -spdif:n  - spdif output\n"
            "\n"
            "mixer options:\n"
            "  -auto_matrix[+|-] - automatic matrix calculation on(default)/off\n"
@@ -136,6 +143,7 @@ int main(int argc, char *argv[])
   const char *input_filename = argv[1];
   enum { mode_nothing, mode_play, mode_raw, mode_decode } mode = mode_nothing;
 
+  bool spdif = false;
   int mask   = MODE_STEREO;
   int format = FORMAT_PCM16;
 
@@ -160,6 +168,7 @@ int main(int argc, char *argv[])
   /////////////////////////////////////////////////////////
 
   Parser *parser = 0;
+
   AC3Parser ac3;
   DTSParser dts;
   MPAParser mpa;
@@ -167,16 +176,26 @@ int main(int argc, char *argv[])
   FileParser file;
 
   /////////////////////////////////////////////////////////
-  // Filters
+  // Sinks
   /////////////////////////////////////////////////////////
-
-  AudioProcessor proc;
 
   RAWSink    raw;
   DSoundSink dsound(0);
   NullSink   null;
   AudioSink *sink = &dsound;
 
+  /////////////////////////////////////////////////////////
+  // Filters
+  /////////////////////////////////////////////////////////
+
+  Filter *filter;
+
+  AudioProcessor proc;
+  Spdifer spdifer;
+
+  /////////////////////////////////////////////////////////
+  // Parse arguments
+  /////////////////////////////////////////////////////////
 
   for (int iarg = 2; iarg < argc; iarg++)
   {
@@ -184,35 +203,47 @@ int main(int argc, char *argv[])
     // Parsers
     ///////////////////////////////////////////////////////
 
+    // -ac3 - force ac3 parser (do not autodetect format)
     if (is_arg(argv[iarg], "ac3", argt_exist))
+    {
       if (parser)
       {
         printf("-ac3 : ambigous parser\n");
         return 1;
       }
-      else
-        parser = &ac3;
 
+      parser = &ac3;
+      continue;
+    }
+
+    // -dts - force dts parser (do not autodetect format)
     if (is_arg(argv[iarg], "dts", argt_exist))
+    {
       if (parser)
       {
         printf("-dts : ambigous parser\n");
         return 1;
       }
-      else
-        parser = &dts;
 
+      parser = &dts;
+      continue;
+    }
+
+    // -mpa - force mpa parser (do not autodetect format)
     if (is_arg(argv[iarg], "mpa", argt_exist))
+    {
       if (parser)
       {
         printf("-mpa : ambigous parser\n");
         return 1;
       }
-      else
-        parser = &mpa;
+
+      parser = &mpa;
+      continue;
+    }
 
     ///////////////////////////////////////////////////////
-    // Mode
+    // Output mode
     ///////////////////////////////////////////////////////
 
     // -d[ecode] - decode
@@ -273,33 +304,15 @@ int main(int argc, char *argv[])
     }
 
     ///////////////////////////////////////////////////////
-    // Info
-    ///////////////////////////////////////////////////////
-
-    // -i - print bitstream info
-    if (is_arg(argv[iarg], "i", argt_exist))
-    {
-      print_info = true;
-      continue;
-    }
-
-    // -opt - print decoding options
-    if (is_arg(argv[iarg], "opt", argt_exist))
-    {
-      print_opt = true;
-      continue;
-    }
-
-    // -hist - print levels histogram
-    if (is_arg(argv[iarg], "hist", argt_exist))
-    {
-      print_hist = true;
-      continue;
-    }
-
-    ///////////////////////////////////////////////////////
     // Output options
     ///////////////////////////////////////////////////////
+
+    // -spdif - enable SPDIF output
+    if (is_arg(argv[iarg], "spdif", argt_exist))
+    {
+      spdif = true;
+      continue;
+    }
 
     // -spk - number of speakers
     if (is_arg(argv[iarg], "spk", argt_num))
@@ -335,6 +348,31 @@ int main(int argc, char *argv[])
 //      spdif = arg_bool(argv[iarg])? SPDIF_AUTO: NO_SPDIF;
 //      continue;
 //    }
+
+    ///////////////////////////////////////////////////////
+    // Info
+    ///////////////////////////////////////////////////////
+
+    // -i - print bitstream info
+    if (is_arg(argv[iarg], "i", argt_exist))
+    {
+      print_info = true;
+      continue;
+    }
+
+    // -opt - print decoding options
+    if (is_arg(argv[iarg], "opt", argt_exist))
+    {
+      print_opt = true;
+      continue;
+    }
+
+    // -hist - print levels histogram
+    if (is_arg(argv[iarg], "hist", argt_exist))
+    {
+      print_hist = true;
+      continue;
+    }
 
     ///////////////////////////////////////////////////////
     // Mixer options
@@ -534,8 +572,8 @@ int main(int argc, char *argv[])
 
   printf("Opening file %s...\n", input_filename);
 
-  if (parser && file.open(parser, input_filename) && file.probe())
-    ; // format specified by user is ok
+  if (parser && file.open(parser, input_filename))
+    ; // use format specified by user
   else if (file.open(&ac3, input_filename) && file.probe())
     parser = &ac3;
   else if (file.open(&dts, input_filename) && file.probe())
@@ -562,41 +600,66 @@ int main(int argc, char *argv[])
   }
 
   /////////////////////////////////////////////////////////
-  // Setup processor
+  // Setup processing
   /////////////////////////////////////////////////////////
 
-  proc.set_delay_units(delay_units);
-  proc.set_delays(delays);
-  proc.set_output_gains(gains);
-  proc.set_input_order(std_order);
-  proc.set_output_order(win_order);
+  // spk = input format
 
   spk = file.get_spk();
-  if (!proc.set_input(spk))
+
+  if (spdif)
   {
-    printf("Error: unsupported input format");
-    return 1;
+    if (parser != &ac3 && parser != &dts && parser != &mpa)
+    {
+      printf("This format does not allow SPDIF transmision.\n");
+      printf("Using general audio output.\n");
+      spdif = false;
+    }
+    else
+    {
+      spk.format = FORMAT_SPDIF;
+      filter = &spdifer;
+    }
   }
 
-  if (mask)
-    spk.mask = mask;
-
-  spk.format = format;
-  spk.level = 1.0;
-  switch (format)
+  if (!spdif)
   {
-    case FORMAT_PCM16: spk.level = 32767; break;
-    case FORMAT_PCM24: spk.level = 8388607; break;
-    case FORMAT_PCM32: spk.level = 2147483647; break;
+    filter = &proc;
+
+    proc.set_delay_units(delay_units);
+    proc.set_delays(delays);
+    proc.set_output_gains(gains);
+    proc.set_input_order(std_order);
+    proc.set_output_order(win_order);
+
+    if (!proc.set_input(spk))
+    {
+      printf("Error: unsupported input format");
+      return 1;
+    }
+
+    if (mask)
+      spk.mask = mask;
+
+    spk.format = format;
+    spk.level = 1.0;
+    switch (format)
+    {
+      case FORMAT_PCM16: spk.level = 32767; break;
+      case FORMAT_PCM24: spk.level = 8388607; break;
+      case FORMAT_PCM32: spk.level = 2147483647; break;
+    }
+
+    if (!proc.set_output(spk))
+    {
+      printf("Error: unsupported output format");
+      return 1;
+    }
+    if (spk != proc.get_output())
+      printf("Warning: using different output format\n");
   }
 
-  if (!proc.set_output(spk))
-  {
-    printf("Error: unsupported output format");
-    return 1;
-  }
-  if (spk != proc.get_output())
-    printf("Warning: using different output format\n");
+  // spk = output format
 
   /////////////////////////////////////////////////////////
   // Print decoder config
@@ -610,7 +673,7 @@ int main(int argc, char *argv[])
   // Setup output
   /////////////////////////////////////////////////////////
 
-  printf("Opening %s %s audio output...\n", spk.format_text(), spk.mode_text());
+  printf("Opening %s %s %iHz audio output...\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
   if (!sink->open(spk))
   {
     printf("Error: Cannot open audio output!");
@@ -636,24 +699,39 @@ int main(int argc, char *argv[])
   sample_t level;
   int i;
 
-  fprintf(stderr, "0.0%% Frs/err: 0/0\tTime: 0:00.000i\tLevel: 0dB\tFPS: 0 CPU: 0%%\r"); 
+  fprintf(stderr, " 0.0%% Frs:      0 Err: 0 Time:   0:00.000i Level:    0dB FPS:    0 CPU: 0%%\r"); 
   while (!file.eof())
-    if (file.frame())
+    if (file.load_frame())
     {
-      chunk1.set_spk(file.get_spk());
-      chunk1.set_time(false);
-      chunk1.set_samples(file.get_samples(), file.get_nsamples());
-      if (!proc.process(&chunk1))
+      if (spdif)
       {
-        printf("Error: processing error");
+        // SPDIF
+        chunk1.set_spk(Speakers(FORMAT_UNKNOWN, 0, 0));
+        chunk1.set_time(false);
+        chunk1.set_buf(parser->get_frame(), parser->get_frame_size());
+      }
+      else
+      {
+        // Decode
+        if (!file.decode_frame())
+          continue;
+
+        chunk1.set_spk(file.get_spk());
+        chunk1.set_time(false);
+        chunk1.set_samples(file.get_samples(), file.get_nsamples());
+      }
+
+      if (!filter->process(&chunk1))
+      {
+        printf("\nError: processing error [process()]\n");
         return 1;
       }
 
-      while (!proc.is_empty())
+      while (!filter->is_empty())
       {
-        if (!proc.get_chunk(&chunk2))
+        if (!filter->get_chunk(&chunk2))
         {
-          printf("Error: processing error");
+          printf("\nError: processing error [get_chunk()]\n");
           return 1;
         }
         sink->write(&chunk2);
@@ -664,14 +742,17 @@ int main(int argc, char *argv[])
           old_ms = ms;
 
           // Levels
-          proc.get_output_levels(sink->get_playback_time(), levels);
-          level = levels[0];
-          for (i = 1; i < spk.nch(); i++)
-            if (levels[i] > level)
-              level = levels[i];
+          if (!spdif)
+          {
+            proc.get_output_levels(sink->get_playback_time(), levels);
+            level = levels[0];
+            for (i = 1; i < spk.nch(); i++)
+              if (levels[i] > level)
+                level = levels[i];
+          }
 
           // Statistics
-          fprintf(stderr, "%2.1f%% Frs/err: %i/%i\tTime: %i:%02i.%03i\tLevel: %idB\tFPS: %i CPU: %.1f%%  \r", 
+          fprintf(stderr, "%4.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \r", 
             file.get_pos(file.relative) * 100, 
             file.get_frames(), file.get_errors(),
             int(ms/60000), int(ms) % 60000/1000, int(ms) % 1000,
@@ -682,7 +763,7 @@ int main(int argc, char *argv[])
       } // while (!chain.is_empty())
     } // if (file.frame())
   // while (!file.eof()) 
-  fprintf(stderr, "%2.1f%% Frs/err: %i/%i\tTime: %i:%02i.%03i\tLevel: %idB\tFPS: %3i CPU: %.1f%%  \n", 
+  fprintf(stderr, "%2.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \n", 
     file.get_pos(file.relative) * 100, 
     file.get_frames(), file.get_errors(),
     int(ms/60000), int(ms) % 60000/1000, int(ms) % 1000,
@@ -701,7 +782,7 @@ int main(int argc, char *argv[])
   // Print levels histogram
   /////////////////////////////////////////////////////////
 
-  if (print_hist)
+  if (print_hist && !spdif)
   {
     double hist[MAX_HISTOGRAM];
     int dbpb;
