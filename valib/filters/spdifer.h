@@ -16,6 +16,8 @@
   Timing: apply input timestamp to the first syncpoint found at the input data
   Parameters:
     -
+
+  todo: no buffering
 */
 
 #ifndef SPDIFER_H
@@ -33,22 +35,21 @@ protected:
   int bs_type;         // bitstream type 32/16/14 bit big/little endian
   int frame_size;      // frame size of encoded stream (not spdif frame size)
   int frame_data;      // data size in frame buffer (excluding spdif header size)
-  enum { state_sync, state_drop, state_spdif, state_passthrough } state;
+  enum { state_sync, state_spdif, state_passthrough } state;
 
-//  int sync_count;      // number of packets to sync
   Speakers stream_spk; // Stream speakers config
   int magic;           // SPDIF stream identifier
   int nsamples;        // number of samples in frame
   int frames;          // number of frames
   
   // fast inline sync detectors
-  inline bool sync(const uint8_t *buf) const;
+  inline bool frame_sync(const uint8_t *buf) const;
   inline bool ac3_sync(const uint8_t *header) const;
   inline bool mpa_sync(const uint8_t *header) const;
   inline bool dts_sync(const uint8_t *header) const;
 
   // decode stream information
-  bool syncinfo(const uint8_t *buf);
+  bool frame_syncinfo(const uint8_t *buf);
   bool ac3_syncinfo(const uint8_t *buf);
   bool mpa_syncinfo(const uint8_t *buf);
   bool dts_syncinfo(const uint8_t *buf);
@@ -86,13 +87,12 @@ public:
   // Filter interface
   virtual void reset();
   virtual bool query_input(Speakers spk) const;
-  virtual bool set_input(Speakers spk);
-  virtual bool process(const Chunk *chunk);
+
+  virtual Speakers get_output() const;
   virtual bool get_chunk(Chunk *chunk);
-  virtual Speakers get_output();
 };
 
-inline bool Spdifer::sync(const uint8_t *_buf) const
+inline bool Spdifer::frame_sync(const uint8_t *_buf) const
 {
   return ac3_sync(_buf) || dts_sync(_buf) || mpa_sync(_buf);
 }

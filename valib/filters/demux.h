@@ -13,13 +13,6 @@
     PES -> DTS
     PES -> PCM16_LE
     PES -> PCM24_LE
-    [SPDIF -> AC3]
-    [SPDIF -> MPA]
-    [SPDIF -> DTS]
-    PCM16_BE -> PCM16_BE
-    [PCM16_BE -> AC3] (may contain IEC 61937 stream)
-    [PCM16_BE -> MPA] (may contain IEC 61937 stream)
-    [PCM16_BE -> AC3] (may contain IEC 61937 stream)
     [TS -> AC3]
     [TS -> MPA]
     [TS -> DTS]
@@ -48,23 +41,16 @@ protected:
   int substream;        // current substream
   Speakers lpcm_spk();  // parse LPCM subheader
 
-  enum { state_none, state_pcm, state_pes, state_spdif } state;
-
-  bool process_pcm(Chunk *chunk);
-  bool process_pes(Chunk *chunk);
-  bool process_spdif(Chunk *chunk);
-
 public:
   Demux();
 
   inline int get_stream()    const { return stream;    }
   inline int get_substream() const { return substream; }
     
+  // Filter interface
   virtual void reset();
-
   virtual bool query_input(Speakers spk) const;
-  virtual Speakers get_output();
-  virtual bool get_chunk(Chunk *chunk);
+  virtual bool process(const Chunk *chunk);
 };
 
 

@@ -1,6 +1,7 @@
 #include <math.h>
 #include "convert.h"
 
+// todo: separate conversion functions for each conversion mode (8*8
 
 #ifdef _M_IX86
 inline int32_t s2i32(sample_t s)

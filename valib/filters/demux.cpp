@@ -2,11 +2,10 @@
 
 // todo: detect encoded stream in PCM input
 // todo: demux spdif
+// todo: syncronization
 
 Demux::Demux()
-{
-  state = state_none;
-}
+{}
 
 Speakers 
 Demux::lpcm_spk()
@@ -47,72 +46,33 @@ Demux::lpcm_spk()
   return Speakers(format, mask, sample_rate, level);
 }
 
-    
+
 void 
 Demux::reset()
 {
-  chunk.set_empty();
-  // force state to reset
-  state = state_none;
-  stream_spk = spk;
+  NullFilter::reset();
+
+  pes_size  = 0;
+  stream    = 0;
+  substream = 0;
+  pes.reset();
 }
 
 bool 
 Demux::query_input(Speakers _spk) const
 {
-  return _spk.is_pcm() ||
-         _spk.format == FORMAT_PES;
-}
-
-Speakers 
-Demux::get_output()
-{
-  return stream_spk;
+  return _spk.format == FORMAT_PES;
 }
 
 bool 
-Demux::get_chunk(Chunk *_chunk)
+Demux::process(const Chunk *_chunk)
 {
-  switch (spk.format)
-  {
-    case FORMAT_PES:   return process_pes(_chunk);
-    case FORMAT_SPDIF: return process_spdif(_chunk);
-    default:           return process_pcm(_chunk);
-  };
-}
+  if (!NullFilter::receive_chunk(_chunk))
+    return false;
 
-bool 
-Demux::process_pcm(Chunk *_chunk)
-{
-  // todo: detect encoded stream in PCM input
-  if (state != state_pcm)
-  {
-    // reset to PCM state
-    state = state_pcm;
-  }
-
-  *_chunk = chunk;
-  chunk.set_empty();
-  return true;
-}
-
-bool 
-Demux::process_pes(Chunk *_chunk)
-{
-  if (state != state_pes)
-  {
-    // reset to PES state
-    pes.reset();
-    pes_size  = 0;
-    stream    = 0;
-    substream = 0;
-
-    state = state_pes;
-  }
-
-  uint8_t *read_buf = chunk.buf;
-  uint8_t *write_buf = chunk.buf;
-  int read_len = chunk.size;
+  uint8_t *read_buf  = buf;
+  uint8_t *write_buf = buf;
+  int read_len = size;
   int write_len = 0;
 
   while (read_len)
@@ -167,17 +127,8 @@ Demux::process_pes(Chunk *_chunk)
     }
   }
 
-  _chunk->set_spk(stream_spk);
-  _chunk->set_buf(chunk.buf, write_len);
-  _chunk->set_time(chunk.timestamp, chunk.time);
-
-  chunk.drop(chunk.size - read_len);
+  spk  = stream_spk; // get_output() is always right
+  buf  = read_buf;
+  size = write_len;
   return true;
-}
-
-bool 
-Demux::process_spdif(Chunk *_chunk)
-{
-  // todo: demux spdif
-  return false;
 }

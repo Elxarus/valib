@@ -37,26 +37,21 @@ protected:
 
   SampleBuf buf;                  // sample buffer
   bool      first_half;           // first/second buffer half is used
-  int       ch_delays[NCHANNELS]; // delay values in samples (reordered)
-  int       lag;                  // time lag
-  float     delay_ms;             // given time shift in ms
+  size_t    ch_delays[NCHANNELS]; // delay values in samples (reordered)
 
   double    units2samples(int _units);
 
 public:
   Delay();
 
-  inline bool   get_enabled();
-  inline void   set_enabled(bool _enabled);
+  inline bool get_enabled() const;
+  inline void set_enabled(bool _enabled);
 
-  int  get_units();
+  int  get_units() const;
   void set_units(int units);
 
-  void get_delays(float delays[NCHANNELS]);
+  void get_delays(float delays[NCHANNELS]) const;
   void set_delays(float delays[NCHANNELS]);
-
-  inline float get_delay_ms();
-  inline void  set_delay_ms(float delay_ms);
 
   // Filter interface
   virtual void reset();
@@ -65,16 +60,10 @@ public:
 };
 
 
-inline bool Delay::get_enabled()
+inline bool Delay::get_enabled() const
 { return enabled; }
 
 inline void Delay::set_enabled(bool _enabled)
 { enabled = _enabled; }
-
-float Delay::get_delay_ms()
-{ return delay_ms; }
-
-void  Delay::set_delay_ms(float _delay_ms)
-{ delay_ms = _delay_ms; }
 
 #endif

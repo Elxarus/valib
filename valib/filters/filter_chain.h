@@ -8,36 +8,55 @@
 
 #include "filter.h"
 
-class FilterChain : public Filter
+class FilterChain : public NullFilter
 {
 protected:
   class Entry
   {
   public:
     Filter *filter;
-    char *desc;
-    bool ok;
+    char   *desc;
 
-    Entry *prev;
+    Entry  *source;
+    Entry  *sink;
 
-    Entry(Filter *filter, const char *desc = 0, Entry *prev = 0);
-    ~Entry();
+    Entry(Filter *_filter, const char *_desc)
+    {
+      filter = _filter;
+      desc = _desc? strdup(_desc): 0;
+      source = 0;
+      sink = 0;
+    }
 
-    inline void reset();
-    inline bool is_empty();
-    inline bool process(const Chunk *in);
-    inline bool get_chunk(Chunk *out);
+    ~Entry()
+    {
+      if (desc)
+        delete desc;
+    };
+
+    // Filter wrapper
+    inline void reset()                       { filter->reset();                  }
+
+    inline bool query_input(Speakers _spk)    { return filter->query_input(_spk); }
+    inline bool set_input(Speakers _spk)      { return filter->set_input(_spk);   }
+    inline bool process(const Chunk *_chunk)  { return filter->process(_chunk);   }
+
+    inline Speakers get_output() const        { return filter->get_output();      }
+    inline bool is_empty() const              { return filter->is_empty();        }
+    inline bool get_chunk(Chunk *_chunk)      { return filter->get_chunk(_chunk); }
   };
 
-  Speakers spk;
-  Chunk chunk; // only for pass-through mode
+  Entry *first;
   Entry *last;
+
+  bool process_internal(Entry *entry);
 
 public:
   FilterChain();
   ~FilterChain();
 
-  void add(Filter *filter, const char *desc);
+  void add_first(Filter *filter, const char *desc);
+  void add_last(Filter *filter, const char *desc);
   void clear();
 
   // Filter interface
@@ -47,53 +66,9 @@ public:
   virtual bool set_input(Speakers spk);
   virtual bool process(const Chunk *in);
 
-  virtual Speakers get_output();
+  virtual Speakers get_output() const;
   virtual bool is_empty();
   virtual bool get_chunk(Chunk *out);
 }; 
-
-
-inline void 
-FilterChain::Entry::reset()
-{
-  filter->reset();
-  ok = true;
-}
-
-
-inline bool 
-FilterChain::Entry::is_empty()
-{
-  return filter->is_empty();
-}
-
-inline bool 
-FilterChain::Entry::process(const Chunk *in)
-{
-  return ok = filter->process(in);
-}
-
-inline bool 
-FilterChain::Entry::get_chunk(Chunk *out)
-{
-  Chunk chunk;
-
-  if (is_empty())
-  {
-    if (!prev)
-    {
-      out->set_empty();
-      return true;
-    }
-
-    if (!prev->get_chunk(&chunk))
-      return false;
- 
-    if (!(ok = filter->process(&chunk)))
-      return false;
-  }
-
-  return ok = filter->get_chunk(out);
-}
 
 #endif

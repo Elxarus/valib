@@ -6,7 +6,6 @@
 #define SPDIF_MAX_FRAME_SIZE 2048*4 // 2048 samples max
 #define SPDIF_HEADER_SIZE    8      // SPDIF header size
 #define HEADER_SIZE          16     // header size required
-#define SYNC_COUNT           5      // number of packets to sync
 
 Spdifer::Spdifer()
 {
@@ -28,9 +27,8 @@ Spdifer::get_frames()
 void
 Spdifer::reset()
 {
-  chunk.set_empty();
+  NullFilter::reset();
 
-//  sync_count = 0;
   stream_spk = unk_spk;
   sync_helper.reset();
   state = state_sync;
@@ -45,231 +43,202 @@ Spdifer::query_input(Speakers _spk) const
   return (FORMAT_MASK(_spk.format) & format_mask) != 0;
 }
 
-bool
-Spdifer::set_input(Speakers _spk)
-{
-  if (NullFilter::set_input(_spk))
-  {
-//    sync_count = 0;
-    return true;
-  }
-  else
-    return false;
-}
-
-bool 
-Spdifer::process(const Chunk *_chunk)
-{
-  if (!NullFilter::process(_chunk))
-    return false;
-
-  if (!chunk.is_empty())
-    sync_helper.receive_timestamp(chunk.timestamp, chunk.time);
-
-  return true;
-}
-
-bool 
-Spdifer::get_chunk(Chunk *_out)
-{
-  if (spk.format == FORMAT_SPDIF)
-  {
-    // passthrough spdif data
-    *_out = chunk;
-    chunk.drop(chunk.size);
-    return true;
-  }
-  else
-    _out->set_empty();
-
-  uint8_t *buf = frame_buf.data() + SPDIF_HEADER_SIZE;
-  int buf_size = frame_buf.size() - SPDIF_HEADER_SIZE;
-
-  uint8_t *read_buf = chunk.buf;
-  int read_len = chunk.size;
-//  Speakers stream_spk_old = stream_spk;
-
-  while (read_len && _out->is_empty())
-    switch (state)
-    {
-      case state_sync:
-      {
-        ///////////////////////////////////////////////////
-        // Sync
-
-        // load header
-        if (frame_data < HEADER_SIZE)
-        {
-          int l = MIN(read_len, HEADER_SIZE - frame_data);
-          memcpy(buf + frame_data, read_buf, l);
-          frame_data += l;
-          read_buf += l;
-          read_len -= l;
-          continue;
-        }
-
-        // check sync
-        if (!sync(buf) || !syncinfo(buf))
-        {
-          memmove(buf, buf+1, HEADER_SIZE - 1);
-          frame_data--;
-          continue;
-        }
-        frames++;
-
-//        if (stream_spk != stream_spk_old)
-//          sync_count = SYNC_COUNT;
-//        stream_spk_old = stream_spk;
-
-        {
-          // init spdif header
-          uint16_t *hdr = (uint16_t *)frame_buf.data();
-          hdr[0] = 0xf872;          // Pa  sync word 1 
-          hdr[1] = 0x4e1f;          // Pb  sync word 2 
-          hdr[2] = magic;           // Pc  data type
-          hdr[3] = frame_size * 8;  // Pd  length-code (bits)
-        }
-
-        // switch state
-//        if (sync_count)
-//        {
-//          sync_count--;
-//          state = state_drop;
-//        }
-//        else 
-        if (frame_size > buf_size || frame_size > nsamples * 4)
-          state = state_passthrough;
-        else
-          state = state_spdif;
-        continue;
-
-      }
-
-      case state_drop:
-      {
-        ///////////////////////////////////////////////////
-        // Drop packet
-
-        // switch state
-        if (!frame_size)
-        {
-          frame_data = 0;
-          state = state_sync;
-          continue;
-        }
-
-        if (frame_data)
-        {
-          frame_size -= frame_data;
-          frame_data = 0;
-        }
-
-        // drop data
-        int l = MIN(frame_size, read_len);
-        read_buf += l;
-        read_len -= l;
-        frame_size -= l;
-        continue; 
-      }
-
-      case state_spdif:
-      {
-        ///////////////////////////////////////////////////
-        // Format spdif frame
-
-        // load frame
-        if (frame_data < frame_size)
-        {
-          int l = MIN(read_len, frame_size - frame_data);
-          memcpy(buf + frame_data, read_buf, l);
-          frame_data += l;
-          read_buf += l;
-          read_len -= l;
-          if (frame_data < frame_size)
-            continue;
-        }
-
-        // zero stuffing
-        memset(buf + frame_size, 0, nsamples * 4 - frame_size - SPDIF_HEADER_SIZE);
-
-        // convert stream format
-        if (bs_type == BITSTREAM_16LE ||
-            bs_type == BITSTREAM_14LE ||
-            bs_type == BITSTREAM_8)
-        {
-          // swap bytes
-          uint16_t *pos = (uint16_t *)buf;
-          uint16_t *end = (uint16_t *)(buf + frame_size + 1);
-          while (pos < end)
-          {
-            *pos = swab16(*pos);
-            pos++;
-          }
-        }
-
-        // prepare output chunk
-        _out->set_spk(stream_spk);
-        _out->spk.format = FORMAT_SPDIF;
-        _out->set_buf(frame_buf.data(), nsamples * 4);
-        sync_helper.set_time(_out);
-
-        // switch state
-        state = state_sync;
-        frame_data = 0;
-        continue;
-      }
-
-      case state_passthrough:
-      {
-        ///////////////////////////////////////////////////
-        // Passthrough unspdifable data
-
-        // switch state
-        if (!frame_size)
-        {
-          state = state_sync;
-          continue;
-        }
-
-        if (frame_data)
-        {
-          // send header
-          _out->set_spk(stream_spk);
-          _out->set_buf(buf, frame_data);
-          sync_helper.set_time(_out);
-          frame_data = 0;
-          continue;
-        }
-
-        // send data
-        int l = MIN(frame_size, read_len);
-        _out->set_spk(stream_spk);
-        _out->set_buf(read_buf, l);
-        _out->set_time(false);
-
-        read_buf += l;
-        read_len -= l;
-        frame_size -= l;
-        continue; 
-      }
-    } // switch (state)
-  // while (read_len && _out->is_empty())
-
-  chunk.drop(read_buf - chunk.buf);
-  return true;
-};
-
 Speakers
-Spdifer::get_output()
+Spdifer::get_output() const
 {
   Speakers spk_tmp = stream_spk;
   spk_tmp.format = FORMAT_SPDIF;
   return spk_tmp;
 }
 
+bool 
+Spdifer::get_chunk(Chunk *_chunk)
+{
+  // passthrough spdif data
+  if (spk.format == FORMAT_SPDIF)
+  {
+    send_chunk_inplace(_chunk, size);
+    return true;
+  }
+
+  // receive sync
+  if (sync)
+  {
+    sync_helper.receive_sync(sync, time);
+    sync = false;
+  }
+
+  uint8_t *read_buf = buf;
+  int      read_len = size;
+
+  uint8_t *write_buf = frame_buf.data() + SPDIF_HEADER_SIZE;
+  int      write_len = frame_buf.size() - SPDIF_HEADER_SIZE;
+
+  while (read_len) switch (state)
+  {
+    case state_sync:
+    {
+      ///////////////////////////////////////////////////
+      // Sync
+
+      // load header
+      if (frame_data < HEADER_SIZE)
+      {
+        int l = MIN(read_len, HEADER_SIZE - frame_data);
+        memcpy(write_buf + frame_data, read_buf, l);
+        frame_data += l;
+        read_buf += l;
+        read_len -= l;
+        continue;
+      }
+
+      // check sync
+      if (!frame_sync(write_buf) || !frame_syncinfo(write_buf))
+      {
+        memmove(write_buf, write_buf+1, HEADER_SIZE - 1);
+        frame_data--;
+        continue;
+      }
+      frames++;
+
+      {
+        // init spdif header
+        uint16_t *hdr = (uint16_t *)frame_buf.data();
+        hdr[0] = 0xf872;          // Pa  sync word 1 
+        hdr[1] = 0x4e1f;          // Pb  sync word 2 
+        hdr[2] = magic;           // Pc  data type
+        hdr[3] = frame_size * 8;  // Pd  length-code (bits)
+      }
+
+      // switch state
+      if (frame_size > write_len || frame_size > nsamples * 4)
+        state = state_passthrough;
+      else
+        state = state_spdif;
+      continue;
+    }
+
+    case state_spdif:
+    {
+      ///////////////////////////////////////////////////
+      // Format spdif frame
+
+      // load frame
+      if (frame_data < frame_size)
+      {
+        int l = MIN(read_len, frame_size - frame_data);
+        memcpy(write_buf + frame_data, read_buf, l);
+        frame_data += l;
+        read_buf += l;
+        read_len -= l;
+        if (frame_data < frame_size)
+          continue;
+      }
+
+      // zero stuffing
+      memset(write_buf + frame_size, 0, nsamples * 4 - frame_size - SPDIF_HEADER_SIZE);
+
+      // convert stream format
+      if (bs_type == BITSTREAM_16LE ||
+          bs_type == BITSTREAM_14LE ||
+          bs_type == BITSTREAM_8)
+      {
+        // swap bytes
+        uint16_t *pos = (uint16_t *)write_buf;
+        uint16_t *end = (uint16_t *)(write_buf + frame_size + 1);
+        while (pos < end)
+        {
+          *pos = swab16(*pos);
+          pos++;
+        }
+      }
+
+      // fill output chunk
+      _chunk->set_spk(get_output());
+      _chunk->set_buf(frame_buf.data(), nsamples * 4);
+      // timing
+      sync_helper.send_sync(_chunk);
+      sync_helper.set_syncing(true);
+      // end-of-strema
+      _chunk->set_eos(flushing && !read_len);
+      flushing = flushing && read_len;
+
+      // switch state
+      state = state_sync;
+      frame_data = 0;
+
+      drop(read_buf - buf);
+      return true;
+    }
+
+    case state_passthrough:
+    {
+      ///////////////////////////////////////////////////
+      // Passthrough unspdifable data
+
+      // switch state
+      if (!frame_size)
+      {
+        state = state_sync;
+        continue;
+      }
+
+      if (frame_data)
+      {
+        // send frame header
+        _chunk->set_spk(stream_spk);
+        _chunk->set_buf(write_buf, frame_data);
+        frame_data = 0;
+
+        // timing
+        sync_helper.send_sync(_chunk);
+        sync_helper.set_syncing(false);
+
+        // end-of-strema
+        _chunk->set_eos(flushing && !read_len);
+        if (flushing && !read_len)
+        {
+          // switch to sync state after flushing
+          flushing = false;
+          state = state_sync;
+        }
+
+        drop(read_buf - buf);
+        return true;
+      }
+
+      // send frame data
+      int l = MIN(frame_size, read_len);
+      _chunk->set_spk(stream_spk);
+      _chunk->set_buf(read_buf, l);
+
+      read_buf   += l;
+      read_len   -= l;
+      frame_size -= l;
+
+      // timing
+      _chunk->set_sync(false);
+
+      // end-of-strema
+      _chunk->set_eos(flushing && !read_len);
+      if (flushing && !read_len)
+      {
+        // switch to sync state after flushing
+        flushing = false;
+        state = state_sync;
+      }
+
+      drop(read_buf - buf);
+      return true;
+    }
+  } // while (read_len && _out->is_empty()) switch (state)
+
+  drop(read_buf - buf);
+  return true;
+};
 
 bool
-Spdifer::syncinfo(const uint8_t *_buf)
+Spdifer::frame_syncinfo(const uint8_t *_buf)
 {
   if (ac3_sync(_buf))
     return ac3_syncinfo(_buf);

@@ -1,14 +1,21 @@
 #include <string.h>
 #include "delay.h"
 
+// optimize: use circular buffering instead of block-switching
+// it should work better for large delays
+// optimize: use larger buffer delay to gain advantages of circualr 
+// buffer? (2 memcpy() calls instead of 2 memcpy and 1 memmove())
+// how large should it be? use something like set_prebuffer()?
+// do not forget about time lag in this case...
+
 const float sonic_speed = 330; // [m/s]
 
 Delay::Delay()
 {
   enabled = false;
   units = DELAY_SP;
-  delay_ms = 0;
   memset(delays, 0, sizeof(delays));
+
   reset();
 }
 
@@ -29,7 +36,7 @@ Delay::units2samples(int _units)
 
 
 int  
-Delay::get_units()
+Delay::get_units() const
 {
   return units;
 }
@@ -45,22 +52,22 @@ Delay::set_units(int _units)
 }
 
 void    
+Delay::get_delays(float _delays[NCHANNELS]) const
+{
+  memcpy(_delays, delays, sizeof(delays));
+}
+
+void    
 Delay::set_delays(float _delays[NCHANNELS])
 {
   memcpy(delays, _delays, sizeof(delays));
   reset();
 }
 
-void    
-Delay::get_delays(float _delays[NCHANNELS])
-{
-  memcpy(_delays, delays, sizeof(delays));
-}
-
 void 
 Delay::reset()
 {
-  chunk.set_empty();
+  NullFilter::reset();
 
   int ch;
   int nch = spk.nch();
@@ -71,15 +78,7 @@ Delay::reset()
   for (ch = 0; ch < nch; ch++)
     ch_delays[ch] = int(delays[order[ch]] * factor);
 
-  lag = ch_delays[0];
-  for (ch = 1; ch < nch; ch++)
-    if (lag > ch_delays[ch])
-      lag = ch_delays[ch];
-
-  for (ch = 0; ch < nch; ch++)
-    ch_delays[ch] -= lag;
-
-  int nsamples = ch_delays[0];
+  size_t nsamples = ch_delays[0];
   for (ch = 1; ch < nch; ch++)
     if (nsamples < ch_delays[ch])
       nsamples = ch_delays[ch];
@@ -95,51 +94,41 @@ Delay::process(const Chunk *_chunk)
   if (!NullFilter::process(_chunk))
     return false;
 
-  if (chunk.timestamp)
-    chunk.time += lag + int(delay_ms * spk.sample_rate / 1000);
-
   if (!enabled)
     return true; 
 
-  int size;
+  size_t delay;
   sample_t *ptr1;
   sample_t *ptr2;
   sample_t *s;
-  int nsamples = chunk.size;
 
-  for (int ch = 0; ch < chunk.spk.nch(); ch++) 
+  for (int ch = 0; ch < spk.nch(); ch++) 
     if (ch_delays[ch])
     {
-      s = chunk.samples[ch];
-      size = ch_delays[ch];
+      s = samples[ch];
+      delay = ch_delays[ch];
       if (first_half)
       {
-        ptr1 = buf[ch] + size;
+        ptr1 = buf[ch] + delay;
         ptr2 = buf[ch];
       }
       else
       {
         ptr1 = buf[ch];
-        ptr2 = buf[ch] + size;
+        ptr2 = buf[ch] + delay;
       }
 
-      if (nsamples > size)
+      if (size > delay)
       {
-        memcpy(ptr2, s + nsamples - size, size * sizeof(sample_t));
-        memmove(s + size, s, (nsamples - size) * sizeof(sample_t));
-        memcpy(s, ptr1, size * sizeof(sample_t));
+        memcpy(ptr2, s + size - delay, delay * sizeof(sample_t));
+        memmove(s + delay, s, (size - delay) * sizeof(sample_t));
+        memcpy(s, ptr1, delay * sizeof(sample_t));
       }
       else
       {
-        // optimize: use circular buffering instead of block-switching
-        // it should work better for large delays
-        // optimize: use larger buffer size to gain advantages of circualr 
-        // buffer? (2 memcpy() calls instead of 2 memcpy and 1 memmove())
-        // how large should it be? use something like set_prebuffer()?
-        // do not forget about time lag in this case...
-        memcpy(ptr2 + size - nsamples, s, nsamples * sizeof(sample_t));
-        memcpy(s, ptr1, nsamples * sizeof(sample_t));
-        memcpy(ptr2, ptr1 + nsamples, (size - nsamples) * sizeof(sample_t));
+        memcpy(ptr2 + delay - size, s, size * sizeof(sample_t));
+        memcpy(s, ptr1, size * sizeof(sample_t));
+        memcpy(ptr2, ptr1 + size, (delay - size) * sizeof(sample_t));
       }
     }
   first_half = !first_half;

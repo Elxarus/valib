@@ -1,22 +1,10 @@
 #include "filter_chain.h"
 
 
-FilterChain::Entry::Entry(Filter *_filter, const char *_desc, Entry *_prev)
-{
-  filter = _filter;
-  desc = _desc? strdup(_desc): 0;
-  ok = true;
-  prev = _prev;
-}
-
-FilterChain::Entry::~Entry()
-{
-  if (desc) delete desc;
-}
-
 FilterChain::FilterChain()
 {
-  last = 0;
+  first   = 0;
+  last    = 0;
 }
 
 FilterChain::~FilterChain()
@@ -25,122 +13,171 @@ FilterChain::~FilterChain()
 }
 
 void 
-FilterChain::add(Filter *filter, const char *desc)
+FilterChain::add_first(Filter *_filter, const char *_desc)
 {
-  last = new Entry(filter, desc, last);
+  Entry *new_entry = new Entry(_filter, _desc);
+
+  if (!first)
+  {
+    first = new_entry;
+    last  = new_entry;
+  }
+  else
+  {
+    first->source = new_entry;
+    new_entry->sink = first;
+    first = new_entry;
+  }
+}
+
+void 
+FilterChain::add_last(Filter *_filter, const char *_desc)
+{
+  Entry *new_entry = new Entry(_filter, _desc);
+
+  if (!first)
+  {
+    first = new_entry;
+    last  = new_entry;
+  }
+  else
+  {
+    last->sink = new_entry;
+    new_entry->source = last;
+    last = new_entry;
+  }
 }
 
 void 
 FilterChain::clear()
 {
-  Entry *entry = last;
-  Entry *prev;
+  Entry *entry = first;
+  Entry *next;
 
   while (entry)
   {
-    prev = entry->prev;
+    next = entry->sink;
     delete entry;
-    entry = prev;
+    entry = next;
   }
-  last = 0;
+  
+  first   = 0;
+  last    = 0;
+  reset();
 }
+
+bool 
+FilterChain::process_internal(Entry *entry)
+{
+  Chunk chunk;
+  while (entry)
+  {
+    if (entry->is_empty())
+      entry = entry->source;
+    else
+    {
+      if (!entry->sink)
+        return true;
+
+      if (!entry->get_chunk(&chunk))
+        return false;
+
+      entry = entry->sink;
+
+      if (!entry->process(&chunk))
+        return false;
+    }
+  }
+  return true;
+}
+
 
 void 
 FilterChain::reset()
 {
-  Entry *entry = last;
+  NullFilter::reset();
+
+  Entry *entry = first;
   while (entry)
   {
     entry->reset();
-    entry = entry->prev;
+    entry = entry->sink;
   }
 }
 
 bool 
-FilterChain::query_input(Speakers spk) const
+FilterChain::query_input(Speakers _spk) const
 {
-  Entry *entry = last;
-  if (!entry) return true;
-
-  while (entry->prev)
-    entry = entry->prev;
-
-  return entry->filter->query_input(spk);
+  if (!first)
+    return NullFilter::query_input(_spk);
+  else
+    return first->query_input(_spk);
 }
 
 bool
 FilterChain::set_input(Speakers _spk)
 {
-  Entry *entry;
-  Entry *end = 0;
-  while (end != last)
-  {
-    entry = last;
-    while (entry->prev != end)
-      entry = entry->prev;
+  // note: set_input() may fail after successful query_input()!
 
-    if (!entry->filter->set_input(_spk))
+  if (!first)
+    return NullFilter::set_input(_spk);
+
+  Entry *entry = first;
+
+  while (entry)
+  {
+    if (!entry->set_input(_spk))
       return false;
 
-    _spk = entry->filter->get_output();
-    end = entry;
-  }
+    _spk = entry->get_output();
+    if (_spk.format == FORMAT_UNKNOWN)
+      // we cannot fully setup filter chain now
+      return true;
 
-  spk = _spk;
+    entry = entry->sink;
+  }
   return true;
 }
 
 bool 
-FilterChain::process(const Chunk *in)
+FilterChain::process(const Chunk *_chunk)
 {
-  if (!last)
-  {
-    chunk = *in;
-    return true;
-  }
+  if (!first)
+    return NullFilter::process(_chunk);
 
-  Entry *entry = last;
-  while (entry->prev)
-    entry = entry->prev;
-
-  return entry->process(in);
+  if (!first->process(_chunk))
+    return false;
+  else
+    return process_internal(first);
 }
 
 bool 
 FilterChain::is_empty()
 {
-  if (!last)
-    return chunk.is_empty();
-
-  Entry *entry = last;
-  while (entry)
-  {
-    if (!entry->is_empty())
-      return false;
-    entry = entry->prev;
-  }
-  return true;
+  if (!first)
+    return NullFilter::is_empty();
+  else
+    return last->is_empty();
 }
   
 Speakers 
-FilterChain::get_output()
+FilterChain::get_output() const
 {
-  if (!last)
-    return spk;
-
-  return last->filter->get_output();
+  if (!first)
+    return NullFilter::get_output();
+  else
+    return last->get_output();
 }
 
 
 bool 
-FilterChain::get_chunk(Chunk *out)
+FilterChain::get_chunk(Chunk *_chunk)
 {
-  if (!last)
-  {
-    *out = chunk;
-    chunk.set_empty();
-    return true;
-  }
+  if (!first)
+    return NullFilter::get_chunk(_chunk);
 
-  return last->get_chunk(out);
+  if (!last->get_chunk(_chunk))
+    return false;
+  else
+    return process_internal(last);
 }

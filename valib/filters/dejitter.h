@@ -37,7 +37,7 @@ public:
   inline float get_time_shift() const              { return time_shift; }
   inline void  set_time_shift(float _time_shift)   { time_shift = _time_shift; }
 
-  inline float get_time_factor() const             { return time_shift_ms; }
+  inline float get_time_factor() const             { return time_shift; }
   inline void  set_time_factor(float _time_shift)  { time_shift = _time_shift; }
 
   inline bool  get_dejitter() const                { return dejitter; }

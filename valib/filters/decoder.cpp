@@ -80,19 +80,19 @@ AudioDecoder::get_chunk(Chunk *_chunk)
       if (!parser->decode_frame())
         return false;
 
+      // fill output chunk
       _chunk->set_spk(parser->get_spk());
       _chunk->set_samples(parser->get_samples(), parser->get_nsamples());
-
       // timimg
       sync_helper.send_sync(_chunk);
       sync_helper.set_syncing(true);
+      // end-of-stream
+      _chunk->set_eos(flushing && !size);
+      flushing = flushing && size;
 
       // quick hack to overcome bug in splitters that report incorrect sample rate
       // _chunk->time *= double(_out->spk.sample_rate) / spk.sample_rate;
 
-      // end-of-stream
-      _chunk->set_eos(flushing && !size);
-      flushing = flushing && size;
 
       return true;
     } // if (parser->load_frame(&buf, end))
