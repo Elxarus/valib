@@ -43,7 +43,7 @@ protected:
   size_t    out_size;      // buffer size in bytes/samples for pcm/linear data
 
   // part of sample from previous call
-  uint8_t   part_buf[12];  // partial sample left from previous call
+  uint8_t   part_buf[24];  // partial sample left from previous call
   size_t    part_size;     // partial sample size in bytes
            
 
