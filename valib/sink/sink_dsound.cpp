@@ -281,21 +281,40 @@ DSoundSink::flush()
   if (!ds_buf) return;
   AutoLock autolock(&lock);
 
-  if (!playing) 
-    return;
-
   void *data1, *data2;
   DWORD data1_bytes, data2_bytes;
   DWORD play_cur;
   size_t data_size;
 
-  // Zero rest of the buffer
+  ///////////////////////////////////////////////////////
+  // Determine size of data in playback buffer
+
   if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
     return;
 
-  data_size = play_cur - cur;
-  if (data_size < 0)
-    data_size += buf_size;
+  data_size = buf_size + play_cur - cur;
+  if (data_size >= buf_size)
+    data_size -= buf_size;
+
+  if (!playing && !data_size)
+    // we have nothing to flush...
+    return;
+
+  ///////////////////////////////////////////////////////
+  // Sleep until we have half of playback buffer free
+
+  data_size = buf_size / 2 - data_size;
+  Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+
+  /////////////////////////////////////////////////////////
+  // Zero the rest of the buffer
+
+  if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
+    return;
+
+  data_size = buf_size + play_cur - cur;
+  if (data_size >= buf_size)
+    data_size -= buf_size;
 
   if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
     return;
@@ -307,11 +326,24 @@ DSoundSink::flush()
   if FAILED(ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
     return;
 
-  // Sleep until end of playback
+  /////////////////////////////////////////////////////////
+  // Start playback if we're in prebuffering state
+
+  if (!playing)
+  {
+    ds_buf->Play(0, 0, DSBPLAY_LOOPING);
+    playing = true;
+  }
+
+  /////////////////////////////////////////////////////////
+  // Sleep until the end of playback
+
   data_size = buf_size - data_size;
   Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
 
+  /////////////////////////////////////////////////////////
   // Stop the playback
+
   ds_buf->Stop();
   ds_buf->SetCurrentPosition(0);
   playing = false;
@@ -365,8 +397,8 @@ DSoundSink::set_vol(double _vol)
   vol = _vol;
   if (ds_buf)
   {
-    // Convert volume [0;1] to decibels
-    // In DirectSOund volume is specified in hundredths of decibels
+    // Convert volume value [0;1] to decibels
+    // In DirectSound volume is specified in hundredths of decibels
     // Zero volume is converted to -100dB
 
     int v = -10000;
@@ -399,7 +431,7 @@ DSoundSink::set_pan(double _pan)
 
   if (ds_buf)
   {
-    // Convert value [-128;+128] to decibels
+    // Convert pan value [-1; 1] to decibels
     // The volume is specified in hundredths of decibels
     // Boundaries are converted to +/-100dB
     int p = 0;
@@ -446,6 +478,11 @@ bool DSoundSink::write(const Chunk *chunk)
 
   while (size)
   {
+    ///////////////////////////////////////////////////////
+    // Determine how much data to output (data_size)
+    // (check free space in playback buffer and size of 
+    // remaining input data)
+
     if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
       return false;
 
@@ -458,33 +495,37 @@ bool DSoundSink::write(const Chunk *chunk)
 
     if (data_size > size)
       data_size = size;
-    else
-      if (playing && data_size < buf_size / 2)
+
+    if (!data_size)
+      data_size = data_size;
+
+    ///////////////////////////////////////////////////////
+    // Put data to playback buffer
+
+    if (data_size)
+    {
+      if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
+        return false;
+
+      memcpy(data1, buf, data1_bytes);
+      buf += data1_bytes;
+      size -= data1_bytes;
+      cur += data1_bytes;
+
+      if (data2_bytes)
       {
-        // now we have no enough space in buffer, so sleep until we have
-        data_size = min(size, buf_size / 2) - data_size;
-        Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
-        continue;
+        memcpy(data2, buf, data2_bytes);
+        buf += data2_bytes;
+        size -= data2_bytes;
+        cur += data2_bytes;
       }
 
-    if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
-      return false;
-
-    memcpy(data1, buf, data1_bytes);
-    buf += data1_bytes;
-    size -= data1_bytes;
-    cur += data1_bytes;
-
-    if (data2_bytes)
-    {
-      memcpy(data2, buf, data2_bytes);
-      buf += data2_bytes;
-      size -= data2_bytes;
-      cur += data2_bytes;
+      if FAILED(ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
+        return false;
     }
 
-    if FAILED(ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
-      return false;
+    ///////////////////////////////////////////////////////
+    // Start playback after prebuffering
 
     if (!playing && cur > preload_size)
     {
@@ -495,6 +536,23 @@ bool DSoundSink::write(const Chunk *chunk)
 
     if (cur >= buf_size)
       cur -= buf_size;
+
+    ///////////////////////////////////////////////////////
+    // Now we have either:
+    // * some more data to output & full playback buffer
+    // * no more data to output
+    //
+    // If we have some input data remaining to output we 
+    // need to wait until some data is played back to continue
+
+    if (size)
+    {
+      // sleep until we can put all remaining data or 
+      // we have free at half of playback buffer
+      data_size = min(size, buf_size / 2);
+      Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+      continue;
+    }
   }
 
   size = chunk->get_size() / wfx.Format.nBlockAlign;
@@ -502,5 +560,9 @@ bool DSoundSink::write(const Chunk *chunk)
     time = chunk->get_time() + size;
   else
     time += size;
+
+  if (chunk->is_eos())
+    flush();
+
   return true;
 }
