@@ -9,7 +9,7 @@
 // sample_t utils
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef DOUBLE_SAMPLE
+#ifndef FLOAT_SAMPLE
 
 union double_t 
 { 
@@ -53,7 +53,7 @@ union float_t
     unsigned mantissa:23;
     unsigned exponent:8;
     unsigned sign:1;
-  }
+  };
 };
 
 

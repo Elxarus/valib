@@ -82,3 +82,8 @@ WriteBS::flush()
   bit_left = 32;
   bit_buf  = 0;
 }
+
+WriteBS::get_pos() const
+{
+  return (buf_ptr - buf) * 8 + 32 - bit_left;
+}

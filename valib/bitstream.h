@@ -62,9 +62,10 @@ public:
   void put_bool(bool value);
   void flush();
 
-  uint8_t *get_buf() { return buf;     }
-  uint8_t *get_end() { return buf_end; }
-  uint8_t *get_ptr() { return buf_ptr; }
+  inline uint8_t *get_buf() const { return buf;     }
+  inline uint8_t *get_end() const { return buf_end; }
+  inline uint8_t *get_ptr() const { return buf_ptr; }
+  int get_pos() const;
 };
 
 

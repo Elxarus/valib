@@ -27,7 +27,7 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
   }
 
   const int buf_size = 32000;
-  uint8_t buf[buf_size]; // one frame of pcm16 stereo samples
+  uint8_t buf[buf_size];
   int buf_data;
 
   int frames = 0;
@@ -74,9 +74,6 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
 
     while (!chain.is_empty())
     {
-      if (frames == 314)
-        frames = 314;
-
       if (!chain.get_chunk(&ac3))
       {
         printf("!!!Error: chain.get_chunk()!\n");
@@ -95,9 +92,6 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
 
       for (int b = 0; b < AC3_NBLOCKS; b++)
       {
-        if (b == 3)
-          b = 3;
-
         if (!dec.decode_block())
         {
           printf("!!!Error: block %i decode error!\n", b);
@@ -129,7 +123,7 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
 
           for (int s = 0; s < endmant; s++)
           {
-            // dequantize encoded dct coefs and compare with decoded coefs
+            // quantize/dequantize encoded dct coefs and compare with decoded coefs
             double v = 0;
             int bap = enc.bap[ch][b][s];
             int m = enc.mant[ch][b][s];
@@ -138,17 +132,25 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
             switch (bap)
             {
               case 0:  break;
-              case 1:  v = ((sym_quant(m, 3) - 1) << 16) / 3; break;
-              case 2:  v = ((sym_quant(m, 5) - 2) << 16) / 5; break;
-              case 3:  v = ((sym_quant(m, 7) - 3) << 16) / 7; break;
-              case 4:  v = ((sym_quant(m,11) - 5) << 16) /11; break;
-              case 5:  v = ((sym_quant(m,15) - 7) << 16) /15; break;
-              case 15: v = m; break;
-              case 14: v = (m >> 2) << 2; break;
-              default: v = (m >> (16 - bap + 1)) << (16 - bap + 1); break;
+              // asymmetric quantization
+              case 1:  v = sym_quant(m, 3)  * 2.0/3.0  - 2.0/3.0;   break;
+              case 2:  v = sym_quant(m, 5)  * 2.0/5.0  - 4.0/5.0;   break;
+              case 3:  v = sym_quant(m, 7)  * 2.0/7.0  - 6.0/7.0;   break;
+              case 4:  v = sym_quant(m, 11) * 2.0/11.0 - 10.0/11.0; break;
+              case 5:  v = sym_quant(m, 15) * 2.0/15.0 - 14.0/15.0; break;
+              // symmetric quantization
+              case 6:  v = int16_t(asym_quant(m, 5)  << 11) / 32768.0; break;
+              case 7:  v = int16_t(asym_quant(m, 6)  << 10) / 32768.0; break;
+              case 8:  v = int16_t(asym_quant(m, 7)  << 9)  / 32768.0; break;
+              case 9:  v = int16_t(asym_quant(m, 8)  << 8)  / 32768.0; break;
+              case 10: v = int16_t(asym_quant(m, 9)  << 7)  / 32768.0; break;
+              case 11: v = int16_t(asym_quant(m, 10) << 6)  / 32768.0; break;
+              case 12: v = int16_t(asym_quant(m, 11) << 5)  / 32768.0; break;
+              case 13: v = int16_t(asym_quant(m, 12) << 4)  / 32768.0; break;
+              case 14: v = int16_t(asym_quant(m, 14) << 2)  / 32768.0; break;
+              case 15: v = int16_t(asym_quant(m, 16))       / 32768.0; break;
             }
-            v /= 32768;
-            v /= (1<<e);
+            v /= (1 << e);
             if (bap != 0 && fabs(v / dec.get_samples()[ch][s + b * AC3_BLOCK_SAMPLES] - 1) > 0.001)
               printf("strange sample f=%i ch=%i b=%i s=%i bap=%i...\n", frames, ch, b, s, bap);
           }

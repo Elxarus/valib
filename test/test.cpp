@@ -67,8 +67,8 @@ int test_ac3_enc_all()
   int err = 0;
   printf("\n* AC3Enc test\n");
 
-  err += test_ac3_enc("f:\\ac3\\ac3test_pcm16_6ch.raw", "5.1, 448kbps", Speakers(FORMAT_PCM16, MODE_5_1, 48000, 65535), 448000, 1874);
   err += test_ac3_enc("f:\\ac3\\ac3test_pcm16.raw", "stereo, 448kbps", Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 65535), 448000, 1875);
+  err += test_ac3_enc("f:\\ac3\\ac3test_pcm16_6ch.raw", "5.1, 448kbps", Speakers(FORMAT_PCM16, MODE_5_1, 48000, 65535), 448000, 1874);
   return err;
 }
 
@@ -83,13 +83,14 @@ int main(int argc, char **argv)
 {
   int errors = 0;
 
+  errors += test_ac3_enc_all();
+
   errors += test_filters();
   errors += test_spdifer();
  
   errors += test_float();
   errors += test_pcm_passthrough();
 
-  errors += test_ac3_enc_all();
   errors += test_ac3_parser();
   errors += test_pes_demux();
 
