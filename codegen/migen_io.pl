@@ -24,7 +24,7 @@ print "\n";
 
 print "typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, size_t); // input-output mixing\n\n";
 
-print "const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = {\n";
+print "static const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = {\n";
 
 foreach $in_nch (1..$nch)
 {

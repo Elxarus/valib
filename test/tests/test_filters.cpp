@@ -1,8 +1,13 @@
 /*
-  Filters test
-  Test each filter to comply following requirements:
-  * Filter should accept empty chunks at process() call without error
-  * Filter should return empty chunks at get_chunk() call if filter is empty without error
+  Empty filters test
+  Test each filter to comply following requirements (filter and chunk are always empty):
+  * Filter should be empty after reset() call
+  * Filter should accept empty chunk at process() call without error
+  * Filter should remain empty after receiving empty chunk
+  * Filter should return empty chunk at get_chunk() call without error
+  * Filter should go to flushing state after receiving end-of-stream and report that it is not empty
+    (because it must send end-of-stream chunk on next get_chunk())
+  * Filter should return epmty end-of-stream chunk in flushing state and go to empty state
 */
 
 #include "..\log.h"
@@ -81,16 +86,16 @@ int test_filter(Log *log, Filter *filter, const char *filter_name)
       return log->err("process() of empty chunk failed");
 
     if (!filter->is_empty())
-      return log->err("filter is not empty after processing of empty chunk");
+      return log->err("filter is not empty after receiving empty chunk");
 
     if (!filter->get_chunk(&chunk))
-      return log->err("get_chunk() of empty filter failed");
+      return log->err("get_chunk() in empty state failed");
 
     if (!filter->is_empty())
       return log->err("filter is not empty after get_chunk()");
 
     if (!chunk.is_empty())
-      return log->err("filter returned non-empty chunk");
+      return log->err("non-empty chunk returned");
 
     ///////////////////////////////////////////////////////
     // End-of-stream processing
@@ -104,13 +109,13 @@ int test_filter(Log *log, Filter *filter, const char *filter_name)
       return log->err("filter is empty after receiving end-of-stream");
 
     if (!filter->get_chunk(&chunk))
-      return log->err("get_chunk() of flushing filter failed");
+      return log->err("get_chunk() in flushing state failed");
 
     if (!filter->is_empty())
       return log->err("filter is not empty after get_chunk()");
 
     if (!chunk.is_empty())
-      return log->err("filter returned non-empty chunk");
+      return log->err("non-empty chunk returned");
 
     if (!chunk.is_eos())
       return log->err("filter did not return end-of stream");

@@ -135,7 +135,9 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 
 #endif
 
-inline uint16_t swab16(uint16_t i) { return (i << 8) | (i >> 8); };
-inline int24_t  swab24(int24_t i)  { return (int24_t)(int32_t)(swab32(i) >> 8); }
+inline uint16_t swab16(uint16_t i)  { return (i << 8) | (i >> 8); };
+inline int24_t  swab24(int24_t i)   { return (int24_t)(int32_t)(swab32(i) >> 8); }
+inline float    swab_float(float f) { uint32_t i = swab32(*(uint32_t *)&f); return *(float *)&i; };
+
 
 #endif

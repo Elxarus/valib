@@ -1,0 +1,81 @@
+{
+  // input: spk, nsamples, rawdata, size
+  // output: out_samples, out_size
+  // intermediate: part_buf, part_size
+
+  const int nch = $ch;
+  const size_t sample_size = sizeof($type) * $ch;
+
+  $type *src;
+  sample_t *dst = out_samples[0];
+  out_size = 0;
+
+  /////////////////////////////////////////////////////////
+  // Process part of sample
+
+  if (part_size)
+  {
+    // assert: part_size < sample_size
+    size_t delta = sample_size - part_size;
+    if (size < delta)
+    {
+      // not enough data to fill sample buffer
+      memcpy(part_buf + part_size, rawdata, size);
+      part_size += size;
+      size = 0;
+      return;
+    }
+    else
+    {
+      // finish & convert incomplete sample 
+      memcpy(part_buf + part_size, rawdata, delta);
+      drop_rawdata(delta);
+      part_size = 0;
+
+      src = ($type *)part_size;
+
+$convert
+
+      dst++;
+      out_size++;
+    }   
+  }
+
+  /////////////////////////////////////////////////////////
+  // Find end of buffer & remember remaining part of sample
+
+  src = ($type *)rawdata;
+  $type *end;
+
+  if ((nsamples - out_size) * sample_size < size)
+  {
+    drop_rawdata((nsamples - out_size) * sample_size);
+    end = src + nsamples - out_size;
+    out_size += nsamples - out_size;
+  }
+  else
+  {
+    out_size += size / sample_size;
+    end = src + size / sample_size;
+    drop_rawdata((size / sample_size) * sample_size);
+
+    // remember part of sample
+    if (size)
+    {
+      memcpy(part_buf, end, size);
+      part_size = size;
+      size = 0;
+    }
+  }
+
+  /////////////////////////////////////////////////////////
+  // Convert
+
+  while (src < end)
+  {
+$convert
+    src += nch;
+    dst++;
+  }
+}
+

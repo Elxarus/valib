@@ -8,10 +8,16 @@
 
 AGC::AGC(size_t _nsamples)
 {
+  block       = 0;
+
+  sample[0]  = 0;
+  sample[1]  = 0;
+  buf_sync[0] = false;
+  buf_sync[1] = false;
+  buf_time[0] = 0;
+  buf_time[1] = 0;
+
   nsamples  = 0;
-  sample    = 0;
-  block     = 0;
-  empty     = true;
 
   level     = 0;
   factor    = 0;
@@ -67,31 +73,39 @@ AGC::get_buffer() const
 bool 
 AGC::fill_buffer()
 {
-  if (sync && sample == 0)
+  if (sync && sample[block] == 0)
   {
     buf_sync[block] = sync;
     buf_time[block] = time;
     sync = false;
   }
 
-  size_t n = nsamples - sample;
+  int ch;
+  size_t n = nsamples - sample[block];
+
   if (size < n)
   {
-    for (int ch = 0; ch < spk.nch(); ch++)
-      memcpy(buf[block][ch] + sample, samples[ch], size * sizeof(sample_t));
+    for (ch = 0; ch < spk.nch(); ch++)
+      memcpy(buf[block][ch] + sample[block], samples[ch], size * sizeof(sample_t));
 
-    sample += size;
+    sample[block] += size;
     time += size;
     drop_samples(size);
 
-    return false;
+    if (!flushing)
+      return false;
+
+    // zero rest of buffer in case of flushing
+    for (ch = 0; ch < spk.nch(); ch++)
+      memset(buf[block][ch] + sample[block], 0, (nsamples - sample[block]) * sizeof(sample_t));
+    return true;
   }
   else
   {
-    for (int ch = 0; ch < spk.nch(); ch++)
-      memcpy(buf[block][ch] + sample, samples[ch], n * sizeof(sample_t));
+    for (ch = 0; ch < spk.nch(); ch++)
+      memcpy(buf[block][ch] + sample[block], samples[ch], n * sizeof(sample_t));
 
-    sample = 0;
+    sample[block] = nsamples;
     time += n;
     drop_samples(n);
 
@@ -291,9 +305,10 @@ AGC::reset()
 {
   NullFilter::reset();
 
-  sample = 0;
-  block  = 0;
-  empty  = true;
+  block       = 0;
+
+  sample[0]  = 0;
+  sample[1]  = 0;
   buf_sync[0] = false;
   buf_sync[1] = false;
   buf_time[0] = 0;
@@ -309,66 +324,30 @@ AGC::reset()
 bool 
 AGC::get_chunk(Chunk *_chunk)
 {
-  // process data
   while (fill_buffer())
   {
     process();
 
-    // do not send first (empty) block
-    if (empty)
-    {
-      empty = false;
+    // do not send empty block (first block)
+    if (!sample[block] && sample[next_block()])
       continue;
-    }
 
     // send data
     _chunk->set
     (
       spk, 
-      buf[block], nsamples, 
-      buf_sync[block], buf_time[block]
+      buf[block], sample[block], 
+      buf_sync[block], buf_time[block],
+      flushing && (sample[next_block()] == 0)
     );
+    sample[block] = 0; // drop block just sent
+    flushing = flushing && (sample[next_block()] != 0); // drop flushing state
     return true;
   }
 
-  if (!flushing)
-  {
-    // not enough data
-    _chunk->set(spk, 0, 0);
-    return true;
-  }
+  // assert: size == 0 
+  // no more input data left to process
 
-
-
-  // todo: flushing
-/*
-  // flushing stage 1 - 
-  else if (flushing && !empty) 
-  {
-    // fill sample buffer
-    n = nsamples - sample;
-    for (ch = 0; ch < spk.nch(); ch++)
-      memset(buf[block][ch] + sample, 0, n * sizeof(sample_t));
-
-    process();
-    empty = true;
-    send_chunk_buffer(_chunk, buf[block], nsamples, false);
-  }
-  else if (flushing && empty)
-  {
-    // fill sample buffer
-    n = nsamples;
-    for (ch = 0; ch < spk.nch(); ch++)
-      memset(buf[block][ch] + sample, 0, n * sizeof(sample_t));
-
-    process();
-    send_chunk_buffer(_chunk, buf[block], samples, true);
-    samples = 0;
-  }
-  else
-  {
-
-  }
-*/
+  _chunk->set(spk, 0, 0);
   return true;
 }

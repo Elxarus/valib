@@ -24,7 +24,7 @@ print "\n";
 
 print "typedef void (Mixer::*ip_mixfunc_t)(samples_t, size_t); // in-place mixing\n\n";
 
-print "const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {\n";
+print "static const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {\n";
 
 foreach $in_nch (1..$nch)
 {

@@ -24,6 +24,8 @@
 class Converter : public NullFilter
 {
 protected:
+  typedef void (Converter::*convert_t)();
+
   // format
   int  format;             // format to convert to
   int  order[NCHANNELS];   // channel order to convert to when converting from linear format
@@ -46,22 +48,23 @@ protected:
   inline bool query_format(int format) const;
   bool alloc_buffer(); // allocate buffer according to format & number of channels
 
-  void pcm2linear();
-  void pcm2linear(uint8_t *src, samples_t dst, size_t n);
   void linear2pcm();
   void linear2pcm(samples_t src, uint8_t *dst, size_t n);
 
-  void pcm16_linear();
+  convert_t convert;
 
 public:
   Converter(int _nsamples)
   {
-    format = FORMAT_PCM16;
+    spk = def_spk;
+    format = spk.format;
     nsamples = _nsamples;
     memcpy(order, std_order, sizeof(order));
 
     out_size = 0;
     part_size = 0;
+
+    convert = 0;
   }
 
   /////////////////////////////////////////////////////////
@@ -87,6 +90,63 @@ public:
 
   virtual Speakers get_output() const;
   virtual bool get_chunk(Chunk *out);
+
+  /////////////////////////////////////////////////////////
+  // Conversion functions
+
+  void pcm16_linear_1ch();
+  void pcm24_linear_1ch();
+  void pcm32_linear_1ch();
+  void pcmfloat_linear_1ch();
+  void pcm16_le_linear_1ch();
+  void pcm24_le_linear_1ch();
+  void pcm32_le_linear_1ch();
+  void pcmfloat_le_linear_1ch();
+
+  void pcm16_linear_2ch();
+  void pcm24_linear_2ch();
+  void pcm32_linear_2ch();
+  void pcmfloat_linear_2ch();
+  void pcm16_le_linear_2ch();
+  void pcm24_le_linear_2ch();
+  void pcm32_le_linear_2ch();
+  void pcmfloat_le_linear_2ch();
+
+  void pcm16_linear_3ch();
+  void pcm24_linear_3ch();
+  void pcm32_linear_3ch();
+  void pcmfloat_linear_3ch();
+  void pcm16_le_linear_3ch();
+  void pcm24_le_linear_3ch();
+  void pcm32_le_linear_3ch();
+  void pcmfloat_le_linear_3ch();
+
+  void pcm16_linear_4ch();
+  void pcm24_linear_4ch();
+  void pcm32_linear_4ch();
+  void pcmfloat_linear_4ch();
+  void pcm16_le_linear_4ch();
+  void pcm24_le_linear_4ch();
+  void pcm32_le_linear_4ch();
+  void pcmfloat_le_linear_4ch();
+
+  void pcm16_linear_5ch();
+  void pcm24_linear_5ch();
+  void pcm32_linear_5ch();
+  void pcmfloat_linear_5ch();
+  void pcm16_le_linear_5ch();
+  void pcm24_le_linear_5ch();
+  void pcm32_le_linear_5ch();
+  void pcmfloat_le_linear_5ch();
+
+  void pcm16_linear_6ch();
+  void pcm24_linear_6ch();
+  void pcm32_linear_6ch();
+  void pcmfloat_linear_6ch();
+  void pcm16_le_linear_6ch();
+  void pcm24_le_linear_6ch();
+  void pcm32_le_linear_6ch();
+  void pcmfloat_le_linear_6ch();
 };
 
 ///////////////////////////////////////////////////////////////////////////////

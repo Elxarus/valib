@@ -34,18 +34,18 @@ class AGC : public NullFilter
 {
 protected:
   SampleBuf w;
-  SampleBuf buf[2];
-  size_t    nsamples;             // number of samples per block
+  SampleBuf buf[2];               // sample buffers
 
-  bool   buf_sync[2];
-  time_t buf_time[2];
+  size_t    block;                // current block
+  size_t    sample[2];            // number of samples filled
+  bool      buf_sync[2];          // beginning of the buffer is syncpoint
+  time_t    buf_time[2];          // timestamp at beginning of the buffer
+
+  size_t    nsamples;             // number of samples per block
 
   LevelsCache input_levels;
   LevelsCache output_levels;
 
-  size_t    sample;               // current sample
-  size_t    block;                // current block
-  bool      empty;                // output sample buffer is empty
 
   sample_t  factor;               // previous block factor
   sample_t  level;                // previous block level (not scaled)
