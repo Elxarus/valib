@@ -107,15 +107,15 @@ AC3Enc::set_bitrate(int _bitrate)
 {
   // check bitrate
   int i;
-  for (i = 0; i < 19; i++)
+  for (i = 0; i < sizeof(bitrate_tbl) / sizeof(bitrate_tbl[0]); i++)
     if (bitrate_tbl[i] == _bitrate)
-      break;
-  if (i == 19) 
-    return false;
+    {
+      bitrate = _bitrate;
+      reset();
+      return true;
+    }
 
-  bitrate = _bitrate;
-  reset();
-  return true;
+  return false;
 }
 
 int  
@@ -156,10 +156,11 @@ AC3Enc::query_input(Speakers _spk)
 
   // check sample rate
   int i;
-  for (i = 0; i < 9; i++)
+  for (i = 0; i < sizeof(freq_tbl) / sizeof(freq_tbl[0]); i++)
     if (freq_tbl[i] == _spk.sample_rate)
       break;
-  if (i == 9) 
+
+  if (i == sizeof(freq_tbl) / sizeof(freq_tbl[0])) 
     return false;
 
   // check mask
@@ -197,20 +198,27 @@ AC3Enc::set_input(Speakers _spk)
   if (!NullFilter::set_input(_spk))
     return false;
 
+  // sample rate
   fscod = 0;
-  for (fscod = 0; fscod < 9; fscod++)
+  for (fscod = 0; fscod < sizeof(freq_tbl) / sizeof(freq_tbl[0]); fscod++)
     if (freq_tbl[fscod] == _spk.sample_rate)
       break;
-  if (fscod == 9) return false;
+
+  if (fscod == sizeof(freq_tbl) / sizeof(freq_tbl[0])) 
+    return false;
+
+  // bitrate
+  for (frmsizecod = 0; frmsizecod < sizeof(bitrate_tbl) / sizeof(bitrate_tbl[0]); frmsizecod++)
+    if (bitrate_tbl[frmsizecod] == bitrate)
+      break;
+
+  if (frmsizecod == sizeof(bitrate_tbl) / sizeof(bitrate_tbl[0])) 
+    return false;
+
+  frmsizecod <<= 1;
   halfratecod = fscod / 3;
   fscod %= 3;
   bsid = 8 + halfratecod;
-
-  for (frmsizecod = 0; frmsizecod < 19; frmsizecod++)
-    if (bitrate_tbl[frmsizecod] == bitrate)
-      break;
-  if (frmsizecod == 19) return false;
-  frmsizecod <<= 1;
 
   spk         = _spk;
   sample_rate = _spk.sample_rate;
@@ -232,7 +240,7 @@ AC3Enc::set_input(Speakers _spk)
   nfchans = spk.lfe()? spk.nch() - 1: spk.nch();
 
   // scale window
-  sample_t factor = 32768 / spk.level;
+  sample_t factor = 32768.0 / spk.level;
   for (int s = 0; s < AC3_BLOCK_SAMPLES; s++)
     window[0][s] = ac3_window[s] * factor;
 
