@@ -44,8 +44,7 @@ protected:
 public:
   Noise(Speakers spk = def_spk, size_t data_size = 65536, size_t buf_size = 4096);
 
-  bool set_output(Speakers spk, size_t data_size = 65536, size_t buf_size = 4096);
-
+  bool   set_output(Speakers spk, size_t data_size = 65536, size_t buf_size = 4096);
   void   set_seed(long seed);
   size_t get_data_size();
   void   set_data_size(size_t _data_size);

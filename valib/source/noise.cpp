@@ -60,10 +60,23 @@ Noise::set_seed(long _seed)
   rng.set(_seed);
 }
 
+size_t 
+Noise::get_data_size()
+{ 
+  return data_size; 
+}
+
+void   
+Noise::set_data_size(size_t _data_size)
+{
+  data_size = _data_size;
+}
+
+
 bool 
 Noise::set_output(Speakers _spk, size_t _data_size, size_t _buf_size)
 {
-  if (spk.format == FORMAT_LINEAR)
+  if (_spk.format == FORMAT_LINEAR)
   {
     if (!buf.allocate(_spk.nch(), _buf_size))
       return false;
@@ -97,7 +110,7 @@ Noise::is_empty() const
 }
 
 bool 
-Noise::get_chunk(Chunk *chunk)
+Noise::get_chunk(Chunk *_chunk)
 {
   size_t n = buf_size;
 
@@ -116,11 +129,11 @@ Noise::get_chunk(Chunk *chunk)
     size_t nch = spk.nch();
     samples_t samples = buf.get_samples();
 
-    for (size_t ch = 0; ch < nch; ch++)
-      for (size_t s = 0; s < n; s++)
-        samples[ch][s] = double(rng.get()) * double(rng.get()) / 32768 / 32878;
+    for (size_t s = 0; s < n; s++)
+      for (size_t ch = 0; ch < nch; ch++)
+        samples[ch][s] = double(rng.get()) / m;
 
-    chunk->set(spk, buf.get_samples(), buf.get_size(), false, 0, eos);
+    _chunk->set(spk, buf.get_samples(), n, false, 0, eos);
     return true;
   }
   else
@@ -132,12 +145,14 @@ Noise::get_chunk(Chunk *chunk)
       *pos32++ = rng.get();
 
     // 8bit fill
-    uint8_t *pos8 = (uint8_t *)pos32;
-    uint8_t *end8 = pos8 + (n & 3);
-    while (pos8 < end8)
-      *pos8++ = (uint8_t)rng.get();
+    switch (n&3)
+    {
+      case 3: *pos32 = (*pos32 & 0xff000000) | (rng.get() & 0x00ffffff); break;
+      case 2: *pos32 = (*pos32 & 0xffff0000) | (rng.get() & 0x0000ffff); break;
+      case 1: *pos32 = (*pos32 & 0xffffff00) | (rng.get() & 0x000000ff); break;
+    }
 
-    chunk->set(spk, buf.get_rawdata(), buf.get_size(), false, 0, eos);
+    _chunk->set(spk, buf.get_rawdata(), n, false, 0, eos);
     return true;
   }
 }
