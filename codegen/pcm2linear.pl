@@ -4,7 +4,7 @@ my @chs      = qw(1 2 3 4 5 6);
 my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCMFLOAT FORMAT_PCM16_LE FORMAT_PCM24_LE FORMAT_PCM32_LE FORMAT_PCMFLOAT_LE );
 my @names    = qw(pcm16    pcm24    pcm32    pcmfloat pcm16_le pcm24_le pcm32_le pcmfloat_le );
 my @types    = qw(int16_t  int24_t  int32_t  float    int16_t  int24_t  int32_t  float       );
-my @funcs    = qw(sample_t sample_t sample_t sample_t swab16   swab24   swab32   swab_float  );
+my @funcs    = qw(sample_t sample_t sample_t sample_t swab_s16 swab_s24 swab_s32 swab_float  );
 
 my $ch;
 my $i;

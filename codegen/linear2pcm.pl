@@ -2,9 +2,10 @@ use strict;
 
 my @chs      = qw(1 2 3 4 5 6);
 my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCMFLOAT FORMAT_PCM16_LE FORMAT_PCM24_LE FORMAT_PCM32_LE FORMAT_PCMFLOAT_LE );
-my @names    = qw(pcm16    pcm24    pcm32    pcmfloat pcm16_le pcm24_le pcm32_le pcmfloat_le );
-my @types    = qw(int16_t  int24_t  int32_t  float    int16_t  int24_t  int32_t  float       );
-my @funcs    = qw(s2i16    s2i32    s2i32    float    s2i16    s2i32    s2i32    float       );
+my @names    = qw(pcm16    pcm24    pcm32    pcmfloat pcm16_le    pcm24_le    pcm32_le    pcmfloat_le );
+my @types    = qw(int16_t  int24_t  int32_t  float    int16_t     int24_t     int32_t     float       );
+my @funcs    = qw(s2i16    s2i32    s2i32    (float)  s2i16       s2i32       s2i32       (float)     );
+my @swabs    =   ('',      '',      '',      '',      'swab_s16', 'swab_s24', 'swab_s32', 'swab_float');
 
 my $ch;
 my $i;
@@ -12,6 +13,7 @@ my $format;
 my $name;
 my $type;
 my $func;
+my $swab;
 
 my @template = <>;
 my $convert;
@@ -57,8 +59,9 @@ foreach $ch (@chs)
     $name = $names[$i];
     $type = $types[$i];
     $func = $funcs[$i];
+    $swab = $swabs[$i];
     $convert = "";
-    $convert = $convert."    dst[$_] = $func(src[$_][0]); src[$_]++;\n" foreach (0..$ch-1);
+    $convert = $convert."    dst[$_] = $swab($func(src[$_][0])); src[$_]++;\n" foreach (0..$ch-1);
     $text = join('', @template);
     $text =~ s/(\$\w+)/$1/gee;
 

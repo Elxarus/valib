@@ -494,7 +494,7 @@ Converter::pcm16_le_linear_1ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int16_t *)part_buf;
-    dst[nsamples * 0] = swab16(src[0]);
+    dst[nsamples * 0] = swab_s16(src[0]);
 
       dst++;
       out_size++;
@@ -540,7 +540,7 @@ Converter::pcm16_le_linear_1ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab16(src[0]);
+    dst[nsamples * 0] = swab_s16(src[0]);
 
     src += nch;
     dst++;
@@ -591,7 +591,7 @@ Converter::pcm24_le_linear_1ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int24_t *)part_buf;
-    dst[nsamples * 0] = swab24(src[0]);
+    dst[nsamples * 0] = swab_s24(src[0]);
 
       dst++;
       out_size++;
@@ -637,7 +637,7 @@ Converter::pcm24_le_linear_1ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab24(src[0]);
+    dst[nsamples * 0] = swab_s24(src[0]);
 
     src += nch;
     dst++;
@@ -688,7 +688,7 @@ Converter::pcm32_le_linear_1ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int32_t *)part_buf;
-    dst[nsamples * 0] = swab32(src[0]);
+    dst[nsamples * 0] = swab_s32(src[0]);
 
       dst++;
       out_size++;
@@ -734,7 +734,7 @@ Converter::pcm32_le_linear_1ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab32(src[0]);
+    dst[nsamples * 0] = swab_s32(src[0]);
 
     src += nch;
     dst++;
@@ -1279,8 +1279,8 @@ Converter::pcm16_le_linear_2ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int16_t *)part_buf;
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
 
       dst++;
       out_size++;
@@ -1326,8 +1326,8 @@ Converter::pcm16_le_linear_2ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
 
     src += nch;
     dst++;
@@ -1378,8 +1378,8 @@ Converter::pcm24_le_linear_2ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int24_t *)part_buf;
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
 
       dst++;
       out_size++;
@@ -1425,8 +1425,8 @@ Converter::pcm24_le_linear_2ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
 
     src += nch;
     dst++;
@@ -1477,8 +1477,8 @@ Converter::pcm32_le_linear_2ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int32_t *)part_buf;
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
 
       dst++;
       out_size++;
@@ -1524,8 +1524,8 @@ Converter::pcm32_le_linear_2ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
 
     src += nch;
     dst++;
@@ -2080,9 +2080,9 @@ Converter::pcm16_le_linear_3ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int16_t *)part_buf;
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
-    dst[nsamples * 2] = swab16(src[2]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
+    dst[nsamples * 2] = swab_s16(src[2]);
 
       dst++;
       out_size++;
@@ -2128,9 +2128,9 @@ Converter::pcm16_le_linear_3ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
-    dst[nsamples * 2] = swab16(src[2]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
+    dst[nsamples * 2] = swab_s16(src[2]);
 
     src += nch;
     dst++;
@@ -2181,9 +2181,9 @@ Converter::pcm24_le_linear_3ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int24_t *)part_buf;
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
-    dst[nsamples * 2] = swab24(src[2]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
+    dst[nsamples * 2] = swab_s24(src[2]);
 
       dst++;
       out_size++;
@@ -2229,9 +2229,9 @@ Converter::pcm24_le_linear_3ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
-    dst[nsamples * 2] = swab24(src[2]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
+    dst[nsamples * 2] = swab_s24(src[2]);
 
     src += nch;
     dst++;
@@ -2282,9 +2282,9 @@ Converter::pcm32_le_linear_3ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int32_t *)part_buf;
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
-    dst[nsamples * 2] = swab32(src[2]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
+    dst[nsamples * 2] = swab_s32(src[2]);
 
       dst++;
       out_size++;
@@ -2330,9 +2330,9 @@ Converter::pcm32_le_linear_3ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
-    dst[nsamples * 2] = swab32(src[2]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
+    dst[nsamples * 2] = swab_s32(src[2]);
 
     src += nch;
     dst++;
@@ -2897,10 +2897,10 @@ Converter::pcm16_le_linear_4ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int16_t *)part_buf;
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
-    dst[nsamples * 2] = swab16(src[2]);
-    dst[nsamples * 3] = swab16(src[3]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
+    dst[nsamples * 2] = swab_s16(src[2]);
+    dst[nsamples * 3] = swab_s16(src[3]);
 
       dst++;
       out_size++;
@@ -2946,10 +2946,10 @@ Converter::pcm16_le_linear_4ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
-    dst[nsamples * 2] = swab16(src[2]);
-    dst[nsamples * 3] = swab16(src[3]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
+    dst[nsamples * 2] = swab_s16(src[2]);
+    dst[nsamples * 3] = swab_s16(src[3]);
 
     src += nch;
     dst++;
@@ -3000,10 +3000,10 @@ Converter::pcm24_le_linear_4ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int24_t *)part_buf;
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
-    dst[nsamples * 2] = swab24(src[2]);
-    dst[nsamples * 3] = swab24(src[3]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
+    dst[nsamples * 2] = swab_s24(src[2]);
+    dst[nsamples * 3] = swab_s24(src[3]);
 
       dst++;
       out_size++;
@@ -3049,10 +3049,10 @@ Converter::pcm24_le_linear_4ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
-    dst[nsamples * 2] = swab24(src[2]);
-    dst[nsamples * 3] = swab24(src[3]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
+    dst[nsamples * 2] = swab_s24(src[2]);
+    dst[nsamples * 3] = swab_s24(src[3]);
 
     src += nch;
     dst++;
@@ -3103,10 +3103,10 @@ Converter::pcm32_le_linear_4ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int32_t *)part_buf;
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
-    dst[nsamples * 2] = swab32(src[2]);
-    dst[nsamples * 3] = swab32(src[3]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
+    dst[nsamples * 2] = swab_s32(src[2]);
+    dst[nsamples * 3] = swab_s32(src[3]);
 
       dst++;
       out_size++;
@@ -3152,10 +3152,10 @@ Converter::pcm32_le_linear_4ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
-    dst[nsamples * 2] = swab32(src[2]);
-    dst[nsamples * 3] = swab32(src[3]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
+    dst[nsamples * 2] = swab_s32(src[2]);
+    dst[nsamples * 3] = swab_s32(src[3]);
 
     src += nch;
     dst++;
@@ -3730,11 +3730,11 @@ Converter::pcm16_le_linear_5ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int16_t *)part_buf;
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
-    dst[nsamples * 2] = swab16(src[2]);
-    dst[nsamples * 3] = swab16(src[3]);
-    dst[nsamples * 4] = swab16(src[4]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
+    dst[nsamples * 2] = swab_s16(src[2]);
+    dst[nsamples * 3] = swab_s16(src[3]);
+    dst[nsamples * 4] = swab_s16(src[4]);
 
       dst++;
       out_size++;
@@ -3780,11 +3780,11 @@ Converter::pcm16_le_linear_5ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
-    dst[nsamples * 2] = swab16(src[2]);
-    dst[nsamples * 3] = swab16(src[3]);
-    dst[nsamples * 4] = swab16(src[4]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
+    dst[nsamples * 2] = swab_s16(src[2]);
+    dst[nsamples * 3] = swab_s16(src[3]);
+    dst[nsamples * 4] = swab_s16(src[4]);
 
     src += nch;
     dst++;
@@ -3835,11 +3835,11 @@ Converter::pcm24_le_linear_5ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int24_t *)part_buf;
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
-    dst[nsamples * 2] = swab24(src[2]);
-    dst[nsamples * 3] = swab24(src[3]);
-    dst[nsamples * 4] = swab24(src[4]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
+    dst[nsamples * 2] = swab_s24(src[2]);
+    dst[nsamples * 3] = swab_s24(src[3]);
+    dst[nsamples * 4] = swab_s24(src[4]);
 
       dst++;
       out_size++;
@@ -3885,11 +3885,11 @@ Converter::pcm24_le_linear_5ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
-    dst[nsamples * 2] = swab24(src[2]);
-    dst[nsamples * 3] = swab24(src[3]);
-    dst[nsamples * 4] = swab24(src[4]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
+    dst[nsamples * 2] = swab_s24(src[2]);
+    dst[nsamples * 3] = swab_s24(src[3]);
+    dst[nsamples * 4] = swab_s24(src[4]);
 
     src += nch;
     dst++;
@@ -3940,11 +3940,11 @@ Converter::pcm32_le_linear_5ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int32_t *)part_buf;
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
-    dst[nsamples * 2] = swab32(src[2]);
-    dst[nsamples * 3] = swab32(src[3]);
-    dst[nsamples * 4] = swab32(src[4]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
+    dst[nsamples * 2] = swab_s32(src[2]);
+    dst[nsamples * 3] = swab_s32(src[3]);
+    dst[nsamples * 4] = swab_s32(src[4]);
 
       dst++;
       out_size++;
@@ -3990,11 +3990,11 @@ Converter::pcm32_le_linear_5ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
-    dst[nsamples * 2] = swab32(src[2]);
-    dst[nsamples * 3] = swab32(src[3]);
-    dst[nsamples * 4] = swab32(src[4]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
+    dst[nsamples * 2] = swab_s32(src[2]);
+    dst[nsamples * 3] = swab_s32(src[3]);
+    dst[nsamples * 4] = swab_s32(src[4]);
 
     src += nch;
     dst++;
@@ -4579,12 +4579,12 @@ Converter::pcm16_le_linear_6ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int16_t *)part_buf;
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
-    dst[nsamples * 2] = swab16(src[2]);
-    dst[nsamples * 3] = swab16(src[3]);
-    dst[nsamples * 4] = swab16(src[4]);
-    dst[nsamples * 5] = swab16(src[5]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
+    dst[nsamples * 2] = swab_s16(src[2]);
+    dst[nsamples * 3] = swab_s16(src[3]);
+    dst[nsamples * 4] = swab_s16(src[4]);
+    dst[nsamples * 5] = swab_s16(src[5]);
 
       dst++;
       out_size++;
@@ -4630,12 +4630,12 @@ Converter::pcm16_le_linear_6ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab16(src[0]);
-    dst[nsamples * 1] = swab16(src[1]);
-    dst[nsamples * 2] = swab16(src[2]);
-    dst[nsamples * 3] = swab16(src[3]);
-    dst[nsamples * 4] = swab16(src[4]);
-    dst[nsamples * 5] = swab16(src[5]);
+    dst[nsamples * 0] = swab_s16(src[0]);
+    dst[nsamples * 1] = swab_s16(src[1]);
+    dst[nsamples * 2] = swab_s16(src[2]);
+    dst[nsamples * 3] = swab_s16(src[3]);
+    dst[nsamples * 4] = swab_s16(src[4]);
+    dst[nsamples * 5] = swab_s16(src[5]);
 
     src += nch;
     dst++;
@@ -4686,12 +4686,12 @@ Converter::pcm24_le_linear_6ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int24_t *)part_buf;
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
-    dst[nsamples * 2] = swab24(src[2]);
-    dst[nsamples * 3] = swab24(src[3]);
-    dst[nsamples * 4] = swab24(src[4]);
-    dst[nsamples * 5] = swab24(src[5]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
+    dst[nsamples * 2] = swab_s24(src[2]);
+    dst[nsamples * 3] = swab_s24(src[3]);
+    dst[nsamples * 4] = swab_s24(src[4]);
+    dst[nsamples * 5] = swab_s24(src[5]);
 
       dst++;
       out_size++;
@@ -4737,12 +4737,12 @@ Converter::pcm24_le_linear_6ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab24(src[0]);
-    dst[nsamples * 1] = swab24(src[1]);
-    dst[nsamples * 2] = swab24(src[2]);
-    dst[nsamples * 3] = swab24(src[3]);
-    dst[nsamples * 4] = swab24(src[4]);
-    dst[nsamples * 5] = swab24(src[5]);
+    dst[nsamples * 0] = swab_s24(src[0]);
+    dst[nsamples * 1] = swab_s24(src[1]);
+    dst[nsamples * 2] = swab_s24(src[2]);
+    dst[nsamples * 3] = swab_s24(src[3]);
+    dst[nsamples * 4] = swab_s24(src[4]);
+    dst[nsamples * 5] = swab_s24(src[5]);
 
     src += nch;
     dst++;
@@ -4793,12 +4793,12 @@ Converter::pcm32_le_linear_6ch(Chunk *_chunk)
       part_size = 0;
 
       src = (int32_t *)part_buf;
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
-    dst[nsamples * 2] = swab32(src[2]);
-    dst[nsamples * 3] = swab32(src[3]);
-    dst[nsamples * 4] = swab32(src[4]);
-    dst[nsamples * 5] = swab32(src[5]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
+    dst[nsamples * 2] = swab_s32(src[2]);
+    dst[nsamples * 3] = swab_s32(src[3]);
+    dst[nsamples * 4] = swab_s32(src[4]);
+    dst[nsamples * 5] = swab_s32(src[5]);
 
       dst++;
       out_size++;
@@ -4844,12 +4844,12 @@ Converter::pcm32_le_linear_6ch(Chunk *_chunk)
 
   while (src < end)
   {
-    dst[nsamples * 0] = swab32(src[0]);
-    dst[nsamples * 1] = swab32(src[1]);
-    dst[nsamples * 2] = swab32(src[2]);
-    dst[nsamples * 3] = swab32(src[3]);
-    dst[nsamples * 4] = swab32(src[4]);
-    dst[nsamples * 5] = swab32(src[5]);
+    dst[nsamples * 0] = swab_s32(src[0]);
+    dst[nsamples * 1] = swab_s32(src[1]);
+    dst[nsamples * 2] = swab_s32(src[2]);
+    dst[nsamples * 3] = swab_s32(src[3]);
+    dst[nsamples * 4] = swab_s32(src[4]);
+    dst[nsamples * 5] = swab_s32(src[5]);
 
     src += nch;
     dst++;

@@ -81,7 +81,7 @@ Converter::linear_pcm16_1ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[0] = (s2i16(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -103,7 +103,7 @@ Converter::linear_pcm24_1ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -125,7 +125,7 @@ Converter::linear_pcm32_1ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -147,7 +147,7 @@ Converter::linear_pcmfloat_1ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
+    dst[0] = ((float)(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -169,7 +169,7 @@ Converter::linear_pcm16_le_1ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[0] = swab_s16(s2i16(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -191,7 +191,7 @@ Converter::linear_pcm24_le_1ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[0] = swab_s24(s2i32(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -213,7 +213,7 @@ Converter::linear_pcm32_le_1ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[0] = swab_s32(s2i32(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -235,7 +235,7 @@ Converter::linear_pcmfloat_le_1ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
+    dst[0] = swab_float((float)(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -258,8 +258,8 @@ Converter::linear_pcm16_2ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[0] = (s2i16(src[0][0])); src[0]++;
+    dst[1] = (s2i16(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -281,8 +281,8 @@ Converter::linear_pcm24_2ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -304,8 +304,8 @@ Converter::linear_pcm32_2ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -327,8 +327,8 @@ Converter::linear_pcmfloat_2ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
+    dst[0] = ((float)(src[0][0])); src[0]++;
+    dst[1] = ((float)(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -350,8 +350,8 @@ Converter::linear_pcm16_le_2ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[0] = swab_s16(s2i16(src[0][0])); src[0]++;
+    dst[1] = swab_s16(s2i16(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -373,8 +373,8 @@ Converter::linear_pcm24_le_2ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[0] = swab_s24(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s24(s2i32(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -396,8 +396,8 @@ Converter::linear_pcm32_le_2ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[0] = swab_s32(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s32(s2i32(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -419,8 +419,8 @@ Converter::linear_pcmfloat_le_2ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
+    dst[0] = swab_float((float)(src[0][0])); src[0]++;
+    dst[1] = swab_float((float)(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -443,9 +443,9 @@ Converter::linear_pcm16_3ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
-    dst[2] = s2i16(src[2][0]); src[2]++;
+    dst[0] = (s2i16(src[0][0])); src[0]++;
+    dst[1] = (s2i16(src[1][0])); src[1]++;
+    dst[2] = (s2i16(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -467,9 +467,9 @@ Converter::linear_pcm24_3ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
+    dst[2] = (s2i32(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -491,9 +491,9 @@ Converter::linear_pcm32_3ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
+    dst[2] = (s2i32(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -515,9 +515,9 @@ Converter::linear_pcmfloat_3ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
-    dst[2] = float(src[2][0]); src[2]++;
+    dst[0] = ((float)(src[0][0])); src[0]++;
+    dst[1] = ((float)(src[1][0])); src[1]++;
+    dst[2] = ((float)(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -539,9 +539,9 @@ Converter::linear_pcm16_le_3ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
-    dst[2] = s2i16(src[2][0]); src[2]++;
+    dst[0] = swab_s16(s2i16(src[0][0])); src[0]++;
+    dst[1] = swab_s16(s2i16(src[1][0])); src[1]++;
+    dst[2] = swab_s16(s2i16(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -563,9 +563,9 @@ Converter::linear_pcm24_le_3ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[0] = swab_s24(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s24(s2i32(src[1][0])); src[1]++;
+    dst[2] = swab_s24(s2i32(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -587,9 +587,9 @@ Converter::linear_pcm32_le_3ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[0] = swab_s32(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s32(s2i32(src[1][0])); src[1]++;
+    dst[2] = swab_s32(s2i32(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -611,9 +611,9 @@ Converter::linear_pcmfloat_le_3ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
-    dst[2] = float(src[2][0]); src[2]++;
+    dst[0] = swab_float((float)(src[0][0])); src[0]++;
+    dst[1] = swab_float((float)(src[1][0])); src[1]++;
+    dst[2] = swab_float((float)(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -636,10 +636,10 @@ Converter::linear_pcm16_4ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
-    dst[2] = s2i16(src[2][0]); src[2]++;
-    dst[3] = s2i16(src[3][0]); src[3]++;
+    dst[0] = (s2i16(src[0][0])); src[0]++;
+    dst[1] = (s2i16(src[1][0])); src[1]++;
+    dst[2] = (s2i16(src[2][0])); src[2]++;
+    dst[3] = (s2i16(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -661,10 +661,10 @@ Converter::linear_pcm24_4ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
+    dst[2] = (s2i32(src[2][0])); src[2]++;
+    dst[3] = (s2i32(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -686,10 +686,10 @@ Converter::linear_pcm32_4ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
+    dst[2] = (s2i32(src[2][0])); src[2]++;
+    dst[3] = (s2i32(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -711,10 +711,10 @@ Converter::linear_pcmfloat_4ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
-    dst[2] = float(src[2][0]); src[2]++;
-    dst[3] = float(src[3][0]); src[3]++;
+    dst[0] = ((float)(src[0][0])); src[0]++;
+    dst[1] = ((float)(src[1][0])); src[1]++;
+    dst[2] = ((float)(src[2][0])); src[2]++;
+    dst[3] = ((float)(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -736,10 +736,10 @@ Converter::linear_pcm16_le_4ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
-    dst[2] = s2i16(src[2][0]); src[2]++;
-    dst[3] = s2i16(src[3][0]); src[3]++;
+    dst[0] = swab_s16(s2i16(src[0][0])); src[0]++;
+    dst[1] = swab_s16(s2i16(src[1][0])); src[1]++;
+    dst[2] = swab_s16(s2i16(src[2][0])); src[2]++;
+    dst[3] = swab_s16(s2i16(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -761,10 +761,10 @@ Converter::linear_pcm24_le_4ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[0] = swab_s24(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s24(s2i32(src[1][0])); src[1]++;
+    dst[2] = swab_s24(s2i32(src[2][0])); src[2]++;
+    dst[3] = swab_s24(s2i32(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -786,10 +786,10 @@ Converter::linear_pcm32_le_4ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[0] = swab_s32(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s32(s2i32(src[1][0])); src[1]++;
+    dst[2] = swab_s32(s2i32(src[2][0])); src[2]++;
+    dst[3] = swab_s32(s2i32(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -811,10 +811,10 @@ Converter::linear_pcmfloat_le_4ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
-    dst[2] = float(src[2][0]); src[2]++;
-    dst[3] = float(src[3][0]); src[3]++;
+    dst[0] = swab_float((float)(src[0][0])); src[0]++;
+    dst[1] = swab_float((float)(src[1][0])); src[1]++;
+    dst[2] = swab_float((float)(src[2][0])); src[2]++;
+    dst[3] = swab_float((float)(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -837,11 +837,11 @@ Converter::linear_pcm16_5ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
-    dst[2] = s2i16(src[2][0]); src[2]++;
-    dst[3] = s2i16(src[3][0]); src[3]++;
-    dst[4] = s2i16(src[4][0]); src[4]++;
+    dst[0] = (s2i16(src[0][0])); src[0]++;
+    dst[1] = (s2i16(src[1][0])); src[1]++;
+    dst[2] = (s2i16(src[2][0])); src[2]++;
+    dst[3] = (s2i16(src[3][0])); src[3]++;
+    dst[4] = (s2i16(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -863,11 +863,11 @@ Converter::linear_pcm24_5ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
-    dst[4] = s2i32(src[4][0]); src[4]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
+    dst[2] = (s2i32(src[2][0])); src[2]++;
+    dst[3] = (s2i32(src[3][0])); src[3]++;
+    dst[4] = (s2i32(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -889,11 +889,11 @@ Converter::linear_pcm32_5ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
-    dst[4] = s2i32(src[4][0]); src[4]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
+    dst[2] = (s2i32(src[2][0])); src[2]++;
+    dst[3] = (s2i32(src[3][0])); src[3]++;
+    dst[4] = (s2i32(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -915,11 +915,11 @@ Converter::linear_pcmfloat_5ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
-    dst[2] = float(src[2][0]); src[2]++;
-    dst[3] = float(src[3][0]); src[3]++;
-    dst[4] = float(src[4][0]); src[4]++;
+    dst[0] = ((float)(src[0][0])); src[0]++;
+    dst[1] = ((float)(src[1][0])); src[1]++;
+    dst[2] = ((float)(src[2][0])); src[2]++;
+    dst[3] = ((float)(src[3][0])); src[3]++;
+    dst[4] = ((float)(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -941,11 +941,11 @@ Converter::linear_pcm16_le_5ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
-    dst[2] = s2i16(src[2][0]); src[2]++;
-    dst[3] = s2i16(src[3][0]); src[3]++;
-    dst[4] = s2i16(src[4][0]); src[4]++;
+    dst[0] = swab_s16(s2i16(src[0][0])); src[0]++;
+    dst[1] = swab_s16(s2i16(src[1][0])); src[1]++;
+    dst[2] = swab_s16(s2i16(src[2][0])); src[2]++;
+    dst[3] = swab_s16(s2i16(src[3][0])); src[3]++;
+    dst[4] = swab_s16(s2i16(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -967,11 +967,11 @@ Converter::linear_pcm24_le_5ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
-    dst[4] = s2i32(src[4][0]); src[4]++;
+    dst[0] = swab_s24(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s24(s2i32(src[1][0])); src[1]++;
+    dst[2] = swab_s24(s2i32(src[2][0])); src[2]++;
+    dst[3] = swab_s24(s2i32(src[3][0])); src[3]++;
+    dst[4] = swab_s24(s2i32(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -993,11 +993,11 @@ Converter::linear_pcm32_le_5ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
-    dst[4] = s2i32(src[4][0]); src[4]++;
+    dst[0] = swab_s32(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s32(s2i32(src[1][0])); src[1]++;
+    dst[2] = swab_s32(s2i32(src[2][0])); src[2]++;
+    dst[3] = swab_s32(s2i32(src[3][0])); src[3]++;
+    dst[4] = swab_s32(s2i32(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -1019,11 +1019,11 @@ Converter::linear_pcmfloat_le_5ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
-    dst[2] = float(src[2][0]); src[2]++;
-    dst[3] = float(src[3][0]); src[3]++;
-    dst[4] = float(src[4][0]); src[4]++;
+    dst[0] = swab_float((float)(src[0][0])); src[0]++;
+    dst[1] = swab_float((float)(src[1][0])); src[1]++;
+    dst[2] = swab_float((float)(src[2][0])); src[2]++;
+    dst[3] = swab_float((float)(src[3][0])); src[3]++;
+    dst[4] = swab_float((float)(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -1046,12 +1046,12 @@ Converter::linear_pcm16_6ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
-    dst[2] = s2i16(src[2][0]); src[2]++;
-    dst[3] = s2i16(src[3][0]); src[3]++;
-    dst[4] = s2i16(src[4][0]); src[4]++;
-    dst[5] = s2i16(src[5][0]); src[5]++;
+    dst[0] = (s2i16(src[0][0])); src[0]++;
+    dst[1] = (s2i16(src[1][0])); src[1]++;
+    dst[2] = (s2i16(src[2][0])); src[2]++;
+    dst[3] = (s2i16(src[3][0])); src[3]++;
+    dst[4] = (s2i16(src[4][0])); src[4]++;
+    dst[5] = (s2i16(src[5][0])); src[5]++;
 
     dst += nch;
   }
@@ -1073,12 +1073,12 @@ Converter::linear_pcm24_6ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
-    dst[4] = s2i32(src[4][0]); src[4]++;
-    dst[5] = s2i32(src[5][0]); src[5]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
+    dst[2] = (s2i32(src[2][0])); src[2]++;
+    dst[3] = (s2i32(src[3][0])); src[3]++;
+    dst[4] = (s2i32(src[4][0])); src[4]++;
+    dst[5] = (s2i32(src[5][0])); src[5]++;
 
     dst += nch;
   }
@@ -1100,12 +1100,12 @@ Converter::linear_pcm32_6ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
-    dst[4] = s2i32(src[4][0]); src[4]++;
-    dst[5] = s2i32(src[5][0]); src[5]++;
+    dst[0] = (s2i32(src[0][0])); src[0]++;
+    dst[1] = (s2i32(src[1][0])); src[1]++;
+    dst[2] = (s2i32(src[2][0])); src[2]++;
+    dst[3] = (s2i32(src[3][0])); src[3]++;
+    dst[4] = (s2i32(src[4][0])); src[4]++;
+    dst[5] = (s2i32(src[5][0])); src[5]++;
 
     dst += nch;
   }
@@ -1127,12 +1127,12 @@ Converter::linear_pcmfloat_6ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
-    dst[2] = float(src[2][0]); src[2]++;
-    dst[3] = float(src[3][0]); src[3]++;
-    dst[4] = float(src[4][0]); src[4]++;
-    dst[5] = float(src[5][0]); src[5]++;
+    dst[0] = ((float)(src[0][0])); src[0]++;
+    dst[1] = ((float)(src[1][0])); src[1]++;
+    dst[2] = ((float)(src[2][0])); src[2]++;
+    dst[3] = ((float)(src[3][0])); src[3]++;
+    dst[4] = ((float)(src[4][0])); src[4]++;
+    dst[5] = ((float)(src[5][0])); src[5]++;
 
     dst += nch;
   }
@@ -1154,12 +1154,12 @@ Converter::linear_pcm16_le_6ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i16(src[0][0]); src[0]++;
-    dst[1] = s2i16(src[1][0]); src[1]++;
-    dst[2] = s2i16(src[2][0]); src[2]++;
-    dst[3] = s2i16(src[3][0]); src[3]++;
-    dst[4] = s2i16(src[4][0]); src[4]++;
-    dst[5] = s2i16(src[5][0]); src[5]++;
+    dst[0] = swab_s16(s2i16(src[0][0])); src[0]++;
+    dst[1] = swab_s16(s2i16(src[1][0])); src[1]++;
+    dst[2] = swab_s16(s2i16(src[2][0])); src[2]++;
+    dst[3] = swab_s16(s2i16(src[3][0])); src[3]++;
+    dst[4] = swab_s16(s2i16(src[4][0])); src[4]++;
+    dst[5] = swab_s16(s2i16(src[5][0])); src[5]++;
 
     dst += nch;
   }
@@ -1181,12 +1181,12 @@ Converter::linear_pcm24_le_6ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
-    dst[4] = s2i32(src[4][0]); src[4]++;
-    dst[5] = s2i32(src[5][0]); src[5]++;
+    dst[0] = swab_s24(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s24(s2i32(src[1][0])); src[1]++;
+    dst[2] = swab_s24(s2i32(src[2][0])); src[2]++;
+    dst[3] = swab_s24(s2i32(src[3][0])); src[3]++;
+    dst[4] = swab_s24(s2i32(src[4][0])); src[4]++;
+    dst[5] = swab_s24(s2i32(src[5][0])); src[5]++;
 
     dst += nch;
   }
@@ -1208,12 +1208,12 @@ Converter::linear_pcm32_le_6ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = s2i32(src[0][0]); src[0]++;
-    dst[1] = s2i32(src[1][0]); src[1]++;
-    dst[2] = s2i32(src[2][0]); src[2]++;
-    dst[3] = s2i32(src[3][0]); src[3]++;
-    dst[4] = s2i32(src[4][0]); src[4]++;
-    dst[5] = s2i32(src[5][0]); src[5]++;
+    dst[0] = swab_s32(s2i32(src[0][0])); src[0]++;
+    dst[1] = swab_s32(s2i32(src[1][0])); src[1]++;
+    dst[2] = swab_s32(s2i32(src[2][0])); src[2]++;
+    dst[3] = swab_s32(s2i32(src[3][0])); src[3]++;
+    dst[4] = swab_s32(s2i32(src[4][0])); src[4]++;
+    dst[5] = swab_s32(s2i32(src[5][0])); src[5]++;
 
     dst += nch;
   }
@@ -1235,12 +1235,12 @@ Converter::linear_pcmfloat_le_6ch(Chunk *_chunk)
 
   while (n--)
   {
-    dst[0] = float(src[0][0]); src[0]++;
-    dst[1] = float(src[1][0]); src[1]++;
-    dst[2] = float(src[2][0]); src[2]++;
-    dst[3] = float(src[3][0]); src[3]++;
-    dst[4] = float(src[4][0]); src[4]++;
-    dst[5] = float(src[5][0]); src[5]++;
+    dst[0] = swab_float((float)(src[0][0])); src[0]++;
+    dst[1] = swab_float((float)(src[1][0])); src[1]++;
+    dst[2] = swab_float((float)(src[2][0])); src[2]++;
+    dst[3] = swab_float((float)(src[3][0])); src[3]++;
+    dst[4] = swab_float((float)(src[4][0])); src[4]++;
+    dst[5] = swab_float((float)(src[5][0])); src[5]++;
 
     dst += nch;
   }
