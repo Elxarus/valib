@@ -85,7 +85,6 @@ int main(int argc, char **argv)
   ScreenLog log;
   log.open_group("Test session");
 
-  test_ac3_enc_all(&log);
 
   test_filters(&log);
   test_spdifer(&log);
@@ -94,6 +93,7 @@ int main(int argc, char **argv)
   test_pcm_passthrough(&log);
 
   test_ac3_parser();
+  test_ac3_enc_all(&log);
   test_pes_demux();
 
   log.close_group();

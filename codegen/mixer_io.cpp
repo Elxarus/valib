@@ -37,7 +37,7 @@ void io_mix66(samples_t input, samples_t output, size_t nsamples);
 
 typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, size_t); // input-output mixing
 
-const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = {
+static const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = {
   { Mixer::io_mix11, Mixer::io_mix12, Mixer::io_mix13, Mixer::io_mix14, Mixer::io_mix15, Mixer::io_mix16 },
   { Mixer::io_mix21, Mixer::io_mix22, Mixer::io_mix23, Mixer::io_mix24, Mixer::io_mix25, Mixer::io_mix26 },
   { Mixer::io_mix31, Mixer::io_mix32, Mixer::io_mix33, Mixer::io_mix34, Mixer::io_mix35, Mixer::io_mix36 },

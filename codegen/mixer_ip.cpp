@@ -37,7 +37,7 @@ void ip_mix66(samples_t samples, size_t nsamples);
 
 typedef void (Mixer::*ip_mixfunc_t)(samples_t, size_t); // in-place mixing
 
-const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {
+static const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {
   { Mixer::ip_mix11, Mixer::ip_mix12, Mixer::ip_mix13, Mixer::ip_mix14, Mixer::ip_mix15, Mixer::ip_mix16 },
   { Mixer::ip_mix21, Mixer::ip_mix22, Mixer::ip_mix23, Mixer::ip_mix24, Mixer::ip_mix25, Mixer::ip_mix26 },
   { Mixer::ip_mix31, Mixer::ip_mix32, Mixer::ip_mix33, Mixer::ip_mix34, Mixer::ip_mix35, Mixer::ip_mix36 },

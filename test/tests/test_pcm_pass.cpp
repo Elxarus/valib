@@ -31,7 +31,8 @@ int test_compare_file(Log *log, Filter *filter, const char *data_file, const cha
   data_buf.allocate(buf_size);
   ref_buf.allocate(buf_size);
 
-  Chunk chunk;
+  Chunk ichunk;
+  Chunk ochunk;
   bool flushing = false;
 
   while (1)
@@ -40,15 +41,15 @@ int test_compare_file(Log *log, Filter *filter, const char *data_file, const cha
     data_size = fdata.read(data_buf, buf_size);
 
     if (data_size)
-      chunk.set(filter->get_input(), data_buf, data_size);
+      ichunk.set(filter->get_input(), data_buf, data_size);
     else
     {
-      chunk.set(filter->get_input(), 0, 0, 0, 0, true);
+      ichunk.set(filter->get_input(), 0, 0, 0, 0, true);
       flushing = true;
     }
 
     // process data
-    if (!filter->process(&chunk))
+    if (!filter->process(&ichunk))
       return log->err("process() failed");
 
     if (flushing && filter->is_empty())
@@ -56,13 +57,13 @@ int test_compare_file(Log *log, Filter *filter, const char *data_file, const cha
 
     while (!filter->is_empty())
     {
-      if (!filter->get_chunk(&chunk))
+      if (!filter->get_chunk(&ochunk))
         return log->err("get_chunk() failed");
 
-      if (chunk.get_spk().format == FORMAT_LINEAR)
+      if (ochunk.get_spk().format == FORMAT_LINEAR)
         return log->err("cannot work with linear output");
 
-      while (!chunk.is_empty())
+      while (!ochunk.is_empty())
       {
         // read reference data buffer
         if (!ref_size)
@@ -76,10 +77,10 @@ int test_compare_file(Log *log, Filter *filter, const char *data_file, const cha
         }
 
         // compare
-        size_t len = MIN(chunk.get_size(), ref_size);
-        if (memcmp(ref_pos, chunk.get_rawdata(), len))
+        size_t len = MIN(ochunk.get_size(), ref_size);
+        if (memcmp(ref_pos, ochunk.get_rawdata(), len))
           return log->err("data differs");
-        chunk.drop(len);
+        ochunk.drop(len);
         ref_pos += len;
         ref_size -= len;
       } // while (!chunk.is_empty())
@@ -87,7 +88,7 @@ int test_compare_file(Log *log, Filter *filter, const char *data_file, const cha
 
     if (flushing)
     {
-      if (!chunk.is_eos())
+      if (!ochunk.is_eos())
         return log->err("Last chunk is not end-of-stream");
 
       if (ref_size)

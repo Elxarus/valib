@@ -34,11 +34,9 @@ inline int16_t s2i16(sample_t s)
 #endif
 
 
-typedef void (Converter::*convert_t)();
-
+typedef bool (Converter::*convert_t)(Chunk *);
 static const int formats_tbl[] = {FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCMFLOAT, FORMAT_PCM16_LE, FORMAT_PCM24_LE, FORMAT_PCM32_LE, FORMAT_PCMFLOAT_LE };
-
-const int formats = FORMAT_PCM16 | FORMAT_PCM24 | FORMAT_PCM32 | FORMAT_PCMFLOAT | FORMAT_PCM16_LE | FORMAT_PCM24_LE | FORMAT_PCM32_LE | FORMAT_PCMFLOAT_LE;
+const int converter_format_mask = FORMAT_MASK_LINEAR | FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCMFLOAT | FORMAT_MASK_PCM16_LE | FORMAT_MASK_PCM24_LE | FORMAT_MASK_PCM32_LE | FORMAT_MASK_PCMFLOAT_LE;
 
 static const convert_t pcm2linear_tbl[NCHANNELS][8] = {
  { Converter::pcm16_linear_1ch, Converter::pcm24_linear_1ch, Converter::pcm32_linear_1ch, Converter::pcmfloat_linear_1ch, Converter::pcm16_le_linear_1ch, Converter::pcm24_le_linear_1ch, Converter::pcm32_le_linear_1ch, Converter::pcmfloat_le_linear_1ch },
@@ -49,8 +47,23 @@ static const convert_t pcm2linear_tbl[NCHANNELS][8] = {
  { Converter::pcm16_linear_6ch, Converter::pcm24_linear_6ch, Converter::pcm32_linear_6ch, Converter::pcmfloat_linear_6ch, Converter::pcm16_le_linear_6ch, Converter::pcm24_le_linear_6ch, Converter::pcm32_le_linear_6ch, Converter::pcmfloat_le_linear_6ch },
 };
 
+static const convert_t linear2pcm_tbl[NCHANNELS][8] = {
+ { Converter::linear_pcm16_1ch, Converter::linear_pcm24_1ch, Converter::linear_pcm32_1ch, Converter::linear_pcmfloat_1ch, Converter::linear_pcm16_le_1ch, Converter::linear_pcm24_le_1ch, Converter::linear_pcm32_le_1ch, Converter::linear_pcmfloat_le_1ch },
+ { Converter::linear_pcm16_2ch, Converter::linear_pcm24_2ch, Converter::linear_pcm32_2ch, Converter::linear_pcmfloat_2ch, Converter::linear_pcm16_le_2ch, Converter::linear_pcm24_le_2ch, Converter::linear_pcm32_le_2ch, Converter::linear_pcmfloat_le_2ch },
+ { Converter::linear_pcm16_3ch, Converter::linear_pcm24_3ch, Converter::linear_pcm32_3ch, Converter::linear_pcmfloat_3ch, Converter::linear_pcm16_le_3ch, Converter::linear_pcm24_le_3ch, Converter::linear_pcm32_le_3ch, Converter::linear_pcmfloat_le_3ch },
+ { Converter::linear_pcm16_4ch, Converter::linear_pcm24_4ch, Converter::linear_pcm32_4ch, Converter::linear_pcmfloat_4ch, Converter::linear_pcm16_le_4ch, Converter::linear_pcm24_le_4ch, Converter::linear_pcm32_le_4ch, Converter::linear_pcmfloat_le_4ch },
+ { Converter::linear_pcm16_5ch, Converter::linear_pcm24_5ch, Converter::linear_pcm32_5ch, Converter::linear_pcmfloat_5ch, Converter::linear_pcm16_le_5ch, Converter::linear_pcm24_le_5ch, Converter::linear_pcm32_le_5ch, Converter::linear_pcmfloat_le_5ch },
+ { Converter::linear_pcm16_6ch, Converter::linear_pcm24_6ch, Converter::linear_pcm32_6ch, Converter::linear_pcmfloat_6ch, Converter::linear_pcm16_le_6ch, Converter::linear_pcm24_le_6ch, Converter::linear_pcm32_le_6ch, Converter::linear_pcmfloat_le_6ch },
+};
 
 
+
+
+inline bool 
+Converter::query_format(int _format) const 
+{
+  return (FORMAT_MASK(_format) & converter_format_mask) != 0;
+}
 
 bool 
 Converter::alloc_buffer()
@@ -83,114 +96,100 @@ Converter::alloc_buffer()
     out_rawdata = buf.get_data();
     out_samples.set_null();
 
-    // todo:
-/*
     // find conversion function
     convert = 0;
     for (int i = 0; i < array_size(formats_tbl); i++)
-      if (spk.format == formats_tbl[i])
-        convert = pcm2linear_tbl[spk.nch()][i];
+      if (format == formats_tbl[i])
+        convert = linear2pcm_tbl[spk.nch()-1][i];
 
     return convert != 0;
-*/
   }
   return true;
 }
 
-
-void 
-Converter::linear2pcm()
+inline void 
+Converter::send_empty(Chunk *_chunk)
 {
-  int nch = spk.nch();
-  size_t sample_size = ::sample_size(format) * nch;
-
-  size_t n = MIN(size, nsamples);
-  linear2pcm(samples, out_rawdata, n);
-  drop_samples(n);
-  out_size = n * sample_size;
+  _chunk->set
+  (
+    get_output(), 0, 0,
+    sync, time, 
+    flushing && !size
+  );
+  flushing = flushing && size;
+  sync = false;
 }
 
-void
-Converter::linear2pcm(samples_t src, uint8_t *dst, size_t n)
+inline void 
+Converter::send_rawdata(Chunk *_chunk)
 {
-  int ch;
-  int nch = spk.nch();
-  size_t s;
+  _chunk->set
+  (
+    get_output(), 
+    out_rawdata, out_size,
+    sync, time, 
+    flushing && !size
+  );
+  flushing = flushing && size;
+  sync = false;
+}
 
-  switch (format)
-  {
-    case FORMAT_PCM16:
-    {
-      int16_t *ptr = (int16_t *)dst;
-      for (s = 0; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          *ptr++ = s2i16(samples[ch][s]);
-      break;
-    }
+inline void 
+Converter::send_samples(Chunk *_chunk)
+{
+  _chunk->set
+  (
+    get_output(), 
+    out_samples, out_size,
+    sync, time, 
+    flushing && !size
+  );
+  flushing = flushing && size;
+  sync = false;
+}
 
-    case FORMAT_PCM16_LE:
-    {
-      int16_t *ptr = (int16_t *)dst;
-      for (s = 0; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          *ptr++ = swab16(s2i16(samples[ch][s]));
-      break;
-    }
+///////////////////////////////////////////////////////////
+// Converter interface
 
-    case FORMAT_PCM24:
-    {
-      int24_t *ptr = (int24_t *)dst;
-      for (s = 0; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          *ptr++ = s2i32(samples[ch][s]);
-      break;
-    }
+size_t 
+Converter::get_buffer() const
+{
+  return nsamples;
+}
 
-    case FORMAT_PCM24_LE:
-    {
-      int24_t *ptr = (int24_t *)dst;
-      for (s = 0; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          *ptr++ = swab24(s2i32(samples[ch][s]));
-      break;
-    }
+bool 
+Converter::set_buffer(size_t _nsamples)
+{
+  nsamples = _nsamples;
+  return alloc_buffer();
+}
 
-    case FORMAT_PCM32:
-    {
-      int32_t *ptr = (int32_t *)dst;
-      for (s = 0; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          *ptr++ = s2i32(samples[ch][s]);
-      break;
-    }
+int 
+Converter::get_format() const
+{
+  return format;
+}
 
-    case FORMAT_PCM32_LE:
-    {
-      int32_t *ptr = (int32_t *)dst;
-      for (s = 0; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          *ptr++ = swab32(s2i32(samples[ch][s]));
-      break;
-    }
+bool 
+Converter::set_format(int _format)
+{
+  if (!query_format(_format))
+    return false;
 
-    case FORMAT_PCMFLOAT:
-    {
-      float *ptr = (float *)dst;
-      for (s = 0; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          *ptr++ = (float)samples[ch][s];
-      break;
-    }
+  format = _format;
+  return alloc_buffer();
+}
 
-    case FORMAT_PCMFLOAT_LE:
-    {
-      int32_t *ptr = (int32_t *)dst;
-      for (s = 0; s < n; s++)
-        for (ch = 0; ch < nch; ch++)
-          *ptr++ = swab32(*(uint32_t *)&samples[ch][s]);
-      break;
-    }
-  }
+void 
+Converter::get_order(int _order[NCHANNELS]) const
+{
+  memcpy(_order, order, sizeof(order));
+}
+
+void 
+Converter::set_order(const int _order[NCHANNELS])
+{
+  memcpy(order, _order, sizeof(order));
 }
 
 ///////////////////////////////////////////////////////////
@@ -236,9 +235,9 @@ Converter::get_chunk(Chunk *_chunk)
   }
 
   if (format == FORMAT_LINEAR)
-    (this->*convert)();
+    return (this->*convert)(_chunk);
   else if (spk.format == FORMAT_LINEAR)
-    linear2pcm();
+    return (this->*convert)(_chunk);
   else
   {
     // todo: pcm->pcm
@@ -268,12 +267,11 @@ Converter::get_chunk(Chunk *_chunk)
   return true;
 }
 
+///////////////////////////////////////////////////////////
+// Conversion functions
 
-
-
-
-void
-Converter::pcm16_linear_1ch()
+bool
+Converter::pcm16_linear_1ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -300,7 +298,8 @@ Converter::pcm16_linear_1ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -361,9 +360,15 @@ Converter::pcm16_linear_1ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_linear_1ch()
+bool
+Converter::pcm24_linear_1ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -390,7 +395,8 @@ Converter::pcm24_linear_1ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -451,9 +457,15 @@ Converter::pcm24_linear_1ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_linear_1ch()
+bool
+Converter::pcm32_linear_1ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -480,7 +492,8 @@ Converter::pcm32_linear_1ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -541,9 +554,15 @@ Converter::pcm32_linear_1ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_linear_1ch()
+bool
+Converter::pcmfloat_linear_1ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -570,7 +589,8 @@ Converter::pcmfloat_linear_1ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -631,9 +651,15 @@ Converter::pcmfloat_linear_1ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm16_le_linear_1ch()
+bool
+Converter::pcm16_le_linear_1ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -660,7 +686,8 @@ Converter::pcm16_le_linear_1ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -721,9 +748,15 @@ Converter::pcm16_le_linear_1ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_le_linear_1ch()
+bool
+Converter::pcm24_le_linear_1ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -750,7 +783,8 @@ Converter::pcm24_le_linear_1ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -811,9 +845,15 @@ Converter::pcm24_le_linear_1ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_le_linear_1ch()
+bool
+Converter::pcm32_le_linear_1ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -840,7 +880,8 @@ Converter::pcm32_le_linear_1ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -901,9 +942,15 @@ Converter::pcm32_le_linear_1ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_le_linear_1ch()
+bool
+Converter::pcmfloat_le_linear_1ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -930,7 +977,8 @@ Converter::pcmfloat_le_linear_1ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -991,10 +1039,16 @@ Converter::pcmfloat_le_linear_1ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
 
-void
-Converter::pcm16_linear_2ch()
+bool
+Converter::pcm16_linear_2ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1021,7 +1075,8 @@ Converter::pcm16_linear_2ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1084,9 +1139,15 @@ Converter::pcm16_linear_2ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_linear_2ch()
+bool
+Converter::pcm24_linear_2ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1113,7 +1174,8 @@ Converter::pcm24_linear_2ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1176,9 +1238,15 @@ Converter::pcm24_linear_2ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_linear_2ch()
+bool
+Converter::pcm32_linear_2ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1205,7 +1273,8 @@ Converter::pcm32_linear_2ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1268,9 +1337,15 @@ Converter::pcm32_linear_2ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_linear_2ch()
+bool
+Converter::pcmfloat_linear_2ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1297,7 +1372,8 @@ Converter::pcmfloat_linear_2ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1360,9 +1436,15 @@ Converter::pcmfloat_linear_2ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm16_le_linear_2ch()
+bool
+Converter::pcm16_le_linear_2ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1389,7 +1471,8 @@ Converter::pcm16_le_linear_2ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1452,9 +1535,15 @@ Converter::pcm16_le_linear_2ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_le_linear_2ch()
+bool
+Converter::pcm24_le_linear_2ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1481,7 +1570,8 @@ Converter::pcm24_le_linear_2ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1544,9 +1634,15 @@ Converter::pcm24_le_linear_2ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_le_linear_2ch()
+bool
+Converter::pcm32_le_linear_2ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1573,7 +1669,8 @@ Converter::pcm32_le_linear_2ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1636,9 +1733,15 @@ Converter::pcm32_le_linear_2ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_le_linear_2ch()
+bool
+Converter::pcmfloat_le_linear_2ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1665,7 +1768,8 @@ Converter::pcmfloat_le_linear_2ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1728,10 +1832,16 @@ Converter::pcmfloat_le_linear_2ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
 
-void
-Converter::pcm16_linear_3ch()
+bool
+Converter::pcm16_linear_3ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1758,7 +1868,8 @@ Converter::pcm16_linear_3ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1823,9 +1934,15 @@ Converter::pcm16_linear_3ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_linear_3ch()
+bool
+Converter::pcm24_linear_3ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1852,7 +1969,8 @@ Converter::pcm24_linear_3ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -1917,9 +2035,15 @@ Converter::pcm24_linear_3ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_linear_3ch()
+bool
+Converter::pcm32_linear_3ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -1946,7 +2070,8 @@ Converter::pcm32_linear_3ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2011,9 +2136,15 @@ Converter::pcm32_linear_3ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_linear_3ch()
+bool
+Converter::pcmfloat_linear_3ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2040,7 +2171,8 @@ Converter::pcmfloat_linear_3ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2105,9 +2237,15 @@ Converter::pcmfloat_linear_3ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm16_le_linear_3ch()
+bool
+Converter::pcm16_le_linear_3ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2134,7 +2272,8 @@ Converter::pcm16_le_linear_3ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2199,9 +2338,15 @@ Converter::pcm16_le_linear_3ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_le_linear_3ch()
+bool
+Converter::pcm24_le_linear_3ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2228,7 +2373,8 @@ Converter::pcm24_le_linear_3ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2293,9 +2439,15 @@ Converter::pcm24_le_linear_3ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_le_linear_3ch()
+bool
+Converter::pcm32_le_linear_3ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2322,7 +2474,8 @@ Converter::pcm32_le_linear_3ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2387,9 +2540,15 @@ Converter::pcm32_le_linear_3ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_le_linear_3ch()
+bool
+Converter::pcmfloat_le_linear_3ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2416,7 +2575,8 @@ Converter::pcmfloat_le_linear_3ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2481,10 +2641,16 @@ Converter::pcmfloat_le_linear_3ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
 
-void
-Converter::pcm16_linear_4ch()
+bool
+Converter::pcm16_linear_4ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2511,7 +2677,8 @@ Converter::pcm16_linear_4ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2578,9 +2745,15 @@ Converter::pcm16_linear_4ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_linear_4ch()
+bool
+Converter::pcm24_linear_4ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2607,7 +2780,8 @@ Converter::pcm24_linear_4ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2674,9 +2848,15 @@ Converter::pcm24_linear_4ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_linear_4ch()
+bool
+Converter::pcm32_linear_4ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2703,7 +2883,8 @@ Converter::pcm32_linear_4ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2770,9 +2951,15 @@ Converter::pcm32_linear_4ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_linear_4ch()
+bool
+Converter::pcmfloat_linear_4ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2799,7 +2986,8 @@ Converter::pcmfloat_linear_4ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2866,9 +3054,15 @@ Converter::pcmfloat_linear_4ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm16_le_linear_4ch()
+bool
+Converter::pcm16_le_linear_4ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2895,7 +3089,8 @@ Converter::pcm16_le_linear_4ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -2962,9 +3157,15 @@ Converter::pcm16_le_linear_4ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_le_linear_4ch()
+bool
+Converter::pcm24_le_linear_4ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -2991,7 +3192,8 @@ Converter::pcm24_le_linear_4ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3058,9 +3260,15 @@ Converter::pcm24_le_linear_4ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_le_linear_4ch()
+bool
+Converter::pcm32_le_linear_4ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3087,7 +3295,8 @@ Converter::pcm32_le_linear_4ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3154,9 +3363,15 @@ Converter::pcm32_le_linear_4ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_le_linear_4ch()
+bool
+Converter::pcmfloat_le_linear_4ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3183,7 +3398,8 @@ Converter::pcmfloat_le_linear_4ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3250,10 +3466,16 @@ Converter::pcmfloat_le_linear_4ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
 
-void
-Converter::pcm16_linear_5ch()
+bool
+Converter::pcm16_linear_5ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3280,7 +3502,8 @@ Converter::pcm16_linear_5ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3349,9 +3572,15 @@ Converter::pcm16_linear_5ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_linear_5ch()
+bool
+Converter::pcm24_linear_5ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3378,7 +3607,8 @@ Converter::pcm24_linear_5ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3447,9 +3677,15 @@ Converter::pcm24_linear_5ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_linear_5ch()
+bool
+Converter::pcm32_linear_5ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3476,7 +3712,8 @@ Converter::pcm32_linear_5ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3545,9 +3782,15 @@ Converter::pcm32_linear_5ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_linear_5ch()
+bool
+Converter::pcmfloat_linear_5ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3574,7 +3817,8 @@ Converter::pcmfloat_linear_5ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3643,9 +3887,15 @@ Converter::pcmfloat_linear_5ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm16_le_linear_5ch()
+bool
+Converter::pcm16_le_linear_5ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3672,7 +3922,8 @@ Converter::pcm16_le_linear_5ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3741,9 +3992,15 @@ Converter::pcm16_le_linear_5ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_le_linear_5ch()
+bool
+Converter::pcm24_le_linear_5ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3770,7 +4027,8 @@ Converter::pcm24_le_linear_5ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3839,9 +4097,15 @@ Converter::pcm24_le_linear_5ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_le_linear_5ch()
+bool
+Converter::pcm32_le_linear_5ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3868,7 +4132,8 @@ Converter::pcm32_le_linear_5ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -3937,9 +4202,15 @@ Converter::pcm32_le_linear_5ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_le_linear_5ch()
+bool
+Converter::pcmfloat_le_linear_5ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -3966,7 +4237,8 @@ Converter::pcmfloat_le_linear_5ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4035,10 +4307,16 @@ Converter::pcmfloat_le_linear_5ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
 
-void
-Converter::pcm16_linear_6ch()
+bool
+Converter::pcm16_linear_6ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -4065,7 +4343,8 @@ Converter::pcm16_linear_6ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4136,9 +4415,15 @@ Converter::pcm16_linear_6ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_linear_6ch()
+bool
+Converter::pcm24_linear_6ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -4165,7 +4450,8 @@ Converter::pcm24_linear_6ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4236,9 +4522,15 @@ Converter::pcm24_linear_6ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_linear_6ch()
+bool
+Converter::pcm32_linear_6ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -4265,7 +4557,8 @@ Converter::pcm32_linear_6ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4336,9 +4629,15 @@ Converter::pcm32_linear_6ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_linear_6ch()
+bool
+Converter::pcmfloat_linear_6ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -4365,7 +4664,8 @@ Converter::pcmfloat_linear_6ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4436,9 +4736,15 @@ Converter::pcmfloat_linear_6ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm16_le_linear_6ch()
+bool
+Converter::pcm16_le_linear_6ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -4465,7 +4771,8 @@ Converter::pcm16_le_linear_6ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4536,9 +4843,15 @@ Converter::pcm16_le_linear_6ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm24_le_linear_6ch()
+bool
+Converter::pcm24_le_linear_6ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -4565,7 +4878,8 @@ Converter::pcm24_le_linear_6ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4636,9 +4950,15 @@ Converter::pcm24_le_linear_6ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcm32_le_linear_6ch()
+bool
+Converter::pcm32_le_linear_6ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -4665,7 +4985,8 @@ Converter::pcm32_le_linear_6ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4736,9 +5057,15 @@ Converter::pcm32_le_linear_6ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
 }
-void
-Converter::pcmfloat_le_linear_6ch()
+bool
+Converter::pcmfloat_le_linear_6ch(Chunk *_chunk)
 {
   // input: spk, nsamples, rawdata, size
   // output: out_samples, out_size
@@ -4765,7 +5092,8 @@ Converter::pcmfloat_le_linear_6ch()
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
       size = 0;
-      return;
+      send_empty(_chunk);
+      return true;
     }
     else
     {
@@ -4836,5 +5164,1191 @@ Converter::pcmfloat_le_linear_6ch()
     src += nch;
     dst++;
   }
+
+  /////////////////////////////////////////////////////////
+  // Fill output chunk
+
+  send_samples(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm16_1ch(Chunk *_chunk)
+{
+  const int nch = 1;
+  const size_t sample_size = sizeof(int16_t) * 1;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_1ch(Chunk *_chunk)
+{
+  const int nch = 1;
+  const size_t sample_size = sizeof(int24_t) * 1;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_1ch(Chunk *_chunk)
+{
+  const int nch = 1;
+  const size_t sample_size = sizeof(int32_t) * 1;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_1ch(Chunk *_chunk)
+{
+  const int nch = 1;
+  const size_t sample_size = sizeof(float) * 1;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm16_le_1ch(Chunk *_chunk)
+{
+  const int nch = 1;
+  const size_t sample_size = sizeof(int16_t) * 1;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_le_1ch(Chunk *_chunk)
+{
+  const int nch = 1;
+  const size_t sample_size = sizeof(int24_t) * 1;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_le_1ch(Chunk *_chunk)
+{
+  const int nch = 1;
+  const size_t sample_size = sizeof(int32_t) * 1;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_le_1ch(Chunk *_chunk)
+{
+  const int nch = 1;
+  const size_t sample_size = sizeof(float) * 1;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
 }
 
+bool
+Converter::linear_pcm16_2ch(Chunk *_chunk)
+{
+  const int nch = 2;
+  const size_t sample_size = sizeof(int16_t) * 2;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_2ch(Chunk *_chunk)
+{
+  const int nch = 2;
+  const size_t sample_size = sizeof(int24_t) * 2;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_2ch(Chunk *_chunk)
+{
+  const int nch = 2;
+  const size_t sample_size = sizeof(int32_t) * 2;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_2ch(Chunk *_chunk)
+{
+  const int nch = 2;
+  const size_t sample_size = sizeof(float) * 2;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm16_le_2ch(Chunk *_chunk)
+{
+  const int nch = 2;
+  const size_t sample_size = sizeof(int16_t) * 2;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_le_2ch(Chunk *_chunk)
+{
+  const int nch = 2;
+  const size_t sample_size = sizeof(int24_t) * 2;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_le_2ch(Chunk *_chunk)
+{
+  const int nch = 2;
+  const size_t sample_size = sizeof(int32_t) * 2;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_le_2ch(Chunk *_chunk)
+{
+  const int nch = 2;
+  const size_t sample_size = sizeof(float) * 2;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+
+bool
+Converter::linear_pcm16_3ch(Chunk *_chunk)
+{
+  const int nch = 3;
+  const size_t sample_size = sizeof(int16_t) * 3;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[2] = s2i16(src[2][0]); src[2]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_3ch(Chunk *_chunk)
+{
+  const int nch = 3;
+  const size_t sample_size = sizeof(int24_t) * 3;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_3ch(Chunk *_chunk)
+{
+  const int nch = 3;
+  const size_t sample_size = sizeof(int32_t) * 3;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_3ch(Chunk *_chunk)
+{
+  const int nch = 3;
+  const size_t sample_size = sizeof(float) * 3;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+    dst[2] = float(src[2][0]); src[2]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm16_le_3ch(Chunk *_chunk)
+{
+  const int nch = 3;
+  const size_t sample_size = sizeof(int16_t) * 3;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[2] = s2i16(src[2][0]); src[2]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_le_3ch(Chunk *_chunk)
+{
+  const int nch = 3;
+  const size_t sample_size = sizeof(int24_t) * 3;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_le_3ch(Chunk *_chunk)
+{
+  const int nch = 3;
+  const size_t sample_size = sizeof(int32_t) * 3;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_le_3ch(Chunk *_chunk)
+{
+  const int nch = 3;
+  const size_t sample_size = sizeof(float) * 3;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+    dst[2] = float(src[2][0]); src[2]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+
+bool
+Converter::linear_pcm16_4ch(Chunk *_chunk)
+{
+  const int nch = 4;
+  const size_t sample_size = sizeof(int16_t) * 4;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[2] = s2i16(src[2][0]); src[2]++;
+    dst[3] = s2i16(src[3][0]); src[3]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_4ch(Chunk *_chunk)
+{
+  const int nch = 4;
+  const size_t sample_size = sizeof(int24_t) * 4;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_4ch(Chunk *_chunk)
+{
+  const int nch = 4;
+  const size_t sample_size = sizeof(int32_t) * 4;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_4ch(Chunk *_chunk)
+{
+  const int nch = 4;
+  const size_t sample_size = sizeof(float) * 4;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+    dst[2] = float(src[2][0]); src[2]++;
+    dst[3] = float(src[3][0]); src[3]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm16_le_4ch(Chunk *_chunk)
+{
+  const int nch = 4;
+  const size_t sample_size = sizeof(int16_t) * 4;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[2] = s2i16(src[2][0]); src[2]++;
+    dst[3] = s2i16(src[3][0]); src[3]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_le_4ch(Chunk *_chunk)
+{
+  const int nch = 4;
+  const size_t sample_size = sizeof(int24_t) * 4;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_le_4ch(Chunk *_chunk)
+{
+  const int nch = 4;
+  const size_t sample_size = sizeof(int32_t) * 4;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_le_4ch(Chunk *_chunk)
+{
+  const int nch = 4;
+  const size_t sample_size = sizeof(float) * 4;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+    dst[2] = float(src[2][0]); src[2]++;
+    dst[3] = float(src[3][0]); src[3]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+
+bool
+Converter::linear_pcm16_5ch(Chunk *_chunk)
+{
+  const int nch = 5;
+  const size_t sample_size = sizeof(int16_t) * 5;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[2] = s2i16(src[2][0]); src[2]++;
+    dst[3] = s2i16(src[3][0]); src[3]++;
+    dst[4] = s2i16(src[4][0]); src[4]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_5ch(Chunk *_chunk)
+{
+  const int nch = 5;
+  const size_t sample_size = sizeof(int24_t) * 5;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[4] = s2i32(src[4][0]); src[4]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_5ch(Chunk *_chunk)
+{
+  const int nch = 5;
+  const size_t sample_size = sizeof(int32_t) * 5;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[4] = s2i32(src[4][0]); src[4]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_5ch(Chunk *_chunk)
+{
+  const int nch = 5;
+  const size_t sample_size = sizeof(float) * 5;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+    dst[2] = float(src[2][0]); src[2]++;
+    dst[3] = float(src[3][0]); src[3]++;
+    dst[4] = float(src[4][0]); src[4]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm16_le_5ch(Chunk *_chunk)
+{
+  const int nch = 5;
+  const size_t sample_size = sizeof(int16_t) * 5;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[2] = s2i16(src[2][0]); src[2]++;
+    dst[3] = s2i16(src[3][0]); src[3]++;
+    dst[4] = s2i16(src[4][0]); src[4]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_le_5ch(Chunk *_chunk)
+{
+  const int nch = 5;
+  const size_t sample_size = sizeof(int24_t) * 5;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[4] = s2i32(src[4][0]); src[4]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_le_5ch(Chunk *_chunk)
+{
+  const int nch = 5;
+  const size_t sample_size = sizeof(int32_t) * 5;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[4] = s2i32(src[4][0]); src[4]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_le_5ch(Chunk *_chunk)
+{
+  const int nch = 5;
+  const size_t sample_size = sizeof(float) * 5;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+    dst[2] = float(src[2][0]); src[2]++;
+    dst[3] = float(src[3][0]); src[3]++;
+    dst[4] = float(src[4][0]); src[4]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+
+bool
+Converter::linear_pcm16_6ch(Chunk *_chunk)
+{
+  const int nch = 6;
+  const size_t sample_size = sizeof(int16_t) * 6;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[2] = s2i16(src[2][0]); src[2]++;
+    dst[3] = s2i16(src[3][0]); src[3]++;
+    dst[4] = s2i16(src[4][0]); src[4]++;
+    dst[5] = s2i16(src[5][0]); src[5]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_6ch(Chunk *_chunk)
+{
+  const int nch = 6;
+  const size_t sample_size = sizeof(int24_t) * 6;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[4] = s2i32(src[4][0]); src[4]++;
+    dst[5] = s2i32(src[5][0]); src[5]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_6ch(Chunk *_chunk)
+{
+  const int nch = 6;
+  const size_t sample_size = sizeof(int32_t) * 6;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[4] = s2i32(src[4][0]); src[4]++;
+    dst[5] = s2i32(src[5][0]); src[5]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_6ch(Chunk *_chunk)
+{
+  const int nch = 6;
+  const size_t sample_size = sizeof(float) * 6;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+    dst[2] = float(src[2][0]); src[2]++;
+    dst[3] = float(src[3][0]); src[3]++;
+    dst[4] = float(src[4][0]); src[4]++;
+    dst[5] = float(src[5][0]); src[5]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm16_le_6ch(Chunk *_chunk)
+{
+  const int nch = 6;
+  const size_t sample_size = sizeof(int16_t) * 6;
+
+  samples_t src = samples;
+  int16_t *dst = (int16_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i16(src[0][0]); src[0]++;
+    dst[1] = s2i16(src[1][0]); src[1]++;
+    dst[2] = s2i16(src[2][0]); src[2]++;
+    dst[3] = s2i16(src[3][0]); src[3]++;
+    dst[4] = s2i16(src[4][0]); src[4]++;
+    dst[5] = s2i16(src[5][0]); src[5]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm24_le_6ch(Chunk *_chunk)
+{
+  const int nch = 6;
+  const size_t sample_size = sizeof(int24_t) * 6;
+
+  samples_t src = samples;
+  int24_t *dst = (int24_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[4] = s2i32(src[4][0]); src[4]++;
+    dst[5] = s2i32(src[5][0]); src[5]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcm32_le_6ch(Chunk *_chunk)
+{
+  const int nch = 6;
+  const size_t sample_size = sizeof(int32_t) * 6;
+
+  samples_t src = samples;
+  int32_t *dst = (int32_t *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = s2i32(src[0][0]); src[0]++;
+    dst[1] = s2i32(src[1][0]); src[1]++;
+    dst[2] = s2i32(src[2][0]); src[2]++;
+    dst[3] = s2i32(src[3][0]); src[3]++;
+    dst[4] = s2i32(src[4][0]); src[4]++;
+    dst[5] = s2i32(src[5][0]); src[5]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
+bool
+Converter::linear_pcmfloat_le_6ch(Chunk *_chunk)
+{
+  const int nch = 6;
+  const size_t sample_size = sizeof(float) * 6;
+
+  samples_t src = samples;
+  float *dst = (float *)out_rawdata;
+  size_t n = MIN(size, nsamples);
+  drop_samples(n);
+  out_size = n * sample_size;
+
+  while (n--)
+  {
+    dst[0] = float(src[0][0]); src[0]++;
+    dst[1] = float(src[1][0]); src[1]++;
+    dst[2] = float(src[2][0]); src[2]++;
+    dst[3] = float(src[3][0]); src[3]++;
+    dst[4] = float(src[4][0]); src[4]++;
+    dst[5] = float(src[5][0]); src[5]++;
+
+    dst += nch;
+  }
+
+  send_rawdata(_chunk);
+  return true;
+}
