@@ -6,14 +6,14 @@
   Ouptupt formats: PCMxx, SPDIF
   Format conversions:
     PCMxx -> PCMxx
-    PCMxx -> SPDIF
     PES   -> PCMxx
-    PES   -> SPDIF
     AC3   -> PCMxx
-    AC3   -> SPDIF
     MPA   -> PCMxx
-    MPA   -> SPDIF
     DTS   -> PCMxx
+    PCMxx -> SPDIF
+    PES   -> SPDIF
+    AC3   -> SPDIF
+    MPA   -> SPDIF
     DTS   -> SPDIF
   Buffering: no
   Timing: complex

@@ -1,6 +1,6 @@
-%echo off
+@echo off
 
-set app=ac3enc
+set app=pes_demux
 
 call _clear.bat
 del release\%app% 2> nul

@@ -176,7 +176,7 @@ double arg_num(char *arg)
   return atof(arg);
 }
 
-double arg_hex(char *arg)
+int arg_hex(char *arg)
 {
   arg += strlen(arg);
   while (*arg != ':' && *arg != '=')

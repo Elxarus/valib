@@ -1,6 +1,6 @@
 %echo off
 
-set app=ac3enc
+set app=valdec
 
 call _clear.bat
 del release\%app% 2> nul

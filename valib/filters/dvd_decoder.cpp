@@ -5,8 +5,12 @@ DVDDecoder::DVDDecoder()
 {
   in_spk  = def_spk;
   out_spk = def_spk;
+
   spdif = FORMAT_MASK_AC3;
   spdif_mode = SPDIF_MODE_NONE;
+
+  encoder.set_bitrate(640000);
+
   stream = 0;
   substream = 0;
   reset();
