@@ -24,7 +24,7 @@
 const char *_ch_names[NCHANNELS] = { "Left", "Center", "Right", "Left surround", "Right surround", "LFE" };
 
 
-const int mask_tbl[7] =
+const int mask_tbl[] =
 {
   0,
   MODE_MONO,
@@ -35,12 +35,28 @@ const int mask_tbl[7] =
   MODE_5_1
 };
 
-const int format_tbl[4] = 
+const int format_tbl[] = 
 {
   FORMAT_PCM16,
   FORMAT_PCM24,
   FORMAT_PCM32,
   FORMAT_PCMFLOAT,
+  FORMAT_PCM16_LE,
+  FORMAT_PCM24_LE,
+  FORMAT_PCM32_LE,
+  FORMAT_PCMFLOAT_LE,
+};
+
+const sample_t level_tbl[] = 
+{
+  32767,
+  8388607,
+  2147483647,
+  1.0,
+  32767,
+  8388607,
+  2147483647,
+  1.0
 };
 
 enum arg_type { argt_exist, argt_bool, argt_num };
@@ -111,8 +127,10 @@ int main(int argc, char *argv[])
            "      (*) 2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
            "          3 - 3/0 (surround)\n"
            "    -fmt:n - set sample format:\n"
-           "      (*) 0 - PCM 16        2 - PCM 32\n"
-           "          1 - PCM 24        3 - PCM Float \n" 
+           "      (*) 0 - PCM 16        4 - PCM 16 (low endian)\n"
+           "          1 - PCM 24        5 - PCM 24 (low endian)\n" 
+           "          2 - PCM 32        6 - PCM 32 (low endian)\n"
+           "          3 - PCM Float     7 - PCM Float (low endian)\n" 
            "  \n"
            "  format selection:\n"
            "    -ac3 - force ac3 (do not autodetect format)\n"
@@ -155,8 +173,8 @@ int main(int argc, char *argv[])
   enum { mode_nothing, mode_play, mode_raw, mode_decode } mode = mode_nothing;
 
   bool spdif = false;
-  int mask   = MODE_STEREO;
-  int format = FORMAT_PCM16;
+  int imask = 2;
+  int iformat = 0;
 
   bool print_info = false;
   bool print_opt  = false;
@@ -328,28 +346,25 @@ int main(int argc, char *argv[])
     // -spk - number of speakers
     if (is_arg(argv[iarg], "spk", argt_num))
     {
-      mask = int(arg_num(argv[iarg]));
+      imask = int(arg_num(argv[iarg]));
 
-      if (mask < 0 || mask > 6)
+      if (imask < 0 || imask > array_size(mask_tbl))
       {
         printf("-spk : incorrect speaker configuration\n");
         return 1;
       }
-
-      mask = mask_tbl[mask];
       continue;
     }
 
     // -fmt - sample format
     if (is_arg(argv[iarg], "fmt", argt_num))
     {
-      format = int(arg_num(argv[iarg]));
-      if (format < 0 || format > 4)
+      iformat = int(arg_num(argv[iarg]));
+      if (iformat < 0 || iformat > array_size(format_tbl))
       {
         printf("-fmt : incorrect sample format");
         return 1;
       }
-      format = format_tbl[format];
       continue;
     }
 
@@ -649,17 +664,11 @@ int main(int argc, char *argv[])
       return 1;
     }
 
-    if (mask)
-      spk.mask = mask;
+    if (imask)
+      spk.mask = mask_tbl[imask];
 
-    spk.format = format;
-    spk.level = 1.0;
-    switch (format)
-    {
-      case FORMAT_PCM16: spk.level = 32767; break;
-      case FORMAT_PCM24: spk.level = 8388607; break;
-      case FORMAT_PCM32: spk.level = 2147483647; break;
-    }
+    spk.format = format_tbl[iformat];
+    spk.level = level_tbl[iformat];
 
     if (!proc.set_output(spk))
     {
