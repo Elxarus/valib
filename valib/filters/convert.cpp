@@ -77,6 +77,7 @@ Converter::alloc_buffer()
     out_samples[0] = (sample_t *)buf.get_data();
     for (int ch = 1; ch < spk.nch(); ch++)
       out_samples[ch] = out_samples[ch-1] + nsamples;
+    out_samples.reorder_to_std(spk, order);
     out_rawdata = 0;
 
     // find conversion function
@@ -145,6 +146,8 @@ Converter::get_order(int _order[NCHANNELS]) const
 void 
 Converter::set_order(const int _order[NCHANNELS])
 {
+  if (format == FORMAT_LINEAR)
+    out_samples.reorder(spk, order, _order);
   memcpy(order, _order, sizeof(order));
 }
 
@@ -207,7 +210,6 @@ Converter::get_chunk(Chunk *_chunk)
   (this->*convert)();
   if (format == FORMAT_LINEAR)
   {
-    samples.reorder_to_std(get_output(), order);
     _chunk->set
     (
       get_output(), 
