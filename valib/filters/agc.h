@@ -36,10 +36,7 @@ protected:
   int       nsamples;             // number of samples per block
   int       sample;               // current sample
   int       block;                // current block
-
-  bool      empty;                // sample buffers are empty
-  bool      timestamp;            // tinestamp on next output sample
-  time_t    time;                 // current time
+  bool      empty;                // output sample buffer is empty
 
   sample_t  factor;               // previous block factor
   sample_t  level;                // previous block level (not scaled)

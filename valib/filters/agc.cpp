@@ -11,10 +11,7 @@ AGC::AGC(int _nsamples)
   nsamples  = 0;
   sample    = 0;
   block     = 0;
-
   empty     = true;
-  timestamp = false;
-  time      = 0;
 
   level     = 0;
   factor    = 0;
@@ -258,6 +255,7 @@ void
 AGC::reset()
 {
   chunk.set_empty();
+  chunk.set_eos(false);
 
   block  = 0;
   sample = 0;
@@ -268,47 +266,47 @@ AGC::reset()
   input_levels.reset();
   output_levels.reset();
 
-  empty     = true;
-  timestamp = false;
-  time      = 0;
+  empty  = true;
+  sync   = false;
+  time   = 0;
 }
 
 bool 
 AGC::get_chunk(Chunk *out)
 {
-  int n, ch;
-
-  // receive input timestamp
-  if (chunk.timestamp)
-  {
-    timestamp = true;
-    time = chunk.time - sample;
-    chunk.timestamp = false;
-  }
+  size_t n;
+  int ch;
 
   // fill sample buffer
-  n = MIN(nsamples - sample, chunk.size);
-  for (ch = 0; ch < spk.nch(); ch++)
-    memcpy(samples[block][ch] + sample, chunk.samples[ch], n * sizeof(sample_t));
+  // assert: sample <= nsamples
+  n = MIN(size_t(nsamples - sample), chunk.get_size());
+  for (ch = 0; ch < get_spk().nch(); ch++)
+    memcpy(samples[block][ch] + sample, chunk[ch], n * sizeof(sample_t));
 
   sample += n;
   chunk.drop(n);
 
   // fill chunk
+  out->set_spk(get_spk());
   out->set_empty();
   if (sample == nsamples)
   {
     process();
     if (empty)
+      // skip empty first buffer
       empty = false;
     else
     {
-      out->set_spk(spk);
       out->set_samples(samples[block], nsamples);
-      out->set_time(timestamp, time - nsamples);
-      timestamp = false;
+      out->set_sync(sync, time - nsamples);
+      sync = false;
     }
     time += nsamples;
+  }
+
+  if (is_flushing())
+  {
+
   }
 
   return true;

@@ -8,10 +8,13 @@
 #include <string.h>
 #include "spk.h"
 
-
 class  Chunk;
 class  SampleBuf;
 struct samples_t;
+
+///////////////////////////////////////////////////////////////////////////////
+// samples_t
+// Block of pointer to sample buffers for each channel for linear format.
 
 struct samples_t
 {
@@ -33,93 +36,249 @@ struct samples_t
 // Chunk class.
 // A part of audio data being processed.
 //
-// spk - data format. In case of FORMAT_LINEAR 'samples' field is valid, but 
-//   'buf' field is invalid. In all other cases 'samples' field is invalid, but
-//   'buf' field is valid. 
+// There are several types of chunks:
+// 1) Data chunk/empty chunk. Chunk may have some portion of data of may 
+//    have not.
+// 2) Syncronization chunk (sync-chunk). Chunk may contain syncronization 
+//    information.
+// 3) End-of-steam chunk (eos-chunk). Chunk that ends data transmission.
 //
-// timestamp - time field is valid.
+// Empty chunk (chunk that contain no data) may be used just to inform 
+// downsteram about some events: format change, syncronization or  end of steram.
 //
-// time - time stamp for data block. Time is measured in samples. Time is 
-//   applied to:
-//   1) first sample of audio data for FORMAT_LINEAR and PCM formats
-//   2) to the first first syncpoint that appears after beginning of this data 
-//      block (i.e. in current or subsequent data blocks):
+// Speakers
+// ========
+// Chunk always has data format. 
 //
-//      chunk data block:
-//      +---------------------------------------------------------------------+
-//      | syncpoint, frame 1 ...... | syncpoint, frame2 ..................... |
-//      +---------------------------------------------------------------------+
-//      ^
-//      timestamp is applied here
+// get_spk() - get data format
+// set_spk() - set data format
 //
-//      chunk data block:
-//      +---------------------------------------------------------------------+
-//      | previous frame tail | syncpoint, frame 1 ...... | syncpoint, frame2 |
-//      +---------------------------------------------------------------------+
-//                            ^
-//                            timestamp is applied here
 //
-//      chunk1 data block:         chunk2 data block:
-//      +------------------------+ +------------------------------------------+
-//      | part of previous frame | | previous frame tail | syncpoint, frame 1 |
-//      +------------------------+ +------------------------------------------+
-//                                                       ^
-//                                 if chunk2 does not contain time stamp
-//                                 timestamp of chunk1 is applied here.
-//                                 chunk2 timestamp is applied otherwise
+// Syncronization
+// ==============
+// Chunk may contain timestamp that indicates position in the stream. In this
+// case it is called syncronization chunk. Empty syncronization chunk is used 
+// just to indicate position. (see also Sync class at filter.h).
 //
-//      This rule is applied to both comressed and container data streams.
+// is_sync()  - is this chunk contains timestamp
+// get_time() - returns timestamp
+// set_sync() - set syncronization parameters
+// 
+// End-of-stream
+// =============
+// End-of-stream chunk (eos-chunk) is method to correctly finish the stream. 
+// This chunk may contain data and stream is assumed to end after last 
+// byte/sample of this chunk. Empty end-of-stream chunk is used just to end 
+// the stream correctly. After receiving eos-chunk filter should flush all 
+// internal data buffers.
 //
-// size - size of chunk data.
-//   FORMAT_LINEAR: number of samples per channel pointed by 'samples' field.
-//   other formats: size in bytes of raw data buffer pointed by 'buf' field.
+// is_eos()  - chunk is end-of-stream chunk
+// set_eos() - set chunk as end-of-stream and empty
 //
-// samples (FORMAT_LINEAR only) - array of channel pointers of size 'size'.
+// Empty chunk
+// ===========
+// Empty chunk may be used to deliver special events to the processing chain
+// (format change, syncronization, end-of-stream). Both data buffers may be 
+// invalid in this case.
 //
-// buf (non-FORMAT_LINEAR formats) - pointer to raw data buffer of size 'size'.
+// is_empty()  - chunk is empty
+// set_empty() - set chunk as empty chunk
+//
+// Buffers
+// =======
+// Chunk has 2 types of buffer pointers: raw buffer and linear 
+// splitted-channels buffer. Most of internal data processing is done on
+// linear format, but data from external sources may be in any format. Some 
+// filters works with both raw and linear data so for interface universality 
+// it is only one type of chunk with both raw and linear buffers.
+//
+// get_size()    - number of samples in case of linear data farmat and size of
+//                 raw buffer in bytes otherwise.       
+// get_buf()     - raw buffer pointer (only for raw data)
+// get_samples() - pointers to linear channel buffers (only for linear firmat)
+// operator []   - pointer to channel buffer
+// set_buf()     - set raw buffer
+// set_samples() - set linear buffers
+// drop()        - drop data from raw or linear buffer (bytes or samples).
+//
+
 
 class Chunk
 {
-public:
+protected:
   Speakers  spk;
 
-  bool      timestamp;
+  bool      sync;
   time_t    time;
+
+  bool      eos;
 
   uint8_t  *buf;
   samples_t samples;
-  int       size;
+  size_t    size;
 
-  Chunk()
-  { set_empty(); }
+public:
+  // Chunk()
+  //
+  // Speakers
+  // inline Speakers get_spk() const
+  // inline void set_spk(Speakers _spk)
 
-  inline void set_spk(Speakers spk);
-  inline void set_time(bool timestamp, time_t time = 0);
-  inline void set_buf(uint8_t *buf, int size);
-  inline void set_samples(samples_t samples, int nsamples);
+  // Syncronization
+  // inline bool is_sync() const
+  // inline time_t get_time() const
+  // inline void set_sync(bool _sync, time_t _time = 0)
 
-  inline void set_empty();
-  inline bool is_empty() const;
+  // End-of-stream
+  // inline bool is_eos() const;
+  // inline void set_eos(bool eos = true);
 
-  inline void drop(int size);
+  // Empty chunk
+  // inline bool is_empty() const
+  // inline void set_empty()
+
+  // Buffers
+  // inline size_t get_size() const
+  // inline uint8_t *get_buf() const
+  // inline samples_t get_samples() const
+  // inline sample_t *operator[](int _ch) const
+  // inline void set_buf(uint8_t *_buf, size_t _size);
+  // inline void set_samples(samples_t _samples, size_t _size) 
+  // inline void drop(size_t _size)
+
+  Chunk(): spk(unk_spk), time(false), sync(false), size(0)
+  {}
+
+  /////////////////////////////////////////////////////////
+  // Speakers
+
+  inline Speakers get_spk() const
+  {
+    return spk;
+  }
+
+  inline void set_spk(Speakers _spk)
+  { 
+    spk = _spk; 
+  };
+
+  /////////////////////////////////////////////////////////
+  // Syncronization
+
+  inline bool is_sync() const
+  {
+    return sync;
+  }
+
+  inline time_t get_time() const
+  {
+    return time;
+  }
+
+  inline void set_sync(bool _sync, time_t _time = 0)
+  { 
+    sync = _sync;
+    time = _time;
+  }
+
+  /////////////////////////////////////////////////////////
+  // End-of-stream
+
+  inline bool is_eos() const
+  {
+    return eos;
+  }
+
+  inline void set_eos(bool eos = true)
+  {
+    size = 0;
+    eos = true;
+  }
+
+  /////////////////////////////////////////////////////////
+  // Empty chunk
+
+  inline bool is_empty() const
+  { 
+    return size == 0; 
+  }
+
+  inline void set_empty()         
+  { 
+    size = 0; 
+  }
+
+  /////////////////////////////////////////////////////////
+  // Buffers
+
+  inline size_t get_size() const                 { return size;         }
+  inline uint8_t *get_buf() const                { return buf;          }
+  inline samples_t get_samples() const           { return samples;      }
+  inline sample_t *operator[](int _ch) const     { return samples[_ch]; }
+
+  inline void set_buf(uint8_t *_buf, size_t _size)
+  { 
+    buf = _buf; 
+    size = _size;
+  }
+
+  inline void set_samples(samples_t _samples, size_t _size) 
+  {
+    samples = _samples; 
+    size = _size; 
+  }
+
+  inline void drop(size_t _size)
+  {
+    if (_size > size)
+      _size = size;
+
+    if (spk.format == FORMAT_LINEAR)
+      samples += _size;
+    else
+      buf += _size;
+
+    size -= _size;
+    sync = false;
+  };
+
 };
 
+
+
+///////////////////////////////////////////////////////////////////////////////
+// DataBuf
+// Method of allocating data buffers.
+// Now it's just simple aliged data block
 
 class DataBuf
 {
 protected:
   uint8_t *buf;
   uint8_t *buf_aligned;
-  int buf_size;
+  size_t   buf_size;
 
 public:
+  // DataBuf()
+  // DataBuf(int _size)
+
+  // inline bool allocate(int _size)
+  // inline bool truncate(int _size)
+  // inline void drop()
+  // inline void zero()
+
+  // inline uint8_t *data() const 
+  // inline int size() const 
+  // inline bool is_null() const 
+  // inline operator uint8_t *() const 
+
   DataBuf()
   {
     buf = 0;
     buf_size = 0;
   }
 
-  DataBuf(int _size)
+  DataBuf(size_t _size)
   { 
     buf = 0;
     buf_size = 0;
@@ -130,18 +289,56 @@ public:
   {
     drop();
   }
-  
-  inline bool allocate(int size);
-  inline bool truncate(int size);
-  inline void drop();
 
-  inline void zero()          { if (buf) memset(buf_aligned, 0, buf_size); }
-  inline uint8_t *data()const { return buf_aligned; }
-  inline int  size()    const { return buf_size;    }
-  inline bool is_null() const { return buf == 0;    } 
+  inline bool allocate(size_t _size)
+  {
+    if (buf_size < _size)
+      return truncate(_size);
+    else
+      return true;
+  }
 
-  inline operator uint8_t *() const { return buf_aligned; }
+  inline bool truncate(size_t _size)
+  {
+    drop();
+
+    if (_size)
+    {
+      buf = new uint8_t[_size + 7];
+      if (!buf) return false;
+      buf_size = _size;
+      buf_aligned = (uint8_t*)(unsigned(buf + 7) & ~7);
+    }
+    return true;
+  }
+
+  inline void drop()
+  {
+    if (buf) delete buf;
+
+    buf = 0;
+    buf_aligned = 0;
+    buf_size = 0;
+  }
+
+  inline void zero()          
+  { 
+    if (buf) 
+      memset(buf_aligned, 0, buf_size); 
+  }
+
+  inline uint8_t *data() const       { return buf_aligned; }
+  inline size_t size() const         { return buf_size;    }
+  inline bool is_null() const        { return buf == 0;    } 
+  inline operator uint8_t *() const  { return buf_aligned; }
 };
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SampleBuf
+// Method of allocating sample buffers for linear format.
+// Implemented using DataBuf.
 
 class SampleBuf
 {
@@ -280,62 +477,15 @@ samples_t::reorder(Speakers _spk, const int _input_order[NCHANNELS], const int _
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// DataBuf inlines
-///////////////////////////////////////////////////////////////////////////////
-
-inline bool 
-DataBuf::allocate(int _size)
-{
-  if (buf_size < _size)
-    return truncate(_size);
-  else
-    return true;
-}
-
-inline bool 
-DataBuf::truncate(int _size)
-{  
-  if (buf)
-    delete buf;
-
-  if (_size)
-  {
-    buf_size = _size;
-    buf = new uint8_t[buf_size + 7];
-    if (!buf) return false;
-    buf_aligned = buf + 7;  
-    buf_aligned -= (int)buf_aligned & 7;
-  }
-  return true;
-}
-
-inline void 
-DataBuf::drop()
-{
-  if (buf) delete buf;
-  buf = 0;
-  buf_aligned = 0;
-  buf_size = 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // SampleBuf inlines
 ///////////////////////////////////////////////////////////////////////////////
 
 inline bool
 SampleBuf::allocate(int _nch, int _nsamples)
 {
-  if (buf_nch >= _nch && buf_nsamples >= _nsamples)
-  {
-    buf_nch = _nch;
-    buf_nsamples = _nsamples;
-    return true;
-  }
-
   buf_nch = _nch;
   buf_nsamples = _nsamples;
-  if (buf.size() < _nch * _nsamples * (int)sizeof(sample_t))
+  if (buf.size() < _nch * _nsamples * sizeof(sample_t))
     return truncate(_nch, _nsamples);
 
   set_pointers();
@@ -372,60 +522,6 @@ SampleBuf::set_pointers()
 
   while (ch < NCHANNELS)
     samples[ch++] = 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Chunk inlines
-///////////////////////////////////////////////////////////////////////////////
-
-// if chunk is empty then all other fields are uninitialized
-// if timestamp is false then time is uninitialized
-// if size is 0 then buf and samples are uninitialized
-
-inline void Chunk::set_spk(Speakers _spk)
-{
-  spk = _spk;
-}
-
-inline void Chunk::set_time(bool _timestamp, time_t _time)
-{
-  timestamp = _timestamp;
-  time = _time;
-}
-
-inline void Chunk::set_buf(uint8_t *_buf, int _size)
-{
-  buf = _buf;
-  size = _size;
-  samples.set_null();
-}
-inline void Chunk::set_samples(samples_t _samples, int _nsamples)
-{
-  samples = _samples;
-  size = _nsamples;
-  buf = 0;
-}
-
-inline void Chunk::set_empty()
-{
-  size = 0;
-}
-inline bool Chunk::is_empty() const
-{
-  return size == 0;
-}
-
-inline void Chunk::drop(int _size)
-{
-  if (_size > size)
-    _size = size;
-
-  if (buf)
-    buf += _size;
-  else
-    samples += _size;
-  size -= _size;
-  timestamp = false;
 }
 
 #endif

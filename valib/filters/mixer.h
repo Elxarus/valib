@@ -4,7 +4,7 @@
     O = M * I 
   where 
     O - output sample vector [output_channels]
-    I - input sample vector [intput_channels]
+    I - input sample vector [input_channels]
     M - conversion matrix [output_channels, input_channels]
   
   Speakers: can change mask

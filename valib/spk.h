@@ -68,9 +68,9 @@
     Dolby-encoded audio source. It is independent audio characteristic and it 
     required to take it into account.
 
-    For compressed formats that contain relation in the bitstream so parser
+    For compressed formats that contain relation in the bitstream so decoder
     may always know it, it is acceptable not to specify relation field at
-    the input of parser. But at output parser must specify correct relation.
+    the input of decoder. But at output decoder must specify correct relation.
     
   level - absolute value for 0dB level. Generally depends on format, i.e.
     for PCM16 format it is 32767.0, so I'm thinking about to get rid of this 
