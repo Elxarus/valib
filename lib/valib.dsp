@@ -473,5 +473,17 @@ SOURCE=..\valib\win32\winspk.cpp
 SOURCE=..\valib\win32\winspk.h
 # End Source File
 # End Group
+# Begin Group "source"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\valib\source\noise.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\noise.h
+# End Source File
+# End Group
 # End Target
 # End Project
