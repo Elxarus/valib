@@ -189,8 +189,6 @@ Spdifer::get_chunk(Chunk *_out)
             continue;
         }
 
-
-
         // zero stuffing
         memset(buf + frame_size, 0, nsamples * 4 - frame_size - SPDIF_HEADER_SIZE);
 
