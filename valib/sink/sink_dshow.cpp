@@ -88,14 +88,14 @@ DShowSink::query_downstream(Speakers _spk) const
     DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_downstream(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
     return true;
   }
-  else if (spk2mt(_spk, mt, true) && query_downstream(&mt))
+  else if (spk2mt(_spk, mt, false) && query_downstream(&mt))
   {
     DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_downstream(%s %s %iHz): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
     return true;
   }
   else
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_downstream(%s %s %iHz%s): Failed", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_downstream(%s %s %iHz): Failed", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
     return false;
   }
 }
