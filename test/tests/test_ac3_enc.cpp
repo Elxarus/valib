@@ -125,6 +125,7 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
           {
             // quantize/dequantize encoded dct coefs and compare with decoded coefs
             double v = 0;
+            double v1 = 0;
             int bap = enc.bap[ch][b][s];
             int m = enc.mant[ch][b][s];
             int e = enc.exp[ch][b][s];
@@ -150,9 +151,10 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
               case 14: v = int16_t(asym_quant(m, 14) << 2)  / 32768.0; break;
               case 15: v = int16_t(asym_quant(m, 16))       / 32768.0; break;
             }
-            v /= (1 << e);
-            if (bap != 0 && fabs(v / dec.get_samples()[ch][s + b * AC3_BLOCK_SAMPLES] - 1) > 0.001)
-              printf("strange sample f=%i ch=%i b=%i s=%i bap=%i...\n", frames, ch, b, s, bap);
+
+            v1 = dec.get_samples()[ch][s + b * AC3_BLOCK_SAMPLES] * (1 << e);
+            if (fabs(v - v1) > 1e-6)
+              printf("strange sample f=%i ch=%i b=%i s=%i; bap=%i, mant=%i, exp=%i, v=%e, s=%e, v-s=%e...\n", frames, ch, b, s, bap, m, e, double(sym_quant(m, 11)) * 2.0/11.0 - 10.0/11.0, dec.get_samples()[ch][s + b * AC3_BLOCK_SAMPLES], fabs(v - v1));
           }
         } // for (int ch = 0; ch < _spk.nch(); ch++)
       } // for (int b = 0; b < AC3_NBLOCKS; b++)
@@ -166,6 +168,6 @@ test_ac3_enc(const char *_raw_filename, const char *_desc, Speakers _spk, int _b
   {
     printf("!!!Error: number of encoded frames (%i) does not match correct number (%i)!\n", frames, _nframes);
     return 1;
-    }
+  }
   return 0;
 }
