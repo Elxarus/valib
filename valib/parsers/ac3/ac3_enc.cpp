@@ -456,7 +456,10 @@ AC3Enc::encode_frame()
   bits_left += 31 * nfchans;                // blocksw, dithflag, chexpstr
                                             // fsnroffst, fgaincod
   if (acmod == 2)
+  {
     bits_left += 6;                         // rematstr
+    bits_left += 4;                         // rematflg[]
+  }
 
   for (ch = 0; ch < nfchans; ch++)
     for (b = 0; b < AC3_NBLOCKS; b++)
@@ -580,9 +583,7 @@ AC3Enc::encode_frame()
       low = snroffset;
   }
 
-#ifdef DEBUG
-
-  // verify correctness
+  // do bit allocation
   snroffset = low & ~3; // clear 2 last bits
   ba_bits = 0;
   for (ch = 0; ch < nch; ch++)
@@ -614,9 +615,7 @@ AC3Enc::encode_frame()
     // some error happen!!!
     return 0;
 
-#endif
-
-//  snroffset = (((csnroffst - 15) << 4) + fsnroffst) << 2;
+  //  snroffset = (((csnroffst - 15) << 4) + fsnroffst) << 2;
   csnroffst = (snroffset >> 6) + 15;
   fsnroffst = (snroffset >> 2) - ((csnroffst - 15) << 4);
 
@@ -885,6 +884,7 @@ AC3Enc::encode_frame()
   } // for (b = 0; b < AC3_NBLOCKS; b++)
 
   pb.flush();
+  memset(pb.get_ptr(), 0, frame_size - (pb.get_ptr() - pb.get_buf()));
 
   // calc CRC
   int frame_size1 = ((frame_size >> 1) + (frame_size >> 3)) & ~1; // should be even
