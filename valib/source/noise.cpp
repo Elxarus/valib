@@ -1,54 +1,8 @@
 #include "noise.h"
 
-#define a 16807         /* multiplier */
-#define m 2147483647L   /* 2**31 - 1 */
-#define q 127773L       /* m div a */
-#define r 2836          /* m mod a */
+#define abs(a) ((a) > 0? (a): -(a))
 
-
-RNG::RNG(long _seed)
-{
-  set(_seed); 
-};
-
-void 
-RNG::set(long _seed)
-{
-  seed = _seed;
-}
-
-long 
-RNG::next()
-{
-  unsigned long lo, hi;
-
-  lo = a * (long)(seed & 0xFFFF);
-  hi = a * (long)((unsigned long)seed >> 16);
-  lo += (hi & 0x7FFF) << 16;
-  if (lo > m)
-  {
-    lo &= m;
-    ++lo;
-  }
-  lo += hi >> 15;
-  if (lo > m)
-  {
-    lo &= m;
-    ++lo;
-  }
-  return (long)lo;
-}
-
-long 
-RNG::get()
-{
-  return seed = next();
-}
-
-
-
-
-Noise::Noise(Speakers _spk, size_t _data_size, size_t _buf_size)
+Noise::Noise(Speakers _spk, size_t _data_size, int _buf_size)
 :spk(unk_spk), data_size(0), buf_size(0)
 {
   set_output(_spk, _data_size, _buf_size);
@@ -74,20 +28,25 @@ Noise::set_data_size(size_t _data_size)
 
 
 bool 
-Noise::set_output(Speakers _spk, size_t _data_size, size_t _buf_size)
+Noise::set_output(Speakers _spk, size_t _data_size, int _buf_size)
 {
+  if (!_buf_size)
+    return false;
+
   if (_spk.format == FORMAT_LINEAR)
   {
-    if (!buf.allocate(_spk.nch(), _buf_size))
+    if (!buf.allocate(_spk.nch(), abs(_buf_size)))
       return false;
+
     spk = _spk;
     buf_size = _buf_size;
     data_size = _data_size;
   }
   else
   {
-    if (!buf.allocate(_buf_size))
+    if (!buf.allocate(abs(_buf_size)))
       return false;
+
     spk = _spk;
     buf_size = _buf_size;
     data_size = _data_size;
@@ -112,9 +71,14 @@ Noise::is_empty() const
 bool 
 Noise::get_chunk(Chunk *_chunk)
 {
-  size_t n = buf_size;
-
   bool eos = false;
+  size_t n;
+
+  if (buf_size > 0)
+    n = size_t(buf_size);
+  else
+    n = rng.get_uint(-buf_size);
+
   if (n >= data_size)
   {
     n = data_size;
@@ -129,27 +93,28 @@ Noise::get_chunk(Chunk *_chunk)
     size_t nch = spk.nch();
     samples_t samples = buf.get_samples();
 
-    for (size_t s = 0; s < n; s++)
-      for (size_t ch = 0; ch < nch; ch++)
-        samples[ch][s] = double(rng.get()) / m;
+    for (size_t ch = 0; ch < nch; ch++)
+      for (size_t s = 0; s < n; s++)
+        samples[ch][s] = rng.get_float();
 
     _chunk->set(spk, buf.get_samples(), n, false, 0, eos);
     return true;
   }
   else
   {
+    uint32_t *pos = (uint32_t *) buf.get_rawdata();
+    uint32_t *end = pos + (n >> 2);
+
     // 32bit fill
-    uint32_t *pos32 = (uint32_t *)buf.get_rawdata();
-    uint32_t *end32 = pos32 + n / 4;
-    while (pos32 < end32)
-      *pos32++ = rng.get();
+    while (pos < end)
+      *pos++ = rng.get_uint();
 
     // 8bit fill
     switch (n&3)
     {
-      case 3: *pos32 = (*pos32 & 0xff000000) | (rng.get() & 0x00ffffff); break;
-      case 2: *pos32 = (*pos32 & 0xffff0000) | (rng.get() & 0x0000ffff); break;
-      case 1: *pos32 = (*pos32 & 0xffffff00) | (rng.get() & 0x000000ff); break;
+      case 3: *pos = (*pos & 0xff000000) | (rng.get_uint() & 0x00ffffff); break;
+      case 2: *pos = (*pos & 0xffff0000) | (rng.get_uint() & 0x0000ffff); break;
+      case 1: *pos = (*pos & 0xffffff00) | (rng.get_uint() & 0x000000ff); break;
     }
 
     _chunk->set(spk, buf.get_rawdata(), n, false, 0, eos);
