@@ -22,6 +22,7 @@
   // AGC
   auto_gain           - apply auto gain control
   normalize           - one-pass normalization
+  attack              - attack speed (dB/s)
   release             - release speed (dB/s)
 
   // DRC
