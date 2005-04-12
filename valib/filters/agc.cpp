@@ -29,6 +29,7 @@ AGC::AGC(size_t _nsamples)
   // Gain control
   master    = 1.0;   // factor
   gain      = 1.0;   // factor
+  attack    = 50.0;  // dB/s
   release   = 50.0;  // dB/s
 
   // DRC
