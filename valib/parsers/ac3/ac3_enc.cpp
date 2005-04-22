@@ -203,17 +203,6 @@ AC3Enc::query_input(Speakers _spk) const
     default: return false;
   }
 
-  // check dolby
-  switch (_spk.relation)
-  {
-    case NO_RELATION: break;
-    case RELATION_DOLBY: 
-      if (_spk.mask != MODE_2_0)
-        return false;
-    default:
-      return false;
-  }
-
   // everything is ok
   return true;
 }
@@ -262,7 +251,7 @@ AC3Enc::set_input(Speakers _spk)
     default: return false;
   }
   lfe     = spk.lfe();
-  dolby   = spk.relation != 0;
+  dolby   = (spk.mask == MODE_STEREO) && ((spk.relation == RELATION_DOLBY) || (spk.relation == RELATION_DOLBY2));
   nfchans = spk.lfe()? spk.nch() - 1: spk.nch();
 
   // scale window
