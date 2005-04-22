@@ -49,9 +49,20 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   }
 
   if (*mt.FormatType() == FORMAT_WaveFormatEx)
-    return wfx2spk((WAVEFORMATEX *)mt.Format(), spk);
-  else
-    return false;
+    if (!wfx2spk((WAVEFORMATEX *)mt.Format(), spk))
+      return false;
+
+  // DVD LPCM uses low-endian format
+  if (*mt.Subtype() == MEDIASUBTYPE_DVD_LPCM_AUDIO)
+    switch (spk.format)
+    {
+      case FORMAT_PCM16: spk.format = FORMAT_PCM16_LE; break;
+      case FORMAT_PCM24: spk.format = FORMAT_PCM24_LE; break;
+      case FORMAT_PCM32: spk.format = FORMAT_PCM32_LE; break;
+      case FORMAT_PCMFLOAT: spk.format = FORMAT_PCMFLOAT_LE; break;
+    }
+
+  return true;
 }
 
 bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx)
