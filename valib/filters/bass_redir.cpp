@@ -97,7 +97,6 @@ BassRedir::set_input(Speakers _spk)
   if (!NullFilter::set_input(_spk))
     return false;
 
-  lpf.gain = 1.0 / spk.nch();
   lpf.sample_rate = spk.sample_rate;
   lpf.update();
   lpf.reset();
