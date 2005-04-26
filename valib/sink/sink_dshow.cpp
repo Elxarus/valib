@@ -93,6 +93,7 @@ DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
   spk = def_spk;
   send_mt = false;
   discontinuity = false;
+  hr = S_OK;
 }
 
 bool 
@@ -146,7 +147,11 @@ DShowSink::set_downstream(const CMediaType *mt)
   }
 
   if (*mt == m_mt)
+  {
+    if (*mt->Subtype() == MEDIASUBTYPE_DOLBY_AC3_SPDIF)
+      send_mt = true;
     return true;
+  }
 
   m_Connected->QueryInterface(IID_IPinConnection, (void **)&connection);
   if (connection) 
@@ -314,7 +319,7 @@ DShowSink::process(const Chunk *chunk)
     chunk_size -= sample_size;
 
     // Send
-    HRESULT hr = Deliver(sample);
+    hr = Deliver(sample);
     sample->Release();
     if FAILED(hr)
     {

@@ -17,6 +17,7 @@ protected:
   Speakers spk;          // output configuration
   bool send_mt;          // send media type with next sample
   bool discontinuity;    // send discontinuity with next sample
+  HRESULT hr;            // result of sending sample
 
   bool query_downstream(const CMediaType *mt) const;
   bool set_downstream(const CMediaType *mt);
@@ -26,6 +27,9 @@ public:
 
   void send_discontinuity()          { discontinuity = true; }
   void send_mediatype()              { send_mt = true;       }
+
+  void reset_hresult()               { hr = S_OK;            }
+  HRESULT get_hresult()              { return hr;            }
 
   // Sink interface
   virtual bool query_input(Speakers spk) const;
