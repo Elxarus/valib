@@ -18,8 +18,8 @@ protected:
   bool send_mt;          // send media type with next sample
   bool discontinuity;    // send discontinuity with next sample
 
-  bool query_downstream(Speakers spk) const;
   bool query_downstream(const CMediaType *mt) const;
+  bool set_downstream(const CMediaType *mt);
 
 public:
   DShowSink(CTransformFilter* pFilter, HRESULT* phr);

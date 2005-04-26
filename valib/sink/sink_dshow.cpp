@@ -48,9 +48,11 @@ bool mt2spk(CMediaType mt, Speakers &spk)
     return true;
   }
 
-  if (*mt.FormatType() == FORMAT_WaveFormatEx)
-    if (!wfx2spk((WAVEFORMATEX *)mt.Format(), spk))
-      return false;
+  if (*mt.FormatType() != FORMAT_WaveFormatEx)
+    return false;
+
+  if (!wfx2spk((WAVEFORMATEX *)mt.Format(), spk))
+    return false;
 
   // DVD LPCM uses low-endian format
   if (*mt.Subtype() == MEDIASUBTYPE_DVD_LPCM_AUDIO)
@@ -94,29 +96,11 @@ DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
 }
 
 bool 
-DShowSink::query_downstream(Speakers _spk) const
-{
-  CMediaType mt;
-  if (spk2mt(_spk, mt, true) && query_downstream(&mt))
-  {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_downstream(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
-    return true;
-  }
-  else if (spk2mt(_spk, mt, false) && query_downstream(&mt))
-  {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_downstream(%s %s %iHz): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
-    return true;
-  }
-  else
-  {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_downstream(%s %s %iHz): Failed", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
-    return false;
-  }
-}
-
-bool 
 DShowSink::query_downstream(const CMediaType *mt) const
 {
+  // We cannot join query_downstream() and set_downstream() functions
+  // because query function must be const.
+
   IPinConnection *connection;
 
   if (!m_Connected) 
@@ -147,19 +131,94 @@ DShowSink::query_downstream(const CMediaType *mt) const
   return false;
 }
 
+bool 
+DShowSink::set_downstream(const CMediaType *mt)
+{
+  // We cannot join query_downstream() and set_downstream() functions
+  // because query function must be const.
+
+  IPinConnection *connection;
+
+  if (!m_Connected)
+  {
+    m_mt = *mt;
+    return true;
+  }
+
+  if (*mt == m_mt)
+    return true;
+
+  m_Connected->QueryInterface(IID_IPinConnection, (void **)&connection);
+  if (connection) 
+  {
+    // Try DynamicQueryAccept
+    if (connection->DynamicQueryAccept(mt) == S_OK)
+    {
+      connection->Release();
+      m_mt = *mt;
+      send_mt = true;
+      return true;
+    }
+    connection->Release();
+  }
+
+  // Try QueryAccept
+  if (m_Connected->QueryAccept(mt) == S_OK)
+  {
+    m_mt = *mt;
+    send_mt = true;
+    return true;
+  }
+
+  return false;
+}
+
 // Sink interface
 bool 
 DShowSink::query_input(Speakers _spk) const
 {
-  DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz)", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
-  return query_downstream(_spk);
+  CMediaType mt;
+  if (spk2mt(_spk, mt, true) && query_downstream(&mt))
+  {
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    return true;
+  }
+  else if (spk2mt(_spk, mt, false) && query_downstream(&mt))
+  {
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    return true;
+  }
+  else
+  {
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz): Failed", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    return false;
+  }
 }
 
 bool 
 DShowSink::set_input(Speakers _spk)
 {
-  DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz)", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
-  return query_downstream(_spk);
+  CMediaType mt;
+/*
+  if (spk2mt(_spk, mt, true) && set_downstream(&mt))
+  {
+    spk = _spk;
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    return true;
+  }
+  else
+*/
+  if (spk2mt(_spk, mt, false) && set_downstream(&mt))
+  {
+    spk = _spk;
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    return true;
+  }
+  else
+  {
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Failed", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    return false;
+  }
 };
 
 Speakers
@@ -177,33 +236,15 @@ DShowSink::process(const Chunk *chunk)
   // Process speaker configuraion changes
   if (spk != chunk->get_spk())
   {
-    CMediaType mt;
-    CMediaType mt_wfx;
-    if (!spk2mt(chunk->get_spk(), mt, false) || !spk2mt(chunk->get_spk(), mt_wfx, true))
+    if (set_input(chunk->get_spk()))
+    {
+      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz) OK", this, chunk->get_spk().mode_text(), chunk->get_spk().format_text(), chunk->get_spk().sample_rate));
+    }
+    else
+    {
+      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz) FAILAED!", this, chunk->get_spk().mode_text(), chunk->get_spk().format_text(), chunk->get_spk().sample_rate));
       return false;
-
-//    if (m_mt != mt && m_mt != mt_wfx)
-//    {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz)", this, chunk->get_spk().mode_text(), chunk->get_spk().format_text(), chunk->get_spk().sample_rate));
-
-      if (query_downstream(&mt_wfx))
-      {
-        DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change Ok (extensible)", this));
-        m_mt = mt_wfx;
-      }
-      else if (query_downstream(&mt))
-      {
-        DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change Ok", this));
-        m_mt = mt;
-      }
-      else
-      {
-        DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change FAILED!", this));
-        return false;
-      }
-      send_mt = true;
-//    }
-    spk = chunk->get_spk();
+    }
   }
 
   if (!m_Connected)
@@ -275,8 +316,11 @@ DShowSink::process(const Chunk *chunk)
     // Send
     HRESULT hr = Deliver(sample);
     sample->Release();
-    if FAILED(hr) 
+    if FAILED(hr)
+    {
+      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Deliver() FAILED! (0x%x)", this, hr));
       return false;
+    }
   }
   return true;
 }
