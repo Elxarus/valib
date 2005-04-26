@@ -48,7 +48,6 @@ protected:
   Spdifer spdifer;
   int     spdif;
   int     spdif_mode;
-  bool    ac3_encode;
 
   int stream;
   int substream;
