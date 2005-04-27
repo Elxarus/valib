@@ -6,7 +6,7 @@
 #ifndef VALIB_FILTER_H
 #define VALIB_FILTER_H
 
-#include "data.h"
+#include "defs.h"
 
 class Chunk;
 class Sink;
@@ -65,8 +65,8 @@ class NullFilter;
 // (format change, syncronization, end-of-stream). Both data buffers may be
 // invalid in this case.
 //
-// is_empty()  - chunk is empty
-// set_empty() - set chunk as empty chunk
+// is_empty()  - query if chunk is empty
+// set_empty() - mark chunk as empty (drop data)
 //
 // Buffers
 // =======

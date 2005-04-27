@@ -13,7 +13,7 @@ class SampleBuf;
 
 ///////////////////////////////////////////////////////////////////////////////
 // samples_t
-// Block of pointer to sample buffers for each channel for linear format.
+// Block of pointers to sample buffers for each channel for linear format.
 
 struct samples_t
 {
