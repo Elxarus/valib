@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <mmreg.h>
+#include <uuids.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include "winspk.h"
@@ -92,7 +93,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
       wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
       wfx->cbSize = 22;
 
-      ext->SubFormat = KSDATAFORMAT_SUBTYPE_AC3_AUDIO;
+      ext->SubFormat = MEDIASUBTYPE_DOLBY_AC3_SPDIF;
       ext->Samples.wValidBitsPerSample = 16;
       ext->dwChannelMask = ds_channels_tbl[MODE_STEREO];
     }
@@ -122,7 +123,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
         case FORMAT_DTS: wfx->wFormatTag = WAVE_FORMAT_DTS;
         case FORMAT_MPA: wfx->wFormatTag = WAVE_FORMAT_MPEG;
       }
-	
+  
       wfx->nChannels = nchannels;
       wfx->nSamplesPerSec = spk.sample_rate;
       wfx->wBitsPerSample = 0;
