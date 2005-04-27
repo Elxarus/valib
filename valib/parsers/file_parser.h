@@ -47,7 +47,7 @@ public:
   void close();
 
   bool probe();
-  void stats(int nframes = 10);
+  void stats(int nframes = 100);
 
   void set_mpeg_stream(int stream = 0, int substream = 0);
 
