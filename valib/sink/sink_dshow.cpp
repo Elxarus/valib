@@ -183,6 +183,7 @@ bool
 DShowSink::query_input(Speakers _spk) const
 {
   CMediaType mt;
+
   if (spk2mt(_spk, mt, true) && query_downstream(&mt))
   {
     DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
@@ -195,7 +196,7 @@ DShowSink::query_input(Speakers _spk) const
   }
   else
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz): Failed", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz): format refused", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
     return false;
   }
 }
@@ -204,16 +205,14 @@ bool
 DShowSink::set_input(Speakers _spk)
 {
   CMediaType mt;
-/*
+
   if (spk2mt(_spk, mt, true) && set_downstream(&mt))
   {
     spk = _spk;
     DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
     return true;
   }
-  else
-*/
-  if (spk2mt(_spk, mt, false) && set_downstream(&mt))
+  else if (spk2mt(_spk, mt, false) && set_downstream(&mt))
   {
     spk = _spk;
     DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
