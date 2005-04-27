@@ -78,7 +78,15 @@ Delay::reset()
   for (ch = 0; ch < nch; ch++)
     ch_delays[ch] = int(delays[order[ch]] * factor);
 
-  size_t nsamples = ch_delays[0];
+  lag = ch_delays[0];
+  for (ch = 1; ch < nch; ch++)
+    if (lag > ch_delays[ch])
+      lag = ch_delays[ch];
+
+  for (ch = 0; ch < nch; ch++)
+    ch_delays[ch] -= lag;
+
+  int nsamples = ch_delays[0];
   for (ch = 1; ch < nch; ch++)
     if (nsamples < ch_delays[ch])
       nsamples = ch_delays[ch];
@@ -96,6 +104,9 @@ Delay::process(const Chunk *_chunk)
 
   if (!enabled)
     return true; 
+
+  if (sync)
+    time += lag;
 
   size_t delay;
   sample_t *ptr1;

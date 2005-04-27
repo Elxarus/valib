@@ -37,7 +37,8 @@ protected:
 
   SampleBuf buf;                  // sample buffer
   bool      first_half;           // first/second buffer half is used
-  size_t    ch_delays[NCHANNELS]; // delay values in samples (reordered)
+  int       ch_delays[NCHANNELS]; // delay values in samples (reordered)
+  int       lag;                  // time lag
 
   double    units2samples(int _units);
 
