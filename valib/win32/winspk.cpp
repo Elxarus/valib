@@ -105,9 +105,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
   use_extensible &= (spk.nch() > 2) || (spk.format != FORMAT_PCM16);
 
   if (use_extensible)
-  {
     memset(wfx, 0, sizeof(WAVEFORMATEXTENSIBLE));
-  }
   else
     memset(wfx, 0, sizeof(WAVEFORMATEX));
 
