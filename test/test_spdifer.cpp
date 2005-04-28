@@ -14,7 +14,7 @@ int test_spdifer_file(Log *log, const char *raw_file, const char *spdif_file);
 int test_spdifer(Log *log)
 {
   log->open_group("Spdifer test");
-  test_spdifer_file(log, "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.spdif");
+  test_spdifer_file(log, "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.ac3.spdif");
   return log->close_group();
 }
 
@@ -27,10 +27,10 @@ int test_spdifer_file(Log *log, const char *raw_file, const char *spdif_file)
   Spdifer spdifer;
 
   if (!raw_src.is_open()) 
-    return log->err("cannot oprn file %s", raw_file);
+    return log->err("cannot open file %s", raw_file);
 
   if (!spdif_src.is_open()) 
-    return log->err("cannot oprn file %s", raw_file);
+    return log->err("cannot open file %s", spdif_file);
 
   return compare(log, &raw_src, &spdifer, &spdif_src);
 }
