@@ -12,12 +12,11 @@
     DTS     -> DTS    (only if DTS bitrate is too high; this allows to decode DTS instead of SPDIF-passthrough)
     Unknown -> SPDIF  (only if source stream contains AC3, MPA or DTS stream)
     Unknown -> DTS    (only if source stream contains DTS stream and DTS bitrate is too high)
+
   Buffering: no
   Timing: apply input timestamp to the first syncpoint found at the input data
   Parameters:
     -
-
-  todo: no buffering
 */
 
 #ifndef SPDIFER_H
@@ -34,19 +33,24 @@
 class Spdifer : public NullFilter
 {
 protected:
-  DataBuf frame_buf;
-  Sync    sync_helper;
+  enum { state_sync, state_spdif, state_send_spdif, state_pass, state_send_pass } state;
 
-  int bs_type;         // bitstream type 32/16/14 bit big/little endian
-  int frame_size;      // frame size of encoded stream (not spdif frame size)
-  int frame_data;      // data size in frame buffer (excluding spdif header size)
-  enum { state_sync, state_spdif, state_passthrough } state;
+  Speakers sync_spk;    // stream config we're synced on
+  DataBuf  frame_buf;   // frame & sync buffer
+  int      frame_data;  // data size at frame buffer (excluding spdif header size)
+  int      frames;      // number of frames sent
+ 
+  Sync     sync_helper;
 
-  Speakers stream_spk; // Stream speakers config
-  int magic;           // SPDIF stream identifier
-  int nsamples;        // number of samples in frame
-  int frames;          // number of frames
+  // modified only by xxxx_syncinfo() functions
+  Speakers stream_spk;  // stream config
+  int frame_size;       // frame size of encoded stream (not spdif frame size)
+  int nsamples;         // number of samples in frame
+  int bs_type;          // bitstream type 32/16/14 bit big/little endian
+  int magic;            // SPDIF stream identifier
   
+  bool load_frame();
+
   // fast inline sync detectors
   inline bool frame_sync(const uint8_t *buf) const;
   inline bool ac3_sync(const uint8_t *header) const;
