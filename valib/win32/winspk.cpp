@@ -249,6 +249,8 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         case 32: format = FORMAT_PCM32; level = 2147483647; break;
         default: return false;
       }
+    else if (wfex->SubFormat == MEDIASUBTYPE_DOLBY_AC3_SPDIF)
+      format = FORMAT_SPDIF;
     else
       return false;
 
