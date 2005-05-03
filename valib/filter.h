@@ -7,6 +7,7 @@
 #define VALIB_FILTER_H
 
 #include "defs.h"
+#include "data.h"
 
 class Chunk;
 class Sink;
