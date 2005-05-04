@@ -4,6 +4,10 @@
 #include <ks.h>
 #include <ksmedia.h>
 #include "winspk.h"
+#include <initguid.h>
+
+DEFINE_GUID(KSADATAFORMAT_DOLBY_AC3_SPDIF, 
+0x00000092, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
 const unsigned int ds_channels_tbl[64] = 
 {
@@ -93,7 +97,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
       wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
       wfx->cbSize = 22;
 
-      ext->SubFormat = MEDIASUBTYPE_DOLBY_AC3_SPDIF;
+      ext->SubFormat = KSADATAFORMAT_DOLBY_AC3_SPDIF;
       ext->Samples.wValidBitsPerSample = 16;
       ext->dwChannelMask = ds_channels_tbl[MODE_STEREO];
     }
@@ -249,7 +253,7 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         case 32: format = FORMAT_PCM32; level = 2147483647; break;
         default: return false;
       }
-    else if (wfex->SubFormat == MEDIASUBTYPE_DOLBY_AC3_SPDIF)
+    else if (wfex->SubFormat == KSADATAFORMAT_DOLBY_AC3_SPDIF)
       format = FORMAT_SPDIF;
     else
       return false;
