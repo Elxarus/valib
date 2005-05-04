@@ -12,9 +12,6 @@
 
 #define NCHANNELS          6
 
-#define SPDIF_HEADER_SIZE  8
-#define SPDIF_FRAME_SIZE   0x1800
-
 #ifndef M_PI
   #define M_PI 3.1415926535897932384626433832795029
 #endif
