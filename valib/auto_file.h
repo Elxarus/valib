@@ -49,9 +49,9 @@ public:
     f = 0;
   }
 
-  inline void seek(size_t _pos)               { fseek(f, _pos, SEEK_SET);       }
-  inline int  read(void *buf, unsigned size)  { return fread(buf, 1, size, f);  }
-  inline int  write(void *buf, unsigned size) { return fwrite(buf, 1, size, f); }
+  inline void   seek(int _pos)                { fseek(f, _pos, SEEK_SET);       }
+  inline size_t read(void *buf, size_t size)  { return fread(buf, 1, size, f);  }
+  inline size_t write(void *buf, size_t size) { return fwrite(buf, 1, size, f); }
 
   inline bool is_open() const { return f != 0;                }
   inline bool eof()     const { return f? feof(f) != 0: true; }
