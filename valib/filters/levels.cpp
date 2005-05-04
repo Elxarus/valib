@@ -83,6 +83,18 @@ LevelsHistogram::get_histogram(double *_histogram, size_t _count) const
   }
 }
 
+void 
+LevelsHistogram::get_histogram(int _ch, double *_histogram, size_t _count) const
+{
+  memset(_histogram, 0, sizeof(double) * _count);
+  if (n && _ch >= 0 && _ch < NCHANNELS)
+  {
+    double inv_n = 1.0 / n;
+    for (size_t i = 0; i < MAX_HISTOGRAM && i < _count; i++)
+      _histogram[i] += double(histogram[_ch][i]) * inv_n;
+  }
+}
+
 
 ///////////////////////////////////////////////////////////
 // Levels

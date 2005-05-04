@@ -78,6 +78,7 @@ public:
 
   void add_levels(sample_t levels[NCHANNELS]);
   void get_histogram(double *histogram, size_t count) const;
+  void get_histogram(int ch, double *histogram, size_t count) const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -115,6 +116,7 @@ public:
   inline void add_levels(vtime_t time, sample_t levels[NCHANNELS]);
   inline void get_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
   inline void get_histogram(double *histogram, size_t count) const;
+  inline void get_histogram(int ch, double *histogram, size_t count) const;
 
   /////////////////////////////////////////////////////////
   // Filter interface
@@ -212,6 +214,12 @@ void
 Levels::get_histogram(double *_histogram, size_t _count) const
 {
   hist.get_histogram(_histogram, _count);
+}
+
+void 
+Levels::get_histogram(int _ch, double *_histogram, size_t _count) const
+{
+  hist.get_histogram(_ch, _histogram, _count);
 }
 
 
