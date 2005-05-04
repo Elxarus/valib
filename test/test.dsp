@@ -444,14 +444,6 @@ SOURCE=..\valib\win32\thread.cpp
 
 SOURCE=..\valib\win32\thread.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\valib\win32\winspk.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\win32\winspk.h
-# End Source File
 # End Group
 # Begin Group "common"
 

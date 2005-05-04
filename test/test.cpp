@@ -16,13 +16,12 @@ int main(int argc, char **argv)
   Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
   log.open_group("Test session");
 
-  test_spdifer(&log);
-
   test_float(&log);
   test_empty(&log);
   test_null(&log);
   test_proc(&log);
   test_crash(&log);
+  test_spdifer(&log);
 
   log.close_group();
   log.msg("-----------------------------------------------------------");
