@@ -56,7 +56,7 @@ public:
     if (!receive_chunk(_chunk))
       return false;
 
-    return f.write(_chunk->get_rawdata(), _chunk->get_size()) != 0;
+    return f.write(_chunk->get_rawdata(), _chunk->get_size()) == _chunk->get_size();
   }
 };
 
