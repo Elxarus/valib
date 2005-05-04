@@ -16,11 +16,11 @@
 //
 // Frame can be sent through SPDIF only if required bitrate is less than
 // bitrate used by stereo 16bit PCM with the same number of samples, i.e.:
-// frame_size + spdif_header_size <= nsamples * 4
+// frame_size + spdif_header <= nsamples * 4
 // where
 //   frame_size - size of the compressed frame
 //   nsamples - number of samples this frame contains
-//   spdif_header_size - size of spdif header
+//   spdif_header - size of spdif header
 //
 // From equation above we can also find maximum spdif frame size:
 // max_spdif_frame_size = max_nsamples * 4
@@ -75,12 +75,22 @@
 
 #define SPDIF_MAX_NSAMPLES   2048   // max 2048 sampels per spdif frame
 #define SPDIF_MAX_FRAME_SIZE 8192   // 2048 samples max * 4 (16bit stereo PCM)
-#define SPDIF_HEADER_SIZE    8      // SPDIF header size
+#define SPDIF_HEADER_SIZE    16     // SPDIF header size
 #define HEADER_SIZE          16     // header size required to catch syncpoint
 #define SYNC_BUFFER_SIZE     49168  // sync buffer size = 16384 * 3 + 16
 
 // formats supported
 static const int format_mask = FORMAT_MASK_UNKNOWN | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF;
+
+struct spdif_header_t
+{
+  uint32_t zero1;
+  uint32_t zero2;
+  uint16_t sync1;   // Pa sync word 1
+  uint16_t sync2;   // Pb sync word 2
+  uint16_t type;    // Pc data type
+  uint16_t len;     // Pd length-code (bits)
+};
 
 Spdifer::Spdifer()
 {
@@ -137,8 +147,11 @@ Spdifer::get_output() const
 
 bool
 Spdifer::load_frame()
-{ 
+{
+  bool use_spdif_header = true;
+
   uint8_t *frame_ptr = frame_buf.get_data() + SPDIF_HEADER_SIZE;
+  size_t spdif_frame_size;
 
   #define LOAD(amount)                  \
   if (frame_data < (amount))            \
@@ -210,16 +223,16 @@ Spdifer::load_frame()
 
       // switch state
       sync_spk = old_spk;
-      state = state_spdif;
+      state = state_frame;
       continue;
     }
 
     ///////////////////////////////////////////////////////
-    // Load and format spdif frame
+    // Load frame
     // sync_spk - stream config we're synced on
     // frame_data - data size at frame buffer
 
-    case state_spdif:
+    case state_frame:
     {
       LOAD(HEADER_SIZE);
 
@@ -238,33 +251,47 @@ Spdifer::load_frame()
         continue;
       }
 
-      // switch to passthrough mode
-      if (frame_size > nsamples * 4 - SPDIF_HEADER_SIZE ||
-          nsamples > SPDIF_MAX_NSAMPLES)
-      {
-        state = state_pass;
-        continue;
-      }
-
       // load frame
       LOAD(frame_size);
+
+      // decide usage of spdif header
+      if (use_spdif_header)
+      {
+        spdif_header = SPDIF_HEADER_SIZE;
+        spdif_frame_size = nsamples * 4 - SPDIF_HEADER_SIZE;
+      }
+      else
+      {
+        spdif_header = 0;
+        spdif_frame_size = nsamples * 4;
+      }
+
+      // send passthrough frame
+      if (frame_size > spdif_frame_size || nsamples > SPDIF_MAX_NSAMPLES)
+      {
+        spdif_header = 0;
+        state = state_send;
+        return true;
+      }
+
+      // fill spdif header
+      spdif_header_t *hdr = (spdif_header_t *)frame_buf.get_data();
+      hdr->zero1 = 0;
+      hdr->zero2 = 0;
+      hdr->sync1 = 0xf872;
+      hdr->sync2 = 0x4e1f;
+      hdr->type  = magic;
+      hdr->len   = frame_size * 8;
 
       // move data due to padding
       if (frame_data > frame_size)
       {
-        memmove(frame_ptr + nsamples * 4 - SPDIF_HEADER_SIZE, frame_ptr + frame_size, frame_data - frame_size);
-        frame_data += nsamples * 4 - SPDIF_HEADER_SIZE - frame_size;
+        memmove(frame_ptr + spdif_frame_size, frame_ptr + frame_size, frame_data - frame_size);
+        frame_data += spdif_frame_size - frame_size;
       }
 
       // zero padding
-      memset(frame_ptr + frame_size, 0, nsamples * 4 - frame_size - SPDIF_HEADER_SIZE);
-
-      // init spdif header
-      uint16_t *hdr = (uint16_t *)frame_buf.get_data();
-      hdr[0] = 0xf872;          // Pa  sync word 1 
-      hdr[1] = 0x4e1f;          // Pb  sync word 2 
-      hdr[2] = magic;           // Pc  data type
-      hdr[3] = frame_size * 8;  // Pd  length-code (bits)
+      memset(frame_ptr + frame_size, 0, spdif_frame_size - frame_size);
 
       // convert stream format
       if (bs_type == BITSTREAM_16LE ||
@@ -283,21 +310,21 @@ Spdifer::load_frame()
 
       // return data
       frames++;
-      frame_size = nsamples * 4 - SPDIF_HEADER_SIZE;
-      state = state_send_spdif;
+      frame_size = spdif_frame_size;
+      state = state_send;
       return true;
     }
 
     ///////////////////////////////////////////////////////
-    // Send spidf frame
+    // Send frame
     // This state is used to say that we're ready to send
     // frame loaded. So if we're here again we have this
-    // frame sent and need to switch back to state_spdif.
+    // frame sent and need to switch back to state_frame.
     //
     // frame_data - data size at frame buffer
     // frame_size - spdif frame size (excluding header)
 
-    case state_send_spdif:
+    case state_send:
     {
       if (frame_data > frame_size)
       {
@@ -306,19 +333,9 @@ Spdifer::load_frame()
       }
       else
         frame_data = 0;
-      state = state_spdif;
+      state = state_frame;
       continue;
     }
-
-    ///////////////////////////////////////////////////////
-    // Passthrough unspdifable data
-    // sync_spk - stream config we're synced on
-    // frame_data - data size at frame buffer
-
-    case state_pass:
-
-      throw;
-
   }
 
   // never be here
@@ -337,7 +354,7 @@ Spdifer::get_chunk(Chunk *_chunk)
   }
 
   if (load_frame())
-    _chunk->set(get_output(), frame_buf, frame_size + SPDIF_HEADER_SIZE, false, 0, flushing && !size);
+    _chunk->set(get_output(), frame_buf + SPDIF_HEADER_SIZE - spdif_header, frame_size + spdif_header, false, 0, flushing && !size);
   else
     _chunk->set(get_output(), 0, 0, false, 0, flushing && !size);
 

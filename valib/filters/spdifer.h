@@ -33,12 +33,13 @@
 class Spdifer : public NullFilter
 {
 protected:
-  enum { state_sync, state_spdif, state_send_spdif, state_pass, state_send_pass } state;
+  enum { state_sync, state_frame, state_send } state;
 
-  Speakers sync_spk;    // stream config we're synced on
-  DataBuf  frame_buf;   // frame & sync buffer
-  int      frame_data;  // data size at frame buffer (excluding spdif header size)
-  int      frames;      // number of frames sent
+  Speakers sync_spk;     // stream config we're synced on
+  DataBuf  frame_buf;    // frame & sync buffer
+  int      frame_data;   // data size at frame buffer (excluding spdif header size)
+  int      frames;       // number of frames sent
+  size_t   spdif_header; // spdif header size; indicates usage of spdif header
  
   Sync     sync_helper;
 
