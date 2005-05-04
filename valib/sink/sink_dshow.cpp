@@ -211,7 +211,7 @@ DShowSink::set_input(Speakers _spk)
     spk = _spk;
     DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
     return true;
-  }
+  } 
   else if (spk2mt(_spk, mt, false) && set_downstream(&mt))
   {
     spk = _spk;
