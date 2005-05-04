@@ -174,7 +174,9 @@ public:
   // Input/output histogram
   inline int      get_dbpb();
   inline void     get_input_histogram(double *input_histogram, size_t count); // r/o
+  inline void     get_input_histogram(int ch, double *input_histogram, size_t count); // r/o
   inline void     get_output_histogram(double *output_histogram, size_t count); // r/o
+  inline void     get_output_histogram(int ch, double *output_histogram, size_t count); // r/o
 
 
   // Channel order
@@ -363,8 +365,16 @@ AudioProcessor::get_input_histogram(double *_input_histogram, size_t _count)
 { in_levels.get_histogram(_input_histogram, _count); }
 
 inline void
+AudioProcessor::get_input_histogram(int _ch, double *_input_histogram, size_t _count)
+{ in_levels.get_histogram(_ch, _input_histogram, _count); }
+
+inline void
 AudioProcessor::get_output_histogram(double *_output_histogram, size_t _count)
 { out_levels.get_histogram(_output_histogram, _count); }
+
+inline void
+AudioProcessor::get_output_histogram(int _ch, double *_output_histogram, size_t _count)
+{ out_levels.get_histogram(_ch, _output_histogram, _count); }
 
 inline void     
 AudioProcessor::set_input_order (const int _order[NCHANNELS])
