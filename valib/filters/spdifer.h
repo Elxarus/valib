@@ -37,16 +37,16 @@ protected:
 
   Speakers sync_spk;     // stream config we're synced on
   DataBuf  frame_buf;    // frame & sync buffer
-  int      frame_data;   // data size at frame buffer (excluding spdif header size)
-  int      frames;       // number of frames sent
+  size_t   frame_data;   // data size at frame buffer (excluding spdif header size)
+  size_t   frames;       // number of frames sent
   size_t   spdif_header; // spdif header size; indicates usage of spdif header
  
   Sync     sync_helper;
 
-  // modified only by xxxx_syncinfo() functions
+  // stream info, filled by xxxx_syncinfo() functions
   Speakers stream_spk;  // stream config
-  int frame_size;       // frame size of encoded stream (not spdif frame size)
-  int nsamples;         // number of samples in frame
+  size_t frame_size;    // frame size of encoded stream (not spdif frame size)
+  size_t nsamples;      // number of samples in frame
   int bs_type;          // bitstream type 32/16/14 bit big/little endian
   int magic;            // SPDIF stream identifier
   
@@ -94,7 +94,7 @@ public:
   /////////////////////////////////////////////////////////
   // Spdifer interface
 
-  void get_info(char *buf, int len);
+  void get_info(char *buf, size_t len);
   int  get_frames();
 
   /////////////////////////////////////////////////////////

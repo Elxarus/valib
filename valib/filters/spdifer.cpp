@@ -254,7 +254,7 @@ Spdifer::load_frame()
       // load frame
       LOAD(frame_size);
 
-      // decide usage of spdif header
+      // decide usage of spdif header and find spdif frame size
       if (use_spdif_header)
       {
         spdif_header = SPDIF_HEADER_SIZE;
@@ -283,15 +283,11 @@ Spdifer::load_frame()
       hdr->type  = magic;
       hdr->len   = frame_size * 8;
 
-      // move data due to padding
+      // move data and fill padding
       if (frame_data > frame_size)
-      {
         memmove(frame_ptr + spdif_frame_size, frame_ptr + frame_size, frame_data - frame_size);
-        frame_data += spdif_frame_size - frame_size;
-      }
-
-      // zero padding
       memset(frame_ptr + frame_size, 0, spdif_frame_size - frame_size);
+      frame_data += spdif_frame_size - frame_size;
 
       // convert stream format
       if (bs_type == BITSTREAM_16LE ||
@@ -327,12 +323,9 @@ Spdifer::load_frame()
     case state_send:
     {
       if (frame_data > frame_size)
-      {
         memmove(frame_ptr, frame_ptr + frame_size, frame_data - frame_size);
-        frame_data -= frame_size;
-      }
-      else
-        frame_data = 0;
+
+      frame_data -= frame_size;
       state = state_frame;
       continue;
     }
@@ -638,7 +631,7 @@ Spdifer::dts_syncinfo(const uint8_t *_buf)
 
 
 void 
-Spdifer::get_info(char *_buf, int _len)
+Spdifer::get_info(char *_buf, size_t _len)
 {
   char info[1024];
   const char *format = 0;
@@ -649,7 +642,7 @@ Spdifer::get_info(char *_buf, int _len)
     case FORMAT_DTS: format = "SPDIF/DTS"; break;
     default:
       sprintf(info, "-");
-      memcpy(_buf, info, MIN(_len, (int)strlen(info)+1));
+      memcpy(_buf, info, MIN(_len, strlen(info)+1));
       return;
   }
 
@@ -676,5 +669,5 @@ Spdifer::get_info(char *_buf, int _len)
     bs_type_text,
     frame_size,
     nsamples);
-  memcpy(_buf, info, MIN(_len, (int)strlen(info)+1));
+  memcpy(_buf, info, MIN(_len, strlen(info)+1));
 }
