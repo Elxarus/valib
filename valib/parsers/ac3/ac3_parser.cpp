@@ -6,6 +6,12 @@
 #include "ac3_dither.h"
 #include "ac3_tables.h"
 
+///////////////////////////////////////////////////////////////////////////////
+// Defines:
+// AC3_DEBUG          - allows access to all private class data
+// AC3_DEBUG_NOIMDCT  - disable IMDCT (samples will return coeffitients)
+// AC3_DEBUG_NODITHER - disable dithering
+///////////////////////////////////////////////////////////////////////////////
 
 // todo:
 // * crc check (start_decode)

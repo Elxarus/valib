@@ -3,33 +3,32 @@
 #include "spdifer.h"
 #include "bitstream.h"
 
-// Maximum frame size (defined by standard)
-// ac3: 3840
-// dts: 16384
-// mpa: 
+///////////////////////////////////////////////////////////////////////////////
+// To sync on compressed stream we first try to catch 3 syncpoints of the same
+// format. 
 //
-// To catch 3 syncpoints we need beffer of size
-// sync_buffer_size = max_frame_size * 3 + header_size
+// To catch 3 syncpoints we need buffer of size
+// (1) sync_buffer_size = max_frame_size * 3 + header_size
 // where 
 //   max_frame_size - maximum frame size among all formats
 //   header_size - minimum data size required to catch a probable syncpoint
 //
 // Frame can be sent through SPDIF only if required bitrate is less than
 // bitrate used by stereo 16bit PCM with the same number of samples, i.e.:
-// frame_size + spdif_header <= nsamples * 4
+// (2) frame_size + spdif_header <= nsamples * 4
 // where
 //   frame_size - size of the compressed frame
 //   nsamples - number of samples this frame contains
 //   spdif_header - size of spdif header
 //
 // From equation above we can also find maximum spdif frame size:
-// max_spdif_frame_size = max_nsamples * 4
+// (3) max_spdif_frame_size = max_nsamples * 4
 //  where max_nsamples - maximum number of samples allowed in spdif frame
 //
 // After we catch 3 syncpoints and spdif conditions are fulfilled we must send
 // first frame. To do this we need some space for padding, but not more than
 // maximum spdif frame size, i.e.:
-// total_buffer_size = sync_buffer_size + max_spdif_frame_size
+// (4) total_buffer_size = sync_buffer_size + max_spdif_frame_size
 //
 // Spdif frame has following format:
 // +--------------+---------------------------+---------------+
@@ -71,7 +70,24 @@
 // +--------------+--------+-----------+----------------------+
 // ^                                   ^
 // +----------- nsamples * 4 ----------+
-
+//
+// Maximum frame size and number of samples (defined by standard):
+//
+// format | max_frame_size | max_nsamples
+// -------+----------------+--------------
+//  ac3   |      3840      |     1536
+//  dts   |     16384      |     4096
+//  mpa   |                |     1152
+//
+// For DTS format thre're 3 types of SPDIF frames: 512, 1024 and 2048 samples.
+// So regardless of the fact that the maximum number of samples per DTS frame
+// is 4096, the maximum number of samples per SPDIF frame (spdif_max_nsamples)
+// is only 2048. DTS stream with 4096 samples per frame is unsupported.
+//
+// Also bitrate for DTS stream may not satisfy the equation (2), so DTS stream
+// of such format is also unsupported.
+//
+// Unsupported DTS formats are passed throu unchanged and output format
 
 #define SPDIF_MAX_NSAMPLES   2048   // max 2048 sampels per spdif frame
 #define SPDIF_MAX_FRAME_SIZE 8192   // 2048 samples max * 4 (16bit stereo PCM)

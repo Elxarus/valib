@@ -1,9 +1,5 @@
 #include "demux.h"
 
-// todo: detect encoded stream in PCM input
-// todo: demux spdif
-// todo: syncronization
-
 Demux::Demux()
 {}
 
@@ -50,7 +46,8 @@ Demux::process(const Chunk *_chunk)
         continue;
       }
 
-      // on stream switch return currently decoded buffer and switch to other stream on next call
+      // if there're something at output buffer and next packet belongs to other stream
+      // return currently decoded buffer and switch to other stream on next call
       if ((stream && stream != pes.stream) ||
           (stream && substream && substream != pes.substream))
         if (write_len)

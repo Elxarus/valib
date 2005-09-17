@@ -9,9 +9,11 @@
     AC3     -> SPDIF
     MPA     -> SPDIF
     DTS     -> SPDIF
-    DTS     -> DTS    (only if DTS bitrate is too high; this allows to decode DTS instead of SPDIF-passthrough)
+    DTS     -> DTS    (only if DTS bitrate is too high; this allows to decode
+                       DTS instead of SPDIF-passthrough)
     Unknown -> SPDIF  (only if source stream contains AC3, MPA or DTS stream)
-    Unknown -> DTS    (only if source stream contains DTS stream and DTS bitrate is too high)
+    Unknown -> DTS    (only if source stream contains DTS stream and DTS 
+                       bitrate is too high)
 
   Buffering: no
   Timing: apply input timestamp to the first syncpoint found at the input data

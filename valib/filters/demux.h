@@ -1,12 +1,11 @@
 /*
-  Demuxer - demux any container stream 
+  Demuxer - demux MPEG container (wrapper filter for MPEGDemux class)
   MPEG1/2 PES supported 
-  MPEG2 transport stream planned
-  Encoded stream detector in PCM planned
+  todo: MPEG2 transport stream
 
   Speakers: can change format
-  Input formats: PES, SPDIF, PCM16_BE
-  Output formats: AC3, MPA, DTS, PCM16_BE, PCM16_LE PCM24_LE
+  Input formats: PES
+  Output formats: AC3, MPA, DTS, PCM16_LE PCM24_LE
   Format conversions:
     PES -> AC3
     PES -> MPA
@@ -18,7 +17,7 @@
     [TS -> DTS]
     [TS -> PCM16_LE]
     [TS -> PCM24_LE]
-  Timing: preserve original (todo: apply input timestamp to the first syncpoint found at the input data?)
+  Timing: preserve original
   Buffering: no
   Parameters:
     -
