@@ -8,7 +8,7 @@
 // format. 
 //
 // To catch 3 syncpoints we need buffer of size
-// (1) sync_buffer_size = max_frame_size * 3 + header_size
+// (1) sync_buffer_size = max_frame_size * 2 + header_size
 // where 
 //   max_frame_size - maximum frame size among all formats
 //   header_size - minimum data size required to catch a probable syncpoint
@@ -21,9 +21,10 @@
 //   nsamples - number of samples this frame contains
 //   spdif_header - size of spdif header
 //
-// From equation above we can also find maximum spdif frame size:
+// From the equation above we can also find maximum spdif frame size:
 // (3) max_spdif_frame_size = max_nsamples * 4
-//  where max_nsamples - maximum number of samples allowed in spdif frame
+// where 
+//   max_nsamples - maximum number of samples per spdif frame allowed
 //
 // After we catch 3 syncpoints and spdif conditions are fulfilled we must send
 // first frame. To do this we need some space for padding, but not more than
@@ -50,10 +51,11 @@
 // +--------------+---------------------------+---------------+
 // | spdif_header | sync_buffer               |    unused     |
 // +--------------+---------------------------+---------------+
-// ^                                                          ^
-// +---------- sync_buffer_size + max_spdif_frame_size -------+
+//                ^                                           ^
+//                +- sync_buffer_size + max_spdif_frame_size -+
 //
-// When sending first 2 spdif frames:
+// When we send first 2 spdif frames pading is inserted in between of current 
+// frame end and other data rmaining at sync buffer:
 //
 //                +----------+---- frame_size
 //                v          v
@@ -63,7 +65,8 @@
 // ^                                   ^
 // +----------- nsamples * 4 ----------+
 //
-// When sending following frames:
+// When we send following frames only one frame is loaded at the same time and
+// the rest of the buffer is unused:
 //
 // +--------------+--------+-----------+----------------------+
 // | spdif_header | frame  | padding   |       unused         |
@@ -73,27 +76,34 @@
 //
 // Maximum frame size and number of samples (defined by standard):
 //
-// format | max_frame_size | max_nsamples
-// -------+----------------+--------------
-//  ac3   |      3840      |     1536
-//  dts   |     16384      |     4096
-//  mpa   |                |     1152
+// format | max_frame_size | max_nsamples | header_size |
+// -------+----------------+--------------+-------------+
+//  ac3   |      3840      |     1536     |       7     |
+//  dts   |     16384      |     4096     |      16     |
+//  mpa   |                |     1152     |       4     |
+// -------+----------------+--------------+-------------+
 //
 // For DTS format thre're 3 types of SPDIF frames: 512, 1024 and 2048 samples.
 // So regardless of the fact that the maximum number of samples per DTS frame
 // is 4096, the maximum number of samples per SPDIF frame (spdif_max_nsamples)
-// is only 2048. DTS stream with 4096 samples per frame is unsupported.
+// is only 2048. 
 //
-// Also bitrate for DTS stream may not satisfy the equation (2), so DTS stream
-// of such format is also unsupported.
+// So from this table we can conclude all constants mentoined above:
+// spdif_max_samples = 2048
+// spdif_max_frame_size = spdif_max_samples * 4 = 8192
+// max_frame_size = 16384
+// sync_buffer_size = max_frame_size * 2 + header_size = 16400
+// total_buffer_size = sync_buffer_size + spdif_max_frame_size = 24592
 //
-// Unsupported DTS formats are passed throu unchanged and output format
+// DTS stream with 4096 samples per frame and DTS stream that does not satisfy
+// the equation (2) cannot be transmitted over spdif. Such DTS streams are
+// passed throu unchanged and output format is indicated as DTS.
 
 #define SPDIF_MAX_NSAMPLES   2048   // max 2048 sampels per spdif frame
 #define SPDIF_MAX_FRAME_SIZE 8192   // 2048 samples max * 4 (16bit stereo PCM)
 #define SPDIF_HEADER_SIZE    16     // SPDIF header size
 #define HEADER_SIZE          16     // header size required to catch syncpoint
-#define SYNC_BUFFER_SIZE     49168  // sync buffer size = 16384 * 3 + 16
+#define SYNC_BUFFER_SIZE     16400  // sync buffer size
 
 // formats supported
 static const int format_mask = FORMAT_MASK_UNKNOWN | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF;
@@ -106,12 +116,31 @@ struct spdif_header_t
   uint16_t sync2;   // Pb sync word 2
   uint16_t type;    // Pc data type
   uint16_t len;     // Pd length-code (bits)
+
+  inline void set(uint16_t _type, size_t _len_bits)
+  {
+    zero1 = 0;
+    zero2 = 0;
+    sync1 = 0xf872;
+    sync2 = 0x4e1f;
+    type  = _type;
+    len   = _len_bits;
+  }
+};
+
+const uint8_t spdif_pause[] =
+{
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x72, 0xf8, 0x1f, 0x4e, // Sync
+  0x00, 0x00,             // type = null data
+  0x40, 0x00,             // length = 64bit
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 Spdifer::Spdifer()
 {
   sync_spk = unk_spk;
-  frame_buf.allocate(SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
+  frame_buf.allocate(SPDIF_HEADER_SIZE + SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
   frame_data = 0;
   frames = 0;
 
@@ -194,7 +223,7 @@ Spdifer::load_frame()
   while (1) switch (state)
   {
     ///////////////////////////////////////////////////////
-    // Initial syncronization (catch at least 3 syncpoints)
+    // Syncronization (catch at least 3 syncpoints)
     // frame_data - data size at sync buffer
     // other: ignored
 
@@ -292,12 +321,7 @@ Spdifer::load_frame()
 
       // fill spdif header
       spdif_header_t *hdr = (spdif_header_t *)frame_buf.get_data();
-      hdr->zero1 = 0;
-      hdr->zero2 = 0;
-      hdr->sync1 = 0xf872;
-      hdr->sync2 = 0x4e1f;
-      hdr->type  = magic;
-      hdr->len   = frame_size * 8;
+      hdr->set(magic, frame_size * 8);
 
       // move data and fill padding
       if (frame_data > frame_size)
