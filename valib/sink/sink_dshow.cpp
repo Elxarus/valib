@@ -29,6 +29,7 @@ bool mt2spk(CMediaType mt, Speakers &spk)
     spk = Speakers(FORMAT_AC3, 0, sample_rate);
     return true;
   }
+
   if (*mt.Subtype() == MEDIASUBTYPE_DTS || 
       *mt.Subtype() == MEDIASUBTYPE_AVI_DTS)
   {
@@ -45,6 +46,12 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   if (*mt.Subtype() == MEDIASUBTYPE_MPEG2_AUDIO)
   {
     spk = Speakers(FORMAT_MPA, 0, sample_rate);
+    return true;
+  }
+
+  if (*mt.Subtype() == MEDIASUBTYPE_DOLBY_AC3_SPDIF)
+  {
+    spk = Speakers(FORMAT_SPDIF, 0, sample_rate);
     return true;
   }
 
@@ -92,12 +99,44 @@ DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
 
   spk = def_spk;
   send_mt = false;
-  discontinuity = false;
+  send_discontinuity = false;
   hr = S_OK;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// CheckMediaType(), SetMediaType(), query_spk() and set_spk() functions must
+// guarantee that media type and spk values are always in sync and media type
+// is allowed by DirectShow rules.
+
+HRESULT 
+DShowSink::CheckMediaType(const CMediaType *_mt)
+{
+  Speakers spk_tmp;
+
+  if (!mt2spk(*_mt, spk_tmp))
+    return S_FALSE;
+  else
+    return CTransformOutputPin::CheckMediaType(_mt);
+}
+
+HRESULT 
+DShowSink::SetMediaType(const CMediaType *_mt)
+{
+  Speakers spk_tmp;
+  HRESULT hr;
+
+  if (!mt2spk(*_mt, spk_tmp))
+    return E_FAIL;
+
+  if FAILED(hr = CTransformOutputPin::SetMediaType(_mt))
+    return hr;
+
+  spk = spk_tmp;
+  return S_OK;
+}
+
 bool 
-DShowSink::query_downstream(const CMediaType *mt) const
+DShowSink::query_downstream(const CMediaType *_mt) const
 {
   // We cannot join query_downstream() and set_downstream() functions
   // because query function must be const.
@@ -107,14 +146,14 @@ DShowSink::query_downstream(const CMediaType *mt) const
   if (!m_Connected) 
     return true;
 
-  if (*mt == m_mt)
+  if (*_mt == m_mt)
     return true;
 
   m_Connected->QueryInterface(IID_IPinConnection, (void **)&connection);
   if (connection) 
   {
     // Try DynamicQueryAccept
-    if (connection->DynamicQueryAccept(mt) == S_OK)
+    if (connection->DynamicQueryAccept(_mt) == S_OK)
     {
       connection->Release();
       return true;
@@ -123,7 +162,7 @@ DShowSink::query_downstream(const CMediaType *mt) const
   }
 
   // Try QueryAccept
-  if (m_Connected->QueryAccept(mt) == S_OK)
+  if (m_Connected->QueryAccept(_mt) == S_OK)
   {
     m_Connected->QueryAccept(&m_mt);
     return true;
@@ -133,7 +172,7 @@ DShowSink::query_downstream(const CMediaType *mt) const
 }
 
 bool 
-DShowSink::set_downstream(const CMediaType *mt)
+DShowSink::set_downstream(const CMediaType *_mt)
 {
   // We cannot join query_downstream() and set_downstream() functions
   // because query function must be const.
@@ -142,25 +181,21 @@ DShowSink::set_downstream(const CMediaType *mt)
 
   if (!m_Connected)
   {
-    m_mt = *mt;
+    m_mt = *_mt;
     return true;
   }
 
-  if (*mt == m_mt)
-  {
-    if (*mt->Subtype() == MEDIASUBTYPE_DOLBY_AC3_SPDIF)
-      send_mt = true;
+  if (*_mt == m_mt)
     return true;
-  }
 
   m_Connected->QueryInterface(IID_IPinConnection, (void **)&connection);
   if (connection) 
   {
     // Try DynamicQueryAccept
-    if (connection->DynamicQueryAccept(mt) == S_OK)
+    if (connection->DynamicQueryAccept(_mt) == S_OK)
     {
       connection->Release();
-      m_mt = *mt;
+      m_mt = *_mt;
       send_mt = true;
       return true;
     }
@@ -168,9 +203,9 @@ DShowSink::set_downstream(const CMediaType *mt)
   }
 
   // Try QueryAccept
-  if (m_Connected->QueryAccept(mt) == S_OK)
+  if (m_Connected->QueryAccept(_mt) == S_OK)
   {
-    m_mt = *mt;
+    m_mt = *_mt;
     send_mt = true;
     return true;
   }
@@ -183,6 +218,13 @@ bool
 DShowSink::query_input(Speakers _spk) const
 {
   CMediaType mt;
+
+  if (_spk == spk)
+    return true;
+
+  if (spk.format == FORMAT_SPDIF && _spk.format == FORMAT_SPDIF &&
+      spk.sample_rate == _spk.sample_rate)
+    return true;
 
   if (spk2mt(_spk, mt, true) && query_downstream(&mt))
   {
@@ -206,16 +248,26 @@ DShowSink::set_input(Speakers _spk)
 {
   CMediaType mt;
 
+  if (_spk == spk)
+    return true;
+
+  if (spk.format == FORMAT_SPDIF && _spk.format == FORMAT_SPDIF &&
+      spk.sample_rate == _spk.sample_rate)
+  {
+    spk = _spk;
+    return true;
+  }
+
   if (spk2mt(_spk, mt, true) && set_downstream(&mt))
   {
     spk = _spk;
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz extensible): Ok %s", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate, send_mt? "(send mediatype)": ""));
     return true;
   } 
   else if (spk2mt(_spk, mt, false) && set_downstream(&mt))
   {
     spk = _spk;
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Ok %s", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate, send_mt? "(send mediatype)": ""));
     return true;
   }
   else
@@ -281,13 +333,13 @@ DShowSink::process(const Chunk *chunk)
     }
 
     // Discontinuity
-    if (discontinuity)
+    if (send_discontinuity)
     {
       DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Sending discontiniuity...", this));
       sample->SetDiscontinuity(true);
-      discontinuity = false;
+      send_discontinuity = false;
     }
-
+    
     // Timestamp
     if (chunk->is_sync())
     {

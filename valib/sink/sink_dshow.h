@@ -14,20 +14,24 @@ bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx);
 class DShowSink : public CTransformOutputPin, public Sink
 {
 protected:
-  Speakers spk;          // output configuration
-  bool send_mt;          // send media type with next sample
-  bool discontinuity;    // send discontinuity with next sample
-  HRESULT hr;            // result of sending sample
+  Speakers spk;             // output configuration
+  bool send_mt;             // send media type with next sample
+  bool send_discontinuity;  // send discontinuity with next sample
+  HRESULT hr;               // result of sending sample
 
   bool query_downstream(const CMediaType *mt) const;
   bool set_downstream(const CMediaType *mt);
 
+  HRESULT CheckMediaType(const CMediaType *mt);
+  HRESULT SetMediaType(const CMediaType *mt);
+
 public:
   DShowSink(CTransformFilter* pFilter, HRESULT* phr);
-
-  void send_discontinuity()          { discontinuity = true; }
-  void send_mediatype()              { send_mt = true;       }
-
+/*
+  void send_discontinuity()          { send_discontinuity = true; }
+  void send_mediatype()              { send_mt = true;            }
+  void send_spdif_pause()            { send_spdif_pause = true;   }
+*/
   void reset_hresult()               { hr = S_OK;            }
   HRESULT get_hresult()              { return hr;            }
 
