@@ -45,17 +45,48 @@ All filters:
   according to IEC 61937
 
 
-                  IP  BUF
-AGC                -   +
-BassRedir          +   -
-Convert            -   -
-AudioDecoder           
-Dejitter           +   -
-Delay              +   +
-Demux
-DVDDecoder
-FilterChain
-Levels             +   -
-Mixer             +/-  +
-AudioProcessor
-Spdifer            -
+
+Raw data
+========
+             NF R QSGP OEC  IP FL BUF 11 n1 1n nn
+Convert      +  + ++-+ +-+  -  +   +  +  -
+Counter      +  + +--+ ---  +  -   -
+Decoder      +  + ++-+ +++  -  -   -               ???? (must require flushing)
+Demux        +  + +--+ +--  +  -   -
+Spdifer      +  + +--- +-+  -  -   +
+
+Processing
+==========
+             NF R QSGP OEC  IP FL BUF
+AGC          +  + ---- --+  -  +   +
+Mixer        +  - -+-- +-+  *  -   +
+Delay        +  + ---+ ---  +  -   +
+BassRedir    +  + -+-+ ---  +  -   - 
+Levels       +  + ---- --+  +  -   -
+Dejitter     +  + ---+ --+  +  -   -
+
+Aggregates
+==========
+             NF R QSGP OEC  IP FL BUF
+FilterChain  +  + ++++ +++         -
+Proc         -  + ++++ +++         -
+DVDDecoder   -  + ++++ +++         -
+
+
+
+NF - NullFilter descendant
+
+R - reset()
+
+Q - query_input()
+S - set_input()
+G - get_input()
+P - process()
+
+O - get_output()
+E - is_empty()
+C - get_chunk()
+
+IP  - In-place filter ('+' - inplace, '-' - buffered, '*' - both)
+FL  - require flushing
+BUF - has buffer (DataBuffer or SampleBuffer)
