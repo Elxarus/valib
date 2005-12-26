@@ -781,7 +781,7 @@ int main(int argc, char *argv[])
     chunk.set(Speakers(FORMAT_UNKNOWN, 0, 0), 0, 0);
   else
     chunk.set(file.get_spk(), 0, 0);
-  chunk.set_eos(true);
+  chunk.eos = true;
 
   if (!filter->process_to(&chunk, sink))
   {

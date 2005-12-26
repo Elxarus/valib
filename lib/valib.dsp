@@ -88,7 +88,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Perf"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "DOUBLE_SAMPLE" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /FR /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -171,6 +171,10 @@ SOURCE=..\valib\spk.cpp
 # Begin Source File
 
 SOURCE=..\valib\spk.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\sync.h
 # End Source File
 # Begin Source File
 

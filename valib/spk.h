@@ -73,7 +73,7 @@
     the input of decoder. But at output decoder must specify correct relation.
     
   level - absolute value for 0dB level. Generally depends on format, i.e.
-    for PCM16 format it is 32767.0, so I'm thinking about to get rid of this 
+    for PCM16 format it is 32767.0, so I think about to get rid of this 
     parameter. Now it is used to pre-scale data.
 */
 

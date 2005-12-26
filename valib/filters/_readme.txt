@@ -48,10 +48,10 @@ All filters:
 
 Raw data
 ========
-             NF R QSGP OEC  IP FL BUF 11 n1 1n nn
-Convert      +  + ++-+ +-+  -  +   +  +  -
+             NF R QSGP OEC  IP FL BUF 
+Convert      +  + ++-+ +-+  -  +   +  
 Counter      +  + +--+ ---  +  -   -
-Decoder      +  + ++-+ +++  -  -   -               ???? (must require flushing)
+Decoder      +  + ++-+ +++  -  -   -    ???? (must require flushing)
 Demux        +  + +--+ +--  +  -   -
 Spdifer      +  + +--- +-+  -  -   +
 
