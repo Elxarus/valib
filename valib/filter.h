@@ -6,7 +6,8 @@
   =====
   * Aduio stream - continious block of audio data. 
     (same format, may have associated timeline, 
-     stream sources: audio file, multimedia file, live source as sound card, internet, etc)
+     stream sources: audio file, multimedia file, live source as sound card, 
+     internet, etc)
   * Chunk - a structure used to carry audio data and stream events.
   * Stream events
     (format change, end-of-stream, syncronization)
@@ -39,6 +40,97 @@
 
   Rules
   =====
+
+  Source
+  ------
+
+  [s1] When source is full it must report format exactly as it will appear at
+    next output chunk. In other words get_output() may change its value only
+    after get_chunk() call or when is_empty() == true.
+
+    if (!source.is_empty())
+    {
+      spk1 = source.get_output();
+      chunk1 = source.get_chunk();
+      assert(chunk1.spk == spk1);
+      ...
+      if (!source.is_empty())
+      {
+        spk2 = source.get_output();
+        chunk2 = source.get_chunk();
+        assert(chunk2.spk == spk2);
+        // note that spk2 may differ from spk1
+      }
+    }
+
+  Sink
+  ----
+
+  [k1] Input format may equal to:
+    1) spk_unknown when sink is not initialized.
+    2) correct format when sink is initialized.
+
+  [k2] Input format switch may occur only in following cases:
+    1) set_input() call.
+    2) process() call if chunk format differs from current input format.
+    3) by call to descendants' class functions (only at working thread).
+
+  [k4] Format switch call should succeed after successful query_input() call.
+
+    if (sink.query_input(spk))
+      assert(sink.set_input(spk));
+
+    if (sink.query_input(chunk.spk))
+      assert(sink.process(chunk));
+
+  [k3] get_output() must report new format immediately after format switch.
+
+    if (sink.query_input(spk))
+    {
+      assert(sink.set_input(spk));
+      assert(spk == sink.get_input());
+    }
+
+    if (sink.query_input(chunk.spk))
+    {
+      assert(sink.process(chunk));
+      assert(chunk.spk == sink.get_input());
+    }
+
+  Filter
+  ------
+
+  [f1] Filter should report spk_unknown for input and output formats when 
+    filter is not initialized (after creation).
+
+  [f2] If output format depends on input data get_output() must report
+    spk_unknown after following:
+    1) reset() call
+    2) input format switch (see [k2] rule)
+    3) call to descendants' class functions (only at working thread) that
+       may affect output format.
+
+    Also filter may change its output format according to [s1] rule.
+
+    filter.reset()
+    assert(filter.get_output() == spk_unknown);
+    ...
+    filter.process(chunk);
+    ...
+    if (!filter.is_empty())
+      assert(correct_format(filter.get_output())
+
+  [f3] If output format doesn't depend on input data it may change only in
+    following cases:
+    1) input format switch (see [k2] rule)
+    2) by call to descendants' class functions (only at working thread)
+
+    Filter cannot switch output format during processing in this case.
+
+  [f4] It is possible that for some input formats output format may depend on
+    input data and for some it doesn't. In this case for dependent formats
+    filter must follow [f2] rule and [f3] rule for independent.
+
 */
 
 #ifndef VALIB_FILTER_H
