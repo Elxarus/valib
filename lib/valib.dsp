@@ -162,6 +162,14 @@ SOURCE=..\valib\parser.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\rng.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\rng.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\sink.h
 # End Source File
 # Begin Source File
