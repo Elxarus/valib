@@ -73,13 +73,11 @@ MPEGDemux::streaming(uint8_t *_buf, int len)
   int current_stream;
   int current_substream;
 
-  #define REQUIRE(bytes)       \
-  {                            \
-    if (data_size < (bytes))   \
-    {                          \
-      required_size = (bytes); \
-      continue;                \
-    }                          \
+  #define REQUIRE(bytes)     \
+  if (data_size < (bytes))   \
+  {                          \
+    required_size = (bytes); \
+    continue;                \
   }
 
   #define DROP(bytes)   \
@@ -100,7 +98,7 @@ MPEGDemux::streaming(uint8_t *_buf, int len)
   while (1)
   {
     /////////////////////////////////////////////////////////////////
-    // Load header data
+    // Load requested data
 
     if (data_size < required_size)
       if (len < required_size - data_size)
