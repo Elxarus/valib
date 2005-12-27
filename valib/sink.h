@@ -1,5 +1,5 @@
 /*
-  Abstract audio sink interface
+  Abstract audio output device (renderer) interface
   NullRenderer implementation
 */
 
@@ -102,9 +102,10 @@ class NullRenderer;
 //   stop() and flush() calls. 
 //
 // write() [working thread, blocking, critical path]
-//   Write data block to device. This function may block during playback.
-//   If device support buffering, this call should not block if free buffer
-//   size >= size of received data and it is no format change.
+//   Write data block to device. This function blocks until all data is
+//   writted to playback buffer. If device is in paused state and playback 
+//   buffer is full this call also blocks. This call should not block if free
+//   playback buffer size >= size of received data and format is unchanged.
 //
 
 class AudioRenderer : public Sink
@@ -198,22 +199,22 @@ protected:
   inline bool receive_chunk(const Chunk *_chunk)
   {
     // Open device
-    if (!opened && !open(_chunk->get_spk()))
+    if (!opened && !open(_chunk->spk))
       return false;
 
     // Format change
-    if (spk != _chunk->get_spk())
+    if (spk != _chunk->spk)
     {
       if (opened)
         flush();
       
-      if (!open(_chunk->get_spk()))
+      if (!open(_chunk->spk))
         return false;
     }
 
     // Synchronization
-    if (_chunk->is_sync())
-      time = _chunk->get_time();
+    if (_chunk->sync)
+      time = _chunk->time;
 
     return true;
   }

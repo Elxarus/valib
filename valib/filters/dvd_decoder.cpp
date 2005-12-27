@@ -98,11 +98,11 @@ DVDDecoder::get_input() const
 bool 
 DVDDecoder::process(const Chunk *_chunk)
 {
-  if (_chunk->get_spk() != in_spk && !set_input(_chunk->get_spk()))
+  if (_chunk->spk != in_spk && !set_input(_chunk->spk))
     return false;
 
   state_ptr = 0;
-  if (demux.query_input(_chunk->get_spk()))
+  if (demux.query_input(_chunk->spk))
   {
     FILTER_SAFE(demux.process(_chunk));
     push_state(state_demux);
@@ -110,21 +110,21 @@ DVDDecoder::process(const Chunk *_chunk)
   }
 
   if ((out_spk.format == FORMAT_SPDIF) && 
-      (spdif & FORMAT_MASK(_chunk->get_spk().format)))
+      (spdif & FORMAT_MASK(_chunk->spk.format)))
   {
     FILTER_SAFE(spdifer.process(_chunk));
     push_state(state_spdif);
     return process_internal();
   }
 
-  if (dec.query_input(_chunk->get_spk()))
+  if (dec.query_input(_chunk->spk))
   {
     FILTER_SAFE(dec.process(_chunk));
     push_state(state_dec);
     return process_internal();
   }
 
-  if (proc.query_input(_chunk->get_spk()))
+  if (proc.query_input(_chunk->spk))
   {
     FILTER_SAFE(proc.process(_chunk));
     push_state(state_proc);
@@ -143,7 +143,7 @@ DVDDecoder::get_output() const
 bool 
 DVDDecoder::is_empty() const
 {
-  if (!chunk.is_empty() || chunk.is_eos())
+  if (!chunk.is_empty() || chunk.eos)
     return false;
 
   for (int i = 0; i < state_ptr; i++)
@@ -162,7 +162,7 @@ DVDDecoder::is_empty() const
 bool 
 DVDDecoder::process_internal()
 { 
-  if (!chunk.is_empty() || chunk.is_eos())
+  if (!chunk.is_empty() || chunk.eos)
     // we did not return the chunk
     return true;
 
@@ -208,13 +208,13 @@ DVDDecoder::process_internal()
         substream = demux.get_substream();
 
         if ((out_spk.format == FORMAT_SPDIF) && 
-            (FORMAT_MASK(chunk.get_spk().format) & spdif))
+            (FORMAT_MASK(chunk.spk.format) & spdif))
         {
           // state_demux -> state_spdif
           FILTER_SAFE(spdifer.process(&chunk));
           PUSH_STATE(state_spdif);
         }
-        else if (proc.query_input(chunk.get_spk()))
+        else if (proc.query_input(chunk.spk))
         {
           // state_demux -> state_proc
           FILTER_SAFE(proc.process(&chunk));
@@ -249,7 +249,7 @@ DVDDecoder::process_internal()
 
         FILTER_SAFE(proc.get_chunk(&chunk));
 
-        if (chunk.get_spk().format != FORMAT_LINEAR)
+        if (chunk.spk.format != FORMAT_LINEAR)
         {
           spdif_mode = SPDIF_MODE_NONE;
           return true;
@@ -314,7 +314,7 @@ DVDDecoder::get_chunk(Chunk *_chunk)
   FILTER_SAFE(process_internal());
 
   *_chunk = chunk;
-  chunk.set_empty();
-  chunk.set_eos(false);
+  chunk.size = 0;
+  chunk.eos = false;
   return true;
 }

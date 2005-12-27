@@ -74,14 +74,14 @@ Syncer::process(const Chunk *_chunk)
   vtime_t old_time = time;
 
   // resync on format change
-  if (spk != _chunk->get_spk())
+  if (spk != _chunk->spk)
     old_sync = false;
 
   // receive chunk
   FILTER_SAFE(receive_chunk(_chunk));
 
   // skip non-sync
-  if (!_chunk->is_sync())
+  if (!_chunk->sync)
     return true;
 
   // resync after reset
@@ -114,7 +114,7 @@ Syncer::process(const Chunk *_chunk)
     }
   }
 
-  istat.add(_chunk->get_time() - old_time);
+  istat.add(_chunk->time - old_time);
   ostat.add(time - old_time);
 
 #ifdef SYNCER_LOG_TIMING

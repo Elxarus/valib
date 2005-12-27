@@ -36,8 +36,6 @@ int test_crash(Log *log)
   test_crash_filter(log, Speakers(FORMAT_AC3,     0, 0), &dec, "Decoder");
   test_crash_filter(log, Speakers(FORMAT_MPA,     0, 0), &dec, "Decoder");
   test_crash_filter(log, Speakers(FORMAT_DTS,     0, 0), &dec, "Decoder");
-//  test_crash_filter(log, Speakers(FORMAT_SPDIF,   0, 0), &dec, "Decoder");
-
 
   test_crash_filter(log, Speakers(FORMAT_PCM16,   MODE_STEREO, 48000), &dvd, "DVDDecoder");
   test_crash_filter(log, Speakers(FORMAT_PCM24,   MODE_STEREO, 48000), &dvd, "DVDDecoder");
@@ -48,8 +46,6 @@ int test_crash(Log *log)
   test_crash_filter(log, Speakers(FORMAT_DTS,     0, 0), &dvd, "DVDDecoder");
 
   test_crash_filter(log, Speakers(FORMAT_PES,     0, 0), &dvd, "DVDDecoder");
-//  test_crash_filter(log, Speakers(FORMAT_SPDIF,   0, 0), &dvd, "DVDDecoder");
-//  test_crash_filter(log, Speakers(FORMAT_UNKNOWN, 0, 0), &dvd, "DVDDecoder");
 
   return log->close_group();
 }
@@ -85,7 +81,7 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
         return log->err("filter->get_chunk() failed!");
   }
 
-  if (!ochunk.is_eos())
+  if (!ochunk.eos)
     return log->err("Last chunk is not end-of-stream!");
 
   return 0;

@@ -125,7 +125,7 @@ AudioProcessor::get_input() const
 bool 
 AudioProcessor::process(const Chunk *_chunk)
 {
-  if (_chunk->get_spk() != in_spk && !set_input(_chunk->get_spk()))
+  if (_chunk->spk != in_spk && !set_input(_chunk->spk))
     return false;
   else
     return chain.process(_chunk);

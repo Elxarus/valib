@@ -42,7 +42,7 @@ int test_empty(Log *log)
   Spdifer        spdifer;
 
   log->open_group("Empty filters test");
-  test_empty_filter(log, &agc,     "NullFilter");
+  test_empty_filter(log, &null,    "NullFilter");
   test_empty_filter(log, &agc,     "AGC");
   test_empty_filter(log, &conv,    "Converter");
   test_empty_filter(log, &dec,     "AudioDecoder");
@@ -120,7 +120,7 @@ int test_empty_filter(Log *log, Filter *filter, const char *filter_name)
     if (!chunk.is_empty())
       return log->err("non-empty chunk returned");
 
-    if (!chunk.is_eos())
+    if (!chunk.eos)
       return log->err("filter did not return end-of stream");
   }
 

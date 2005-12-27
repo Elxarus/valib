@@ -34,7 +34,7 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     //   if (!src_filter->get_from(&ochunk, src))
     //     return log->err("src_filter->get_from()");
 
-    while (!so_chunk.get_size() && !so_chunk.is_eos())
+    while (!so_chunk.size && !so_chunk.eos)
     {
       while (src_filter->is_empty())
       {
@@ -51,7 +51,7 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
 
     if (ref_filter)
     {
-      while (!ro_chunk.get_size() && !ro_chunk.is_eos())
+      while (!ro_chunk.size && !ro_chunk.eos)
       {
         while (src_filter->is_empty())
         {
@@ -68,7 +68,7 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     }
     else
     {
-      while (!ro_chunk.get_size() && !ro_chunk.is_eos())
+      while (!ro_chunk.size && !ro_chunk.eos)
         if (!ref->get_chunk(&ro_chunk))
           return log->err("ref->get_chunk()");
     }
@@ -79,21 +79,21 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     // Check that stream configurstions are equal
     // Do not check if output is raw and reference format is FORMT_UNKNOWN
 
-    if (ro_chunk.get_spk() != so_chunk.get_spk())
-      if (so_chunk.get_spk().format == FORMAT_LINEAR || ro_chunk.get_spk().format != FORMAT_UNKNOWN)
+    if (ro_chunk.spk != so_chunk.spk)
+      if (so_chunk.spk.format == FORMAT_LINEAR || ro_chunk.spk.format != FORMAT_UNKNOWN)
         return log->err("Different speaker configurations");
 
     // Compare data
 
-    spk = so_chunk.get_spk();
-    len = MIN(ro_chunk.get_size(), so_chunk.get_size());
+    spk = so_chunk.spk;
+    len = MIN(ro_chunk.size, so_chunk.size);
     if (spk.format == FORMAT_LINEAR)
     {
       log->status("Pos: %.3fs (%usm)", double(osize) / spk.sample_rate, osize);
 
       // compare linear
       for (ch = 0; ch < spk.nch(); ch++)
-        if (memcmp(so_chunk[ch], ro_chunk[ch], len * sizeof(sample_t)))
+        if (memcmp(so_chunk.samples[ch], ro_chunk.samples[ch], len * sizeof(sample_t)))
           return log->err("Data differs");
     }
     else
@@ -101,7 +101,7 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
       log->status("Pos: %u", osize);
 
       // compare raw data
-      if (memcmp(so_chunk.get_rawdata(), ro_chunk.get_rawdata(), len))
+      if (memcmp(so_chunk.rawdata, ro_chunk.rawdata, len))
         return log->err("Data differs");
     }
     osize += len;
@@ -111,13 +111,13 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
 
     // now we have either output or reference chunk empty
 
-    if (so_chunk.is_eos() && ro_chunk.get_size() > so_chunk.get_size())
-      return log->err("Source stream ends at %u. Reference stream is longer...", osize + so_chunk.get_size());
+    if (so_chunk.eos && ro_chunk.size > so_chunk.size)
+      return log->err("Source stream ends at %u. Reference stream is longer...", osize + so_chunk.size);
 
-    if (ro_chunk.is_eos() && so_chunk.get_size() > ro_chunk.get_size())
-      return log->err("Reference stream ends at %u. Processed stream is longer...", rsize + ro_chunk.get_size());
+    if (ro_chunk.eos && so_chunk.size > ro_chunk.size)
+      return log->err("Reference stream ends at %u. Processed stream is longer...", rsize + ro_chunk.size);
 
-    if (ro_chunk.is_eos() && so_chunk.is_eos())
+    if (ro_chunk.eos && so_chunk.eos)
       return 0;
   }
 }

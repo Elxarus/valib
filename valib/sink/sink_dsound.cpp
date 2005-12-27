@@ -473,8 +473,8 @@ bool DSRenderer::write(const Chunk *chunk)
   DWORD play_cur;
   size_t data_size;
 
-  size_t  size = chunk->get_size();
-  uint8_t *buf = chunk->get_rawdata();
+  size_t  size = chunk->size;
+  uint8_t *buf = chunk->rawdata;
 
   while (size)
   {
@@ -555,13 +555,13 @@ bool DSRenderer::write(const Chunk *chunk)
     }
   }
 
-  size = chunk->get_size() / wfx.Format.nBlockAlign;
-  if (chunk->is_sync())
-    time = chunk->get_time() + size;
+  size = chunk->size / wfx.Format.nBlockAlign;
+  if (chunk->sync)
+    time = chunk->time + size;
   else
     time += size;
 
-  if (chunk->is_eos())
+  if (chunk->eos)
     flush();
 
   return true;

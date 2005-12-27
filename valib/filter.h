@@ -1,6 +1,44 @@
 /*
   Abstract filter interface
   NullFilter implementation
+
+  Terms
+  =====
+  * Aduio stream - continious block of audio data. 
+    (same format, may have associated timeline, 
+     stream sources: audio file, multimedia file, live source as sound card, internet, etc)
+  * Chunk - a structure used to carry audio data and stream events.
+  * Stream events
+    (format change, end-of-stream, syncronization)
+
+  * Source
+  * Sink
+  * Filter
+
+  * Timestamps
+  * Syncpoints
+
+
+  Data flow
+  =========
+  ......
+
+  Filter data processing
+  ======================
+
+  * 2 sided data processing model (with block diagram)
+  * in-place processing
+  * buffered processing
+  * external references
+  * Buffering and flushing
+
+  Flow control
+  ============
+  ........
+
+
+  Rules
+  =====
 */
 
 #ifndef VALIB_FILTER_H
@@ -21,150 +59,150 @@ class NullFilter;
 #define FILTER_SAFE(call) if (!call) return false;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Chunk class.
-// A part of audio data.
+// Chunk
 //
-// There are several types of chunks:
-// 1) Data chunk/empty chunk. A chunk that has data/has no data.
-// 2) Syncronization chunk (sync-chunk). A chunk that has syncronization info.
-// 3) End-of-steam chunk (eos-chunk). A chunk that ends data transmission.
+// This structure is used to transfer audio data and stream events from audio
+// source to auido sink (see Source and Sink classes below). 
 //
-// Empty chunk (chunk that contain no data) may be used to inform downsteram
-// about different events: format change, syncronization or end of steram.
+// Structure consists of:
+// * Data format
+// * Audio data
+// * Syncronization data
+// * End of stream flag
 //
-// Speakers
-// ========
-// Chunk always has data format. 
+// Following stream events possible:
+// * Format change
+// * Syncronization
+// * End of stream
 //
-// get_spk() - get data format
-// set_spk() - set data format
+// Data format
+// ===========
+// Chunk always carries data format in 'spk' field.
+//
+// Audio data
+// ==========
+// Chunk may carry audio data. There two kinds of data possible: raw data and
+// channel samples (linear format). Raw data is a simple continious block of
+// binary data. It may be PCM data, encoded data (AC3, DTS) or something else.
+// Linear format data is a set of sample buffers for each channel. PCM data in
+// raw form is interleaved and may have different sample format. So it's hard
+// to work with it. Linear format has linear buffers for each channel and
+// fixed sample format (sample_t). Most of internal data processing is done on
+// linear format but input and output must be raw. So considering importance
+// of both kinds of data the chunk structure may carry both. So 'rawdata'
+// field is a pointer to raw buffer and 'samples' field is a set of pointers
+// to sample buffers for each channel.
+//
+// We can find data format with 'spk' field. If it indicates FORMAT_LINEAR
+// then 'samples' field must be filled and 'rawdata' field value is undefined.
+// Any other format means that 'samples' field is undefined and 'rawdata'
+// field has correct pointer. We must not use undefined field.
+//
+// Any data format has buffer size. In case of raw data it means size of data
+// buffer pointed by 'rawdata' pointer in bytes. In case of linear format it
+// means number of samples in each channel buffer. So size of each buffer in 
+// bytes is: channel_buffer_size = sizeof(sample_t) * chunk.size .
+//
+// Also chunk may not contain any data (empty chunk). Such chunks may be used
+// to inform downstream about different events without sending data. Empty 
+// chunk means that both pointers are considered to be invalid and must not be
+// used. Empty chunk has 'size' field set to zero (size == 0). There is a
+// special function is_empty() to clarify this statement.
+//
+// Syncronization data
+// ===================
+// Chunk may contain time stamp that indicates position in the stream. In this
+// case it is called syncronization chunk (sync-chunk). 'sync' field indicates
+// that we have correct time stamp and 'time' field is this stamp.
+//
+// (see Sync class at sync.h for more information).
+// 
+// End of stream flag
+// ===================
+// End-of-stream chunk (eos-chunk) is method to correctly finish the stream. 
+// eos-chunk may contain data and stream is assumed to end after the last 
+// byte/sample of this chunk. 'eos' field indicates eos-chunk.
+//
+// Format change
+// =============
+// There are 2 ways to change the stream format and start new stream:
+// * Forced. Send chunk with new format without sending eos-chunk before or
+//   set_input() call without flush() call before. In this case sink should
+//   drop all internal buffers immediately without waiting this data to
+//   playback and switch to the new format. New data is considered to be not
+//   connected with previous. This method provides fastest switching to the
+//   new foramt.
+// * Flushing. Send eos-chunk with old format before sending chunk with new
+//   format or flush() call before set_input(). In this case sink should 
+//   guarantee that all buffered data is sent to output before receiving new
+//   data. Flushing is also used to correctly finish playback. This way
+//   guarantees that we don't loose audio tail. 
+//
+// Of course new format should be supported. Unsupported format will lead to
+// fail of process() or set_input() call and immediate stop of playback in 
+// case of forced format change or correct finish of current stream and stop
+// in case of flushing.
 //
 // Syncronization
 // ==============
-// Chunk may contain timestamp that indicates position in the stream. In this
-// case it is called syncronization chunk. Empty syncronization chunk is used 
-// just to indicate position. (see also Sync class at filter.h).
+// Audio source may indicate position in the audio stream. All filters must
+// pass this informtion correctly. But this may be a hard task because of
+// a simple rule: time stamp is applied to the first syncpoint of incoming 
+// data. Where syncpoint is:
+// * each sample for linear format
+// * first byte of interleaved PCM sample for PCM format
+// * first byte of a packet for packeted format (ac3/dts/mpa/pes, etc)
+// * reasonable place for other formats (should be documented)
 //
-// is_sync()  - is this chunk contains timestamp
-// get_time() - returns timestamp
-// set_sync() - set syncronization parameters
-// 
-// End-of-stream
+// This rule comes from MPEG where presentation timestamp of PES packet is
+// applied to the first syncpoint of wrapped elementary stream. In our case
+// filter may receive timestamped chunk of multichannel PCM data beginning 
+// from half-a-sample. This requires to extend the concept of syncpoint.
+//
+// End of stream
 // =============
-// End-of-stream chunk (eos-chunk) is method to correctly finish the stream. 
-// This chunk may contain data and stream is assumed to end after last 
-// byte/sample of this chunk. Empty end-of-stream chunk is used just to end 
-// the stream correctly. After receiving eos-chunk filter should flush all 
-// internal data buffers and mark last chunk sent as eos-chunk.
-//
-// is_eos()  - chunk is end-of-stream chunk
-// set_eos() - set chunk as end-of-stream and empty
-//
-// Empty chunk
-// ===========
-// Empty chunk may be used to deliver special events to the processing chain
-// (format change, syncronization, end-of-stream). Both data buffers may be
-// invalid in this case.
-//
-// is_empty()  - query if chunk is empty
-// set_empty() - mark chunk as empty (drop data)
-//
-// Buffers
-// =======
-// Chunk has 2 types of buffer pointers: raw buffer and linear 
-// (splitted-channels) buffer. Most of internal data processing is done on
-// linear format, but data from external sources may be in any format. Some 
-// filters works with both raw and linear data so for interface universality 
-// it is only one type of chunk with both raw and linear buffers.
-//
-// get_size()    - number of samples in case of linear data farmat and size of
-//                 raw buffer in bytes otherwise.       
-// get_rawdata() - raw buffer pointer (only for raw data)
-// get_samples() - pointers to linear channel buffers (only for linear firmat)
-// operator []   - pointer to channel buffer
-// set_rawdata() - set raw buffer
-// set_samples() - set linear buffers
-// drop()        - drop data from raw or linear buffer (bytes or samples).
-//
-
+// See end of stream flag and format change...
 
 class Chunk
 {
-protected:
+public:
+  /////////////////////////////////////////////////////////
+  // Data
+
   Speakers  spk;
+
+  uint8_t  *rawdata;
+  samples_t samples;
+  size_t    size;
 
   bool      sync;
   vtime_t   time;
             
   bool      eos;
 
-  uint8_t  *rawdata;
-  samples_t samples;
-  size_t    size;
-
-public:
-  // Chunk()
-  //
-  // Speakers
-  // inline Speakers get_spk() const
-  // inline void set_spk(Speakers _spk)
-
-  // Syncronization
-  // inline bool is_sync() const
-  // inline vtime_t get_time() const
-  // inline void set_sync(bool _sync, vtime_t _time = 0)
-
-  // End-of-stream
-  // inline bool is_eos() const;
-  // inline void set_eos(bool eos = true);
-
-  // Empty chunk
-  // inline bool is_empty() const
-  // inline void set_empty()
-
-  // Buffers
-  // inline size_t    get_size() const
-  // inline uint8_t  *get_rawdata() const
-  // inline samples_t get_samples() const
-
-  // inline operator uint8_t *() const
-  // inline operator samples_t() const
-  // inline sample_t *operator[](int _ch) const
-
-  // inline void set_buf(uint8_t *_buf, size_t _size);
-  // inline void set_samples(samples_t _samples, size_t _size) 
-  // inline void drop(size_t _size)
-  
-
+  /////////////////////////////////////////////////////////
+  // Utilities
 
   Chunk(): spk(unk_spk), sync(false), time(0), eos(false), size(0), rawdata(0)
   {}
 
-  Chunk(Speakers _spk, 
-                  samples_t _samples, size_t _size,
-                  bool _sync = false, vtime_t _time = 0,
-                  bool _eos  = false)
+  Chunk(Speakers _spk, samples_t _samples, size_t _size,
+    bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
     set(_spk, _samples, _size, _sync, _time, _eos);
   }
 
-  Chunk(Speakers _spk, 
-                  uint8_t *_rawdata, size_t _size,
-                  bool _sync = false, vtime_t _time = 0,
-                  bool _eos  = false)
+  Chunk(Speakers _spk, uint8_t *_rawdata, size_t _size,
+    bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
     set(_spk, _rawdata, _size, _sync, _time, _eos);
   }
 
-  /////////////////////////////////////////////////////////
-  // Speakers
-
-  inline void set(Speakers _spk, 
-                  samples_t _samples, size_t _size,
-                  bool _sync = false, vtime_t _time = 0,
-                  bool _eos  = false)
+  inline void set(Speakers _spk, samples_t _samples, size_t _size,
+    bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
     spk = _spk;
+    rawdata = 0;
     samples = _samples;
     size = _size;
     sync = _sync;
@@ -172,98 +210,21 @@ public:
     eos = _eos;
   }
 
-  inline void set(Speakers _spk, 
-                  uint8_t *_rawdata, size_t _size,
-                  bool _sync = false, vtime_t _time = 0,
-                  bool _eos  = false)
+  inline void set(Speakers _spk, uint8_t *_rawdata, size_t _size,
+    bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
     spk = _spk;
     rawdata = _rawdata;
+    samples.set_null();
     size = _size;
     sync = _sync;
     time = _time;
     eos = _eos;
   }
-
-  /////////////////////////////////////////////////////////
-  // Speakers
-
-  inline Speakers get_spk() const
-  {
-    return spk;
-  }
-
-  inline void set_spk(Speakers _spk)
-  { 
-    spk = _spk; 
-  };
-
-  /////////////////////////////////////////////////////////
-  // Syncronization
-
-  inline bool is_sync() const
-  {
-    return sync;
-  }
-
-  inline vtime_t get_time() const
-  {
-    return time;
-  }
-
-  inline void set_sync(bool _sync, vtime_t _time = 0)
-  { 
-    sync = _sync;
-    time = _time;
-  }
-
-  /////////////////////////////////////////////////////////
-  // End-of-stream
-
-  inline bool is_eos() const
-  {
-    return eos;
-  }
-
-  inline void set_eos(bool _eos)
-  {
-    eos = _eos;
-  }
-
-  /////////////////////////////////////////////////////////
-  // Empty chunk
 
   inline bool is_empty() const
   { 
     return size == 0; 
-  }
-
-  inline void set_empty()         
-  { 
-    size = 0; 
-  }
-
-  /////////////////////////////////////////////////////////
-  // Buffers
-
-  inline size_t    get_size() const              { return size;         }
-  inline uint8_t  *get_rawdata() const           { return rawdata;      }
-  inline samples_t get_samples() const           { return samples;      }
-
-  inline operator uint8_t *() const              { return rawdata;      }
-  inline operator samples_t() const              { return samples;      }
-  inline sample_t *operator[](int _ch) const     { return samples[_ch]; }
-
-  inline void set_rawdata(uint8_t *_rawdata, size_t _size)
-  { 
-    rawdata = _rawdata; 
-    size = _size;
-  }
-
-  inline void set_samples(const samples_t &_samples, size_t _size) 
-  {
-    samples = _samples; 
-    size = _size; 
   }
 
   inline void drop(size_t _size)
@@ -287,44 +248,77 @@ public:
 // Abstract audio sink.
 // 
 // query_input() [thread-safe, fast]
-//   Check if we can change format now. Returns true if we can and false if we
-//   can't. Sink may have some internal state that may prevent format change, 
-//   so this function should return true only if it can switch format right 
-//   now. It is assumed that query result may be changed only as a result of 
-//   some state-change calls and does not change all other time. So we can 
-//   query sink from one thread and then call set_input() from other and be 
-//   sure that set_input() call succeeds. set_input() and process() calls 
-//   should not change query result (?). Should work as fast as possible, 
-//   because it may be used to try numerous formats to find acceptable 
-//   conversion. Also, this function may be called asynchronously from other 
-//   thread, so it should be thread-safe.
+//   Check if we can change format to proposed. Should work as fast as 
+//   possible because it may be used to try numerous formats to find 
+//   acceptable conversion. Also, this function may be called asynchronously
+//   from other thread, so it should be thread-safe. 
+//
+//   It is assumed that set_input() succeeds if this function returns true.
+//   But it is possible that sink may change its mind because some resources
+//   may be locked by other applications. For example imagine that some audio
+//   device supports SPDIF output. query_input() may check it and report that
+//   resource is free. But before set_input() call some other application
+//   locks SPIDF output. Of course set_input() will fail.
+//
+//   Other scenario. Some sink has option to block some formats. So in 
+//   following scenario set_input() will fall:
+//
+//   sink.allow(format1);
+//   sink.allow(format2);
+//
+//   if (sink.query_input(format1)) // ok. can change format to 'format1'
+//     sink.set_input(format1);     // ok. format is allowed...
+// 
+//   if (sink.query_input(format2)) // ok. can change format to 'format2'
+//   {
+//     sink.disallow(format2);      // change our mind about 'format2'
+//     sink.set_input(format2);     // always fail!
+//   }
+//
+//   Such scenarios with shared resources, sink options, etc must be 
+//   documented because it may require special ways to work with such sink.
 //
 // set_input() [working thread, blocking]
-//   Change format. Returns true on success and false otherwise. It is 
-//   expected that it returns true if query_input() returned true just
-//   before set_input() call (no additional verification required).
-//   It may require some time to change format (initialize output, device, 
+//   Switch format. If sink has buffered data it should immediately drop it,
+//   stop playback and prepare to receive new data. Even if we switch format
+//   to the same one. I.e. following scenario provides fast switch to the new
+//   audio stream of the same format:
+//
+//   sink.set_input(pcm16); // prepare to output pcm16 data
+//   sink.process(chunk1);  // buffer some data and possibly start playback
+//   sink.set_input(pcm16); // stop playback and drop remaining data
+//   sink.process(chunk2);  // buffer new data and possibly start playback
+//
+//   It is expected that call succeeds after successful query_input() call 
+//   (see query_input() for more info).
+//
+//   It may require some time to change format (initialize output device, 
 //   allocate buffers, etc). Sound output is not required to be continious 
 //   and clickless in case of format changes, but it is highly recommended 
-//   to produce minimum artifacts. This function should be called only from 
-//   worker thread. 
+//   to produce minimum artifacts.
 //
 // get_input() [thread-safe, fast]
 //   Just report current input format. If function reports FORMAT_UNKNOWN it
 //   means that sink is not initialized. In all other cases it is supposed 
-//   that query_input(get_input()) returns true.
+//   that query_input(get_input()) returns true. If chunk format differs from
+//   get_input() result it means that format change procedure will be evaluted
 //
 // process() [working thread, critical path]
-//   Receive data chunk. Returns true on success and false otherwise. Data 
-//   chunk may have different format than specified by set_input() call so 
-//   this function is required to handle format changes correctly (in this
-//   case it is the same assumptions as for set_input() call). Empty chunks
-//   shuold be inored without errors. Empty chunks may contain invalid format
-//   (sink should not change format for empty chunks) and invalid timestamp.
-//   For audio renderers this call may block working thread during audio 
-//   playback. After receiving end-of-stream chunk it may block until last 
-//   audio sample played.
+//   Receive data chunk. Returns true on success and false otherwise. This
+//   function must carry about possible events: format change, syncronization,
+//   end of stream. 
 //
+//   For audio renderers this call may block working thread during audio 
+//   playback.
+//
+// flush() [working thread, blocking]
+//   Flush buffered data. Used to playback tail of an audio stream to correctly
+//   finish playback or before format change. After flush() call all internal
+//   buffers should be flushed and playback stopped so set_input() call should
+//   just prepare to receive new format.
+//
+//   For audio renderers this call may block working thread during audio
+//   playback.
 
 class Sink
 {
@@ -346,7 +340,7 @@ public:
   virtual bool query_input(Speakers _spk) const { return true; }
   virtual bool set_input(Speakers _spk)         { spk = _spk; return true; }
   virtual Speakers get_input() const            { return spk;  }
-  virtual bool process(const Chunk *_chunk)     { spk = _chunk->get_spk(); return true; }
+  virtual bool process(const Chunk *_chunk)     { spk = _chunk->spk; return true; }
 };
 
 
@@ -356,11 +350,13 @@ public:
 // Abstract audio source.
 //
 // get_output() [thread-safe, fast]
-//   Query current output format. Primary purpose of this call is to setup
-//   downstream audio sink before processing (because state change may be 
-//   time-consuming operation). But it is no general rules when source may 
-//   change output format (depends completely on implementation). May be 
-//   called asynchronously.
+//   Report format of next output chunk. Primary purpose of this call is to 
+//   setup downstream audio sink before processing because format switch may
+//   be time-consuming operation. When source is empty (is_empty() == true)
+//   it may report any format and may change it. But when source is full
+//   (is_empty() == false) it must report format exactly as it will appear
+//   at next output chunk. So returned value may change either when
+//   is_empty() == true or after get_chunk() call (standard format change).
 //
 // is_empty() [thread-safe, critical path]
 //   Check if we can get some data from this source. Depending on source type
@@ -370,8 +366,8 @@ public:
 //
 // get_chunk() [working thread, critical path]
 //   Receive data from the source. Should be called only from working thread.
-//   If empty chunk is returned it does not mean that source is empty. Always
-//   check it with is_empty() call. This call may block working thread.
+//   If empty chunk is returned it does not mean that source becomes empty.
+//   Check it with is_empty() call. This call may block working thread (?).
 //
 
 class Source
@@ -389,10 +385,99 @@ public:
 // Abstract data processing class. It is sink and source at the same time so 
 // it should follow all rules for Sink and Source classes.
 //
+// Data processing model (working thread):
+//
+// . . . . . . . . . | . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+// .                 |                                           Initialize  .
+// .                 |                                                       .
+// .   +------------>|<--------------------------------------------------+   .
+// .   |             v                  ^              ^                 |   .
+// .   |      +-------------+           |              |                 |   .
+// .   |      |   reset()   |           |              |                 |   .
+// .   |      | set_input() |           |        ...any state            |   .
+// .   |      +-------------+           |                                |   .
+// .   |             |                  |                                |   .
+// . . | . . . . . . | . . . . . . . . .|. . . . . . . . . . . . . . . . |   .
+// .   |             |                  |    .                           |   .
+// .   |             |<-------------+   |    .                           |   .
+// .   |     ----------------       |   |    .                           |   .
+// .   |   <  have more data? >---- | - | --------------------+          |   .
+// .   |     ----------------   no  |   |    .                |          |   .
+// .   |         yes |              |   |    .                v          |   .
+// .   |             v              |   |    .           +---------+     |   .
+// .   |        ----------          |   |    .           | flush() |     |   .
+// .   |      (  get data  )        |   |    .           +---------+     |   .
+// .   |      ( to process )        |   |    .                |          |   .
+// .   |        ----------          |   |    .  +------------>|          |   .
+// .   |             |              |   |    .  |             v          |   .
+// .   |             v              |   |    .  |        -----------     |   .
+// .   | error +-----------+        |   |    .  |      < is_empty()? >---+   .
+// .   +-------| process() |        |   |    .  |        -----------  true   .
+// .           +-----------+        |   |    .  |       false |              .
+// .                 |              |   |    .  |             |              .
+// .   +------------>|              |   |    .  |             v              .
+// .   |             v              |   |    .  |  err +-------------+       .
+// .   |        -----------   true  |   |<----- | -----| get_chunk() |       .
+// .   |      < is_empty()? >-------+   |    .  |      +-------------+       .
+// .   |        -----------             |    .  |             |              .            
+// .   |       false |                  |    .  |             v              .
+// .   |             |                  |    .  |      ---------------       .
+// .   |             v                  |    .  |    (  do something   )     .
+// .   |      +-------------+  error    |    .  |    ( with chunk data )     .
+// .   |      | get_chunk() |-----------+    .  |      ---------------       .
+// .   |      +-------------+                .  |             |              .
+// .   |             |                       .  +-------------+              .
+// .   |             v                       .                               .
+// .   |      ---------------                .                Flushing loop  .
+// .   |    (  do something   )              . . . . . . . . . . . . . . . . .                              
+// .   |    ( with chunk data )              .
+// .   |      ---------------                .
+// .   |             |                       .
+// .   +-------------+                       .
+// .                        Processing loop  .
+// . . . . . . . . . . . . . . . . . . . . . .
+//
+// Filter may process data in-place at buffers received with process() call.
+// This allows to avoid data copy from buffer to buffer so speed up processing
+// but we should always remember about data references. After process() call
+// filter may hold references to upstream data buffers so we must not alter it
+// until the end of processing.
+//
+// Filter has 3 states:
+//
+// * empty
+//   Filter has no data to output and waits for more data to input. In this 
+//   state filter may have some data cached at internal buffes. But it is 
+//   guaranteed that filter has no references to any external data buffers
+//   received with process() call.
+//
+//   * is_empty() returns true.
+//   * process() with non-eof chunk may switch filter to full state.
+//   * process() with eof-chunk must switch filter to flushing state.
+//   * get_chunk() returns empty chunk with no state change.
+//
+// * full
+//   Filter has some data to output. In this state it cannot receive data
+//   and may have references to the data received with process() call, so 
+//   external procedures should not alter this data.
+//
+//   * is_empty() returns false.
+//   * get_chunk() may return empty and non-empty chunks.
+//   * get_chunk() may switch filter to empty state.
+//   * process() call result is undefined (maybe it should fail?)
+//
+// * flushing
+//   In this state filter releases data cached at its internal buffers.
+//   After this call all external references of the filter are dropped.
+//
+//   is_empty() returns false.
+//   get_chunk() may return empty and non-empty chunks without state change.
+//   get_chunk() may return eof-chunk and switch to empty state.
+//   process() call result is undefined.
+//           
 // reset() [working thread]
 //   Reset filter state to empty, drop all internal buffers and all external 
-//   references. But after reset() call filter should be able to report its 
-//   state as it was before for most of its parameters.
+//   references.
 //
 // set_input() [working thread]
 //   If current and new configuration differs then it acts as reset() call,
@@ -406,79 +491,7 @@ public:
 //   May be used for data processing. Do main processing here if filter 
 //   may produce many output chunks for one input chunk.
 //
-// Filter have 3 states:
 //
-// * empty
-//   Filter have no data to output and waits for more data to input. In this 
-//   state filter may have some data locked at internal buffes. But it is 
-//   guaranteed that filter has no references to any external data received
-//   with process() call.
-//
-//   is_empty() returns true.
-//   process() with non-eof chunk may switch filter to full state.
-//   process() with eof-chunk must switch filter to flushing state.
-//   get_chunk() returns empty chunk with no state change.
-//
-// * full
-//   Filter have some data to output. In this state it cannot receive data
-//   and may have references to the data received with process() call, so 
-//   external procedures should not alter this data.
-//
-//   is_empty() returns false.
-//   get_chunk() may return empty and non-empty chunks.
-//   get_chunk() may switch filter to empty state.
-//   process() call result is undefined (maybe it should fail?)
-//
-// * flushing
-//   In this state filter releases data blocked in its internal buffers.
-//   After this call all external references of the filter are dropped.
-//
-//   is_empty() returns false.
-//   get_chunk() may return empty and non-empty chunks without state change.
-//   get_chunk() may return eof-chunk and switch to empty state.
-//   process() call result is undefined.
-//           
-//
-// Data processing model (working thread):
-//
-//                 |
-//   +------------>|<----------------------------+
-//   |             v                  ^          |
-//   |      +-------------+           |          |
-//   |      |   reset()   |           |          |
-//   |      | set_input() |           |    ...any state
-//   |      +-------------+           |
-//   |             |                  |
-//   |             |<-------------+   |
-//   |        ----------          |   |
-//   |      (  get data  )        |   |
-//   |      ( to process )        |   |
-//   |        ----------          |   |
-//   |             |              |   |
-//   |             v              |   |
-//   | error +-----------+        |   |
-//   +-------| process() |        |   |
-//           +-----------+        |   |
-//                 |              |   |
-//   +------------>|              |   |
-//   |             v              |   |
-//   |       /-----------\  true  |   |
-//   |      < is_empty()? >-------+   |
-//   |       \-----------/            |                    
-//   |       false |                  |
-//   |             |                  |
-//   |             v                  |
-//   |      +-------------+  error    |
-//   |      | get_chunk() |-----------+ 
-//   |      +-------------+  
-//   |             |         
-//   |             v         
-//   |      ---------------  
-//   |    (  do something   )
-//   |    ( with chunk data )
-//   |      ---------------  
-//   |             |         
-//   +-------------+
 //
 // Other threads may call:
 //   query_input()
@@ -541,19 +554,19 @@ protected:
   inline bool receive_chunk(const Chunk *_chunk)
   {
     // format change
-    if (spk != _chunk->get_spk())
-      FILTER_SAFE(set_input(_chunk->get_spk()));
+    if (spk != _chunk->spk)
+      FILTER_SAFE(set_input(_chunk->spk));
 
     // remember input chunk info
-    if (_chunk->is_sync()) // ignore non-sync chunks
+    if (_chunk->sync) // ignore non-sync chunks
     {
       sync     = true;
-      time     = _chunk->get_time();
+      time     = _chunk->time;
     }
-    flushing = _chunk->is_eos();
-    rawdata  = _chunk->get_rawdata();
-    samples  = _chunk->get_samples();
-    size     = _chunk->get_size();
+    flushing = _chunk->eos;
+    rawdata  = _chunk->rawdata;
+    samples  = _chunk->samples;
+    size     = _chunk->size;
 
     return true;
   }
@@ -591,19 +604,6 @@ protected:
     size -= _size;
     sync = false;
     flushing = flushing && size;
-  }
-
-  inline void drop(size_t _size)
-  {
-    if (_size > size)
-      _size = size;
-
-    if (spk.format == FORMAT_LINEAR)
-      samples += _size;
-    else
-      rawdata += _size;
-
-    size -= _size;
   }
 
   inline void drop_rawdata(size_t _size)

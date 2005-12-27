@@ -40,12 +40,13 @@ public:
   }
   inline void receive_sync(const Chunk *chunk)
   {
-    receive_sync(chunk->is_sync(), chunk->get_time());
+    receive_sync(chunk->sync, chunk->time);
   }
 
   inline void send_sync(Chunk *_chunk)
   {
-    _chunk->set_sync(sync[0], time[0]);
+    _chunk->sync = sync[0];
+    _chunk->time = time[0];
     sync[0] = sync[1];
     time[0] = time[1];
     sync[1] = false;

@@ -290,15 +290,15 @@ DShowSink::process(const Chunk *chunk)
     return true;
 
   // Process speaker configuraion changes
-  if (spk != chunk->get_spk())
+  if (spk != chunk->spk)
   {
-    if (set_input(chunk->get_spk()))
+    if (set_input(chunk->spk))
     {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz) OK", this, chunk->get_spk().mode_text(), chunk->get_spk().format_text(), chunk->get_spk().sample_rate));
+      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz) OK", this, chunk->spk.mode_text(), chunk->spk.format_text(), chunk->spk.sample_rate));
     }
     else
     {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz) FAILAED!", this, chunk->get_spk().mode_text(), chunk->get_spk().format_text(), chunk->get_spk().sample_rate));
+      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz) FAILAED!", this, chunk->spk.mode_text(), chunk->spk.format_text(), chunk->spk.sample_rate));
       return false;
     }
   }
@@ -311,8 +311,8 @@ DShowSink::process(const Chunk *chunk)
   uint8_t *sample_buf;
   int sample_size;
 
-  uint8_t *chunk_buf = chunk->get_rawdata();
-  int chunk_size = chunk->get_size();
+  uint8_t *chunk_buf = chunk->rawdata;
+  int chunk_size = chunk->size;
 
   while (chunk_size)
   {
@@ -341,13 +341,13 @@ DShowSink::process(const Chunk *chunk)
     }
     
     // Timestamp
-    if (chunk->is_sync())
+    if (chunk->sync)
     {
-      REFERENCE_TIME begin = __int64(double(chunk->get_time()) / spk.sample_rate * 10000000);
-      REFERENCE_TIME end   = __int64(double(chunk->get_time() + chunk->get_size()) / spk.sample_rate * 10000000);
+      REFERENCE_TIME begin = __int64(double(chunk->time) / spk.sample_rate * 10000000);
+      REFERENCE_TIME end   = __int64(double(chunk->time + chunk->size) / spk.sample_rate * 10000000);
       sample->SetTime(&begin, &end);
 #ifdef DSHOWSINK_LOG_TIMING
-      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->get_time()));
+      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->time));
 #endif
     }
     else

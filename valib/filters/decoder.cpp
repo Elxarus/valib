@@ -129,13 +129,13 @@ AudioDecoder::load_frame()
   if (parser->load_frame(&buf_ptr, end_ptr))
   {
     sync_helper.set_syncing(true);
-    drop(buf_ptr - rawdata);
+    drop_rawdata(buf_ptr - rawdata);
     return true;
   }
   else
   {
     sync_helper.set_syncing(false);
-    drop(buf_ptr - rawdata);
+    drop_rawdata(buf_ptr - rawdata);
     return false;
   }
 }
