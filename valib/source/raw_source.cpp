@@ -20,7 +20,7 @@ RAWSource::open(Speakers _spk, const char *_filename, size_t _block_size)
 void 
 RAWSource::close()
 { 
-  spk = unk_spk;
+  spk = spk_unknown;
   f.close();
 }
 

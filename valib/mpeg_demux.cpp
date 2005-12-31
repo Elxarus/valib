@@ -41,17 +41,17 @@ MPEGDemux::spk()
     {
       case 0: format = FORMAT_PCM16_LE; level = 32767;    break;
       case 2: format = FORMAT_PCM24_LE; level = 8388607;  break;
-      default: return unk_spk;
+      default: return spk_unknown;
     }
 
     mask = nch2mask[subheader[4] & 7];
-    if (!mask) return unk_spk;
+    if (!mask) return spk_unknown;
 
     switch ((subheader[4] >> 4) & 3)
     {
       case 0: sample_rate = 48000; break;
       case 1: sample_rate = 96000; break;
-      default: return unk_spk;
+      default: return spk_unknown;
     }
 
     return Speakers(format, mask, sample_rate, level);
@@ -59,7 +59,7 @@ MPEGDemux::spk()
   }
   else
     // not an audio format
-    return unk_spk;
+    return spk_unknown;
 }
 
 int 
@@ -396,12 +396,10 @@ MPEGDemux::packet(uint8_t *buf, int len, int *gone)
   int required_size  = 0;
 
   #define REQUIRE(bytes)       \
-  {                            \
-    if (data_size < (bytes))   \
-    {                          \
-      required_size = (bytes); \
-      continue;                \
-    }                          \
+  if (data_size < (bytes))   \
+  {                          \
+    required_size = (bytes); \
+    continue;                \
   }
 
   #define DROP(bytes)   \

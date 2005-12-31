@@ -27,8 +27,6 @@ const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] =
 
 Mixer::Mixer(size_t _nsamples)
 {
-  spk      = def_spk;
-  out_spk  = def_spk;
   nsamples = _nsamples;
 
   // Options

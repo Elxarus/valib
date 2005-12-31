@@ -56,7 +56,8 @@ protected:
   size_t    data_size;
 
 public:
-  Noise(Speakers spk = def_spk, size_t data_size = 65536, int buf_size = 4096);
+  Noise();
+  Noise(Speakers spk, size_t data_size, int buf_size = 4096);
 
   bool   set_output(Speakers spk, size_t data_size = 65536, int buf_size = 4096);
   void   set_seed(long seed);

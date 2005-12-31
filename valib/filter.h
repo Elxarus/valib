@@ -46,7 +46,11 @@
 
   [s1] When source is full it must report format exactly as it will appear at
     next output chunk. In other words get_output() may change its value only
-    after get_chunk() call or when is_empty() == true.
+    in following cases:
+    
+    1) after get_chunk() call
+    2) when is_empty == true (should be avioded)
+    3) by call to descendants' class functions (only at working thread).
 
     if (!source.is_empty())
     {
@@ -130,6 +134,8 @@
   [f4] It is possible that for some input formats output format may depend on
     input data and for some it doesn't. In this case for dependent formats
     filter must follow [f2] rule and [f3] rule for independent.
+
+  [f5] 
 
 */
 
@@ -275,7 +281,7 @@ public:
   /////////////////////////////////////////////////////////
   // Utilities
 
-  Chunk(): spk(unk_spk), sync(false), time(0), eos(false), size(0), rawdata(0)
+  Chunk(): spk(spk_unknown), sync(false), time(0), eos(false), size(0), rawdata(0)
   {}
 
   Chunk(Speakers _spk, samples_t _samples, size_t _size,
@@ -719,7 +725,7 @@ protected:
 public:
   NullFilter() 
   {
-    spk  = unk_spk;
+    spk  = spk_unknown;
     size = 0;
     time = 0;
     sync = false;

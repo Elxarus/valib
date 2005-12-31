@@ -139,12 +139,12 @@ const uint8_t spdif_pause[] =
 
 Spdifer::Spdifer()
 {
-  sync_spk = unk_spk;
+  sync_spk = spk_unknown;
   frame_buf.allocate(SPDIF_HEADER_SIZE + SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
   frame_data = 0;
   frames = 0;
 
-  stream_spk = unk_spk;
+  stream_spk = spk_unknown;
   frame_size = 0;
   nsamples = 0;
 
@@ -163,11 +163,11 @@ Spdifer::reset()
 {
   NullFilter::reset();
 
-  sync_spk = unk_spk;
+  sync_spk = spk_unknown;
   frame_data = 0;
   frames = 0;
 
-  stream_spk = unk_spk;
+  stream_spk = spk_unknown;
   frame_size = 0;
   nsamples = 0;
 

@@ -22,8 +22,8 @@ int test_spdifer_file(Log *log, const char *raw_file, const char *spdif_file)
 {
   log->msg("Testing transform %s => %s", raw_file, spdif_file);
 
-  RAWSource raw_src(unk_spk, raw_file);
-  RAWSource spdif_src(unk_spk, spdif_file);
+  RAWSource raw_src(spk_unknown, raw_file);
+  RAWSource spdif_src(spk_unknown, spdif_file);
   Spdifer spdifer;
 
   if (!raw_src.is_open()) 

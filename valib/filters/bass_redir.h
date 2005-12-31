@@ -27,16 +27,20 @@ public:
   IIR()
   {
     gain = 1.0;
-    freq = 120;
-    sample_rate = 48000;
+    freq = 0;
+    sample_rate = 0;
 
+    // passthrough filter
     a  = 1.0;
     a1 = 0;
     a2 = 0;
     b1 = 0;
     b2 = 0;
 
-    reset();
+    x1 = 0;
+    x2 = 0;
+    y1 = 0;
+    y2 = 0;
   };
 
   inline void reset()
@@ -131,7 +135,6 @@ BassRedir::get_freq() const
 inline void 
 BassRedir::set_freq(double _freq)
 {
-  if (_freq < 10) _freq = 10; // fool protection
   lpf.freq = _freq;
   lpf.update();
 }

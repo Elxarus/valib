@@ -77,7 +77,7 @@ AudioDecoder::get_output() const
   if (parser)
     return parser->get_spk();
   else
-    return unk_spk;
+    return spk_unknown;
 }
 
 bool

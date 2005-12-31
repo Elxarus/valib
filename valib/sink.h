@@ -222,7 +222,7 @@ protected:
 public:
   NullRenderer()
   {
-    spk    = unk_spk;
+    spk    = spk_unknown;
 
     opened = false;
     paused = false;

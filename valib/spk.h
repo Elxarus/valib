@@ -40,7 +40,7 @@
     
   mask - channels bitmask. Defines a set of existing channels. Number of bits
     set defines number of channels so class have no separate field to avoid 
-    ambiguity. But is is nch() function that returns number of channels for
+    ambiguity. But it is nch() function that returns number of channels for
     current mask. 
     
     Format and mask also define channel ordering. Different formats may have 
@@ -281,10 +281,14 @@ public:
 extern const int std_order[NCHANNELS];
 extern const int win_order[NCHANNELS];
 
+
+extern const Speakers spk_unknown;
+/*
 extern const Speakers def_spk;
 extern const Speakers err_spk;
 extern const Speakers unk_spk;
 extern const Speakers stereo_spk;
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class inlines

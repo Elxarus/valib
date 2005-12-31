@@ -32,9 +32,12 @@ extern const int std_order[NCHANNELS] =
 extern const int win_order[NCHANNELS] = 
 { CH_L, CH_R, CH_C, CH_LFE, CH_SL, CH_SR };
 
+extern const Speakers spk_unknown = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
+/*
 extern const Speakers def_spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0, NO_RELATION);
 extern const Speakers err_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
 extern const Speakers unk_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
+*/
 
 extern const Speakers stereo_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768.0, NO_RELATION); // stereo 16bit
 

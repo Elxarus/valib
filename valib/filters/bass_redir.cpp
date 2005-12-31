@@ -37,6 +37,17 @@ IIR::process(sample_t *_samples, int _nsamples)
 void
 HPF::update()
 {
+  if ((sample_rate < 10) || (freq < 10))
+  {
+    // setup as passthrough on incorrect parameters
+    a  = 1.0;
+    a1 = 0;
+    a2 = 0;
+    b1 = 0;
+    b2 = 0;
+    return;
+  }
+
   double omega = 2 * M_PI * freq / sample_rate;
   double s = sin(omega);
   double c = cos(omega);
@@ -53,6 +64,17 @@ HPF::update()
 void
 LPF::update()
 {
+  if ((sample_rate < 10) || (freq < 10))
+  {
+    // setup as passthrough on incorrect parameters
+    a  = 1.0;
+    a1 = 0;
+    a2 = 0;
+    b1 = 0;
+    b2 = 0;
+    return;
+  }
+
   double omega = 2 * M_PI * freq / sample_rate;
   double s = sin(omega);
   double c = cos(omega);
@@ -73,14 +95,8 @@ LPF::update()
 
 BassRedir::BassRedir()
 {
-  spk = def_spk;
+  // use default lpf filter setup (passthrough)
   enabled = false;
-
-  lpf.gain = 1.0 / spk.nch();
-  lpf.freq = 120;
-  lpf.sample_rate = spk.sample_rate;
-
-  reset();
 }
 
 

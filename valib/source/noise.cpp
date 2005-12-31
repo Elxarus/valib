@@ -2,8 +2,13 @@
 
 #define abs(a) ((a) > 0? (a): -(a))
 
+Noise::Noise()
+:spk(spk_unknown), data_size(0), buf_size(0)
+{
+}
+
 Noise::Noise(Speakers _spk, size_t _data_size, int _buf_size)
-:spk(unk_spk), data_size(0), buf_size(0)
+:spk(spk_unknown), data_size(0), buf_size(0)
 {
   set_output(_spk, _data_size, _buf_size);
 }

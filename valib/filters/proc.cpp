@@ -4,9 +4,6 @@
 AudioProcessor::AudioProcessor(size_t _nsamples)
 :conv1(_nsamples), conv2(_nsamples), mixer(_nsamples)
 {
-  in_spk  = def_spk;
-  out_spk = def_spk;
-
   rebuild_chain();
 }
 

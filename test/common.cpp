@@ -11,10 +11,10 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
 
   // todo: add couters to prevent infinite loop
 
-  Chunk si_chunk(unk_spk, 0, 0, false, 0, false);
-  Chunk so_chunk(unk_spk, 0, 0, false, 0, false);
-  Chunk ri_chunk(unk_spk, 0, 0, false, 0, false);
-  Chunk ro_chunk(unk_spk, 0, 0, false, 0, false);
+  Chunk si_chunk;
+  Chunk so_chunk;
+  Chunk ri_chunk;
+  Chunk ro_chunk;
 
   size_t isize = 0;
   size_t osize = 0;

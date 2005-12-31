@@ -26,10 +26,11 @@ class Converter : public NullFilter
 protected:
   // conversion function pointer
   typedef void (Converter::*convert_t)();
-  convert_t convert;
+  convert_t convert;       // conversion function
 
   // format
   int  format;             // format to convert to
+                           // affected only by set_format() function
   int  order[NCHANNELS];   // channel order to convert to when converting from linear format
                            // channel order to convert from when converting to linear format
 
@@ -45,24 +46,19 @@ protected:
   // part of sample from previous call
   uint8_t   part_buf[24];  // partial sample left from previous call
   size_t    part_size;     // partial sample size in bytes
-           
 
-  bool alloc_buffer(); // allocate buffer according to format & number of channels
-
-  inline bool query_format(int format) const;
+  bool initialize();       // initialize convertor
+  convert_t find_conversion(int _format, Speakers _spk) const;
 
 public:
   Converter(int _nsamples)
   {
-    spk = def_spk;
-    format = spk.format;
-    nsamples = _nsamples;
+    convert = 0;
+    format = FORMAT_UNKNOWN;
     memcpy(order, std_order, sizeof(order));
-
+    nsamples = _nsamples;
     out_size = 0;
     part_size = 0;
-
-    convert = 0;
   }
 
   /////////////////////////////////////////////////////////
@@ -92,6 +88,8 @@ public:
 
   /////////////////////////////////////////////////////////
   // Conversion functions
+
+  void passthrough();
 
   void linear_pcm16_1ch();
   void linear_pcm24_1ch();
