@@ -1,5 +1,5 @@
 /*
-  Data structures
+  Data allocation
 */
 
 #ifndef DATA_H
@@ -13,7 +13,7 @@ class SampleBuf;
 
 ///////////////////////////////////////////////////////////////////////////////
 // DataBuf
-// Method of allocating BIG data buffers.
+// Method of allocating data buffers.
 // Now it's just simple aliged data block
 
 class DataBuf
@@ -236,93 +236,4 @@ public:
   inline sample_t *operator[](int _ch) const     { return samples[_ch]; }
 };
 
-/*
-class SampleBuf
-{
-protected:
-  DataBuf   buf;
-  samples_t samples;
-
-  int buf_nch;
-  int buf_nsamples;
-
-  inline void set_pointers();
-
-public:
-  SampleBuf()
-  {
-    buf_nch = 0;
-    buf_nsamples = 0;
-  }
-
-  SampleBuf(int _nch, int _nsamples)
-  {
-    buf_nch = 0;
-    buf_nsamples = 0;
-    allocate(_nch, _nsamples);
-  }
-
-  inline bool allocate(int nch, int nsamples);
-  inline bool truncate(int nch, int nsamples);
-
-  inline void zero()           { buf.zero();           }
-//  inline bool is_null() const  { return buf.is_null(); } 
-
-  inline int  nch() const      { return buf_nch;       }
-  inline int  nsamples() const { return buf_nsamples;  }
-
-  inline operator samples_t () const         { return samples; }
-  inline sample_t *operator [](int ch) const { return samples[ch]; }
-};
-
-*/
-
-///////////////////////////////////////////////////////////////////////////////
-// SampleBuf inlines
-///////////////////////////////////////////////////////////////////////////////
-/*
-inline bool
-SampleBuf::allocate(int _nch, int _nsamples)
-{
-  buf_nch = _nch;
-  buf_nsamples = _nsamples;
-  if (buf.get_size() < _nch * _nsamples * sizeof(sample_t))
-    return truncate(_nch, _nsamples);
-
-  set_pointers();
-
-  return true;
-}
-
-inline bool
-SampleBuf::truncate(int _nch, int _nsamples)
-{
-  if (buf.truncate(_nch * _nsamples * sizeof(sample_t)))
-  {
-    buf_nch = _nch;
-    buf_nsamples = _nsamples;
-    set_pointers();
-    return true;
-  }
-  else
-  {
-    buf_nch = 0;
-    buf_nsamples = 0;
-    return false;
-  }
-}
-
-inline void 
-SampleBuf::set_pointers()
-{
-  samples[0] = (sample_t *)buf.get_data();
-
-  int ch = 1;
-  for (ch = 1; ch < buf_nch; ch++)
-    samples[ch] = samples[ch-1] + buf_nsamples;
-
-  while (ch < NCHANNELS)
-    samples[ch++] = 0;
-}
-*/
 #endif
