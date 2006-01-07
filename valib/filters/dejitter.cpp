@@ -1,4 +1,5 @@
 #include <math.h>
+#include <string.h>
 #include "dejitter.h"
 
 // uncomment this to log timing information into DirectShow log

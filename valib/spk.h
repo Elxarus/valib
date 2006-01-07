@@ -278,9 +278,9 @@ public:
   inline const char *mode_text() const;
 };
 
-extern const int std_order[NCHANNELS];
-extern const int win_order[NCHANNELS];
-
+///////////////////////////////////////////////////////////////////////////////
+// Constants for common audio formats
+///////////////////////////////////////////////////////////////////////////////
 
 extern const Speakers spk_unknown;
 /*
@@ -289,6 +289,34 @@ extern const Speakers err_spk;
 extern const Speakers unk_spk;
 extern const Speakers stereo_spk;
 */
+
+///////////////////////////////////////////////////////////////////////////////
+// Constants for common channel orders
+///////////////////////////////////////////////////////////////////////////////
+
+extern const int std_order[NCHANNELS];
+extern const int win_order[NCHANNELS];
+
+///////////////////////////////////////////////////////////////////////////////
+// samples_t
+// Block of pointers to sample buffers for each channel for linear format.
+///////////////////////////////////////////////////////////////////////////////
+
+struct samples_t
+{
+  sample_t *samples[NCHANNELS];
+
+  inline sample_t *&operator [](int ch)       { return samples[ch]; }
+  inline sample_t  *operator [](int ch) const { return samples[ch]; }
+
+  inline samples_t &operator +=(int n);
+  inline samples_t &operator -=(int n);
+  inline samples_t &set_null();
+
+  void reorder_to_std(Speakers spk, const int order[NCHANNELS]);
+  void reorder_from_std(Speakers spk, const int order[NCHANNELS]);
+  void reorder(Speakers spk, const int input_order[NCHANNELS], const int output_order[NCHANNELS]);
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class inlines
@@ -437,6 +465,46 @@ Speakers::mode_text() const
   }
 
   return ::mode_text[mask];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// samples_t inlines
+///////////////////////////////////////////////////////////////////////////////
+
+inline samples_t &
+samples_t::operator +=(int _n)
+{
+  samples[0] += _n;
+  samples[1] += _n;
+  samples[2] += _n;
+  samples[3] += _n;
+  samples[4] += _n;
+  samples[5] += _n;
+  return *this;
+}
+
+inline samples_t &
+samples_t::operator -=(int _n)
+{
+  samples[0] -= _n;
+  samples[1] -= _n;
+  samples[2] -= _n;
+  samples[3] -= _n;
+  samples[4] -= _n;
+  samples[5] -= _n;
+  return *this;
+}
+
+inline samples_t &
+samples_t::set_null()
+{
+  samples[0] = 0;
+  samples[1] = 0;
+  samples[2] = 0;
+  samples[3] = 0;
+  samples[4] = 0;
+  samples[5] = 0;
+  return *this;
 }
 
 

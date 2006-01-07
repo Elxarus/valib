@@ -1,4 +1,4 @@
-#include <memory.h>
+#include <string.h>
 #include "mpa_defs.h"
 #include "mpa_synth.h"
 #include "mpa_synth_filter.h"

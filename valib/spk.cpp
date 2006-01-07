@@ -1,5 +1,9 @@
 #include "spk.h"
 
+///////////////////////////////////////////////////////////////////////////////
+// Just for reference
+///////////////////////////////////////////////////////////////////////////////
+
 /*
 #define FORMAT_UNKNOWN     0
 #define FORMAT_LINEAR      1
@@ -26,20 +30,33 @@
 #define FORMAT_OGG        16
 */
 
-extern const int std_order[NCHANNELS] = 
-{ 0, 1, 2, 3, 4, 5 };
-
-extern const int win_order[NCHANNELS] = 
-{ CH_L, CH_R, CH_C, CH_LFE, CH_SL, CH_SR };
+///////////////////////////////////////////////////////////////////////////////
+// Constants for common audio formats
+///////////////////////////////////////////////////////////////////////////////
 
 extern const Speakers spk_unknown = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
 /*
 extern const Speakers def_spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0, NO_RELATION);
 extern const Speakers err_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
 extern const Speakers unk_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
+extern const Speakers stereo_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768.0, NO_RELATION); // stereo 16bit
 */
 
-extern const Speakers stereo_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768.0, NO_RELATION); // stereo 16bit
+
+///////////////////////////////////////////////////////////////////////////////
+// Constants for common channel orders
+///////////////////////////////////////////////////////////////////////////////
+
+extern const int std_order[NCHANNELS] = 
+{ 0, 1, 2, 3, 4, 5 };
+
+extern const int win_order[NCHANNELS] = 
+{ CH_L, CH_R, CH_C, CH_LFE, CH_SL, CH_SR };
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Tables for Speakers class
+///////////////////////////////////////////////////////////////////////////////
 
 extern const int sample_size_tbl[32] = 
 {
@@ -208,3 +225,65 @@ extern const char *mode_text[64] =
   "{ C, R, SL, SR, LFE }",
   "3/2.1 (5.1)"
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// samples_t
+///////////////////////////////////////////////////////////////////////////////
+
+void
+samples_t::reorder_to_std(Speakers _spk, const int _order[NCHANNELS])
+{
+  int i, ch;
+  int mask = _spk.mask;
+
+  sample_t *tmp[NCHANNELS];
+
+  ch = 0;
+  for (i = 0; i < NCHANNELS; i++)
+    if (mask & CH_MASK(_order[i]))
+      tmp[_order[i]] = samples[ch++];
+
+  ch = 0;
+  for (i = 0; i < NCHANNELS; i++)
+    if (mask & CH_MASK(i))
+      samples[ch++] = tmp[i];
+}
+
+void
+samples_t::reorder_from_std(Speakers _spk, const int _order[NCHANNELS])
+{
+  int i, ch;
+  int mask = _spk.mask;
+
+  sample_t *tmp[NCHANNELS];
+
+  ch = 0;
+  for (i = 0; i < NCHANNELS; i++)
+    if (mask & CH_MASK(i))
+      tmp[i] = samples[ch++];
+
+  ch = 0;
+  for (i = 0; i < NCHANNELS; i++)
+    if (mask & CH_MASK(_order[i]))
+      samples[ch++] = tmp[_order[i]];
+}
+
+void
+samples_t::reorder(Speakers _spk, const int _input_order[NCHANNELS], const int _output_order[NCHANNELS])
+{
+  int i, ch;
+  int mask = _spk.mask;
+
+  sample_t *tmp[NCHANNELS];
+
+  ch = 0;
+  for (i = 0; i < NCHANNELS; i++)
+    if (mask & CH_MASK(_input_order[i]))
+      tmp[_input_order[i]] = samples[ch++];
+
+  ch = 0;
+  for (i = 0; i < NCHANNELS; i++)
+    if (mask & CH_MASK(_output_order[i]))
+      samples[ch++] = tmp[_output_order[i]];
+}
+

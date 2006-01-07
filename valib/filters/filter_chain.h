@@ -6,6 +6,7 @@
 #ifndef FILTER_CHAIN_H
 #define FILTER_CHAIN_H
 
+#include <string.h>
 #include "filter.h"
 
 class FilterChain : public NullFilter

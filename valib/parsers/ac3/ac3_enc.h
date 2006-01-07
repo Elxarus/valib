@@ -5,6 +5,7 @@
 #include "ac3_defs.h"
 #include "ac3_mdct.h"
 #include "bitstream.h"
+#include "data.h"
 
 inline int sym_quant(int m, int levels);
 inline int asym_quant(int m, int bits);

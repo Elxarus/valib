@@ -144,8 +144,7 @@
 #ifndef VALIB_FILTER_H
 #define VALIB_FILTER_H
 
-#include "defs.h"
-#include "data.h"
+#include "spk.h"
 
 class Chunk;
 class Sink;

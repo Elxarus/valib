@@ -12,26 +12,6 @@ class DataBuf;
 class SampleBuf;
 
 ///////////////////////////////////////////////////////////////////////////////
-// samples_t
-// Block of pointers to sample buffers for each channel for linear format.
-
-struct samples_t
-{
-  sample_t *samples[NCHANNELS];
-
-  inline sample_t *&operator [](int ch)       { return samples[ch]; }
-  inline sample_t  *operator [](int ch) const { return samples[ch]; }
-
-  inline samples_t &operator +=(int n);
-  inline samples_t &operator -=(int n);
-  inline samples_t &set_null();
-
-  inline void reorder_to_std(Speakers spk, const int order[NCHANNELS]);
-  inline void reorder_from_std(Speakers spk, const int order[NCHANNELS]);
-  inline void reorder(Speakers spk, const int input_order[NCHANNELS], const int output_order[NCHANNELS]);
-};
-
-///////////////////////////////////////////////////////////////////////////////
 // DataBuf
 // Method of allocating BIG data buffers.
 // Now it's just simple aliged data block
@@ -296,103 +276,6 @@ public:
 };
 
 */
-
-///////////////////////////////////////////////////////////////////////////////
-// samples_t inlines
-///////////////////////////////////////////////////////////////////////////////
-
-inline samples_t &
-samples_t::operator +=(int _n)
-{
-  samples[0] += _n;
-  samples[1] += _n;
-  samples[2] += _n;
-  samples[3] += _n;
-  samples[4] += _n;
-  samples[5] += _n;
-  return *this;
-}
-
-inline samples_t &
-samples_t::operator -=(int _n)
-{
-  samples[0] -= _n;
-  samples[1] -= _n;
-  samples[2] -= _n;
-  samples[3] -= _n;
-  samples[4] -= _n;
-  samples[5] -= _n;
-  return *this;
-}
-
-inline samples_t &
-samples_t::set_null()
-{
-  samples[0] = 0;
-  samples[1] = 0;
-  samples[2] = 0;
-  samples[3] = 0;
-  samples[4] = 0;
-  samples[5] = 0;
-  return *this;
-}
-
-inline void
-samples_t::reorder_to_std(Speakers _spk, const int _order[NCHANNELS])
-{
-  int i, ch;
-  int mask = _spk.mask;
-
-  sample_t *tmp[NCHANNELS];
-
-  ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
-    if (mask & CH_MASK(_order[i]))
-      tmp[_order[i]] = samples[ch++];
-
-  ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
-    if (mask & CH_MASK(i))
-      samples[ch++] = tmp[i];
-}
-
-inline void
-samples_t::reorder_from_std(Speakers _spk, const int _order[NCHANNELS])
-{
-  int i, ch;
-  int mask = _spk.mask;
-
-  sample_t *tmp[NCHANNELS];
-
-  ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
-    if (mask & CH_MASK(i))
-      tmp[i] = samples[ch++];
-
-  ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
-    if (mask & CH_MASK(_order[i]))
-      samples[ch++] = tmp[_order[i]];
-}
-
-inline void
-samples_t::reorder(Speakers _spk, const int _input_order[NCHANNELS], const int _output_order[NCHANNELS])
-{
-  int i, ch;
-  int mask = _spk.mask;
-
-  sample_t *tmp[NCHANNELS];
-
-  ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
-    if (mask & CH_MASK(_input_order[i]))
-      tmp[_input_order[i]] = samples[ch++];
-
-  ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
-    if (mask & CH_MASK(_output_order[i]))
-      samples[ch++] = tmp[_output_order[i]];
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleBuf inlines

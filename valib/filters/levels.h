@@ -17,6 +17,7 @@
 #ifndef LEVELS_H
 #define LEVELS_H
 
+#include <string.h>
 #include "filter.h"
 
 class LevelsCache;

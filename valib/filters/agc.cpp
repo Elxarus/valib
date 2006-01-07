@@ -1,5 +1,5 @@
 #include <math.h>
-#include <memory.h>
+#include <string.h>
 #include "agc.h"
 
 #define LEVEL_MINUS_50DB 0.0031622776601683793319988935444327

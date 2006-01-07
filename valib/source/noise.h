@@ -5,6 +5,7 @@
 
 #include "filter.h"
 #include "rng.h"
+#include "data.h"
 
 /*
   Noise class is source that generates blocks of noise data.

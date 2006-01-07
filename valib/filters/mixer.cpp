@@ -1,5 +1,5 @@
 #include <math.h>
-#include <memory.h>
+#include <string.h>
 #include "mixer.h"
 
 typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, size_t); // input-output mixing
