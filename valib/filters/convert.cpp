@@ -145,7 +145,7 @@ Converter::initialize()
   {
     // set rawdata pointer
     out_rawdata = buf.get_data();
-    out_samples.set_null();
+    out_samples.zero();
   }
 
   return true;

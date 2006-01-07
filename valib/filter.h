@@ -314,7 +314,7 @@ public:
   {
     spk = _spk;
     rawdata = _rawdata;
-    samples.set_null();
+    samples.zero();
     size = _size;
     sync = _sync;
     time = _time;

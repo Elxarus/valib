@@ -156,7 +156,7 @@ public:
     nch  = 0;
     size = 0;
     rawdata = 0;
-    samples.set_null();
+    samples.zero();
   }
 
   ~SampleBuf()
@@ -172,7 +172,7 @@ public:
     nch = 0;
     size = _size;
     rawdata = buf;
-    samples.set_null();
+    samples.zero();
     return true;
   }
 
@@ -184,7 +184,7 @@ public:
     nch = 0;
     size = _size;
     rawdata = buf.get_data();
-    samples.set_null();
+    samples.zero();
     return true;
   }
 
@@ -219,7 +219,7 @@ public:
     nch  = 0;
     size = 0;
     rawdata = 0;
-    samples.set_null();
+    samples.zero();
   }
 
   inline void zero()          

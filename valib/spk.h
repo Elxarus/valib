@@ -311,7 +311,7 @@ struct samples_t
 
   inline samples_t &operator +=(int n);
   inline samples_t &operator -=(int n);
-  inline samples_t &set_null();
+  inline samples_t &zero();
 
   void reorder_to_std(Speakers spk, const int order[NCHANNELS]);
   void reorder_from_std(Speakers spk, const int order[NCHANNELS]);
@@ -496,7 +496,7 @@ samples_t::operator -=(int _n)
 }
 
 inline samples_t &
-samples_t::set_null()
+samples_t::zero()
 {
   samples[0] = 0;
   samples[1] = 0;
