@@ -70,16 +70,15 @@
   Sink
   ----
 
-  [k1] Input format may equal to:
-    1) spk_unknown when sink is not initialized.
-    2) correct format when sink is initialized.
+  [k1] Input format must be equal to spk_unknown when sink requires 
+    initialization (after creation, errors, etc).
 
   [k2] Input format switch may occur only in following cases:
     1) set_input() call.
     2) process() call if chunk format differs from current input format.
     3) by call to descendants' class functions (only at working thread).
 
-  [k4] Format switch call should succeed after successful query_input() call.
+  [k3] Format switch call should succeed after successful query_input() call.
 
     if (sink.query_input(spk))
       assert(sink.set_input(spk));
@@ -87,7 +86,7 @@
     if (sink.query_input(chunk.spk))
       assert(sink.process(chunk));
 
-  [k3] get_output() must report new format immediately after format switch.
+  [k4] get_output() must report new format immediately after format switch.
 
     if (sink.query_input(spk))
     {
@@ -104,17 +103,17 @@
   Filter
   ------
 
-  [f1] Filter should report spk_unknown for input and output formats when 
-    filter is not initialized (after creation).
+  [f1] Filter must report spk_unknown for input formats when filter requires
+    initialization (after creation, errors, etc).
 
-  [f2] If output format depends on input data get_output() must report
+  [f2] If output format depends on input data get_output() must report 
     spk_unknown after following:
     1) reset() call
     2) input format switch (see [k2] rule)
     3) call to descendants' class functions (only at working thread) that
        may affect output format.
 
-    Also filter may change its output format according to [s1] rule.
+    Filter must change its output format according to [s1] rule.
 
     filter.reset()
     assert(filter.get_output() == spk_unknown);
@@ -135,7 +134,10 @@
     input data and for some it doesn't. In this case for dependent formats
     filter must follow [f2] rule and [f3] rule for independent.
 
-  [f5] 
+  [f5] If output format changes according to [f3.2] to format that is
+    incompatible with current input format input format must change to 
+    spk_unknown indicating that input should be reinitialized according to
+    [f1] rule.
 
 */
 
