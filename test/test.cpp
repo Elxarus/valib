@@ -17,7 +17,7 @@ int main(int argc, char **argv)
   log.open_group("Test session");
 
   test_float(&log);
-  test_empty(&log);
+//  test_empty(&log);
   test_null(&log);
   test_proc(&log);
   test_crash(&log);

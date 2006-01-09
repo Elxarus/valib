@@ -83,7 +83,7 @@ int test_empty_filter(Log *log, Filter *filter, const char *filter_name)
     ///////////////////////////////////////////////////////
     // Empty chunk processing
 
-    chunk.set(filter->get_input(), 0, 0);
+    chunk.set_empty(filter->get_input());
 
     if (!filter->process(&chunk))
       return log->err("process() of empty chunk failed");
@@ -103,7 +103,7 @@ int test_empty_filter(Log *log, Filter *filter, const char *filter_name)
     ///////////////////////////////////////////////////////
     // End-of-stream processing
 
-    chunk.set(filter->get_input(), 0, 0, 0, 0, true);
+    chunk.set_empty(filter->get_input(), 0, 0, true);
 
     if (!filter->process(&chunk))
       return log->err("process() of end-of-stream failed");

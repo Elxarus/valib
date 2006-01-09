@@ -141,7 +141,7 @@ Mixer::get_chunk(Chunk *_chunk)
     (this->*mixfunc)(samples, buf.get_samples(), n);
 
     // fill output chunk
-    _chunk->set
+    _chunk->set_linear
     (
       out_spk,
       buf.get_samples(), n,
@@ -162,7 +162,7 @@ Mixer::get_chunk(Chunk *_chunk)
     (this->*mixfunc)(samples, size);
 
     // fill output chunk
-    _chunk->set
+    _chunk->set_linear
     (
       out_spk,
       samples, size,

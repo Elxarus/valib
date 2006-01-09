@@ -102,7 +102,7 @@ Noise::get_chunk(Chunk *_chunk)
       for (size_t s = 0; s < n; s++)
         samples[ch][s] = rng.get_float();
 
-    _chunk->set(spk, buf.get_samples(), n, false, 0, eos);
+    _chunk->set_linear(spk, buf.get_samples(), n, false, 0, eos);
     return true;
   }
   else
@@ -122,7 +122,7 @@ Noise::get_chunk(Chunk *_chunk)
       case 1: *pos = (*pos & 0xffffff00) | (rng.get_uint() & 0x000000ff); break;
     }
 
-    _chunk->set(spk, buf.get_rawdata(), n, false, 0, eos);
+    _chunk->set_rawdata(spk, buf.get_rawdata(), n, false, 0, eos);
     return true;
   }
 }

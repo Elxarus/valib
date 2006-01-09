@@ -387,9 +387,20 @@ Spdifer::get_chunk(Chunk *_chunk)
   }
 
   if (load_frame())
-    _chunk->set(get_output(), frame_buf + SPDIF_HEADER_SIZE - spdif_header, frame_size + spdif_header, false, 0, flushing && !size);
+    _chunk->set_rawdata
+    (
+      get_output(), 
+      frame_buf + SPDIF_HEADER_SIZE - spdif_header, frame_size + spdif_header, 
+      false, 0, 
+      flushing && !size
+    );
   else
-    _chunk->set(get_output(), 0, 0, false, 0, flushing && !size);
+    _chunk->set_empty
+    (
+      get_output(), 
+      false, 0, 
+      flushing && !size
+    );
 
   // timing
   sync_helper.send_sync(_chunk);

@@ -323,7 +323,7 @@ AGC::get_chunk(Chunk *_chunk)
       continue;
 
     // send data
-    _chunk->set
+    _chunk->set_linear
     (
       spk, 
       buf[block].get_samples(), sample[block], 
@@ -339,6 +339,6 @@ AGC::get_chunk(Chunk *_chunk)
   // assert: size == 0 
   // no more input data left to process
 
-  _chunk->set(spk, 0, 0);
+  _chunk->set_empty(spk);
   return true;
 }

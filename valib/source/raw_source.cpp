@@ -29,6 +29,6 @@ RAWSource::get_chunk(Chunk *_chunk)
 {
   size_t read_size = f.read(buf, block_size);
   bool eof = f.eof();
-  _chunk->set(spk, buf, read_size, false, 0, eof);
+  _chunk->set_rawdata(spk, buf, read_size, false, 0, eof);
   return eof || read_size;
 };

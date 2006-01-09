@@ -264,26 +264,14 @@ Converter::get_chunk(Chunk *_chunk)
 
   (this->*convert)();
 
-  if (format == FORMAT_LINEAR)
-  {
-    _chunk->set
-    (
-      get_output(),
-      out_samples, out_size,
-      sync, time, 
-      flushing && !size
-    );
-  }
-  else
-  {
-    _chunk->set
-    (
-      get_output(), 
-      out_rawdata, out_size,
-      sync, time, 
-      flushing && !size
-    );
-  }
+  _chunk->set
+  (
+    get_output(), 
+    out_rawdata, out_samples, out_size, 
+    sync, time, 
+    flushing && !size
+  );
+
   flushing = flushing && size;
   sync = false;
   return true;

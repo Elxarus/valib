@@ -97,7 +97,7 @@ DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
 {
   DbgLog((LOG_TRACE, 3, "DShowSink(%x)::DShowSink()", this));
 
-  spk = def_spk;
+  spk = spk_unknown;
   send_mt = false;
   send_discontinuity = false;
   hr = S_OK;

@@ -99,7 +99,7 @@ AudioDecoder::get_chunk(Chunk *_chunk)
 
   if (!parser->is_frame_loaded() || !parser->decode_frame())
   {
-    _chunk->set(parser->get_spk(), 0, 0, 0, 0, flushing);
+    _chunk->set_empty(parser->get_spk(), 0, 0, flushing);
     flushing = false;
 
     load_frame();
@@ -108,7 +108,7 @@ AudioDecoder::get_chunk(Chunk *_chunk)
   else
   {
     // fill output chunk
-    _chunk->set(parser->get_spk(), parser->get_samples(), parser->get_nsamples());
+    _chunk->set_linear(parser->get_spk(), parser->get_samples(), parser->get_nsamples());
     // timimg
     sync_helper.send_sync(_chunk);
 

@@ -71,7 +71,8 @@
   ----
 
   [k1] Input format must be equal to spk_unknown when sink requires 
-    initialization (after creation, errors, etc).
+    initialization (after creation, errors, etc). Others must not call
+    processing functions on uninitialized filter.
 
   [k2] Input format switch may occur only in following cases:
     1) set_input() call.
@@ -144,6 +145,7 @@
 #ifndef VALIB_FILTER_H
 #define VALIB_FILTER_H
 
+#include <assert.h>
 #include "spk.h"
 
 class Chunk;
@@ -285,21 +287,42 @@ public:
   Chunk(): spk(spk_unknown), sync(false), time(0), eos(false), size(0), rawdata(0)
   {}
 
+  Chunk(Speakers _spk, 
+    bool _sync = false, vtime_t _time = 0, bool _eos  = false)
+  {
+    set_empty(_spk, _sync, _time, _eos);
+  }
+
   Chunk(Speakers _spk, samples_t _samples, size_t _size,
     bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
-    set(_spk, _samples, _size, _sync, _time, _eos);
+    set_linear(_spk, _samples, _size, _sync, _time, _eos);
   }
 
   Chunk(Speakers _spk, uint8_t *_rawdata, size_t _size,
     bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
-    set(_spk, _rawdata, _size, _sync, _time, _eos);
+    set_rawdata(_spk, _rawdata, _size, _sync, _time, _eos);
   }
 
-  inline void set(Speakers _spk, samples_t _samples, size_t _size,
+  inline void set_empty(Speakers _spk, 
     bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
+    spk = _spk;
+    rawdata = 0;
+    samples.zero();
+    size = 0;
+    sync = _sync;
+    time = _time;
+    eos = _eos;
+  }
+
+  inline void set_linear(Speakers _spk, samples_t _samples, size_t _size,
+    bool _sync = false, vtime_t _time = 0, bool _eos  = false)
+  {
+    // channel samples must be used only with linear format
+    assert(_spk.format == FORMAT_LINEAR);
+
     spk = _spk;
     rawdata = 0;
     samples = _samples;
@@ -309,12 +332,30 @@ public:
     eos = _eos;
   }
 
-  inline void set(Speakers _spk, uint8_t *_rawdata, size_t _size,
+  inline void set_rawdata(Speakers _spk, uint8_t *_rawdata, size_t _size,
     bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
+    // cannot use raw data with linear format
+    assert(_spk.format != FORMAT_LINEAR);
+
     spk = _spk;
     rawdata = _rawdata;
     samples.zero();
+    size = _size;
+    sync = _sync;
+    time = _time;
+    eos = _eos;
+  }
+
+  inline void set(Speakers _spk, uint8_t *_rawdata, samples_t _samples, size_t _size,
+    bool _sync = false, vtime_t _time = 0, bool _eos  = false)
+  {
+    // cannot use raw data with linear format
+    assert((_spk.format != FORMAT_LINEAR) || (_rawdata == 0));
+
+    spk = _spk;
+    rawdata = _rawdata;
+    samples = _samples;
     size = _size;
     sync = _sync;
     time = _time;
@@ -677,28 +718,18 @@ protected:
     if (_size > size)
       _size = size;
 
+    _chunk->set
+    (
+      spk, 
+      rawdata, samples, _size,
+      sync, time,
+      flushing && (size == _size)
+    );
+
     if (spk.format == FORMAT_LINEAR)
-    {
-      _chunk->set
-      (
-        spk, 
-        samples, _size,
-        sync, time,
-        flushing && (size == _size)
-      );
       samples += _size;
-    }
     else
-    {
-      _chunk->set
-      (
-        spk, 
-        rawdata, _size,
-        sync, time,
-        flushing && (size == _size)
-      );
       rawdata += _size;
-    }
 
     size -= _size;
     sync = false;

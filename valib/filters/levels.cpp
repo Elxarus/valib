@@ -120,7 +120,7 @@ Levels::get_chunk(Chunk *_chunk)
   /////////////////////////////////////////////////////////
   // Fill output chunk
 
-  _chunk->set(spk, samples, size, sync, time, flushing);
+  _chunk->set_linear(spk, samples, size, sync, time, flushing);
   sync = false;
   flushing = false;
 

@@ -304,7 +304,7 @@ DVDDecoder::process_internal()
   ///////////////////////////////////////////////////
   // End of processing
 
-  chunk = Chunk(out_spk, 0, 0);
+  chunk.set_empty(out_spk);
   return true;
 }
 

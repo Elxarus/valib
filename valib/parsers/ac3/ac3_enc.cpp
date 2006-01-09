@@ -276,7 +276,7 @@ AC3Enc::get_chunk(Chunk *_chunk)
       return false;
 
     // fill chunk
-    _chunk->set
+    _chunk->set_rawdata
     (
       get_output(),
       frame_buf, frame_size,
@@ -287,7 +287,12 @@ AC3Enc::get_chunk(Chunk *_chunk)
   else
   {
     // empty chunk
-    _chunk->set(get_output(), 0, 0, false, 0, flushing && !size);
+    _chunk->set_empty
+    (
+      get_output(), 
+      false, 0, 
+      flushing && !size
+    );
   }
 
   // reset after flushing

@@ -130,7 +130,13 @@ Syncer::process(const Chunk *_chunk)
 bool 
 Syncer::get_chunk(Chunk *_chunk)
 {
-  _chunk->set(spk, samples, size, sync, time * time_factor + time_shift * spk.sample_rate, flushing);
+  _chunk->set_linear
+  (
+    spk, 
+    samples, size, 
+    sync, time * time_factor + time_shift * spk.sample_rate, 
+    flushing
+  );
 
   // do not keep sync if we do not do dejitter
   // drop sync in case of flushing
