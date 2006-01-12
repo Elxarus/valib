@@ -44,14 +44,60 @@
   Source
   ------
 
-  [s1] When source is full it must report format exactly as it will appear at
-    next output chunk. In other words get_output() may change its value only
-    in following cases:
-    
+  [s1] When source is full it must report output format exactly as it will 
+    appear at next output chunk.
+
+  [s2] Output format may change only in following cases:
     1) after get_chunk() call
-    2) when is_empty == true (should be avioded)
+    2) when is_empty() == true (should be avioded)
     3) by call to descendants' class functions (only at working thread).
 
+  Sink
+  ----
+
+  [k1] Input format must be equal to spk_unknown when sink requires 
+    initialization (after creation, errors, etc). Others must not call
+    processing functions on uninitialized sink.
+
+  [k2] Input format may change only in following cases:
+    1) set_input() call.
+    2) process() call if chunk format differs from current input format.
+    3) by call to descendants' class functions (only at working thread).
+
+  [k3] Format switch call should succeed after successful query_input() call.
+
+  [k4] get_output() must report new format immediately after format switch.
+
+  Filter
+  ------
+
+  [f1] If output format depends on input data (parser, demuxer, etc) 
+    get_output() must report spk_unknown after following:
+    1) reset() call
+    2) input format switch (see [k2] rule)
+    3) call to descendants' class functions (only at working thread) that
+       may affect output format.
+
+    Filter must change its output format according to [s2] rule.
+
+  [f2] If output format doesn't depend on input data output format may change
+    only in following cases:
+    1) input format switch (see [k2] rule)
+    2) by call to descendants' class functions (only at working thread)
+
+    Filter cannot switch output format during processing in this case.
+
+  [f3] It is possible that for some input formats output format may depend on
+    input data and for some it doesn't. In this case for dependent formats
+    filter must follow [f1] rule and [f2] rule for independent.
+
+  [f4] If output format changes according to [f2.2] to format that is
+    incompatible with current input format input format must change to 
+    spk_unknown indicating that input should be reinitialized according to
+    [k1] rule.
+
+
+  [s1]
     if (!source.is_empty())
     {
       spk1 = source.get_output();
@@ -67,28 +113,14 @@
       }
     }
 
-  Sink
-  ----
-
-  [k1] Input format must be equal to spk_unknown when sink requires 
-    initialization (after creation, errors, etc). Others must not call
-    processing functions on uninitialized filter.
-
-  [k2] Input format switch may occur only in following cases:
-    1) set_input() call.
-    2) process() call if chunk format differs from current input format.
-    3) by call to descendants' class functions (only at working thread).
-
-  [k3] Format switch call should succeed after successful query_input() call.
-
+  [k3]
     if (sink.query_input(spk))
       assert(sink.set_input(spk));
 
     if (sink.query_input(chunk.spk))
       assert(sink.process(chunk));
 
-  [k4] get_output() must report new format immediately after format switch.
-
+  [k4]
     if (sink.query_input(spk))
     {
       assert(sink.set_input(spk));
@@ -101,21 +133,7 @@
       assert(chunk.spk == sink.get_input());
     }
 
-  Filter
-  ------
-
-  [f1] Filter must report spk_unknown for input formats when filter requires
-    initialization (after creation, errors, etc).
-
-  [f2] If output format depends on input data get_output() must report 
-    spk_unknown after following:
-    1) reset() call
-    2) input format switch (see [k2] rule)
-    3) call to descendants' class functions (only at working thread) that
-       may affect output format.
-
-    Filter must change its output format according to [s1] rule.
-
+  [f1]
     filter.reset()
     assert(filter.get_output() == spk_unknown);
     ...
@@ -124,21 +142,7 @@
     if (!filter.is_empty())
       assert(correct_format(filter.get_output())
 
-  [f3] If output format doesn't depend on input data it may change only in
-    following cases:
-    1) input format switch (see [k2] rule)
-    2) by call to descendants' class functions (only at working thread)
 
-    Filter cannot switch output format during processing in this case.
-
-  [f4] It is possible that for some input formats output format may depend on
-    input data and for some it doesn't. In this case for dependent formats
-    filter must follow [f2] rule and [f3] rule for independent.
-
-  [f5] If output format changes according to [f3.2] to format that is
-    incompatible with current input format input format must change to 
-    spk_unknown indicating that input should be reinitialized according to
-    [f1] rule.
 
 */
 
