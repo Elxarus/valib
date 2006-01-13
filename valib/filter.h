@@ -85,7 +85,7 @@
     1) input format switch (see [k2] rule)
     2) by call to descendants' class functions (only at working thread)
 
-    Filter cannot switch output format during processing in this case.
+    Filter cannot change output format during processing in this case.
 
   [f3] It is possible that for some input formats output format may depend on
     input data and for some it doesn't. In this case for dependent formats
@@ -96,6 +96,19 @@
     spk_unknown indicating that input should be reinitialized according to
     [k1] rule.
 
+  Summary of filter format changes:
+  -----------------------------+--------------+---------------+
+                               | Input format | Output format |
+  -----------------------------+--------------+---------------+
+  reset()                      |      -       |     ofdd      |
+  set_input()                  |      +       |      +        |
+  process() (no format change) |      -       |     ofdd      |
+  process() (format change)    |      +       |      +        |
+  get_chunk()                  |      -       |     ofdd      |
+  -----------------------------+--------------+---------------+
+                      ofdd - when output format depends on data
+
+  Examples:
 
   [s1]
     if (!source.is_empty())
@@ -141,8 +154,6 @@
     ...
     if (!filter.is_empty())
       assert(correct_format(filter.get_output())
-
-
 
 */
 
