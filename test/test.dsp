@@ -151,6 +151,10 @@ SOURCE=.\test_empty.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_filter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_float.cpp
 # End Source File
 # Begin Source File
