@@ -1,6 +1,117 @@
 /*
   General filters test
 
+Creation
+========
+After creation filter should be in uninitialized state and get_output() should
+report spk_unknown.
+
+  Filter *filter = create_filter();
+  // ... setup filter parameters ...
+  if (filter.get_input() != spk_unknown)
+    * filter created in initialized state.
+
+Initialization
+==============
+Filter must be initialized by set_input() call. 
+
+  // try to initialize filter by unsupported format
+
+  if (filter->query_input(spk_unsupported))
+    * query_input() lies
+  else
+  {
+    if (filter->set_input(spk_unsupported))
+      * set_input() set unsupported format
+
+    if (filter->get_input() != spk_unknown)
+      * filter was initialized by unsupported format
+  }
+
+  // initialize filter
+
+  if (!filter->query_input(spk_init))
+    * query_input() lies
+  else
+  {
+    if (!filter->set_input(spk_init))
+    {
+      * set_input() cannot set supported format
+      return; // cannot proceed further with an uninitialized filter
+    }
+
+    if (filter->get_input() != spk_init)
+    {
+      * filter was not initialized by set_input()
+      return; // cannot proceed further with an uninitialized filter
+    }
+
+    if (!filter->is_empty())
+    {
+      * filter is not empty after initialization
+      return; // cannot proceed further with a buggggy filter
+    }
+
+    // input format must not change until next format change
+    spk_input = filter->get_input();
+  }
+
+Check output format
+===================
+After input format change output format must be either unitialized or equal to
+spk_unknown if it depends on input data.
+
+  if (filter.get_output() == spk_unknown)
+  {
+    // output format is data-dependent and may change during processing
+    ofdd = true;
+  }
+  else
+  {
+    // output format cannot change during processing
+    spk_output = filter.get_output();
+  }
+
+Check buffering
+===============
+
+Buffered processing may be of 2 kinds:
+* Immediate. If output buffer must be larger than input buffer input data is
+  processed from input buffer to private output buffer and returned 
+  immediately. If filter cannot store all processed data into its output 
+  buffer it generates several output chunks. This method does not produce 
+  processing lag.
+* Block buffering. To process data filter requires a block of data that is
+  processed at once. So filter get input data until internal buffer fills up 
+  and only after this generates output chunk. Also it may hold some amount of
+  data in buffer to process next block. This method produces processing lag.
+  Also this method requires flushing to release data locked in buffer and 
+  correctly finish the stream.
+
+Filters may use different processing models for different input formats. For
+example if mixer does inplace processing if output number of channels is less
+or equal to input number of channels and uses immediate buffering otherwise.
+
+We can check buffering method used by following conditions:
+* Filter that does in-place processing must return pointer to the input buffer.
+* If filter does conversion between linear and rawdata it obviously cannot do
+  it inplace and uses immediate buffering.
+* If filter can process 1 byte/sample and generates output chunk immediately
+  it uses immediate buffering. We can find buffer size by increasing input 
+  chunk size by one sample/byte until filter to generate 2 output chunks for 1
+  input chunk. Buffer size equals to input chunk size - 1.
+* If filter remains empty after processing chunk with 1 byte/sample it uses 
+  block buffering. We can find buffer size by sending 1 byte/sample chunks 
+  until filter to generate output chunk. Buffer size equals to number of input
+  chunks but size of output chunk may be less. Difference between buffer size
+  and size of output chunk equals to size of data remains at buffer. This
+  produces a lag between input and output.
+
+
+
+Format change
+=============
+... kinds of format change ...
 
 */
 
