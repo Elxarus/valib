@@ -216,8 +216,8 @@ class NullFilter;
 //
 // Any data format has buffer size. In case of raw data it means size of data
 // buffer pointed by 'rawdata' pointer in bytes. In case of linear format it
-// means number of samples in each channel buffer. So size of each buffer in 
-// bytes is: channel_buffer_size = sizeof(sample_t) * chunk.size .
+// means number of samples in each channel buffer. All channel buffers have 
+// the same number of samples.
 //
 // Also chunk may not contain any data (empty chunk). Such chunks may be used
 // to inform downstream about different events without sending data. Empty 
@@ -319,6 +319,13 @@ public:
   {
     set_rawdata(_spk, _rawdata, _size, _sync, _time, _eos);
   }
+
+  Chunk(Speakers _spk, uint8_t *_rawdata, samples_t _samples, size_t _size,
+    bool _sync = false, vtime_t _time = 0, bool _eos  = false)
+  {
+    set(_spk, _rawdata, _samples, _size, _sync, _time, _eos);
+  }
+
 
   inline void set_empty(Speakers _spk, 
     bool _sync = false, vtime_t _time = 0, bool _eos  = false)
