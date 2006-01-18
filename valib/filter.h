@@ -96,6 +96,12 @@
     spk_unknown indicating that input should be reinitialized according to
     [k1] rule.
 
+  [f5] Filter must be empty and have drop internal buffers after following:
+    1) reset() call
+    2) input format change
+    3) call to descendants' class function that affects input/output format or
+       buffered data.
+
   Summary of filter format changes:
   -----------------------------+--------------+---------------+
                                | Input format | Output format |
@@ -154,6 +160,27 @@
     ...
     if (!filter.is_empty())
       assert(correct_format(filter.get_output())
+
+  [f4] & [f5]
+    some_filter.set_output(spk_output);
+    if (filter.get_input() == spk_unknown)
+    {
+      // input format is incompatible with output format set
+      // we have to reinitialize filter
+      ...
+      if (!some_filter.set_input(spk_input))
+        * cannot setup filter
+      assert(some_filter.is_empty());
+      ...
+    }
+    else
+    {
+      // input format is ok and we may not reinitialize filter
+      ...
+    }
+    // filter must be empty because output format was changed
+    assert(some_filter.is_empty());
+
 
 */
 
