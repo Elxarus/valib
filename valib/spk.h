@@ -249,7 +249,7 @@ public:
 
   Speakers() 
   {
-    set_error();
+    set_unknown();
   };
 
   Speakers(int _format, int _mask, int _sample_rate, sample_t _level = 1.0, int _relation = NO_RELATION)
@@ -258,14 +258,17 @@ public:
   }
 
   inline void set(int format, int mask, int sample_rate, sample_t level = 1.0, int relation = NO_RELATION);
-  inline void set_error();
+  inline void set_unknown();
+
+  inline bool is_unknown() const;
+  inline bool is_linear() const;
+  inline bool is_rawdata() const;
+
+  inline bool is_pcm()   const;
+  inline bool is_spdif() const;
 
   inline int  nch()   const;
-  inline bool error() const;
   inline bool lfe()   const;
-
-  inline bool is_spdif() const;
-  inline bool is_pcm()   const;
 
   inline const int *order() const;
 
@@ -354,42 +357,37 @@ Speakers::set(int _format, int _mask, int _sample_rate, sample_t _level, int _re
 }
 
 inline void 
-Speakers::set_error()
+Speakers::set_unknown()
 {
   format = FORMAT_UNKNOWN;
   mask = 0;
   sample_rate = 0;
   relation = NO_RELATION;
+  level = 1.0;
 }
 
-inline int 
-Speakers::nch() const
-{
-  return mask_nch(mask);
-}
+inline bool Speakers::is_unknown() const
+{ return format == FORMAT_UNKNOWN; }
 
-inline bool 
-Speakers::error() const
-{
-  return format == FORMAT_UNKNOWN;
-}
+inline bool Speakers::is_linear() const
+{ return format == FORMAT_LINEAR; }
+
+inline bool Speakers::is_rawdata() const
+{ return format != FORMAT_LINEAR; }
+
+inline bool Speakers::is_pcm() const
+{ return (FORMAT_MASK(format) & FORMAT_CLASS_PCM) != 0; }
+
+inline bool Speakers::is_spdif() const
+{ return format == FORMAT_SPDIF; }
+
+inline int Speakers::nch() const
+{ return mask_nch(mask); }
 
 inline bool 
 Speakers::lfe() const
 {
   return (mask & CH_MASK_LFE) != 0;
-}
-
-inline bool 
-Speakers::is_spdif() const
-{
-  return format == FORMAT_SPDIF;
-}
-
-inline bool 
-Speakers::is_pcm() const
-{
-  return (FORMAT_MASK(format) & FORMAT_CLASS_PCM) != 0;
 }
 
 inline const int *
