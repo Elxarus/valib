@@ -38,8 +38,8 @@
   ........
 
 
-  Rules
-  =====
+  Format change rules
+  ===================
 
   Source
   ------
@@ -114,32 +114,33 @@
   -----------------------------+--------------+---------------+
                       ofdd - when output format depends on data
 
-  Examples:
+  Examples of format change
+  -------------------------
 
-  [s1]
+  Rules [s1] and [s2]:
     if (!source.is_empty())
     {
       spk1 = source.get_output();
-      chunk1 = source.get_chunk();
+      source.get_chunk(chunk1);
       assert(chunk1.spk == spk1);
       ...
       if (!source.is_empty())
       {
         spk2 = source.get_output();
-        chunk2 = source.get_chunk();
+        source.get_chunk(chunk2);
         assert(chunk2.spk == spk2);
         // note that spk2 may differ from spk1
       }
     }
 
-  [k3]
+  Rule [k3]:
     if (sink.query_input(spk))
       assert(sink.set_input(spk));
 
     if (sink.query_input(chunk.spk))
       assert(sink.process(chunk));
 
-  [k4]
+  Rule [k4]:
     if (sink.query_input(spk))
     {
       assert(sink.set_input(spk));
@@ -152,16 +153,18 @@
       assert(chunk.spk == sink.get_input());
     }
 
-  [f1]
+  Rule [f1]:
     filter.reset()
-    assert(filter.get_output() == spk_unknown);
-    ...
-    filter.process(chunk);
+    assert(filter.get_output() == spk_unknown); // output format depends on data
     ...
     if (!filter.is_empty())
-      assert(correct_format(filter.get_output())
+    {
+      spk = source.get_output();
+      source.get_chunk(chunk);
+      assert(chunk.spk == spk);
+    }
 
-  [f4] & [f5]
+  Rules [f4] and [f5]:
     some_filter.set_output(spk_output);
     if (filter.get_input() == spk_unknown)
     {
@@ -408,6 +411,17 @@ public:
     size = _size;
     sync = _sync;
     time = _time;
+    eos = _eos;
+  }
+
+  inline void set_sync(bool _sync, vtime_t _time)
+  {
+    sync = _sync;
+    time = _time;
+  }
+
+  inline void set_eos(bool _eos = true)
+  {
     eos = _eos;
   }
 
