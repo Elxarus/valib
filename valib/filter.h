@@ -838,18 +838,17 @@ public:
   virtual bool query_input(Speakers _spk) const
   { 
     // general audio processing filter works only with linear format
-    return _spk.format == FORMAT_LINEAR;
+    // channel mask and sample rate must be defined
+    return _spk.format == FORMAT_LINEAR && _spk.mask && _spk.sample_rate;
   }
 
   virtual bool set_input(Speakers _spk)
   {
-    if (spk != _spk)
-    {
-      if (!query_input(_spk)) // may be overwritten
-        return false;
-      spk = _spk;
-      reset(); // may be overwritten
-    }
+    if (!query_input(_spk)) // may be overwritten
+      return false;
+
+    spk = _spk;
+    reset(); // may be overwritten
     return true;
   }
 

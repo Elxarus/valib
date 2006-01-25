@@ -3,19 +3,19 @@
 
 Creation
 ========
-After creation filter should be in uninitialized state and get_output() should
+After creation the filter should be in uninitialized state and get_output() should
 report spk_unknown.
 
   Filter *filter = create_filter();
   // ... setup filter parameters ...
   if (filter.get_input() != spk_unknown)
-    * filter created in initialized state.
+    * filter was created in initialized state.
 
 Initialization
 ==============
 Filter must be initialized by set_input() call. 
 
-  // try to initialize filter by unsupported format
+  // try to initialize the filter with an unsupported format
 
   if (filter->query_input(spk_unsupported))
     * query_input() lies
@@ -25,7 +25,7 @@ Filter must be initialized by set_input() call.
       * set_input() set unsupported format
 
     if (filter->get_input() != spk_unknown)
-      * filter was initialized by unsupported format
+      * filter was initialized with an unsupported format
   }
 
   // initialize filter
@@ -75,11 +75,17 @@ spk_unknown if it depends on input data.
 Check buffering
 ===============
 
-Buffered processing may be of 2 kinds:
-* Immediate. If output buffer must be larger than input buffer input data is
+Following buffer processing methods possible:
+* In-place. Filter processes data in-place at buffers received with process()
+  call. Therefore, upstream must provide buffer that we can safely change. 
+  This allows to avoid data copy from buffer to buffer so speed up processing.
+  But we must always remember about data references. After process() call
+  filter may hold references to upstream data buffers so we must not alter it
+  until the end of processing. 
+* Immediate. If output data must be larger than input buffer input data is
   processed from input buffer to private output buffer and returned 
   immediately. If filter cannot store all processed data into its output 
-  buffer it generates several output chunks. This method does not produce 
+  buffer it produces several output chunks. This method does not produce
   processing lag.
 * Block buffering. To process data filter requires a block of data that is
   processed at once. So filter get input data until internal buffer fills up 
@@ -90,7 +96,8 @@ Buffered processing may be of 2 kinds:
 
 Filters may use different processing models for different input formats. For
 example if mixer does inplace processing if output number of channels is less
-or equal to input number of channels and uses immediate buffering otherwise.
+or equal to input number of channels (faster) and uses immediate buffering 
+otherwise.
 
 We can check buffering method used by following conditions:
 * Filter that does in-place processing must return pointer to the input buffer.
@@ -108,10 +115,50 @@ We can check buffering method used by following conditions:
   produces a lag between input and output.
 
 
+Reset
+=====
+Post-conditions:
+* filter is empty
+* filter does not contain data
 
 Format change
 =============
-... kinds of format change ...
+
+* Forced format change.
+  Methods:
+  * set_input()
+  * process()
+  New format:
+  * same format (only set_input())
+  * unsupported format
+  * new format
+  Filter state:
+  * filter is empty and does not contain data
+  * filter is empty but contains data (for block buffering filters)
+  * filter is full (only set_input())
+  * filter is in flushing state (only set_input())
+
+  Total: 16 cases
+  * set_input(): 12 cases
+  * process(): 4 cases
+
+* Flushing
+  Methods:
+  * flush() (not implemented yet)
+  * process()
+  New format: does not matter...
+  Filter state:
+  * filter is empty and does not contain data
+  * filter is empty but contains data (for block buffering filters)
+  * filter is full (only flush())
+  * filter is in flushing state (only flush())
+
+  Total: 2 cases
+
+* Post-conditions check:
+  * new format set (not set for unsupported format)
+  * filter is empty
+  * filter does not contain data
 
 */
 
@@ -127,8 +174,8 @@ Format change
 #include "filters\demux.h"
 #include "filters\spdifer.h"
 
-int test_filter(Log *log);
-int test_empty_filter(Log *log, Filter *filter, const char *desc);
+int test_rules(Log *log);
+int test_rules_filter(Log *log, Filter *filter, const char *desc);
 
 class FilterTester : public Filter
 {
@@ -140,37 +187,61 @@ protected:
   bool     ofdd;       // output format is data-dependent
   Speakers spk_output; // output format
 
-  void check_input(const char *caller)
+  void update_formats()
   {
-    if (filter->get_input() != spk_input)
-      log->err("[k2] %s: input format illegaly changed", caller);
+    spk_input = filter->get_input();
+    spk_output = filter->get_output();
 
-    spk_input = filter->get_input(); // suppress this error report afterwards
+    // output format may depend on data for some input formats
+    // and may not depend for others so status may change...
+    // see [f3] rule
+    ofdd = (spk_output == spk_unknown);
   }
 
-  void check_output(const char *caller)
+  void check_formats(const char *caller)
   {
-    if (!ofdd && (filter->get_output() != spk_output))
-      log->err("[s2] %s: output format illegaly changed", caller);
+    // check input format
+    if (filter->get_input() != spk_input)
+      log->err("[k2] %s: input format was illegaly changed", caller);
+    spk_input = filter->get_input(); // suppress this error report afterwards
 
+    // check output format
+    if (!ofdd && (filter->get_output() != spk_output))
+      log->err("[f2] %s: output format was illegaly changed", caller);
     spk_output = filter->get_output(); // suppress this error report afterwards
+
+    // check unininitialized state
+    if ((filter->get_input() == spk_unknown) && !filter->is_empty())
+      log->err("[f5] %s: filter is not empty in uninitialized state");
+  }
+
+  void check_reset(const char *caller)
+  {
+    if (ofdd && (filter->get_output() != spk_unknown))
+      log->err("[f1] %s: output format did not change to spk_unknown", caller);
+
+    if (!filter->is_empty())
+      log->err("[f5] %s: filter is not empty", caller);
+
+    // todo: check buffered data
   }
 
 public:
-  FilterTest(Filter *filter, Log *log);
+  FilterTester(Filter *_filter, Log *_log)
+  {
+    filter = _filter;
+    log = _log;
+    update_formats();
+  }
 
   void reset()
   {
-    check_input("before reset()");
-    check_output("before reset()");
+    check_formats("before reset()");
 
     filter->reset();
 
-    if (ofdd && (filter->get_output() != spk_unknown))
-      log->err("[f1] reset(): output format did not change to spk_unknown");
-
-    check_input("after reset()");
-    check_output("after reset()");
+    check_reset("after reset()");
+    check_formats("after reset()");
   }
 
   /////////////////////////////////////////////////////////
@@ -183,29 +254,37 @@ public:
 
   bool set_input(Speakers _spk)
   {
-    check_input("before set_input()");
-    check_output("before set_input()");
+    check_formats("before set_input()");
 
     bool query = filter->query_input(_spk);
     bool result = filter->set_input(_spk);
 
     if (query != result)
-      log->err("[k3] set_input() and query_input() conflict");
+      log->err("[k3] set_input(): query_input() lies");
 
-    if (!result)
-      return false;
+    if (result)
+    {
+      // after successful format change filter must 
+      // update input and output formats
+      if (filter->get_input() != _spk)
+        log->err("[k4] set_input(): new format was not set");
+      update_formats();
+    }
+    else
+    {
+      // if format change failed input and output must 
+      // reamin unchanged or require initialization
+      if (filter->get_input() == spk_unknown)
+        // filter requires reinit so formats was changed
+        update_formats();
+      else
+        // formats stay unchanged
+        check_formats("set_input()");
+    }
 
-    if (filter->get_input() != _spk)
-      log->err("[k4] set_input() and get_input() conflict");
-
-    spk_input = filter->get_input();
-    spk_output = filter->get_output();
-
-    // output format may depend on data for some input formats
-    // and may not depend for others so status may change...
-    ofdd = (spk_output == spk_unknown);
-
-    return true;
+    // filter must reset in either case
+    check_reset("set_input()"); 
+    return result;
   }
 
   Speakers get_input() const
@@ -215,40 +294,50 @@ public:
 
   bool process(const Chunk *_chunk)
   {
-    check_input("before process()");
-    check_output("before process()");
+    // check input parameters
+    if (!_chunk)
+    {
+      log->err("process(): null chunk pointer!!!");
+      return false;
+    }
 
     bool input_format_change = (_chunk->spk != filter->get_input());
+    bool query = true;
 
-    bool query = filter->query_input(_chunk->spk);
+    check_formats("before process()");
+
+    if (input_format_change)
+      query = filter->query_input(_chunk->spk);
 
     bool result = filter->process(_chunk);
 
-    if (query != result)
-      log->err("[k3] process() and query_input() conflict");
-
-    if (!result)
-      return false;
-
     if (input_format_change)
     {
-      if (_chunk->spk != filter->get_input())
-        log->err("[k4] process() and get_input() conflict");
+      if (query != result)
+        log->err("[k3] process(): query_input() lies");
 
-      spk_input = filter->get_input();
-      spk_output = filter->get_output();
-
-      // output format may depend on data for some input formats
-      // and may not depend for others so status may change...
-      // (see [f3] and [f1] rules)
-      ofdd = (spk_output == spk_unknown);
+      if (result)
+      {
+        // successful format change
+        // filter must update input and output formats
+        if (filter->get_input() != _chunk->spk)
+          log->err("[k4] process(): new format was not set");
+        update_formats();
+      }
+      else
+      {
+        // if format change failed input and output must 
+        // reamin unchanged or require initialization
+        if (filter->get_input() == spk_unknown)
+          update_formats();
+        else
+          check_formats("process()");
+      }
     }
     else
-    {
-      check_input("after process()");
-      check_output("after process()");
-    }
-    return true;
+      check_formats("after process()");
+
+    return result;
   }
 
   /////////////////////////////////////////////////////////
@@ -266,8 +355,19 @@ public:
 
   bool get_chunk(Chunk *_chunk)
   {
-    check_input("before get_chunk()");
-    check_output("before get_chunk()");
+    // check input parameters
+    if (!_chunk)
+    {
+      log->err("get_chunk(): null chunk pointer!!!");
+      return false;
+    }
+
+    // check filter state correctness
+    // get_chunk() must be called only in full state
+    if (filter->is_empty())
+      log->err("get_chunk() is called in empty state");
+
+    check_formats("before get_chunk()");
 
     Speakers spk = filter->get_output();
 
@@ -275,17 +375,16 @@ public:
       return false;
 
     if (_chunk->spk != spk)
-      log->err("[s1] get_chunk() and get_output() conflict");
+      log->err("[s1] get_chunk(): get_output() lies");
 
-    check_input("after get_chunk()");
-    check_output("after get_chunk()");
+    check_formats("after get_chunk()");
 
     return true;
   }
 };
 
 
-int test_empty(Log *log)
+int test_rules(Log *log)
 {
   NullFilter     null;
   AGC            agc;
@@ -299,88 +398,88 @@ int test_empty(Log *log)
   Demux          demux;
   Spdifer        spdifer;
 
-  log->open_group("Empty filters test");
-  test_filter(log, &null,    "NullFilter");
-  test_filter(log, &agc,     "AGC");
-  test_filter(log, &conv,    "Converter");
-  test_filter(log, &dec,     "AudioDecoder");
-  test_filter(log, &delay,   "Delay");
-  test_filter(log, &dvd,     "DVDDecoder");
-  test_filter(log, &chain,   "FilterChain");
-  test_filter(log, &levels,  "Levels");
-  test_filter(log, &proc,    "AudioProcessor");
-  test_filter(log, &demux,   "Demux");
-  test_filter(log, &spdifer, "Spdifer");
+  log->open_group("Test filters");
+  test_rules_filter(log, &null,    "NullFilter");
+  test_rules_filter(log, &agc,     "AGC");
+  test_rules_filter(log, &conv,    "Converter");
+  test_rules_filter(log, &dec,     "AudioDecoder");
+  test_rules_filter(log, &delay,   "Delay");
+  test_rules_filter(log, &dvd,     "DVDDecoder");
+  test_rules_filter(log, &chain,   "FilterChain");
+  test_rules_filter(log, &levels,  "Levels");
+  test_rules_filter(log, &proc,    "AudioProcessor");
+  test_rules_filter(log, &demux,   "Demux");
+  test_rules_filter(log, &spdifer, "Spdifer");
   return log->close_group();
 }
 
-int test_empty_filter(Log *log, Filter *filter, const char *filter_name)
+
+static const int formats[] = 
+{ 
+  FORMAT_LINEAR,
+  FORMAT_PCM16,
+  FORMAT_PCM24,
+  FORMAT_PCM32,
+  FORMAT_PCMFLOAT,
+  FORMAT_PCM16_LE,
+  FORMAT_PCM24_LE,
+  FORMAT_PCM32_LE,
+  FORMAT_PCMFLOAT_LE,
+  FORMAT_PES,
+  FORMAT_SPDIF,
+  FORMAT_AC3,
+  FORMAT_MPA,
+  FORMAT_DTS,
+  FORMAT_AAC,
+  FORMAT_OGG,
+  FORMAT_UNKNOWN
+};
+
+static const int modes[] = 
 {
-  // Test for:
-  // * Filter should go to empty state after reset().
-  // * Empty filter should accept empty chunks without error in process() call
-  //   and remain in empty state.
-  // * Empty filter should return empty chunks without error in get_chunk() 
-  //   call and remain in empty state.
-  // * Empty filter should go to flushing state after receiving empty 
-  //   eos-chunk and report that it not empty.
-  // * Empty flushing filter should return empty eos-chunk and go to empty 
-  //   state.
+  MODE_1_0,
+  MODE_2_0,
+  MODE_3_0,
+  MODE_2_1,
+  MODE_3_1,
+  MODE_2_2,
+  MODE_3_2,
+  MODE_1_0_LFE,
+  MODE_2_0_LFE,
+  MODE_3_0_LFE,
+  MODE_2_1_LFE,
+  MODE_3_1_LFE,
+  MODE_2_2_LFE,
+  MODE_3_2_LFE,
+  0 // unspecified mode
+};
 
-  int i;
-  Chunk chunk;
+static const int sample_rates[] = 
+{
+  192000, 96000, 48000, 24000, 12000,
+  176400, 88200, 44100, 22050, 11025, 
+  128000, 64000, 32000, 16000, 8000,
+  0 // unspecified sample rate
+};
 
-  log->msg("%s", filter_name);
+static const int n_formats = array_size(formats);
+static const int n_modes = array_size(modes);
+static const int n_sample_rates = array_size(sample_rates);
 
-  filter->reset();
-  if (!filter->is_empty())
-    return log->err("filter is not empty after reset()");
+int test_rules_filter(Log *log, Filter *filter, const char *filter_name)
+{
+  FilterTester f(filter, log);
+  log->open_group("Testing %s filter", filter_name);
 
-  for (i = 0; i < 10; i++)
-  {
-    ///////////////////////////////////////////////////////
-    // Empty chunk processing
+  // Filter should be created in uninitialized state
+  if (f.get_input() != spk_unknown)
+    log->msg("Filter was created in initialized state");
 
-    chunk.set_empty(filter->get_input());
+  // Try to set different formats
+  for (int i_format = 0; i_format < n_formats; i_format++)
+    for (int i_mode = 0; i_mode < n_modes; i_mode++)
+      for (int i_sample_rate = 0; i_sample_rate < n_sample_rates; i_sample_rate++)
+        f.set_input(Speakers(formats[i_format], modes[i_mode], sample_rates[i_sample_rate]));
 
-    if (!filter->process(&chunk))
-      return log->err("process() of empty chunk failed");
-
-    if (!filter->is_empty())
-      return log->err("filter is not empty after receiving empty chunk");
-
-    if (!filter->get_chunk(&chunk))
-      return log->err("get_chunk() in empty state failed");
-
-    if (!filter->is_empty())
-      return log->err("filter is not empty after get_chunk()");
-
-    if (!chunk.is_empty())
-      return log->err("non-empty chunk returned");
-
-    ///////////////////////////////////////////////////////
-    // End-of-stream processing
-
-    chunk.set_empty(filter->get_input(), 0, 0, true);
-
-    if (!filter->process(&chunk))
-      return log->err("process() of end-of-stream failed");
-
-    if (filter->is_empty())
-      return log->err("filter is empty after receiving end-of-stream");
-
-    if (!filter->get_chunk(&chunk))
-      return log->err("get_chunk() in flushing state failed");
-
-    if (!filter->is_empty())
-      return log->err("filter is not empty after get_chunk()");
-
-    if (!chunk.is_empty())
-      return log->err("non-empty chunk returned");
-
-    if (!chunk.eos)
-      return log->err("filter did not return end-of stream");
-  }
-
-  return 0;
+  return log->close_group();
 }

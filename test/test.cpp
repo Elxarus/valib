@@ -4,7 +4,7 @@
 
 
 int test_float(Log *log);
-int test_empty(Log *log);
+int test_rules(Log *log);
 int test_null(Log *log);
 int test_proc(Log *log);
 int test_crash(Log *log);
@@ -16,8 +16,8 @@ int main(int argc, char **argv)
   Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
   log.open_group("Test session");
 
+  test_rules(&log);
   test_float(&log);
-//  test_empty(&log);
   test_null(&log);
   test_proc(&log);
   test_crash(&log);
@@ -32,6 +32,7 @@ int main(int argc, char **argv)
 
   return log.get_total_errors();
 }
+ 
 
 /*
 int test_spdifer(Log *log, Speakers spk, const char *data_file, const char *spdif_file);

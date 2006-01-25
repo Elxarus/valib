@@ -1,5 +1,9 @@
 #include "proc.h"
 
+static const int format_mask = 
+  FORMAT_MASK_LINEAR | 
+  FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCMFLOAT | 
+  FORMAT_MASK_PCM16_LE | FORMAT_MASK_PCM24_LE | FORMAT_MASK_PCM32_LE | FORMAT_MASK_PCMFLOAT_LE;
 
 AudioProcessor::AudioProcessor(size_t _nsamples)
 :conv1(_nsamples), conv2(_nsamples), mixer(_nsamples)
@@ -10,32 +14,23 @@ AudioProcessor::AudioProcessor(size_t _nsamples)
 bool 
 AudioProcessor::query_spk(Speakers _spk) const
 {
-  return (_spk.format == FORMAT_LINEAR)   ||
-         (_spk.format == FORMAT_PCM16)    ||
-         (_spk.format == FORMAT_PCM24)    ||
-         (_spk.format == FORMAT_PCM32)    ||
-         (_spk.format == FORMAT_PCMFLOAT) ||
-         (_spk.format == FORMAT_PCM16_LE) ||
-         (_spk.format == FORMAT_PCM24_LE) ||
-         (_spk.format == FORMAT_PCM32_LE) ||
-         (_spk.format == FORMAT_PCMFLOAT_LE);
+  return (FORMAT_MASK(_spk.format) & format_mask) && 
+         _spk.sample_rate && 
+         _spk.mask;
 }
 
 bool 
 AudioProcessor::set_input(Speakers _spk)
 {
-  if (in_spk != _spk)
-  {
-    if (!query_spk(_spk)) 
-      return false;
+  if (!query_spk(_spk)) 
+    return false;
 
-    in_spk = _spk;
+  in_spk = _spk;
 
-    // todo: add sample rate convertor and remove this
-    out_spk.sample_rate = in_spk.sample_rate;
+  // todo: add sample rate convertor and remove this
+  out_spk.sample_rate = in_spk.sample_rate;
 
-    rebuild_chain();
-  }
+  rebuild_chain();
   return true;
 }
 
