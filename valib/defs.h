@@ -74,6 +74,8 @@ struct int24_t
 {
   uint16_t low; 
   int8_t   high;
+
+  int24_t() {}
   int24_t(int32_t i)
   {
     low  = uint16_t(i & 0xFFFF);
