@@ -38,7 +38,7 @@ public:
   // Source interface
 
   virtual Speakers get_output() const  { return spk;               }
-  virtual bool is_empty() const        { return f.is_open() && !f.eof(); }
+  virtual bool is_empty() const        { return !f.is_open() || f.eof(); }
   virtual bool get_chunk(Chunk *chunk);
 
 };
