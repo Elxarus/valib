@@ -783,7 +783,7 @@ protected:
 
     _chunk->set
     (
-      spk, 
+      get_output(), 
       rawdata, samples, _size,
       sync, time,
       flushing && (size == _size)
@@ -844,11 +844,11 @@ public:
 
   virtual bool set_input(Speakers _spk)
   {
+    reset(); // may be overwritten
     if (!query_input(_spk)) // may be overwritten
       return false;
 
     spk = _spk;
-    reset(); // may be overwritten
     return true;
   }
 
