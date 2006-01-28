@@ -113,6 +113,7 @@ We can check buffering method used by following conditions:
   chunks but size of output chunk may be less. Difference between buffer size
   and size of output chunk equals to size of data remains at buffer. This
   produces a lag between input and output.
+  WRONG. FILTER MAY REDUCE DATA SIZE.
 
 
 Reset
@@ -125,35 +126,40 @@ Format change
 =============
 
 * Forced format change.
-  Methods:
-  * set_input()
-  * process()
-  New format:
-  * same format (only set_input())
-  * unsupported format
-  * new format
   Filter state:
   * filter is empty and does not contain data
-  * filter is empty but contains data (for block buffering filters)
   * filter is full (only set_input())
-  * filter is in flushing state (only set_input())
+  * filter is cycled through full state to empty
+  * ? filter is in flushing state (only set_input())
+  Methods:
+  * set_input()
+  * process() with empty chunk
+  * process() with data chunk
+  New format:
+  * same format (it is no format change for process())
+  * new format
+  * unsupported format
 
   Total: 16 cases
   * set_input(): 12 cases
   * process(): 4 cases
 
 * Flushing
-  Methods:
-  * flush() (not implemented yet)
-  * process()
-  New format: does not matter...
   Filter state:
   * filter is empty and does not contain data
-  * filter is empty but contains data (for block buffering filters)
+  * filter is cycled through full state to empty
   * filter is full (only flush())
   * filter is in flushing state (only flush())
+  Methods:
+  * flush() (not implemented yet)
+  * process() with empty chunk
+  * process() with data chunk
+  New format:
+  * same format (it is no format change for process())
+  * new format
+  * unsupported format
 
-  Total: 2 cases
+  Total: 4 cases
 
 * Post-conditions check:
   * new format set (not set for unsupported format)
@@ -163,6 +169,9 @@ Format change
 */
 
 #include "log.h"
+#include "filter_tester.h"
+#include "test_source.h"
+
 #include "filters\agc.h"
 #include "filters\convert.h"
 #include "filters\decoder.h"
@@ -174,231 +183,135 @@ Format change
 #include "filters\demux.h"
 #include "filters\spdifer.h"
 
-int test_rules(Log *log);
-int test_rules_filter(Log *log, Filter *filter, const char *desc);
-
-class FilterTester : public Filter
-{
-protected:
-  Filter *filter;
-  Log    *log;
-
-  Speakers spk_input;  // input format
-  bool     ofdd;       // output format is data-dependent
-  Speakers spk_output; // output format
-
-  void update_formats()
-  {
-    spk_input = filter->get_input();
-    spk_output = filter->get_output();
-
-    // output format may depend on data for some input formats
-    // and may not depend for others so status may change...
-    // see [f3] rule
-    ofdd = (spk_output == spk_unknown);
-  }
-
-  void check_formats(const char *caller)
-  {
-    // check input format
-    if (filter->get_input() != spk_input)
-      log->err("[k2] %s: input format was illegaly changed", caller);
-    spk_input = filter->get_input(); // suppress this error report afterwards
-
-    // check output format
-    if (!ofdd && (filter->get_output() != spk_output))
-      log->err("[f2] %s: output format was illegaly changed", caller);
-    spk_output = filter->get_output(); // suppress this error report afterwards
-
-    // check unininitialized state
-    if ((filter->get_input() == spk_unknown) && !filter->is_empty())
-      log->err("[f5] %s: filter is not empty in uninitialized state");
-  }
-
-  void check_reset(const char *caller)
-  {
-    if (ofdd && (filter->get_output() != spk_unknown))
-      log->err("[f1] %s: output format did not change to spk_unknown", caller);
-
-    if (!filter->is_empty())
-      log->err("[f5] %s: filter is not empty", caller);
-
-    // todo: check buffered data
-  }
-
-public:
-  FilterTester(Filter *_filter, Log *_log)
-  {
-    filter = _filter;
-    log = _log;
-    update_formats();
-  }
-
-  void reset()
-  {
-    check_formats("before reset()");
-
-    filter->reset();
-
-    check_reset("after reset()");
-    check_formats("after reset()");
-  }
-
-  /////////////////////////////////////////////////////////
-  // Sink interface
-
-  bool query_input(Speakers _spk) const 
-  {
-    return filter->query_input(_spk);
-  }
-
-  bool set_input(Speakers _spk)
-  {
-    check_formats("before set_input()");
-
-    bool query = filter->query_input(_spk);
-    bool result = filter->set_input(_spk);
-
-    if (query != result)
-      log->err("[k3] set_input(): query_input() lies");
-
-    if (result)
-    {
-      // after successful format change filter must 
-      // update input and output formats
-      if (filter->get_input() != _spk)
-        log->err("[k4] set_input(): new format was not set");
-      update_formats();
-    }
-    else
-    {
-      // if format change failed input and output must 
-      // reamin unchanged or require initialization
-      if (filter->get_input() == spk_unknown)
-        // filter requires reinit so formats was changed
-        update_formats();
-      else
-        // formats stay unchanged
-        check_formats("set_input()");
-    }
-
-    // filter must reset in either case
-    check_reset("set_input()"); 
-    return result;
-  }
-
-  Speakers get_input() const
-  {
-    return filter->get_input();
-  }
-
-  bool process(const Chunk *_chunk)
-  {
-    // check input parameters
-    if (!_chunk)
-    {
-      log->err("process(): null chunk pointer!!!");
-      return false;
-    }
-
-    bool input_format_change = (_chunk->spk != filter->get_input());
-    bool query = true;
-
-    check_formats("before process()");
-
-    if (input_format_change)
-      query = filter->query_input(_chunk->spk);
-
-    bool result = filter->process(_chunk);
-
-    if (input_format_change)
-    {
-      if (query != result)
-        log->err("[k3] process(): query_input() lies");
-
-      if (result)
-      {
-        // successful format change
-        // filter must update input and output formats
-        if (filter->get_input() != _chunk->spk)
-          log->err("[k4] process(): new format was not set");
-        update_formats();
-      }
-      else
-      {
-        // if format change failed input and output must 
-        // reamin unchanged or require initialization
-        if (filter->get_input() == spk_unknown)
-          update_formats();
-        else
-          check_formats("process()");
-      }
-    }
-    else
-      check_formats("after process()");
-
-    return result;
-  }
-
-  /////////////////////////////////////////////////////////
-  // Source interface
-
-  Speakers get_output() const
-  {
-    return filter->get_output();
-  }
-
-  bool is_empty() const
-  {
-    return filter->is_empty();
-  }
-
-  bool get_chunk(Chunk *_chunk)
-  {
-    // check input parameters
-    if (!_chunk)
-    {
-      log->err("get_chunk(): null chunk pointer!!!");
-      return false;
-    }
-
-    // check filter state correctness
-    // get_chunk() must be called only in full state
-    if (filter->is_empty())
-      log->err("get_chunk() is called in empty state");
-
-    check_formats("before get_chunk()");
-
-    Speakers spk = filter->get_output();
-
-    if (!filter->get_chunk(_chunk))
-      return false;
-
-    if (_chunk->spk != spk)
-      log->err("[s1] get_chunk(): get_output() lies");
-
-    check_formats("after get_chunk()");
-
-    return true;
-  }
+static const int formats[] = 
+{ 
+  FORMAT_UNKNOWN, // unspecified format
+  FORMAT_LINEAR,
+  FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCMFLOAT,
+  FORMAT_PCM16_LE, FORMAT_PCM24_LE, FORMAT_PCM32_LE, FORMAT_PCMFLOAT_LE,
+  FORMAT_PES, FORMAT_SPDIF,
+  FORMAT_AC3, FORMAT_MPA, FORMAT_DTS, FORMAT_AAC, FORMAT_OGG
 };
 
+static const int modes[] = 
+{
+  0, // unspecified mode
+  MODE_1_0,     MODE_2_0,     MODE_3_0,     MODE_2_1,     MODE_3_1,     MODE_2_2,     MODE_3_2,
+  MODE_1_0_LFE, MODE_2_0_LFE, MODE_3_0_LFE, MODE_2_1_LFE, MODE_3_1_LFE, MODE_2_2_LFE, MODE_3_2_LFE
+};
+
+static const int sample_rates[] = 
+{
+  0, // unspecified sample rate
+  192000, 96000, 48000, 24000, 12000,
+  176400, 88200, 44100, 22050, 11025, 
+  128000, 64000, 32000, 16000, 8000,
+};
+
+static const int n_formats = array_size(formats);
+static const int n_modes = array_size(modes);
+static const int n_sample_rates = array_size(sample_rates);
+
+
+
+
+int test_rules(Log *log);
+int test_rules_filter(Log *log, Filter *filter, const char *filter_name, 
+  Speakers spk_supported1, const char *file_name1, 
+  Speakers spk_supported2, const char *file_name2, 
+  Speakers spk_unsupported);
+int test_rules_filter_int(Log *log, Filter *filter,
+  Speakers spk_supported, const char *filename, 
+  Speakers spk_supported2, const char *filename2, 
+  Speakers spk_unsupported);
 
 int test_rules(Log *log)
 {
+  // Base filter
   NullFilter     null;
-  AGC            agc;
-  Converter      conv(2048);
+
+  // Rawdata filters
+  Converter      conv_ll(2048);
+  Converter      conv_lr(2048);
+  Converter      conv_rl(2048);
+  Converter      conv_rr(2048);
   AudioDecoder   dec;
-  Delay          delay;
-  DVDDecoder     dvd;
-  FilterChain    chain;
-  Levels         levels;
-  AudioProcessor proc(2048);
   Demux          demux;
   Spdifer        spdifer;
 
+  // Processing filters
+  AGC            agc;
+  Delay          delay;
+  Levels         levels;
+
+  // Aggregate filters
+  DVDDecoder     dvd;
+  FilterChain    chain;
+  AudioProcessor proc(2048);
+
+  // Setup filters
+
+  conv_ll.set_format(FORMAT_LINEAR);
+  conv_lr.set_format(FORMAT_PCM16);
+  conv_rl.set_format(FORMAT_LINEAR);
+  conv_rr.set_format(FORMAT_PCM16);
+
   log->open_group("Test filters");
+
+
+  // Base filter
+
+  test_rules_filter(log, &null,    "NullFilter", 
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
+  // Rawdata filters
+
+  test_rules_filter(log, &conv_ll, "Converter linear->linear",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &conv_lr, "Converter linear->raw",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &conv_rl, "Converter raw->linear",
+    Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_PCM16, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &conv_rr, "Converter raw->raw",
+    Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_PCM16, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &dec, "AudioDecoder",
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000), "test.ac3",
+    Speakers(FORMAT_AC3, 0, 0), "test.ac3",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &demux, "Demuxer",
+    Speakers(FORMAT_PES, 0, 0), "test.ac3.pes",
+    Speakers(FORMAT_PES, MODE_STEREO, 48000), "test.ac3.pes",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &spdifer, "Spdifer",
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000), "test.ac3",
+    Speakers(FORMAT_AC3, 0, 0), "test.ac3",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
+
+  // Processing filters
+
+  test_rules_filter(log, &agc,     "AGC",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
+    
+/*
   test_rules_filter(log, &null,    "NullFilter");
   test_rules_filter(log, &agc,     "AGC");
   test_rules_filter(log, &conv,    "Converter");
@@ -410,76 +323,471 @@ int test_rules(Log *log)
   test_rules_filter(log, &proc,    "AudioProcessor");
   test_rules_filter(log, &demux,   "Demux");
   test_rules_filter(log, &spdifer, "Spdifer");
+*/
   return log->close_group();
 }
 
 
-static const int formats[] = 
-{ 
-  FORMAT_LINEAR,
-  FORMAT_PCM16,
-  FORMAT_PCM24,
-  FORMAT_PCM32,
-  FORMAT_PCMFLOAT,
-  FORMAT_PCM16_LE,
-  FORMAT_PCM24_LE,
-  FORMAT_PCM32_LE,
-  FORMAT_PCMFLOAT_LE,
-  FORMAT_PES,
-  FORMAT_SPDIF,
-  FORMAT_AC3,
-  FORMAT_MPA,
-  FORMAT_DTS,
-  FORMAT_AAC,
-  FORMAT_OGG,
-  FORMAT_UNKNOWN
-};
 
-static const int modes[] = 
+int test_rules_filter(Log *log, Filter *filter, const char *filter_name, 
+  Speakers spk_supported, const char *filename, 
+  Speakers spk_supported2, const char *filename2, 
+  Speakers spk_unsupported)
 {
-  MODE_1_0,
-  MODE_2_0,
-  MODE_3_0,
-  MODE_2_1,
-  MODE_3_1,
-  MODE_2_2,
-  MODE_3_2,
-  MODE_1_0_LFE,
-  MODE_2_0_LFE,
-  MODE_3_0_LFE,
-  MODE_2_1_LFE,
-  MODE_3_1_LFE,
-  MODE_2_2_LFE,
-  MODE_3_2_LFE,
-  0 // unspecified mode
-};
+  const char *err = 0;
+  log->open_group("Testing %s", filter_name);
+  test_rules_filter_int(log, filter, 
+    spk_supported, filename, 
+    spk_supported2, filename2, 
+    spk_unsupported);
+  return log->close_group();
+}
 
-static const int sample_rates[] = 
+
+int test_rules_filter_int(Log *log, Filter *filter,
+  Speakers spk_supported, const char *filename, 
+  Speakers spk_supported2, const char *filename2, 
+  Speakers spk_unsupported)
 {
-  192000, 96000, 48000, 24000, 12000,
-  176400, 88200, 44100, 22050, 11025, 
-  128000, 64000, 32000, 16000, 8000,
-  0 // unspecified sample rate
-};
+  const data_size = 8192;
+  TestSource src;
+  Chunk chunk;
 
-static const int n_formats = array_size(formats);
-static const int n_modes = array_size(modes);
-static const int n_sample_rates = array_size(sample_rates);
-
-int test_rules_filter(Log *log, Filter *filter, const char *filter_name)
-{
   FilterTester f(filter, log);
-  log->open_group("Testing %s filter", filter_name);
 
+  /////////////////////////////////////////////////////////
+  // Most used operations 
+
+  #define SET_INPUT_OK(spk, err_text)   \
+    if (!f.set_input(spk))              \
+      return log->err(err_text, spk.format_text(), spk.mode_text(), spk.sample_rate);
+
+  #define SET_INPUT_FAIL(spk, err_text) \
+    if (f.set_input(spk))               \
+      return log->err(err_text, spk.format_text(), spk.mode_text(), spk.sample_rate);
+
+  #define PROCESS_OK(chunk, err_text)   \
+    if (!f.process(&chunk))             \
+      return log->err(err_text, chunk.spk.format_text(), chunk.spk.mode_text(), chunk.spk.sample_rate);
+
+  #define PROCESS_FAIL(chunk, err_text) \
+    if (f.process(&chunk))              \
+      return log->err(err_text, chunk.spk.format_text(), chunk.spk.mode_text(), chunk.spk.sample_rate);
+
+  #define GET_CHUNK_OK(chunk, err_text) \
+    if (!f.get_chunk(&chunk))           \
+      return log->err(err_text);
+
+  #define FILL_FILTER                   \
+    while (f.is_empty())                \
+    {                                   \
+      src.get_chunk(&chunk);            \
+      PROCESS_OK(chunk, "process(%s %s %i) failed"); \
+    }
+
+  #define EMPTY_FILTER                  \
+    while (!f.is_empty())               \
+      GET_CHUNK_OK(chunk, "get_chunk() failed");
+
+
+  /////////////////////////////////////////////////////////
+  // Check sources
+
+  src.open(spk_supported, filename, data_size);
+  if (!src.is_open())
+    return log->err("Cannot open file %s", filename);
+
+  if (src.is_empty())
+    return log->err("Source is empty");
+
+  if (!src.get_chunk(&chunk))
+    return log->err("Cannot get chunk from source");
+
+  if (chunk.spk != spk_supported)
+    return log->err("Source has wrong fromat");
+
+  if (chunk.size != data_size)
+    return log->err("Source has wrong chunk size");
+
+  src.open(spk_supported2, filename2, data_size);
+  if (!src.is_open())
+    return log->err("Cannot open file %s", filename2);
+
+  if (src.is_empty())
+    return log->err("Source2 is empty");
+
+  if (!src.get_chunk(&chunk))
+    return log->err("Cannot get chunk from source2");
+
+  if (chunk.spk != spk_supported2)
+    return log->err("Source2 has wrong format");
+
+  if (chunk.size != data_size)
+    return log->err("Source2 has wrong chunk size");
+
+  /////////////////////////////////////////////////////////
   // Filter should be created in uninitialized state
+
   if (f.get_input() != spk_unknown)
     log->msg("Filter was created in initialized state");
 
-  // Try to set different formats
+  /////////////////////////////////////////////////////////
+  // Check output format dependency
+
+  SET_INPUT_OK(spk_supported, "Set format: %s %s %i failed");
+  if (f.get_output().is_unknown())
+    log->msg("Output format is data-dependent");
+
+  /////////////////////////////////////////////////////////
+  // Determine buffering
+
+  {
+    size_t size = 0;
+    bool empty_chunks = false;
+    bool buffering = false;
+
+    src.open(spk_supported, filename, 1);
+    src.get_chunk(&chunk);
+    SET_INPUT_OK(spk_supported, "Set format: %s %s %i failed");
+    PROCESS_OK(chunk, "process(%s %s %i) failed");
+
+    // block-buffering filter may generate empty chunks
+    // but it is bad strategy
+    while (!f.is_empty())
+    {
+      GET_CHUNK_OK(chunk, "get_chunk() failed");
+      size += chunk.size;
+      if (chunk.is_empty())
+        empty_chunks = true;
+    }
+
+    if (size == 0)
+      log->msg("Filter possibly uses block buffering");
+
+    if (empty_chunks)
+      log->msg("Filter generates unnesesary empty chunks");
+  }
+
+  /////////////////////////////////////////////////////////
+  // Format change crash test.
+  // Try to set numerous formats. 
+
+  log->msg("Format change crash test");
+
   for (int i_format = 0; i_format < n_formats; i_format++)
     for (int i_mode = 0; i_mode < n_modes; i_mode++)
       for (int i_sample_rate = 0; i_sample_rate < n_sample_rates; i_sample_rate++)
         f.set_input(Speakers(formats[i_format], modes[i_mode], sample_rates[i_sample_rate]));
 
-  return log->close_group();
+  /////////////////////////////////////////////////////////
+  // Forced format change 1. 
+  // Empty filter, set_input()
+
+  log->msg("Forced format change 1. Empty filter, set_input()");
+
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  SET_INPUT_OK(spk_supported,     "set_input(same format: %s %s %i) failed");
+  SET_INPUT_OK(spk_supported2,    "set_input(new format: %s %s %i) failed");
+  SET_INPUT_FAIL(spk_unsupported, "set_input(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Forced format change 2. 
+  // Empty filter, process(empty chunk)
+
+  log->msg("Forced format change 2. Empty filter, process(empty chunk)");
+
+  // 2.1 - format change to the same format
+  chunk.set_empty(spk_supported);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(same format: %s %s %i) failed");
+
+  // 2.2 - format change to the new format
+  chunk.set_empty(spk_supported2);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
+
+  // 2.3 - format change to the unsupported format
+  chunk.set_empty(spk_unsupported);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Forced format change 3. 
+  // Empty filter, process(data chunk)
+
+  log->msg("Forced format change 3. Empty filter, process(data chunk)");
+
+  // 3.1 - format change to the same format
+  src.open(spk_supported, filename, data_size);
+  src.get_chunk(&chunk);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(same format: %s %s %i) failed");
+
+  // 3.2 - format change to the new format
+  src.open(spk_supported2, filename2, data_size);
+  src.get_chunk(&chunk);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
+
+  // 3.3 - format change to the unsupported format
+  // (use noise source for unsupported format)
+  src.open(spk_unsupported, 0, data_size);
+  src.get_chunk(&chunk);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Forced format change 4. 
+  // Full filter, set_input()
+
+  log->msg("Forced format change 4. Full filter, set_input()");
+
+  // 4.1 - format change to the same format
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  SET_INPUT_OK(spk_supported,     "set_input(same format: %s %s %i) failed");
+
+  // 4.2 - format change to the new format
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  SET_INPUT_OK(spk_supported2,    "set_input(new format: %s %s %i) failed");
+
+  // 4.3 - format change to the usupported format
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  SET_INPUT_FAIL(spk_unsupported, "set_input(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Forced format change 5. 
+  // Cycled filter, set_input()
+
+  log->msg("Forced format change 5. Cycled filter, set_input()");
+
+  // 5.1 - format change to the same format
+
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  EMPTY_FILTER;
+  SET_INPUT_OK(spk_supported,     "set_input(same format: %s %s %i) failed");
+
+  // 5.2 - format change to the new format
+
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  EMPTY_FILTER;
+  SET_INPUT_OK(spk_supported2,    "set_input(new format: %s %s %i) failed");
+
+  // 5.3 - format change to the unsupported format
+
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  EMPTY_FILTER;
+  SET_INPUT_FAIL(spk_unsupported, "set_input(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Forced format change 6.
+  // Cycled filter, process(empty chunk)
+
+  log->msg("Forced format change 6. Cycled filter, process(empty chunk)");
+
+  // 6.1 - format change to the new format
+
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  EMPTY_FILTER;
+
+  chunk.set_empty(spk_supported2);
+  PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
+
+  // 6.2 - format change to the unsupported format
+
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  EMPTY_FILTER;
+
+  chunk.set_empty(spk_unsupported);
+  PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Forced format change 7.
+  // Cycled filter, process(data chunk)
+
+  log->msg("Forced format change 7. Cycled filter, process(data chunk)");
+
+  // 7.1 - format change to the new format
+
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  EMPTY_FILTER;
+
+  src.open(spk_supported2, filename2, data_size);
+  src.get_chunk(&chunk);
+  PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
+
+  // 7.2 - format change to the unsupported format
+
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  FILL_FILTER;
+  EMPTY_FILTER;
+
+  src.open(spk_unsupported, 0, data_size);
+  src.get_chunk(&chunk);
+  PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Flushing 1. 
+  // Empty filter, process(empty chunk)
+
+  log->msg("Flushing 1. Empty filter, process(empty chunk)");
+
+  // 1.1 same format (flush current stream)
+
+  chunk.set_empty(spk_supported, false, 0, true);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(%s %s %i) failed");
+  if (!f.is_empty())
+  {
+    size_t size = 0;
+    while (!f.is_empty())
+    {
+      GET_CHUNK_OK(chunk,         "get_chunk() failed");
+      size += chunk.size;
+    }
+    if (size)
+      log->err("Empty filter generates output on flushing");
+    if (!chunk.eos)
+      log->err("Empty filter did not end the stream");
+  }
+  else
+    log->msg("Empty filter does not pass the eos-chunk");
+
+  // 1.2 new format (forced format change and then flush new stream)
+
+  chunk.set_empty(spk_supported2, false, 0, true);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(%s %s %i) failed");
+  if (!f.is_empty())
+  {
+    size_t size = 0;
+    while (!f.is_empty())
+    {
+      GET_CHUNK_OK(chunk,         "get_chunk() failed");
+      size += chunk.size;
+    }
+    if (size)
+      log->err("Empty filter generates output on flushing");
+    if (!chunk.eos)
+      log->err("Empty filter did not end the stream");
+  }
+  else
+    log->msg("Empty filter does not pass the eos-chunk");
+
+  // 1.3 unsupported format (terminate current stream)
+
+  chunk.set_empty(spk_unsupported, false, 0, true);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Flushing 2. 
+  // Empty filter, process(data chunk)
+
+  log->msg("Flushing 2. Empty filter, process(data chunk)");
+
+  // 2.1 same format
+
+  src.open(spk_supported, filename, data_size);
+  src.get_chunk(&chunk);
+  chunk.eos = true;
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(%s %s %i) failed");
+  if (!f.is_empty())
+  {
+    EMPTY_FILTER;
+    if (!chunk.eos)
+      log->err("Filter did not end the stream");
+  }
+  else
+    log->msg("Filter does not pass the eos-chunk");
+
+  // 2.2 new format (forced format change and then flush new stream)
+
+  src.open(spk_supported2, filename, data_size);
+  src.get_chunk(&chunk);
+  chunk.eos = true;
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(%s %s %i) failed");
+  if (!f.is_empty())
+  {
+    EMPTY_FILTER;
+    if (!chunk.eos)
+      log->err("Empty filter did not end the stream");
+  }
+  else
+    log->msg("Empty filter does not pass the eos-chunk");
+
+  // 2.3 unsupported format
+
+  src.open(spk_unsupported, 0, data_size);
+  src.get_chunk(&chunk);
+  chunk.eos = true;
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
+/*
+  /////////////////////////////////////////////////////////
+  // Flushing 3. 
+  // Cycled filter, process(empty chunk)
+
+  log->msg("Flushing 3. Cycled filter, process(empty chunk)");
+
+  // 2.1 same format
+
+  src.open(spk_supported, filename, data_size);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+
+  src.get_chunk(&chunk);
+  PROCESS_OK(chunk,               "process(%s %s %i) failed");
+  if (!f.is_empty())
+  {
+    EMPTY_FILTER;
+    if (!chunk.eos)
+      log->err("Filter did not end the stream");
+  }
+  else
+    log->msg("Filter does not pass the eos-chunk");
+
+  // 2.2 new format (forced format change and then flush new stream)
+
+  src.open(spk_supported2, filename, data_size);
+  src.get_chunk(&chunk);
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_OK(chunk,               "process(%s %s %i) failed");
+  if (!f.is_empty())
+  {
+    EMPTY_FILTER;
+    if (!chunk.eos)
+      log->err("Empty filter did not end the stream");
+  }
+  else
+    log->msg("Empty filter does not pass the eos-chunk");
+
+  // 2.3 unsupported format
+
+  src.open(spk_unsupported, 0, data_size);
+  src.get_chunk(&chunk);
+  chunk.eos = true;
+  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
+*/
+  return 0;
 }

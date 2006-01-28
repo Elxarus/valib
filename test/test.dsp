@@ -143,6 +143,10 @@ SOURCE=..\liba52\tables.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\filter_tester.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_crash.cpp
 # End Source File
 # Begin Source File
@@ -160,6 +164,10 @@ SOURCE=.\test_null.cpp
 # Begin Source File
 
 SOURCE=.\test_proc.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\test_source.h
 # End Source File
 # Begin Source File
 
