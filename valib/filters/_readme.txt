@@ -48,29 +48,29 @@ All filters:
 
 Raw data
 ========
-             NF R QSGP OEC  IP FL BUF 
-Convert      +  + ++-+ +-+  -  +   +  
-Counter      +  + +--+ ---  +  -   -
-Decoder      +  + ++-+ +++  -  -   -    ???? (must require flushing)
-Demux        +  + +--+ +--  +  -   -
-Spdifer      +  + +--- +-+  -  -   +
+                NF R QSGP OEC  IP FL BUF 
+Convert         +  + ++-+ +-+  -  +   +  
+Counter         +  + +--+ ---  +  -   -
+Decoder         +  + ++-+ +++  -  -   -    ???? (must require flushing)
+Demux           +  + +--+ +--  +  -   -
+Spdifer         +  + +--- +-+  -  -   +
 
 Processing
 ==========
-             NF R QSGP OEC  IP FL BUF
-AGC          +  + ---- --+  -  +   +
-Mixer        +  - -+-- +-+  *  -   +
-Delay        +  + ---+ ---  +  -   +
-BassRedir    +  + -+-+ ---  +  -   - 
-Levels       +  + ---- --+  +  -   -
-Dejitter     +  + ---+ --+  +  -   -
+                NF R QSGP OEC  IP FL BUF
+AGC             +  + ---- --+  -  +   +
+Mixer           +  - -+-- +-+  *  -   +
+Delay           +  + ---+ ---  +  -   +
+BassRedir       +  + -+-+ ---  +  -   - 
+Levels          +  + ---- --+  +  -   -
+Dejitter        +  + ---+ --+  +  -   -
 
 Aggregates
 ==========
-             NF R QSGP OEC  IP FL BUF
-FilterChain  +  + ++++ +++         -
-Proc         -  + ++++ +++         -
-DVDDecoder   -  + ++++ +++         -
+                NF R QSGP OEC  IP FL BUF
+AudioProcessor  -  + ++++ +++         -
+FilterChain     +  + ++++ +++         -
+DVDDecoder      -  + ++++ +++         -
 
 
 

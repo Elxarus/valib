@@ -726,14 +726,14 @@ int main(int argc, char *argv[])
     if (file.load_frame())
     {
       if (spdif)
-        chunk.set(Speakers(FORMAT_UNKNOWN, 0, 0), parser->get_frame(), parser->get_frame_size());
+        chunk.set_rawdata(Speakers(FORMAT_UNKNOWN, 0, 0), parser->get_frame(), parser->get_frame_size());
       else
       {
         // Decode
         if (!file.decode_frame())
           continue;
 
-        chunk.set(file.get_spk(), file.get_samples(), file.get_nsamples());
+        chunk.set_linear(file.get_spk(), file.get_samples(), file.get_nsamples());
       }
 
       /////////////////////////////////////////////////////
@@ -778,9 +778,9 @@ int main(int argc, char *argv[])
   // Flushing
 
   if (spdif)
-    chunk.set(Speakers(FORMAT_UNKNOWN, 0, 0), 0, 0);
+    chunk.set_empty(Speakers(FORMAT_UNKNOWN, 0, 0));
   else
-    chunk.set(file.get_spk(), 0, 0);
+    chunk.set_empty(file.get_spk());
   chunk.eos = true;
 
   if (!filter->process_to(&chunk, sink))
