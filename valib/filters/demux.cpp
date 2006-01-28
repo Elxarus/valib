@@ -2,7 +2,9 @@
 #include "demux.h"
 
 Demux::Demux()
-{}
+{
+  reset();
+}
 
 void 
 Demux::reset()
@@ -12,6 +14,7 @@ Demux::reset()
   pes_size  = 0;
   stream    = 0;
   substream = 0;
+  stream_spk = spk_unknown;
   pes.reset();
 }
 
@@ -77,7 +80,6 @@ Demux::process(const Chunk *_chunk)
     }
   }
 
-  spk     = stream_spk; // get_output() is always right
   size    = write_len;
   return true;
 }
