@@ -139,6 +139,8 @@ Mixer::get_chunk(Chunk *_chunk)
     size_t n = MIN(nsamples, size);
     io_mixfunc_t mixfunc = io_mix_tbl[spk.nch()-1][out_spk.nch()-1];
     (this->*mixfunc)(samples, buf.get_samples(), n);
+    samples += n;
+    size -= n;
 
     // fill output chunk
     _chunk->set_linear
@@ -148,9 +150,6 @@ Mixer::get_chunk(Chunk *_chunk)
       sync, time, 
       flushing && !size
     );
-
-    samples += n;
-    size -= n;
 
     sync = false;
     flushing = flushing && size;
