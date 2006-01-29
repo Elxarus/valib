@@ -28,6 +28,9 @@ protected:
   bool     ofdd;       // output format is data-dependent
   Speakers spk_output; // output format
 
+  bool     stream;     // filter has started a stream
+  bool     flushing;   // filter must flush the started stream
+
   void update_formats()
   {
     spk_input = filter->get_input();
@@ -82,6 +85,9 @@ public:
 
   void reset()
   {
+    stream = false;
+    flushing = false;
+
     check_formats("before reset()");
 
     filter->reset();
@@ -100,6 +106,9 @@ public:
 
   bool set_input(Speakers _spk)
   {
+    stream = false;
+    flushing = false;
+
     check_formats("before set_input()");
 
     bool query = filter->query_input(_spk);
@@ -125,11 +134,11 @@ public:
         update_formats();
       else
         // formats stay unchanged
-        check_formats("set_input()");
+        check_formats("after set_input()");
     }
 
     // filter must reset in either case
-    check_reset("set_input()"); 
+    check_reset("after set_input()"); 
     return result;
   }
 
@@ -140,6 +149,9 @@ public:
 
   bool process(const Chunk *_chunk)
   {
+    bool input_format_change = false;
+    bool query = true;
+
     // check input parameters
     if (!_chunk)
     {
@@ -147,18 +159,29 @@ public:
       return false;
     }
 
-    bool input_format_change = (_chunk->spk != filter->get_input());
-    bool query = true;
+    // process() must be called only in empty state
+    if (!is_empty())
+    {
+      log->err("process() is called in full state");
+      return false;
+    }
+
+    // detect input format change
+    if (_chunk->spk != get_input())
+    {
+      input_format_change = true;
+      query = filter->query_input(_chunk->spk);
+    }
 
     check_formats("before process()");
-
-    if (input_format_change)
-      query = filter->query_input(_chunk->spk);
 
     bool result = filter->process(_chunk);
 
     if (input_format_change)
     {
+      stream = false;
+      flushing = false;
+
       if (query != result)
         log->err("[k3] process(): query_input() lies");
 
@@ -175,13 +198,33 @@ public:
         // if format change failed input and output must 
         // reamin unchanged or require initialization
         if (filter->get_input() == spk_unknown)
+          // filter requires reinit so formats was changed
           update_formats();
         else
-          check_formats("process()");
+          // formats must stay unchanged
+          check_formats("after set_input()");
       }
     }
     else
-      check_formats("after process()");
+    {
+      if (!result && filter->get_input() == spk_unknown)
+        // filter requires reinit so formats was changed
+        update_formats();
+      else 
+        // formats must stay unchanged
+        check_formats("after process()");
+    }
+
+    // filter starts a stream when it fills
+    if (!is_empty())
+      stream = true;
+
+    // filter must flush a started stream
+    if (_chunk->eos && stream)
+      if (is_empty())
+        log->err("process(): filter does not want to end the stream");
+      else
+        flushing = true;
 
     return result;
   }
@@ -208,10 +251,12 @@ public:
       return false;
     }
 
-    // check filter state correctness
     // get_chunk() must be called only in full state
     if (filter->is_empty())
+    {
       log->err("get_chunk() is called in empty state");
+      return false;
+    }
 
     check_formats("before get_chunk()");
 
@@ -224,6 +269,18 @@ public:
       log->err("[s1] get_chunk(): get_output() lies");
 
     check_formats("after get_chunk()");
+
+    // filter has ended the stream
+    if (_chunk->eos)
+      stream = false;
+
+    // filter starts a stream again
+    if (!is_empty())
+      stream = true;
+
+    // filter must end the stream in flushing mode
+    if (flushing && stream && is_empty())
+      log->err("Filter did not end the stream");
 
     return true;
   }
