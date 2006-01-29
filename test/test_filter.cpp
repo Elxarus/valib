@@ -234,7 +234,6 @@ int test_rules(Log *log)
   Converter      conv_ll(2048);
   Converter      conv_lr(2048);
   Converter      conv_rl(2048);
-  Converter      conv_rr(2048);
   AudioDecoder   dec;
   Demux          demux;
   Spdifer        spdifer;
@@ -254,7 +253,6 @@ int test_rules(Log *log)
   conv_ll.set_format(FORMAT_LINEAR);
   conv_lr.set_format(FORMAT_PCM16);
   conv_rl.set_format(FORMAT_LINEAR);
-  conv_rr.set_format(FORMAT_PCM16);
 
   log->open_group("Test filters");
 
@@ -280,12 +278,7 @@ int test_rules(Log *log)
 
   test_rules_filter(log, &conv_rl, "Converter raw->linear",
     Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
-    Speakers(FORMAT_PCM16, MODE_5_1, 96000), 0,
-    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
-
-  test_rules_filter(log, &conv_rr, "Converter raw->raw",
-    Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
-    Speakers(FORMAT_PCM16, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_PCM32, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
   test_rules_filter(log, &dec, "AudioDecoder",
@@ -480,6 +473,15 @@ int test_rules_filter_int(Log *log, Filter *filter,
         f.set_input(Speakers(formats[i_format], modes[i_mode], sample_rates[i_sample_rate]));
 
   /////////////////////////////////////////////////////////
+  // Format change
+  //
+  // Test format change scenarios. Most of work is done by 
+  // FilterTester so we do not explicitly check the filter
+  // to actually change the stream. We just run different
+  // scenarios to force traps to work...
+  /////////////////////////////////////////////////////////
+
+  /////////////////////////////////////////////////////////
   // Forced format change 1. 
   // Empty filter, set_input()
 
@@ -634,6 +636,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
 
   // 7.2 - format change to the unsupported format
+  // (use noise source for unsupported format)
 
   src.open(spk_supported, filename, data_size);
   SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
@@ -643,6 +646,15 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.open(spk_unsupported, 0, data_size);
   src.get_chunk(&chunk);
   PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Flushing
+  //
+  // Test flushing scenarios. Most of work is done by 
+  // FilterTester so we do not explicitly check the filter
+  // to end the stream.  We just run different scenarios to
+  // force traps to work...
+  /////////////////////////////////////////////////////////
 
   /////////////////////////////////////////////////////////
   // Flushing 1. 
@@ -665,8 +677,6 @@ int test_rules_filter_int(Log *log, Filter *filter,
     }
     if (size)
       log->err("Empty filter generates output on flushing");
-    if (!chunk.eos)
-      log->err("Empty filter did not end the stream");
   }
   else
     log->msg("Empty filter does not pass the eos-chunk");
@@ -686,8 +696,6 @@ int test_rules_filter_int(Log *log, Filter *filter,
     }
     if (size)
       log->err("Empty filter generates output on flushing");
-    if (!chunk.eos)
-      log->err("Empty filter did not end the stream");
   }
   else
     log->msg("Empty filter does not pass the eos-chunk");
@@ -711,15 +719,11 @@ int test_rules_filter_int(Log *log, Filter *filter,
   chunk.eos = true;
   SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
-  if (!f.is_empty())
-  {
-    EMPTY_FILTER;
-    if (!chunk.eos)
-      log->err("Filter did not end the stream");
-  }
-  else
+  if (f.is_empty())
     log->msg("Filter does not pass the eos-chunk");
-
+  else
+    EMPTY_FILTER;
+ 
   // 2.2 new format (forced format change and then flush new stream)
 
   src.open(spk_supported2, filename, data_size);

@@ -143,10 +143,6 @@ SOURCE=..\liba52\tables.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\filter_tester.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\test_crash.cpp
 # End Source File
 # Begin Source File
@@ -483,6 +479,10 @@ SOURCE=..\valib\defs.h
 # Begin Source File
 
 SOURCE=..\valib\filter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filter_tester.h
 # End Source File
 # Begin Source File
 
