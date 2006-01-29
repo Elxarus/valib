@@ -280,7 +280,7 @@ public:
 
     // filter must end the stream in flushing mode
     if (flushing && stream && is_empty())
-      log->err("Filter did not end the stream");
+      log->err("get_chunk(): filter did not end the stream");
 
     return true;
   }

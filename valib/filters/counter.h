@@ -35,7 +35,7 @@ public:
   virtual bool process(const Chunk *_chunk)
   {
     FILTER_SAFE(NullFilter::receive_chunk(_chunk));
-    counter += _chunk->get_size();
+    counter += _chunk->size;
     return true;
   };
 };
