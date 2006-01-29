@@ -71,7 +71,7 @@ Converter::find_conversion(int _format, Speakers _spk) const
       if (_spk.format == formats_tbl[i])
         return pcm2linear_tbl[_spk.nch()-1][i];
   }
-  else
+  else if (_spk.format == FORMAT_LINEAR)
   {
     // find linear->pcm conversion function
     for (int i = 0; i < array_size(formats_tbl); i++)
