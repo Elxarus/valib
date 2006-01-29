@@ -95,18 +95,26 @@ Log::open_group(const char *msg, ...)
 }
 
 int 
-Log::close_group()
+Log::close_group(int _proper_errors)
 {
   print_header(level? level-1: 0);
 
   vtime_t elapsed = local_time() - time[level];
 
-  if (errors[level])
-    log_print(flags, f, "< Errors: %i (%i:%02i)\n", 
+  if (!errors[level] && !_proper_errors)
+    log_print(flags, f, "< Ok. (%i:%02i)\n", 
+      int(elapsed) / 60, int(elapsed) % 60);
+  else if (errors[level] == _proper_errors)
+    log_print(flags, f, "< Ok. Proper errors: %i (%i:%02i)\n", 
+      _proper_errors, int(elapsed) / 60, int(elapsed) % 60);
+  else if (!_proper_errors)
+    log_print(flags, f, "< Fail. Errors: %i (%i:%02i)\n", 
       errors[level], int(elapsed) / 60, int(elapsed) % 60);
   else
-    log_print(flags, f, "< Ok (%i:%02i)\n", 
-      int(elapsed) / 60, int(elapsed) % 60);
+    log_print(flags, f, "< Fail. Errors/proper errors: %i/%i (%i:%02i)\n", 
+      errors[level], _proper_errors, int(elapsed) / 60, int(elapsed) % 60);
+
+  errors[level] -= _proper_errors;
 
   if (level)
   {
