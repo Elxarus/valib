@@ -202,6 +202,10 @@ SOURCE=..\valib\filters\convert.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\counter.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\decoder.cpp
 # End Source File
 # Begin Source File
@@ -562,6 +566,10 @@ SOURCE=..\valib\source\raw_source.h
 # End Source File
 # End Group
 # End Group
+# Begin Source File
+
+SOURCE=.\all_filters.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\common.cpp

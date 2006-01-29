@@ -52,6 +52,7 @@ Format change
   * filter is empty and does not contain data
   * filter is full (only set_input())
   * filter is cycled through full state to empty
+  * filter is cycled and full again (only set_input())
   * ? filter is in flushing state (only set_input())
   Methods:
   * set_input()
@@ -343,6 +344,24 @@ int test_rules_filter_int(Log *log, Filter *filter,
     FILL_FILTER;                        \
     EMPTY_FILTER;
 
+  #define INIT_CYCLED_FULL(spk, filename) \
+    INIT_EMPTY(spk);                    \
+    src.open(spk, filename, data_size); \
+    FILL_FILTER;                        \
+    EMPTY_FILTER;                       \
+    FILL_FILTER;
+
+  // post-cycle to ensure correct filter state
+
+  #define POST_CYCLE                    \
+    FILL_FILTER;                        \
+    EMPTY_FILTER;
+
+  #define POST_NEW_CYCLE(spk, filename) \
+    src.open(spk, filename, data_size); \
+    FILL_FILTER;                        \
+    EMPTY_FILTER;
+
   /////////////////////////////////////////////////////////
   // Check sources
 
@@ -447,9 +466,18 @@ int test_rules_filter_int(Log *log, Filter *filter,
 
   log->msg("Forced format change 1. Empty filter, set_input()");
 
-  SET_INPUT_OK(spk_supported,     "Set format: %s %s %i failed");
+  // 1.1 - format change to the same format
+  INIT_EMPTY(spk_supported);
   SET_INPUT_OK(spk_supported,     "set_input(same format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported, filename);
+
+  // 1.2 - format change to the new format
+  INIT_EMPTY(spk_supported);
   SET_INPUT_OK(spk_supported2,    "set_input(new format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported2, filename2);
+
+  // 1.3 - format change to the unsupported format
+  INIT_EMPTY(spk_supported);
   SET_INPUT_FAIL(spk_unsupported, "set_input(wrong format: %s %s %i) succeeded");
 
   /////////////////////////////////////////////////////////
@@ -462,11 +490,13 @@ int test_rules_filter_int(Log *log, Filter *filter,
   INIT_EMPTY(spk_supported);
   chunk.set_empty(spk_supported);
   PROCESS_OK(chunk,               "process(same format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported, filename);
 
   // 2.2 - format change to the new format
   INIT_EMPTY(spk_supported);
   chunk.set_empty(spk_supported2);
   PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported2, filename);
 
   // 2.3 - format change to the unsupported format
   INIT_EMPTY(spk_supported);
@@ -484,12 +514,14 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.open(spk_supported, filename, data_size);
   src.get_chunk(&chunk);
   PROCESS_OK(chunk,               "process(same format: %s %s %i) failed");
+  POST_CYCLE;
 
   // 3.2 - format change to the new format
   INIT_EMPTY(spk_supported);
   src.open(spk_supported2, filename2, data_size);
   src.get_chunk(&chunk);
   PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
+  POST_CYCLE;
 
   // 3.3 - format change to the unsupported format
   // (use noise source for unsupported format)
@@ -507,10 +539,12 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 4.1 - format change to the same format
   INIT_FULL(spk_supported, filename);
   SET_INPUT_OK(spk_supported,     "set_input(same format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported, filename);
 
   // 4.2 - format change to the new format
   INIT_FULL(spk_supported, filename);
   SET_INPUT_OK(spk_supported2,    "set_input(new format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported2, filename2);
 
   // 4.3 - format change to the usupported format
   INIT_FULL(spk_supported, filename);
@@ -525,10 +559,12 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 5.1 - format change to the same format
   INIT_CYCLED(spk_supported, filename);
   SET_INPUT_OK(spk_supported,     "set_input(same format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported, filename);
 
   // 5.2 - format change to the new format
   INIT_CYCLED(spk_supported, filename);
   SET_INPUT_OK(spk_supported2,    "set_input(new format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported2, filename2);
 
   // 5.3 - format change to the unsupported format
   INIT_CYCLED(spk_supported, filename);
@@ -544,6 +580,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   INIT_CYCLED(spk_supported, filename);
   chunk.set_empty(spk_supported2);
   PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported2, filename2);
 
   // 6.2 - format change to the unsupported format
   INIT_CYCLED(spk_supported, filename);
@@ -561,6 +598,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.open(spk_supported2, filename2, data_size);
   src.get_chunk(&chunk);
   PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
+  POST_CYCLE;
 
   // 7.2 - format change to the unsupported format
   // (use noise source for unsupported format)
@@ -568,6 +606,26 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.open(spk_unsupported, 0, data_size);
   src.get_chunk(&chunk);
   PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Forced format change 8. 
+  // Cycled filter, set_input()
+
+  log->msg("Forced format change 8. Cycled full filter, set_input()");
+
+  // 8.1 - format change to the same format
+  INIT_CYCLED_FULL(spk_supported, filename);
+  SET_INPUT_OK(spk_supported,     "set_input(same format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported, filename);
+
+  // 8.2 - format change to the new format
+  INIT_CYCLED_FULL(spk_supported, filename);
+  SET_INPUT_OK(spk_supported2,    "set_input(new format: %s %s %i) failed");
+  POST_NEW_CYCLE(spk_supported2, filename2);
+
+  // 8.3 - format change to the unsupported format
+  INIT_CYCLED_FULL(spk_supported, filename);
+  SET_INPUT_FAIL(spk_unsupported, "set_input(wrong format: %s %s %i) succeeded");
 
   /////////////////////////////////////////////////////////
   // Flushing
