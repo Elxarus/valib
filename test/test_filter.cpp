@@ -1,5 +1,6 @@
 /*
-  General filters test
+  Test filters to comply format change rules and correctness of flushing.
+
 
 Check buffering
 ===============
@@ -53,36 +54,33 @@ Format change
   * filter is full (only set_input())
   * filter is cycled through full state to empty
   * filter is cycled and full again (only set_input())
-  * ? filter is in flushing state (only set_input())
   Methods:
   * set_input()
   * process() with empty chunk
   * process() with data chunk
   New format:
-  * same format (not nessesary for process())
+  * same format
   * new format
   * unsupported format
 
-  Total: 16 cases
+  Total: 24 cases
   * set_input(): 12 cases
-  * process(): 4 cases
+  * process(empty): 6 cases
+  * process(data): 6 cases
 
 * Flushing
   Filter state:
   * filter is empty and does not contain data
   * filter is cycled through full state to empty
-  * filter is full (only flush())
-  * ? filter is in flushing state (only flush())
   Methods:
-  * flush() (not implemented yet)
   * process() with empty chunk
   * process() with data chunk
   New format:
-  * same format (it is no format change for process())
+  * same format
   * new format
   * unsupported format
 
-  Total: 4 cases
+  Total: 12 cases
 
 */
 
@@ -170,7 +168,7 @@ int test_rules(Log *log)
   mixer_ib.set_output(Speakers(FORMAT_LINEAR, MODE_5_1, 48000));
   bass_redir_ip.set_freq(120);
   bass_redir_ip.set_enabled(true);
-  bass_redir_ip.set_freq(120);
+  bass_redir_ib.set_freq(120);
   bass_redir_ib.set_enabled(true);
 
   log->open_group("Test filters");
@@ -344,13 +342,6 @@ int test_rules_filter_int(Log *log, Filter *filter,
     FILL_FILTER;                        \
     EMPTY_FILTER;
 
-  #define INIT_CYCLED_FULL(spk, filename) \
-    INIT_EMPTY(spk);                    \
-    src.open(spk, filename, data_size); \
-    FILL_FILTER;                        \
-    EMPTY_FILTER;                       \
-    FILL_FILTER;
-
   // post-cycle to ensure correct filter state
 
   #define POST_CYCLE                    \
@@ -458,7 +449,20 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // FilterTester so we do not explicitly check the filter
   // to actually change the stream. We just run different
   // scenarios to force traps to work...
+  // 
+  // List of tests:                 format: same new wrong
+  // 1. Empty filter, set_input()            +    +    +
+  // 2. Empty filter, process(empty chunk)   +    +    +
+  // 3. Empty filter, process(data chunk)    +    +    +  
+  // 4. Full filter, set_input()             +    +    +   
+  // 5. Cycled filter, set_input()           +    +    +   
+  // 6. Cycled filter, process(empty chunk)  -    +    +   
+  // 7. Cycled filter, process(data chunk)   -    +    +   
+  // 8. Cycled full filter, set_input()      +    +    +   
+  //
+  // Total scenarios: 22
   /////////////////////////////////////////////////////////
+
 
   /////////////////////////////////////////////////////////
   // Forced format change 1. 
@@ -609,22 +613,25 @@ int test_rules_filter_int(Log *log, Filter *filter,
 
   /////////////////////////////////////////////////////////
   // Forced format change 8. 
-  // Cycled filter, set_input()
+  // Cycled full filter, set_input()
 
   log->msg("Forced format change 8. Cycled full filter, set_input()");
 
   // 8.1 - format change to the same format
-  INIT_CYCLED_FULL(spk_supported, filename);
+  INIT_CYCLED(spk_supported, filename);
+  FILL_FILTER;
   SET_INPUT_OK(spk_supported,     "set_input(same format: %s %s %i) failed");
   POST_NEW_CYCLE(spk_supported, filename);
 
   // 8.2 - format change to the new format
-  INIT_CYCLED_FULL(spk_supported, filename);
+  INIT_CYCLED(spk_supported, filename);
+  FILL_FILTER;
   SET_INPUT_OK(spk_supported2,    "set_input(new format: %s %s %i) failed");
   POST_NEW_CYCLE(spk_supported2, filename2);
 
   // 8.3 - format change to the unsupported format
-  INIT_CYCLED_FULL(spk_supported, filename);
+  INIT_CYCLED(spk_supported, filename);
+  FILL_FILTER;
   SET_INPUT_FAIL(spk_unsupported, "set_input(wrong format: %s %s %i) succeeded");
 
   /////////////////////////////////////////////////////////
@@ -634,6 +641,14 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // FilterTester so we do not explicitly check the filter
   // to end the stream.  We just run different scenarios to
   // force traps to work...
+  //
+  // List of tests:                 format: same new wrong
+  // 1. Empty filter, process(empty chunk)   +    +    +
+  // 2. Empty filter, process(data chunk)    +    +    +
+  // 3. Cycled filter, process(empty chunk)  +    +    +
+  // 4. Cycled filter, process(data chunk)   +    +    +
+  //
+  // Total scenarios: 12
   /////////////////////////////////////////////////////////
 
   /////////////////////////////////////////////////////////
