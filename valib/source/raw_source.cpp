@@ -17,6 +17,23 @@ RAWSource::open(Speakers _spk, const char *_filename, size_t _block_size)
   return true;
 }
 
+bool 
+RAWSource::open(Speakers _spk, FILE *_f, size_t _block_size)
+{
+  if (spk.format == FORMAT_LINEAR)
+    return false;
+
+  if (!f.open(_f))
+    return false;
+
+  if (!buf.allocate(_block_size))
+    return false;
+
+  spk = _spk;
+  block_size = _block_size;
+  return true;
+}
+
 void 
 RAWSource::close()
 { 

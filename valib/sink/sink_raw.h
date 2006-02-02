@@ -21,12 +21,21 @@ public:
   f(_filename, "wb") 
   {}
 
+  RAWRenderer(FILE *_f): 
+  f(_f) 
+  {}
+
   /////////////////////////////////////////////////////////
   // RAWRenderer interface
 
   bool open_file(const char *_filename)
   {
     return f.open(_filename, "wb");
+  }
+
+  bool open_file(FILE *_f)
+  {
+    return f.open(_f);
   }
 
   void close_file()

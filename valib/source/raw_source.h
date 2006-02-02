@@ -20,10 +20,14 @@ public:
   RAWSource(Speakers _spk, const char *_filename, size_t _block_size = 65536)
   { open (_spk, _filename, _block_size); }
 
+  RAWSource(Speakers _spk, FILE *_f, size_t _block_size = 65536)
+  { open (_spk, _f, _block_size); }
+
   /////////////////////////////////////////////////////////
   // FileSource interface
 
   bool open(Speakers _spk, const char *_filename, size_t _block_size = 65536);
+  bool open(Speakers _spk, FILE *_f, size_t _block_size = 65536);
   void close();
 
   inline void seek(size_t _pos) { f.seek(_pos);       }

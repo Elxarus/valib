@@ -11,6 +11,7 @@ class AutoFile
 {
 protected:
   FILE *f;
+  bool close_file;
   int filesize;
 
 public:
@@ -23,10 +24,15 @@ public:
     f = 0;
     open(filename, mode);
   }
+  AutoFile(FILE *_f)
+  {
+    f = 0;
+    open(_f);
+  }
+
   ~AutoFile()
   {
-    if (f) 
-      fclose(f);
+    close();
   };
 
   bool open(const char *filename, const char *mode = "rb")
@@ -38,13 +44,30 @@ public:
       fseek(f, 0, SEEK_END);
       filesize = ftell(f);
       fseek(f, 0, SEEK_SET);
+      close_file = true;
+    }
+    return is_open();
+  }
+
+  bool open(FILE *_f)
+  {
+    if (f) close();
+    filesize = 0;
+    f = _f;
+    if (f)
+    {
+      long old_pos = ftell(f);
+      fseek(f, 0, SEEK_END);
+      filesize = ftell(f);
+      fseek(f, old_pos, SEEK_SET);
+      close_file = false;
     }
     return is_open();
   }
 
   void close()
   {
-    if (f)
+    if (f && close_file)
       fclose(f);
     f = 0;
   }
