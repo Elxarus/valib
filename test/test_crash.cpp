@@ -58,6 +58,7 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
   Noise noise;
   Chunk ichunk;
   Chunk ochunk;
+  bool is_output = false;
 
   if (!filter->set_input(spk))
     return log->err("filter->set_input() failed!");
@@ -77,11 +78,14 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
       return log->err("filter->process() failed!");
 
     while (!filter->is_empty())
+    {
+      is_output = true;
       if (!filter->get_chunk(&ochunk))
         return log->err("filter->get_chunk() failed!");
+    }
   }
 
-  if (!ochunk.eos)
+  if (is_output && !ochunk.eos)
     return log->err("Last chunk is not end-of-stream!");
 
   return 0;
