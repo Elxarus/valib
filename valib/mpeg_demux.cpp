@@ -3,9 +3,96 @@
 
 // todo: check marker bits
 
+///////////////////////////////////////////////////////////////////////////////
+// PSDemux
+///////////////////////////////////////////////////////////////////////////////
+
+PSDemux::PSDemux(int _stream, int _substream)
+{
+  stream = _stream;
+  substream = _substream;
+}
+
+void
+PSDemux::reset()
+{
+  parser.reset();
+}
+
+void
+PSDemux::set(int _stream, int _substream)
+{
+  stream = _stream;
+  substream = _substream;
+  parser.reset();
+}
+
+size_t
+PSDemux::demux(uint8_t *_buf, size_t _size)
+{
+  uint8_t *end = _buf + _size;
+  uint8_t *read_buf  = _buf;
+  uint8_t *write_buf = _buf;
+  size_t len;
+
+  while (read_buf < end)
+  {
+    if (parser.payload_size)
+    {
+      len = MIN(parser.payload_size, size_t(end - read_buf));
+
+      // drop other streams
+      if ((stream && stream != parser.stream) || 
+          (stream && substream && substream != parser.substream))
+      {
+        parser.payload_size -= len;
+        read_buf += len;
+        continue;
+      }
+
+      // demux
+      memmove(write_buf, read_buf, len);
+      parser.payload_size -= len;
+      read_buf += len;
+      write_buf += len;
+    }
+    else
+      parser.parse(&read_buf, end);
+  }
+
+  return write_buf - _buf;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// PSParser
+///////////////////////////////////////////////////////////////////////////////
+
+PSParser::PSParser()
+{
+  packets = 0;
+  errors = 0;
+  reset();
+}
+
+void
+PSParser::reset()
+{
+  state = state_sync;
+  data_size = 0;
+
+  subheader = 0;
+
+  header_size = 0;
+  payload_size = 0;
+
+  stream = 0;
+  substream = 0;
+}
 
 bool
-MPEGDemux::is_audio()
+PSParser::is_audio()
 {
   return (((stream    & 0xe0) != 0xc0) ||   // MPEG audio stream
           ((substream & 0xf8) != 0x80) ||   // AC3 audio substream
@@ -14,7 +101,7 @@ MPEGDemux::is_audio()
 }
 
 Speakers 
-MPEGDemux::spk()
+PSParser::spk()
 {
   // convert LPCM number of channels to channel mask
   static const int nch2mask[8] = 
@@ -62,360 +149,50 @@ MPEGDemux::spk()
     return spk_unknown;
 }
 
-int 
-MPEGDemux::streaming(uint8_t *_buf, int len)
+size_t 
+PSParser::parse(uint8_t **buf, uint8_t *end)
 {
-  int size;
-  int required_size  = 0;
-  uint8_t *buf_read  = _buf;
-  uint8_t *buf_write = _buf;
-
-  int current_stream;
-  int current_substream;
-
-  #define REQUIRE(bytes)     \
-  if (data_size < (bytes))   \
-  {                          \
-    required_size = (bytes); \
-    continue;                \
-  }
-
-  #define DROP(bytes)   \
-  {                     \
-    data_size = bytes;  \
-    state = demux_drop; \
-    continue;           \
-  }
-
-  #define SYNC          \
-  {                     \
-    data_size = 0;      \
-    required_size = 4;  \
-    state = demux_sync; \
-    continue;           \
-  }
-
-  while (1)
-  {
-    /////////////////////////////////////////////////////////////////
-    // Load requested data
-
-    if (data_size < required_size)
-      if (len < required_size - data_size)
-      {
-        memcpy(header + data_size, buf_read, len);
-        data_size += len;
-        return buf_write - _buf;
-      }
-      else
-      {
-        size = required_size - data_size;
-        memcpy(header + data_size, buf_read, size);
-        buf_read += size;
-        len -= size;
-        data_size = required_size;
-      }
-
-    switch (state)
-    {
-      /////////////////////////////////////////////////////////////////
-      // Drop unneeded data
-
-      case demux_drop:
-      {
-        if (len > data_size)
-        {
-          buf_read += data_size;
-          len -= data_size;
-          SYNC;
-        }
-        else
-        {
-          data_size -= len;
-          return buf_write - _buf;
-        }
-      } // case demux_drop:
-
-      /////////////////////////////////////////////////////////////////
-      // Sync
-
-      case demux_sync:
-      {
-        REQUIRE(4);
-        uint32_t sync = swab_u32(*(uint32_t *)header);
-
-        while ((sync & 0xffffff00) != 0x00000100 && len)
-        {
-          sync <<= 8;
-          sync += *buf_read;
-          buf_read++;
-          len--;
-        }
-
-        data_size = 4;
-        *(uint32_t *)header = swab_u32(sync);
-
-        if ((sync & 0xffffff00) == 0x00000100)
-          state = demux_header;
-        else
-          return buf_write - _buf;
-
-        // no break: now we go to demux_header
-      } // case demux_sync:
-
-      /////////////////////////////////////////////////////////////////
-      // Parse header
-
-      case demux_header:
-      {
-        switch (header[3])
-        {
-          /////////////////////////////////////////////////////////////////
-          // Program end code
-
-          case 0xb9:
-          {         
-            data_size = 0;
-            state = demux_sync;
-            return buf_write - _buf;
-          } // case 0xb9
-
-          /////////////////////////////////////////////////////////////////
-          // Pack header
-
-          case 0xba:
-          {
-            REQUIRE(12);
-            if ((header[4] & 0xf0) == 0x20) 
-              // MPEG1
-              SYNC
-            else if ((header[4] & 0xc0) == 0x40) 
-            {
-              // MPEG2
-              REQUIRE(14);
-              REQUIRE(14 + (header[13] & 7));
-              SYNC;
-            } 
-            else 
-            {
-              // Unknown
-              errors++;
-              SYNC;
-            }
-            // never be here
-          }
-
-          /////////////////////////////////////////////////////////////////
-          // System header
-
-          case 0xbb:  // system header
-          {
-            // drop
-            REQUIRE(6);
-            DROP((header[4] << 8) + header[5]);
-          }
-
-          /////////////////////////////////////////////////////////////////
-          // Reserved and stuffing streams
-
-          case 0xbc:  // reserved stream
-          case 0xbe:  // stuffing stream
-          {
-            // padding packet length?
-            // drop packet
-            REQUIRE(6);
-            DROP((header[4] << 8) + header[5]); 
-          } // case 0xbe:  // stuffing stream
-        } // switch (header[3])
-
-        /////////////////////////////////////////////////////////////////
-        // Disallowed stream number
-
-        if (header[3] < 0xb9)
-        {
-          errors++;  
-          SYNC;
-        }
-
-        /////////////////////////////////////////////////////////////////
-        // Reserved stream
-
-        if ((header[3] & 0xf0) == 0xf0)
-        {
-          // drop packet
-          REQUIRE(6);
-          DROP(6 + (header[4] << 8) + header[5] - data_size);
-        }
-
-        /////////////////////////////////////////////////////////////////
-        // Actual data packet
-
-        current_stream = header[3];
-        current_substream = 0;
-        if (stream && stream != current_stream)
-        {
-          REQUIRE(6);
-          DROP(6 + (header[4] << 8) + header[5] - data_size);
-        }
-
-        REQUIRE(7);
-        int pos = 6;
-        if (stream != 0xbf) // Private Stream 2 have no following flags
-        {
-          if ((header[pos] & 0xc0) == 0x80)
-          {
-            // MPEG2
-            REQUIRE(9);
-            pos = header[8] + 9;
-            REQUIRE(pos);
-          } 
-          else 
-          {
-            // MPEG1
-            while (header[pos] == 0xff && pos < data_size)
-              pos++;
-
-            if (pos == data_size)
-              if (data_size < 24)
-                REQUIRE(pos+1)
-              else
-              {
-                errors++; // too much stuffing
-                SYNC;
-              }
-
-            if ((header[pos] & 0xc0) == 0x40)
-            {
-              pos += 2;
-              REQUIRE(pos+1);
-            }
-
-            if ((header[pos] & 0xf0) == 0x20)
-              pos += 5;
-            else if ((header[pos] & 0xf0) == 0x30)
-              pos += 10;
-            else // if (header[pos] == 0x0f)
-              pos++;
-
-            REQUIRE(pos);
-          }
-        } // if (stream != 0xbf) // Private Stream 2 have no following flags
-
-        /////////////////////////////////////////////////////////////////
-        // Substream header
-
-        if (current_stream == 0xbd)
-        {
-          pos++;
-          REQUIRE(pos);
-
-          current_substream = header[pos-1]; 
-          if (substream && substream != current_substream)
-          {
-            DROP(6 + (header[4] << 8) + header[5] - data_size);
-            // went out...
-          }
-
-          // AC3/DTS substream
-          if ((current_substream & 0xf0) == 0x80)
-          {
-            pos += 3;
-            REQUIRE(pos);
-
-            subheader[0] = header[pos-3];
-            subheader[1] = header[pos-2];
-            subheader[2] = header[pos-1];
-          }
-          // LPCM substeam
-          if ((current_substream & 0xf0) == 0xa0)
-          {
-            pos += 6;
-            REQUIRE(pos);
-
-            subheader[0] = header[pos-6];
-            subheader[1] = header[pos-5];
-            subheader[2] = header[pos-4];
-            subheader[3] = header[pos-3];
-            subheader[4] = header[pos-2];
-            subheader[5] = header[pos-1];
-          }
-        }
-
-        ///////////////////////////////////////////////
-        // FINAL
-        ///////////////////////////////////////////////
-
-        data_size = 6 + (header[4] << 8) + header[5] - data_size;
-        if (data_size <= 0)
-        {
-          errors++;
-          SYNC;
-        }
-
-        // Lock on the first found stream
-        if (!stream) stream = current_stream;
-        if (!substream) substream = current_substream;
-
-        state = demux_data;
-        frames++;
-        // no break: now we go to demux_data
-      } // case demux_header:
-
-      /////////////////////////////////////////////////////////////////
-      // Extract data
-
-      case demux_data:
-      {
-        if (len > data_size)
-        {
-          memmove(buf_write, buf_read, data_size);
-          buf_read += data_size;
-          buf_write += data_size;
-          len -= data_size;
-          SYNC;
-        }
-        else
-        {
-          memmove(buf_write, buf_read, len);
-          data_size -= len;
-          return buf_write + len - _buf;
-        }
-        // never be here
-      } // case demux_data:
-    } // switch (state)
-  } // while (1)
-}
-
-
-int 
-MPEGDemux::packet(uint8_t *buf, int len, int *gone)
-{
-  *gone = 0;
-
-  int size;
-  int required_size  = 0;
+  size_t len;
+  size_t required_size = 0;
 
   #define REQUIRE(bytes)       \
-  if (data_size < (bytes))   \
-  {                          \
-    required_size = (bytes); \
-    continue;                \
+  if (data_size < (bytes))     \
+  {                            \
+    required_size = (bytes);   \
+    continue;                  \
   }
 
-  #define DROP(bytes)   \
-  {                     \
-    data_size = bytes;  \
-    state = demux_drop; \
-    continue;           \
+  #define DROP                 \
+  {                            \
+    REQUIRE(6);                \
+    data_size = 6 + (header[4] << 8) + header[5] - data_size; \
+    state = state_drop;        \
+    continue;                  \
   }
 
-  #define SYNC          \
-  {                     \
-    data_size = 0;      \
-    required_size = 4;  \
-    state = demux_sync; \
-    continue;           \
+  #define SYNC                 \
+  {                            \
+    data_size = 0;             \
+    state = state_sync;        \
+    required_size = 4;         \
+    continue;                  \
   }
+
+  #define RESYNC(bytes)        \
+  {                            \
+    data_size -= bytes;        \
+    memmove(header, header + bytes, data_size); \
+    state = state_sync;        \
+    required_size = 4;         \
+    continue;                  \
+  }
+
+  ///////////////////////////////////////////////////////////////////
+  // Forget about previous packet
+  // Do not zap stream/substream because it may be used for pes demux
+
+  header_size = 0;
+  payload_size = 0;
 
   while (1)
   {
@@ -423,166 +200,109 @@ MPEGDemux::packet(uint8_t *buf, int len, int *gone)
     // Load header data
 
     if (data_size < required_size)
-      if (len < required_size - data_size)
-      {
-        memcpy(header + data_size, buf, len);
-        data_size += len;
-        *gone += len;
+    {
+      len = MIN(size_t(end - *buf), required_size - data_size);
+      memcpy(header + data_size, *buf, len);
+      data_size += len;
+      *buf += len;
+
+      if (data_size < required_size)
         return 0;
-      }
-      else
-      {
-        size = required_size - data_size;
-        memcpy(header + data_size, buf, size);
-        buf += size;
-        len -= size;
-        *gone += size;
-        data_size = required_size;
-      }
+    }
 
     switch (state)
     {
       /////////////////////////////////////////////////////////////////
       // Drop unneeded data
+      // data_size - size of data to drop
 
-      case demux_drop:
+      case state_drop:
       {
-        if (len > data_size)
-        {
-          buf += data_size;
-          len -= data_size;
-          *gone += data_size;
-          SYNC;
-        }
-        else
-        {
-          *gone += len;
-          data_size -= len;
+        len = MIN(size_t(end - *buf), data_size);
+        data_size -= len;
+        *buf += len;
+
+        if (data_size)
           return 0;
-        }
-      } // case demux_drop:
+        else 
+          SYNC;
+      } // case state_drop:
 
       /////////////////////////////////////////////////////////////////
       // Sync
+      // data_size - size of data at header buffer
 
-      case demux_sync:
+      case state_sync:
       {
         REQUIRE(4);
-        uint32_t sync = swab_u32(*(uint32_t *)header);
 
-        while ((sync & 0xffffff00) != 0x00000100 && len)
-        {
-          sync <<= 8;
-          sync += *buf;
-          buf++;
-          len--;
-          (*gone)++;
-        }
+        // syncword
+        if (header[0] != 0 || header[1] != 0 || header[2] != 1)
+          RESYNC(1);
 
-        data_size = 4;
-        *(uint32_t *)header = swab_u32(sync);
+        // check for invalid stream number (false sync)
+        if (header[3] < 0xb9)
+          RESYNC(1);
 
-        if ((sync & 0xffffff00) == 0x00000100)
-          state = demux_header;
-        else
-          return 0;
+        // ignore program end code
+        if (header[3] == 0xb9)
+          RESYNC(4);
 
-        // no break: now we go to demux_header
+        state = state_header;
+        // no break: now we go to state_header
       } // case demux_sync:
 
       /////////////////////////////////////////////////////////////////
       // Parse header
+      // data_size - size of data at header buffer
 
-      case demux_header:
+      case state_header:
       {
+        /////////////////////////////////////////////////////////////////
+        // Drop unused packets
+
         switch (header[3])
         {
-          /////////////////////////////////////////////////////////////////
-          // Program end code
-
-          case 0xb9:
-          {         
-            data_size = 0;
-            state = demux_sync;
-            return 0;
-          } // case 0xb9
-
-          /////////////////////////////////////////////////////////////////
-          // Pack header
-
-          case 0xba:
+          case 0xba: // pack header
           {
             REQUIRE(12);
-            if ((header[4] & 0xf0) == 0x20) 
+            if ((header[4] & 0xf0) == 0x20)
+            {
               // MPEG1
-              SYNC
+              SYNC;
+            }
             else if ((header[4] & 0xc0) == 0x40) 
             {
               // MPEG2
               REQUIRE(14);
-              REQUIRE(14 + (header[13] & 7));
+              REQUIRE(14 + size_t(header[13] & 7));
               SYNC;
             } 
-            else 
+            else
             {
-              // Unknown
+              // error (false sync?)
               errors++;
-              SYNC;
+              RESYNC(1);
             }
-            // never be here
           }
 
-          /////////////////////////////////////////////////////////////////
-          // System header
+          case 0xbb: // system header
+          case 0xbc: // MPEG2: program stream map
+          case 0xbe: // stuffing stream
+            DROP;
 
-          case 0xbb:  // system header
-          {
-            // drop
-            REQUIRE(6);
-            DROP((header[4] << 8) + header[5]);
-          }
-
-          /////////////////////////////////////////////////////////////////
-          // Reserved and stuffing streams
-
-          case 0xbc:  // reserved stream
-          case 0xbe:  // stuffing stream
-          {
-            // padding packet length????????
-            // drop packet
-            REQUIRE(6);
-            DROP((header[4] << 8) + header[5]);
-          } // case 0xbe:  // stuffing stream
         } // switch (header[3])
 
-        /////////////////////////////////////////////////////////////////
-        // Disallowed stream number
-
-        if (header[3] < 0xb9)
-        {
-          errors++;  
-          SYNC;
-        }
-
-        /////////////////////////////////////////////////////////////////
-        // Reserved stream
-
+        // reserved streams
         if ((header[3] & 0xf0) == 0xf0)
-        {
-          // drop packet
-          REQUIRE(6);
-          DROP(6 + (header[4] << 8) + header[5] - data_size);
-        }
+          DROP;
 
         /////////////////////////////////////////////////////////////////
-        // Actual data packet
-
-        stream = header[3];
-        substream = 0;
+        // Parse packet flags
 
         REQUIRE(7);
-        int pos = 6;
-        if (stream != 0xbf) // Private Stream 2 have no following flags
+        size_t pos = 6;
+        if (header[3] != 0xbf) // Private Stream 2 has no following flags
         {
           if ((header[pos] & 0xc0) == 0x80)
           {
@@ -602,8 +322,9 @@ MPEGDemux::packet(uint8_t *buf, int len, int *gone)
                 REQUIRE(pos+1)
               else
               {
-                errors++; // too much stuffing
-                SYNC;
+                // too much stuffing (false sync?)
+                errors++; 
+                RESYNC(1);
               }
 
             if ((header[pos] & 0xc0) == 0x40)
@@ -621,62 +342,51 @@ MPEGDemux::packet(uint8_t *buf, int len, int *gone)
 
             REQUIRE(pos);
           }
-        } // if (stream != 0xbf) // Private Stream 2 have no following flags
+        } // if (header[3] != 0xbf) // Private Stream 2 has no following flags
 
         /////////////////////////////////////////////////////////////////
         // Substream header
 
-        if (stream == 0xbd)
+        stream = header[3];
+        if (stream == 0xbd) // Private Stream 1 has substream header
         {
           pos++;
           REQUIRE(pos);
+
           substream = header[pos-1];
+          subheader = header + pos;
 
-          // AC3/DTS substream
+          // AC3/DTS substream (3 bytes subheader)
           if ((substream & 0xf0) == 0x80)
-          {
-            pos += 3;
-            REQUIRE(pos);
-
-            subheader[0] = header[pos-3];
-            subheader[1] = header[pos-2];
-            subheader[2] = header[pos-1];
-          }
-          // LPCM substeam
+            REQUIRE(pos + 3);
+          // LPCM substeam (6 bytes subheader)
           if ((substream & 0xf0) == 0xa0)
-          {
-            pos += 6;
-            REQUIRE(pos);
-
-            subheader[0] = header[pos-6];
-            subheader[1] = header[pos-5];
-            subheader[2] = header[pos-4];
-            subheader[3] = header[pos-3];
-            subheader[4] = header[pos-2];
-            subheader[5] = header[pos-1];
-          }
+            REQUIRE(pos + 6);
+        }
+        else
+        {
+          substream = 0;
+          subheader = 0;
         }
 
         ///////////////////////////////////////////////
         // FINAL
         ///////////////////////////////////////////////
 
-        size = 6 + (header[4] << 8) + header[5] - data_size;
-        if (size <= 0)
-        {
-          errors++;
-          SYNC;
-        }
+        packets++;
+        header_size = data_size;
+        payload_size = 6 + (header[4] << 8) + header[5] - data_size;
 
         data_size = 0;
-        required_size = 4;
-        state = demux_sync;
+        state = state_sync;
 
-        frames++;
-        return size;
+        return payload_size;
         // note: never be here
       } // case demux_header:
 
     } // switch (state)
   } // while (1)
 }
+
+
+

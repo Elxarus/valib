@@ -7,15 +7,69 @@ Demux::Demux()
 }
 
 void 
+Demux::process()
+{
+  out_rawdata = rawdata;
+  out_size    = 0;
+
+  while (size)
+  {
+    if (ps.payload_size)
+    {
+      size_t len = MIN(size, ps.payload_size);
+
+      // drop all non-audio packets
+      if (!ps.is_audio())
+      {
+        ps.payload_size -= len;
+        rawdata += len;
+        size    -= len;
+        continue;
+      }
+
+      // detect stream change
+      if ((stream && stream != ps.stream) ||
+          (stream && substream && substream != ps.substream))
+      {
+        flushing = true;
+        break;
+      }
+
+      // update stream info
+      stream     = ps.stream;
+      substream  = ps.substream;
+      out_spk    = ps.spk();
+
+      // demux
+      memmove(out_rawdata, rawdata, len);
+      ps.payload_size -= len;
+      rawdata     += len;
+      size        -= len;
+      out_rawdata += len;
+      out_size    += len;
+    }
+    else
+    {
+      // load PES packet
+      uint8_t *end = rawdata + size;
+      ps.parse(&rawdata, end);
+      size = end - rawdata;
+    }
+  }
+}
+
+void 
 Demux::reset()
 {
   NullFilter::reset();
 
-  pes_size  = 0;
   stream    = 0;
   substream = 0;
-  stream_spk = spk_unknown;
-  pes.reset();
+
+  out_spk  = spk_unknown;
+  out_size = 0;
+
+  ps.reset();
 }
 
 bool 
@@ -30,62 +84,51 @@ Demux::process(const Chunk *_chunk)
   if (!NullFilter::receive_chunk(_chunk))
     return false;
 
-  uint8_t *read_buf  = rawdata;
-  uint8_t *write_buf = rawdata;
-  int read_len = size;
-  int write_len = 0;
+  process();
 
-  while (read_len)
-  {
-    if (pes_size)
-    {
-      int l = MIN(read_len, pes_size);
+  if (flushing && !stream)
+    // stream was not started so we should not flush it
+    flushing = false;
 
-      if (!pes.is_audio())
-      {
-        // drop all non-audio packets
-        pes_size -= l;
-        read_buf += l;
-        read_len -= l;
-        continue;
-      }
-
-      // if there're something at output buffer and next packet belongs to other stream
-      // return currently decoded buffer and switch to other stream on next call
-      if ((stream && stream != pes.stream) ||
-          (stream && substream && substream != pes.substream))
-        if (write_len)
-          break;
-
-      // update stream info
-      stream = pes.stream;
-      substream = pes.substream;
-      stream_spk = pes.spk();
-
-      // demux
-      memmove(write_buf, read_buf, l);
-      read_buf  += l;
-      read_len  -= l;
-      write_buf += l;
-      write_len += l;
-      pes_size  -= l;
-    }
-    else
-    {
-      // load PES packet
-      int gone;
-      pes_size = pes.packet(read_buf, read_len, &gone);
-      read_buf += gone;
-      read_len -= gone;
-    }
-  }
-
-  size    = write_len;
   return true;
 }
 
 Speakers 
 Demux::get_output() const
 {
-  return stream_spk;
+  return out_spk;
+}
+
+bool
+Demux::is_empty() const
+{
+  return !size && !out_size && !flushing;
+}
+
+bool
+Demux::get_chunk(Chunk *_chunk)
+{
+  _chunk->set_rawdata
+  (
+    out_spk, 
+    out_rawdata, out_size, 
+    sync, time, 
+    flushing
+  );
+
+  if (flushing)
+  {
+    // stream is finished
+    // forget about current stream and
+    // possibly change stream format
+    stream = 0;
+    substream = 0;
+    out_spk = ps.spk();
+  }
+
+  sync = false;
+  flushing = false;
+
+  process();
+  return true;
 }

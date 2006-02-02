@@ -1,69 +1,83 @@
+/*
+  MPEG parser&demuxer
+
+  //////////////////////////////////////////////////////////////////////////////
+  // PSParser - a simple MPEG1/2 Program Stream parser.
+
+  //////////////////////////////////////////////////////////////////////////////
+  // PSDemux - a simple MPEG1/2 Program Stream demuxer.
+
+  This class is also a good example how to use PSParser class.
+
+  Demux may work in 2 modes:
+  1) Extract certain elementary stream from a multiplexed MPEG stream.
+  2) Extract elementart stream from a PES stream.
+
+  In first mode we must to know stream/substream numbers we want to extract. 
+  Demuxer will extract only the specified stream.
+
+  In second mode we may not know stream/substream numbers (set it to 0). 
+  Demuxer will extract any stream it finds. So input must contain exactly one 
+  stream (PES stream).
+
+  Demuxer interface is extremely simple: we must just specify stream/substream
+  numbers, get stream buffer and call demux() function. It replaces original
+  buffer data with demuxed data. New data size is returned.
+  //////////////////////////////////////////////////////////////////////////////
+
+  todo: Transport Stream parser
+*/
+
 #ifndef VALIB_MPEGDEMUX_H
 #define VALIB_MPEGDEMUX_H
 
 #include "defs.h"
 #include "spk.h"
 
-//////////////////////////////////////////////////
-// MPEG1/2 Program Stream demuxer
-
-class MPEGDemux
+class PSParser
 {
-private:
-  enum { demux_sync, demux_header, demux_data, demux_drop } state;
-  uint8_t header[268];
-  uint8_t subheader[6];
-  int data_size;
+private: // private data
+  enum { state_sync, state_header, state_drop, state_payload } state;
+  size_t data_size;     // data size for internal use
 
-public:
-  int stream;
-  int substream;
+public: // public data
+  uint8_t header[268];  // packet header (including substream header)
+  uint8_t *subheader;   // pointer to subheader start (0 - no subheader)
 
-  int frames;
-  int errors;
+  size_t  header_size;  // header size
+  size_t  payload_size; // packet payload size;
 
-  MPEGDemux()
-  {
-    frames = 0;
-    errors = 0;
-    stream = 0;
-    substream = 0;
-    state = demux_sync;
-    data_size = 0;
-  };
+  int stream;           // stream number
+  int substream;        // substream number (0 for no substream)
 
-  void reset()
-  {
-    state = demux_sync; 
-    data_size = 0; 
-  };
+  int packets;          // packets processed
+  int errors;           // errors
 
-  void reset(int _stream, int _substream = 0)
-  {
-    stream = _stream;
-    substream = _substream;
-    state = demux_sync; 
-    data_size = 0; 
-  };
+public: // public interface
+  PSParser();
+
+  void   reset();
+  size_t parse(uint8_t **buf, uint8_t *end);
 
   bool is_audio();
   Speakers spk();
+};
 
-  /////////////////////////////////////////////////////////
-  // Stream-based demux
-  //
-  // replaces original buffer with demuxed stream 
-  // returns demuxed data size
 
-  int streaming(uint8_t *buf, int len);
 
-  /////////////////////////////////////////////////////////
-  // Packet-based demux
-  //
-  // finds next packet payload data
-  // returns payload data size
+class PSDemux
+{
+public: // public data
+  PSParser parser;
+  int stream;
+  int substream;
 
-  int packet(uint8_t *buf, int len, int *gone);
+public: // public interface
+  PSDemux(int stream = 0, int substream = 0);
+
+  void   reset();
+  void   set(int stream, int substream = 0);
+  size_t demux(uint8_t *buf, size_t size);
 };
 
 #endif

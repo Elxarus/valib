@@ -24,7 +24,7 @@ protected:
   unsigned frames_overhead;
   unsigned errors_overhead;
 
-  MPEGDemux demux;
+  PSDemux   demux;
   Parser   *parser;
 
   uint8_t *buf;
@@ -84,7 +84,7 @@ public:
 
   virtual void get_info(char *buf, size_t len) const;
   virtual unsigned get_frames()     const { return parser->get_frames() - frames_overhead; }
-  virtual unsigned get_errors()     const { return parser->get_errors() + demux.errors - errors_overhead; }
+  virtual unsigned get_errors()     const { return parser->get_errors() + demux.parser.errors - errors_overhead; }
 
   // Buffers
   virtual uint8_t *get_frame()      const { return parser->get_frame();     }

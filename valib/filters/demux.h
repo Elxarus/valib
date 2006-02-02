@@ -1,26 +1,16 @@
 /*
-  Demuxer - demux MPEG container (wrapper filter for MPEGDemux class)
+  Demuxer - demux MPEG container (filter wrapper for MPEGDemux class)
   MPEG1/2 PES supported 
   todo: MPEG2 transport stream
 
-  Speakers: can change format
-  Input formats: PES
-  Output formats: AC3, MPA, DTS, PCM16_LE PCM24_LE
-  Format conversions:
-    PES -> AC3
-    PES -> MPA
-    PES -> DTS
-    PES -> PCM16_LE
-    PES -> PCM24_LE
-    [TS -> AC3]
-    [TS -> MPA]
-    [TS -> DTS]
-    [TS -> PCM16_LE]
-    [TS -> PCM24_LE]
-  Timing: preserve original
-  Buffering: no
+  Input:     PES
+  Output:    AC3, MPA, DTS, PCM16_LE PCM24_LE
+  OFDD:      yes
+  Buffering: inplace
+  Timing:    passthrough
   Parameters:
-    -
+    [ro] stream - current stream number
+    [ro] substream - current substream number
 */
 
 #ifndef DEMUX_H
@@ -32,12 +22,16 @@
 class Demux : public NullFilter
 {
 protected:
-  MPEGDemux pes;        // MPEG demuxer
+  PSParser ps;          // MPEG Program Stream parser
 
-  int pes_size;         // PES packet payload size
-  int stream;           // current stream
-  int substream;        // current substream
-  Speakers stream_spk;  // speaker configuration of contained stream
+  int    stream;        // current stream
+  int    substream;     // current substream
+
+  Speakers out_spk;
+  uint8_t *out_rawdata;
+  size_t   out_size;
+
+  void process();
 
 public:
   Demux();
@@ -49,9 +43,10 @@ public:
   virtual void reset();
   virtual bool query_input(Speakers spk) const;
   virtual bool process(const Chunk *chunk);
+
   virtual Speakers get_output() const;
+  virtual bool is_empty() const;
+  virtual bool get_chunk(Chunk *chunk);
 };
-
-
 
 #endif;

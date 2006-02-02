@@ -67,7 +67,7 @@ FileParser::open(Parser *_parser, const char *_filename, unsigned _max_scan)
   fseek(f, 0, SEEK_SET);
 
   frames_overhead = parser->get_frames();
-  errors_overhead = parser->get_errors() + demux.errors;
+  errors_overhead = parser->get_errors() + demux.parser.errors;
 
   reset();
   return true;
@@ -107,7 +107,7 @@ FileParser::probe()
   int old_pos = get_pos();
   int old_parser_frames = parser->get_frames();
   int old_parser_errors = parser->get_errors();
-  int old_demux_errors  = demux.errors;
+  int old_demux_errors  = demux.parser.errors;
 
   int i;
   bool failed = false;
@@ -146,7 +146,7 @@ FileParser::probe()
   seek(old_pos);
   frames_overhead += parser->get_frames() - old_parser_frames;
   errors_overhead += parser->get_errors() - old_parser_frames;
-  errors_overhead += demux.errors - old_demux_errors;
+  errors_overhead += demux.parser.errors - old_demux_errors;
   return false;
 
 probe_ok:
@@ -154,7 +154,7 @@ probe_ok:
   seek(old_pos);
   frames_overhead += parser->get_frames() - old_parser_frames;
   errors_overhead += parser->get_errors() - old_parser_errors;
-  errors_overhead += demux.errors - old_demux_errors;
+  errors_overhead += demux.parser.errors - old_demux_errors;
   return true;
 }
 
@@ -171,7 +171,7 @@ FileParser::stats(int nframes)
   int old_pos = get_pos();
   int old_parser_frames = parser->get_frames();
   int old_parser_errors = parser->get_errors();
-  int old_demux_errors  = demux.errors;
+  int old_demux_errors  = demux.parser.errors;
 
   for (int i = 0; i < nframes; i++)
   {
@@ -202,7 +202,7 @@ FileParser::stats(int nframes)
   seek(old_pos);
   frames_overhead += parser->get_frames() - old_parser_frames;
   errors_overhead += parser->get_errors() - old_parser_errors;
-  errors_overhead += demux.errors - old_demux_errors;
+  errors_overhead += demux.parser.errors - old_demux_errors;
 }
 
 void 
@@ -353,7 +353,7 @@ FileParser::fill_buf()
     if (is_pes)
     {
       sync += buf_data;
-      buf_data = demux.streaming(buf, buf_data);
+      buf_data = demux.demux(buf, buf_data);
     }
   }
   while (!buf_data && sync < max_scan);
