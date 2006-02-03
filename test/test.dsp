@@ -163,10 +163,6 @@ SOURCE=.\test_proc.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\test_source.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\test_spdifer.cpp
 # End Source File
 # End Group
@@ -581,6 +577,10 @@ SOURCE=.\common.h
 # Begin Source File
 
 SOURCE=.\test.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\test_source.h
 # End Source File
 # End Target
 # End Project

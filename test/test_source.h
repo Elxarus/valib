@@ -37,7 +37,7 @@ public:
     else
     {
       source = &noise;
-      noise.set_output(_spk, 65536, _block_size);
+      noise.set_output(_spk, MAX(10*_block_size, 65536), _block_size);
       noise.set_seed(23545);
       return true;
     }

@@ -3,9 +3,10 @@
 */
 
 #include "log.h"
-#include "common.h"
-#include "source\raw_source.h"
+#include "filter_tester.h"
 #include "filters\spdifer.h"
+#include "filters\demux.h"
+#include "common.h"
 
 int test_spdifer(Log *log);
 int test_spdifer_file(Log *log, const char *raw_file, const char *spdif_file);
@@ -13,25 +14,25 @@ int test_spdifer_file(Log *log, const char *raw_file, const char *spdif_file);
 
 int test_spdifer(Log *log)
 {
-  log->open_group("Spdifer test");
-  test_spdifer_file(log, "f:\\ac3\\ac3test.ac3", "f:\\ac3\\ac3test.ac3.spdif");
-  return log->close_group();
-}
-
-int test_spdifer_file(Log *log, const char *raw_file, const char *spdif_file)
-{
-  log->msg("Testing transform %s => %s", raw_file, spdif_file);
-
-  RAWSource raw_src(spk_unknown, raw_file);
-  RAWSource spdif_src(spk_unknown, spdif_file);
   Spdifer spdifer;
+  FilterTester spdifer_tester(&spdifer, log);
 
-  if (!raw_src.is_open()) 
-    return log->err("cannot open file %s", raw_file);
+  log->open_group("Spdifer test");
+  compare_file(log, Speakers(FORMAT_AC3, 0, 0), "test.ac3", &spdifer_tester, "test.ac3.spdif");
+  compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts", &spdifer_tester, "test.dts.spdif");
+  compare_file(log, Speakers(FORMAT_MPA, 0, 0), "test.mp2", &spdifer_tester, "test.mp2.spdif");
+  compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "test.all", &spdifer_tester, "test.all.spdif");
+  log->close_group();
 
-  if (!spdif_src.is_open()) 
-    return log->err("cannot open file %s", spdif_file);
+  Demux demux;
+  FilterTester demux_tester(&demux, log);
 
-  return compare(log, &raw_src, &spdifer, &spdif_src);
+  log->open_group("Demuxer test");
+  compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.ac3.pes", &demux_tester, "test.ac3");
+  compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.dts.pes", &demux_tester, "test.dts");
+  compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.mp2.pes", &demux_tester, "test.mp2");
+  compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.lpcm.pes", &demux_tester, "test.lpcm");
+  compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.all2.pes", &demux_tester, "test.all2");
+  return log->close_group();
+
 }
-
