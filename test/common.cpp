@@ -129,6 +129,8 @@ int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter,
 
   Speakers spk_ref(FORMAT_UNKNOWN, 0, 0);
 
+  log->msg("Testing transform %s => %s", fn_src, fn_ref);
+
   if (!src.open(spk_src, fn_src))
     return log->err("cannot open source file '%s' of format %s %s %ikHz", fn_src, spk_src.format_text(), spk_src.mode_text(), spk_src.sample_rate);
 

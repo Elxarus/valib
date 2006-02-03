@@ -4,6 +4,7 @@
 */
 
 #include "log.h"
+#include "filter_tester.h"
 #include "filters\demux.h"
 #include "filters\spdifer.h"
 #include "filters\decoder.h"
@@ -58,9 +59,11 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
   Noise noise;
   Chunk ichunk;
   Chunk ochunk;
-  bool is_output = false;
+  size_t isize = 0;
+  size_t osize = 0;
+  FilterTester f(filter, log);
 
-  if (!filter->set_input(spk))
+  if (!f.set_input(spk))
     return log->err("filter->set_input() failed!");
 
   if (!noise.set_output(spk))
@@ -71,22 +74,22 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
 
   while (!noise.is_empty())
   {
+    log->status("Pos: %i", osize);
+
     if (!noise.get_chunk(&ichunk))
       return log->err("noise.get_chunk() failed!");
+    isize += ichunk.size;
 
-    if (!filter->process(&ichunk))
+    if (!f.process(&ichunk))
       return log->err("filter->process() failed!");
 
-    while (!filter->is_empty())
+    while (!f.is_empty())
     {
-      is_output = true;
-      if (!filter->get_chunk(&ochunk))
+      if (!f.get_chunk(&ochunk))
         return log->err("filter->get_chunk() failed!");
+      osize += ochunk.size;
     }
   }
-
-  if (is_output && !ochunk.eos)
-    return log->err("Last chunk is not end-of-stream!");
 
   return 0;
 }

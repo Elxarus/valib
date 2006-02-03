@@ -38,7 +38,7 @@ int test_proc(Log *log)
   int iformat = 0;
   int imode = 0;
   const int seed = 345346;
-  const int nsamples = 8192;
+  const int nsamples = 128*1024;
 
   Speakers spk;
   Noise src;
