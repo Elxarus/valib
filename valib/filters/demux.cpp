@@ -41,12 +41,11 @@ Demux::process()
       out_spk    = ps.spk();
 
       // demux
-      memmove(out_rawdata, rawdata, len);
+      memmove(out_rawdata + out_size, rawdata, len);
       ps.payload_size -= len;
+      out_size    += len;
       rawdata     += len;
       size        -= len;
-      out_rawdata += len;
-      out_size    += len;
     }
     else
     {
