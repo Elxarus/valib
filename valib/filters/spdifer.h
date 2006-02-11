@@ -1,22 +1,11 @@
 /*
   Encapsulates encoded stream into SPDIF according to IEC 61937
 
-  Speakers: can change format
-  Input formats:  SPDIF, AC3, MPA, DTS, Unknown
-  Output formats: SPDIF, DTS
-  Format conversions:
-    SPDIF   -> SPDIF
-    AC3     -> SPDIF
-    MPA     -> SPDIF
-    DTS     -> SPDIF
-    DTS     -> DTS    (only if DTS bitrate is too high; this allows to decode
-                       DTS instead of SPDIF-passthrough)
-    Unknown -> SPDIF  (only if source stream contains AC3, MPA or DTS stream)
-    Unknown -> DTS    (only if source stream contains DTS stream and DTS 
-                       bitrate is too high)
-
-  Buffering: no
-  Timing: apply input timestamp to the first syncpoint found at the input data
+  Input:     SPDIF, AC3, MPA, DTS, Unknown
+  Output:    SPDIF, DTS
+  OFDD:      yes
+  Buffering: block
+  Timing:    first syncpoint
   Parameters:
     -
 */
@@ -36,24 +25,31 @@
 class Spdifer : public NullFilter
 {
 protected:
-  enum { state_sync, state_frame, state_send } state;
+  enum { state_sync, state_spdif, state_drop_spdif, state_passthrough, state_drop_passthrough } state;
 
-  Speakers sync_spk;     // stream config we're synced on
+  Sync     sync_helper;
   DataBuf  frame_buf;    // frame & sync buffer
   size_t   frame_data;   // data size at frame buffer (excluding spdif header size)
   size_t   frames;       // number of frames sent
-  size_t   spdif_header; // spdif header size; indicates usage of spdif header
  
-  Sync     sync_helper;
+  Speakers sync_spk;     // stream format we're synced on
 
-  // stream info, filled by xxxx_syncinfo() functions
-  Speakers stream_spk;  // stream config
-  size_t frame_size;    // frame size of encoded stream (not spdif frame size)
-  size_t nsamples;      // number of samples in frame
-  int bs_type;          // bitstream type 32/16/14 bit big/little endian
-  int magic;            // SPDIF stream identifier
+  // output
+  Speakers out_spk;      // output format
+  uint8_t *out_rawdata;  // output data
+  size_t   out_size;     // output data size
+  bool     out_flushing; // inter-stream flushing
+
+  // stream info
+  // filled by xxxx_syncinfo() functions
+  Speakers stream_spk;   // stream format
+  size_t frame_size;     // frame size of encoded stream (not spdif frame size)
+  size_t nsamples;       // number of samples in frame
+  int bs_type;           // bitstream type 32/16/14 bit big/little endian
+  int magic;             // SPDIF stream identifier
   
   bool load_frame();
+  void drop_frame();
 
   // fast inline sync detectors
   inline bool frame_sync(const uint8_t *buf) const;
@@ -104,9 +100,12 @@ public:
   // Filter interface
 
   virtual void reset();
+
   virtual bool query_input(Speakers spk) const;
+  virtual bool process(const Chunk *chunk);
 
   virtual Speakers get_output() const;
+  virtual bool is_empty() const;
   virtual bool get_chunk(Chunk *chunk);
 };
 

@@ -51,8 +51,8 @@
 // +--------------+---------------------------+---------------+
 // | spdif_header | sync_buffer               |    unused     |
 // +--------------+---------------------------+---------------+
-//                ^                                           ^
-//                +- sync_buffer_size + max_spdif_frame_size -+
+// ^                                                          ^
+// +--------- sync_buffer_size + max_spdif_frame_size --------+
 //
 // When we send first 2 spdif frames pading is inserted in between of current 
 // frame end and other data rmaining at sync buffer:
@@ -92,18 +92,19 @@
 // spdif_max_samples = 2048
 // spdif_max_frame_size = spdif_max_samples * 4 = 8192
 // max_frame_size = 16384
-// sync_buffer_size = max_frame_size * 2 + header_size = 16400
-// total_buffer_size = sync_buffer_size + spdif_max_frame_size = 24592
+// sync_buffer_size = max_frame_size * 2 + header_size = 32784
+// total_buffer_size = sync_buffer_size + spdif_max_frame_size = 40976
 //
 // DTS stream with 4096 samples per frame and DTS stream that does not satisfy
 // the equation (2) cannot be transmitted over spdif. Such DTS streams are
-// passed throu unchanged and output format is indicated as DTS.
+// passed throu unchanged and output format is indicated as DTS so we still 
+// have to detect such streams.
 
 #define SPDIF_MAX_NSAMPLES   2048   // max 2048 sampels per spdif frame
 #define SPDIF_MAX_FRAME_SIZE 8192   // 2048 samples max * 4 (16bit stereo PCM)
 #define SPDIF_HEADER_SIZE    16     // SPDIF header size
 #define HEADER_SIZE          16     // header size required to catch syncpoint
-#define SYNC_BUFFER_SIZE     16400  // sync buffer size
+#define SYNC_BUFFER_SIZE     32784  // sync buffer size
 
 // formats supported
 static const int format_mask = FORMAT_MASK_UNKNOWN | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF;
@@ -139,16 +140,9 @@ const uint8_t spdif_pause[] =
 
 Spdifer::Spdifer()
 {
-  sync_spk = spk_unknown;
-  frame_buf.allocate(SPDIF_HEADER_SIZE + SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
-  frame_data = 0;
+  frame_buf.allocate(SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
   frames = 0;
-
-  stream_spk = spk_unknown;
-  frame_size = 0;
-  nsamples = 0;
-
-  state = state_sync;
+  reset();
 }
 
 int
@@ -157,46 +151,14 @@ Spdifer::get_frames()
   return frames;
 }
 
-
-void
-Spdifer::reset()
-{
-  NullFilter::reset();
-
-  sync_spk = spk_unknown;
-  frame_data = 0;
-  frames = 0;
-
-  stream_spk = spk_unknown;
-  frame_size = 0;
-  nsamples = 0;
-
-  sync_helper.reset();
-  state = state_sync;
-}
-
-bool
-Spdifer::query_input(Speakers _spk) const
-{
-  return (FORMAT_MASK(_spk.format) & format_mask) != 0;
-}
-
-Speakers
-Spdifer::get_output() const
-{
-  Speakers spk_tmp = sync_spk;
-  spk_tmp.format = FORMAT_SPDIF;
-  return spk_tmp;
-}
-
-
 bool
 Spdifer::load_frame()
 {
   bool use_spdif_header = true;
+  size_t spdif_payload_size;
 
+  uint8_t *spdif_ptr = frame_buf.get_data();
   uint8_t *frame_ptr = frame_buf.get_data() + SPDIF_HEADER_SIZE;
-  size_t spdif_frame_size;
 
   #define LOAD(amount)                  \
   if (frame_data < (amount))            \
@@ -220,104 +182,161 @@ Spdifer::load_frame()
     }                                   \
   }
 
+  #define SYNC                          \
+  {                                     \
+    LOAD(HEADER_SIZE);                  \
+    if (!frame_sync(frame_ptr) || !frame_syncinfo(frame_ptr)) \
+    {                                   \
+      frame_data--;                     \
+      memmove(frame_ptr, frame_ptr + 1, frame_data); \
+      continue;                         \
+    }                                   \
+  }
+
+  #define FLUSH                         \
+  {                                     \
+    out_flushing = true;                \
+    state = state_sync;                 \
+    return true;                        \
+  }
+
   while (1) switch (state)
   {
     ///////////////////////////////////////////////////////
-    // Syncronization (catch at least 3 syncpoints)
-    // frame_data - data size at sync buffer
-    // other: ignored
+    // Syncronization
+    // Catch at least 3 syncpoints
+    // input:
+    //   frame_data - data size at sync buffer
+    // output:
+    //   frame_data - data size at sync buffer
+    //   sync_spk - format we're synced on
+    //   out_spk - output format
 
     case state_sync:
     {
-      LOAD(HEADER_SIZE);
+      // find first syncpoint
+      SYNC;
+      sync_spk = stream_spk;
 
-      // check sync
-      if (!frame_sync(frame_ptr) || !frame_syncinfo(frame_ptr))
+      // load buffer until buffer fills or we have no more data
       {
-        memmove(frame_ptr, frame_ptr + 1, frame_data - 1);
-        frame_data--;
-        continue;
+        size_t len = MIN(size, SYNC_BUFFER_SIZE - frame_data);
+        memcpy(frame_ptr + frame_data, rawdata, len);
+        frame_data += len;
+        rawdata += len;
+        size -= len;
       }
 
-      LOAD(SYNC_BUFFER_SIZE);
-
       // count syncpoints
-      Speakers old_spk = stream_spk;
-      uint8_t *pos = frame_ptr + frame_size;
+      // find max(frame_size) and max(nsamples) along syncpoints found
+      size_t max_nsamples = 0;
+      size_t max_frame_size = 0;
       int sync_count = 0;
 
-      while (pos < frame_ptr + SYNC_BUFFER_SIZE - HEADER_SIZE)
+      uint8_t *pos = frame_ptr;
+      while (pos < frame_ptr + frame_data - HEADER_SIZE)
       {
-        if (frame_sync(pos) && frame_syncinfo(pos))          
+        if (frame_sync(pos) && frame_syncinfo(pos))
         {
-          if (stream_spk != old_spk) break;
-          pos += frame_size;
+          if (stream_spk != sync_spk) 
+            break;
+
           sync_count++;
+
+          if (frame_size > max_frame_size)
+            max_frame_size = frame_size;
+
+          if (nsamples > max_nsamples)
+            max_nsamples = nsamples;
+
+          pos += frame_size;
         }
         else
           pos++;
       }
 
-      // resync
-      if (sync_count < 3 || pos < frame_ptr + SYNC_BUFFER_SIZE - HEADER_SIZE)
+      // if we did not catch 3 syncpoints
+      if (sync_count < 3)
       {
-        memmove(frame_ptr, frame_ptr + 1, frame_data - 1);
-        frame_data--;
-        continue;
+        if (size)
+        {
+          // resync
+          frame_data--;
+          memmove(frame_ptr, frame_ptr + 1, frame_data);
+          continue;
+        }
+        else 
+        {
+          // we have no enough data
+          sync_spk = spk_unknown;
+          out_spk = spk_unknown;
+          return false;
+        }
       }
 
-      // switch state
-      sync_spk = old_spk;
-      state = state_frame;
+      // find spdif payload size and decide type of output
+      // load_frame() always generates at least 3 frames 
+      // after successful syncronization
+
+      spdif_payload_size = nsamples * 4;
+      if (use_spdif_header)
+        spdif_payload_size -= SPDIF_HEADER_SIZE;
+
+      if (max_frame_size > spdif_payload_size || max_nsamples > SPDIF_MAX_NSAMPLES)
+      {
+        out_spk = sync_spk;
+        state = state_passthrough;
+      }
+      else
+      {
+        out_spk = sync_spk;
+        out_spk.format = FORMAT_SPDIF;
+        state = state_spdif;
+      }
       continue;
     }
 
     ///////////////////////////////////////////////////////
-    // Load frame
-    // sync_spk - stream config we're synced on
-    // frame_data - data size at frame buffer
+    // Spdif mode
+    // Load and format spdif frame
+    // input:
+    //   frame_data - data size at sync buffer
+    //   sync_spk - format we're synced on
+    //   out_spk - output format
+    // output:
+    //   frame_data - data size at sync buffer
+    //   out_rawdata - pointer to output buffer
+    //   out_size - data size at output buffer
 
-    case state_frame:
+    case state_drop_spdif:
     {
-      LOAD(HEADER_SIZE);
+      // drop frame sent
+      memmove(frame_ptr, frame_ptr + frame_size, frame_data - frame_size);
+      frame_data -= frame_size;
+      state = state_spdif;
+      // no break: now we go to state_spdif...
+    }
 
-      // check sync
-      if (!frame_sync(frame_ptr) || !frame_syncinfo(frame_ptr))
-      {
-        memmove(frame_ptr, frame_ptr + 1, frame_data - 1);
-        frame_data--;
-        continue;
-      }
+    case state_spdif:
+    {
+      SYNC;
 
-      // resync
+      // switch streams
       if (stream_spk != sync_spk)
-      {
-        state = state_sync;
-        continue;
-      }
+        FLUSH;
 
       // load frame
       LOAD(frame_size);
 
-      // decide usage of spdif header and find spdif frame size
+      // find spdif payload size
+      spdif_payload_size = nsamples * 4;
       if (use_spdif_header)
-      {
-        spdif_header = SPDIF_HEADER_SIZE;
-        spdif_frame_size = nsamples * 4 - SPDIF_HEADER_SIZE;
-      }
-      else
-      {
-        spdif_header = 0;
-        spdif_frame_size = nsamples * 4;
-      }
+        spdif_payload_size -= SPDIF_HEADER_SIZE;
 
-      // send passthrough frame
-      if (frame_size > spdif_frame_size || nsamples > SPDIF_MAX_NSAMPLES)
-      {
-        spdif_header = 0;
-        state = state_send;
-        return true;
-      }
+      // switch to passthrough mode
+      // state_spdif -> state_flush -> state_sync -> state_passthrough
+      if (frame_size > spdif_payload_size || nsamples > SPDIF_MAX_NSAMPLES)
+        FLUSH;
 
       // fill spdif header
       spdif_header_t *hdr = (spdif_header_t *)frame_buf.get_data();
@@ -325,9 +344,9 @@ Spdifer::load_frame()
 
       // move data and fill padding
       if (frame_data > frame_size)
-        memmove(frame_ptr + spdif_frame_size, frame_ptr + frame_size, frame_data - frame_size);
-      memset(frame_ptr + frame_size, 0, spdif_frame_size - frame_size);
-      frame_data += spdif_frame_size - frame_size;
+        memmove(frame_ptr + spdif_payload_size, frame_ptr + frame_size, frame_data - frame_size);
+      memset(frame_ptr + frame_size, 0, spdif_payload_size - frame_size);
+      frame_data += spdif_payload_size - frame_size;
 
       // convert stream format
       if (bs_type == BITSTREAM_16LE ||
@@ -346,39 +365,107 @@ Spdifer::load_frame()
 
       // return data
       frames++;
-      frame_size = spdif_frame_size;
-      state = state_send;
+      if (use_spdif_header)
+        out_rawdata = spdif_ptr;
+      else
+        out_rawdata = frame_ptr;
+      out_size = nsamples * 4;
+      state = state_drop_spdif;
       return true;
     }
 
     ///////////////////////////////////////////////////////
-    // Send frame
-    // This state is used to say that we're ready to send
-    // frame loaded. So if we're here again we have this
-    // frame sent and need to switch back to state_frame.
-    //
-    // frame_data - data size at frame buffer
-    // frame_size - spdif frame size (excluding header)
+    // Passthrough mode
+    // Load a frame and send it unchanged
+    // input:
+    //   frame_data - data size at sync buffer
+    //   sync_spk - format we're synced on
+    //   out_spk - output format
+    // note that out_spk == sync_spk because it is 
+    // passthrough mode!
+    // output:
+    //   frame_data - data size at sync buffer
+    //   out_rawdata - pointer to output buffer
+    //   out_size - data size at output buffer
 
-    case state_send:
+    case state_drop_passthrough:
     {
-      if (frame_data > frame_size)
-        memmove(frame_ptr, frame_ptr + frame_size, frame_data - frame_size);
-
+      // drop frame sent
+      memmove(frame_ptr, frame_ptr + frame_size, frame_data - frame_size);
       frame_data -= frame_size;
-      state = state_frame;
-      continue;
+      state = state_passthrough;
+      // no break: now we go to state_passthrough...
+    }
+
+    case state_passthrough:
+    {
+      SYNC;
+
+      // switch streams
+      if (stream_spk != sync_spk)
+        FLUSH;
+
+      // load frame
+      LOAD(frame_size);
+
+      // return data
+      frames++;
+      out_rawdata = frame_ptr;
+      out_size = frame_size;
+      state = state_drop_passthrough;
+      return true;
     }
   }
 
   // never be here
+  assert(false);
   return false;
 }
 
+void
+Spdifer::drop_frame()
+{
+  uint8_t *frame_ptr = frame_buf.get_data() + SPDIF_HEADER_SIZE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Filter interface
+///////////////////////////////////////////////////////////////////////////////
+
+void
+Spdifer::reset()
+{
+  NullFilter::reset();
+  sync_helper.reset();
+
+  frame_data = 0;
+  frames = 0;
+
+  sync_spk = spk_unknown;
+
+  out_spk = spk_unknown;
+  out_rawdata = 0;
+  out_size = 0;
+  out_flushing = false;
+
+  stream_spk = spk_unknown;
+  frame_size = 0;
+  nsamples = 0;
+
+  state = state_sync;
+}
+
+bool
+Spdifer::query_input(Speakers _spk) const
+{
+  return (FORMAT_MASK(_spk.format) & format_mask) != 0;
+}
 
 bool 
-Spdifer::get_chunk(Chunk *_chunk)
+Spdifer::process(const Chunk *_chunk)
 {
+  FILTER_SAFE(receive_chunk(_chunk));
+
   // receive sync
   if (sync)
   {
@@ -386,30 +473,81 @@ Spdifer::get_chunk(Chunk *_chunk)
     sync = false;
   }
 
-  if (load_frame())
-    _chunk->set_rawdata
-    (
-      get_output(), 
-      frame_buf + SPDIF_HEADER_SIZE - spdif_header, frame_size + spdif_header, 
-      false, 0, 
-      flushing && !size
-    );
-  else
-    _chunk->set_empty
-    (
-      get_output(), 
-      false, 0, 
-      flushing && !size
-    );
+  // load next frame
+  load_frame();
+
+  // if we did not start a stream we must
+  // forget about current stream on flushing
+  // and drop data currently buffered
+  // (flushing state is also dropped so we 
+  // do not pass eos event in this case)
+  if (flushing && out_spk == spk_unknown)
+    reset();
+
+  return true;
+}
+
+Speakers
+Spdifer::get_output() const
+{
+  return out_spk;
+}
+
+bool 
+Spdifer::is_empty() const
+{
+  return !size && !out_size && !flushing && !out_flushing;
+}
+
+bool 
+Spdifer::get_chunk(Chunk *_chunk)
+{
+  if (!out_size && !out_flushing)
+    load_frame();
+
+  if (out_size)
+  {
+    // send data chunk
+    _chunk->set_rawdata(out_spk, out_rawdata, out_size);
+    out_size = 0;
+  }
+  else if (out_flushing)
+  {
+    // send inter-stream flushing and forget current stream
+    _chunk->set_empty(out_spk, false, 0, true);
+    out_spk = spk_unknown;
+    out_flushing = false;
+
+    // try to start a new stream
+    load_frame();
+
+    // if we're flushing and we did not start a new stream
+    // we must drop data currently buffered
+    // (flushing state is also dropped so we will not send
+    // excessive flushing)
+    if (flushing && out_spk == spk_unknown)
+      reset();
+  }
+  else if (flushing)
+  {
+    // send filter flushing, forget current stream
+    // and drop data buffered
+    _chunk->set_empty(out_spk, false, 0, true);
+    flushing = false;
+    reset();
+  }
 
   // timing
+  // note thet filter flushing will be untimed
+  // because of reset() call (is it a problem???)
   sync_helper.send_sync(_chunk);
   sync_helper.set_syncing(true);
-
-  // end-of-stream
-  flushing = flushing && size;
   return true;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// Syncronization info parsers
+///////////////////////////////////////////////////////////////////////////////
 
 bool
 Spdifer::frame_syncinfo(const uint8_t *_buf)
