@@ -24,73 +24,87 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
   size_t len;
   int ch;
 
+  #define SAFE_CALL(call)     \
+  {                           \
+    if (!call)                \
+      return log->err(#call); \
+  }
+
+
   while (1)
   {
-    // We need detailed information in case of 
-    // errors, so we have to expand cycles.
-    // The following cycle may be rewrited as:
-    //
-    // while (!ochunk.get_size() && !ochunk.is_eos())
-    //   if (!src_filter->get_from(&ochunk, src))
-    //     return log->err("src_filter->get_from()");
-
-    while (!so_chunk.size && !so_chunk.eos)
+    if (!so_chunk.size)
     {
-      while (src_filter->is_empty())
+      // try to fill the filter
+      if (src_filter->is_empty())
       {
-        if (!src->get_chunk(&si_chunk))
-          return log->err("src->get_chunk()");
-
-        if (!src_filter->process(&si_chunk))
-          return log->err("src_filter->process()");
+        if (src->is_empty()) break;
+        SAFE_CALL(src->get_chunk(&si_chunk));
+        SAFE_CALL(src_filter->process(&si_chunk));
       }
 
-      if (!src_filter->get_chunk(&so_chunk))
-        return log->err("src_filter->get_chunk()");
+      // try to get data
+      if (!src_filter->is_empty())
+        SAFE_CALL(src_filter->get_chunk(&so_chunk))
+      else
+        continue;
     }
 
-    if (ref_filter)
+    if (!ro_chunk.size)
     {
-      while (!ro_chunk.size && !ro_chunk.eos)
+      if (ref_filter)
       {
-        while (src_filter->is_empty())
+        // try to fill the filter
+        if (ref_filter->is_empty())
         {
-          if (!ref->get_chunk(&ri_chunk))
-            return log->err("ref->get_chunk()");
-
-          if (!ref_filter->process(&ri_chunk))
-            return log->err("ref_filter->process()");
+          if (ref->is_empty()) break;
+          SAFE_CALL(ref->get_chunk(&ri_chunk));
+          SAFE_CALL(ref_filter->process(&ri_chunk));
         }
 
-        if (!ref_filter->get_chunk(&ro_chunk))
-          return log->err("ref_filter->get_chunk()");
+        // try to get data
+        if (!ref_filter->is_empty())
+          SAFE_CALL(ref_filter->get_chunk(&ro_chunk))
+        else
+          continue;
       }
-    }
-    else
-    {
-      while (!ro_chunk.size && !ro_chunk.eos)
-        if (!ref->get_chunk(&ro_chunk))
-          return log->err("ref->get_chunk()");
+      else
+      {
+        // try to get data
+        if (ref->is_empty()) break;
+        SAFE_CALL(ref->get_chunk(&ro_chunk));
+      }
     }
 
     // Now we have both output and reference chunks are loaded 
     // with data or end-of stream signaled
 
+    ///////////////////////////////////////////////////////
+    // Statistics
+
+    if (osize < 10000)
+      log->status("Pos: %u    ", osize);
+    if (osize < 10000000)
+      log->status("Pos: %uK    ", osize/1000);
+    else
+      log->status("Pos: %uM    ", osize/1000000);
+
+    ///////////////////////////////////////////////////////
     // Check that stream configurstions are equal
-    // Do not check if output is raw and reference format is FORMT_UNKNOWN
+    // Do not check if output is raw and reference format is FORMT_UNKNOWN 
+    // (reference format is unspecified)
 
     if (ro_chunk.spk != so_chunk.spk)
       if (so_chunk.spk.format == FORMAT_LINEAR || ro_chunk.spk.format != FORMAT_UNKNOWN)
         return log->err("Different speaker configurations");
 
+    ///////////////////////////////////////////////////////
     // Compare data
 
     spk = so_chunk.spk;
     len = MIN(ro_chunk.size, so_chunk.size);
     if (spk.format == FORMAT_LINEAR)
     {
-      log->status("Pos: %.3fs (%usm)", double(osize) / spk.sample_rate, osize);
-
       // compare linear
       for (ch = 0; ch < spk.nch(); ch++)
         if (memcmp(so_chunk.samples[ch], ro_chunk.samples[ch], len * sizeof(sample_t)))
@@ -98,13 +112,6 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     }
     else
     {
-      if (osize < 10000)
-        log->status("Pos: %u    ", osize);
-      if (osize < 10000000)
-        log->status("Pos: %uK    ", osize/1000);
-      else
-        log->status("Pos: %uM    ", osize/1000000);
-
       // compare raw data
       if (memcmp(so_chunk.rawdata, ro_chunk.rawdata, len))
         return log->err("Data differs");
@@ -113,18 +120,15 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     rsize += len;
     so_chunk.drop(len);
     ro_chunk.drop(len);
-
-    // now we have either output or reference chunk empty
-
-    if (so_chunk.eos && ro_chunk.size > so_chunk.size)
-      return log->err("Source stream ends at %u. Reference stream is longer...", osize + so_chunk.size);
-
-    if (ro_chunk.eos && so_chunk.size > ro_chunk.size)
-      return log->err("Reference stream ends at %u. Processed stream is longer...", rsize + ro_chunk.size);
-
-    if (ro_chunk.eos && so_chunk.eos)
-      return 0;
   }
+
+  if (so_chunk.size)
+    log->err("output output is longer than reference");
+
+  if (ro_chunk.size)
+    log->err("reference is longer than output");
+
+  return 0;
 }
 
 int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter, const char *fn_ref)
