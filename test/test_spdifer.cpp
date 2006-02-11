@@ -20,10 +20,16 @@ int test_spdifer(Log *log)
   FilterTester spdifer_tester(&spdifer, log);
 
   log->open_group("Spdifer test");
+  // raw stream -> spdif stream
   compare_file(log, Speakers(FORMAT_AC3, 0, 0), "test.ac3", &spdifer_tester, "test.ac3.spdif");
   compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts", &spdifer_tester, "test.dts.spdif");
   compare_file(log, Speakers(FORMAT_MPA, 0, 0), "test.mp2", &spdifer_tester, "test.mp2.spdif");
   compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "test.all", &spdifer_tester, "test.all.spdif");
+  // spdif stream -> spdif stream
+  compare_file(log, Speakers(FORMAT_AC3, 0, 0), "test.ac3.spdif", &spdifer_tester, "test.ac3.spdif");
+  compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts.spdif", &spdifer_tester, "test.dts.spdif");
+  compare_file(log, Speakers(FORMAT_MPA, 0, 0), "test.mp2.spdif", &spdifer_tester, "test.mp2.spdif");
+  compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "test.all.spdif", &spdifer_tester, "test.all.spdif");
   errs += log->close_group();
 
   Demux demux;
