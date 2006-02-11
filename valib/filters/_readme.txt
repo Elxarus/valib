@@ -48,22 +48,22 @@ All filters:
 
 Raw data
 ========
-                NF R QSGP OEC  IP FL BUF 
-Convert         +  + ++-+ +-+  -  +   +  
-Counter         +  + +--+ ---  +  -   -
-Decoder         +  + ++-+ +++  -  -   -    ???? (must require flushing)
-Demux           +  + +--+ +--  +  -   -
-Spdifer         +  + +--- +-+  -  -   +
+                NF R QSGP OEC  IP FL BUF
+Convert         +  + ++-+ +-+  -  +  im  
+Counter         +  + +--+ ---  +  -  ip
+Decoder         +  + ++-+ +++  -  -  bl
+Demux           +  + +--+ +--  +  -  ip
+Spdifer         +  + +--- +-+  -  -  bl
 
 Processing
 ==========
                 NF R QSGP OEC  IP FL BUF
-AGC             +  + ---- --+  -  +   +
-Mixer           +  - -+-- +-+  *  -   +
-Delay           +  + ---+ ---  +  -   +
-BassRedir       +  + -+-+ ---  +  -   - 
-Levels          +  + ---- --+  +  -   -
-Dejitter        +  + ---+ --+  +  -   -
+AGC             +  + ---- --+  -  +  bl
+Mixer           +  - -+-- +-+  *  -  ip/im
+Delay           +  + ---+ ---  +  -  ip
+BassRedir       +  + -+-+ ---  +  -  ip
+Levels          +  + ---- --+  +  -  ip
+Dejitter        +  + ---+ --+  +  -  ip
 
 Aggregates
 ==========

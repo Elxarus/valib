@@ -5,7 +5,6 @@ First order
   DVDDecoder. Remove AudioDecoder class.
 * Inherit FileParser class from Source class.
 * Check Sync class timing
-* Add def_spk and err_spk global constants
 * CPUMeter may not work in some cases??? See message from SBN 02.04.2004
 * New: Despdifer to demux input SPDIFed stream.
 ?* Rewrite AudioDecoder & DVDDecoder classes to reorganide decoding process.
@@ -14,15 +13,12 @@ First order
   an option to scan PCM input for SPDIF stream that it can possibly contain
   (required to directly play WAV/DTS and WAV/AC3 files prepared for DTS(AC3)/CD.
   DVDDecoder should support SPDIF output, SPDIF passthrough, and decode modes.
-* Spdifer test: add more ac3, mpa and dts streams
 * clev, slev, lfelev mixing coefs locking
 * expand parsers format report
 * ac3 encoder test: what is 'strange sample'?
-* Tests with negative results as normal result (crash tests for example)
 * ac3dec: add SPDIF output
 * AudioDecoder SPDIF test: add MPA, DTS, PES/AC3, PES/MPA, PES/DTS
 * New: out-of-bounds test for filters (update PCM passthrough test)
-* Test suite: add logging to file
 * New: Test: correct filter timstamp passthrough
 * Find classes to make tests for
 
@@ -30,8 +26,6 @@ Tests
 =====
 * New: MPAParser test
 * New: FileParser test
-* MPEGDemux test: add MPEG1 stream test
-* MPEGDemux test: add DTS-PES test
 
 Think about
 ===========
@@ -92,3 +86,8 @@ Done
 +* PCM passthrough test: 32-bit noise passthrough failed
 +* Filters test: AudioDecoder test failed
 +* PCM passthrough test: Multichannel PCM passthrough test failed
++* Spdifer test: add more ac3, mpa and dts streams
++* Test suite: add logging to file
++* Tests with negative results as normal result (crash tests for example)
++* MPEGDemux test: add MPEG1 stream test
++* MPEGDemux test: add DTS-PES test
