@@ -310,9 +310,14 @@ Spdifer::load_frame()
 
     case state_drop_spdif:
     {
+      // find spdif payload size
+      spdif_payload_size = nsamples * 4;
+      if (use_spdif_header)
+        spdif_payload_size -= SPDIF_HEADER_SIZE;
+
       // drop frame sent
-      memmove(frame_ptr, frame_ptr + frame_size, frame_data - frame_size);
-      frame_data -= frame_size;
+      memmove(frame_ptr, frame_ptr + spdif_payload_size, frame_data - spdif_payload_size);
+      frame_data -= spdif_payload_size;
       state = state_spdif;
       // no break: now we go to state_spdif...
     }
