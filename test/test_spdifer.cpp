@@ -14,6 +14,8 @@ int test_spdifer_file(Log *log, const char *raw_file, const char *spdif_file);
 
 int test_spdifer(Log *log)
 {
+  int errs = 0;
+
   Spdifer spdifer;
   FilterTester spdifer_tester(&spdifer, log);
 
@@ -22,7 +24,7 @@ int test_spdifer(Log *log)
   compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts", &spdifer_tester, "test.dts.spdif");
   compare_file(log, Speakers(FORMAT_MPA, 0, 0), "test.mp2", &spdifer_tester, "test.mp2.spdif");
   compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "test.all", &spdifer_tester, "test.all.spdif");
-  log->close_group();
+  errs += log->close_group();
 
   Demux demux;
   FilterTester demux_tester(&demux, log);
@@ -33,6 +35,7 @@ int test_spdifer(Log *log)
   compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.mp2.pes", &demux_tester, "test.mp2");
   compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.lpcm.pes", &demux_tester, "test.lpcm");
   compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.all2.pes", &demux_tester, "test.all2");
-  return log->close_group();
+  errs += log->close_group();
 
+  return errs;
 }

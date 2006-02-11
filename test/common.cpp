@@ -98,7 +98,12 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     }
     else
     {
-      log->status("Pos: %u", osize);
+      if (osize < 10000)
+        log->status("Pos: %u    ", osize);
+      if (osize < 10000000)
+        log->status("Pos: %uK    ", osize/1000);
+      else
+        log->status("Pos: %uM    ", osize/1000000);
 
       // compare raw data
       if (memcmp(so_chunk.rawdata, ro_chunk.rawdata, len))

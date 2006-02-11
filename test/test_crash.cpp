@@ -74,7 +74,12 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
 
   while (!noise.is_empty())
   {
-    log->status("Pos: %i", isize);
+    if (isize < 10000)
+      log->status("Pos: %u    ", isize);
+    if (isize < 10000000)
+      log->status("Pos: %uK    ", isize/1000);
+    else
+      log->status("Pos: %uM    ", isize/1000000);
 
     if (!noise.get_chunk(&ichunk))
       return log->err("noise.get_chunk() failed!");

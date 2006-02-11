@@ -7,4 +7,7 @@ del release\%app% 2> nul
 msdev %app%.dsp /MAKE "%app% - Win32 Release" /REBUILD
 call _clear.bat
 
-release\test.exe
+cd ..\samples
+..\test\release\test.exe
+ren test.log ..\test
+cd ..\test
