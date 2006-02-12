@@ -146,14 +146,28 @@ inline bool Spdifer::ac3_sync(const uint8_t *_buf) const
 
 inline bool Spdifer::mpa_sync(const uint8_t *_buf) const
 {
-  MPAHeader h = swab_u32(*(uint32_t *)_buf);
+  MPAHeader h;
+  // 8 bit or 16 bit little endian steram sync
+  if ((_buf[0] == 0xff) && ((_buf[1] & 0xf0) == 0xf0))
+  {
+    uint32_t header = *(uint32_t *)_buf;
+    h = swab_u32(header);
+  }
+  // 16 bit big endian steram sync
+  else if ((_buf[1] == 0xff) && ((_buf[0] & 0xf0) == 0xf0))
+  {
+    uint32_t header = *(uint32_t *)_buf;
+    h = (header >> 16) | (header << 16);
+  }
+  else 
+    return false;
 
   if (h.sync != 0xfff)           return false;
   if (h.layer == 0)              return false;
   if (h.bitrate_index >= 15)     return false;
   if (h.sampling_frequency >= 3) return false;
 
-  // for now we will not work with free-format
+  // now we do not work with free-format
   if (h.bitrate_index == 0)      return false; 
 
   return true;

@@ -703,7 +703,24 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
   };
   static const int slots_tbl[3] = { 12, 144, 144 };
 
-  MPAHeader h = swab_u32(*(int32_t *)_buf);
+  MPAHeader h;
+
+  // 8 bit or 16 bit little endian steram sync
+  if ((_buf[0] == 0xff) && ((_buf[1] & 0xf0) == 0xf0))
+  {
+    uint32_t header = *(uint32_t *)_buf;
+    h = swab_u32(header);
+    bs_type = BITSTREAM_8;
+  }
+  // 16 bit big endian steram sync
+  else if ((_buf[1] == 0xff) && ((_buf[0] & 0xf0) == 0xf0))
+  {
+    uint32_t header = *(uint32_t *)_buf;
+    h = (header >> 16) | (header << 16);
+    bs_type = BITSTREAM_16BE;
+  }
+  else 
+    return false;
 
   // common information
   int ver = 1 - h.version;
@@ -735,7 +752,6 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
 
   nsamples = layer == 0? 384: 1152;
   stream_spk = Speakers(FORMAT_MPA, (h.mode == 3)? MODE_MONO: MODE_STEREO, sample_rate);
-  bs_type = BITSTREAM_8;
   return true;
 }
 
