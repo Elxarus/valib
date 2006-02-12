@@ -30,7 +30,6 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
       return log->err(#call); \
   }
 
-
   while (1)
   {
     if (!so_chunk.size)
@@ -41,6 +40,7 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
         if (src->is_empty()) break;
         SAFE_CALL(src->get_chunk(&si_chunk));
         SAFE_CALL(src_filter->process(&si_chunk));
+        isize += si_chunk.size;
       }
 
       // try to get data
@@ -76,19 +76,6 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
       }
     }
 
-    // Now we have both output and reference chunks are loaded 
-    // with data or end-of stream signaled
-
-    ///////////////////////////////////////////////////////
-    // Statistics
-
-    if (osize < 10000)
-      log->status("Pos: %u    ", osize);
-    if (osize < 10000000)
-      log->status("Pos: %uK    ", osize/1000);
-    else
-      log->status("Pos: %uM    ", osize/1000000);
-
     ///////////////////////////////////////////////////////
     // Check that stream configurstions are equal
     // Do not check if output is raw and reference format is FORMT_UNKNOWN 
@@ -120,13 +107,56 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     rsize += len;
     so_chunk.drop(len);
     ro_chunk.drop(len);
+
+
+    ///////////////////////////////////////////////////////
+    // Statistics
+
+    {
+      const char *iunit = "";
+      const char *ounit = "";
+      size_t isize_tmp = isize;
+      size_t osize_tmp = osize;
+      if (isize > 10000000)
+      {
+        isize_tmp /= 1000000;
+        iunit = "M";
+      }
+      else if (isize > 10000)
+      {
+        isize_tmp /= 1000;
+        iunit = "K";
+      }
+      if (osize > 10000000)
+      {
+        osize_tmp /= 1000000;
+        ounit = "M";
+      }
+      else if (osize > 10000)
+      {
+        osize_tmp /= 1000;
+        ounit = "K";
+      }
+      log->status("Input: %u%s\tOutput: %u%s      ", isize_tmp, iunit, osize_tmp, ounit);
+    }
+  } // while (1)
+
+  /////////////////////////////////////////////////////////
+  // Verify stream lengths
+
+  if (!src->is_empty() || !src_filter->is_empty() || so_chunk.size)
+    return log->err("output is longer than reference");
+
+  if (ref_filter)
+  {
+    if (!ref->is_empty() || !ref_filter->is_empty() || ro_chunk.size)
+      return log->err("reference is longer than output");
   }
-
-  if (so_chunk.size)
-    log->err("output output is longer than reference");
-
-  if (ro_chunk.size)
-    log->err("reference is longer than output");
+  else
+  {
+    if (!ref->is_empty() || ro_chunk.size)
+      return log->err("reference is longer than output");
+  }
 
   return 0;
 }
