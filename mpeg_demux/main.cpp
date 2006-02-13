@@ -165,7 +165,7 @@ void demux(FILE *f, FILE *out, int stream, int substream, bool pes)
 
       int eta = int((float(file_size) / processed - 1.0) * elapsed);
 
-      printf("%02i:%02i %02i%% In: %iM (%2iMB/s) Out: %iK", 
+      printf("%02i:%02i %02i%% In: %iM (%2iMB/s) Out: %iK    ", 
         eta / 60, eta % 60,
         int(processed * 100 / float(file_size)),
         in_pos / 1000000, int(processed/elapsed/1000000), out_pos / 1000);
@@ -254,16 +254,16 @@ int main(int argc, char **argv)
 
   printf("MPEG Program Stream demuxer.\n"
          "This utility is part of AC3Filter project (http://ac3filter.sourceforge.net)\n"
-         "Copyright (c) 2004 by Alexander Vigovsky\n\n");
+         "Copyright (c) 2006 by Alexander Vigovsky\n\n");
   if (argc < 2)
   {
     printf("Usage:\n"
-           "  mpeg_demux file.pes [-i] [-d | -p output_file [-stream:x | substream:x]]\n"
+           "  mpeg_demux file.pes [-i] [-d | -p output_file [-s=x | -ss=x]]\n"
            "  -i - file info (default)\n"
            "  -d - demux to elementary stream\n"
            "  -p - demux to pes stream\n"
-           "  -s:xx  - demux stream xx (hex)\n"
-           "  -ss:xx - demux substream xx (hex)\n");
+           "  -s=xx  - demux stream xx (hex)\n"
+           "  -ss=xx - demux substream xx (hex)\n");
     exit(0);
   }
 
