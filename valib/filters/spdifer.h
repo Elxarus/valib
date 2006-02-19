@@ -49,6 +49,7 @@ protected:
   int magic;             // SPDIF stream identifier
   
   bool load_frame();
+  bool load_frame1();
   void drop_frame();
 
   // fast inline sync detectors
@@ -93,6 +94,7 @@ public:
   /////////////////////////////////////////////////////////
   // Spdifer interface
 
+  Speakers get_sync();
   void get_info(char *buf, size_t len);
   int  get_frames();
 
@@ -115,8 +117,35 @@ public:
 // Spdifer inlines
 ///////////////////////////////////////////////////////////////////////////////
 
+extern const int sync_tbl[256];
 inline bool Spdifer::frame_sync(const uint8_t *_buf) const
 {
+/*
+  // analyze first 16 bits
+  if (sync_tbl[_buf[0]] && sync_tbl[_buf[1]])
+    return ac3_sync(_buf) || dts_sync(_buf) || mpa_sync(_buf);
+  else
+    return false;
+*/
+/*
+  uint16_t header = swab_u16(*(int16_t*)_buf);
+  header &= 0xf0f0;
+  switch (header)
+  {
+    case 0x0070: //case 0x0b77:
+    case 0x7000: //case 0x770b:
+      return ac3_sync(_buf);
+    case 0xf010: //case 0xff1f:
+    case 0x10f0: //case 0x1fff:
+    case 0xf070: //case 0xfe7f:
+    case 0x70f0: //case 0x7ffe:
+      return dts_sync(_buf);
+    case 0xf0f0: //case 0xfffx: case 0xfxff
+      return mpa_sync(_buf);
+    default:
+      return false;
+  };
+*/
   return ac3_sync(_buf) || dts_sync(_buf) || mpa_sync(_buf);
 }
 

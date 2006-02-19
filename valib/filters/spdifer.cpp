@@ -3,6 +3,29 @@
 #include "spdifer.h"
 #include "bitstream.h"
 
+
+
+const int sync_tbl[256] = 
+{
+//0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, // 0x00
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // 0x10
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x20
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x30
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x40
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x50
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x60
+  0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, // 0x70
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x80
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x90
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xa0
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xb0
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xc0
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xd0
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0xe0
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0xf0
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // To sync on compressed stream we first try to catch 3 syncpoints of the same
 // format. 
@@ -151,8 +174,129 @@ Spdifer::get_frames()
   return frames;
 }
 
+Speakers
+Spdifer::get_sync()
+{
+  return sync_spk;
+}
+
+
 bool
 Spdifer::load_frame()
+{
+  uint8_t *spdif_ptr = frame_buf.get_data();
+  uint8_t *frame_ptr = frame_buf.get_data() + SPDIF_HEADER_SIZE;
+
+  size_t len;
+  size_t required_size = 0;
+
+  #define REQUIRE(bytes)       \
+  if (frame_data < (bytes))    \
+  {                            \
+    required_size = (bytes);   \
+    continue;                  \
+  }
+
+  #define RESYNC(bytes)        \
+  {                            \
+    frame_data -= bytes;       \
+    memmove(frame_ptr, frame_ptr + bytes, frame_data); \
+    required_size = 4;         \
+    continue;                  \
+  }
+
+  while (1)
+  {
+    /////////////////////////////////////////////////////////////////
+    // Load required data
+
+    if (frame_data < required_size)
+    {
+      len = MIN(size, required_size - frame_data);
+      memcpy(frame_ptr + frame_data, rawdata, len);
+      frame_data += len;
+      rawdata += len;
+      size -= len;
+
+      if (frame_data < required_size)
+        return false;
+    }
+
+    switch (state)
+    {
+      case state_sync:
+      {
+
+        if (frame_data < 2)
+        {
+          required_size = 2;
+          continue;
+        }
+
+        uint16_t header = *(int16_t*)frame_ptr;
+        header &= 0xf0f0;
+
+        if (header != 0x0070)/* && 
+            header != 0x7000 && 
+            header != 0xf010 && 
+            header != 0x10f0 &&
+            header != 0xf070 && 
+            header != 0x70f0 && 
+            header != 0xf0f0)*/
+        {
+          frame_data--;
+          memmove(frame_ptr, frame_ptr + 1, frame_data);
+          required_size = 2;
+          continue;
+        }
+
+        {
+          frame_data--;
+          memmove(frame_ptr, frame_ptr + 1, frame_data);
+          required_size = 2;
+          continue;
+        }
+
+
+        if (frame_data < HEADER_SIZE)
+        {
+          required_size = HEADER_SIZE;
+          continue;
+        }
+
+        if (!frame_sync(frame_ptr))
+        {
+          frame_data--;
+          memmove(frame_ptr, frame_ptr + 1, frame_data);
+          required_size = 2;
+          continue;
+        }
+
+        if (!frame_syncinfo(frame_ptr))
+        {
+          frame_data--;
+          memmove(frame_ptr, frame_ptr + 1, frame_data);
+          required_size = HEADER_SIZE;
+          continue;
+        }
+
+        sync_spk = stream_spk;
+        {
+          len = MIN(frame_data, frame_size);
+          frame_data -= len;
+          memmove(frame_ptr, frame_ptr + len, frame_data);
+          required_size = 2;
+          continue;
+        }
+
+      }
+    }
+  }
+
+}
+
+bool
+Spdifer::load_frame1()
 {
   bool use_spdif_header = true;
   size_t spdif_payload_size;
@@ -200,8 +344,42 @@ Spdifer::load_frame()
     return true;                        \
   }
 
-  while (1) switch (state)
+  size_t required_size = 0;
+  size_t len;
+  #define REQUIRE(bytes)       \
+  if (frame_data < (bytes))    \
+  {                            \
+    required_size = (bytes);   \
+    continue;                  \
+  }
+
+  #define RESYNC(bytes)        \
+  {                            \
+    frame_data -= (bytes);     \
+    memmove(frame_ptr, frame_ptr + (bytes), frame_data); \
+    required_size = HEADER_SIZE; \
+    continue;                    \
+  }
+
+
+  while (1) 
   {
+    if (frame_data < required_size)
+    {
+      len = MIN(size, required_size - frame_data);
+      memcpy(frame_ptr + frame_data, rawdata, len);
+      frame_data += len;
+      rawdata += len;
+      size -= len;
+
+      if (frame_data < required_size)
+        return 0;
+    }
+
+    
+  switch (state)
+  {
+
     ///////////////////////////////////////////////////////
     // Syncronization
     // Catch at least 3 syncpoints
@@ -214,10 +392,140 @@ Spdifer::load_frame()
 
     case state_sync:
     {
-      // find first syncpoint
-      SYNC;
+      if (frame_data < 2)
+      {
+        required_size = 2;
+        continue;
+      }
+
+      uint16_t header = *(int16_t*)frame_ptr;
+      header &= 0xf0f0;
+      if (header != 0x0070 && 
+          header != 0x7000 && 
+          header != 0xf010 && 
+          header != 0x10f0 &&
+          header != 0xf070 && 
+          header != 0x70f0 && 
+          header != 0xf0f0)
+      {
+        frame_data--;
+        memmove(frame_ptr, frame_ptr + 1, frame_data);
+        required_size = 2;
+        continue;
+      }
+
+      if (frame_data < HEADER_SIZE)
+      {
+        required_size = HEADER_SIZE;
+        continue;
+      }
+
+      if (!frame_sync(frame_ptr))
+      {
+        frame_data--;
+        memmove(frame_ptr, frame_ptr + 1, frame_data);
+        required_size = 2;
+        continue;
+      }
+
+      if (!frame_syncinfo(frame_ptr))
+      {
+        frame_data--;
+        memmove(frame_ptr, frame_ptr + 1, frame_data);
+        required_size = HEADER_SIZE;
+        continue;
+      }
+
       sync_spk = stream_spk;
 
+/*
+      // load buffer until buffer fills or we have no more data
+      {
+        size_t len = MIN(size, SYNC_BUFFER_SIZE - frame_data);
+        memcpy(frame_ptr + frame_data, rawdata, len);
+        frame_data += len;
+        rawdata += len;
+        size -= len;
+      }
+
+
+      // try to sync
+      bool sync = false;
+      uint8_t *pos1 = frame_ptr;
+      uint8_t *end = frame_ptr + frame_data - HEADER_SIZE;
+      while (pos1 < end)
+      {
+        if (frame_sync(pos1)) 
+          if (frame_syncinfo(pos1))
+          {
+            sync = true;
+            break;
+          }
+        pos1++;
+      }
+
+      // drop stuffing
+      if (pos1 > frame_ptr)
+      {
+        frame_data = HEADER_SIZE - 1;
+        memmove(frame_ptr, pos1, HEADER_SIZE - 1);
+      }
+
+      if (!sync)
+      {
+        if (size)
+          continue;
+        else
+          return false;
+      }
+      sync_spk = stream_spk;
+*/
+/*
+      // 1st stage: search sync in frame buffer
+      bool sync = false;
+      uint8_t *pos = frame_ptr;
+      uint8_t *end = frame_ptr + frame_data - HRADER_SIZE;
+      while (pos < end)
+      {
+        if (frame_sync(pos)) 
+          if (frame_syncinfo(pos))
+          {
+            sync = true;
+            break;
+          }
+        pos++;
+      }
+
+      if (!sync)
+      {
+        // copy some data from input
+        size_t len = MIN(size, HEADER_SIZE - 1);
+        memcpy(frame_ptr, frame_ptr + frame_data, len);
+        end += len;
+
+        // 2nd stage: search sync in between of frame buffer and input buffer
+        while (pos < end)
+        {
+          if (frame_sync(pos)) 
+            if (frame_syncinfo(pos))
+            {
+              sync = true;
+              break;
+            }
+          pos++;
+        }
+      }
+
+      if (!sync)
+      {
+        // 3rd stage: search sync
+      }
+
+*/
+/*
+      SYNC;
+      sync_spk = stream_spk;
+*/
       // load buffer until buffer fills or we have no more data
       {
         size_t len = MIN(size, SYNC_BUFFER_SIZE - frame_data);
@@ -420,6 +728,7 @@ Spdifer::load_frame()
       state = state_drop_passthrough;
       return true;
     }
+  }
   }
 
   // never be here
