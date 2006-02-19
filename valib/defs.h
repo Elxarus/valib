@@ -122,8 +122,18 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 // Byteorder
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined(_M_IX86)
+#if defined(_DEBUG)
 
+  // do not use inline functions for debug version (faaaaster)
+  #define swab_u32(i) uint32_t((uint32_t(i) >> 24) | (uint32_t(i) >> 8) & 0xff00 | (uint32_t(i) << 8) & 0xff0000 | (uint32_t(i) << 24))
+  #define swab_s32(i) int32_t(swab_u32(i))
+  #define swab_u16(i) uint16_t((i << 8) | (i >> 8))
+  #define swab_s16(i) int16_t(swab_u16(i))
+  inline int32_t  swab_s24(int24_t i)  { return swab_s32(i) >> 8; }
+
+#elif defined(_M_IX86)
+
+  // use asm inline functions
   #pragma warning(push)
   #pragma warning(disable: 4035) 
   inline uint32_t swab_u32(uint32_t x) 
@@ -165,12 +175,12 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 
 #else
 
+  // use general inline functions
   inline uint32_t swab_u32(uint32_t i) { return (i >> 24) | (i >> 8) & 0xff00 | (i << 8) & 0xff0000 | (i << 24); }
   inline int32_t  swab_s32(int32_t i)  { return (int32_t)swab_u32((uint32_t)i); }
   inline uint16_t swab_u16(uint16_t i) { return (i << 8) | (i >> 8); };
   inline int16_t  swab_s16(int16_t i)  { return (int16_t)swab_u16((uint16_t)i); };
   inline int32_t  swab_s24(int24_t i)  { return swab_s32(i) >> 8; }
-
 #endif
 
 inline float    swab_float(float f) { uint32_t i = swab_u32(*(uint32_t *)&f); return *(float *)&i; };
