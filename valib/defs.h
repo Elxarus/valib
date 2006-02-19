@@ -127,7 +127,7 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
   // do not use inline functions for debug version (faaaaster)
   #define swab_u32(i) uint32_t((uint32_t(i) >> 24) | (uint32_t(i) >> 8) & 0xff00 | (uint32_t(i) << 8) & 0xff0000 | (uint32_t(i) << 24))
   #define swab_s32(i) int32_t(swab_u32(i))
-  #define swab_u16(i) uint16_t((i << 8) | (i >> 8))
+  #define swab_u16(i) uint16_t((uint16_t(i) << 8) | (uint16_t(i) >> 8))
   #define swab_s16(i) int16_t(swab_u16(i))
   inline int32_t  swab_s24(int24_t i)  { return swab_s32(i) >> 8; }
 
