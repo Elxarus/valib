@@ -93,8 +93,9 @@ public:
   /////////////////////////////////////////////////////////
   // Spdifer interface
 
+  Speakers get_sync() const;
+  int  get_frames() const;
   void get_info(char *buf, size_t len);
-  int  get_frames();
 
   /////////////////////////////////////////////////////////
   // Filter interface

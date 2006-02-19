@@ -145,8 +145,14 @@ Spdifer::Spdifer()
   reset();
 }
 
+Speakers
+Spdifer::get_sync() const 
+{
+  return sync_spk;
+}
+
 int
-Spdifer::get_frames()
+Spdifer::get_frames() const
 {
   return frames;
 }
