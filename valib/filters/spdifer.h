@@ -13,6 +13,7 @@
 #ifndef SPDIFER_H
 #define SPDIFER_H
 
+#include "helpers\syncscan.h"
 #include "sync.h"
 #include "filter.h"
 #include "data.h"
@@ -28,6 +29,8 @@ protected:
   enum { state_sync, state_spdif, state_drop_spdif, state_passthrough, state_drop_passthrough } state;
 
   Sync     sync_helper;
+  SyncScan scanner;
+
   DataBuf  frame_buf;    // frame & sync buffer
   size_t   frame_data;   // data size at frame buffer (excluding spdif header size)
   size_t   frames;       // number of frames sent

@@ -142,6 +142,7 @@ Spdifer::Spdifer()
 {
   frame_buf.allocate(SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
   frames = 0;
+  scanner.set_mad();
   reset();
 }
 
@@ -221,7 +222,32 @@ Spdifer::load_frame()
     case state_sync:
     {
       // find first syncpoint
-      SYNC;
+      LOAD(4);
+      if (!scanner.get_sync(frame_ptr))
+      {
+        size_t gone = scanner.scan(frame_ptr, frame_ptr + 4, frame_data - 4);
+        frame_data -= gone;
+        memmove(frame_ptr + 4, frame_ptr + 4 + gone, frame_data);
+
+        if (!scanner.get_sync(frame_ptr))
+        {
+          assert(frame_data == 4);
+          gone = scanner.scan(frame_ptr, rawdata, size);
+          rawdata += gone;
+          size -= gone;
+          if (!scanner.get_sync(frame_ptr))
+            return false;
+        }
+      }
+
+      // validate syncpoint
+      LOAD(HEADER_SIZE);
+      if (!frame_sync(frame_ptr) || !frame_syncinfo(frame_ptr))
+      {
+        frame_data--;
+        memmove(frame_ptr, frame_ptr + 1, frame_data);
+        continue;
+      }
       sync_spk = stream_spk;
 
       // load buffer until buffer fills or we have no more data
@@ -330,7 +356,33 @@ Spdifer::load_frame()
 
     case state_spdif:
     {
-      SYNC;
+      // find syncpoint
+      LOAD(4);
+      if (!scanner.get_sync(frame_ptr))
+      {
+        size_t gone = scanner.scan(frame_ptr, frame_ptr + 4, frame_data - 4);
+        frame_data -= gone;
+        memmove(frame_ptr + 4, frame_ptr + 4 + gone, frame_data);
+
+        if (!scanner.get_sync(frame_ptr))
+        {
+          assert(frame_data == 4);
+          gone = scanner.scan(frame_ptr, rawdata, size);
+          rawdata += gone;
+          size -= gone;
+          if (!scanner.get_sync(frame_ptr))
+            return false;
+        }
+      }
+
+      // validate syncpoint
+      LOAD(HEADER_SIZE);
+      if (!frame_sync(frame_ptr) || !frame_syncinfo(frame_ptr))
+      {
+        frame_data--;
+        memmove(frame_ptr, frame_ptr + 1, frame_data);
+        continue;
+      }
 
       // switch streams
       if (stream_spk != sync_spk)
@@ -410,7 +462,33 @@ Spdifer::load_frame()
 
     case state_passthrough:
     {
-      SYNC;
+      // find syncpoint
+      LOAD(4);
+      if (!scanner.get_sync(frame_ptr))
+      {
+        size_t gone = scanner.scan(frame_ptr, frame_ptr + 4, frame_data - 4);
+        frame_data -= gone;
+        memmove(frame_ptr + 4, frame_ptr + 4 + gone, frame_data);
+
+        if (!scanner.get_sync(frame_ptr))
+        {
+          assert(frame_data == 4);
+          gone = scanner.scan(frame_ptr, rawdata, size);
+          rawdata += gone;
+          size -= gone;
+          if (!scanner.get_sync(frame_ptr))
+            return false;
+        }
+      }
+
+      // validate syncpoint
+      LOAD(HEADER_SIZE);
+      if (!frame_sync(frame_ptr) || !frame_syncinfo(frame_ptr))
+      {
+        frame_data--;
+        memmove(frame_ptr, frame_ptr + 1, frame_data);
+        continue;
+      }
 
       // switch streams
       if (stream_spk != sync_spk)
@@ -448,6 +526,7 @@ Spdifer::reset()
 {
   NullFilter::reset();
   sync_helper.reset();
+  scanner.reset();
 
   frame_data = 0;
   frames = 0;
