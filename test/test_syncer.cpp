@@ -65,6 +65,7 @@ test_syncer(Log *log)
   const int buf_size = max_ptr_offset + max_block_size + max_offset + 16;
 
   uint8_t *buf = new uint8_t[buf_size];
+  uint8_t scanbuf[4];
 
   //////////////////////////////////////////////////////////
   // Syncpoint find test
@@ -129,10 +130,70 @@ test_syncer(Log *log)
         }
   }
 
+  //////////////////////////////////////////////////////////
+  // Syncpoint find test
+
+  for (isyncword = 0; isyncword < max_syncwords; isyncword++)
+  {
+    log->status("syncword: %x", syncwords[isyncword]);
+    for (int ptr_offset = 0; ptr_offset < max_ptr_offset; ptr_offset++)
+      for (int block_size = 1; block_size < max_block_size; block_size++)
+        for (int offset = 0; offset < max_offset; offset++)
+        {
+          memset(buf, 0, buf_size);
+          *(uint32_t *)(buf + ptr_offset + offset) = swab_u32(syncwords[isyncword]);
+          s.reset();
+
+          for (int i = 0; i < offset + 16; i += block_size)
+          {
+            int gone = s.scan(scanbuf, buf + i + ptr_offset, block_size);
+
+            if (s.get_sync(scanbuf))
+            {
+              if (gone > block_size)
+              {
+                log->msg("syncword: %x ptr.offset: %i block size: %i offset: %i", syncwords[isyncword], ptr_offset, block_size, offset);
+                log->err("Too much bytes gone: %i", gone);
+                break;
+              }
+
+              if (i + gone - 4 != offset)
+              {
+                log->msg("syncword: %x ptr.offset: %i block size: %i offset: %i", syncwords[isyncword], ptr_offset, block_size, offset);
+                log->err("Sync found at %i", i+gone-4);
+              }
+
+              if ((s.get_sync(scanbuf) & (1 << syncindex[isyncword])) == 0)
+              {
+                log->msg("syncword: %x ptr.offset: %i block size: %i offset: %i", syncwords[isyncword], ptr_offset, block_size, offset);
+                log->err("Wrong sync = %i", s.count);
+              }
+              break;
+            }
+            else
+              if (gone != block_size)
+              {
+                log->msg("syncword: %x ptr.offset: %i block size: %i offset: %i", syncwords[isyncword], ptr_offset, block_size, offset);
+                log->err("Wrong number of bytes gone: %i", gone);
+                break;
+              }
+
+          }
+          if (!s.get_sync(scanbuf))
+          {
+            log->msg("syncword: %x ptr.offset: %i block size: %i offset: %i", syncwords[isyncword], ptr_offset, block_size, offset);
+            log->err("Sync was not found");
+          }
+        }
+  }
+
   delete buf;
 
   //////////////////////////////////////////////////////////
   // Speed test
+
+  s.clear_all();
+  s.set_mad();
 
   const int runs = 50;
   const int size = 10000000;
@@ -154,7 +215,8 @@ test_syncer(Log *log)
     while (gone < chunk.size)
     {
       gone += s.scan(chunk.rawdata + gone, chunk.size - gone);
-      sync_count++;
+      if (s.get_sync())
+        sync_count++;
     }
   }
   cpu.stop();
@@ -162,6 +224,27 @@ test_syncer(Log *log)
   log->msg("Sync scan speed: %iMB/s, Syncpoints found: %i", 
     int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 
     sync_count / runs);
+
+  sync_count = 0;
+  cpu.reset();
+  cpu.start();
+  for (i = 0; i < runs; i++)
+  {
+    s.reset();
+    size_t gone = 0;
+    while (gone < chunk.size)
+    {
+      gone += s.scan(scanbuf, chunk.rawdata + gone, chunk.size - gone);
+      if (s.get_sync(scanbuf))
+        sync_count++;
+    }
+  }
+  cpu.stop();
+
+  log->msg("Sync scan speed: %iMB/s, Syncpoints found: %i", 
+    int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 
+    sync_count / runs);
+
 
   return log->close_group();
 };
