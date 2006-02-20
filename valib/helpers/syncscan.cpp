@@ -12,7 +12,7 @@
 // 0x40  DTS syncword 3: 0xfe 0x7f 0x01 0x80
 // 0x80  DTS syncword 4: 0x7f 0xfe 0x80 0x01
 
-static const int mad_sync[] = 
+static const uint32_t mad_sync[] = 
 {
   0xfff00000, 0xfff00000,
   0xf0ff0000, 0xf0ff0000, 
@@ -23,13 +23,6 @@ static const int mad_sync[] =
   0xfe7f0180, 0xffffffff,
   0x7ffe8001, 0xffffffff,
 };
-
-MADSyncScan::MADSyncScan()
-{
-  for (int i = 0; i < array_size(mad_sync); i+=2)
-    set(i, mad_sync[i], mad_sync[i+1]);
-}
-
 
 SyncScan::SyncScan(uint32_t _syncword, uint32_t _syncmask)
 {
@@ -90,6 +83,26 @@ SyncScan::set(int _index, uint32_t _syncword, uint32_t _syncmask)
   return true;
 }
 
+bool 
+SyncScan::set_list(const uint32_t *_list, size_t _size)
+{
+  if (_size & 1)
+    return false;
+
+  for (size_t i = 0; i < _size; i+=2)
+    if (!set(i / 2, _list[i], _list[i+1]))
+      return false;
+
+  return true;
+}
+
+bool 
+SyncScan::set_mad()
+{
+  return set_list(mad_sync, array_size(mad_sync));
+}
+
+
 bool
 SyncScan::clear(int _index)
 {
@@ -113,6 +126,27 @@ void
 SyncScan::reset()
 {
   count = 0;
+}
+
+uint32_t 
+SyncScan::get_sync() const
+{
+  if (count == 4)
+    return synctable[(syncword & 0xff)] & 
+           synctable[((syncword >> 8) & 0xff) + 256] & 
+           synctable[((syncword >> 16) & 0xff) + 512] & 
+           synctable[(syncword >> 24) + 768];
+  else
+    return 0;
+}
+
+uint32_t 
+SyncScan::get_sync(uint8_t *buf) const
+{
+  return synctable[buf[0]] & 
+         synctable[buf[1] + 256] & 
+         synctable[buf[2] + 512] & 
+         synctable[buf[3] + 768];
 }
 
 size_t 
@@ -211,7 +245,7 @@ SyncScan::scan(uint8_t *buf, size_t size)
     #define N4 (next & 0xff)
     #define N5 ((next >> 8) & 0xff)
     #define N6 ((next >> 16) & 0xff)
-    #define N7 ((next >> 24) & 0xff)
+    #define N7 (next >> 24)
 
     if (st1(S1) & st2(S2))
     if (st1(S1) & st2(S2) & st3(S3) & st4(N4))
@@ -271,14 +305,124 @@ SyncScan::scan(uint8_t *buf, size_t size)
   return size;
 }
 
-int 
-SyncScan::get_sync()
+size_t 
+SyncScan::scan(uint8_t *syncbuf, uint8_t *buf, size_t size) const
 {
-  if (count == 4)
-    return synctable[(syncword & 0xff)] & 
-           synctable[((syncword >> 8) & 0xff) + 256] & 
-           synctable[((syncword >> 16) & 0xff) + 512] & 
-           synctable[(syncword >> 24) + 768];
-  else
-    return 0;
+  uint8_t *pos = buf;
+  uint8_t *end = buf + size;
+
+  ///////////////////////////////////////////////////////
+  // Use local syncbuf
+
+  uint32_t sync = swab_u32(*(uint32_t*)syncbuf);                   
+
+  ///////////////////////////////////////////////////////
+  // Use local synctable
+  // Macroses to access the synctable
+
+  synctbl_t *st = synctable;
+
+  #define st1(i) st[(i)]
+  #define st2(i) st[(i) + 256]
+  #define st3(i) st[(i) + 512]
+  #define st4(i) st[(i) + 768]
+
+  #define is_sync(s)            \
+  (                             \
+    st1(sync >> 24) &           \
+    st2((sync >> 16) & 0xff) &  \
+    st3((sync >> 8) & 0xff) &   \
+    st4(sync & 0xff)            \
+  )
+
+  ///////////////////////////////////////////////////////
+  // Process unaligned start
+
+  while (((uint32_t)pos & 3) && (pos < end))
+  {
+    sync = (sync << 8) | *pos++;
+    if (is_sync(sync))
+    {
+      *(uint32_t *)syncbuf = swab_u32(sync);
+      return pos - buf;
+    }
+  }
+
+  ///////////////////////////////////////////////////////
+  // Setup 32bit transfer
+
+  uint32_t *pos32 = (uint32_t *)pos;
+  uint32_t *end32 = (uint32_t *)((uint32_t)end & ~3);
+
+  ///////////////////////////////////////////////////////
+  // Process main block
+
+  while (pos32 < end32)
+  {
+    uint32_t next = *pos32++;
+
+    #define S1 ((sync >> 16) & 0xff)
+    #define S2 ((sync >> 8) & 0xff)
+    #define S3 (sync & 0xff)
+    #define N4 (next & 0xff)
+    #define N5 ((next >> 8) & 0xff)
+    #define N6 ((next >> 16) & 0xff)
+    #define N7 (next >> 24)
+
+    if (st1(S1) & st2(S2))
+    if (st1(S1) & st2(S2) & st3(S3) & st4(N4))
+    {
+      sync = (sync << 8) | N4;
+      *(uint32_t *)syncbuf = swab_u32(sync);
+      return (uint8_t *)pos32 - buf + 1 - 4;
+    }
+
+    if (st1(S2) & st2(S3))
+    if (st1(S2) & st2(S3) & st3(N4) & st4(N5))
+    {
+      sync = (sync << 16) | (N4 << 8) | N5;
+      *(uint32_t *)syncbuf = swab_u32(sync);
+      return (uint8_t *)pos32 - buf + 2 - 4;
+    }
+
+    if (st1(S3) & st2(N4))
+    if (st1(S3) & st2(N4) & st3(N5) & st4(N6))
+    {
+      sync = (sync << 24) | (N4 << 16) | (N5 << 8) | N6;
+      *(uint32_t *)syncbuf = swab_u32(sync);
+      return (uint8_t *)pos32 - buf + 3 - 4;
+    }
+
+    sync = swab_u32(next);
+
+    if (st1(N4) & st2(N5))
+    if (st1(N4) & st2(N5) & st3(N6) & st4(N7))
+    {
+      // sync is right
+      *(uint32_t *)syncbuf = swab_u32(sync);
+      return (uint8_t *)pos32 - buf + 4 - 4;
+    }
+  }
+
+  ///////////////////////////////////////////////////////
+  // Process unaligned end
+
+  pos = (uint8_t *)pos32;
+
+  while (pos < end)
+  {
+    sync = (sync << 8) | *pos++;
+    if (is_sync(sync))
+    {
+      *(uint32_t *)syncbuf = swab_u32(sync);
+      return pos - buf;
+    }
+  }
+
+  ///////////////////////////////////////////////////////
+  // Scan failed
+
+  *(uint32_t *)syncbuf = swab_u32(sync);
+  return size;
 }
+
