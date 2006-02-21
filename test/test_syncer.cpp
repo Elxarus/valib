@@ -16,16 +16,6 @@ static const int syncwords[] =
   0x1fffe800,
   0xfe7f0180,
   0x7ffe8001,
-
-  0xfff00000, 0xfff10000, 0xfff20000, 0xfff30000,
-  0xfff40000, 0xfff50000, 0xfff60000, 0xfff70000,
-  0xfff80000, 0xfff90000, 0xfffa0000, 0xfffb0000,
-  0xfffc0000, 0xfffd0000, 0xfffe0000, 0xffff0000,
-
-  0xf0ff0000, 0xf1ff0000, 0xf2ff0000, 0xf3ff0000,
-  0xf4ff0000, 0xf5ff0000, 0xf6ff0000, 0xf7ff0000,
-  0xf8ff0000, 0xf9ff0000, 0xfaff0000, 0xfbff0000,
-  0xfcff0000, 0xfdff0000, 0xfeff0000, 0xffff0000,
 };
 
 static const int syncindex[] = 
@@ -221,6 +211,9 @@ test_syncer(Log *log)
   }
   cpu.stop();
 
+  if (sync_count != 8606*runs)
+    log->err("Syncpoints found: %i (must be 8606)", sync_count / 8606);
+
   log->msg("Sync scan speed: %iMB/s, Syncpoints found: %i", 
     int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 
     sync_count / runs);
@@ -240,6 +233,9 @@ test_syncer(Log *log)
     }
   }
   cpu.stop();
+
+  if (sync_count != 8606*runs)
+    log->err("Syncpoints found: %i (must be 8606)", sync_count / 8606);
 
   log->msg("Sync scan speed: %iMB/s, Syncpoints found: %i", 
     int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 
