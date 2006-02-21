@@ -52,7 +52,6 @@ protected:
   int magic;             // SPDIF stream identifier
   
   bool load_frame();
-  void drop_frame();
 
   // fast inline sync detectors
   inline bool frame_sync(const uint8_t *buf) const;
