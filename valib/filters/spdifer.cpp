@@ -801,7 +801,7 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
   else if ((_buf[1] == 0xff) && ((_buf[0] & 0xf0) == 0xf0))
   {
     uint32_t header = *(uint32_t *)_buf;
-    h = (header >> 16) | (header << 16);
+    h = ((header & 0xff00ff00) >> 8) | ((header & 0x00ff00ff) << 8);
     bs_type = BITSTREAM_16BE;
   }
   else 
