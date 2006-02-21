@@ -12,12 +12,20 @@
 // 0x40  DTS syncword 3: 0xfe 0x7f 0x01 0x80
 // 0x80  DTS syncword 4: 0x7f 0xfe 0x80 0x01
 
-static const uint32_t mad_sync[] = 
+static const uint32_t mpa_sync[] = 
 {
   0xfff00000, 0xfff00000,
   0xf0ff0000, 0xf0ff0000, 
+};
+
+static const uint32_t ac3_sync[] = 
+{
   0x0b770000, 0xffff0000,
   0x770b0000, 0xffff0000,
+};
+
+static const uint32_t dts_sync[] = 
+{
   0xff1f00e8, 0xffffffff,
   0x1fffe800, 0xffffffff,
   0xfe7f0180, 0xffffffff,
@@ -96,10 +104,30 @@ SyncScan::set_list(const uint32_t *_list, size_t _size)
   return true;
 }
 
-bool 
+void
+SyncScan::set_mpa()
+{
+  set_list(mpa_sync, array_size(mpa_sync));
+}
+
+void
+SyncScan::set_ac3()
+{
+  set_list(ac3_sync, array_size(ac3_sync));
+}
+
+void
+SyncScan::set_dts()
+{
+  set_list(dts_sync, array_size(dts_sync));
+}
+
+void
 SyncScan::set_mad()
 {
-  return set_list(mad_sync, array_size(mad_sync));
+  set_list(mpa_sync, array_size(mpa_sync));
+  set_list(ac3_sync, array_size(ac3_sync));
+  set_list(dts_sync, array_size(dts_sync));
 }
 
 

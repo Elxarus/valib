@@ -33,7 +33,11 @@ public:
 
   bool   set(int index, uint32_t syncword, uint32_t syncmask);
   bool   set_list(const uint32_t *list, size_t size);
-  bool   set_mad();
+
+  void   set_mpa();
+  void   set_ac3();
+  void   set_dts();
+  void   set_mad();
 
   bool   clear(int index);
   void   clear_all();
