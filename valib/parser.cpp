@@ -1,67 +1,88 @@
 #include "parser.h"
 
-void 
-BaseParser::reset()
-{
-  // drop data in frame buffer
-  frame_data = 0;
-  new_frame_size = 0;
-
-  // samples.zero()?
-}
-
 size_t
 BaseParser::load_frame(uint8_t **buf, uint8_t *end)
 {
   // Drop old frame if loaded
-  if (frame_size && (frame_data >= frame_size))
-  {
-    frame_data = 0;
-    new_frame_size = 0;
+  if (is_frame_loaded())
+    drop_frame();
+
+  uint8_t *frame_buf = frame.get_data();
+  #define LOAD(amount)                  \
+  if (frame_data < (amount))            \
+  {                                     \
+    size_t len = (amount) - frame_data; \
+    if (size_t(end - *buf) < len)       \
+    {                                   \
+      /* have no enough data */         \
+      memcpy(frame_buf + frame_data, *buf, end - *buf); \
+      frame_data += end - *buf;         \
+      *buf += end - *buf;               \
+      return 0;                         \
+    }                                   \
+    else                                \
+    {                                   \
+      memcpy(frame_buf + frame_data, *buf, len); \
+      frame_data += len;                \
+      *buf += len;                      \
+    }                                   \
   }
 
-  while (*buf < end) 
+  while (1) 
   {
     ///////////////////////////////////////////////////////
-    // Sync
+    // Sync 
+    // * We may have some data in frame buffer. Therefore 
+    //   we must scan frame buffer first.
+    // * We may have no data in frame buffer. So we must
+    //   load 4 bytes to make scanner to work with frame
+    //   buffer as scan buffer.
 
-    if (!new_frame_size)
+    LOAD(4);
+    if (!scanner.get_sync(frame_buf))
     {
-      new_frame_size = sync(buf, end);
+      size_t gone = scanner.scan(frame_buf, frame_buf + 4, frame_data - 4);
+      frame_data -= gone;
+      memmove(frame_buf + 4, frame_buf + 4 + gone, frame_data);
+
+      if (!scanner.get_sync(frame_buf))
+      {
+        gone = scanner.scan(frame_buf, *buf, end - *buf);
+        *buf += gone;
+        if (!scanner.get_sync(frame_buf))
+          return 0;
+      }
+    }
+
+    LOAD(header_size())
+
+    ///////////////////////////////////////////////////////
+    // Load header
+    // Parse header and fill stream info
+
+    if (!load_header(frame_buf))
+    {
+      // resync (possibly false sync)
+      frame_data--;
+      memmove(frame_buf, frame_buf + 1, frame_data);
       continue;
     }
 
     ///////////////////////////////////////////////////////
-    // Load frame
+    // Load frame data and prepare for decoding
+    // todo: crc check here
 
-    if (end - *buf < signed(new_frame_size - frame_data))
+    LOAD(frame_size);
+    if (!prepare())
     {
-      memcpy(frame + frame_data, *buf, end - *buf);
-      frame_data += end - *buf;
-      *buf = end;
-      return 0;
-    }
-    else
-    {
-      memcpy(frame + frame_data, *buf, new_frame_size - frame_data);
-      *buf += new_frame_size - frame_data;
-      frame_data = new_frame_size;
-    }
-
-    ///////////////////////////////////////////////////////
-    // Update stream info and prepare to decode frame
-
-    if (!start_decode())
-    {
-      // error (drop frame)
-      errors++;
-      frame_data = 0;
-      new_frame_size = 0;
+      // resync (possibly false sync)
+      frame_data--;
+      memmove(frame_buf, frame_buf + 1, frame_data);
       continue;
     }
 
     frames++;
-    return frame_size = new_frame_size;
+    return frame_size;
   } // while (*buf < end)
 
   return 0;

@@ -635,6 +635,7 @@ int main(int argc, char *argv[])
   // spk = input format
 
   spk = file.get_spk();
+  spk.format = FORMAT_LINEAR;
 
   if (spdif)
   {
@@ -733,7 +734,9 @@ int main(int argc, char *argv[])
         if (!file.decode_frame())
           continue;
 
-        chunk.set_linear(file.get_spk(), file.get_samples(), file.get_nsamples());
+        spk = file.get_spk();
+        spk.format = FORMAT_LINEAR;
+        chunk.set_linear(spk, file.get_samples(), file.get_nsamples());
       }
 
       /////////////////////////////////////////////////////
@@ -780,7 +783,7 @@ int main(int argc, char *argv[])
   if (spdif)
     chunk.set_empty(Speakers(FORMAT_UNKNOWN, 0, 0));
   else
-    chunk.set_empty(file.get_spk());
+    chunk.set_empty(spk);
   chunk.eos = true;
 
   if (!filter->process_to(&chunk, sink))

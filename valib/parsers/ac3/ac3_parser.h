@@ -138,8 +138,11 @@ public:
 class AC3Parser : public BaseParser, public AC3Info, public AC3FrameState
 {
 public:
-  bool check_crc;
+  bool do_crc;        // do crc check
+  bool do_dither;     // do dithering
+  bool do_imdct;      // do IMDCT
 
+public:
   AC3Parser();
   ~AC3Parser();
 
@@ -155,8 +158,9 @@ protected:
   /////////////////////////////////////////////////////////
   // BaseParser overrides
 
-  unsigned sync(uint8_t **buf, uint8_t *end);
-  bool start_decode();
+  virtual size_t header_size() const;
+  virtual bool   load_header(uint8_t *_buf);
+  virtual bool   prepare();
 
 #ifndef AC3_DEBUG 
 protected:
@@ -182,74 +186,5 @@ public:
   void parse_coeff(samples_t samples);
 
 };
-
-
-inline unsigned
-AC3Parser::ac3_sync(uint8_t *_buf) const
-{
-  static const int halfrate_tbl[12] = 
-  { 
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3
-  };
-  static const int bitrate_tbl[] = 
-  { 
-    32,  40,  48,  56,  64,  80,  96, 112,
-   128, 160, 192, 224, 256, 320, 384, 448,
-   512, 576, 640 
-  };
-
-  /////////////////////////////////////////////////////////
-  // 8 bit or 16 bit little endian steram sync
-  if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
-  {
-    if (_buf[5] >= 0x60)         // 'bsid'
-      return 0;
-
-    if ((_buf[4] & 0x3f) > 0x25) // 'frmesizecod'
-      return 0;
-
-    if ((_buf[4] & 0xc0) > 0x80) // 'fscod'
-      return 0;
-
-    int halfrate = halfrate_tbl[_buf[5] >> 3];
-    int frmsizecod = (_buf[4] & 0x3f);
-    int bitrate = bitrate_tbl[frmsizecod >> 1];
-
-    switch (_buf[4] & 0xc0) 
-    {
-      case 0:    return 4 * bitrate;
-      case 0x40: return 2 * (320 * bitrate / 147 + (frmsizecod & 1));
-      case 0x80: return 6 * bitrate;
-      default:   return 0;
-    }
-  }
-  /////////////////////////////////////////////////////////
-  // 16 bit big endian steram sync
-  else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
-  {
-    if (_buf[4] >= 0x60)         // 'bsid'
-      return 0;
-
-    if ((_buf[5] & 0x3f) > 0x25) // 'frmesizecod'
-      return 0;
-
-    if ((_buf[5] & 0xc0) > 0x80) // 'fscod'
-      return 0;
-
-    int halfrate = halfrate_tbl[_buf[4] >> 3];
-    int frmsizecod = (_buf[5] & 0x3f);
-    int bitrate = bitrate_tbl[frmsizecod >> 1];
-
-    switch (_buf[5] & 0xc0) 
-    {
-      case 0:    return 4 * bitrate;
-      case 0x40: return 2 * (320 * bitrate / 147 + (frmsizecod & 1));
-      case 0x80: return 6 * bitrate;
-      default:   return 0;
-   }
-  }
-  else
-    return 0;
-}
 
 #endif

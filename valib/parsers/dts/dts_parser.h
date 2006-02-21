@@ -98,9 +98,9 @@ protected:
   /////////////////////////////////////////////////////////
   // BaseParser overrides
 
-  unsigned sync(uint8_t **buf, uint8_t *end);
-  bool check_crc();
-  bool start_decode();
+  virtual size_t header_size() const;
+  virtual bool   load_header(uint8_t *_buf);
+  virtual bool   prepare();
 
   /////////////////////////////////////////////////////////
   // DTS parse

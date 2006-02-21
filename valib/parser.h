@@ -7,6 +7,8 @@
 
 #include "spk.h"
 #include "data.h"
+#include "helpers\syncscan.h"
+#include "bitstream.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Parser
@@ -63,7 +65,7 @@
 //   Should be called only after successful decode_frame() call. Returns
 //   pointers to decoded samples buffers. Buffer size is reported by 
 //   get_nsamples(). Number of correct buffer pointers returned should be
-//   equal to number of channels (reported by get_spk.nch() ).
+//   equal to the number of channels reported by get_spk.nch().
 //
 // Following functions may be called asyncronously (and possibly from another
 // thread/process) and should be designed carefully. All returned values may 
@@ -73,7 +75,7 @@
 // 1) get_info() may be changed in case of errors but it is undesirable
 // 2) get_errors() is increased in case of errors
 //
-// get_spk()         Returns speaker configuration of current stream.
+// get_spk()         Returns speaker configuration of compresed stream.
 // get_frame_size()  Retruns size of last frame loaded.
 // get_nsamples()    Returns number of samples in the last loaded frame.
 // get_info()        Detailed text report about the stream.
@@ -117,13 +119,26 @@ public:
 // Provide base functionality common for most of parsers.
 //
 // Following functions are required to override:
-// sync()         Find sync and return frame size
-// crc_check()    Checks CRC of fully loaded frame [optional]
-// start_decode() Update stream information currently reported and 
-//                prepare to decode frame
-// decode_frame() Decode frame. This function should check 
-//                is_frame_loaded() to proceed correctly and
-//                return false otherwise.
+//
+// header_size()  
+//   Minimum data size required to decode header. Used by load_frame() to load
+//   nessesary data for load_header() function.
+//
+// load_header()
+//   Decode stream info and return frame size. Used by load_frame() to ensure
+//   that frame can be loaded with given syncpoint. It must fill 'spk', 
+//   'frame_size', 'nsamples' and 'bs_type' fields with correct values.
+//   Returns true on successful header check and false otherwise.
+//
+// prepare() (placeholder)
+//   Called after successful frame load to prepare decoder. Here we can parse
+//   additional information, do some initializations, etc. But we must do it 
+//   as fast as possible because load_frame() may be used for fast stream 
+//   scanning so only publically avalable data should be loaded here (for 
+//   example BSI info for ac3). Returns true on success and false otherwise.
+//
+// decode_frame() Decode frame. This function should check is_frame_loaded()
+//   to proceed correctly and return false otherwise.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -135,43 +150,68 @@ protected:
   SampleBuf samples;
 
   size_t    frame_data;
-  size_t    new_frame_size;
-  
+
+  // Syncronization
+  SyncScan  scanner;
+
   // Stream information currently reported
+  // must be filled by load_header()
   Speakers  spk;
   size_t    frame_size;
   size_t    nsamples;
+  int       bs_type;
 
   size_t    frames;
   size_t    errors;
 
   // Functions to override
-  virtual size_t sync(uint8_t **buf, uint8_t *end) = 0;
-  virtual bool start_decode() = 0;
+  virtual size_t header_size() const = 0;
+  virtual bool   load_header(uint8_t *_buf) = 0;
+  virtual bool   prepare() { return true; };
 
 public:
   BaseParser():
     frame_data(0),
-    new_frame_size(0),
-    spk(FORMAT_UNKNOWN, MODE_UNDEFINED, 0, 0.0, NO_RELATION), // indicate unknown format
+    spk(spk_unknown), // indicate unknown format
     frame_size(0),
     nsamples(0), 
+    bs_type(0),
     frames(0),
     errors(0)
   {
-    // ancessor classes may set buffer sizes and other 
-    // constant params as needed in constructor
+    ///////////////////////////////////////////////////////
+    // Descendant class must:
+    // * Set buffer size for frame buffer.
+    //   It must be larger or equal to the largest frame 
+    //   size possible (used by load_frame()).
+    // * Initialize syncronization scanner.
+    //
+    // Descendant class may:
+    // * Set buffer size for samples buffer
+    //   (or it may be set on decoding)
+    // * Set stream info variables that do not change
+    //   (for ac3 nsamples = 1536)
   }
 
   /////////////////////////////////////////////////////////
   // Parser interface
 
-  void reset();
+  void reset()
+  {
+    frame_data = 0;
+  };
 
   // Frame load operations
   size_t load_frame(uint8_t **buf, uint8_t *end);
   bool   is_frame_loaded()  const { return frame_size && (frame_data >= frame_size); }
-  void   drop_frame()             { frame_data = 0; new_frame_size = 0; }
+  void   drop_frame()             
+  { 
+    if (frame_data)
+    {
+      frame_data -= frame_size;
+      memmove(frame, frame + frame_size, frame_data);
+    }
+  }
 
   // Buffers
   uint8_t *get_frame()      const { return frame;      }

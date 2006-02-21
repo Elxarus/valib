@@ -4,6 +4,8 @@
 // Decoder should be empty after process() if it was no frame loaded.
 // (because it should report right output format at get_chunk())
 
+static const int format_mask = FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS;
+
 AudioDecoder::AudioDecoder()
 {
   parser = 0;
@@ -26,12 +28,12 @@ AudioDecoder::reset()
   sync_helper.reset();
   if (parser)
     parser->reset();
+  out_spk = spk_unknown;
 }
 
 bool
 AudioDecoder::query_input(Speakers _spk) const
 {
-  int format_mask = FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS;
   return (FORMAT_MASK(_spk.format) & format_mask) != 0;
 }
 
@@ -66,18 +68,22 @@ AudioDecoder::process(const Chunk *_chunk)
   sync = false;
 
   load_frame();
+
+  // if we did not start a stream we must
+  // forget about current stream on flushing
+  // and drop data currently buffered
+  // (flushing state is also dropped so we 
+  // do not pass eos event in this case)
+  if (flushing && out_spk == spk_unknown)
+    reset();
+
   return true;
 }
-
-
 
 Speakers
 AudioDecoder::get_output() const
 {
-  if (parser)
-    return parser->get_spk();
-  else
-    return spk_unknown;
+  return out_spk;
 }
 
 bool
@@ -99,7 +105,7 @@ AudioDecoder::get_chunk(Chunk *_chunk)
 
   if (!parser->is_frame_loaded() || !parser->decode_frame())
   {
-    _chunk->set_empty(parser->get_spk(), 0, 0, flushing);
+    _chunk->set_empty(out_spk, 0, 0, flushing);
     flushing = false;
 
     load_frame();
@@ -108,7 +114,7 @@ AudioDecoder::get_chunk(Chunk *_chunk)
   else
   {
     // fill output chunk
-    _chunk->set_linear(parser->get_spk(), parser->get_samples(), parser->get_nsamples());
+    _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
     // timimg
     sync_helper.send_sync(_chunk);
 
@@ -128,6 +134,8 @@ AudioDecoder::load_frame()
 
   if (parser->load_frame(&buf_ptr, end_ptr))
   {
+    out_spk = parser->get_spk();
+    out_spk.format = FORMAT_LINEAR;
     sync_helper.set_syncing(true);
     drop_rawdata(buf_ptr - rawdata);
     return true;

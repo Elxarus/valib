@@ -56,7 +56,12 @@ public:
 
 AC3Parser::AC3Parser()
 {
-  check_crc = true;
+  do_crc = true;
+  do_dither = true;
+  do_imdct = true;
+
+  // setup syncronization scanner
+  scanner.set_ac3();
 
   // constant number of samples per frame
   nsamples = AC3_FRAME_SAMPLES;
@@ -80,43 +85,107 @@ AC3Parser::~AC3Parser()
 ///////////////////////////////////////////////////////////////////////////////
 // BaseParser overrides
 
-unsigned 
-AC3Parser::sync(uint8_t **buf, uint8_t *end)
-{
-  unsigned new_frame_size = 0;
-
-  // initialize header buffer
-  if (frame_data < 7)
-  {
-    while (frame_data < 7 && *buf < end)
-      frame[frame_data++] = *(*buf)++;
-
-    if (frame_data == 7)
-      new_frame_size = ac3_sync(frame);
-    else
-      return 0;
-  }
-
-  // scan input data
-  while (!new_frame_size && *buf < end)
-  {
-    frame[0] = frame[1];
-    frame[1] = frame[2];
-    frame[2] = frame[3];
-    frame[3] = frame[4];
-    frame[4] = frame[5];
-    frame[5] = frame[6];
-    frame[6] = *(*buf)++;
-    new_frame_size = ac3_sync(frame);
-  }
-
-  frame_data = 7;
-  return new_frame_size;
+size_t 
+AC3Parser::header_size() const
+{ 
+  return 7; 
 }
 
 bool 
-AC3Parser::start_decode()
+AC3Parser::load_header(uint8_t *_buf)
 {
+  int fscod;
+  int frmsizecod;
+
+  int acmod;
+  int dolby = NO_RELATION;
+
+  int halfrate;
+  int bitrate;
+  int sample_rate;
+
+  static const int lfe_mask[] = 
+  { 
+    16, 16, 4, 4, 4, 1, 4, 1
+  };
+
+  /////////////////////////////////////////////////////////
+  // 8 bit or 16 bit little endian stream sync
+  if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
+  {
+    // constraints
+    if (_buf[5] >= 0x60)         return false;   // 'bsid'
+    if ((_buf[4] & 0x3f) > 0x25) return false;   // 'frmesizecod'
+    if ((_buf[4] & 0xc0) > 0x80) return false;   // 'fscod'
+
+    fscod      = _buf[4] >> 6;
+    frmsizecod = _buf[4] & 0x3f;
+    acmod      = _buf[6] >> 5;
+
+    if (acmod == 2 && (_buf[6] & 0x18) == 0x10)
+      dolby = RELATION_DOLBY;
+
+    if (_buf[6] & lfe_mask[acmod])
+      acmod |= 8;
+
+    halfrate   = halfrate_tbl[_buf[5] >> 3];
+    bitrate    = bitrate_tbl[frmsizecod >> 1];
+
+    bs_type = BITSTREAM_8;
+  }
+  /////////////////////////////////////////////////////////
+  // 16 bit big endian stream sync
+  else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
+  {
+    // constraints
+    if (_buf[4] >= 0x60)         return false;   // 'bsid'
+    if ((_buf[5] & 0x3f) > 0x25) return false;   // 'frmesizecod'
+    if ((_buf[5] & 0xc0) > 0x80) return false;   // 'fscod'
+
+    fscod      = _buf[5] >> 6;
+    frmsizecod = _buf[5] & 0x3f;
+    acmod      = _buf[7] >> 5;
+
+    if (acmod == 2 && (_buf[7] & 0x18) == 0x10)
+      dolby = RELATION_DOLBY;
+
+    if (_buf[7] & lfe_mask[acmod])
+      acmod |= 8;
+
+    halfrate   = halfrate_tbl[_buf[4] >> 3];
+    bitrate    = bitrate_tbl[frmsizecod >> 1];
+
+    bs_type = BITSTREAM_16BE;
+  }
+  else
+    return false;
+
+  switch (fscod) 
+  {
+    case 0:    
+      frame_size = 4 * bitrate;
+      sample_rate = 48000 >> halfrate;
+      break;
+
+    case 1: 
+      frame_size = 2 * (320 * bitrate / 147 + (frmsizecod & 1));
+      sample_rate = 44100 >> halfrate;
+      break;
+
+    case 2: 
+      frame_size = 6 * bitrate;
+      sample_rate = 32000 >> halfrate;
+  }
+
+  nsamples = 1536;
+  spk = Speakers(FORMAT_AC3, acmod2mask_tbl[acmod], sample_rate, 1.0, dolby);
+  return true;
+}
+
+bool
+AC3Parser::prepare()
+{
+  bs.set_ptr(frame, bs_type);
   return parse_header();
 }
 
@@ -149,8 +218,8 @@ AC3Parser::decode_frame()
 bool 
 AC3Parser::decode_block()
 {
-  samples_t s = samples;
   samples_t d = delay;
+  samples_t s = samples;
   s += (block * AC3_BLOCK_SAMPLES);
 
   if (block >= AC3_NBLOCKS || !parse_block())
@@ -161,34 +230,18 @@ AC3Parser::decode_block()
   }
   parse_coeff(s);
 
-#ifndef AC3_DEBUG_NOIMDCT
-  int nfchans = spk.lfe()? spk.nch() - 1: spk.nch();
-/*
-  if (eq_on)
+  if (do_imdct)
+  {
+    int nfchans = spk.lfe()? spk.nch() - 1: spk.nch();
     for (int ch = 0; ch < nfchans; ch++)
-    {
-      sample_t *sptr = s[ch];
-      sample_t *eqptr = eq[0];
-      for (int i = 0; i < (AC3_BLOCK_SAMPLES >> 2); i++)
-      {
-        sptr[0] *= eqptr[0];
-        sptr[1] *= eqptr[1];
-        sptr[2] *= eqptr[2];
-        sptr[3] *= eqptr[3];
-        sptr  += 4;
-        eqptr += 4;
-      }
-    }
-*/
-  for (int ch = 0; ch < nfchans; ch++)
-    if (blksw[ch])
-      imdct.imdct_256(s[ch], d[ch]);
-    else
-      imdct.imdct_512(s[ch], d[ch]);
+      if (blksw[ch])
+        imdct.imdct_256(s[ch], delay[ch]);
+      else
+        imdct.imdct_512(s[ch], delay[ch]);
 
-  if (spk.lfe())
-    imdct.imdct_512(s[nfchans], d[nfchans]);
-#endif
+    if (spk.lfe())
+      imdct.imdct_512(s[nfchans], d[nfchans]);
+  }
 
   block++;
   return true;
@@ -237,25 +290,17 @@ AC3Parser::parse_header()
 // Fill AC3Info structure
 {
   /////////////////////////////////////////////////////////////
-  // Init bitstream
+  // Skip syncword
 
-  int bs_type;
-  switch (frame[0])
-  {
-    case 0x0b: bs_type = BITSTREAM_8;    break;
-    case 0x77: bs_type = BITSTREAM_16BE; break;
-    default: return false;
-  }
-  bs.set_ptr(frame, bs_type);
   bs.get(32);
 
   /////////////////////////////////////////////////////////////
   // Check CRC
 
-  if (check_crc)
+  if (do_crc)
   {
-    int crc_frame_size = ((frame_data >> 1) + (frame_data >> 3)) & ~1;
     int crc;
+    int crc_frame_size = ((frame_size >> 1) + (frame_size >> 3)) & ~1;
     switch (bs_type)
     {
       case BITSTREAM_8:
@@ -388,26 +433,6 @@ AC3Parser::parse_header()
   }
 
   /////////////////////////////////////////////////////////////
-  // Speakers configuration
-
-  spk.format = FORMAT_LINEAR;
-  spk.mask = acmod2mask_tbl[acmod];
-  if (lfeon) spk.mask |= CH_MASK_LFE;
-  switch (fscod) 
-  {
-    case 0: spk.sample_rate = 48000 >> halfrate; break;
-    case 1: spk.sample_rate = 44100 >> halfrate; break;
-    case 2: spk.sample_rate = 32000 >> halfrate; break;
-    default:
-      return false;
-  }
-  spk.level = 1.0;
-  if (dsurmod == 2)
-    spk.relation = RELATION_DOLBY;
-  else
-    spk.relation = NO_RELATION;
-
-  /////////////////////////////////////////////////////////////
   // Init variables to for first block decoding
 
   block    = 0;
@@ -445,10 +470,11 @@ AC3Parser::parse_block()
   for (ch = 0; ch < nfchans; ch++)
     dithflag[ch] = bs.get_bool();             // 'dithflag[ch]' - dither flag
 
-#ifdef AC3_DEBUG_NODITHER
-  for (ch = 0; ch < nfchans; ch++)
-    dithflag[ch] = 0;
-#endif
+  // reset dithering info 
+  // if we do not want to dither
+  if (!do_dither)
+    for (ch = 0; ch < nfchans; ch++)
+      dithflag[ch] = 0;
 
   if (bs.get_bool())                          // 'dynrnge' - dynamic range gain word exists
   {

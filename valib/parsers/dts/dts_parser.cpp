@@ -89,6 +89,9 @@ DTSParser::DTSParser()
   init_cosmod();
   frame.allocate(DTS_MAX_FRAME_SIZE);
   samples.allocate(DTS_NCHANNELS, DTS_MAX_SAMPLES);
+
+  // setup syncronization scanner
+  scanner.set_dts();
 }
 
 void 
@@ -114,52 +117,88 @@ DTSParser::init_cosmod()
 ///////////////////////////////////////////////////////////////////////////////
 // BaseParser overrides
 
-unsigned 
-DTSParser::sync(uint8_t **buf, uint8_t *end)
+size_t 
+DTSParser::header_size() const
 {
-  unsigned new_frame_size = 0;
-
-  // initialize header buffer
-  if (frame_data < 16)
-  {
-    while (frame_data < 16 && *buf < end)
-      frame[frame_data++] = *(*buf)++;
-
-    if (frame_data == 16)
-      new_frame_size = dts_sync(frame);
-    else
-      return 0;
-  }
-
-  // scan input data
-  while (!new_frame_size && *buf < end)
-  {
-    frame[0] = frame[1];
-    frame[1] = frame[2];
-    frame[2] = frame[3];
-    frame[3] = frame[4];
-    frame[4] = frame[5];
-    frame[5] = frame[6];
-    frame[6] = frame[7];
-    frame[7] = frame[8];
-    frame[8] = frame[9];
-    frame[9] = frame[10];
-    frame[10] = frame[11];
-    frame[11] = frame[12];
-    frame[12] = frame[13];
-    frame[13] = frame[14];
-    frame[14] = frame[15];
-    frame[15] = *(*buf)++;
-    new_frame_size = dts_sync(frame);
-  }
-
-  frame_data = 16;
-  return new_frame_size;
+  return 16;
 }
 
 bool 
-DTSParser::start_decode()
+DTSParser::load_header(uint8_t *_buf)
 {
+  ReadBS bs_tmp;
+
+  // 14 bits and little endian bitstream
+  if (_buf[0] == 0xff && _buf[1] == 0x1f &&
+      _buf[2] == 0x00 && _buf[3] == 0xe8 &&
+      (_buf[4] & 0xf0) == 0xf0 && _buf[5] == 0x07)
+    bs_tmp.set_ptr(_buf, BITSTREAM_14BE);
+  // 14 bits and big endian bitstream
+  else if (_buf[0] == 0x1f && _buf[1] == 0xff &&
+           _buf[2] == 0xe8 && _buf[3] == 0x00 &&
+           _buf[4] == 0x07 && (_buf[5] & 0xf0) == 0xf0)
+    bs_tmp.set_ptr(_buf, BITSTREAM_14LE);
+  // 16 bits and little endian bitstream
+  else if (_buf[0] == 0xfe && _buf[1] == 0x7f &&
+           _buf[2] == 0x01 && _buf[3] == 0x80)
+    bs_tmp.set_ptr(_buf, BITSTREAM_16BE);
+  // 16 bits and big endian bitstream
+  else if (_buf[0] == 0x7f && _buf[1] == 0xfe &&
+           _buf[2] == 0x80 && _buf[3] == 0x01)
+    bs_tmp.set_ptr(_buf, BITSTREAM_16LE);
+  else
+  // no sync
+    return 0;
+
+  bs_tmp.set_ptr(_buf, bs_type);
+  bs_tmp.get(32);                         // Sync
+  bs_tmp.get(6);                          // Frame type(1), Deficit sample count(5)
+  int cpf = bs_tmp.get(1);                // CRC present flag
+
+  int nblks = bs_tmp.get(7) + 1;          // Number of PCM sample blocks
+  if (nblks < 5) return false;            // constraint
+
+  frame_size = bs_tmp.get(14) + 1;        // Primary frame byte size
+  if (frame_size < 95) return false;      // constraint
+
+  if (bs_tmp.get_type() == BITSTREAM_14LE ||
+      bs_tmp.get_type() == BITSTREAM_14BE)
+    frame_size = frame_size * 16 / 14;
+
+
+  int amode = bs_tmp.get(6);              // Audio channel arrangement
+  if (amode > 0xc) return false;          // we don't work with more than 6 channels
+
+  int sfreq = bs_tmp.get(4);              // Core audio sampling frequency
+  if (!dts_sample_rates[sfreq])           // constraint
+    return false; 
+
+  bs_tmp.get(15);                         // Transmission bit rate(5), and other flags....
+
+  int lff = bs_tmp.get(2);                // Low frequency effects flag
+  if (lff == 3) return false;             // constraint
+
+  if (cpf)
+  {
+    int hcrc = bs_tmp.get(16);            // Header CRC
+    // todo: header CRC check
+  }
+
+  nsamples = nblks * 32;
+
+  int sample_rate = dts_sample_rates[sfreq];
+  int mask = amode2mask_tbl[amode];
+  int relation = amode2rel_tbl[amode];
+  if (lff) mask |= CH_MASK_LFE;
+  spk = Speakers(FORMAT_DTS, mask, sample_rate, 1.0, relation);
+
+  return true;
+}
+
+bool 
+DTSParser::prepare()
+{
+  bs.set_ptr(frame, bs_type);
   return parse_frame_header();
 }
 
@@ -252,74 +291,6 @@ DTSParser::get_info(char *buf, unsigned len) const
 }
 
 
-
-
-
-
-unsigned
-DTSParser::dts_sync(uint8_t *_buf) const
-{
-  ReadBS bs_tmp;
-  int sync_frame_size;
-
-  // 14 bits and little endian bitstream
-  if (_buf[0] == 0xff && _buf[1] == 0x1f &&
-      _buf[2] == 0x00 && _buf[3] == 0xe8 &&
-      (_buf[4] & 0xf0) == 0xf0 && _buf[5] == 0x07)
-    bs_tmp.set_ptr(_buf, BITSTREAM_14BE);
-  // 14 bits and big endian bitstream
-  else if (_buf[0] == 0x1f && _buf[1] == 0xff &&
-           _buf[2] == 0xe8 && _buf[3] == 0x00 &&
-           _buf[4] == 0x07 && (_buf[5] & 0xf0) == 0xf0)
-    bs_tmp.set_ptr(_buf, BITSTREAM_14LE);
-  // 16 bits and little endian bitstream
-  else if (_buf[0] == 0xfe && _buf[1] == 0x7f &&
-           _buf[2] == 0x01 && _buf[3] == 0x80)
-    bs_tmp.set_ptr(_buf, BITSTREAM_16BE);
-  // 16 bits and big endian bitstream
-  else if (_buf[0] == 0x7f && _buf[1] == 0xfe &&
-           _buf[2] == 0x80 && _buf[3] == 0x01)
-    bs_tmp.set_ptr(_buf, BITSTREAM_16LE);
-  else
-  // no sync
-    return 0;
-
-  bs_tmp.get(32);
-  bs_tmp.get(6);                          // Frame type(1), Deficit sample count(5)
-  int cpf = bs_tmp.get(1);                // CRC present flag
-
-  int nblks = bs_tmp.get(7) + 1;          // Number of PCM sample blocks
-  if (nblks < 5) return 0;                // constraint
-
-  sync_frame_size = bs_tmp.get(14) + 1;   // Primary frame byte size
-  if (sync_frame_size < 95) return 0;     // constraint
-
-  if (bs_tmp.get_type() == BITSTREAM_14LE ||
-      bs_tmp.get_type() == BITSTREAM_14BE)
-    sync_frame_size = sync_frame_size * 8 / 14 * 2;
-
-  int amode = bs_tmp.get(6);              // Audio channel arrangement
-  if (amode > 0xc) return 0;              // we don't work with more than 6 channels
-
-  int sfreq = bs_tmp.get(4);              // Core audio sampling frequency
-  if (!dts_sample_rates[sfreq]) return 0; // constraint
-
-  bs_tmp.get(15);                         // Transmission bit rate(5), and other flags....
-
-  int lff = bs_tmp.get(2);                // Low frequency effects flag
-  if (lff == 3) return 0;                 // constraint
-
-  if (cpf)
-  {
-    int hcrc = bs_tmp.get(16);            // Header CRC
-    // todo: header CRC check
-  }
-
-  return sync_frame_size;
-}
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 //                         FRAME HEADER
 ///////////////////////////////////////////////////////////////////////////////
@@ -333,18 +304,8 @@ DTSParser::parse_frame_header()
   static const float adj_table[] = { 1.0, 1.1250, 1.2500, 1.4375 };
 
   /////////////////////////////////////////////////////////
-  // Init bitstream
+  // Skip sync
 
-  int bs_type;
-  switch (frame[0])
-  {
-    case 0xff: bs_type = BITSTREAM_14BE; break;
-    case 0x1f: bs_type = BITSTREAM_14LE; break;
-    case 0xfe: bs_type = BITSTREAM_16BE; break;
-    case 0x7f: bs_type = BITSTREAM_16LE; break;
-    default: return false;
-  }
-  bs.set_ptr(frame, bs_type);
   bs.get(32);
 
   /////////////////////////////////////////////////////////
