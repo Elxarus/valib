@@ -505,5 +505,17 @@ SOURCE=..\valib\source\noise.cpp
 SOURCE=..\valib\source\noise.h
 # End Source File
 # End Group
+# Begin Group "helpers"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\valib\helpers\syncscan.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\helpers\syncscan.h
+# End Source File
+# End Group
 # End Target
 # End Project
