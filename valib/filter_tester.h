@@ -53,11 +53,11 @@ protected:
     if (!ofdd && (filter->get_output() != spk_output))
       log->err("[f2] %s: output format was illegaly changed", caller);
     spk_output = filter->get_output(); // suppress this error report afterwards
-
+/*
     // check unininitialized state
     if ((filter->get_input() == spk_unknown) && !filter->is_empty())
       log->err("[f5] %s: filter is not empty in uninitialized state", caller);
-
+*/
     // check output format in full state
     if ((filter->get_output() == spk_unknown) && !filter->is_empty())
       log->err("[s3] %s: filter generates spk_unknown chunk", caller);
@@ -76,6 +76,12 @@ protected:
   }
 
 public:
+  FilterTester()
+  {
+    filter = 0;
+    log = 0;
+  }
+
   FilterTester(Filter *_filter, Log *_log)
   {
     filter = _filter;
@@ -83,8 +89,23 @@ public:
     update_formats();
   }
 
+  void link(Filter *_filter, Log *_log)
+  {
+    filter = _filter;
+    log = _log;
+    update_formats();
+  }
+
+  void unlink()
+  {
+    filter = 0;
+    log = 0;
+  }
+
   void reset()
   {
+    if (!filter) return;
+
     stream = false;
     flushing = false;
 
@@ -101,11 +122,14 @@ public:
 
   bool query_input(Speakers _spk) const 
   {
+    if (!filter) return false;
     return filter->query_input(_spk);
   }
 
   bool set_input(Speakers _spk)
   {
+    if (!filter) return false;
+
     stream = false;
     flushing = false;
 
@@ -144,11 +168,13 @@ public:
 
   Speakers get_input() const
   {
+    if (!filter) return spk_unknown;
     return filter->get_input();
   }
 
   bool process(const Chunk *_chunk)
   {
+    if (!filter) return false;
     bool input_format_change = false;
     bool query = true;
 
@@ -204,6 +230,9 @@ public:
           // formats must stay unchanged
           check_formats("after set_input()");
       }
+      // we cannot know ofdd status on process() format change
+      // so we have to set it to true (do not check output format)
+      ofdd = true;
     }
     else
     {
@@ -234,16 +263,20 @@ public:
 
   Speakers get_output() const
   {
+    if (!filter) return spk_unknown;
     return filter->get_output();
   }
 
   bool is_empty() const
   {
+    if (!filter) return true;
     return filter->is_empty();
   }
 
   bool get_chunk(Chunk *_chunk)
   {
+    if (!filter) return false;
+
     // check input parameters
     if (!_chunk)
     {

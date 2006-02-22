@@ -19,21 +19,21 @@ static const int noise_size = 10000000;
 static const int noise_runs = 1;
 
 // file speed test
-static const char *file_name = "test.all";
+static const char *file_name = "test.all2.pes";
 static const int file_runs = 50;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
 
-class Spdifer_test
+class Demux_test
 {
 protected:
   FilterTester t;
-  Spdifer s;
+  Demux s;
   Log *log;
 
 public:
-  Spdifer_test(Log *_log)
+  Demux_test(Log *_log)
   {
     log = _log;
     t.link(&s, log);
@@ -41,7 +41,7 @@ public:
 
   int test()
   {
-    log->open_group("Spdifer test");
+    log->open_group("Demux test");
     transform();
     speed_noise();
     speed_file();
@@ -53,16 +53,11 @@ public:
     /////////////////////////////////////////////////////////
     // Transform test
 
-    // raw stream -> spdif stream
-    compare_file(log, Speakers(FORMAT_AC3, 0, 0), "test.ac3", &t, "test.ac3.spdif");
-    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts", &t, "test.dts.spdif");
-    compare_file(log, Speakers(FORMAT_MPA, 0, 0), "test.mp2", &t, "test.mp2.spdif");
-    compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "test.all", &t, "test.all.spdif");
-    // spdif stream -> spdif stream
-    compare_file(log, Speakers(FORMAT_AC3, 0, 0), "test.ac3.spdif", &t, "test.ac3.spdif");
-    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts.spdif", &t, "test.dts.spdif");
-    compare_file(log, Speakers(FORMAT_MPA, 0, 0), "test.mp2.spdif", &t, "test.mp2.spdif");
-    compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "test.all.spdif", &t, "test.all.spdif");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.ac3.pes", &t, "test.ac3");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.dts.pes", &t, "test.dts");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.mp2.pes", &t, "test.mp2");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.lpcm.pes", &t, "test.lpcm");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.all2.pes", &t, "test.all2");
   }
 
   void speed_noise()
@@ -72,7 +67,7 @@ public:
 
     Chunk ichunk;
     Chunk ochunk;
-    Noise noise(Speakers(FORMAT_AC3, 0, 0), noise_size, noise_size);
+    Noise noise(Speakers(FORMAT_PES, 0, 0), noise_size, noise_size);
     noise.get_chunk(&ichunk);
 
     CPUMeter cpu;
@@ -96,7 +91,7 @@ public:
     }
     cpu.stop();
 
-    log->msg("Spdifer speed on noise: %iMB/s, Data: %i, Empty: %i", 
+    log->msg("Demux speed on noise: %iMB/s, Data: %i, Empty: %i", 
       int(double(noise_size) * noise_runs / cpu.get_thread_time() / 1000000), 
       data_chunks / noise_runs, empty_chunks / noise_runs);
   }
@@ -108,7 +103,7 @@ public:
 
     Chunk ichunk;
     Chunk ochunk;
-    RAWSource f(spk_unknown, file_name);
+    RAWSource f(Speakers(FORMAT_PES, 0, 0), file_name);
     if (!f.is_open())
     {
       log->err("Cannot open file %s", file_name);
@@ -143,7 +138,7 @@ public:
     }
     cpu.stop();
 
-    log->msg("Spdifer speed on file: %iMB/s, Data: %i, Empty: %i", 
+    log->msg("Demux speed on file: %iMB/s, Data: %i, Empty: %i", 
       int(double(f.size()) * file_runs / cpu.get_thread_time() / 1000000), 
       data_chunks / file_runs, empty_chunks / file_runs);
   }
@@ -153,8 +148,8 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // Test function
 
-int test_spdifer(Log *log)
+int test_demux(Log *log)
 {
-  Spdifer_test test(log);
+  Demux_test test(log);
   return test.test();
 }

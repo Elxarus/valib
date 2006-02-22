@@ -5,12 +5,15 @@
 
 int test_float(Log *log);
 int test_null(Log *log);
-int test_rules(Log *log);
-int test_proc(Log *log);
-int test_crash(Log *log);
-int test_spdifer(Log *log);
-int test_syncer(Log *log);
 
+int test_rules(Log *log);
+
+int test_syncer(Log *log);
+int test_crash(Log *log);
+int test_demux(Log *log);
+int test_spdifer(Log *log);
+
+int test_proc(Log *log);
 
 int main(int argc, char **argv)
 {
@@ -19,11 +22,13 @@ int main(int argc, char **argv)
 
   test_float(&log);
   test_null(&log);
+
   test_rules(&log);
 
   test_syncer(&log);
-  test_spdifer(&log);
   test_crash(&log);
+  test_demux(&log);
+  test_spdifer(&log);
 
   test_proc(&log);
 
