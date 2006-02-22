@@ -142,7 +142,7 @@ Spdifer::Spdifer()
 {
   frame_buf.allocate(SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
   frames = 0;
-  scanner.set_mad();
+  scanner.set_standard(SYNCMASK_MAD);
   reset();
 }
 

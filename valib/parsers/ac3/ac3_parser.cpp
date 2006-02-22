@@ -61,7 +61,7 @@ AC3Parser::AC3Parser()
   do_imdct = true;
 
   // setup syncronization scanner
-  scanner.set_ac3();
+  scanner.set_standard(SYNCMASK_AC3);
 
   // constant number of samples per frame
   nsamples = AC3_FRAME_SAMPLES;

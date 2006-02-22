@@ -12,26 +12,6 @@
 // 0x40  DTS syncword 3: 0xfe 0x7f 0x01 0x80
 // 0x80  DTS syncword 4: 0x7f 0xfe 0x80 0x01
 
-static const uint32_t mpa_sync[] = 
-{
-  0xfff00000, 0xfff00000,
-  0xf0ff0000, 0xf0ff0000, 
-};
-
-static const uint32_t ac3_sync[] = 
-{
-  0x0b770000, 0xffff0000,
-  0x770b0000, 0xffff0000,
-};
-
-static const uint32_t dts_sync[] = 
-{
-  0xff1f00e8, 0xffffffff,
-  0x1fffe800, 0xffffffff,
-  0xfe7f0180, 0xffffffff,
-  0x7ffe8001, 0xffffffff,
-};
-
 SyncScan::SyncScan(uint32_t _syncword, uint32_t _syncmask)
 {
   synctable = new synctbl_t[1024];
@@ -66,6 +46,8 @@ SyncScan::set(int _index, uint32_t _syncword, uint32_t _syncmask)
   for (i = 0; i < 256; i++)
     if ((sync_byte & mask_byte) == (i & mask_byte))
       synctable[i] |= table_mask;
+    else
+      synctable[i] &= ~table_mask;
 
   sync_byte = (_syncword >> 16) & 0xff;
   mask_byte = (_syncmask >> 16) & 0xff;
@@ -73,6 +55,8 @@ SyncScan::set(int _index, uint32_t _syncword, uint32_t _syncmask)
   for (i = 0; i < 256; i++)
     if ((sync_byte & mask_byte) == (i & mask_byte))
       synctable[i + 256] |= table_mask;
+    else
+      synctable[i + 256] &= ~table_mask;
   
   sync_byte = (_syncword >> 8) & 0xff;
   mask_byte = (_syncmask >> 8) & 0xff;
@@ -80,6 +64,8 @@ SyncScan::set(int _index, uint32_t _syncword, uint32_t _syncmask)
   for (i = 0; i < 256; i++)
     if ((sync_byte & mask_byte) == (i & mask_byte))
       synctable[i + 512] |= table_mask;
+    else
+      synctable[i + 512] &= ~table_mask;
   
   sync_byte = _syncword & 0xff;
   mask_byte = _syncmask & 0xff;
@@ -87,6 +73,102 @@ SyncScan::set(int _index, uint32_t _syncword, uint32_t _syncmask)
   for (i = 0; i < 256; i++)
     if ((sync_byte & mask_byte) == (i & mask_byte))
       synctable[i + 768] |= table_mask;
+    else
+      synctable[i + 768] &= ~table_mask;
+
+  return true;
+}
+
+bool
+SyncScan::allow(int _index, uint32_t _syncword, uint32_t _syncmask)
+{
+  if (_index < 0 || _index > sizeof(synctbl_t) * 8)
+    return false;
+
+  synctbl_t table_mask = (1 << _index);
+
+  int i;
+  uint8_t sync_byte;
+  uint8_t mask_byte;
+
+  sync_byte = (_syncword >> 24);
+  mask_byte = (_syncmask >> 24);
+
+  if (mask_byte)
+    for (i = 0; i < 256; i++)
+      if ((sync_byte & mask_byte) == (i & mask_byte))
+        synctable[i] |= table_mask;
+
+  sync_byte = (_syncword >> 16) & 0xff;
+  mask_byte = (_syncmask >> 16) & 0xff;
+
+  if (mask_byte)
+    for (i = 0; i < 256; i++)
+      if ((sync_byte & mask_byte) == (i & mask_byte))
+        synctable[i + 256] |= table_mask;
+  
+  sync_byte = (_syncword >> 8) & 0xff;
+  mask_byte = (_syncmask >> 8) & 0xff;
+
+  if (mask_byte)
+    for (i = 0; i < 256; i++)
+      if ((sync_byte & mask_byte) == (i & mask_byte))
+        synctable[i + 512] |= table_mask;
+  
+  sync_byte = (_syncword & 0xff);
+  mask_byte = (_syncmask & 0xff);
+
+  if (mask_byte)
+    for (i = 0; i < 256; i++)
+      if ((sync_byte & mask_byte) == (i & mask_byte))
+        synctable[i + 768] |= table_mask;
+
+  return true;
+}
+
+bool
+SyncScan::deny(int _index, uint32_t _syncword, uint32_t _syncmask)
+{
+  if (_index < 0 || _index > sizeof(synctbl_t) * 8)
+    return false;
+
+  synctbl_t table_mask = (1 << _index);
+
+  int i;
+  uint8_t sync_byte;
+  uint8_t mask_byte;
+
+  sync_byte = (_syncword >> 24);
+  mask_byte = (_syncmask >> 24);
+
+  if (mask_byte)
+    for (i = 0; i < 256; i++)
+      if ((sync_byte & mask_byte) == (i & mask_byte))
+        synctable[i] &= ~table_mask;
+
+  sync_byte = (_syncword >> 16) & 0xff;
+  mask_byte = (_syncmask >> 16) & 0xff;
+
+  if (mask_byte)
+    for (i = 0; i < 256; i++)
+      if ((sync_byte & mask_byte) == (i & mask_byte))
+        synctable[i + 256] &= ~table_mask;
+  
+  sync_byte = (_syncword >> 8) & 0xff;
+  mask_byte = (_syncmask >> 8) & 0xff;
+
+  if (mask_byte)
+    for (i = 0; i < 256; i++)
+      if ((sync_byte & mask_byte) == (i & mask_byte))
+        synctable[i + 512] &= ~table_mask;
+  
+  sync_byte = (_syncword & 0xff);
+  mask_byte = (_syncmask & 0xff);
+
+  if (mask_byte)
+    for (i = 0; i < 256; i++)
+      if ((sync_byte & mask_byte) == (i & mask_byte))
+        synctable[i + 768] &= ~table_mask;
 
   return true;
 }
@@ -103,33 +185,6 @@ SyncScan::set_list(const uint32_t *_list, size_t _size)
 
   return true;
 }
-
-void
-SyncScan::set_mpa()
-{
-  set_list(mpa_sync, array_size(mpa_sync));
-}
-
-void
-SyncScan::set_ac3()
-{
-  set_list(ac3_sync, array_size(ac3_sync));
-}
-
-void
-SyncScan::set_dts()
-{
-  set_list(dts_sync, array_size(dts_sync));
-}
-
-void
-SyncScan::set_mad()
-{
-  set_list(mpa_sync, array_size(mpa_sync));
-  set_list(ac3_sync, array_size(ac3_sync));
-  set_list(dts_sync, array_size(dts_sync));
-}
-
 
 bool
 SyncScan::clear(int _index)
@@ -149,6 +204,45 @@ SyncScan::clear_all()
 {
   memset(synctable, 0, sizeof(synctbl_t) * 1024);
 }
+
+void
+SyncScan::set_standard(uint32_t _syncmask)
+{
+  if (_syncmask & SYNCMASK_MPA_LE)
+  {
+    set(SYNC_MPA_LE, 0xfff00000, 0xfff00000); // allow anything after syncword
+    deny(SYNC_MPA_LE, 0x00000000, 0x00060000); // deny value of 00 for layer
+    deny(SYNC_MPA_LE, 0x0000f000, 0x0000f000); // deny value of 11 for bitrate
+    deny(SYNC_MPA_LE, 0x00000c00, 0x00000c00); // deny value of 11 for samplerate
+  }
+
+  if (_syncmask & SYNCMASK_MPA_BE)
+  {
+    set(SYNC_MPA_BE, 0xf0ff0000, 0xf0ff0000); // allow anything after syncword
+    deny(SYNC_MPA_BE, 0x00000000, 0x06000000); // deny value of 00 for layer
+    deny(SYNC_MPA_BE, 0x000000f0, 0x000000f0); // deny value of 11 for bitrate
+    deny(SYNC_MPA_BE, 0x0000000c, 0x0000000c); // deny value of 11 for sampBErate
+  }
+
+  if (_syncmask & SYNCMASK_AC3_LE)
+    set(SYNC_AC3_LE, 0x0b770000, 0xffff0000);
+
+  if (_syncmask & SYNCMASK_AC3_BE)
+    set(SYNC_AC3_BE, 0x770b0000, 0xffff0000);
+
+  if (_syncmask & SYNCMASK_DTS16_LE)
+    set(SYNC_DTS16_LE, 0xff1f00e8, 0xffffffff);
+
+  if (_syncmask & SYNCMASK_DTS16_BE)
+    set(SYNC_DTS16_BE, 0x1fffe800, 0xffffffff);
+
+  if (_syncmask & SYNCMASK_DTS14_LE)
+    set(SYNC_DTS14_LE, 0xfe7f0180, 0xffffffff);
+
+  if (_syncmask & SYNCMASK_DTS14_BE)
+    set(SYNC_DTS14_BE, 0x7ffe8001, 0xffffffff);
+}
+
 
 void 
 SyncScan::reset()

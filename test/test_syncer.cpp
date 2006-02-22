@@ -10,35 +10,87 @@ SyncScan s;
 
 static const int syncwords[] = 
 {
+  // ac3
   0x0b770000,
   0x770b0000,
+  // dts
   0xff1f00e8,
   0x1fffe800,
   0xfe7f0180,
   0x7ffe8001,
 };
-
-static const int syncindex[] = 
-{
-  0, 
-  1,
-  2,
-  3,
-  4,
-  5,
-
-  6, 6, 6, 6, 
-  6, 6, 6, 6, 
-  6, 6, 6, 6, 
-  6, 6, 6, 6, 
-
-  7, 7, 7, 7, 
-  7, 7, 7, 7, 
-  7, 7, 7, 7, 
-  7, 7, 7, 7, 
-};
-
 const max_syncwords = array_size(syncwords);
+
+
+static bool mpa_le_sync(const uint8_t *_buf)
+{
+  if ((_buf[0] == 0xff)         && // sync
+     ((_buf[1] & 0xf0) == 0xf0) && // sync
+     ((_buf[1] & 0x06) != 0x00) && // layer
+     ((_buf[2] & 0xf0) != 0xf0) && // biterate
+     ((_buf[2] & 0x0c) != 0x0c))   // sample rate
+    return true;
+  else
+    return false;
+}
+
+static bool mpa_be_sync(const uint8_t *_buf)
+{
+  if ((_buf[1] == 0xff)         && // sync
+     ((_buf[0] & 0xf0) == 0xf0) && // sync
+     ((_buf[0] & 0x06) != 0x00) && // layer
+     ((_buf[3] & 0xf0) != 0xf0) && // biterate
+     ((_buf[3] & 0x0c) != 0x0c))   // sample rate
+    return true;
+  else
+    return false;
+}
+
+static bool mpa_sync(const uint8_t *_buf)
+{
+  return mpa_le_sync(_buf) || mpa_be_sync(_buf);
+}
+
+static bool ac3_sync(const uint8_t *_buf)
+{
+  // 8 bit or 16 bit little endian steram sync
+  if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
+    return true;
+  // 16 bit big endian steram sync
+  else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
+    return true;
+  else 
+    return false;
+}
+
+static bool dts_sync(const uint8_t *_buf)
+{
+  // 14 bits little endian bitstream
+  if (_buf[0] == 0xff && _buf[1] == 0x1f &&
+      _buf[2] == 0x00 && _buf[3] == 0xe8)
+    return true;
+  // 14 bits big endian bitstream
+  else if (_buf[0] == 0x1f && _buf[1] == 0xff &&
+           _buf[2] == 0xe8 && _buf[3] == 0x00)
+    return true;
+  // 16 bits little endian bitstream
+  else if (_buf[0] == 0xfe && _buf[1] == 0x7f &&
+           _buf[2] == 0x01 && _buf[3] == 0x80)
+    return true;
+  // 16 bits big endian bitstream
+  else if (_buf[0] == 0x7f && _buf[1] == 0xfe &&
+           _buf[2] == 0x80 && _buf[3] == 0x01)
+    return true;
+  else
+  // no sync
+    return false;
+}
+
+static bool is_sync(const uint8_t *_buf)
+{
+  return ac3_sync(_buf) || dts_sync(_buf) || mpa_sync(_buf);
+}
+
 
 int 
 test_syncer(Log *log)
@@ -47,7 +99,7 @@ test_syncer(Log *log)
 
   int i;
   for (i = 0; i < array_size(syncwords); i++)
-    s.set(syncindex[i], syncwords[i], 0xffffffff);
+    s.set(i, syncwords[i], 0xffffffff);
 
   const int max_ptr_offset = 32;
   const int max_block_size = 32;
@@ -96,7 +148,7 @@ test_syncer(Log *log)
                 log->err("Count = %i", s.count);
               }
 
-              if ((s.get_sync() & (1 << syncindex[isyncword])) == 0)
+              if ((s.get_sync() & (1 << isyncword)) == 0)
               {
                 log->msg("syncword: %x ptr.offset: %i block size: %i offset: %i", syncwords[isyncword], ptr_offset, block_size, offset);
                 log->err("Wrong sync = %i", s.count);
@@ -153,7 +205,7 @@ test_syncer(Log *log)
                 log->err("Sync found at %i", i+gone-4);
               }
 
-              if ((s.get_sync(scanbuf) & (1 << syncindex[isyncword])) == 0)
+              if ((s.get_sync(scanbuf) & (1 << isyncword)) == 0)
               {
                 log->msg("syncword: %x ptr.offset: %i block size: %i offset: %i", syncwords[isyncword], ptr_offset, block_size, offset);
                 log->err("Wrong sync = %i", s.count);
@@ -180,13 +232,49 @@ test_syncer(Log *log)
   delete buf;
 
   //////////////////////////////////////////////////////////
+  // MPA sync test
+
+  s.clear_all();
+  s.set_standard(SYNCMASK_MPA_LE);
+
+  uint32_t syncword;
+  int mpa_allowed = 0;
+
+  for (syncword = 0xfff00000; syncword < 0xffffffff; syncword++)
+  {
+    *(uint32_t *)scanbuf = swab_u32(syncword);
+    if (s.get_sync(scanbuf))
+    {
+      mpa_allowed++;
+      if (!mpa_le_sync(scanbuf))
+        break;
+    }
+    else
+    {
+      if (mpa_le_sync(scanbuf))
+        break;
+    }
+  }
+
+  if (syncword < 0xffffffff)
+  {
+    if (s.get_sync(scanbuf))
+      log->err("0x%08x is detected as MPA sync", syncword);
+    else
+      log->err("0x%08x is not detected as MPA sync", syncword);
+  }
+  else
+    log->msg("Correct MPA headers found: %i", mpa_allowed);
+
+  //////////////////////////////////////////////////////////
   // Speed test
 
   s.clear_all();
-  s.set_mad();
+  s.set_standard(SYNCMASK_MAD);
 
   const int runs = 50;
   const int size = 10000000;
+  const int syncpoints = 1683;
 
   Chunk chunk;
   Noise noise(spk_unknown, size, size);
@@ -198,6 +286,7 @@ test_syncer(Log *log)
   sync_count = 0;
   cpu.reset();
   cpu.start();
+  s.reset();
   for (i = 0; i < runs; i++)
   {
     s.reset();
@@ -206,13 +295,19 @@ test_syncer(Log *log)
     {
       gone += s.scan(chunk.rawdata + gone, chunk.size - gone);
       if (s.get_sync())
-        sync_count++;
+        if (is_sync(s.syncbuf))
+          sync_count++;
+        else
+        {
+          log->err("0x%08x is detected as syncpoint", swab_u32(s.syncword));
+          break;
+        }
     }
   }
   cpu.stop();
 
-  if (sync_count != 8606*runs)
-    log->err("Syncpoints found: %i (must be 8606)", sync_count / 8606);
+  if (sync_count != syncpoints * runs)
+    log->err("Syncpoints found: %i (must be %i)", sync_count / runs, syncpoints);
 
   log->msg("Sync scan speed: %iMB/s, Syncpoints found: %i", 
     int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 
@@ -221,6 +316,7 @@ test_syncer(Log *log)
   sync_count = 0;
   cpu.reset();
   cpu.start();
+  memset(scanbuf, 0, sizeof(scanbuf));
   for (i = 0; i < runs; i++)
   {
     s.reset();
@@ -229,13 +325,19 @@ test_syncer(Log *log)
     {
       gone += s.scan(scanbuf, chunk.rawdata + gone, chunk.size - gone);
       if (s.get_sync(scanbuf))
-        sync_count++;
+        if (is_sync(scanbuf))
+          sync_count++;
+        else
+        {
+          log->err("0x%08x is detected as syncpoint", swab_u32(s.syncword));
+          break;
+        }
     }
   }
   cpu.stop();
 
-  if (sync_count != 8606*runs)
-    log->err("Syncpoints found: %i (must be 8606)", sync_count / 8606);
+  if (sync_count != syncpoints * runs)
+    log->err("Syncpoints found: %i (must be %i)", sync_count / runs, syncpoints);
 
   log->msg("Sync scan speed: %iMB/s, Syncpoints found: %i", 
     int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 

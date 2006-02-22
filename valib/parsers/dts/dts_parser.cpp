@@ -91,7 +91,7 @@ DTSParser::DTSParser()
   samples.allocate(DTS_NCHANNELS, DTS_MAX_SAMPLES);
 
   // setup syncronization scanner
-  scanner.set_dts();
+  scanner.set_standard(SYNCMASK_DTS);
 }
 
 void 
