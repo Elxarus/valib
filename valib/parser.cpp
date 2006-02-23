@@ -54,17 +54,28 @@ BaseParser::load_frame(uint8_t **buf, uint8_t *end)
       }
     }
 
-    LOAD(header_size())
-
     ///////////////////////////////////////////////////////
-    // Load header
-    // Parse header and fill stream info
+    // Load header, parse it, and fill stream info
 
+    LOAD(header_size())
     if (!load_header(frame_buf))
     {
       // resync (possibly false sync)
       frame_data--;
       memmove(frame_buf, frame_buf + 1, frame_data);
+      continue;
+    }
+
+    ///////////////////////////////////////////////////////
+    // Fool protection
+
+    if (frame_size > frame.get_size())
+    {
+      // resync
+      // (frame is too big and we cannot load it...)
+      frame_data--;
+      memmove(frame_buf, frame_buf + 1, frame_data);
+      errors++; // inform about error
       continue;
     }
 
