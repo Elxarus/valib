@@ -100,7 +100,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 msvcrt.lib oldnames.lib kernel32.lib user32.lib dsound.lib /nologo /subsystem:console /machine:I386 /nodefaultlib
-# ADD LINK32 msvcrt.lib oldnames.lib kernel32.lib user32.lib dsound.lib /nologo /subsystem:console /profile /debug /debugtype:cv /machine:I386 /nodefaultlib
+# ADD LINK32 msvcrt.lib oldnames.lib kernel32.lib user32.lib dsound.lib /nologo /subsystem:console /profile /debug /machine:I386 /nodefaultlib
 
 !ENDIF 
 

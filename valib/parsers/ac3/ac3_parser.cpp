@@ -270,7 +270,7 @@ AC3Parser::get_info(char *buf, unsigned len) const
     spk.mode_text(),
     spk.sample_rate,
     bitrate,
-    (bs.get_type() == BITSTREAM_8? "8 bit": "16bit big endian"), 
+    (bs_type == BITSTREAM_8? "8 bit": "16bit big endian"), 
     frame_size,
     1536,
     bsid, 

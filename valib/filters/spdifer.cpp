@@ -812,6 +812,7 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
   // so first we check low endian as most used and only
   // then try big endian
 
+  // 8 bit or 16 bit little endian steram sync
   if ((_buf[0] == 0xff)         && // sync
      ((_buf[1] & 0xf0) == 0xf0) && // sync
      ((_buf[1] & 0x06) != 0x00) && // layer
@@ -824,10 +825,11 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
     bs_type = BITSTREAM_8;
   }
   else
+  // 16 bit big endian steram sync
   if ((_buf[1] == 0xff)         && // sync
      ((_buf[0] & 0xf0) == 0xf0) && // sync
      ((_buf[0] & 0x06) != 0x00) && // layer
-     ((_buf[3] & 0xf0) != 0xf0) && // biterate
+     ((_buf[3] & 0xf0) != 0xf0) && // bitrate
      ((_buf[3] & 0xf0) != 0x00) && // prohibit free-format
      ((_buf[3] & 0x0c) != 0x0c))   // sample rate
   {
