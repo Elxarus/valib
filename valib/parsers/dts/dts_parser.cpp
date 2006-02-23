@@ -22,7 +22,7 @@
 
 static const int dts_order[NCHANNELS] = { CH_C, CH_L, CH_R, CH_SL, CH_SR, CH_LFE };
 
-static const amode2mask_tbl[] = 
+static const int amode2mask_tbl[] = 
 {
   MODE_MONO, 
   MODE_STEREO,
@@ -36,7 +36,7 @@ static const amode2mask_tbl[] =
   MODE_3_2
 };
 
-static const amode2rel_tbl[] = 
+static const int amode2rel_tbl[] = 
 {
   NO_RELATION,
   NO_RELATION,

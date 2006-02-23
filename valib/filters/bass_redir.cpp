@@ -48,16 +48,16 @@ HPF::update()
     return;
   }
 
-  double omega = 2 * M_PI * freq / sample_rate;
+  double omega = 2.0 * M_PI * freq / sample_rate;
   double s = sin(omega);
   double c = cos(omega);
-  double alfa = s * sinh(log(2) / 2 * omega / s);
+  double alfa = s * sinh(log(2.0) / 2.0 * omega / s);
 
-  a  = gain * (1 + c) / 2 / (1 + alfa);
-  a1 = gain * -(1 + c) / (1 + alfa);
-  a2 = gain * (1 + c) / 2 / (1 + alfa);
-  b1 = -(2 * c) / (1 + alfa);
-  b2 = (1 - alfa) / (1 + alfa);
+  a  = gain * (1.0 + c) / 2.0 / (1.0 + alfa);
+  a1 = gain * -(1.0 + c) / (1.0 + alfa);
+  a2 = gain * (1.0 + c) / 2.0 / (1.0 + alfa);
+  b1 = -(2.0 * c) / (1.0 + alfa);
+  b2 = (1.0 - alfa) / (1.0 + alfa);
 
 }
 
@@ -75,16 +75,16 @@ LPF::update()
     return;
   }
 
-  double omega = 2 * M_PI * freq / sample_rate;
+  double omega = 2.0 * M_PI * freq / sample_rate;
   double s = sin(omega);
   double c = cos(omega);
-  double alfa = s * sinh(log(2) / 2 * omega / s);
+  double alfa = s * sinh(log(2.0) / 2.0 * omega / s);
 
-  a  = gain * (1 - c) / 2 / (1 + alfa);
-  a1 = gain * (1 - c) / (1 + alfa);
-  a2 = gain * (1 - c) / 2 / (1 + alfa);
-  b1 = -(2 * c) / (1 + alfa);
-  b2 = (1 - alfa) / (1 + alfa);
+  a  = gain * (1.0 - c) / 2.0 / (1.0 + alfa);
+  a1 = gain * (1.0 - c) / (1.0 + alfa);
+  a2 = gain * (1.0 - c) / 2.0 / (1.0 + alfa);
+  b1 = -(2.0 * c) / (1.0 + alfa);
+  b2 = (1.0 - alfa) / (1.0 + alfa);
 }
 
 

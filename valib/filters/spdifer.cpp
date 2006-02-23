@@ -843,13 +843,13 @@ Spdifer::dts_syncinfo(const uint8_t *_buf)
     12000, 24000, 48000, 96000, 192000
   };
 
-  static const amode2mask_tbl[] = 
+  static const int amode2mask_tbl[] = 
   {
     MODE_MONO,   MODE_STEREO,  MODE_STEREO,  MODE_STEREO,  MODE_STEREO,
     MODE_3_0,    MODE_2_1,     MODE_3_1,     MODE_2_2,     MODE_3_2
   };
 
-  static const amode2rel_tbl[] = 
+  static const int amode2rel_tbl[] = 
   {
     NO_RELATION,   NO_RELATION,  NO_RELATION,  RELATION_SUMDIFF, RELATION_DOLBY,
     NO_RELATION,   NO_RELATION,  NO_RELATION,  NO_RELATION,      NO_RELATION,

@@ -19,7 +19,7 @@ static const int syncwords[] =
   0xfe7f0180,
   0x7ffe8001,
 };
-const max_syncwords = array_size(syncwords);
+static const int max_syncwords = array_size(syncwords);
 
 
 static bool mpa_le_sync(const uint8_t *_buf)
@@ -105,6 +105,10 @@ test_syncer(Log *log)
   const int max_block_size = 32;
   const int max_offset = 128;
   const int buf_size = max_ptr_offset + max_block_size + max_offset + 16;
+  int isyncword;
+  int ptr_offset;
+  int block_size;
+  int offset;
 
   uint8_t *buf = new uint8_t[buf_size];
   uint8_t scanbuf[4];
@@ -112,18 +116,18 @@ test_syncer(Log *log)
   //////////////////////////////////////////////////////////
   // Syncpoint find test
 
-  for (int isyncword = 0; isyncword < max_syncwords; isyncword++)
+  for (isyncword = 0; isyncword < max_syncwords; isyncword++)
   {
     log->status("syncword: %x", syncwords[isyncword]);
-    for (int ptr_offset = 0; ptr_offset < max_ptr_offset; ptr_offset++)
-      for (int block_size = 1; block_size < max_block_size; block_size++)
-        for (int offset = 0; offset < max_offset; offset++)
+    for (ptr_offset = 0; ptr_offset < max_ptr_offset; ptr_offset++)
+      for (block_size = 1; block_size < max_block_size; block_size++)
+        for (offset = 0; offset < max_offset; offset++)
         {
           memset(buf, 0, buf_size);
           *(uint32_t *)(buf + ptr_offset + offset) = swab_u32(syncwords[isyncword]);
           s.reset();
 
-          for (int i = 0; i < offset + 16; i += block_size)
+          for (i = 0; i < offset + 16; i += block_size)
           {
             int gone = s.scan(buf + i + ptr_offset, block_size);
 
@@ -178,15 +182,15 @@ test_syncer(Log *log)
   for (isyncword = 0; isyncword < max_syncwords; isyncword++)
   {
     log->status("syncword: %x", syncwords[isyncword]);
-    for (int ptr_offset = 0; ptr_offset < max_ptr_offset; ptr_offset++)
-      for (int block_size = 1; block_size < max_block_size; block_size++)
-        for (int offset = 0; offset < max_offset; offset++)
+    for (ptr_offset = 0; ptr_offset < max_ptr_offset; ptr_offset++)
+      for (block_size = 1; block_size < max_block_size; block_size++)
+        for (offset = 0; offset < max_offset; offset++)
         {
           memset(buf, 0, buf_size);
           *(uint32_t *)(buf + ptr_offset + offset) = swab_u32(syncwords[isyncword]);
           s.reset();
 
-          for (int i = 0; i < offset + 16; i += block_size)
+          for (i = 0; i < offset + 16; i += block_size)
           {
             int gone = s.scan(scanbuf, buf + i + ptr_offset, block_size);
 
