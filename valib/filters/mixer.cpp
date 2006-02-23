@@ -5,24 +5,22 @@
 typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, size_t); // input-output mixing
 typedef void (Mixer::*ip_mixfunc_t)(samples_t, size_t);            // in-place mixing
 
-static const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = 
-{
-  { Mixer::io_mix11, Mixer::io_mix12, Mixer::io_mix13, Mixer::io_mix14, Mixer::io_mix15, Mixer::io_mix16 },
-  { Mixer::io_mix21, Mixer::io_mix22, Mixer::io_mix23, Mixer::io_mix24, Mixer::io_mix25, Mixer::io_mix26 },
-  { Mixer::io_mix31, Mixer::io_mix32, Mixer::io_mix33, Mixer::io_mix34, Mixer::io_mix35, Mixer::io_mix36 },
-  { Mixer::io_mix41, Mixer::io_mix42, Mixer::io_mix43, Mixer::io_mix44, Mixer::io_mix45, Mixer::io_mix46 },
-  { Mixer::io_mix51, Mixer::io_mix52, Mixer::io_mix53, Mixer::io_mix54, Mixer::io_mix55, Mixer::io_mix56 },
-  { Mixer::io_mix61, Mixer::io_mix62, Mixer::io_mix63, Mixer::io_mix64, Mixer::io_mix65, Mixer::io_mix66 }
+static const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = {
+  { &Mixer::io_mix11, &Mixer::io_mix12, &Mixer::io_mix13, &Mixer::io_mix14, &Mixer::io_mix15, &Mixer::io_mix16 },
+  { &Mixer::io_mix21, &Mixer::io_mix22, &Mixer::io_mix23, &Mixer::io_mix24, &Mixer::io_mix25, &Mixer::io_mix26 },
+  { &Mixer::io_mix31, &Mixer::io_mix32, &Mixer::io_mix33, &Mixer::io_mix34, &Mixer::io_mix35, &Mixer::io_mix36 },
+  { &Mixer::io_mix41, &Mixer::io_mix42, &Mixer::io_mix43, &Mixer::io_mix44, &Mixer::io_mix45, &Mixer::io_mix46 },
+  { &Mixer::io_mix51, &Mixer::io_mix52, &Mixer::io_mix53, &Mixer::io_mix54, &Mixer::io_mix55, &Mixer::io_mix56 },
+  { &Mixer::io_mix61, &Mixer::io_mix62, &Mixer::io_mix63, &Mixer::io_mix64, &Mixer::io_mix65, &Mixer::io_mix66 },
 };
 
-const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = 
-{
-  { Mixer::ip_mix11, Mixer::ip_mix12, Mixer::ip_mix13, Mixer::ip_mix14, Mixer::ip_mix15, Mixer::ip_mix16 },
-  { Mixer::ip_mix21, Mixer::ip_mix22, Mixer::ip_mix23, Mixer::ip_mix24, Mixer::ip_mix25, Mixer::ip_mix26 },
-  { Mixer::ip_mix31, Mixer::ip_mix32, Mixer::ip_mix33, Mixer::ip_mix34, Mixer::ip_mix35, Mixer::ip_mix36 },
-  { Mixer::ip_mix41, Mixer::ip_mix42, Mixer::ip_mix43, Mixer::ip_mix44, Mixer::ip_mix45, Mixer::ip_mix46 },
-  { Mixer::ip_mix51, Mixer::ip_mix52, Mixer::ip_mix53, Mixer::ip_mix54, Mixer::ip_mix55, Mixer::ip_mix56 },
-  { Mixer::ip_mix61, Mixer::ip_mix62, Mixer::ip_mix63, Mixer::ip_mix64, Mixer::ip_mix65, Mixer::ip_mix66 }
+static const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {
+  { &Mixer::ip_mix11, &Mixer::ip_mix12, &Mixer::ip_mix13, &Mixer::ip_mix14, &Mixer::ip_mix15, &Mixer::ip_mix16 },
+  { &Mixer::ip_mix21, &Mixer::ip_mix22, &Mixer::ip_mix23, &Mixer::ip_mix24, &Mixer::ip_mix25, &Mixer::ip_mix26 },
+  { &Mixer::ip_mix31, &Mixer::ip_mix32, &Mixer::ip_mix33, &Mixer::ip_mix34, &Mixer::ip_mix35, &Mixer::ip_mix36 },
+  { &Mixer::ip_mix41, &Mixer::ip_mix42, &Mixer::ip_mix43, &Mixer::ip_mix44, &Mixer::ip_mix45, &Mixer::ip_mix46 },
+  { &Mixer::ip_mix51, &Mixer::ip_mix52, &Mixer::ip_mix53, &Mixer::ip_mix54, &Mixer::ip_mix55, &Mixer::ip_mix56 },
+  { &Mixer::ip_mix61, &Mixer::ip_mix62, &Mixer::ip_mix63, &Mixer::ip_mix64, &Mixer::ip_mix65, &Mixer::ip_mix66 },
 };
 
 Mixer::Mixer(size_t _nsamples)

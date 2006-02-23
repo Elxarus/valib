@@ -41,7 +41,7 @@ print "static const convert_t pcm2linear_tbl[NCHANNELS][".($#formats+1)."] = {\n
 foreach $ch (@chs)
 {
   print " { ";
-  print join ", ", map { "Converter::".$_."_linear_".$ch."ch" } @names;
+  print join ", ", map { "&Converter::".$_."_linear_".$ch."ch" } @names;
   print " },\n";
 }
 print "};\n\n";

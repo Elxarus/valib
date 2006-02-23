@@ -31,9 +31,9 @@ foreach $in_nch (1..$nch)
   print "  { ";
   foreach $out_nch (1..$nch-1)
   {
-    print "Mixer::io_mix$in_nch$out_nch, ";
+    print "&Mixer::io_mix$in_nch$out_nch, ";
   }
-  print "Mixer::io_mix$in_nch$nch },\n";
+  print "&Mixer::io_mix$in_nch$nch },\n";
 }
 print "};\n";
 print "\n";

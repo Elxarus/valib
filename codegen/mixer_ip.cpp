@@ -38,12 +38,12 @@ void ip_mix66(samples_t samples, size_t nsamples);
 typedef void (Mixer::*ip_mixfunc_t)(samples_t, size_t); // in-place mixing
 
 static const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {
-  { Mixer::ip_mix11, Mixer::ip_mix12, Mixer::ip_mix13, Mixer::ip_mix14, Mixer::ip_mix15, Mixer::ip_mix16 },
-  { Mixer::ip_mix21, Mixer::ip_mix22, Mixer::ip_mix23, Mixer::ip_mix24, Mixer::ip_mix25, Mixer::ip_mix26 },
-  { Mixer::ip_mix31, Mixer::ip_mix32, Mixer::ip_mix33, Mixer::ip_mix34, Mixer::ip_mix35, Mixer::ip_mix36 },
-  { Mixer::ip_mix41, Mixer::ip_mix42, Mixer::ip_mix43, Mixer::ip_mix44, Mixer::ip_mix45, Mixer::ip_mix46 },
-  { Mixer::ip_mix51, Mixer::ip_mix52, Mixer::ip_mix53, Mixer::ip_mix54, Mixer::ip_mix55, Mixer::ip_mix56 },
-  { Mixer::ip_mix61, Mixer::ip_mix62, Mixer::ip_mix63, Mixer::ip_mix64, Mixer::ip_mix65, Mixer::ip_mix66 },
+  { &Mixer::ip_mix11, &Mixer::ip_mix12, &Mixer::ip_mix13, &Mixer::ip_mix14, &Mixer::ip_mix15, &Mixer::ip_mix16 },
+  { &Mixer::ip_mix21, &Mixer::ip_mix22, &Mixer::ip_mix23, &Mixer::ip_mix24, &Mixer::ip_mix25, &Mixer::ip_mix26 },
+  { &Mixer::ip_mix31, &Mixer::ip_mix32, &Mixer::ip_mix33, &Mixer::ip_mix34, &Mixer::ip_mix35, &Mixer::ip_mix36 },
+  { &Mixer::ip_mix41, &Mixer::ip_mix42, &Mixer::ip_mix43, &Mixer::ip_mix44, &Mixer::ip_mix45, &Mixer::ip_mix46 },
+  { &Mixer::ip_mix51, &Mixer::ip_mix52, &Mixer::ip_mix53, &Mixer::ip_mix54, &Mixer::ip_mix55, &Mixer::ip_mix56 },
+  { &Mixer::ip_mix61, &Mixer::ip_mix62, &Mixer::ip_mix63, &Mixer::ip_mix64, &Mixer::ip_mix65, &Mixer::ip_mix66 },
 };
 
 void Mixer::ip_mix11(samples_t samples, size_t nsamples)

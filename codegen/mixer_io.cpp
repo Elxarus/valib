@@ -38,12 +38,12 @@ void io_mix66(samples_t input, samples_t output, size_t nsamples);
 typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, size_t); // input-output mixing
 
 static const io_mixfunc_t io_mix_tbl[NCHANNELS][NCHANNELS] = {
-  { Mixer::io_mix11, Mixer::io_mix12, Mixer::io_mix13, Mixer::io_mix14, Mixer::io_mix15, Mixer::io_mix16 },
-  { Mixer::io_mix21, Mixer::io_mix22, Mixer::io_mix23, Mixer::io_mix24, Mixer::io_mix25, Mixer::io_mix26 },
-  { Mixer::io_mix31, Mixer::io_mix32, Mixer::io_mix33, Mixer::io_mix34, Mixer::io_mix35, Mixer::io_mix36 },
-  { Mixer::io_mix41, Mixer::io_mix42, Mixer::io_mix43, Mixer::io_mix44, Mixer::io_mix45, Mixer::io_mix46 },
-  { Mixer::io_mix51, Mixer::io_mix52, Mixer::io_mix53, Mixer::io_mix54, Mixer::io_mix55, Mixer::io_mix56 },
-  { Mixer::io_mix61, Mixer::io_mix62, Mixer::io_mix63, Mixer::io_mix64, Mixer::io_mix65, Mixer::io_mix66 },
+  { &Mixer::io_mix11, &Mixer::io_mix12, &Mixer::io_mix13, &Mixer::io_mix14, &Mixer::io_mix15, &Mixer::io_mix16 },
+  { &Mixer::io_mix21, &Mixer::io_mix22, &Mixer::io_mix23, &Mixer::io_mix24, &Mixer::io_mix25, &Mixer::io_mix26 },
+  { &Mixer::io_mix31, &Mixer::io_mix32, &Mixer::io_mix33, &Mixer::io_mix34, &Mixer::io_mix35, &Mixer::io_mix36 },
+  { &Mixer::io_mix41, &Mixer::io_mix42, &Mixer::io_mix43, &Mixer::io_mix44, &Mixer::io_mix45, &Mixer::io_mix46 },
+  { &Mixer::io_mix51, &Mixer::io_mix52, &Mixer::io_mix53, &Mixer::io_mix54, &Mixer::io_mix55, &Mixer::io_mix56 },
+  { &Mixer::io_mix61, &Mixer::io_mix62, &Mixer::io_mix63, &Mixer::io_mix64, &Mixer::io_mix65, &Mixer::io_mix66 },
 };
 
 void Mixer::io_mix11(samples_t input, samples_t output, size_t nsamples)

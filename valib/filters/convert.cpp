@@ -36,21 +36,21 @@ static const int formats_tbl[] = {FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORM
 const int converter_format_mask = FORMAT_MASK_LINEAR | FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCMFLOAT | FORMAT_MASK_PCM16_LE | FORMAT_MASK_PCM24_LE | FORMAT_MASK_PCM32_LE | FORMAT_MASK_PCMFLOAT_LE;
 
 static const convert_t pcm2linear_tbl[NCHANNELS][8] = {
- { Converter::pcm16_linear_1ch, Converter::pcm24_linear_1ch, Converter::pcm32_linear_1ch, Converter::pcmfloat_linear_1ch, Converter::pcm16_le_linear_1ch, Converter::pcm24_le_linear_1ch, Converter::pcm32_le_linear_1ch, Converter::pcmfloat_le_linear_1ch },
- { Converter::pcm16_linear_2ch, Converter::pcm24_linear_2ch, Converter::pcm32_linear_2ch, Converter::pcmfloat_linear_2ch, Converter::pcm16_le_linear_2ch, Converter::pcm24_le_linear_2ch, Converter::pcm32_le_linear_2ch, Converter::pcmfloat_le_linear_2ch },
- { Converter::pcm16_linear_3ch, Converter::pcm24_linear_3ch, Converter::pcm32_linear_3ch, Converter::pcmfloat_linear_3ch, Converter::pcm16_le_linear_3ch, Converter::pcm24_le_linear_3ch, Converter::pcm32_le_linear_3ch, Converter::pcmfloat_le_linear_3ch },
- { Converter::pcm16_linear_4ch, Converter::pcm24_linear_4ch, Converter::pcm32_linear_4ch, Converter::pcmfloat_linear_4ch, Converter::pcm16_le_linear_4ch, Converter::pcm24_le_linear_4ch, Converter::pcm32_le_linear_4ch, Converter::pcmfloat_le_linear_4ch },
- { Converter::pcm16_linear_5ch, Converter::pcm24_linear_5ch, Converter::pcm32_linear_5ch, Converter::pcmfloat_linear_5ch, Converter::pcm16_le_linear_5ch, Converter::pcm24_le_linear_5ch, Converter::pcm32_le_linear_5ch, Converter::pcmfloat_le_linear_5ch },
- { Converter::pcm16_linear_6ch, Converter::pcm24_linear_6ch, Converter::pcm32_linear_6ch, Converter::pcmfloat_linear_6ch, Converter::pcm16_le_linear_6ch, Converter::pcm24_le_linear_6ch, Converter::pcm32_le_linear_6ch, Converter::pcmfloat_le_linear_6ch },
+ { &Converter::pcm16_linear_1ch, &Converter::pcm24_linear_1ch, &Converter::pcm32_linear_1ch, &Converter::pcmfloat_linear_1ch, &Converter::pcm16_le_linear_1ch, &Converter::pcm24_le_linear_1ch, &Converter::pcm32_le_linear_1ch, &Converter::pcmfloat_le_linear_1ch },
+ { &Converter::pcm16_linear_2ch, &Converter::pcm24_linear_2ch, &Converter::pcm32_linear_2ch, &Converter::pcmfloat_linear_2ch, &Converter::pcm16_le_linear_2ch, &Converter::pcm24_le_linear_2ch, &Converter::pcm32_le_linear_2ch, &Converter::pcmfloat_le_linear_2ch },
+ { &Converter::pcm16_linear_3ch, &Converter::pcm24_linear_3ch, &Converter::pcm32_linear_3ch, &Converter::pcmfloat_linear_3ch, &Converter::pcm16_le_linear_3ch, &Converter::pcm24_le_linear_3ch, &Converter::pcm32_le_linear_3ch, &Converter::pcmfloat_le_linear_3ch },
+ { &Converter::pcm16_linear_4ch, &Converter::pcm24_linear_4ch, &Converter::pcm32_linear_4ch, &Converter::pcmfloat_linear_4ch, &Converter::pcm16_le_linear_4ch, &Converter::pcm24_le_linear_4ch, &Converter::pcm32_le_linear_4ch, &Converter::pcmfloat_le_linear_4ch },
+ { &Converter::pcm16_linear_5ch, &Converter::pcm24_linear_5ch, &Converter::pcm32_linear_5ch, &Converter::pcmfloat_linear_5ch, &Converter::pcm16_le_linear_5ch, &Converter::pcm24_le_linear_5ch, &Converter::pcm32_le_linear_5ch, &Converter::pcmfloat_le_linear_5ch },
+ { &Converter::pcm16_linear_6ch, &Converter::pcm24_linear_6ch, &Converter::pcm32_linear_6ch, &Converter::pcmfloat_linear_6ch, &Converter::pcm16_le_linear_6ch, &Converter::pcm24_le_linear_6ch, &Converter::pcm32_le_linear_6ch, &Converter::pcmfloat_le_linear_6ch },
 };
 
 static const convert_t linear2pcm_tbl[NCHANNELS][8] = {
- { Converter::linear_pcm16_1ch, Converter::linear_pcm24_1ch, Converter::linear_pcm32_1ch, Converter::linear_pcmfloat_1ch, Converter::linear_pcm16_le_1ch, Converter::linear_pcm24_le_1ch, Converter::linear_pcm32_le_1ch, Converter::linear_pcmfloat_le_1ch },
- { Converter::linear_pcm16_2ch, Converter::linear_pcm24_2ch, Converter::linear_pcm32_2ch, Converter::linear_pcmfloat_2ch, Converter::linear_pcm16_le_2ch, Converter::linear_pcm24_le_2ch, Converter::linear_pcm32_le_2ch, Converter::linear_pcmfloat_le_2ch },
- { Converter::linear_pcm16_3ch, Converter::linear_pcm24_3ch, Converter::linear_pcm32_3ch, Converter::linear_pcmfloat_3ch, Converter::linear_pcm16_le_3ch, Converter::linear_pcm24_le_3ch, Converter::linear_pcm32_le_3ch, Converter::linear_pcmfloat_le_3ch },
- { Converter::linear_pcm16_4ch, Converter::linear_pcm24_4ch, Converter::linear_pcm32_4ch, Converter::linear_pcmfloat_4ch, Converter::linear_pcm16_le_4ch, Converter::linear_pcm24_le_4ch, Converter::linear_pcm32_le_4ch, Converter::linear_pcmfloat_le_4ch },
- { Converter::linear_pcm16_5ch, Converter::linear_pcm24_5ch, Converter::linear_pcm32_5ch, Converter::linear_pcmfloat_5ch, Converter::linear_pcm16_le_5ch, Converter::linear_pcm24_le_5ch, Converter::linear_pcm32_le_5ch, Converter::linear_pcmfloat_le_5ch },
- { Converter::linear_pcm16_6ch, Converter::linear_pcm24_6ch, Converter::linear_pcm32_6ch, Converter::linear_pcmfloat_6ch, Converter::linear_pcm16_le_6ch, Converter::linear_pcm24_le_6ch, Converter::linear_pcm32_le_6ch, Converter::linear_pcmfloat_le_6ch },
+ { &Converter::linear_pcm16_1ch, &Converter::linear_pcm24_1ch, &Converter::linear_pcm32_1ch, &Converter::linear_pcmfloat_1ch, &Converter::linear_pcm16_le_1ch, &Converter::linear_pcm24_le_1ch, &Converter::linear_pcm32_le_1ch, &Converter::linear_pcmfloat_le_1ch },
+ { &Converter::linear_pcm16_2ch, &Converter::linear_pcm24_2ch, &Converter::linear_pcm32_2ch, &Converter::linear_pcmfloat_2ch, &Converter::linear_pcm16_le_2ch, &Converter::linear_pcm24_le_2ch, &Converter::linear_pcm32_le_2ch, &Converter::linear_pcmfloat_le_2ch },
+ { &Converter::linear_pcm16_3ch, &Converter::linear_pcm24_3ch, &Converter::linear_pcm32_3ch, &Converter::linear_pcmfloat_3ch, &Converter::linear_pcm16_le_3ch, &Converter::linear_pcm24_le_3ch, &Converter::linear_pcm32_le_3ch, &Converter::linear_pcmfloat_le_3ch },
+ { &Converter::linear_pcm16_4ch, &Converter::linear_pcm24_4ch, &Converter::linear_pcm32_4ch, &Converter::linear_pcmfloat_4ch, &Converter::linear_pcm16_le_4ch, &Converter::linear_pcm24_le_4ch, &Converter::linear_pcm32_le_4ch, &Converter::linear_pcmfloat_le_4ch },
+ { &Converter::linear_pcm16_5ch, &Converter::linear_pcm24_5ch, &Converter::linear_pcm32_5ch, &Converter::linear_pcmfloat_5ch, &Converter::linear_pcm16_le_5ch, &Converter::linear_pcm24_le_5ch, &Converter::linear_pcm32_le_5ch, &Converter::linear_pcmfloat_le_5ch },
+ { &Converter::linear_pcm16_6ch, &Converter::linear_pcm24_6ch, &Converter::linear_pcm32_6ch, &Converter::linear_pcmfloat_6ch, &Converter::linear_pcm16_le_6ch, &Converter::linear_pcm24_le_6ch, &Converter::linear_pcm32_le_6ch, &Converter::linear_pcmfloat_le_6ch },
 };
 
 
