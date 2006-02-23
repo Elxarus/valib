@@ -9,5 +9,5 @@ call _clear.bat
 
 cd ..\samples
 ..\test\release\test.exe
-ren test.log ..\test
+move test.log ..\test
 cd ..\test
