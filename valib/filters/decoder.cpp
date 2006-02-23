@@ -103,13 +103,16 @@ AudioDecoder::get_chunk(Chunk *_chunk)
 
   // here we may have a frame loaded
 
-  if (!parser->is_frame_loaded() || !parser->decode_frame())
+  if (!parser->is_frame_loaded())
   {
+    // flushing (see is_empty())
     _chunk->set_empty(out_spk, 0, 0, flushing);
     flushing = false;
-
-    load_frame();
-    return true;
+  }
+  else if (!parser->decode_frame())
+  {
+    // send dummy chunk
+    _chunk->set_empty(out_spk, 0, 0, flushing);
   }
   else
   {
@@ -117,13 +120,10 @@ AudioDecoder::get_chunk(Chunk *_chunk)
     _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
     // timimg
     sync_helper.send_sync(_chunk);
-
-    // quick hack to overcome bug in splitters that report incorrect sample rate
-    // _chunk->time *= double(_out->spk.sample_rate) / spk.sample_rate;
-
-    load_frame();
-    return true;
   }
+
+  load_frame();
+  return true;
 }
 
 bool
