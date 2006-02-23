@@ -143,7 +143,9 @@ int test_rules(Log *log)
   Converter      conv_ll(2048);
   Converter      conv_lr(2048);
   Converter      conv_rl(2048);
-  AudioDecoder   dec;
+  AudioDecoder   dec_mpa;
+  AudioDecoder   dec_ac3;
+  AudioDecoder   dec_dts;
   Demux          demux;
   Spdifer        spdifer;
 
@@ -200,18 +202,28 @@ int test_rules(Log *log)
     Speakers(FORMAT_PCM32, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dec, "AudioDecoder",
+  test_rules_filter(log, &dec_mpa, "AudioDecoder (MPA)",
+    Speakers(FORMAT_MPA, MODE_STEREO, 48000), "test.mp2",
+    Speakers(FORMAT_MPA, 0, 0), "test.mp2",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &dec_ac3, "AudioDecoder (AC3)",
     Speakers(FORMAT_AC3, MODE_STEREO, 48000), "test.ac3",
     Speakers(FORMAT_AC3, 0, 0), "test.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
+  test_rules_filter(log, &dec_dts, "AudioDecoder (DTS)",
+    Speakers(FORMAT_DTS, MODE_STEREO, 48000), "test.dts",
+    Speakers(FORMAT_DTS, 0, 0), "test.dts",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
+
   test_rules_filter(log, &demux, "Demuxer",
-    Speakers(FORMAT_PES, 0, 0), "test.ac3.pes",
+    Speakers(FORMAT_PES, 0, 0), "test.all2.pes",
     Speakers(FORMAT_PES, MODE_STEREO, 48000), "test.ac3.pes",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &spdifer, "Spdifer",
-    Speakers(FORMAT_AC3, 0, 0), "test.ac3",
+    Speakers(FORMAT_AC3, 0, 0), "test.all",
     Speakers(FORMAT_AC3, 0, 0), "test.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
@@ -817,6 +829,19 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
+
+  /////////////////////////////////////////////////////////
+  // Full processing cycle test. 
+
+  log->msg("Full processing cycle test");
+
+  INIT_EMPTY(spk_supported);
+  src.open(spk_supported, filename, data_size);
+  while (!src.is_empty())
+  {
+    FILL_FILTER;
+    EMPTY_FILTER;
+  }
 
   return 0;
 }
