@@ -15,7 +15,7 @@
 
 
 
-class MPAParser : public Parser
+class MPAParser : public BaseParser
 {
 public:
   // raw frame header struct
@@ -60,45 +60,27 @@ public:
 
   Header   hdr; // raw header
   BSI      bsi; // bitstream information
-  Speakers spk; // speaker configuration
-
-  // just statistics
-  unsigned errors;
-  unsigned frames;
 
   MPAParser();
   ~MPAParser();
 
-  // Parser interface
-  virtual void reset();
+  /////////////////////////////////////////////////////////
+  // Parser overrides
 
-  // Frame load operations
-  virtual unsigned load_frame(uint8_t **buf, uint8_t *end);
-  virtual bool     is_frame_loaded() const { return bsi.frame_size && (frame_data >= bsi.frame_size); };
-  virtual void     drop_frame()            { frame_data = 0; bsi.frame_size = 0; }
+  void reset();
+  bool decode_frame();
+  void get_info(char *buf, unsigned len) const;
 
-  // Frame decode
-  virtual bool decode_frame();
+protected:
+  /////////////////////////////////////////////////////////
+  // BaseParser overrides
 
-  // stream information
-  virtual Speakers get_spk()        const { return spk;            }
-  virtual unsigned get_frame_size() const { return bsi.frame_size; }
-  virtual unsigned get_nsamples()   const { return bsi.nsamples;   }
-  virtual void get_info(char *buf, unsigned len) const;
-  virtual unsigned get_frames()     const { return frames;         }
-  virtual unsigned get_errors()     const { return errors;         }
-
-  // Buffers
-  virtual uint8_t *get_frame()      const { return frame_buf;      }
-  virtual samples_t get_samples()   const { return samples;        }
+  virtual size_t header_size() const;
+  virtual bool   load_header(uint8_t *_buf);
+  virtual bool   prepare();
 
 private:
   int II_table;            // Layer II allocation table number 
-
-  // buffers
-  DataBuf   frame_buf;     // raw frame buffer
-  int frame_data;          // data size on frame buffer
-  SampleBuf samples;       // samples buffer
 
   ReadBS       bitstream;  // bitstream 
   SynthBuffer *synth[MPA_NCH]; // synthesis buffers
@@ -128,21 +110,5 @@ private:
          sample_t scale[MPA_NCH][3][SBLIMIT],
          int x);
 };
-
-inline bool 
-MPAParser::sync(Header h)
-{
-  // sync check
-  if (h.sync != 0xfff)           return false;
-
-  // integrity check
-  if (h.layer == 0)              return false;
-  if (h.bitrate_index >= 15)     return false;
-  if (h.sampling_frequency >= 3) return false;
-
-  // for now we will not work with free-format
-  if (h.bitrate_index == 0)      return false; 
-  return true;
-}
 
 #endif

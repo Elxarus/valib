@@ -20,7 +20,8 @@ unsigned short calc_crc(unsigned short crc, unsigned short *data, int len)
 {
   while (len >= 16)
   {
-    crc = swab_u16(*(data++)) ^ crc;
+    crc = swab_u16(*data) ^ crc;
+    data++;
 
     #define calc_crc_step(crc) \
       crc = (crc << 1) ^ (CRC16_POLYNOMIAL >> ((~crc & 0x8000) >> 11))
@@ -57,14 +58,14 @@ unsigned short calc_crc(unsigned short crc, unsigned short *data, int len)
 
 MPAParser::MPAParser()
 {
-  frames = 0;
-  errors = 0;
-
   samples.allocate(2, MPA_NSAMPLES);
-  frame_buf.allocate(MPA_MAX_FRAME_SIZE);
+  frame.allocate(MPA_MAX_FRAME_SIZE);
 
   synth[0] = new SynthBufferFPU();
   synth[1] = new SynthBufferFPU();
+
+  // setup syncronization scanner
+  scanner.set_standard(SYNCMASK_MPA);
 
   // always useful
   reset();
@@ -77,19 +78,19 @@ MPAParser::~MPAParser()
   if (synth[1]) delete synth[1];
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Parser overrides
 
 void 
 MPAParser::reset()
 {
-  frame_buf.zero();
+  BaseParser::reset();
+
+  frame.zero();
   samples.zero();
 
   if (synth[0]) synth[0]->reset();
   if (synth[1]) synth[1]->reset();
-
-  bsi.frame_size = 0;
-  frame_data = 0;
-  *(uint32_t *)(uint8_t *)frame_buf = 0;
 }
 
 void 
@@ -101,68 +102,19 @@ MPAParser::get_info(char *buf, unsigned len) const
     "speakers: %s\n"
     "ver: %s\n"
     "frame size: %i bytes\n"
+    "stream: %s\n"
     "bitrate: %ikbps\n"
     "sample rate: %iHz\n"
     "bandwidth: %ikHz/%ikHz\n\0",
     spk.mode_text(),
     bsi.ver? "MPEG2 LSF": "MPEG1", 
     bsi.frame_size,
+    (bs_type == BITSTREAM_8? "8 bit": "16bit big endian"), 
     bsi.bitrate / 1000,
     bsi.freq,
     bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2,
     bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2);
   memcpy(buf, info, MIN(len, strlen(info)+1));
-}
-
-unsigned
-MPAParser::load_frame(uint8_t **buf, uint8_t *end)
-{
-  uint8_t *pos;
-  uint32_t header;
-  int l;
-
-  // drop previous frame
-  if (frame_data >= bsi.frame_size)
-  {
-    frame_data = 0;
-    bsi.frame_size = 0;
-    header = 0;
-  }
-  else
-    header = swab_u32(*(uint32_t *)frame_buf.get_data());
-
-  // sync
-  pos = *buf;
-  if (!sync(header))
-  {
-    while (pos < end && !sync(header))
-      header = (header << 8) | (*pos++);
-    *(uint32_t *)frame_buf.get_data() = swab_u32(header);
-    frame_data = 4;
-    if (pos == end)
-    {
-      *buf = pos;
-      return 0;
-    }
-  }
-  decode_header();
-
-  // load frame
-  l = MIN(bsi.frame_size - frame_data, end - pos);
-  memcpy(frame_buf + frame_data, pos, l);
-  frame_data += l;
-  pos += l;
-
-  if (frame_data < bsi.frame_size)
-  {
-    *buf = pos;
-    return 0;
-  }
-
-  // start frame
-  frames++;
-  *buf = pos;
-  return bsi.frame_size;
 }
 
 bool 
@@ -173,7 +125,7 @@ MPAParser::decode_frame()
 
   bool ok = false;
 
-  bitstream.set_ptr(frame_buf + 4 + (hdr.error_protection << 1), BITSTREAM_8);
+  bitstream.set_ptr(frame + 4 + (hdr.error_protection << 1), bs_type);
   switch (bsi.layer)
   {
     case MPA_LAYER_I:  ok = I_decode_frame();  break;
@@ -189,10 +141,93 @@ MPAParser::decode_frame()
   return ok;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// BaseParser overrides
+
+size_t 
+MPAParser::header_size() const
+{ 
+  return 4;
+}
+
+bool 
+MPAParser::load_header(uint8_t *_buf)
+{
+  Header h;
+
+  // MPA low and big endians have ambigous headers
+  // so first we check low endian as most used and only
+  // then try big endian
+
+  // 8 bit or 16 bit little endian steram sync
+  if ((_buf[0] == 0xff)         && // sync
+     ((_buf[1] & 0xf0) == 0xf0) && // sync
+     ((_buf[1] & 0x06) != 0x00) && // layer
+     ((_buf[2] & 0xf0) != 0xf0) && // bitrate
+     ((_buf[2] & 0xf0) != 0x00) && // prohibit free-format
+     ((_buf[2] & 0x0c) != 0x0c))   // sample rate
+  {
+    uint32_t header = *(uint32_t *)_buf;
+    h = swab_u32(header);
+    bs_type = BITSTREAM_8;
+  }
+  else
+  // 16 bit big endian steram sync
+  if ((_buf[1] == 0xff)         && // sync
+     ((_buf[0] & 0xf0) == 0xf0) && // sync
+     ((_buf[0] & 0x06) != 0x00) && // layer
+     ((_buf[3] & 0xf0) != 0xf0) && // bitrate
+     ((_buf[3] & 0xf0) != 0x00) && // prohibit free-format
+     ((_buf[3] & 0x0c) != 0x0c))   // sample rate
+  {
+    uint32_t header = *(uint32_t *)_buf;
+    h = (header >> 16) | (header << 16);
+    bs_type = BITSTREAM_16BE;
+  }
+  else
+    return false;
+
+  // common information
+  int ver = 1 - h.version;
+  int layer = 3 - h.layer;
+  int bitrate = bitrate_tbl[ver][layer][h.bitrate_index] * 1000;
+  int sample_rate = freq_tbl[ver][h.sampling_frequency];
+
+  // frame size calculation
+  frame_size = bitrate * slots_tbl[layer] / sample_rate + h.padding;
+  if (layer == 0) // MPA_LAYER_I
+    frame_size *= 4;
+
+  nsamples = layer == 0? 384: 1152;
+  spk = Speakers(FORMAT_MPA, (h.mode == 3)? MODE_MONO: MODE_STEREO, sample_rate);
+  return true;
+}
+
+bool
+MPAParser::prepare()
+{
+  return decode_header();
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// MPA parsing
+//////////////////////////////////////////////////////////////////////
+
 bool 
 MPAParser::decode_header()
 {
-  hdr.raw = swab_u32(*(uint32_t *)frame_buf.get_data());
+  if (bs_type == BITSTREAM_8)
+  {
+    uint32_t header = *(uint32_t *)frame.get_data();
+    hdr = swab_u32(header);
+  }
+  else
+  {
+    uint32_t header = *(uint32_t *)frame.get_data();
+    hdr = (header >> 16) | (header << 16);
+  }
+
   hdr.error_protection = ~hdr.error_protection;
 
   // integrity check
@@ -211,9 +246,6 @@ MPAParser::decode_header()
   bsi.freq      = freq_tbl[bsi.ver][hdr.sampling_frequency];
   bsi.nch       = bsi.mode == MPA_MODE_SINGLE? 1: 2;
   bsi.nsamples  = bsi.layer == MPA_LAYER_I? SCALE_BLOCK * SBLIMIT: SCALE_BLOCK * SBLIMIT * 3;
-
-  // speaker configuration
-  spk = Speakers(FORMAT_LINEAR, (bsi.mode == MPA_MODE_SINGLE)? MODE_MONO: MODE_STEREO, bsi.freq);
 
   // frame size calculation
   bsi.frame_size = bsi.bitrate * slots_tbl[bsi.layer] / bsi.freq + hdr.padding;
@@ -290,15 +322,26 @@ MPAParser::II_decode_frame()
     {
       int bits = ba_bits[sb];
       crc_bits += bits << 1;
-      bit_alloc[0][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
-      bit_alloc[1][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
+      if (bits)
+      {
+        bit_alloc[0][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
+        bit_alloc[1][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
+      }
+      else
+      {
+        bit_alloc[0][sb] = II_ba_tbl[table][sb][0];
+        bit_alloc[1][sb] = II_ba_tbl[table][sb][0];
+      }
     }
 
     for (sb = jsbound; sb < sblimit; sb++)
     {
       int bits = ba_bits[sb];
       crc_bits += bits;
-      bit_alloc[0][sb] = bit_alloc[1][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
+      if (bits)
+        bit_alloc[0][sb] = bit_alloc[1][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
+      else
+        bit_alloc[0][sb] = bit_alloc[1][sb] = II_ba_tbl[table][sb][0];
     }
     
     for (sb = sblimit; sb < SBLIMIT; sb++) 
@@ -324,13 +367,14 @@ MPAParser::II_decode_frame()
 
   /////////////////////////////////////////////////////////
   // CRC check
+  // todo: big endian CRC check
 
-  if (hdr.error_protection)
+  if (hdr.error_protection && bs_type == BITSTREAM_8)
   {
     uint16_t crc = 0xffff;
-    crc = calc_crc(crc, (uint16_t*)(frame_buf+2), 16);
-    crc = calc_crc(crc, (uint16_t*)(frame_buf+6), crc_bits);
-    uint16_t crc_test = swab_u16(*(uint16_t*)(frame_buf+4));
+    crc = calc_crc(crc, (uint16_t*)(frame+2), 16);
+    crc = calc_crc(crc, (uint16_t*)(frame+6), crc_bits);
+    uint16_t crc_test = swab_u16(*(uint16_t*)(frame+4));
     if (crc != crc_test)
       return false;
   }
@@ -566,9 +610,9 @@ MPAParser::I_decode_frame()
     uint16_t crc_bits = jsbound;
     crc_bits = (crc_bits << 3) + ((32 - crc_bits) << 2);
 
-    crc = calc_crc(crc, (uint16_t*)(frame_buf+2), 16);
-    crc = calc_crc(crc, (uint16_t*)(frame_buf+6), crc_bits);
-    uint16_t crc_test = swab_u16(*(uint16_t*)(frame_buf+4));
+    crc = calc_crc(crc, (uint16_t*)(frame+2), 16);
+    crc = calc_crc(crc, (uint16_t*)(frame+6), crc_bits);
+    uint16_t crc_test = swab_u16(*(uint16_t*)(frame+4));
     if (crc != crc_test)
       return false;
   }
