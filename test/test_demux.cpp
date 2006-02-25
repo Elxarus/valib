@@ -19,7 +19,7 @@ static const int noise_size = 10000000;
 static const int noise_runs = 1;
 
 // file speed test
-static const char *file_name = "test.all2.pes";
+static const char *file_pes = "test.all2.pes";
 static const int file_runs = 50;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ public:
     log->open_group("Demux test");
     transform();
     speed_noise();
-    speed_file();
+    speed_file(file_pes);
     return log->close_group();
   }
 
@@ -96,7 +96,7 @@ public:
       data_chunks / noise_runs, empty_chunks / noise_runs);
   }
 
-  void speed_file()
+  void speed_file(const char *file_name)
   {
     /////////////////////////////////////////////////////////
     // File speed test
@@ -138,7 +138,7 @@ public:
     }
     cpu.stop();
 
-    log->msg("Demux speed on file: %iMB/s, Data: %i, Empty: %i", 
+    log->msg("Demux speed on file %s: %iMB/s, Data: %i, Empty: %i", file_name,
       int(double(f.size()) * file_runs / cpu.get_thread_time() / 1000000), 
       data_chunks / file_runs, empty_chunks / file_runs);
   }
