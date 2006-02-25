@@ -95,6 +95,10 @@
 // sync_buffer_size = max_frame_size * 2 + header_size = 32784
 // total_buffer_size = sync_buffer_size + spdif_max_frame_size = 40976
 //
+// Also we must take in account that we may have SPDIF stream at input. But 
+// maximun SPDIF frame size is 8192 and maximum frame size we may deal with 
+// is 16384. Therefore we have no problems with syncing with SPDIF streams.
+//
 // DTS stream with 4096 samples per frame and DTS stream that does not satisfy
 // the equation (2) cannot be transmitted over spdif. Such DTS streams are
 // passed throu unchanged and output format is indicated as DTS so we still 
@@ -221,7 +225,8 @@ Spdifer::load_frame()
 
     case state_sync:
     {
-      // find first syncpoint
+      // find first syncpoint using frame buffer as scan buffer
+      // (drop non-sync)
       LOAD(4);
       if (!scanner.get_sync(frame_ptr))
       {
@@ -259,32 +264,38 @@ Spdifer::load_frame()
         size -= len;
       }
 
-      // count syncpoints
+      // count syncpoints using scanner buffer (do not alter frame buffer)
       // find max(frame_size) and max(nsamples) along syncpoints found
       size_t max_nsamples = 0;
       size_t max_frame_size = 0;
       int sync_count = 0;
 
       uint8_t *pos = frame_ptr;
-      while (pos < frame_ptr + frame_data - HEADER_SIZE)
+      uint8_t *end = frame_ptr + frame_data - HEADER_SIZE + 4;
+      scanner.reset();
+      while (pos < end)
       {
-        if (frame_sync(pos) && frame_syncinfo(pos))
-        {
-          if (stream_spk != sync_spk) 
-            break;
+        pos += scanner.scan(pos, end - pos);
 
-          sync_count++;
+        if (scanner.get_sync())
+          if (frame_sync(pos - 4) && frame_syncinfo(pos - 4))
+          {
+            if (stream_spk != sync_spk) 
+              break;
 
-          if (frame_size > max_frame_size)
-            max_frame_size = frame_size;
+            sync_count++;
 
-          if (nsamples > max_nsamples)
-            max_nsamples = nsamples;
+            if (frame_size > max_frame_size)
+            {
+              // to detect spdif compatibility we must 
+              // consider nsamples from the same frame
+              max_frame_size = frame_size;
+              max_nsamples = nsamples;
+            }
 
-          pos += frame_size;
-        }
-        else
-          pos++;
+            scanner.reset();
+            pos += frame_size - 4;
+          }
       }
 
       // if we did not catch 3 syncpoints
@@ -310,7 +321,7 @@ Spdifer::load_frame()
       // load_frame() always generates at least 3 frames 
       // after successful syncronization
 
-      spdif_payload_size = nsamples * 4;
+      spdif_payload_size = max_nsamples * 4;
       if (use_spdif_header)
         spdif_payload_size -= SPDIF_HEADER_SIZE;
 
