@@ -2,7 +2,7 @@
 #include "win32\winspk.h"
 
 // uncomment this to log timing information into DirectShow log
-#define DSHOWSINK_LOG_TIMING
+//#define DSHOWSINK_LOG_TIMING
 
 DEFINE_GUID(MEDIASUBTYPE_AVI_AC3, 
 0x00002000, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
@@ -111,28 +111,16 @@ DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
 HRESULT 
 DShowSink::CheckMediaType(const CMediaType *_mt)
 {
-  Speakers spk_tmp;
-
-  if (!mt2spk(*_mt, spk_tmp))
-    return S_FALSE;
-  else
-    return CTransformOutputPin::CheckMediaType(_mt);
+  // verified by filter
+  return CTransformOutputPin::CheckMediaType(_mt);
 }
 
 HRESULT 
 DShowSink::SetMediaType(const CMediaType *_mt)
 {
-  Speakers spk_tmp;
-  HRESULT hr;
+  spk = spk_unknown; // sink must be reinitialized
 
-  if (!mt2spk(*_mt, spk_tmp))
-    return E_FAIL;
-
-  if FAILED(hr = CTransformOutputPin::SetMediaType(_mt))
-    return hr;
-
-  spk = spk_tmp;
-  return S_OK;
+  return CTransformOutputPin::SetMediaType(_mt);
 }
 
 bool 
@@ -217,15 +205,11 @@ DShowSink::set_downstream(const CMediaType *_mt)
 bool 
 DShowSink::query_input(Speakers _spk) const
 {
+  if (*m_mt.FormatType() == FORMAT_WaveFormatEx)
+    if (is_compatible(_spk, (WAVEFORMATEX *)m_mt.Format()))
+      return true;
+
   CMediaType mt;
-
-  if (_spk == spk)
-    return true;
-
-  if (spk.format == FORMAT_SPDIF && _spk.format == FORMAT_SPDIF &&
-      spk.sample_rate == _spk.sample_rate)
-    return true;
-
   if (spk2mt(_spk, mt, true) && query_downstream(&mt))
   {
     DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
@@ -246,18 +230,14 @@ DShowSink::query_input(Speakers _spk) const
 bool 
 DShowSink::set_input(Speakers _spk)
 {
+  if (*m_mt.FormatType() == FORMAT_WaveFormatEx)
+    if (is_compatible(_spk, (WAVEFORMATEX *)m_mt.Format()))
+    {
+      spk = _spk;
+      return true;
+    }
+
   CMediaType mt;
-
-  if (_spk == spk)
-    return true;
-
-  if (spk.format == FORMAT_SPDIF && _spk.format == FORMAT_SPDIF &&
-      spk.sample_rate == _spk.sample_rate)
-  {
-    spk = _spk;
-    return true;
-  }
-
   if (spk2mt(_spk, mt, true) && set_downstream(&mt))
   {
     spk = _spk;
@@ -272,6 +252,7 @@ DShowSink::set_input(Speakers _spk)
   }
   else
   {
+    spk = spk_unknown;
     DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Failed", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
     return false;
   }
