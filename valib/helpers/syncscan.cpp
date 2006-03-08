@@ -241,6 +241,17 @@ SyncScan::set_standard(uint32_t _syncmask)
 
   if (_syncmask & SYNCMASK_DTS14_BE)
     set(SYNC_DTS14_BE, 0x7ffe8001, 0xffffffff);
+
+  if (_syncmask & SYNCMASK_SPDIF)
+    set(SYNC_SPDIF, 0x72f81f4e, 0xffffffff);
+
+  if (_syncmask & SYNCMASK_PS)
+  {
+    set(SYNC_PS, 0x000001b8, 0xffffffff);
+    for (int stream = 0xb8; stream < 0xff; stream++)
+      allow(SYNC_PS, stream, 0x000000ff);
+  }
+
 }
 
 

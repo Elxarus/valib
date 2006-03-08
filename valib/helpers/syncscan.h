@@ -405,12 +405,17 @@
 
 #define SYNC_MPA_LE   8
 #define SYNC_MPA_BE   9
+
 #define SYNC_AC3_LE   10  
 #define SYNC_AC3_BE   11
+
 #define SYNC_DTS16_LE 12
 #define SYNC_DTS16_BE 13
 #define SYNC_DTS14_LE 14
 #define SYNC_DTS14_BE 15
+
+#define SYNC_SPDIF    16
+#define SYNC_PS       17
 
 ///////////////////////////////////////////////////////////
 // Syncpoint masks
@@ -430,6 +435,9 @@
 #define SYNCMASK_DTS16_BE 0x2000
 #define SYNCMASK_DTS14_LE 0x4000
 #define SYNCMASK_DTS14_BE 0x8000
+
+#define SYNCMASK_SPDIF    0x10000
+#define SYNCMASK_PS       0x20000
 
 ///////////////////////////////////////////////////////////
 // SyncScan class
