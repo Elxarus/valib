@@ -87,6 +87,9 @@ O - get_output()
 E - is_empty()
 C - get_chunk()
 
-IP  - In-place filter ('+' - inplace, '-' - buffered, '*' - both)
 FL  - require flushing
-BUF - has buffer (DataBuffer or SampleBuffer)
+
+BUF - buffering method:
+  ip - inplace
+  im - immediate
+  bl - block

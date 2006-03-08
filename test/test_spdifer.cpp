@@ -1,5 +1,5 @@
 /*
-  NullFilter noise passthrough test
+  Spdifer filter test
 */
 
 #include "log.h"
