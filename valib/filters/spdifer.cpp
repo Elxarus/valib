@@ -146,7 +146,6 @@ Spdifer::Spdifer()
 {
   frame_buf.allocate(SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
   frames = 0;
-  scanner.set_standard(SYNCMASK_MAD);
   reset();
 }
 
@@ -554,6 +553,39 @@ bool
 Spdifer::query_input(Speakers _spk) const
 {
   return (FORMAT_MASK(_spk.format) & format_mask) != 0;
+}
+
+bool
+Spdifer::set_input(Speakers _spk)
+{
+/*
+      scanner.set_standard(SYNCMASK_MAD);
+      return NullFilter::set_input(_spk);
+*/
+  scanner.clear_all();
+
+  switch (_spk.format)
+  {
+    case FORMAT_UNKNOWN:
+    case FORMAT_SPDIF:
+    case FORMAT_PCM16:
+      scanner.set_standard(SYNCMASK_MAD);
+      return NullFilter::set_input(_spk);
+
+    case FORMAT_MPA:
+      scanner.set_standard(SYNCMASK_MPA);
+      return NullFilter::set_input(_spk);
+
+    case FORMAT_AC3:
+      scanner.set_standard(SYNCMASK_AC3);
+      return NullFilter::set_input(_spk);
+
+    case FORMAT_DTS:
+      scanner.set_standard(SYNCMASK_DTS);
+      return NullFilter::set_input(_spk);
+  }
+
+  return false;
 }
 
 bool 
