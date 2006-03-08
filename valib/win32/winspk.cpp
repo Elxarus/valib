@@ -240,6 +240,9 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
   if (wfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
   {
     // extensible
+    if (wfx->cbSize < 22)
+      return false;
+
     wfex = (WAVEFORMATEXTENSIBLE *)wfx;
 
     // determine sample format
@@ -319,3 +322,24 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
   spk = Speakers(format, mask, wfx->nSamplesPerSec, level);
   return true;
 }
+
+bool is_compatible(Speakers _spk, WAVEFORMATEX *_wfx)
+{
+  WAVEFORMATEXTENSIBLE wfx_tmp;
+
+  if (!spk2wfx(_spk, (WAVEFORMATEX *)&wfx_tmp, true)) 
+    return false;
+
+  if (_wfx->cbSize == wfx_tmp.Format.cbSize)
+    if (!memcmp(_wfx, &wfx_tmp, wfx_tmp.Format.cbSize))
+      return true;
+
+  if (!spk2wfx(_spk, (WAVEFORMATEX *)&wfx_tmp, false)) 
+    return false;
+
+  if (_wfx->cbSize == wfx_tmp.Format.cbSize)
+    if (!memcmp(_wfx, &wfx_tmp, wfx_tmp.Format.cbSize))
+      return true;
+
+  return false;
+};

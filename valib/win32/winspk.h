@@ -20,7 +20,9 @@
 #define WAVE_FORMAT_DTS 0x2001
 #endif
 
+
 bool wfx2spk(WAVEFORMATEX *wfx, Speakers &spk);
 bool spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible);
+bool is_compatible(Speakers spk, WAVEFORMATEX *wfx);
 
 #endif
