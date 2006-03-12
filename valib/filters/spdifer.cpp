@@ -558,29 +558,28 @@ Spdifer::query_input(Speakers _spk) const
 bool
 Spdifer::set_input(Speakers _spk)
 {
-/*
-      scanner.set_standard(SYNCMASK_MAD);
-      return NullFilter::set_input(_spk);
-*/
-  scanner.clear_all();
-
+  reset();
   switch (_spk.format)
   {
     case FORMAT_UNKNOWN:
     case FORMAT_SPDIF:
     case FORMAT_PCM16:
+      scanner.clear_all();
       scanner.set_standard(SYNCMASK_MAD);
       return NullFilter::set_input(_spk);
 
     case FORMAT_MPA:
+      scanner.clear_all();
       scanner.set_standard(SYNCMASK_MPA);
       return NullFilter::set_input(_spk);
 
     case FORMAT_AC3:
+      scanner.clear_all();
       scanner.set_standard(SYNCMASK_AC3);
       return NullFilter::set_input(_spk);
 
     case FORMAT_DTS:
+      scanner.clear_all();
       scanner.set_standard(SYNCMASK_DTS);
       return NullFilter::set_input(_spk);
   }
