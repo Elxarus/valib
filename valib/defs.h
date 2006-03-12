@@ -10,7 +10,7 @@
 // Basic constants
 ///////////////////////////////////////////////////////////////////////////////
 
-#define NCHANNELS          6
+#define NCHANNELS 6
 
 #ifndef M_PI
   #define M_PI 3.1415926535897932384626433832795029
@@ -55,11 +55,6 @@
 // Base word types
 ///////////////////////////////////////////////////////////////////////////////
 
-// todo: Add intxxbe_t and intxxle_t types and conversion functions between 
-// all this types. This conversion functions should be created according to 
-// current machine architecture so we have no need to take it into account 
-// anymore (and we may forgot about swab functions)...
-
 typedef signed char      int8_t;
 typedef signed short     int16_t;
 typedef signed int       int32_t;
@@ -103,6 +98,12 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Some utilities
+//
+//   MIN(a, b)
+//   MAX(a, b)
+//   value2db(value)     (requires math.h)
+//   db2value(db)        (requires math.h)
+//   array_size(array)
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef MIN
@@ -119,7 +120,18 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 #define array_size(array) (sizeof(array) / sizeof(array[0]))
 
 ///////////////////////////////////////////////////////////////////////////////
-// Byteorder
+// Byte-swap functions
+//
+//   uint32_t swab_u32(uint32_t i)
+//   int32_t  swab_s32(int32_t i)
+//   uint16_t swab_u16(uint16_t i)
+//   int16_t  swab_s16(int16_t i)
+//   int32_t  swab_s24(int24_t i)
+//
+// We use defines for debug version because it works much faster than inline
+// functions (overhead of function call is too big).
+//
+// Use asm inlines for X86 architecture and general inlines otherwise.
 ///////////////////////////////////////////////////////////////////////////////
 
 #if defined(_DEBUG)
@@ -164,13 +176,6 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
     __asm bswap eax
     __asm sar eax, 8
   }
-/*
-  inline float swab_float(float x)
-  {
-    __asm mov eax, x
-    __asm bswap eax
-  }
-*/
   #pragma warning(pop)
 
 #else
@@ -184,6 +189,19 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 #endif
 
 inline float    swab_float(float f) { uint32_t i = swab_u32(*(uint32_t *)&f); return *(float *)&i; };
+
+///////////////////////////////////////////////////////////////////////////////
+// Byteorder conversion
+///////////////////////////////////////////////////////////////////////////////
+
+#define int2be32(i) swab_u32(i)
+#define int2le32(i) (i)
+#define int2be16(i) swab_u16(i)
+#define int2le16(i) (i)
+#define be2int32(i) swab_u32(i)
+#define le2int32(i) (i)
+#define be2int16(i) swab_u16(i)
+#define le2int16(i) (i)
 
 
 #endif
