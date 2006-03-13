@@ -65,7 +65,7 @@ typedef unsigned int     uint32_t;
 typedef unsigned __int64 uint64_t;
 
 #pragma pack(push, 1)   // do not justify following structure
-struct int24_t 
+struct int24_t // int24_t is a low-endian structure
 {
   uint16_t low; 
   int8_t   high;
@@ -99,11 +99,11 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 ///////////////////////////////////////////////////////////////////////////////
 // Some utilities
 //
-//   MIN(a, b)
-//   MAX(a, b)
-//   value2db(value)     (requires math.h)
-//   db2value(db)        (requires math.h)
-//   array_size(array)
+//   MIN(a, b)           finds minimum
+//   MAX(a, b)           finds maximum
+//   value2db(value)     convert to decibels (requires math.h)
+//   db2value(db)        convert from decibels (requires math.h)
+//   array_size(array)   calculates array size
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef MIN
@@ -129,7 +129,11 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 //   int32_t  swab_s24(int24_t i)
 //
 // We use defines for debug version because it works much faster than inline
-// functions (overhead of function call is too big).
+// functions (overhead of function call is too big). So we must be careful
+// with it because following constructions are prohibited:
+//
+// i = swab_u16(*p++); // WRONG!!! because it is replaced with
+//                     // i = ((*p++) << 8) | (*p++) >> 8));
 //
 // Use asm inlines for X86 architecture and general inlines otherwise.
 ///////////////////////////////////////////////////////////////////////////////
@@ -194,14 +198,39 @@ inline float    swab_float(float f) { uint32_t i = swab_u32(*(uint32_t *)&f); re
 // Byteorder conversion
 ///////////////////////////////////////////////////////////////////////////////
 
-#define int2be32(i) swab_u32(i)
+#define int2be32(i) swab_s32(i)
 #define int2le32(i) (i)
-#define int2be16(i) swab_u16(i)
+#define int2be24(i) swab_s24(i)
+#define int2le24(i) (i)
+#define int2be16(i) swab_s16(i)
 #define int2le16(i) (i)
-#define be2int32(i) swab_u32(i)
+
+#define be2int32(i) swab_s32(i)
 #define le2int32(i) (i)
-#define be2int16(i) swab_u16(i)
+#define be2int24(i) swab_s24(i)
+#define le2int24(i) (i)
+#define be2int16(i) swab_s16(i)
 #define le2int16(i) (i)
 
+#define uint2be32(i) swab_u32(i)
+#define uint2le32(i) (i)
+#define uint2be24(i) swab_u24(i)
+#define uint2le24(i) (i)
+#define uint2be16(i) swab_u16(i)
+#define uint2le16(i) (i)
+
+#define be2uint32(i) swab_u32(i)
+#define le2uint32(i) (i)
+#define be2uint24(i) swab_u24(i)
+#define le2uint24(i) (i)
+#define be2uint16(i) swab_u16(i)
+#define le2uint16(i) (i)
+
+
+///////////////////////////////////////////////////////////////////////////////
+// MSVC8: disable depreciation warning
+///////////////////////////////////////////////////////////////////////////////
+
+#pragma warning(disable: 4996)
 
 #endif
