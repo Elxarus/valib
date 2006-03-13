@@ -3,33 +3,37 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Just for reference
 ///////////////////////////////////////////////////////////////////////////////
-
 /*
+// special-purpose formats
 #define FORMAT_UNKNOWN     0
 #define FORMAT_LINEAR      1
 
+// PCM low-endian formats
 #define FORMAT_PCM16       2
 #define FORMAT_PCM24       3
 #define FORMAT_PCM32       4
-#define FORMAT_PCMFLOAT    5
 
-#define FORMAT_PCM16_LE    6
-#define FORMAT_PCM24_LE    7
-#define FORMAT_PCM32_LE    8
-#define FORMAT_PCMFLOAT_LE 9
+// PCM big-endian formats
+#define FORMAT_PCM16_BE    5
+#define FORMAT_PCM24_BE    6
+#define FORMAT_PCM32_BE    7
 
-// data containers
-#define FORMAT_PES        10
-#define FORMAT_SPDIF      11
+// PCM floating-point
+#define FORMAT_PCMFLOAT    8
 
-// compressed formats
-#define FORMAT_AC3        12
-#define FORMAT_MPA        13
+// container formats
+#define FORMAT_PES        10 // MPEG1/2 Program Elementary Stream
+#define FORMAT_SPDIF      11 // IEC 61937 stream
+
+// compressed spdifable formats
+#define FORMAT_MPA        12
+#define FORMAT_AC3        13
 #define FORMAT_DTS        14
+
+// other compressed formats
 #define FORMAT_AAC        15
 #define FORMAT_OGG        16
 */
-
 ///////////////////////////////////////////////////////////////////////////////
 // Constants for common audio formats
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,12 +70,15 @@ extern const int sample_size_tbl[32] =
   sizeof(int16_t),
   sizeof(int24_t),
   sizeof(int32_t),
-  sizeof(float),
 
   sizeof(int16_t),
   sizeof(int24_t),
   sizeof(int32_t),
+
   sizeof(float),
+
+  0,                // reserved
+
   1, 1,             // PES/SPDIF
   1, 1, 1, 1, 1,    // compresed formats
 

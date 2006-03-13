@@ -102,7 +102,7 @@ inline bool Spdifer::frame_sync(const uint8_t *_buf) const
 
 inline bool Spdifer::ac3_sync(const uint8_t *_buf) const
 {
-  // 8 bit or 16 bit little endian steram sync
+  // 8 bit or 16 bit big endian stream sync
   if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
   {
     // constraints
@@ -111,7 +111,7 @@ inline bool Spdifer::ac3_sync(const uint8_t *_buf) const
     if ((_buf[4] & 0xc0) > 0x80) return false;   // 'fscod'
     return true;
   }
-  // 16 bit big endian steram sync
+  // 16 bit low endian stream sync
   else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
   {
     // constraints
@@ -126,11 +126,11 @@ inline bool Spdifer::ac3_sync(const uint8_t *_buf) const
 
 inline bool Spdifer::mpa_sync(const uint8_t *_buf) const
 {
-  // MPA low and big endians have ambigous headers
+  // MPA big and low endians have ambigous headers
   // so first we check low endian as most used and only
   // then try big endian
 
-  // 8 bit or 16 bit little endian steram sync
+  // 8 bit or 16 bit big endian steram sync
   if ((_buf[0] == 0xff)         && // sync
      ((_buf[1] & 0xf0) == 0xf0) && // sync
      ((_buf[1] & 0x06) != 0x00) && // layer
@@ -139,7 +139,7 @@ inline bool Spdifer::mpa_sync(const uint8_t *_buf) const
      ((_buf[2] & 0x0c) != 0x0c))   // sample rate
     return true;
   else
-  // 16 bit big endian steram sync
+  // 16 bit low endian steram sync
   if ((_buf[1] == 0xff)         && // sync
      ((_buf[0] & 0xf0) == 0xf0) && // sync
      ((_buf[0] & 0x06) != 0x00) && // layer
@@ -153,27 +153,27 @@ inline bool Spdifer::mpa_sync(const uint8_t *_buf) const
 
 inline bool Spdifer::dts_sync(const uint8_t *_buf) const
 {
-  // 14 bits little endian bitstream
-  if (_buf[0] == 0xff && _buf[1] == 0x1f &&
-      _buf[2] == 0x00 && _buf[3] == 0xe8 &&
-      (_buf[4] & 0xf0) == 0xf0 && _buf[5] == 0x07)
+  // 16 bits big endian bitstream
+  if (_buf[0] == 0x7f && _buf[1] == 0xfe &&
+           _buf[2] == 0x80 && _buf[3] == 0x01)
+    return true;
+  // 16 bits low endian bitstream
+  else if (_buf[0] == 0xfe && _buf[1] == 0x7f &&
+           _buf[2] == 0x01 && _buf[3] == 0x80)
     return true;
   // 14 bits big endian bitstream
   else if (_buf[0] == 0x1f && _buf[1] == 0xff &&
            _buf[2] == 0xe8 && _buf[3] == 0x00 &&
            _buf[4] == 0x07 && (_buf[5] & 0xf0) == 0xf0)
     return true;
-  // 16 bits little endian bitstream
-  else if (_buf[0] == 0xfe && _buf[1] == 0x7f &&
-           _buf[2] == 0x01 && _buf[3] == 0x80)
-    return true;
-  // 16 bits big endian bitstream
-  else if (_buf[0] == 0x7f && _buf[1] == 0xfe &&
-           _buf[2] == 0x80 && _buf[3] == 0x01)
+  // 14 bits low endian bitstream
+  else if (_buf[0] == 0xff && _buf[1] == 0x1f &&
+      _buf[2] == 0x00 && _buf[3] == 0xe8 &&
+      (_buf[4] & 0xf0) == 0xf0 && _buf[5] == 0x07)
     return true;
   else
   // no sync
-    return false;
+    return 0;
 }
 
 #endif

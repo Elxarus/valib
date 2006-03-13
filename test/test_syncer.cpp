@@ -22,7 +22,7 @@ static const int syncwords[] =
 static const int max_syncwords = array_size(syncwords);
 
 
-static bool mpa_le_sync(const uint8_t *_buf)
+static bool mpa_be_sync(const uint8_t *_buf)
 {
   if ((_buf[0] == 0xff)         && // sync
      ((_buf[1] & 0xf0) == 0xf0) && // sync
@@ -34,7 +34,7 @@ static bool mpa_le_sync(const uint8_t *_buf)
     return false;
 }
 
-static bool mpa_be_sync(const uint8_t *_buf)
+static bool mpa_le_sync(const uint8_t *_buf)
 {
   if ((_buf[1] == 0xff)         && // sync
      ((_buf[0] & 0xf0) == 0xf0) && // sync
@@ -48,15 +48,15 @@ static bool mpa_be_sync(const uint8_t *_buf)
 
 static bool mpa_sync(const uint8_t *_buf)
 {
-  return mpa_le_sync(_buf) || mpa_be_sync(_buf);
+  return mpa_be_sync(_buf) || mpa_le_sync(_buf);
 }
 
 static bool ac3_sync(const uint8_t *_buf)
 {
-  // 8 bit or 16 bit little endian steram sync
+  // 8 bit or 16 bit big endian steram sync
   if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
     return true;
-  // 16 bit big endian steram sync
+  // 16 bit low endian steram sync
   else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
     return true;
   else 

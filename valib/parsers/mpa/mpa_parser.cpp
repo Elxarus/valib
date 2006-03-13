@@ -109,7 +109,7 @@ MPAParser::get_info(char *buf, unsigned len) const
     spk.mode_text(),
     bsi.ver? "MPEG2 LSF": "MPEG1", 
     bsi.frame_size,
-    (bs_type == BITSTREAM_8? "8 bit": "16bit big endian"), 
+    (bs_type == BITSTREAM_8? "8 bit": "16bit low endian"), 
     bsi.bitrate / 1000,
     bsi.freq,
     bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2,
@@ -155,11 +155,11 @@ MPAParser::load_header(uint8_t *_buf)
 {
   Header h;
 
-  // MPA low and big endians have ambigous headers
+  // MPA big and low endians have ambigous headers
   // so first we check low endian as most used and only
   // then try big endian
 
-  // 8 bit or 16 bit little endian steram sync
+  // 8 bit or 16 bit big endian steram sync
   if ((_buf[0] == 0xff)         && // sync
      ((_buf[1] & 0xf0) == 0xf0) && // sync
      ((_buf[1] & 0x06) != 0x00) && // layer
@@ -172,7 +172,7 @@ MPAParser::load_header(uint8_t *_buf)
     bs_type = BITSTREAM_8;
   }
   else
-  // 16 bit big endian steram sync
+  // 16 bit low endian steram sync
   if ((_buf[1] == 0xff)         && // sync
      ((_buf[0] & 0xf0) == 0xf0) && // sync
      ((_buf[0] & 0x06) != 0x00) && // layer
@@ -182,7 +182,7 @@ MPAParser::load_header(uint8_t *_buf)
   {
     uint32_t header = *(uint32_t *)_buf;
     h = (header >> 16) | (header << 16);
-    bs_type = BITSTREAM_16BE;
+    bs_type = BITSTREAM_16LE;
   }
   else
     return false;
@@ -367,7 +367,7 @@ MPAParser::II_decode_frame()
 
   /////////////////////////////////////////////////////////
   // CRC check
-  // todo: big endian CRC check
+  // todo: low endian CRC check
 
   if (hdr.error_protection && bs_type == BITSTREAM_8)
   {

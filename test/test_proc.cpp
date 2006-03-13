@@ -19,7 +19,7 @@ int test_proc(Log *log)
   { 
     FORMAT_LINEAR, 
     FORMAT_PCM16,    FORMAT_PCM24,    FORMAT_PCM32,
-    FORMAT_PCM16_LE, FORMAT_PCM24_LE, FORMAT_PCM32_LE,
+    FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE,
   };
 
   static const sample_t levels[] = 

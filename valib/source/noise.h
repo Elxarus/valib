@@ -11,7 +11,7 @@
   Noise class is source that generates blocks of noise data.
 
   For raw formats it generates binary noise blocks. It is acceptable for
-  integer PCM formats (either signed/unsigned and big/little endians),
+  integer PCM formats (either signed/unsigned and low/big endians),
   compressed formats (parser shoud not crash in this conditions), etc.
   But it is not for floating-point PCM formats! FP PCM noise shoud be limited
   with -1...1 range (otherwise it is senseless), and binary noise does not

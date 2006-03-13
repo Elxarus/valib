@@ -144,6 +144,7 @@ const uint8_t spdif_pause[] =
 
 Spdifer::Spdifer()
 {
+  scanner.set_standard(SYNCMASK_MAD);
   frame_buf.allocate(SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
   frames = 0;
   reset();
@@ -360,8 +361,12 @@ Spdifer::load_frame()
       // drop frame sent
       memmove(frame_ptr, frame_ptr + spdif_payload_size, frame_data - spdif_payload_size);
       frame_data -= spdif_payload_size;
-      state = state_spdif;
+
+	  // say that we have drop current frame
+	  out_size = 0;
+
       // no break: now we go to state_spdif...
+      state = state_spdif;
     }
 
     case state_spdif:
@@ -422,8 +427,9 @@ Spdifer::load_frame()
       frame_data += spdif_payload_size - frame_size;
 
       // convert stream format
-      if (bs_type == BITSTREAM_16LE ||
-          bs_type == BITSTREAM_14LE ||
+	  // SPDIF uses low-endian stream format
+      if (bs_type == BITSTREAM_16BE ||
+          bs_type == BITSTREAM_14BE ||
           bs_type == BITSTREAM_8)
       {
         // swap bytes
@@ -466,8 +472,12 @@ Spdifer::load_frame()
       // drop frame sent
       memmove(frame_ptr, frame_ptr + frame_size, frame_data - frame_size);
       frame_data -= frame_size;
-      state = state_passthrough;
+
+	  // say that we have drop current frame
+	  out_size = 0;
+
       // no break: now we go to state_passthrough...
+      state = state_passthrough;
     }
 
     case state_passthrough:
@@ -662,6 +672,12 @@ Spdifer::get_chunk(Chunk *_chunk)
     flushing = false;
     reset();
   }
+  else
+  {
+    // send empty chunk when we have processed all input
+    // data but no output was generated
+    _chunk->set_empty(out_spk);
+  }
 
   // timing
   // note thet filter flushing will be untimed
@@ -737,7 +753,7 @@ Spdifer::ac3_syncinfo(const uint8_t *_buf)
   int sample_rate;
 
   /////////////////////////////////////////////////////////
-  // 8 bit or 16 bit little endian stream sync
+  // 8 bit or 16 bit big endian stream sync
   if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
   {
     fscod      = _buf[4] >> 6;
@@ -756,7 +772,7 @@ Spdifer::ac3_syncinfo(const uint8_t *_buf)
     bs_type = BITSTREAM_8;
   }
   /////////////////////////////////////////////////////////
-  // 16 bit big endian stream sync
+  // 16 bit low endian stream sync
   else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
   {
     fscod      = _buf[5] >> 6;
@@ -772,7 +788,7 @@ Spdifer::ac3_syncinfo(const uint8_t *_buf)
     halfrate   = halfrate_tbl[_buf[4] >> 3];
     bitrate    = bitrate_tbl[frmsizecod >> 1];
 
-    bs_type = BITSTREAM_16BE;
+    bs_type = BITSTREAM_16LE;
   }
   else
     return false;
@@ -850,11 +866,11 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
 
   MPAHeader h;
 
-  // MPA low and big endians have ambigous headers
-  // so first we check low endian as most used and only
-  // then try big endian
+  // MPA big and low endians have ambigous headers
+  // so first we check big endian as most used and only
+  // then try low endian
 
-  // 8 bit or 16 bit little endian steram sync
+  // 8 bit or 16 bit big endian steram sync
   if ((_buf[0] == 0xff)         && // sync
      ((_buf[1] & 0xf0) == 0xf0) && // sync
      ((_buf[1] & 0x06) != 0x00) && // layer
@@ -867,7 +883,7 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
     bs_type = BITSTREAM_8;
   }
   else
-  // 16 bit big endian steram sync
+  // 16 bit low endian steram sync
   if ((_buf[1] == 0xff)         && // sync
      ((_buf[0] & 0xf0) == 0xf0) && // sync
      ((_buf[0] & 0x06) != 0x00) && // layer
@@ -877,7 +893,7 @@ Spdifer::mpa_syncinfo(const uint8_t *_buf)
   {
     uint32_t header = *(uint32_t *)_buf;
     h = (header >> 16) | (header << 16);
-    bs_type = BITSTREAM_16BE;
+    bs_type = BITSTREAM_16LE;
   }
   else
     return false;
@@ -940,10 +956,10 @@ Spdifer::dts_syncinfo(const uint8_t *_buf)
   ReadBS bs_tmp;
   switch (_buf[0])
   {
-    case 0xff: bs_type = BITSTREAM_14BE; break;
-    case 0x1f: bs_type = BITSTREAM_14LE; break;
-    case 0xfe: bs_type = BITSTREAM_16BE; break;
-    case 0x7f: bs_type = BITSTREAM_16LE; break;
+    case 0x7f: bs_type = BITSTREAM_16BE; break;
+    case 0xfe: bs_type = BITSTREAM_16LE; break;
+    case 0x1f: bs_type = BITSTREAM_14BE; break;
+    case 0xff: bs_type = BITSTREAM_14LE; break;
     default: return false;
   }
 
@@ -1020,10 +1036,10 @@ Spdifer::get_info(char *_buf, size_t _len)
   switch (bs_type)
   {
     case BITSTREAM_8:    bs_type_text = "8bit"; break;
-    case BITSTREAM_14LE: bs_type_text = "14bit LE"; break;
-    case BITSTREAM_14BE: bs_type_text = "14bit BE"; break;
-    case BITSTREAM_16LE: bs_type_text = "16bit LE"; break;
     case BITSTREAM_16BE: bs_type_text = "16bit BE"; break;
+    case BITSTREAM_16LE: bs_type_text = "16bit LE"; break;
+    case BITSTREAM_14BE: bs_type_text = "14bit BE"; break;
+    case BITSTREAM_14LE: bs_type_text = "14bit LE"; break;
   }
 
   sprintf(info,

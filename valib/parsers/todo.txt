@@ -5,7 +5,7 @@
   drc - turn DRC on/off
   drc_heavy - turn heavy DRC compression on/off
   crc - use CRC flag
-* AC3Parser: CRC check for big endian
+* AC3Parser: CRC check for low endian
 * AC3Parser: get rid of warnings in floor_tbl table
 * AC3Parser: add comments to tables, review tables
 * AC3Parser: add block-level decoding support

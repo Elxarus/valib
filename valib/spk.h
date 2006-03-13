@@ -7,7 +7,7 @@
     distinguish them. For example, format definition have no bit-per-pixel
     parameter, but we have to distinguish PCM 16bit and PCM 32bit formats. So
     it is FORMAT_PCM16 and FORMAT_PCM32 formats. On other hand it is several
-    different AC3 format variations: low-endian, big endian and sparse
+    different AC3 format variations: big-endian, low-endian and sparse
     zero-padded format (IEC 61937 aka SPDIF/AC3 aka AC3/AudioCD). But AC3 
     parser can work properly with all this formats so we may not distinguish 
     them and it is only one FORMAT_AC3 format. 
@@ -90,26 +90,29 @@
 #define FORMAT_UNKNOWN     0
 #define FORMAT_LINEAR      1
 
-// PCM big-endian formats
+// PCM low-endian formats
 #define FORMAT_PCM16       2
 #define FORMAT_PCM24       3
 #define FORMAT_PCM32       4
-#define FORMAT_PCMFLOAT    5
 
-// PCM low-endian formats
-#define FORMAT_PCM16_LE    6
-#define FORMAT_PCM24_LE    7
-#define FORMAT_PCM32_LE    8
-#define FORMAT_PCMFLOAT_LE 9
+// PCM big-endian formats
+#define FORMAT_PCM16_BE    5
+#define FORMAT_PCM24_BE    6
+#define FORMAT_PCM32_BE    7
+
+// PCM floating-point
+#define FORMAT_PCMFLOAT    8
 
 // container formats
 #define FORMAT_PES        10 // MPEG1/2 Program Elementary Stream
 #define FORMAT_SPDIF      11 // IEC 61937 stream
 
-// compressed formats
-#define FORMAT_AC3        12
-#define FORMAT_MPA        13
+// compressed spdifable formats
+#define FORMAT_MPA        12
+#define FORMAT_AC3        13
 #define FORMAT_DTS        14
+
+// other compressed formats
 #define FORMAT_AAC        15
 #define FORMAT_OGG        16
 
@@ -124,17 +127,18 @@
 #define FORMAT_MASK_UNKNOWN      FORMAT_MASK(FORMAT_UNKNOWN)
 #define FORMAT_MASK_LINEAR       FORMAT_MASK(FORMAT_LINEAR)
 
-// PCM big-endian format masks
+// PCM low-endian format masks
 #define FORMAT_MASK_PCM16        FORMAT_MASK(FORMAT_PCM16)
 #define FORMAT_MASK_PCM24        FORMAT_MASK(FORMAT_PCM24)
 #define FORMAT_MASK_PCM32        FORMAT_MASK(FORMAT_PCM32)
-#define FORMAT_MASK_PCMFLOAT     FORMAT_MASK(FORMAT_PCMFLOAT)
 
-// PCM low-endian format masks
-#define FORMAT_MASK_PCM16_LE     FORMAT_MASK(FORMAT_PCM16_LE)
-#define FORMAT_MASK_PCM24_LE     FORMAT_MASK(FORMAT_PCM24_LE)
-#define FORMAT_MASK_PCM32_LE     FORMAT_MASK(FORMAT_PCM32_LE)
-#define FORMAT_MASK_PCMFLOAT_LE  FORMAT_MASK(FORMAT_PCMFLOAT_LE)
+// PCM big-endian format masks
+#define FORMAT_MASK_PCM16_BE     FORMAT_MASK(FORMAT_PCM16_BE)
+#define FORMAT_MASK_PCM24_BE     FORMAT_MASK(FORMAT_PCM24_BE)
+#define FORMAT_MASK_PCM32_BE     FORMAT_MASK(FORMAT_PCM32_BE)
+
+// PCM floating-point format masks
+#define FORMAT_MASK_PCMFLOAT     FORMAT_MASK(FORMAT_PCMFLOAT)
 
 // container format masks
 #define FORMAT_MASK_PES          FORMAT_MASK(FORMAT_PES)
@@ -432,12 +436,12 @@ Speakers::format_text() const
     case FORMAT_PCM16:       return "PCM16";
     case FORMAT_PCM24:       return "PCM24";
     case FORMAT_PCM32:       return "PCM32";
-    case FORMAT_PCMFLOAT:    return "PCM Float";
 
-    case FORMAT_PCM16_LE:    return "PCM16 LE";
-    case FORMAT_PCM24_LE:    return "PCM24 LE";
-    case FORMAT_PCM32_LE:    return "PCM32 LE";
-    case FORMAT_PCMFLOAT_LE: return "PCM Float LE";
+    case FORMAT_PCM16_BE:    return "PCM16 BE";
+    case FORMAT_PCM24_BE:    return "PCM24 BE";
+    case FORMAT_PCM32_BE:    return "PCM32 BE";
+
+    case FORMAT_PCMFLOAT:    return "PCM Float";
 
     case FORMAT_PES:         return "MPEG Program Stream";
     case FORMAT_SPDIF:       return "SPDIF";

@@ -95,110 +95,98 @@ public:
   void linear_pcm16_1ch();
   void linear_pcm24_1ch();
   void linear_pcm32_1ch();
+  void linear_pcm16_be_1ch();
+  void linear_pcm24_be_1ch();
+  void linear_pcm32_be_1ch();
   void linear_pcmfloat_1ch();
-  void linear_pcm16_le_1ch();
-  void linear_pcm24_le_1ch();
-  void linear_pcm32_le_1ch();
-  void linear_pcmfloat_le_1ch();
 
   void linear_pcm16_2ch();
   void linear_pcm24_2ch();
   void linear_pcm32_2ch();
+  void linear_pcm16_be_2ch();
+  void linear_pcm24_be_2ch();
+  void linear_pcm32_be_2ch();
   void linear_pcmfloat_2ch();
-  void linear_pcm16_le_2ch();
-  void linear_pcm24_le_2ch();
-  void linear_pcm32_le_2ch();
-  void linear_pcmfloat_le_2ch();
 
   void linear_pcm16_3ch();
   void linear_pcm24_3ch();
   void linear_pcm32_3ch();
+  void linear_pcm16_be_3ch();
+  void linear_pcm24_be_3ch();
+  void linear_pcm32_be_3ch();
   void linear_pcmfloat_3ch();
-  void linear_pcm16_le_3ch();
-  void linear_pcm24_le_3ch();
-  void linear_pcm32_le_3ch();
-  void linear_pcmfloat_le_3ch();
 
   void linear_pcm16_4ch();
   void linear_pcm24_4ch();
   void linear_pcm32_4ch();
+  void linear_pcm16_be_4ch();
+  void linear_pcm24_be_4ch();
+  void linear_pcm32_be_4ch();
   void linear_pcmfloat_4ch();
-  void linear_pcm16_le_4ch();
-  void linear_pcm24_le_4ch();
-  void linear_pcm32_le_4ch();
-  void linear_pcmfloat_le_4ch();
 
   void linear_pcm16_5ch();
   void linear_pcm24_5ch();
   void linear_pcm32_5ch();
+  void linear_pcm16_be_5ch();
+  void linear_pcm24_be_5ch();
+  void linear_pcm32_be_5ch();
   void linear_pcmfloat_5ch();
-  void linear_pcm16_le_5ch();
-  void linear_pcm24_le_5ch();
-  void linear_pcm32_le_5ch();
-  void linear_pcmfloat_le_5ch();
 
   void linear_pcm16_6ch();
   void linear_pcm24_6ch();
   void linear_pcm32_6ch();
+  void linear_pcm16_be_6ch();
+  void linear_pcm24_be_6ch();
+  void linear_pcm32_be_6ch();
   void linear_pcmfloat_6ch();
-  void linear_pcm16_le_6ch();
-  void linear_pcm24_le_6ch();
-  void linear_pcm32_le_6ch();
-  void linear_pcmfloat_le_6ch();
 
   void pcm16_linear_1ch();
   void pcm24_linear_1ch();
   void pcm32_linear_1ch();
+  void pcm16_be_linear_1ch();
+  void pcm24_be_linear_1ch();
+  void pcm32_be_linear_1ch();
   void pcmfloat_linear_1ch();
-  void pcm16_le_linear_1ch();
-  void pcm24_le_linear_1ch();
-  void pcm32_le_linear_1ch();
-  void pcmfloat_le_linear_1ch();
 
   void pcm16_linear_2ch();
   void pcm24_linear_2ch();
   void pcm32_linear_2ch();
+  void pcm16_be_linear_2ch();
+  void pcm24_be_linear_2ch();
+  void pcm32_be_linear_2ch();
   void pcmfloat_linear_2ch();
-  void pcm16_le_linear_2ch();
-  void pcm24_le_linear_2ch();
-  void pcm32_le_linear_2ch();
-  void pcmfloat_le_linear_2ch();
 
   void pcm16_linear_3ch();
   void pcm24_linear_3ch();
   void pcm32_linear_3ch();
+  void pcm16_be_linear_3ch();
+  void pcm24_be_linear_3ch();
+  void pcm32_be_linear_3ch();
   void pcmfloat_linear_3ch();
-  void pcm16_le_linear_3ch();
-  void pcm24_le_linear_3ch();
-  void pcm32_le_linear_3ch();
-  void pcmfloat_le_linear_3ch();
 
   void pcm16_linear_4ch();
   void pcm24_linear_4ch();
   void pcm32_linear_4ch();
+  void pcm16_be_linear_4ch();
+  void pcm24_be_linear_4ch();
+  void pcm32_be_linear_4ch();
   void pcmfloat_linear_4ch();
-  void pcm16_le_linear_4ch();
-  void pcm24_le_linear_4ch();
-  void pcm32_le_linear_4ch();
-  void pcmfloat_le_linear_4ch();
 
   void pcm16_linear_5ch();
   void pcm24_linear_5ch();
   void pcm32_linear_5ch();
+  void pcm16_be_linear_5ch();
+  void pcm24_be_linear_5ch();
+  void pcm32_be_linear_5ch();
   void pcmfloat_linear_5ch();
-  void pcm16_le_linear_5ch();
-  void pcm24_le_linear_5ch();
-  void pcm32_le_linear_5ch();
-  void pcmfloat_le_linear_5ch();
 
   void pcm16_linear_6ch();
   void pcm24_linear_6ch();
   void pcm32_linear_6ch();
+  void pcm16_be_linear_6ch();
+  void pcm24_be_linear_6ch();
+  void pcm32_be_linear_6ch();
   void pcmfloat_linear_6ch();
-  void pcm16_le_linear_6ch();
-  void pcm24_le_linear_6ch();
-  void pcm32_le_linear_6ch();
-  void pcmfloat_le_linear_6ch();
 };
 
 #endif

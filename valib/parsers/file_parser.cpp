@@ -119,7 +119,7 @@ FileParser::probe()
   is_pes  = false;
 
   failed = false;
-  for (i = 0; i < 10; i++)  // try to decode 10 frames
+  for (i = 0; i < 100; i++)  // try to decode 10 frames
     if (!frame())
     {
       failed = true;
@@ -134,7 +134,7 @@ FileParser::probe()
   is_pes  = true;
 
   failed = false;
-  for (i = 0; i < 10; i++)  // try to decode 10 frames
+  for (i = 0; i < 100; i++)  // try to decode 10 frames
     if (!frame())
     {
       failed = true;

@@ -98,7 +98,7 @@ DSRenderer::DSRenderer(HWND _hwnd, int _ds_buf_size_ms, int _preload_ms)
     SAFE_RELEASE(ds);
     return;
   }
-#ifdef DSRenderer_PRIMARY_BUFFER
+#ifdef DSOUND_SINK_PRIMARY_BUFFER
   DSBUFFERDESC dsbdesc;
   ZeroMemory(&dsbdesc, sizeof(DSBUFFERDESC));
   dsbdesc.dwSize  = sizeof(DSBUFFERDESC);

@@ -208,39 +208,39 @@ SyncScan::clear_all()
 void
 SyncScan::set_standard(uint32_t _syncmask)
 {
-  if (_syncmask & SYNCMASK_MPA_LE)
-  {
-    set(SYNC_MPA_LE, 0xfff00000, 0xfff00000); // allow anything after syncword
-    deny(SYNC_MPA_LE, 0x00000000, 0x00060000); // deny value of 00 for layer
-    deny(SYNC_MPA_LE, 0x0000f000, 0x0000f000); // deny value of 11 for bitrate
-    deny(SYNC_MPA_LE, 0x00000c00, 0x00000c00); // deny value of 11 for samplerate
-  }
-
   if (_syncmask & SYNCMASK_MPA_BE)
   {
-    set(SYNC_MPA_BE, 0xf0ff0000, 0xf0ff0000); // allow anything after syncword
-    deny(SYNC_MPA_BE, 0x00000000, 0x06000000); // deny value of 00 for layer
-    deny(SYNC_MPA_BE, 0x000000f0, 0x000000f0); // deny value of 11 for bitrate
-    deny(SYNC_MPA_BE, 0x0000000c, 0x0000000c); // deny value of 11 for sampBErate
+    set(SYNC_MPA_BE, 0xfff00000, 0xfff00000); // allow anything after syncword
+    deny(SYNC_MPA_BE, 0x00000000, 0x00060000); // deny value of 00 for layer
+    deny(SYNC_MPA_BE, 0x0000f000, 0x0000f000); // deny value of 11 for bitrate
+    deny(SYNC_MPA_BE, 0x00000c00, 0x00000c00); // deny value of 11 for samplerate
   }
 
-  if (_syncmask & SYNCMASK_AC3_LE)
-    set(SYNC_AC3_LE, 0x0b770000, 0xffff0000);
+  if (_syncmask & SYNCMASK_MPA_LE)
+  {
+    set(SYNC_MPA_LE, 0xf0ff0000, 0xf0ff0000); // allow anything after syncword
+    deny(SYNC_MPA_LE, 0x00000000, 0x06000000); // deny value of 00 for layer
+    deny(SYNC_MPA_LE, 0x000000f0, 0x000000f0); // deny value of 11 for bitrate
+    deny(SYNC_MPA_LE, 0x0000000c, 0x0000000c); // deny value of 11 for sampBErate
+  }
 
   if (_syncmask & SYNCMASK_AC3_BE)
-    set(SYNC_AC3_BE, 0x770b0000, 0xffff0000);
+    set(SYNC_AC3_BE, 0x0b770000, 0xffff0000);
 
-  if (_syncmask & SYNCMASK_DTS16_LE)
-    set(SYNC_DTS16_LE, 0xff1f00e8, 0xffffffff);
+  if (_syncmask & SYNCMASK_AC3_LE)
+    set(SYNC_AC3_LE, 0x770b0000, 0xffff0000);
 
   if (_syncmask & SYNCMASK_DTS16_BE)
-    set(SYNC_DTS16_BE, 0x1fffe800, 0xffffffff);
+    set(SYNC_DTS16_BE, 0xff1f00e8, 0xffffffff);
 
-  if (_syncmask & SYNCMASK_DTS14_LE)
-    set(SYNC_DTS14_LE, 0xfe7f0180, 0xffffffff);
+  if (_syncmask & SYNCMASK_DTS16_LE)
+    set(SYNC_DTS16_LE, 0x1fffe800, 0xffffffff);
 
   if (_syncmask & SYNCMASK_DTS14_BE)
-    set(SYNC_DTS14_BE, 0x7ffe8001, 0xffffffff);
+    set(SYNC_DTS14_BE, 0xfe7f0180, 0xffffffff);
+
+  if (_syncmask & SYNCMASK_DTS14_LE)
+    set(SYNC_DTS14_LE, 0x7ffe8001, 0xffffffff);
 
   if (_syncmask & SYNCMASK_SPDIF)
     set(SYNC_SPDIF, 0x72f81f4e, 0xffffffff);

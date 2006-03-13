@@ -128,24 +128,24 @@ DTSParser::load_header(uint8_t *_buf)
 {
   ReadBS bs_tmp;
 
-  // 14 bits and little endian bitstream
-  if (_buf[0] == 0xff && _buf[1] == 0x1f &&
-      _buf[2] == 0x00 && _buf[3] == 0xe8 &&
-      (_buf[4] & 0xf0) == 0xf0 && _buf[5] == 0x07)
-    bs_tmp.set_ptr(_buf, BITSTREAM_14BE);
-  // 14 bits and big endian bitstream
+  // 16 bits big endian bitstream
+  if (_buf[0] == 0x7f && _buf[1] == 0xfe &&
+           _buf[2] == 0x80 && _buf[3] == 0x01)
+    bs_type = BITSTREAM_16BE;
+  // 16 bits low endian bitstream
+  else if (_buf[0] == 0xfe && _buf[1] == 0x7f &&
+           _buf[2] == 0x01 && _buf[3] == 0x80)
+    bs_type = BITSTREAM_16LE;
+  // 14 bits big endian bitstream
   else if (_buf[0] == 0x1f && _buf[1] == 0xff &&
            _buf[2] == 0xe8 && _buf[3] == 0x00 &&
            _buf[4] == 0x07 && (_buf[5] & 0xf0) == 0xf0)
-    bs_tmp.set_ptr(_buf, BITSTREAM_14LE);
-  // 16 bits and little endian bitstream
-  else if (_buf[0] == 0xfe && _buf[1] == 0x7f &&
-           _buf[2] == 0x01 && _buf[3] == 0x80)
-    bs_tmp.set_ptr(_buf, BITSTREAM_16BE);
-  // 16 bits and big endian bitstream
-  else if (_buf[0] == 0x7f && _buf[1] == 0xfe &&
-           _buf[2] == 0x80 && _buf[3] == 0x01)
-    bs_tmp.set_ptr(_buf, BITSTREAM_16LE);
+    bs_type = BITSTREAM_14BE;
+  // 14 bits low endian bitstream
+  else if (_buf[0] == 0xff && _buf[1] == 0x1f &&
+      _buf[2] == 0x00 && _buf[3] == 0xe8 &&
+      (_buf[4] & 0xf0) == 0xf0 && _buf[5] == 0x07)
+    bs_type = BITSTREAM_14LE;
   else
   // no sync
     return 0;
@@ -262,12 +262,12 @@ DTSParser::get_info(char *buf, unsigned len) const
   char info[1024];
 
   char *stream = "???";
-  switch (bs.get_type())
+  switch (bs_type)
   {
-    case BITSTREAM_14LE: stream = "14bit LE"; break;
-    case BITSTREAM_14BE: stream = "14bit BE"; break;
-    case BITSTREAM_16LE: stream = "16bit LE"; break;
     case BITSTREAM_16BE: stream = "16bit BE"; break;
+    case BITSTREAM_16LE: stream = "16bit LE"; break;
+    case BITSTREAM_14BE: stream = "14bit BE"; break;
+    case BITSTREAM_14LE: stream = "14bit LE"; break;
   }
 
   sprintf(info,

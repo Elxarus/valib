@@ -8,7 +8,7 @@
   -----------------------------------------------------------------------------
 
   To find 32bit syncpoint we must ensure that 4 successive bytes belongs to 
-  the same syncronization point (note that we may seach for different kids of
+  the same syncronization point (note that we may seach for different kinds of
   syncpoints simultaneously). To do this we may check it directly:
   
   uint32_t *ptr;
@@ -23,7 +23,7 @@
   }
 
   This method obviously is not too good. For exmple, MPA syncword contains only
-  12 bits of syncword so we must do as follofing:
+  12 bits of syncword so we must search it as following:
 
   if (((*ptr & 0x0000fff0) == 0x0000fff0) || 
      ((*ptr & 0x0000fff0) == 0x0000fff0))
@@ -31,7 +31,7 @@
     // MPA syncpoint found
   }
 
-  So universal algorithm may look like
+  So universal algorithm may look like:
 
   if (((*ptr & mask1) == sync1) || ((*ptr & mask2) == sync2) ... )
   {
@@ -47,7 +47,7 @@
   2 table lookups per 32 syncpoints for each position. Syncpoints may be more
   than just a syncword allowing more comprehensive (and effective) scanning.
 
-  So let's consider table lookup method. To ensure that 4 byes belongs to the
+  So let's consider table lookup method. To ensure that 4 bytes belongs to the
   same syncpoint with table lookup we may write following:
 
   if ((table[b1] == table[b2]) &&
@@ -58,7 +58,7 @@
   }
 
   Obvious weakness of this algorithm is one table: we may not distinguish
-  sequences 0xff 0x1f 0x00 0xe8 and 0x1f 0xff 0xe8 0x00 (DTS high and low
+  sequences 0xff 0x1f 0x00 0xe8 and 0x1f 0xff 0xe8 0x00 (DTS big and low
   endian) and 0xff 0x00 0x00 0x00 (not a syncpoint at all).
 
   if ((table1[b1] == table2[b2]) &&
@@ -73,8 +73,8 @@
   And we have excessive table accesses here (1.5 per byte).
 
   We may solve all problems if we build table not with syncpoint NUMBERS
-  but with syncpoint MASKS and not direct compare but bit operations. 
-  So syncpoint check we look like:
+  but with syncpoint MASKS and do not compare but do bit operations. 
+  So syncpoint check will look like:
 
   if (t1[b1] & t2[b2] & t3[b3] & t4[b4])
   {
@@ -94,8 +94,8 @@
     // found
   }
 
-  Because of we have small probability that b1 belongs to a syncpoint we may
-  not check all other bytes. Is it good? NO!
+  Because of small probability that b1 belongs to a syncpoint we may not check
+  all other bytes. Is it good? NO!
 
   The probability of that b1 belongs to a syncpoint may be up to 1/16 
   (for MPA). You may say that is good enough but it is not! Because 
@@ -126,14 +126,14 @@
   ...
 
   So first byte is always 0xff. Layer field in the second byte may be equal to:
-  11b - Lyaer1, 10b - Lyaer2, 01b - Layer3. Note that value of 00b is 
+  11b - Layer1, 10b - Layer2, 01b - Layer3. Note that value of 00b is 
   prohibited. Can we check it with our table lookup algorithm? Yes, we can!
   Prohibited values of the second byte are: 0xf0, 0xf1, 0xf8 and 0xf9. So we 
   may clear MPA bit for this values in the table2 and set it for all other 
   values. So syncpoint in our case is not just a syncword and a mask but a 
   list of possible values.
 
-  This methos is not possible for direct comparison: we have either to check
+  This method is not possible for direct comparison: we have either to check
   each possible syncpoint value (252 items in example above) or have a table
   of prohibited values (and masks...) or build direct equation (but it is hard
   to make scanner fast and configurable in this case).
@@ -144,8 +144,8 @@
 
   Capacity of table is fixed to bit-depth of table elements and table is bigger
   that just a list of syncpoints. If we need to scan for 1 syncpoint direct
-  comparison may be faster anyway (but it depends on implementation, because 
-  simple way may be slower than usage of scanner).
+  comparison is faster (but it depends on implementation, because simple way
+  may be slower than scanner usage).
 
   -----------------------------------------------------------------------------
   HOW TO BUILD A SYNCRONIZATION TABLE
@@ -157,8 +157,8 @@
   2) If we need effective sync with more complex conditions we must prepare
      all possible values for each byte. Examples: 
      a) MPEG Program Stream have fixed syncword 0x00 0x00 0x01 followed by 
-        stream number. Allowed stream number are > 0xb8.
-     b) AC3 has 2 syncwords: 0x0b 0x77 and 0x77 0x0b (low and big endian).
+        a stream number. Allowed stream number are > 0xb8.
+     b) AC3 has 2 syncwords: 0x0b 0x77 and 0x77 0x0b (big and low endian).
      c) MPA has fixed syncword 0xfff0 followed by header that has following
         constraints: layer != 0 (prohibited values for 2nd byte: 0xf0, 0xf1, 
         0xf8 and 0xf9), bitrate index != 0xf (prohibited values for 3rd 
@@ -169,7 +169,7 @@
      bytes may appear in any combination:
 
      a) allow 0 value for 1st byte, 2nd byte, value of 1 to 3rd byte and
-        all values > 0xb8 for 4th byte. All other values must have out bit
+        all values > 0xb8 for 4th byte. All other values must have format bit
         clear:
 
         scan.set(1, 0x000001b9, 0xffffffff); // only b9 stream is allowed now
@@ -181,7 +181,7 @@
      b) Though we have 2 values allowed for 1st and 2nd byte (0x0b and 0x77)
         we must not allow it for the same syncpoint because we may catch
         0x0b 0x0b or 0x77 0x77 'syncpoint' that is not what we want. Therefore
-        we must init 2 different syncpoints instead:
+        we must init 2 different syncpoints:
         
         scan.set(1, 0x770b0000, 0xffff0000);
         scan.set(2, 0x0b770000, 0xffff0000);
@@ -320,9 +320,13 @@
   We may have some data loaded into frame_buf so we need to scan frame buffer
   before scanning of new data.
 
-  uint8_t *frame_buf;
-  size_t frame_data;
-  SyncScan scanner;
+  uint8_t *input_buf;   // input data
+  size_t   intpu_size;  // input data size
+
+  uint8_t *frame_buf;   // frame buffer we load frame to
+  size_t frame_data;    // frame buffer data size
+
+  SyncScan scanner;     // scanner
   ...
 
   /////////////////////////////////////////////////////////
@@ -351,7 +355,7 @@
     frame_data -= gone;
     memmove(frame_buf + 4, frame_buf + 4 + gone, frame_data);
 
-    // if we did not find syncpoint scan input data 
+    // if we did not find syncpoint at frame buffer scan input data
     if (!scanner.get_sync(frame_buf))
     {
       gone = scanner.scan(frame_buf, input_buf, input_size);
@@ -364,8 +368,7 @@
   }
 
   /////////////////////////////////////////////////////////
-  // Load the rest of the frame, check other conditions, 
-  // etc
+  // Load the rest of the frame, check conditions, CRC, etc
 
   ...
 
@@ -380,14 +383,14 @@
   use only user-definable syncpoints:
 
   0-7   custom syncpoints (user-definable)
-  8     MPA low endian
-  9     MPA big endian
-  10    AC3 low endian
-  11    AC3 big endian
-  12    DTS16 low endian
-  13    DTS16 big endian
-  14    DTS14 low endian
-  15    DTS14 big endian
+  8     MPA big endian
+  9     MPA low endian
+  10    AC3 big endian
+  11    AC3 low endian
+  12    DTS16 big endian
+  13    DTS16 low endian
+  14    DTS14 big endian
+  15    DTS14 low endian
   16-31 reserved (planned: SPDIF syncpoints, MPEG Program Stream)
 
   Standard syncpoints are defined with most complex error checking possible, 
@@ -403,16 +406,16 @@
 ///////////////////////////////////////////////////////////
 // Syncpoint indexes
 
-#define SYNC_MPA_LE   8
-#define SYNC_MPA_BE   9
+#define SYNC_MPA_BE   8
+#define SYNC_MPA_LE   9
 
-#define SYNC_AC3_LE   10  
-#define SYNC_AC3_BE   11
+#define SYNC_AC3_BE   10  
+#define SYNC_AC3_LE   11
 
-#define SYNC_DTS16_LE 12
-#define SYNC_DTS16_BE 13
-#define SYNC_DTS14_LE 14
-#define SYNC_DTS14_BE 15
+#define SYNC_DTS16_BE 12
+#define SYNC_DTS16_LE 13
+#define SYNC_DTS14_BE 14
+#define SYNC_DTS14_LE 15
 
 #define SYNC_SPDIF    16
 #define SYNC_PS       17
@@ -423,18 +426,18 @@
 #define SYNCMASK_MAD      0xff00
 
 #define SYNCMASK_MPA      0x0300
-#define SYNCMASK_MPA_LE   0x0100
-#define SYNCMASK_MPA_BE   0x0200
+#define SYNCMASK_MPA_BE   0x0100
+#define SYNCMASK_MPA_LE   0x0200
 
 #define SYNCMASK_AC3      0x0c00
-#define SYNCMASK_AC3_LE   0x0400
-#define SYNCMASK_AC3_BE   0x0800
+#define SYNCMASK_AC3_BE   0x0400
+#define SYNCMASK_AC3_LE   0x0800
 
 #define SYNCMASK_DTS      0xf000
-#define SYNCMASK_DTS16_LE 0x1000
-#define SYNCMASK_DTS16_BE 0x2000
-#define SYNCMASK_DTS14_LE 0x4000
-#define SYNCMASK_DTS14_BE 0x8000
+#define SYNCMASK_DTS16_BE 0x1000
+#define SYNCMASK_DTS16_LE 0x2000
+#define SYNCMASK_DTS14_BE 0x4000
+#define SYNCMASK_DTS14_LE 0x8000
 
 #define SYNCMASK_SPDIF    0x10000
 #define SYNCMASK_PS       0x20000

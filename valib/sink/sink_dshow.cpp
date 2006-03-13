@@ -61,14 +61,14 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   if (!wfx2spk((WAVEFORMATEX *)mt.Format(), spk))
     return false;
 
-  // DVD LPCM uses low-endian format
+  // DVD LPCM uses big-endian format
   if (*mt.Subtype() == MEDIASUBTYPE_DVD_LPCM_AUDIO)
     switch (spk.format)
     {
-      case FORMAT_PCM16: spk.format = FORMAT_PCM16_LE; break;
-      case FORMAT_PCM24: spk.format = FORMAT_PCM24_LE; break;
-      case FORMAT_PCM32: spk.format = FORMAT_PCM32_LE; break;
-      case FORMAT_PCMFLOAT: spk.format = FORMAT_PCMFLOAT_LE; break;
+      case FORMAT_PCM16: spk.format = FORMAT_PCM16_BE; break;
+      case FORMAT_PCM24: spk.format = FORMAT_PCM24_BE; break;
+      case FORMAT_PCM32: spk.format = FORMAT_PCM32_BE; break;
+      case FORMAT_PCMFLOAT: spk.format = FORMAT_PCMFLOAT; break;
     }
 
   return true;

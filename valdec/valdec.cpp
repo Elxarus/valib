@@ -43,11 +43,10 @@ const int format_tbl[] =
   FORMAT_PCM16,
   FORMAT_PCM24,
   FORMAT_PCM32,
+  FORMAT_PCM16_BE,
+  FORMAT_PCM24_BE,
+  FORMAT_PCM32_BE,
   FORMAT_PCMFLOAT,
-  FORMAT_PCM16_LE,
-  FORMAT_PCM24_LE,
-  FORMAT_PCM32_LE,
-  FORMAT_PCMFLOAT_LE,
 };
 
 const sample_t level_tbl[] = 
@@ -130,10 +129,10 @@ int main(int argc, char *argv[])
            "      (*) 2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
            "          3 - 3/0 (surround)\n"
            "    -fmt:n - set sample format:\n"
-           "      (*) 0 - PCM 16        4 - PCM 16 (big endian)\n"
-           "          1 - PCM 24        5 - PCM 24 (big endian)\n" 
-           "          2 - PCM 32        6 - PCM 32 (big endian)\n"
-           "          3 - PCM Float     7 - PCM Float (big endian)\n" 
+           "      (*) 0 - PCM 16        3 - PCM 16 (big endian)\n"
+           "          1 - PCM 24        4 - PCM 24 (big endian)\n" 
+           "          2 - PCM 32        5 - PCM 32 (big endian)\n"
+           "                 6 - PCM Float\n" 
            "  \n"
            "  format selection:\n"
            "    -ac3 - force ac3 (do not autodetect format)\n"

@@ -93,6 +93,7 @@ int main(int argc, const char **argv)
 
     while (!spdifer.is_empty())
     {
+
       if (!spdifer.get_chunk(&chunk))
       {
         fprintf(stderr, "Processing error\n");
@@ -105,11 +106,6 @@ int main(int argc, const char **argv)
         fprintf(stderr, "Cannot write data\n");
         return 1;
       }
-    }
-
-    if (src.eof())
-    {
-      stat = stat;
     }
 
     if (stat) if (src.eof() || local_time() > old_time + 0.1)

@@ -121,13 +121,14 @@ PSParser::spk()
   else if ((substream & 0xf8) == 0xA0)                                 // LPCM audio substream
   {
     // parse LPCM header
+    // note that MPEG LPCM uses big-endian format
     int format, mask, sample_rate;
     sample_t level;
 
     switch (subheader[4] >> 6)
     {
-      case 0: format = FORMAT_PCM16_LE; level = 32767;    break;
-      case 2: format = FORMAT_PCM24_LE; level = 8388607;  break;
+      case 0: format = FORMAT_PCM16_BE; level = 32767;    break;
+      case 2: format = FORMAT_PCM24_BE; level = 8388607;  break;
       default: return spk_unknown;
     }
 

@@ -11,10 +11,10 @@
 
 // Bitstream types
 #define BITSTREAM_8     0
-#define BITSTREAM_16LE  1
-#define BITSTREAM_16BE  2
-#define BITSTREAM_32LE  3
-#define BITSTREAM_32BE  4
+#define BITSTREAM_16BE  1
+#define BITSTREAM_16LE  2
+#define BITSTREAM_32BE  3
+#define BITSTREAM_32LE  4
 #define BITSTREAM_14BE  5  // DTS bitstream
 #define BITSTREAM_14LE  6  // DTS bitstream
 
@@ -81,24 +81,24 @@ ReadBS::fill_current()
   switch (type)
   {
     case BITSTREAM_8:
-    case BITSTREAM_16LE: 
-    case BITSTREAM_32LE: 
+    case BITSTREAM_16BE: 
+    case BITSTREAM_32BE: 
       current_word = swab_u32(tmp);
       bits_left = 32;
       break;
 
-    case BITSTREAM_16BE:
+    case BITSTREAM_16LE:
       current_word = (tmp >> 16) | (tmp << 16);
       bits_left = 32;
       break;
 
-    case BITSTREAM_14LE:
+    case BITSTREAM_14BE:
       tmp = swab_u32(tmp);
       current_word = (tmp & 0x3fff) | ((tmp & 0x3fff0000) >> 2);
       bits_left = 28;
       break;
 
-    case BITSTREAM_14BE:
+    case BITSTREAM_14LE:
       tmp = (tmp >> 16) | (tmp << 16);
       current_word = (tmp & 0x3fff) | ((tmp & 0x3fff0000) >> 2);
       bits_left = 28;

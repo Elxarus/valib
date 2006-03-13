@@ -110,7 +110,7 @@ AC3Parser::load_header(uint8_t *_buf)
   };
 
   /////////////////////////////////////////////////////////
-  // 8 bit or 16 bit little endian stream sync
+  // 8 bit or 16 bit big endian stream sync
   if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
   {
     // constraints
@@ -134,7 +134,7 @@ AC3Parser::load_header(uint8_t *_buf)
     bs_type = BITSTREAM_8;
   }
   /////////////////////////////////////////////////////////
-  // 16 bit big endian stream sync
+  // 16 bit low endian stream sync
   else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
   {
     // constraints
@@ -155,7 +155,7 @@ AC3Parser::load_header(uint8_t *_buf)
     halfrate   = halfrate_tbl[_buf[4] >> 3];
     bitrate    = bitrate_tbl[frmsizecod >> 1];
 
-    bs_type = BITSTREAM_16BE;
+    bs_type = BITSTREAM_16LE;
   }
   else
     return false;
@@ -270,7 +270,7 @@ AC3Parser::get_info(char *buf, unsigned len) const
     spk.mode_text(),
     spk.sample_rate,
     bitrate,
-    (bs_type == BITSTREAM_8? "8 bit": "16bit big endian"), 
+    (bs_type == BITSTREAM_8? "8 bit": "16bit low endian"), 
     frame_size,
     1536,
     bsid, 
@@ -308,8 +308,8 @@ AC3Parser::parse_header()
         if (crc) return false;
         break;
 
-      case BITSTREAM_16BE:
-        // todo: CRC check for big endian
+      case BITSTREAM_16LE:
+        // todo: CRC check for low endian
         break;
     }
   }
