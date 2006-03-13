@@ -378,7 +378,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
     while (f.is_empty())                \
     {                                   \
       if (src.is_empty())               \
-        return log->err("Cannot fill the filter"); \
+        return log->err("Cannot fill a filter"); \
       src.get_chunk(&chunk);            \
       PROCESS_OK(chunk, "process(%s %s %i) failed"); \
     }
@@ -485,9 +485,9 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // Format change
   //
   // Test format change scenarios. Most of work is done by 
-  // FilterTester so we do not explicitly check the filter
+  // FilterTester so we do not explicitly check a filter
   // to actually change the stream. We just run different
-  // scenarios to force traps to work...
+  // scenarios to force our traps to work...
   // 
   // Tests 1-4 do not use post cycle because elements of 
   // this cycle are not tested yet. Tests 5-7 use post 
@@ -677,7 +677,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // Flushing
   //
   // Test flushing scenarios. Most of work is done by 
-  // FilterTester so we do not explicitly check the filter
+  // FilterTester so we do not explicitly check a filter
   // to end the stream.  We just run different scenarios to
   // force traps to work...
   //
@@ -712,7 +712,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
       log->err("Empty filter generates output on flushing");
   }
   else
-    log->msg("Empty filter does not pass the eos-chunk");
+    log->msg("Empty filter does not pass eos-chunk");
 
   // 1.2 new format (forced format change and then flush new stream)
   INIT_EMPTY(spk_supported);
@@ -730,7 +730,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
       log->err("Empty filter generates output on flushing");
   }
   else
-    log->msg("Empty filter does not pass the eos-chunk");
+    log->msg("Empty filter does not pass eos-chunk");
 
   // 1.3 unsupported format (terminate current stream)
   INIT_EMPTY(spk_supported);
@@ -750,7 +750,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
   if (f.is_empty())
-    log->msg("Filter does not pass the eos-chunk");
+    log->msg("Filter does not pass eos-chunk");
   else
     EMPTY_FILTER;
  
@@ -761,7 +761,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
   if (f.is_empty())
-    log->msg("Filter does not pass the eos-chunk");
+    log->msg("Filter does not pass eos-chunk");
   else
     EMPTY_FILTER;
 
@@ -790,7 +790,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   chunk.set_empty(spk_supported2, false, 0, true);
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
   if (f.is_empty())
-    log->msg("Filter does not pass the eos-chunk");
+    log->msg("Filter does not pass eos-chunk");
   else
     EMPTY_FILTER;
 
@@ -820,7 +820,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
   if (f.is_empty())
-    log->msg("Filter does not pass the eos-chunk");
+    log->msg("Filter does not pass eos-chunk");
   else
     EMPTY_FILTER;
 

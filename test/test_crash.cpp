@@ -1,6 +1,8 @@
 /*
-  Noise crash test for filters that have raw input
-  (Demux, Spdifer, etc)
+  Noise crash test for filters that have raw input (Demux, Spdifer, etc)
+  (using filter tester)
+
+  Just send noise to the filter input and get output.
 */
 
 #include "log.h"

@@ -1,3 +1,20 @@
+/*
+  SyncScan test.
+
+  1. Test that scanner can find given list of syncwords. Test internal and
+     external buffer modes.
+
+  1.1 try different syncword offsets
+  1.2 try different block sizes
+  1.3 try different pointer offsets
+
+  3. Test MPA syncronization: try all possible syncpoints and compare scanner
+     verdict with direct header check.
+ 
+  4. Speed test. Count syncpoints found and validate syncpoints with direct
+     header check.
+*/
+
 #include <string.h>
 #include <spk.h>
 #include <log.h>

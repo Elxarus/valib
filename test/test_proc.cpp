@@ -1,6 +1,10 @@
 /*
   AudioProcessor PCM passthrough test
   AudioProcessor should not alter input stream with default settings
+
+  Test all possible input formats
+  Test standard speaker configs
+  Use 48000 sample rate
 */
 
 #include "source/raw_source.h"

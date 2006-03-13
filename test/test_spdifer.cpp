@@ -1,5 +1,17 @@
 /*
   Spdifer filter test
+  (using filter tester)
+
+  1. Conversion test:
+  1.1 high-bitrate DTS passthrough mode
+  1.2 raw->spdif conversion
+  1.3 spdif->spdif conversion
+
+  2. Speed test on noise.
+
+  3. Speed test on file:
+  3.1 raw file
+  3.2 spdif file
 */
 
 #include "log.h"

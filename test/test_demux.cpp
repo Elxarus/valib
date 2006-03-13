@@ -1,5 +1,14 @@
 /*
-  NullFilter noise passthrough test
+  Demux filter test
+  (using filter tester)
+
+  1. Transform test
+  1.1. pes to raw stream tests
+  1.2. all possible pes format transitions test
+
+  2. Speed test on noise
+
+  3. Speed test on file
 */
 
 #include "log.h"
