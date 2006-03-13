@@ -303,8 +303,11 @@ DSRenderer::flush()
   ///////////////////////////////////////////////////////
   // Sleep until we have half of playback buffer free
 
-  data_size = buf_size / 2 - data_size;
-  Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+  if (data_size > buf_size / 2)
+  {
+    data_size -= buf_size / 2;
+    Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+  }
 
   /////////////////////////////////////////////////////////
   // Zero the rest of the buffer
