@@ -88,55 +88,55 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\liba52\a52.h
+SOURCE=.\liba52\a52.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\a52_bitstream.c
+SOURCE=.\liba52\a52_bitstream.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\a52_bitstream.h
+SOURCE=.\liba52\a52_bitstream.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\a52_internal.h
+SOURCE=.\liba52\a52_internal.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\a52_parser.cpp
+SOURCE=.\liba52\a52_parser.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\a52_parser.h
+SOURCE=.\liba52\a52_parser.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\bit_allocate.c
+SOURCE=.\liba52\bit_allocate.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\config.h
+SOURCE=.\liba52\config.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\downmix.c
+SOURCE=.\liba52\downmix.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\imdct.c
+SOURCE=.\liba52\imdct.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\inttypes.h
+SOURCE=.\liba52\inttypes.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\parse.c
+SOURCE=.\liba52\parse.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\liba52\tables.h
+SOURCE=.\liba52\tables.h
 # End Source File
 # End Group
 # Begin Group "tests"
