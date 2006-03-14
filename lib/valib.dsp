@@ -186,6 +186,14 @@ SOURCE=..\valib\sync.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\syncscan.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\syncscan.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\vtime.cpp
 # End Source File
 # Begin Source File
@@ -503,18 +511,6 @@ SOURCE=..\valib\source\noise.cpp
 # Begin Source File
 
 SOURCE=..\valib\source\noise.h
-# End Source File
-# End Group
-# Begin Group "helpers"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\valib\helpers\syncscan.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\helpers\syncscan.h
 # End Source File
 # End Group
 # End Target

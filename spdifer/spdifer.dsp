@@ -121,11 +121,11 @@ SOURCE=..\valib\spk.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\helpers\syncscan.cpp
+SOURCE=..\valib\syncscan.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\helpers\syncscan.h
+SOURCE=..\valib\syncscan.h
 # End Source File
 # Begin Source File
 

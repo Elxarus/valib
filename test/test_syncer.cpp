@@ -19,7 +19,7 @@
 #include <spk.h>
 #include <log.h>
 
-#include <helpers\syncscan.h>
+#include <syncscan.h>
 #include <source\noise.h>
 #include <win32\cpu.h>
 
