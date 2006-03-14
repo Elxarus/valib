@@ -7,7 +7,7 @@
 
 #include "spk.h"
 #include "data.h"
-#include "helpers\syncscan.h"
+#include "syncscan.h"
 #include "bitstream.h"
 
 ///////////////////////////////////////////////////////////////////////////////

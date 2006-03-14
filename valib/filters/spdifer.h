@@ -13,7 +13,7 @@
 #ifndef SPDIFER_H
 #define SPDIFER_H
 
-#include "helpers\syncscan.h"
+#include "syncscan.h"
 #include "sync.h"
 #include "filter.h"
 #include "data.h"
