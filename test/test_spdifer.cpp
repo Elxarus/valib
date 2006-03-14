@@ -12,6 +12,17 @@
   3. Speed test on file:
   3.1 raw file
   3.2 spdif file
+
+  Required files:
+  test.mpa
+  test.ac3
+  test.dts
+  test.mpa.spdif
+  test.ac3.spdif
+  test.dts.spdif
+  test.all
+  test.all.spdif
+
 */
 
 #include "log.h"

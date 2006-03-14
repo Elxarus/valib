@@ -9,6 +9,16 @@
   2. Speed test on noise
 
   3. Speed test on file
+
+  Required files:
+  test.mpa
+  test.ac3
+  test.dts
+  test.mpa.pes
+  test.ac3.pes
+  test.dts.pes
+  test.all2
+  test.all2.pes
 */
 
 #include "log.h"
