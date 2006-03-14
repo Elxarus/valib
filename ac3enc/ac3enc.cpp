@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
   {
     buf_data = f.read(buf, buf_size);
 
-    raw_chunk.set(Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768), buf, buf_data);
+    raw_chunk.set_rawdata(Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768), buf, buf_data);
 
     if (!chain.process(&raw_chunk))
     {
