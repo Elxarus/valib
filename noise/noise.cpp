@@ -38,15 +38,15 @@ int main()
       return 1;
     }
 
-    if (chunk.is_eos())
-      chunk.set_eos(true);
+    if (chunk.eos)
+      chunk.eos = true;
 
     if (!sink->process(&chunk))
     {
       printf("sink.process() failed\n");
       return 1;
     }
-  } while (!chunk.is_eos());
+  } while (!chunk.eos);
 
   return 0;
 }
