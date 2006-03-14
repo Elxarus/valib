@@ -1,0 +1,17 @@
+*.log
+*.aps
+*.ncb
+*.plg
+*.opt
+*.dep
+*.pdb
+*.bsc
+*.exp
+*.idb
+*.lib
+*.obj
+*.pch
+*.res
+*.sbr
+*.ilk
+*.map
