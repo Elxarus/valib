@@ -3,7 +3,7 @@
 #include "common.h"
 
 
-int test_float(Log *log);
+int test_general(Log *log);
 int test_null(Log *log);
 
 int test_rules(Log *log);
@@ -20,7 +20,7 @@ int main(int argc, char **argv)
   Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
   log.open_group("Test session");
 
-  test_float(&log);
+  test_general(&log);
   test_null(&log);
 
   test_rules(&log);
