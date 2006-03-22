@@ -1,6 +1,13 @@
 /*
   Bitstream operations
   Read & Write classes
+
+  Known issues:
+  =============
+  1) Low-endian streams must be aligned to 16 bits (for 16 bits stream) or 32 bits 
+     (for 32 bits stream) boundary.
+
+  2) We must not use ReadBS::get(0).
 */
 
 
@@ -8,15 +15,6 @@
 #define BITSTREAM_H
 
 #include "defs.h"
-
-// Bitstream types
-#define BITSTREAM_8     0
-#define BITSTREAM_16BE  1
-#define BITSTREAM_16LE  2
-#define BITSTREAM_32BE  3
-#define BITSTREAM_32LE  4
-#define BITSTREAM_14BE  5  // DTS bitstream
-#define BITSTREAM_14LE  6  // DTS bitstream
 
 class ReadBS
 {
