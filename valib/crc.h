@@ -4,6 +4,8 @@
   This class provides following functionality:
   * Can work with any given polinomial up to 32 bit width
   * Can work with any kind of bitstream (8/16/32 bits big/low endian)
+  * Can work with byte-aligned stream
+  * Can work with bit-aligned stream
 */
 
 
@@ -23,8 +25,7 @@ protected:
   uint32_t tbl[256];
 
 public:
-  CRC()
-  {};
+  CRC() {};
   CRC(uint32_t _poly, size_t _power)
   { init(poly, power); };
 
@@ -35,8 +36,12 @@ public:
   inline uint32_t add_16   (uint32_t crc, uint16_t data);
   inline uint32_t add_32   (uint32_t crc, uint32_t data);
 
-  uint32_t bitstream  (uint32_t crc, uint8_t *data, size_t start_bit, size_t bits, int bs_type = BITSTREAM_8);
-  uint32_t bytestream (uint32_t crc, uint8_t *data, size_t bytes, int bs_type = BITSTREAM_8);
+  uint32_t calc(uint32_t crc, uint8_t *data, size_t bytes, int bs_type);
+
+  uint32_t calc(uint32_t crc, uint8_t *data, size_t bytes);
+  uint32_t calc_16le(uint32_t crc, uint8_t *data, size_t bytes);
+  uint32_t calc_32le(uint32_t crc, uint8_t *data, size_t bytes);
+
 };
 
 
@@ -61,24 +66,20 @@ CRC::add_8(uint32_t crc, uint8_t data)
 uint32_t
 CRC::add_16(uint32_t crc, uint16_t data)
 {
-  // todo: get rod of data dependence
-  // (we cannot process last operations because it depends on previous)
   crc ^=  ((uint32_t)data) << 16;
-  crc = (crc << 8) ^ tbl[8][crc >> 24];
-  crc = (crc << 8) ^ tbl[8][crc >> 24];
+  crc = (crc << 8) ^ tbl[crc >> 24];
+  crc = (crc << 8) ^ tbl[crc >> 24];
   return crc;
 }
 
 uint32_t
 CRC::add_32(uint32_t crc, uint32_t data)
 {
-  // todo: get rod of data dependence
-  // (we cannot process last operations because it depends on previous)
   crc ^=  data;
-  crc = (crc << 8) ^ tbl[8][crc >> 24];
-  crc = (crc << 8) ^ tbl[8][crc >> 24];
-  crc = (crc << 8) ^ tbl[8][crc >> 24];
-  crc = (crc << 8) ^ tbl[8][crc >> 24];
+  crc = (crc << 8) ^ tbl[crc >> 24];
+  crc = (crc << 8) ^ tbl[crc >> 24];
+  crc = (crc << 8) ^ tbl[crc >> 24];
+  crc = (crc << 8) ^ tbl[crc >> 24];
   return crc;
 }
 
