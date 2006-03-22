@@ -35,7 +35,7 @@ public:
   Log(int flags = LOG_SCREEN | LOG_HEADER | LOG_STATUS, const char *log_file = 0, vtime_t period = 0.1);
 
   void open_group(const char *msg, ...);
-  int close_group(int proper_errors = 0);
+  int close_group(int expected_errors = 0);
 
   int get_level();
   int get_errors();
