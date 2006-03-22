@@ -141,6 +141,12 @@ Log::get_errors()
   return errors[level]; 
 }
 
+vtime_t
+Log::get_time()
+{
+  return local_time() - time[level];
+}
+
 int 
 Log::get_total_errors()
 { 
@@ -150,6 +156,13 @@ Log::get_total_errors()
 
   return result;
 }
+
+vtime_t
+Log::get_total_time()
+{
+  return local_time() - time[0];
+}
+
 
 void 
 Log::status(const char *_msg, ...)
