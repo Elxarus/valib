@@ -148,6 +148,10 @@ SOURCE=.\test_crash.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_crc.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_demux.cpp
 # End Source File
 # Begin Source File
@@ -472,6 +476,10 @@ SOURCE=..\valib\bitstream.cpp
 # Begin Source File
 
 SOURCE=..\valib\bitstream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\crc.cpp
 # End Source File
 # Begin Source File
 

@@ -4,11 +4,12 @@
 
 
 int test_general(Log *log);
-int test_null(Log *log);
+int test_crc(Log *log);
+int test_syncer(Log *log);
 
+int test_null(Log *log);
 int test_rules(Log *log);
 
-int test_syncer(Log *log);
 int test_crash(Log *log);
 int test_demux(Log *log);
 int test_spdifer(Log *log);
@@ -21,11 +22,12 @@ int main(int argc, char **argv)
   log.open_group("Test session");
 
   test_general(&log);
-  test_null(&log);
+  test_crc(&log);
+  test_syncer(&log);
 
+  test_null(&log);
   test_rules(&log);
 
-  test_syncer(&log);
   test_crash(&log);
   test_demux(&log);
   test_spdifer(&log);
