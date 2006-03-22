@@ -49,7 +49,6 @@ public:
 
 AC3Parser::AC3Parser()
 {
-  do_crc = true;
   do_dither = true;
   do_imdct = true;
 
@@ -182,6 +181,37 @@ AC3Parser::prepare()
   return parse_header();
 }
 
+bool
+AC3Parser::crc_check()
+{
+  // Note: AC3 uses standard CRC16 polinomial
+
+  uint32_t crc;
+
+  /////////////////////////////////////////////////////////
+  // Check first 5/8 of frame
+  // CRC is initialized by 0 and test result must be also 0.
+  // Syncword (first 2 bytes) is not imcluded to crc calc
+  // but it is included to 5/8 of frame size. So we must 
+  // check 5/8*frame_size - 2 bytes.
+
+  size_t frame_size1 = (frame_size >> 1) + (frame_size >> 3);
+  crc = crc16.calc(0, frame + 2, frame_size1 - 2, bs_type);
+  if (crc) 
+    return false;
+
+  /////////////////////////////////////////////////////////
+  // Check the rest of frame
+  // CRC is initialized by 0 (from previous point) and test
+  // result must be also 0.
+
+  crc = crc16.calc(0, frame + frame_size1, frame_size - frame_size1, bs_type);
+  if (crc) 
+    return false;
+
+  return true;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Parser overrides
@@ -286,26 +316,6 @@ AC3Parser::parse_header()
   // Skip syncword
 
   bs.get(32);
-
-  /////////////////////////////////////////////////////////////
-  // Check CRC
-
-  if (do_crc)
-  {
-    int crc;
-    int crc_frame_size = ((frame_size >> 1) + (frame_size >> 3)) & ~1;
-    switch (bs_type)
-    {
-      case BITSTREAM_8:
-        crc = calc_crc(0, frame + 2, crc_frame_size - 2); break;
-        if (crc) return false;
-        break;
-
-      case BITSTREAM_16LE:
-        // todo: CRC check for low endian
-        break;
-    }
-  }
 
   /////////////////////////////////////////////////////////////
   // Parse bit stream information (BSI)

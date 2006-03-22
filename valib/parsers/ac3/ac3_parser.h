@@ -7,13 +7,6 @@
 #include "ac3_defs.h"
 #include "ac3_imdct.h"
 
-///////////////////////////////////////////////////////////////////////////////
-// Defines:
-// AC3_DEBUG          - allows access to all private class data
-// AC3_DEBUG_NOIMDCT  - disable IMDCT (samples will return coeffitients)
-// AC3_DEBUG_NODITHER - disable dithering
-///////////////////////////////////////////////////////////////////////////////
-
 // todo: decode_block() for per-block decode
 
 class AC3Info
@@ -138,7 +131,6 @@ public:
 class AC3Parser : public BaseParser, public AC3Info, public AC3FrameState
 {
 public:
-  bool do_crc;        // do crc check
   bool do_dither;     // do dithering
   bool do_imdct;      // do IMDCT
 
@@ -161,6 +153,7 @@ protected:
   virtual size_t header_size() const;
   virtual bool   load_header(uint8_t *_buf);
   virtual bool   prepare();
+  virtual bool   crc_check();
 
 #ifndef AC3_DEBUG 
 protected:
