@@ -45,7 +45,7 @@ public:
 
   int test_float()
   {
-    log->open_group("Floating-point consistency test");
+    log->msg("Floating-point consistency test");
 
     test_one_float(+2.00, +0x40000000, +2);
     test_one_float(-2.00, -0x40000000, +2);
@@ -65,7 +65,7 @@ public:
     test_one_float(+0.75, +0x60000000, 0);
     test_one_float(-0.75, -0x60000000, 0);
 
-    return log->close_group();
+    return log->get_errors();
   }
 
   int test_one_float(sample_t s, int32_t mant, int16_t exp)
@@ -88,7 +88,7 @@ public:
 
   int test_int()
   {
-    log->open_group("Test size of types");
+    log->msg("Test size of types");
 
     if (sizeof(int32_t)  != 4) log->err("sizeof(int32_t) != 4");
     if (sizeof(uint32_t) != 4) log->err("sizeof(uint32_t) != 4");
@@ -103,7 +103,7 @@ public:
 
     if (sizeof(float)    != 4) log->err("sizeof(float) != 4");
 
-    return log->close_group();
+    return log->get_errors();
   }
 
   /////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ public:
 
   int test_swab()
   {
-    log->open_group("Swab functions test");
+    log->msg("Swab functions test");
 
     if (swab_u32(0x01020304) != 0x04030201) log->err("swab_u32() does not work");
     if (swab_s32(0x01020304) != 0x04030201) log->err("swab_s32() does not work");
@@ -119,7 +119,7 @@ public:
     if (swab_u16(0x0102)     != 0x0201)     log->err("swab_u16() does not work");
     if (swab_s16(0x0102)     != 0x0201)     log->err("swab_s16() does not work");
 
-    return log->close_group();
+    return log->get_errors();
   }
 
   /////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ public:
 
   int test_byteorder()
   {
-    log->open_group("Byteorder test");
+    log->msg("Byteorder test");
 
     const char *buf = "\01\02\03\04\05\06\07\08";
 
@@ -191,7 +191,7 @@ public:
     if (int2be16(0x0102)      != *pi16)  log->err("int2be16() does not work");
     if (uint2be16(0x0102)     != *pui16) log->err("uint2be16() does not work");
 
-    return log->close_group();
+    return log->get_errors();
   }
 };
 
