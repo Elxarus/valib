@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /c
+# ADD CPP /nologo /G6 /MD /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x417 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -65,7 +65,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "..\valib" /D "WIN32" /D "_DEBUG.DEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /GZ /c
+# ADD CPP /nologo /G6 /MDd /W3 /Gm /Zi /Od /I "..\valib" /D "WIN32" /D "_DEBUG.DEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -88,7 +88,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Perf"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "DOUBLE_SAMPLE" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /FR /YX /FD /c
+# ADD CPP /nologo /G6 /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /FR /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
