@@ -156,8 +156,8 @@ MPAParser::load_header(uint8_t *_buf)
   Header h;
 
   // MPA big and low endians have ambigous headers
-  // so first we check low endian as most used and only
-  // then try big endian
+  // so first we check big endian as most used and only
+  // then try low endian
 
   // 8 bit or 16 bit big endian steram sync
   if ((_buf[0] == 0xff)         && // sync
