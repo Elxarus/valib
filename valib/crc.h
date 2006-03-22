@@ -4,8 +4,6 @@
   This class provides following functionality:
   * Can work with any given polinomial up to 32 bit width
   * Can work with any kind of bitstream (8/16/32 bits big/low endian)
-  * Can work with byte-aligned stream
-  * Can work with bit-aligned stream
 */
 
 
@@ -27,26 +25,29 @@ protected:
 public:
   CRC() {};
   CRC(uint32_t _poly, size_t _power)
-  { init(poly, power); };
+  { init(_poly, _power); };
 
   void init(uint32_t poly, size_t power);
 
-  inline uint32_t add_bits (uint32_t crc, uint32_t data, size_t bits);
-  inline uint32_t add_8    (uint32_t crc, uint8_t  data);
-  inline uint32_t add_16   (uint32_t crc, uint16_t data);
-  inline uint32_t add_32   (uint32_t crc, uint32_t data);
+  uint32_t crc_init(uint32_t crc) const { return crc << (32 - power); }
+  uint32_t crc_get(uint32_t crc)  const { return crc >> (32 - power); }
 
-  uint32_t calc(uint32_t crc, uint8_t *data, size_t bytes, int bs_type);
+  inline uint32_t add_bits (uint32_t crc, uint32_t data, size_t bits) const;
+  inline uint32_t add_8    (uint32_t crc, uint8_t  data) const;
+  inline uint32_t add_16   (uint32_t crc, uint16_t data) const;
+  inline uint32_t add_32   (uint32_t crc, uint32_t data) const;
 
-  uint32_t calc(uint32_t crc, uint8_t *data, size_t bytes);
-  uint32_t calc_16le(uint32_t crc, uint8_t *data, size_t bytes);
-  uint32_t calc_32le(uint32_t crc, uint8_t *data, size_t bytes);
+  uint32_t calc(uint32_t crc, uint8_t *data, size_t bytes, int bs_type) const;
 
+  uint32_t calc(uint32_t crc, uint8_t *data, size_t bytes) const;
+  uint32_t calc_16le(uint32_t crc, uint8_t *data, size_t bytes) const;
+  uint32_t calc_32le(uint32_t crc, uint8_t *data, size_t bytes) const;
 };
 
+extern const CRC crc16;
 
 uint32_t 
-CRC::add_bits(uint32_t crc, uint32_t data, size_t bits)
+CRC::add_bits(uint32_t crc, uint32_t data, size_t bits) const
 {
   crc ^= (data << (32 - bits));
   while (bits--)
@@ -58,13 +59,13 @@ CRC::add_bits(uint32_t crc, uint32_t data, size_t bits)
 }
 
 uint32_t
-CRC::add_8(uint32_t crc, uint8_t data)
+CRC::add_8(uint32_t crc, uint8_t data) const
 {
   return (crc << 8) ^ tbl[(crc >> 24) ^ data];
 }
 
 uint32_t
-CRC::add_16(uint32_t crc, uint16_t data)
+CRC::add_16(uint32_t crc, uint16_t data) const
 {
   crc ^=  ((uint32_t)data) << 16;
   crc = (crc << 8) ^ tbl[crc >> 24];
@@ -73,7 +74,7 @@ CRC::add_16(uint32_t crc, uint16_t data)
 }
 
 uint32_t
-CRC::add_32(uint32_t crc, uint32_t data)
+CRC::add_32(uint32_t crc, uint32_t data) const
 {
   crc ^=  data;
   crc = (crc << 8) ^ tbl[crc >> 24];

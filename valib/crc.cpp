@@ -1,6 +1,8 @@
 #include <assert.h>
 #include "crc.h"
 
+const CRC crc16(POLY_CRC16, 16);
+
 void
 CRC::init(uint32_t _poly, size_t _power)
 {
@@ -13,7 +15,7 @@ CRC::init(uint32_t _poly, size_t _power)
 }
 
 uint32_t 
-CRC::calc(uint32_t crc, uint8_t *data, size_t bytes, int bs_type)
+CRC::calc(uint32_t crc, uint8_t *data, size_t bytes, int bs_type) const
 {
   switch (bs_type)
   {
@@ -36,7 +38,7 @@ CRC::calc(uint32_t crc, uint8_t *data, size_t bytes, int bs_type)
 
 
 uint32_t 
-CRC::calc(uint32_t crc, uint8_t *data, size_t bytes)
+CRC::calc(uint32_t crc, uint8_t *data, size_t bytes) const
 {
   /////////////////////////////////////////////////////
   // Byte stream or 16/32bit big endian stream
@@ -71,7 +73,7 @@ CRC::calc(uint32_t crc, uint8_t *data, size_t bytes)
 }
 
 uint32_t 
-CRC::calc_16le(uint32_t crc, uint8_t *data, size_t bytes)
+CRC::calc_16le(uint32_t crc, uint8_t *data, size_t bytes) const
 {
   /////////////////////////////////////////////////////
   // 16bit low endian stream
@@ -97,7 +99,7 @@ CRC::calc_16le(uint32_t crc, uint8_t *data, size_t bytes)
 }
 
 uint32_t 
-CRC::calc_32le(uint32_t crc, uint8_t *data, size_t bytes)
+CRC::calc_32le(uint32_t crc, uint8_t *data, size_t bytes) const
 {
   /////////////////////////////////////////////////////
   // 32bit low endian stream
