@@ -36,6 +36,9 @@ int main(int argc, char **argv)
 
   log.close_group();
   log.msg("-----------------------------------------------------------");
+
+  int total_time = log.get_total_time();
+  log.msg("Total time: %i:%02i", total_time / 60, total_time % 60);
   if (log.get_total_errors())
     log.msg("There are %i errors!\n", log.get_total_errors());
   else
