@@ -80,10 +80,22 @@ BaseParser::load_frame(uint8_t **buf, uint8_t *end)
     }
 
     ///////////////////////////////////////////////////////
-    // Load frame data and prepare for decoding
-    // todo: crc check here
+    // Load frame data and do CRC check
 
     LOAD(frame_size);
+    if (do_crc)
+      if (!crc_check())
+      {
+        // resync on crc check fail
+        frame_data--;
+        memmove(frame_buf, frame_buf + 1, frame_data);
+        errors++; // inform about error
+        continue;
+      }
+
+    ///////////////////////////////////////////////////////
+    // Prepare to decode
+
     if (!prepare())
     {
       // resync (possibly false sync)

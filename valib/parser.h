@@ -137,6 +137,11 @@ public:
 //   scanning so only publically avalable data should be loaded here (for 
 //   example BSI info for ac3). Returns true on success and false otherwise.
 //
+// crc_check() (placeholder)
+//   Called to check crc of loaded frame. Only called if do_crc flag is set.
+//   You may leave this function empty and implement crc check on frame decode
+//   (use the same do_crc flag to determine if crc check is required).
+//
 // decode_frame() Decode frame. This function should check is_frame_loaded()
 //   to proceed correctly and return false otherwise.
 //
@@ -168,8 +173,11 @@ protected:
   virtual size_t header_size() const = 0;
   virtual bool   load_header(uint8_t *_buf) = 0;
   virtual bool   prepare() { return true; };
+  virtual bool   crc_check() { return true; };
 
 public:
+  bool do_crc;
+
   BaseParser():
     frame_data(0),
     spk(spk_unknown), // indicate unknown format
@@ -177,7 +185,8 @@ public:
     nsamples(0), 
     bs_type(0),
     frames(0),
-    errors(0)
+    errors(0),
+    do_crc(true)
   {
     ///////////////////////////////////////////////////////
     // Descendant class must:
@@ -188,8 +197,8 @@ public:
     //
     // Descendant class may:
     // * Set buffer size for samples buffer
-    //   (or it may be set on decoding)
-    // * Set stream info variables that do not change
+    //   (or it may set it on decoding)
+    // * Set constant stream info variables
     //   (for ac3 nsamples = 1536)
   }
 
