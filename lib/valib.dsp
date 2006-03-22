@@ -122,6 +122,10 @@ SOURCE=..\valib\bitstream.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\crc.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\crc.h
 # End Source File
 # Begin Source File
