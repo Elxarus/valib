@@ -131,7 +131,7 @@ test_syncer(Log *log)
   uint8_t scanbuf[4];
 
   //////////////////////////////////////////////////////////
-  // Syncpoint find test
+  // Syncpoint find test (internal buffer)
 
   for (isyncword = 0; isyncword < max_syncwords; isyncword++)
   {
@@ -194,7 +194,7 @@ test_syncer(Log *log)
   }
 
   //////////////////////////////////////////////////////////
-  // Syncpoint find test
+  // Syncpoint find test (external buffer)
 
   for (isyncword = 0; isyncword < max_syncwords; isyncword++)
   {
@@ -288,28 +288,30 @@ test_syncer(Log *log)
     log->msg("Correct MPA headers found: %i", mpa_allowed);
 
   //////////////////////////////////////////////////////////
-  // Speed test
+  // Speed test (internal buffer)
 
   s.clear_all();
   s.set_standard(SYNCMASK_MAD);
 
-  const int runs = 50;
   const int size = 10000000;
   const int syncpoints = 1683;
+  const vtime_t time_per_test = 1.0;
+  int sync_count;
+  int runs;
 
   Chunk chunk;
   Noise noise(spk_unknown, size, size);
   noise.get_chunk(&chunk);
 
   CPUMeter cpu;
-  int sync_count;
 
+  runs = 0;
   sync_count = 0;
   cpu.reset();
   cpu.start();
-  s.reset();
-  for (i = 0; i < runs; i++)
+  while (cpu.get_thread_time() < time_per_test)
   {
+    runs++;
     s.reset();
     size_t gone = 0;
     while (gone < chunk.size)
@@ -334,12 +336,17 @@ test_syncer(Log *log)
     int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 
     sync_count / runs);
 
+  //////////////////////////////////////////////////////////
+  // Speed test (internal buffer)
+
+  runs = 0;
   sync_count = 0;
   cpu.reset();
   cpu.start();
   memset(scanbuf, 0, sizeof(scanbuf));
-  for (i = 0; i < runs; i++)
+  while (cpu.get_thread_time() < time_per_test)
   {
+    runs++;
     s.reset();
     size_t gone = 0;
     while (gone < chunk.size)

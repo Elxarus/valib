@@ -20,9 +20,9 @@
 #include "parsers\mpa\mpa_parser.h"
 
 
-const vtime_t time_per_test = 1.0; // 1 sec for each speed test
-const int size = 10000000;         // use 10MB noise buffer
-const int err_dist = 17426;        // generate error each N bytes
+static const vtime_t time_per_test = 1.0; // 1 sec for each speed test
+static const int size = 10000000;         // use 10MB noise buffer
+static const int err_dist = 17426;        // generate error each N bytes
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
@@ -212,7 +212,7 @@ public:
     else
       log->err("No broken frames produced");
 
-    log->msg("CRC: %.0fMB/s CRC: %.0fMB/s (%.1f times speed overhead)", 
+    log->msg("No CRC: %.0fMB/s CRC: %.0fMB/s (%.1f times speed overhead)", 
       speed_nocrc, speed_crc, speed_nocrc / speed_crc);
 
     return log->get_errors();

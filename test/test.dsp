@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /G6 /MDd /W3 /GX /ZI /Od /I "..\valib" /I "..\liba52" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "LIBA52_DOUBLE" /D "AC3_DEBUG" /D "AC3_DEBUG_NODITHER" /D "AC3_DEBUG_NOIMDCT" /D "TIME_WIN32" /FAs /FR /YX /FD /GZ /c
+# ADD CPP /nologo /G6 /MDd /W3 /GX /ZI /Od /Ob0 /I "..\valib" /I "..\liba52" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "LIBA52_DOUBLE" /D "AC3_DEBUG" /D "AC3_DEBUG_NODITHER" /D "AC3_DEBUG_NOIMDCT" /D "TIME_WIN32" /FAs /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe

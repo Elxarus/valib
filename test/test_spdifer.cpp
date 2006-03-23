@@ -37,14 +37,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Test constants
 
+static const vtime_t time_per_test = 1.0; // 1 sec for each speed test
+
 // noise speed test
 static const int noise_size = 10000000;
-static const int noise_runs = 1;
 
 // file speed test
 static const char *file_raw   = "test.all";
 static const char *file_spdif = "test.all.spdif";
-static const int   file_runs = 50;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
@@ -106,10 +106,12 @@ public:
     cpu.reset();
     cpu.start();
 
+    int runs = 0;
     int data_chunks = 0;
     int empty_chunks = 0;
-    for (int i = 0; i < noise_runs; i++)
+    while (cpu.get_thread_time() < time_per_test)
     {
+      runs++;
       t.reset();
       t.process(&ichunk);
       while (!t.is_empty())
@@ -124,8 +126,8 @@ public:
     cpu.stop();
 
     log->msg("Spdifer speed on noise: %iMB/s, Data: %i, Empty: %i", 
-      int(double(noise_size) * noise_runs / cpu.get_thread_time() / 1000000), 
-      data_chunks / noise_runs, empty_chunks / noise_runs);
+      int(double(noise_size) * runs / cpu.get_thread_time() / 1000000), 
+      data_chunks / runs, empty_chunks / runs);
   }
 
   void speed_file(const char *file_name)
@@ -148,10 +150,12 @@ public:
     cpu.reset();
     cpu.start();
 
+    int runs = 0;
     int data_chunks = 0;
     int empty_chunks = 0;
-    for (int i = 0; i < file_runs; i++)
+    while (cpu.get_thread_time() < time_per_test)
     {
+      runs++;
       f.seek(0);
       t.reset();
       while (!f.eof())
@@ -171,8 +175,8 @@ public:
     cpu.stop();
 
     log->msg("Spdifer speed on file %s: %iMB/s, Data: %i, Empty: %i", file_name, 
-      int(double(f.size()) * file_runs / cpu.get_thread_time() / 1000000), 
-      data_chunks / file_runs, empty_chunks / file_runs);
+      int(double(f.size()) * runs / cpu.get_thread_time() / 1000000), 
+      data_chunks / runs, empty_chunks / runs);
   }
 
 };
