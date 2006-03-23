@@ -168,8 +168,8 @@ AGC::process()
   if (attack  < 0) attack  = 0;
   if (release < 0) release = 0;
 
-  attack_factor  = pow(10, attack  * nsamples / spk.sample_rate / 20);
-  release_factor = pow(10, release * nsamples / spk.sample_rate / 20);
+  attack_factor  = pow(10.0, attack  * nsamples / spk.sample_rate / 20);
+  release_factor = pow(10.0, release * nsamples / spk.sample_rate / 20);
 
   // block level
 
