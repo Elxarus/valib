@@ -22,6 +22,7 @@
 
 const vtime_t time_per_test = 1.0; // 1 sec for each speed test
 const int size = 10000000;         // use 10MB noise buffer
+const int err_dist = 17426;        // generate error each N bytes
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
@@ -185,11 +186,13 @@ public:
         f.get_chunk(&chunk);
         ptr = chunk.rawdata;
         end = chunk.rawdata + chunk.size;
-        if (ptr[chunk.size / 3] != 0)
-        {
-          ptr[chunk.size / 3] = 0;
-          broken_frames++;
-        }
+
+        for (size_t i = err_dist; i < chunk.size; i += err_dist)
+          if (ptr[i] != 0)
+          {
+            ptr[i] = 0;
+            broken_frames++;
+          }
 
         while (ptr < end)
         {
