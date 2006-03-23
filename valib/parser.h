@@ -141,6 +141,8 @@ public:
 //   Called to check crc of loaded frame. Only called if do_crc flag is set.
 //   You may leave this function empty and implement crc check on frame decode
 //   (use the same do_crc flag to determine if crc check is required).
+//   This function is used at load_frame() so it allows error detection at an
+//   earlier stage (before decoding).
 //
 // decode_frame() Decode frame. This function should check is_frame_loaded()
 //   to proceed correctly and return false otherwise.
