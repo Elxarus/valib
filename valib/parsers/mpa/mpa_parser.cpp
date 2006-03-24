@@ -266,14 +266,12 @@ MPAParser::II_decode_frame()
   // Load bitalloc
  
   const int16_t *ba_bits = II_ba_bits_tbl[table];
-  int crc_bits = 0;
 
   if (nch == 1)
   {
     for (sb = 0; sb < sblimit; sb++)
     {
       int bits = ba_bits[sb];
-      crc_bits += bits;
       bit_alloc[0][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
     }
     
@@ -285,7 +283,6 @@ MPAParser::II_decode_frame()
     for (sb = 0; sb < jsbound; sb++) 
     {
       int bits = ba_bits[sb];
-      crc_bits += bits << 1;
       if (bits)
       {
         bit_alloc[0][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
@@ -301,7 +298,6 @@ MPAParser::II_decode_frame()
     for (sb = jsbound; sb < sblimit; sb++)
     {
       int bits = ba_bits[sb];
-      crc_bits += bits;
       if (bits)
         bit_alloc[0][sb] = bit_alloc[1][sb] = II_ba_tbl[table][sb][bitstream.get(bits)];
       else
@@ -319,10 +315,7 @@ MPAParser::II_decode_frame()
   for (sb = 0; sb < sblimit; sb++) 
     for (ch = 0; ch < nch; ch++)    // 2 bit scfsi 
       if (bit_alloc[ch][sb]) 
-      {
-        crc_bits += 2;
         scfsi[ch][sb] = (uint16_t) bitstream.get(2);
-      }
 
   // do we need this?
   for (sb = sblimit; sb < SBLIMIT; sb++) 
@@ -331,16 +324,18 @@ MPAParser::II_decode_frame()
 
   /////////////////////////////////////////////////////////
   // CRC check
-  // Note that we include CRC word into processing AFTER
-  // protected data. Due to CRC properties we must get 
-  // zero result in case of no errors.
+  // Do crc check up to current point. Note that we 
+  // include CRC word into processing AFTER protected 
+  // data. Due to CRC properties we must get zero result
+  // in case of no errors.
 
   if (hdr.error_protection && do_crc)
   {
+    uint32_t crc_bits = bitstream.get_pos() - 32 /*header*/ - 16 /*crc*/;
     uint32_t crc = crc16.crc_init(0xffff);
-    crc = crc16.calc_bits(crc, frame + 2, 0, 16,       bs_type);
-    crc = crc16.calc_bits(crc, frame + 6, 0, crc_bits, bs_type);
-    crc = crc16.calc_bits(crc, frame + 4, 0, 16,       bs_type);
+    crc = crc16.calc_bits(crc, frame + 2, 0, 16,       bs_type); // header
+    crc = crc16.calc_bits(crc, frame + 6, 0, crc_bits, bs_type); // frame data
+    crc = crc16.calc_bits(crc, frame + 4, 0, 16,       bs_type); // crc
     if (crc)
       return false;
   }
@@ -569,17 +564,18 @@ MPAParser::I_decode_frame()
   
   /////////////////////////////////////////////////////////
   // CRC check
+  // Note that we include CRC word into processing AFTER 
+  // protected data. Due to CRC properties we must get zero
+  // result in case of no errors.
 
-  if (hdr.error_protection)
+  if (hdr.error_protection && do_crc)
   {
-    uint16_t crc = 0xffff;
-    uint16_t crc_bits = jsbound;
-    crc_bits = (crc_bits << 3) + ((32 - crc_bits) << 2);
-
-    crc = calc_crc(crc, (uint16_t*)(frame+2), 16);
-    crc = calc_crc(crc, (uint16_t*)(frame+6), crc_bits);
-    uint16_t crc_test = swab_u16(*(uint16_t*)(frame+4));
-    if (crc != crc_test)
+    uint32_t crc_bits = (jsbound << 3) + ((32 - jsbound) << 2);
+    uint32_t crc = crc16.crc_init(0xffff);
+    crc = crc16.calc_bits(crc, frame + 2, 0, 16,       bs_type); // header
+    crc = crc16.calc_bits(crc, frame + 6, 0, crc_bits, bs_type); // frame data
+    crc = crc16.calc_bits(crc, frame + 4, 0, 16,       bs_type); // crc
+    if (crc)
       return false;
   }
         
