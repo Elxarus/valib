@@ -2,12 +2,12 @@
   Bitstream operations
   Read & Write classes
 
-  Known issues:
-  =============
-  1) Low-endian streams must be aligned to 16 bits (for 16 bits stream) or 32 bits 
-     (for 32 bits stream) boundary.
+  Important note!!!
+  -----------------
+  Low endian streams MUST be aligned to stream word boundary
+  (16 bit for 14 and 16 bit stream and 32 bit for 32 bit stream)
 
-  2) We must not use ReadBS::get(0).
+  We must not use ReadBS::get(0).
 */
 
 
