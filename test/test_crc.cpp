@@ -22,7 +22,7 @@
 
 static const vtime_t time_per_test = 1.0; // 1 sec for each speed test
 static const int size = 10000000;         // use 10MB noise buffer
-static const int err_dist = 17426;        // generate error each N bytes
+static const int err_dist = 12689;        // generate error each N bytes
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
@@ -50,12 +50,16 @@ public:
 
   void parser_test()
   {
+    MPAParser mpa;
     AC3Parser ac3;
     DTSParser dts;
-    MPAParser mpa;
 
+    parser_test(&mpa, 500, "test.mp2");
+    parser_test(&mpa, 500, "test.mp2.spdif");
     parser_test(&ac3, 375, "test.ac3");
     parser_test(&ac3, 375, "test.ac3.spdif");
+    parser_test(&dts, 1125, "test.dts");
+    parser_test(&dts, 1125, "test.dts.spdif");
   }
 
   void speed_test()
@@ -68,7 +72,11 @@ public:
     crc.init(POLY_CRC16, 16);
     speed_test_table(chunk.rawdata, chunk.size, 0x7589);
     speed_test(BITSTREAM_8,    "byte stream", chunk.rawdata, chunk.size, 0x75890000);
+    speed_test(BITSTREAM_14BE, "14bit BE",    chunk.rawdata, chunk.size, 0xaf9b0000);
+    speed_test(BITSTREAM_14LE, "14bit LE",    chunk.rawdata, chunk.size, 0xba690000);
+    speed_test(BITSTREAM_16BE, "16bit BE",    chunk.rawdata, chunk.size, 0x75890000);
     speed_test(BITSTREAM_16LE, "16bit LE",    chunk.rawdata, chunk.size, 0x826f0000);
+    speed_test(BITSTREAM_32BE, "32bit BE",    chunk.rawdata, chunk.size, 0x75890000);
     speed_test(BITSTREAM_32LE, "32bit LE",    chunk.rawdata, chunk.size, 0x00470000);
   }
 
@@ -116,7 +124,8 @@ public:
         end = chunk.rawdata + chunk.size;
         while (ptr < end)
           if (parser->load_frame(&ptr, end))
-            frame_count++;
+//            if (parser->decode_frame())
+              frame_count++;
       }
     }
     cpu.stop();
@@ -150,7 +159,8 @@ public:
         end = chunk.rawdata + chunk.size;
         while (ptr < end)
           if (parser->load_frame(&ptr, end))
-            frame_count++;
+//            if (parser->decode_frame())
+              frame_count++;
       }
     }
     cpu.stop();
@@ -197,7 +207,8 @@ public:
         while (ptr < end)
         {
           if (parser->load_frame(&ptr, end))
-            frame_count++;
+//            if (parser->decode_frame())
+              frame_count++;
         }
       }
     }
@@ -212,7 +223,7 @@ public:
     else
       log->err("No broken frames produced");
 
-    log->msg("No CRC: %.0fMB/s CRC: %.0fMB/s (%.1f times speed overhead)", 
+    log->msg("No CRC: %.0fMB/s CRC: %.0fMB/s (%.1f times speed diff)", 
       speed_nocrc, speed_crc, speed_nocrc / speed_crc);
 
     return log->get_errors();
@@ -235,6 +246,9 @@ public:
 
     log->msg("CRC speed (table method): %iMB/s",
       int(double(size) * runs / cpu.get_thread_time() / 1000000));
+
+    if (result != crc_test)
+      log->err("crc = 0x%08x but must be 0x%08x", result, crc_test);
 
     return log->get_errors();
   }
