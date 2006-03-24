@@ -6,52 +6,6 @@
 
 
 //////////////////////////////////////////////////////////////////////
-// Support functions
-//////////////////////////////////////////////////////////////////////
-/*
-inline uint16_t swabw(uint16_t w) { return ((w & 0xff) << 8) | (w >> 8); };
-inline uint32_t swabd(uint32_t d) { return swabw(d >> 16) | (swabw((uint16_t)d) << 16); }
-#define min(a, b) ((a) < (b)? (a): (b))
-*/
-#define CRC16_POLYNOMIAL 0x8005
-
-unsigned short calc_crc(unsigned short crc, unsigned short *data, int len)
-// len  - data length in bits (sic!)
-{
-  while (len >= 16)
-  {
-    crc = swab_u16(*data) ^ crc;
-    data++;
-
-    #define calc_crc_step(crc) \
-      crc = (crc << 1) ^ (CRC16_POLYNOMIAL >> ((~crc & 0x8000) >> 11))
-
-//  calc_crc_step(crc) is equivalent to:
-//  {
-//    if (crc & 0x8000)
-//      (crc <<= 1) ^= CRC16_POLYNOMIAL;
-//    else
-//      crc <<= 1;
-//  }
-
-    calc_crc_step(crc); calc_crc_step(crc); calc_crc_step(crc); calc_crc_step(crc);
-    calc_crc_step(crc); calc_crc_step(crc); calc_crc_step(crc); calc_crc_step(crc);
-    calc_crc_step(crc); calc_crc_step(crc); calc_crc_step(crc); calc_crc_step(crc);
-    calc_crc_step(crc); calc_crc_step(crc); calc_crc_step(crc); calc_crc_step(crc);
-
-    len -= 16;
-  }
-
-  if (len)
-  {
-    crc = (swab_u16(*(data++)) >> (16 - len) << (16 - len)) ^ crc;
-    while (len--) calc_crc_step(crc);
-  }
-
-  return crc;
-}
-
-//////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
@@ -209,6 +163,16 @@ MPAParser::prepare()
   return decode_header();
 }
 
+bool
+MPAParser::crc_check()
+{
+  // Note: MPA uses standard CRC16 polinomial and 0xffff start value
+  // MPA LayerII has variable number of protected bits.
+  // To calculate it we must parse much of bitstream.
+  // So we will check CRC on frame decode.
+  // Maybe later.........
+  return true;
+}
 
 //////////////////////////////////////////////////////////////////////
 // MPA parsing
@@ -367,18 +331,20 @@ MPAParser::II_decode_frame()
 
   /////////////////////////////////////////////////////////
   // CRC check
-  // todo: low endian CRC check
+  // Note that we include CRC word into processing AFTER
+  // protected data. Due to CRC properties we must get 
+  // zero result in case of no errors.
 
-  if (hdr.error_protection && bs_type == BITSTREAM_8)
+  if (hdr.error_protection && do_crc)
   {
-    uint16_t crc = 0xffff;
-    crc = calc_crc(crc, (uint16_t*)(frame+2), 16);
-    crc = calc_crc(crc, (uint16_t*)(frame+6), crc_bits);
-    uint16_t crc_test = swab_u16(*(uint16_t*)(frame+4));
-    if (crc != crc_test)
+    uint32_t crc = crc16.crc_init(0xffff);
+    crc = crc16.calc_bits(crc, frame + 2, 0, 16,       bs_type);
+    crc = crc16.calc_bits(crc, frame + 6, 0, crc_bits, bs_type);
+    crc = crc16.calc_bits(crc, frame + 4, 0, 16,       bs_type);
+    if (crc)
       return false;
   }
-        
+
   /////////////////////////////////////////////////////////
   // Load scalefactors
 

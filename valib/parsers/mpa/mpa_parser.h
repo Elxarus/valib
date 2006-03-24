@@ -78,6 +78,7 @@ protected:
   virtual size_t header_size() const;
   virtual bool   load_header(uint8_t *_buf);
   virtual bool   prepare();
+  virtual bool   crc_check();
 
 private:
   int II_table;            // Layer II allocation table number 
@@ -88,7 +89,6 @@ private:
   /////////////////////////////////////////////////////////
   // Common decoding functions
 
-  inline bool sync(Header header);
   bool decode_header();
 
   /////////////////////////////////////////////////////////
