@@ -64,8 +64,12 @@ const int word_bits[] =
 class CRCTest
 {
 protected:
-  CRC crc;
   Log *log;
+
+  CRC crc;
+  MPAParser mpa;
+  AC3Parser ac3;
+  DTSParser dts;
 
 public:
   CRCTest(Log *_log)
@@ -76,17 +80,79 @@ public:
   int test()
   {
     log->open_group("CRC test");
+    math_test();
+    speed_test();
+    parser_test();
+    return log->close_group();
+  }
 
+  ///////////////////////////////////////////////////////////////////////////////
+  // Test math
+
+  void math_test()
+  {
+    log->open_group("CRC math test");
     bytestream_test(POLY_CRC16, 16, "CRC16");
     bytestream_test(POLY_CRC32, 32, "CRC32");
     bitstream_test(POLY_CRC16, 16, "CRC16");
     bitstream_test(POLY_CRC32, 32, "CRC32");
+    log->close_group();
+  }
 
-    crc.init(POLY_CRC32, 32);
-    speed_test();
+  ///////////////////////////////////////////////////////////////////////////////
+  // Test speed of all bitstream types
 
-    parser_test();
-    return log->close_group();
+  void speed_test()
+  {
+    Chunk chunk;
+    Noise noise(spk_unknown, size, size);
+    noise.set_seed(47564321);
+    noise.get_chunk(&chunk);
+
+    crc.init(POLY_CRC16, 16);
+
+    log->open_group("CRC speed test");
+    speed_test_table(chunk.rawdata, chunk.size, 0x7589);
+    speed_test(BITSTREAM_8,    "byte stream", chunk.rawdata, chunk.size, 0x75890000);
+    speed_test(BITSTREAM_14BE, "14bit BE",    chunk.rawdata, chunk.size, 0xaf9b0000);
+    speed_test(BITSTREAM_14LE, "14bit LE",    chunk.rawdata, chunk.size, 0xba690000);
+    speed_test(BITSTREAM_16BE, "16bit BE",    chunk.rawdata, chunk.size, 0x75890000);
+    speed_test(BITSTREAM_16LE, "16bit LE",    chunk.rawdata, chunk.size, 0x826f0000);
+    speed_test(BITSTREAM_32BE, "32bit BE",    chunk.rawdata, chunk.size, 0x75890000);
+    speed_test(BITSTREAM_32LE, "32bit LE",    chunk.rawdata, chunk.size, 0x00470000);
+    log->close_group();
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // Test all parsers
+
+  void parser_test()
+  {
+    log->open_group("Parser error detection test");
+
+    parser_test(&mpa, 500, "test.mp2");
+    parser_test(&mpa, 500, "test.mp2.spdif");
+
+    parser_test(&ac3, 375, "test.ac3");
+    parser_test(&ac3, 375, "test.ac3.spdif");
+
+    ///////////////////////////////////////////////////////
+    // Some notes about DTS
+    // 1. DTSParser does not do CRC check currently
+    // 2. CRC protected DTS stream is uncommon case
+    // But parser test allows us to know error detection
+    // coverage and stream scan speed. It is useful and 
+    // therefore it is included in this test, regardless of
+    // the fact that it is not a CRC test but general error
+    // detection test.
+    //
+    // Possibly, this test should be moved to parsers test
+    // later and do not only scan but decode test also...
+
+    parser_test(&dts, 1125, "test.dts");
+    parser_test(&dts, 1125, "test.dts.spdif");
+
+    log->close_group();
   }
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -108,54 +174,43 @@ public:
 
     log->msg("Bytestream test with %s polinomial", poly_name);
 
-    // fill buffer with noise data
-    for (i = 0; i < array_size(buf); i++)
-      buf[i] = (uint8_t)rng.get_uint(256);
-
     crc.init(poly, power);
     for (int bs_index = 0; bs_index < array_size(bs_type); bs_index++)
-    {
       for (int size = 0; size < max_size; size += word_size[bs_index])
-      {
-        // create new message and calc its crc
-        crc_msg = 0;
-        for (i = 0; i < size; i += word_size[bs_index])
-        {
-          uint32_t value = rng.get_uint();
-          crc_msg = crc.add_bits(crc_msg, value, word_bits[bs_index]);
-          switch (bs_type[bs_index])
-          {
-            case BITSTREAM_8:    *(uint8_t *) (buf + i) = (uint8_t)value;   break;
-            case BITSTREAM_14BE: *(uint16_t *)(buf + i) = uint2be16(value); break;
-            case BITSTREAM_14LE: *(uint16_t *)(buf + i) = uint2le16(value); break;
-            case BITSTREAM_16BE: *(uint16_t *)(buf + i) = uint2be16(value); break;
-            case BITSTREAM_16LE: *(uint16_t *)(buf + i) = uint2le16(value); break;
-            case BITSTREAM_32BE: *(uint32_t *)(buf + i) = uint2be32(value); break;
-            case BITSTREAM_32LE: *(uint32_t *)(buf + i) = uint2le32(value); break;
-            default: assert(false);
-          }
-        }
-        crc_msg = crc.crc_get(crc_msg);
-
-        // shift message and calc its crc
         for (int shift = 0; shift < max_shift; shift++)
         {
-          // calc crc of message
-          uint32_t crc_test = 0;
+          // fill buffer with noise data
+          for (i = 0; i < array_size(buf); i++)
+            buf[i] = (uint8_t)rng.get_uint(256);
+
+          // calc message reference crc
+          crc_msg = 0;
+          for (i = 0; i < size; i += word_size[bs_index])
+          {
+            uint32_t value;
+            switch (bs_type[bs_index])
+            {
+              case BITSTREAM_8:    value = *(buf + shift + i); break;
+              case BITSTREAM_14BE: value = be2uint16(*(uint16_t *)(buf + shift + i)); break;
+              case BITSTREAM_14LE: value = le2uint16(*(uint16_t *)(buf + shift + i)); break;
+              case BITSTREAM_16BE: value = be2uint16(*(uint16_t *)(buf + shift + i)); break;
+              case BITSTREAM_16LE: value = le2uint16(*(uint16_t *)(buf + shift + i)); break;
+              case BITSTREAM_32BE: value = be2uint32(*(uint32_t *)(buf + shift + i)); break;
+              case BITSTREAM_32LE: value = le2uint32(*(uint32_t *)(buf + shift + i)); break;
+              default: assert(false);
+            }
+            crc_msg = crc.add_bits(crc_msg, value, word_bits[bs_index]);
+          }
+
+          // calc message test crc
+          crc_test = 0;
           crc_test = crc.calc(crc_test, buf + shift, size, bs_type[bs_index]);
-          crc_test = crc.crc_get(crc_test);
 
           // test it
           if (crc_test != crc_msg)
             return log->err("bitstream: %s, size = %i, shift: %i, crc = 0x%x (must be 0x%x)", 
               bs_name[bs_index], size, shift, crc_test, crc_msg);
-
-          // shift message
-          for (i = array_size(buf) - 1; i > 0; i--)
-            buf[i] = buf[i-1];
         }
-      }
-    }
     return 0;
   }
 
@@ -178,113 +233,91 @@ public:
 
     log->msg("Bitstream test with %s polinomial", poly_name);
 
-    // fill buffer with noise data
-    for (i = 0; i < array_size(buf); i++)
-      buf[i] = (uint8_t)rng.get_uint(256);
-
     crc.init(poly, power);
     for (int bs_index = 0; bs_index < array_size(bs_type); bs_index++)
-    {
       for (int size = 0; size < max_size; size++)
-      {
-        uint32_t value;
-        // create new message and calc its crc
-        crc_msg = 0;
-        for (i = 0; i < size / word_bits[bs_index]; i += word_size[bs_index])
-        {
-          value = rng.get_uint();
-          crc_msg = crc.add_bits(crc_msg, value, word_bits[bs_index]);
-          switch (bs_type[bs_index])
-          {
-            case BITSTREAM_8:    *(uint8_t *) (buf + i) = (uint8_t)value;   break;
-            case BITSTREAM_14BE: *(uint16_t *)(buf + i) = uint2be16(value); break;
-            case BITSTREAM_14LE: *(uint16_t *)(buf + i) = uint2le16(value); break;
-            case BITSTREAM_16BE: *(uint16_t *)(buf + i) = uint2be16(value); break;
-            case BITSTREAM_16LE: *(uint16_t *)(buf + i) = uint2le16(value); break;
-            case BITSTREAM_32BE: *(uint32_t *)(buf + i) = uint2be32(value); break;
-            case BITSTREAM_32LE: *(uint32_t *)(buf + i) = uint2le32(value); break;
-            default: assert(false);
-          }
-        }
-        // message tail bits must be left-aligned inside message word
-        if (size % word_bits[bs_index])
-        {
-          value = rng.get_uint();
-          crc_msg = crc.add_bits(crc_msg, value, size % word_bits[bs_index]);
-          value = value << (word_bits[bs_index] - size % word_bits[bs_index]);
-          switch (bs_type[bs_index])
-          {
-            case BITSTREAM_8:    *(uint8_t *) (buf + i) = (uint8_t)value;   break;
-            case BITSTREAM_14BE: *(uint16_t *)(buf + i) = uint2be16(value); break;
-            case BITSTREAM_14LE: *(uint16_t *)(buf + i) = uint2le16(value); break;
-            case BITSTREAM_16BE: *(uint16_t *)(buf + i) = uint2be16(value); break;
-            case BITSTREAM_16LE: *(uint16_t *)(buf + i) = uint2le16(value); break;
-            case BITSTREAM_32BE: *(uint32_t *)(buf + i) = uint2be32(value); break;
-            case BITSTREAM_32LE: *(uint32_t *)(buf + i) = uint2le32(value); break;
-            default: assert(false);
-          }
-        }
-        crc_msg = crc.crc_get(crc_msg);
-
-        // shift message and calc its crc
         for (int shift = 0; shift < max_shift; shift++)
         {
-          // calc crc of message
+          if (size == 3 && shift == 23)
+            size = size;
+
+          int bpw = word_bits[bs_index]; // bits per word
+          int start_word = shift / bpw;
+          int end_word   = (shift + size) / bpw;
+          int start_bit  = shift % bpw;
+          int end_bit    = (shift + size) % bpw;
+
+          // fill buffer with noise data
+          for (i = 0; i < array_size(buf); i++)
+            buf[i] = (uint8_t)rng.get_uint(256);
+
+          // calc message reference crc
+          crc_msg = 0;
+          uint32_t value;
+
+          // prolog
+          i = start_word * word_size[bs_index];
+          switch (bs_type[bs_index])
+          {
+            case BITSTREAM_8:    value = *(buf + i); break;
+            case BITSTREAM_14BE: value = be2uint16(*(uint16_t *)(buf + i)); break;
+            case BITSTREAM_14LE: value = le2uint16(*(uint16_t *)(buf + i)); break;
+            case BITSTREAM_16BE: value = be2uint16(*(uint16_t *)(buf + i)); break;
+            case BITSTREAM_16LE: value = le2uint16(*(uint16_t *)(buf + i)); break;
+            case BITSTREAM_32BE: value = be2uint32(*(uint32_t *)(buf + i)); break;
+            case BITSTREAM_32LE: value = le2uint32(*(uint32_t *)(buf + i)); break;
+            default: assert(false);
+          }
+          if (start_word == end_word)
+            crc_msg = crc.add_bits(crc_msg, value >> (bpw - end_bit), size);
+          else
+          {
+            crc_msg = crc.add_bits(crc_msg, value, bpw - start_bit);
+            i += word_size[bs_index];
+
+            // body
+            while (i < end_word * word_size[bs_index])
+            {
+              switch (bs_type[bs_index])
+              {
+                case BITSTREAM_8:    value = *(buf + i); break;
+                case BITSTREAM_14BE: value = be2uint16(*(uint16_t *)(buf + i)); break;
+                case BITSTREAM_14LE: value = le2uint16(*(uint16_t *)(buf + i)); break;
+                case BITSTREAM_16BE: value = be2uint16(*(uint16_t *)(buf + i)); break;
+                case BITSTREAM_16LE: value = le2uint16(*(uint16_t *)(buf + i)); break;
+                case BITSTREAM_32BE: value = be2uint32(*(uint32_t *)(buf + i)); break;
+                case BITSTREAM_32LE: value = le2uint32(*(uint32_t *)(buf + i)); break;
+                default: assert(false);
+              }
+              crc_msg = crc.add_bits(crc_msg, value, bpw);
+              i += word_size[bs_index];
+            }
+
+            // epilog
+            switch (bs_type[bs_index])
+            {
+              case BITSTREAM_8:    value = *(buf + i); break;
+              case BITSTREAM_14BE: value = be2uint16(*(uint16_t *)(buf + i)); break;
+              case BITSTREAM_14LE: value = le2uint16(*(uint16_t *)(buf + i)); break;
+              case BITSTREAM_16BE: value = be2uint16(*(uint16_t *)(buf + i)); break;
+              case BITSTREAM_16LE: value = le2uint16(*(uint16_t *)(buf + i)); break;
+              case BITSTREAM_32BE: value = be2uint32(*(uint32_t *)(buf + i)); break;
+              case BITSTREAM_32LE: value = le2uint32(*(uint32_t *)(buf + i)); break;
+              default: assert(false);
+            }
+            crc_msg = crc.add_bits(crc_msg, value >> (bpw - end_bit), end_bit);
+          }
+
+          // calc message test crc
           uint32_t crc_test = 0;
           crc_test = crc.calc_bits(crc_test, buf, shift, size, bs_type[bs_index]);
-          crc_test = crc.crc_get(crc_test);
 
           // test it
           if (crc_test != crc_msg)
             return log->err("bitstream: %s, size = %i, shift: %i, crc = 0x%x (must be 0x%x)", 
               bs_name[bs_index], size, shift, crc_test, crc_msg);
-
-          // shift message by 1 bit
-          for (i = array_size(buf) - 1; i > 0; i--)
-            buf[i] = (buf[i] >> 1) | (buf[i-1] << 7);
-          buf[0] >>= 1;
         }
-      }
-    }
     return 0;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  // Test all parsers
-
-  void parser_test()
-  {
-    MPAParser mpa;
-    AC3Parser ac3;
-    DTSParser dts;
-
-    parser_test(&mpa, 500, "test.mp2");
-    parser_test(&mpa, 500, "test.mp2.spdif");
-    parser_test(&ac3, 375, "test.ac3");
-    parser_test(&ac3, 375, "test.ac3.spdif");
-    parser_test(&dts, 1125, "test.dts");
-    parser_test(&dts, 1125, "test.dts.spdif");
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  // Test speed of all bitstream types
-
-  void speed_test()
-  {
-    Chunk chunk;
-    Noise noise(spk_unknown, size, size);
-    noise.set_seed(47564321);
-    noise.get_chunk(&chunk);
-
-    crc.init(POLY_CRC16, 16);
-    speed_test_table(chunk.rawdata, chunk.size, 0x7589);
-    speed_test(BITSTREAM_8,    "byte stream", chunk.rawdata, chunk.size, 0x75890000);
-    speed_test(BITSTREAM_14BE, "14bit BE",    chunk.rawdata, chunk.size, 0xaf9b0000);
-    speed_test(BITSTREAM_14LE, "14bit LE",    chunk.rawdata, chunk.size, 0xba690000);
-    speed_test(BITSTREAM_16BE, "16bit BE",    chunk.rawdata, chunk.size, 0x75890000);
-    speed_test(BITSTREAM_16LE, "16bit LE",    chunk.rawdata, chunk.size, 0x826f0000);
-    speed_test(BITSTREAM_32BE, "32bit BE",    chunk.rawdata, chunk.size, 0x75890000);
-    speed_test(BITSTREAM_32LE, "32bit LE",    chunk.rawdata, chunk.size, 0x00470000);
   }
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -296,11 +329,18 @@ public:
   // * break some frames
   //
   // This allows us to determine:
-  // * correct frame load with crc detection enabled
-  // * error detection coverage
-  // * crc performance overhead
+  // * correct frame load with and without crc detection enabled
+  // * find error detection coverage
+  // * find crc performance overhead
 
   int parser_test(BaseParser *parser, int frames, const char *filename)
+  {
+    log->open_group("Scanning file %s (%i frames):", filename, frames);
+    parser_test_int(parser, frames, filename);
+    return log->close_group();
+  }
+
+  int parser_test_int(BaseParser *parser, int frames, const char *filename)
   {
     int runs;
     int frame_count;
@@ -318,8 +358,6 @@ public:
 
     if (!f.open(spk_unknown, filename))
       return log->err("Cannot open file %s", filename);
-    else
-      log->msg("Scanning file %s (%i frames):", filename, frames);
 
     ///////////////////////////////////////////////////////
     // Load all frames without CRC check
@@ -394,8 +432,8 @@ public:
     ///////////////////////////////////////////////////////
     // Break some frames
     // Do not change 0 value because 0 is used at spdif -
-    // wrapped stream as padding and not participates at 
-    // crc check.
+    // wrapped stream as padding and does not participate 
+    // at crc check.
 
     runs = 0;
     frame_count = 0;
@@ -448,6 +486,9 @@ public:
 
     return log->get_errors();
   }
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // Simple table algorithm speed test
 
   int speed_test_table(uint8_t *data, size_t size, uint32_t crc_test)
   {
