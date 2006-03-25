@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
            "    -d[ecode] - just decode (used for testing and performance measurements)\n"
            "    -p[lay]   - play file (*)\n"
            "    -r[aw]    - decode to RAW file\n"
+           "    -n[othing]- do nothing (to be used with -i option)\n"
            "  \n"
            "  output options:\n"
            "    -spdif - spdif output (no other options will work in this mode)\n"
@@ -172,7 +173,7 @@ int main(int argc, char *argv[])
   }
 
   const char *input_filename = argv[1];
-  enum { mode_nothing, mode_play, mode_raw, mode_decode } mode = mode_nothing;
+  enum { mode_undefined, mode_nothing, mode_play, mode_raw, mode_decode } mode = mode_undefined;
 
   bool spdif = false;
   int imask = 2;
@@ -281,7 +282,7 @@ int main(int argc, char *argv[])
     if (is_arg(argv[iarg], "d", argt_exist) || 
         is_arg(argv[iarg], "decode", argt_exist))
     {
-      if (mode != mode_nothing)
+      if (mode != mode_undefined)
       {
         printf("-decode : ambigous output mode\n");
         return 1;
@@ -296,7 +297,7 @@ int main(int argc, char *argv[])
     if (is_arg(argv[iarg], "p", argt_exist) || 
         is_arg(argv[iarg], "play", argt_exist))
     {
-      if (mode != mode_nothing)
+      if (mode != mode_undefined)
       {
         printf("-play : ambigous output mode\n");
         return 1;
@@ -316,7 +317,7 @@ int main(int argc, char *argv[])
         printf("-raw : specify a file name\n");
         return 1;
       }
-      if (mode != mode_nothing)
+      if (mode != mode_undefined)
       {
         printf("-raw : ambigous output mode\n");
         return 1;
@@ -334,6 +335,18 @@ int main(int argc, char *argv[])
       continue;
     }
 
+    // -n[othing] - play
+    if (is_arg(argv[iarg], "n", argt_exist) || 
+        is_arg(argv[iarg], "nothing", argt_exist))
+    {
+      if (mode != mode_undefined)
+      {
+        printf("-nothing : ambigous output mode\n");
+        return 1;
+      }
+      continue;
+    }
+    
     ///////////////////////////////////////////////////////
     // Output options
     ///////////////////////////////////////////////////////
@@ -626,6 +639,9 @@ int main(int argc, char *argv[])
     file.get_info(info, 1024);
     printf("%s\n", info);
   }
+
+  if (mode = mode_nothing)
+    return 0;
 
   /////////////////////////////////////////////////////////
   // Setup processing
