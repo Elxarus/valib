@@ -279,6 +279,7 @@ DTSParser::get_info(char *buf, unsigned len) const
     "frame size: %i bytes\n"
     "nsamples: %i\n"
     "amode: %i\n"
+    "%s"
     "\0",
     spk.mode_text(),
     spk.sample_rate,
@@ -286,7 +287,9 @@ DTSParser::get_info(char *buf, unsigned len) const
     stream, 
     frame_size,
     nsamples,
-    amode);
+    amode,
+    crc_present? "CRC protected\n": "No CRC"
+    );
   memcpy(buf, info, MIN(len, strlen(info)+1));
 }
 
