@@ -101,12 +101,15 @@ public:
 uint32_t 
 CRC::add_bits(uint32_t crc, uint32_t data, size_t bits) const
 {
-  crc ^= (data << (32 - bits));
-  while (bits--)
-    if (crc & 0x80000000)
-      crc = (crc << 1) ^ poly;
-    else
-      crc <<= 1;
+  if (bits)
+  {
+    crc ^= (data << (32 - bits));
+    while (bits--)
+      if (crc & 0x80000000)
+        crc = (crc << 1) ^ poly;
+      else
+        crc <<= 1;
+  }
   return crc;
 }
 

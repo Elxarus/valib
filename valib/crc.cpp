@@ -1,18 +1,20 @@
 /*
   Table CRC algorithm speed mainly depends on table access speed.
-  We cannot increase table size (and decrease table accesses) because it increases cache misses.
+  If we increase table size (and decrease table accesses) it increases cache
+  misses so 8bit table may be considered as optimal choise.
 
   Some words about 32bit access
   =============================
   This module uses 32bit access everywhere. Why?
 
-  Conversion 16 <-> 32bit word sometimes takes much of time. In some cases it is not a problem: 
-  16bit-le with 16bit access works almost at the same speed as 32bit access. But 16bit-be works 6 
-  times slower on P4 and 2 times slower on P3 because of several 16 <-> 32bit conversions (before 
-  and after swab function).
+  Conversion 16 <-> 32bit word sometimes takes much of time. In some cases it
+  is not a problem: 16bit-le with 16bit access works almost at the same speed
+  as 32bit access. But 16bit-be works 6 times slower on P4 and 2 times slower
+  on P3 because of several 16 <-> 32bit conversions (before and after swab 
+  function).
 
-  Also 32bit access is about 30% faster on P4 and about 50% faster on P3 compared to simple 
-  byte-access CRC algorithm.
+  Also 32bit access is about 30% faster on P4 and about 50% faster on P3 
+  compared to simple byte-access CRC algorithm.
 */
 
 
@@ -250,6 +252,8 @@ CRC::calc_32le(uint32_t crc, uint32_t *data, size_t size) const
 
 ///////////////////////////////////////////////////////////////////////////////
 // Bit stream interface
+// This interface is implemented as wrapper functions that add bit-level 
+// prolog and epilog to byte stream functions.
 ///////////////////////////////////////////////////////////////////////////////
 
 uint32_t 
@@ -283,16 +287,18 @@ CRC::calc_bits(uint32_t crc, uint8_t *data, size_t start_bit, size_t bits) const
 
   if (size)
   {
+    // prolog
     crc = add_bits(crc, *data, 8 - start_bit);
     data++;
-
+    // body
     crc = calc(crc, data, size-1);
     data += size-1;
-
+    // epilog
     crc = add_bits(crc, (*data) >> (8 - end_bit), end_bit);
   }
   else
   {
+    // all stream is in one word
     crc = add_bits(crc, (*data) >> (8 - end_bit), bits);
   }
 
@@ -302,29 +308,8 @@ CRC::calc_bits(uint32_t crc, uint8_t *data, size_t start_bit, size_t bits) const
 uint32_t 
 CRC::calc_bits_16be(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits) const
 {
-  data += start_bit >> 4;
-  start_bit &= 15;
-
-  int end_bit = start_bit + bits;
-  int size = end_bit >> 4;
-  end_bit &= 15;
-
-  if (size)
-  {
-    crc = add_bits(crc, *data, 16 - start_bit);
-    data++;
-
-    crc = calc_16be(crc, data, size-1);
-    data += size-1;
-
-    crc = add_bits(crc, (*data) >> (16 - end_bit), end_bit);
-  }
-  else
-  {
-    crc = add_bits(crc, (*data) >> (16 - end_bit), bits);
-  }
-
-  return crc;
+  // 16bit-be stream is equivalent to general bit stream
+  return calc_bits(crc, (uint8_t *)data, start_bit, bits);
 }
 
 uint32_t 
@@ -339,17 +324,19 @@ CRC::calc_bits_16le(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits)
 
   if (size)
   {
-    crc = add_bits(crc, *data, 16 - start_bit);
+    // prolog
+    crc = add_bits(crc, le2uint16(*data), 16 - start_bit);
     data++;
-
+    // body
     crc = calc_16le(crc, data, size-1);
     data += size-1;
-
-    crc = add_bits(crc, (*data) >> (16 - end_bit), end_bit);
+    // epilog
+    crc = add_bits(crc, le2uint16(*data) >> (16 - end_bit), end_bit);
   }
   else
   {
-    crc = add_bits(crc, (*data) >> (16 - end_bit), bits);
+    // all stream is in one word
+    crc = add_bits(crc, le2uint16(*data) >> (16 - end_bit), bits);
   }
 
   return crc;
@@ -358,20 +345,93 @@ CRC::calc_bits_16le(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits)
 uint32_t 
 CRC::calc_bits_14be(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits) const
 {
-  return 0;
+  data += start_bit / 14;
+  start_bit %= 14;
+
+  int end_bit = start_bit + bits;
+  int size = end_bit / 14;
+  end_bit %= 14;
+
+  if (size)
+  {
+    // prolog
+    crc = add_bits(crc, be2uint16(*data), 14 - start_bit);
+    data++;
+    // body
+    crc = calc_14be(crc, data, size-1);
+    data += size-1;
+    // epilog
+    crc = add_bits(crc, be2uint16(*data) >> (14 - end_bit), end_bit);
+  }
+  else
+  {
+    // all stream is in one word
+    crc = add_bits(crc, be2uint16(*data) >> (14 - end_bit), bits);
+  }
+
+  return crc;
 }
 uint32_t 
 CRC::calc_bits_14le(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits) const
 {
-  return 0;
+  data += start_bit / 14;
+  start_bit %= 14;
+
+  int end_bit = start_bit + bits;
+  int size = end_bit / 14;
+  end_bit %= 14;
+
+  if (size)
+  {
+    // prolog
+    crc = add_bits(crc, le2uint16(*data), 14 - start_bit);
+    data++;
+    // body
+    crc = calc_14le(crc, data, size-1);
+    data += size-1;
+    // epilog
+    crc = add_bits(crc, le2uint16(*data) >> (14 - end_bit), end_bit);
+  }
+  else
+  {
+    // all stream is in one word
+    crc = add_bits(crc, le2uint16(*data) >> (14 - end_bit), bits);
+  }
+
+  return crc;
 }
 uint32_t 
 CRC::calc_bits_32be(uint32_t crc, uint32_t *data, size_t start_bit, size_t bits) const
 {
-  return 0;
+  // 32bit-be stream is equivalent to general bit stream
+  return calc_bits(crc, (uint8_t *)data, start_bit, bits);
 }
 uint32_t 
 CRC::calc_bits_32le(uint32_t crc, uint32_t *data, size_t start_bit, size_t bits) const
 {
-  return 0;
+  data += start_bit >> 5;
+  start_bit &= 31;
+
+  int end_bit = start_bit + bits;
+  int size = end_bit >> 5;
+  end_bit &= 31;
+
+  if (size)
+  {
+    // prolog
+    crc = add_bits(crc, le2uint32(*data), 32 - start_bit);
+    data++;
+    // body
+    crc = calc_32le(crc, data, size-1);
+    data += size-1;
+    // epilog
+    crc = add_bits(crc, le2uint32(*data) >> (32 - end_bit), end_bit);
+  }
+  else
+  {
+    // all stream is in one word
+    crc = add_bits(crc, le2uint32(*data) >> (32 - end_bit), bits);
+  }
+
+  return crc;
 }
