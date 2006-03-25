@@ -78,8 +78,8 @@ public:
     /////////////////////////////////////////////////////////
     // Transform test
 
-    // passthrough test
-    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "F:\\samples\\dts\\DTS-AudioCD\\Music\\Mendelssohn_2.dts", &t, "F:\\samples\\dts\\DTS-AudioCD\\Music\\Mendelssohn_2.dts");
+    // high-bitrate dts passthrough test
+    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "e:\\samples\\dts\\DTS-AudioCD\\Music\\Mendelssohn_2.dts", &t, "e:\\samples\\dts\\DTS-AudioCD\\Music\\Mendelssohn_2.dts");
     // raw stream -> spdif stream
     compare_file(log, Speakers(FORMAT_AC3, 0, 0), "test.ac3", &t, "test.ac3.spdif");
     compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts", &t, "test.dts.spdif");
