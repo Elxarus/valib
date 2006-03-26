@@ -79,6 +79,7 @@ PSParser::PSParser()
 void
 PSParser::reset()
 {
+  scanner.set_standard(SYNCMASK_PS);
   state = state_sync;
   data_size = 0;
 
@@ -236,6 +237,21 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
       case state_sync:
       {
         REQUIRE(4);
+
+        if (!scanner.get_sync(header))
+        {
+          size_t gone = scanner.scan(header, header + 4, data_size - 4);
+          data_size -= gone;
+          memmove(header + 4, header + 4 + gone, data_size);
+
+          if (!scanner.get_sync(header))
+          {
+            gone = scanner.scan(header, *buf, end - *buf);
+            *buf += gone;
+            if (!scanner.get_sync(header))
+              return 0;
+          }
+        }
 
         // syncword
         if (header[0] != 0 || header[1] != 0 || header[2] != 1)

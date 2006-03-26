@@ -33,10 +33,12 @@
 
 #include "defs.h"
 #include "spk.h"
+#include "syncscan.h"
 
 class PSParser
 {
 private: // private data
+  SyncScan scanner;
   enum { state_sync, state_header, state_drop, state_payload } state;
   size_t data_size;     // data size for internal use
 
