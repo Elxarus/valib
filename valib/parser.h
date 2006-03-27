@@ -170,7 +170,13 @@ protected:
 
   size_t    frames;
   size_t    errors;
-
+/*
+  // functions to override
+  virtual size_t header_size() const = 0;
+  virtual size_t frame_size(uint8_t *hdr) const = 0;
+  virtual bool   compare_headers(uint8_t *hdr1, uint8_t *hdr2) const = 0;
+  virtual bool   load_header() = 0;
+*/
   // Functions to override
   virtual size_t header_size() const = 0;
   virtual bool   load_header(uint8_t *_buf) = 0;

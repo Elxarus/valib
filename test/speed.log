@@ -106,3 +106,35 @@ Mem:	512 MB
 * Spdifer speed on file test.all.spdif: 66MB/s, Data: 4375, Empty: 250
 * Total time: 1:45
 
+-------------------------------------------------------------------------------
+Date:	2006/02/26 05:30
+Host:	VAL
+OS:	Microsoft Windows XP Professional
+CPU:	2 Processor(s) Installed.
+CPU:	[01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+CPU:	[02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+Mem:	2ÿ047 MB
+
+* CRC speed (table method): 68MB/s
+* CRC byte stream speed: 300MB/s
+* CRC 14bit BE speed: 252MB/s
+* CRC 14bit LE speed: 280MB/s
+* CRC 16bit BE speed: 300MB/s
+* CRC 16bit LE speed: 300MB/s
+* CRC 32bit BE speed: 300MB/s
+* CRC 32bit LE speed: 300MB/s
+* No CRC: 1061MB/s CRC: 1059MB/s (1.0 times speed diff)
+* No CRC: 472MB/s CRC: 468MB/s (1.0 times speed diff)
+* No CRC: 738MB/s CRC: 202MB/s (3.6 times speed diff)
+* No CRC: 456MB/s CRC: 318MB/s (1.4 times speed diff)
+* No CRC: 465MB/s CRC: 479MB/s (1.0 times speed diff)
+* No CRC: 419MB/s CRC: 433MB/s (1.0 times speed diff)
+* Sync scan speed: 450MB/s, Syncpoints found: 1683
+* Sync scan speed: 460MB/s, Syncpoints found: 1683
+* Demux speed on noise: 460MB/s, Data: 0, Empty: 0
+* Demux speed on file test.all2.pes: 1027MB/s, Data: 240, Empty: 0
+* Spdifer speed on noise: 350MB/s, Data: 0, Empty: 0
+* Spdifer speed on file test.all: 309MB/s, Data: 4375, Empty: 85
+* Spdifer speed on file test.all.spdif: 387MB/s, Data: 4375, Empty: 250
+* Total time: 0:56
+
