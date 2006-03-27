@@ -156,7 +156,7 @@
 
   2) If we need effective sync with more complex conditions we must prepare
      all possible values for each byte. Examples: 
-     a) MPEG Program Stream have fixed syncword 0x00 0x00 0x01 followed by 
+     a) MPEG Program Stream has fixed syncword 0x00 0x00 0x01 followed by 
         a stream number. Allowed stream number are > 0xb8.
      b) AC3 has 2 syncwords: 0x0b 0x77 and 0x77 0x0b (big and low endian).
      c) MPA has fixed syncword 0xfff0 followed by header that has following
@@ -187,7 +187,7 @@
         scan.set(2, 0x0b770000, 0xffff0000);
 
      c) Much of conditions. But all conditions are independent: if we see any
-        of the bytes prohibited we must not sync. So synctable initialization
+        of the bytes prohibited we do not sync. So synctable initialization
         looks complicated but really simple (counting zeros is the most complex
         task here :)
 
@@ -241,7 +241,9 @@
     to 'size'. So position of syncpoint after successful scan may be 
     calculated as: 
 
-      syncpos = buf + gone - count;
+      gone = sync.scan(buf, size);
+      if (sync.get_sync())
+        syncpos = buf + gone - sync.count;
 
     where 
       'gone' - number of bytes returned by scan() function
@@ -257,8 +259,8 @@
   syncpoint found. We're not required to copy data to/from scanner buffer.
   This mode does not use 'syncbuf' and 'count' fields and we must carry about
   our buffer init to avoid false-sync. For example buffer inited by zeros
-  vales is not good choice for MPEG Program Stream. So best way to proceed is
-  to fill buffer with at least 4 bytes of input data and scan the rest.
+  is not good choice for MPEG Program Stream. So best way to proceed is to 
+  fill buffer with at least 4 bytes of input data and scan the rest.
 
   uint32_t get_sync(uint8_t *syncbuf) const
     Fully analogous to get_sync() of internal buffer mode but works with 
@@ -315,13 +317,13 @@
       syncpoints++;
   }
 
-  3) External buffer mode, frame loading algorithm.
+  3) External buffer mode, recommended frame load algorithm.
 
   We may have some data loaded into frame_buf so we need to scan frame buffer
   before scanning of new data.
 
   uint8_t *input_buf;   // input data
-  size_t   intpu_size;  // input data size
+  size_t   input_size;  // input data size
 
   uint8_t *frame_buf;   // frame buffer we load frame to
   size_t frame_data;    // frame buffer data size
@@ -379,7 +381,7 @@
   This module provides 'standard' syncpoints most used in this library: AC3, 
   DTS, MPA. But because of limited number of syncpoints scanned simultaneously 
   syncpoint indexes are divided into several categories. Of course, any 
-  syncpoint index may be used but if we need use standard syncpoints we must 
+  syncpoint index may be used but if we need to use standard syncpoints we must
   use only user-definable syncpoints:
 
   0-7   custom syncpoints (user-definable)
