@@ -50,11 +50,21 @@ protected:
     spk_input = filter->get_input(); // suppress this error report afterwards
 
     // check output format
-    if (!ofdd && (filter->get_output() != spk_output))
-      log->err("[f2] %s: output format was illegaly changed", caller);
+    if (ofdd)
+    {
+      if (stream && filter->get_output() != spk_output)
+        log->err("[x] %s: output format was illegaly changed", caller);
+    }
+    else
+    {
+      if (filter->get_output() != spk_output)
+        log->err("[f2] %s: output format was illegaly changed", caller);
+    }
     spk_output = filter->get_output(); // suppress this error report afterwards
 /*
     // check unininitialized state
+    // commented because filter may have spk_unknown input format and
+    // therefore it may not be empty but have spk_unknonwn input format.
     if ((filter->get_input() == spk_unknown) && !filter->is_empty())
       log->err("[f5] %s: filter is not empty in uninitialized state", caller);
 */
@@ -301,13 +311,13 @@ public:
     if (_chunk->spk != spk)
       log->err("[s1] get_chunk(): get_output() lies");
 
-    check_formats("after get_chunk()");
-
-    // filter has ended the stream
+    // filter has ended a stream
     if (_chunk->eos)
       stream = false;
 
-    // filter starts a stream again
+    check_formats("after get_chunk()");
+
+    // filter continues a stream or starts a new one
     if (!is_empty())
       stream = true;
 
