@@ -26,9 +26,9 @@
 class AudioDecoder : public NullFilter
 {
 protected:
+  Speakers stream_spk;   // stream format
   Speakers out_spk;      // output format
   bool     out_flushing; // inter-stream flushing
-
 
   Sync     sync_helper;
   Parser  *parser; // current parser;

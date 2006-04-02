@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include "decoder.h"
 
-// Decoder should be empty after process() if it was no frame loaded.
-// (because it should report right output format at get_chunk())
-
 static const int format_mask = FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS;
 
 AudioDecoder::AudioDecoder()
@@ -28,6 +25,8 @@ AudioDecoder::reset()
   sync_helper.reset();
   if (parser)
     parser->reset();
+
+  stream_spk = spk_unknown;
   out_spk = spk_unknown;
 }
 
@@ -101,18 +100,29 @@ AudioDecoder::get_chunk(Chunk *_chunk)
   if (!parser) 
     return false;
 
-  // here we may have a frame loaded
-
   if (!parser->is_frame_loaded())
   {
     // flushing (see is_empty())
     _chunk->set_empty(out_spk, 0, 0, flushing);
     flushing = false;
+    return true;
   }
   else if (!parser->decode_frame())
   {
-    // send dummy chunk
-    _chunk->set_empty(out_spk, 0, 0, flushing);
+    // decoding error
+    // send dummy chunk and load next frame
+    _chunk->set_empty(out_spk);
+    load_frame();
+    return true;
+  }
+  else if (parser->get_spk() != stream_spk)
+  {
+    // output format change flushing
+    _chunk->set_empty(out_spk, 0, 0, true);
+    stream_spk = parser->get_spk();
+    out_spk = stream_spk;
+    out_spk.format = FORMAT_LINEAR;
+    return true;
   }
   else
   {
@@ -120,9 +130,11 @@ AudioDecoder::get_chunk(Chunk *_chunk)
     _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
     // timimg
     sync_helper.send_sync(_chunk);
+    load_frame();
+    return true;
   }
 
-  load_frame();
+  // never be here
   return true;
 }
 
@@ -134,8 +146,12 @@ AudioDecoder::load_frame()
 
   if (parser->load_frame(&buf_ptr, end_ptr))
   {
-    out_spk = parser->get_spk();
-    out_spk.format = FORMAT_LINEAR;
+    if (stream_spk == spk_unknown)
+    {
+      stream_spk = parser->get_spk();
+      out_spk = stream_spk;
+      out_spk.format = FORMAT_LINEAR;
+    }
     sync_helper.set_syncing(true);
     drop_rawdata(buf_ptr - rawdata);
     return true;
