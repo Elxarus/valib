@@ -288,17 +288,23 @@ DSRenderer::flush()
 
   ///////////////////////////////////////////////////////
   // Determine size of data in playback buffer
+  // data size - size of data to playback
 
   if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
     return;
 
-  data_size = buf_size + cur - play_cur;
-  if (data_size >= buf_size)
-    data_size -= buf_size;
-
-  if (!playing && !data_size)
-    // we have nothing to flush...
-    return;
+  if (cur < play_cur)
+    data_size = buf_size + cur - play_cur;
+  else if (cur > play_cur)
+    data_size = cur - play_cur;
+  else
+  {
+    if (!playing)
+      // we have nothing to flush...
+      return;
+    else
+      data_size = buf_size;
+  }
 
   ///////////////////////////////////////////////////////
   // Sleep until we have half of playback buffer free
@@ -311,6 +317,7 @@ DSRenderer::flush()
 
   /////////////////////////////////////////////////////////
   // Zero the rest of the buffer
+  // data size - size of data to zero
 
   if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
     return;
