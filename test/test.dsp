@@ -83,6 +83,9 @@ LINK32=link.exe
 
 # Name "test - Win32 Release"
 # Name "test - Win32 Debug"
+# Begin Group "tests"
+
+# PROP Default_Filter ""
 # Begin Group "liba52"
 
 # PROP Default_Filter ""
@@ -139,9 +142,6 @@ SOURCE=.\liba52\parse.c
 SOURCE=.\liba52\tables.h
 # End Source File
 # End Group
-# Begin Group "tests"
-
-# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\test_crash.cpp
