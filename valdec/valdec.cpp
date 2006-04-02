@@ -810,6 +810,7 @@ int main(int argc, char *argv[])
   /////////////////////////////////////////////////////
   // Final statistics
 
+  ms = double(cpu_total.get_system_time() * 1000);
   fprintf(stderr, "%2.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \n", 
     file.get_pos(file.relative) * 100, 
     file.get_frames(), file.get_errors(),
