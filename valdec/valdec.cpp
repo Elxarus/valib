@@ -640,7 +640,7 @@ int main(int argc, char *argv[])
     printf("%s\n", info);
   }
 
-  if (mode = mode_nothing)
+  if (mode == mode_nothing)
     return 0;
 
   /////////////////////////////////////////////////////////
