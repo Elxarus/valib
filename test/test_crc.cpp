@@ -309,7 +309,7 @@ public:
           }
 
           // calc message test crc
-          uint32_t crc_test = 0;
+          crc_test = 0;
           crc_test = crc.calc_bits(crc_test, buf, shift, size, bs_type[bs_index]);
 
           // test it
