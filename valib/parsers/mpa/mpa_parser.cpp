@@ -79,7 +79,11 @@ MPAParser::decode_frame()
 
   bool ok = false;
 
-  bitstream.set_ptr(frame + 4 + (hdr.error_protection << 1), bs_type);
+  bitstream.set_ptr(frame, bs_type);
+  bitstream.get(32); // skip header
+  if (hdr.error_protection)
+    bitstream.get(16); // skip crc
+
   switch (bsi.layer)
   {
     case MPA_LAYER_I:  ok = I_decode_frame();  break;
