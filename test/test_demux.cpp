@@ -35,7 +35,7 @@
 
 static const vtime_t time_per_test = 1.0; // 1s per speed test
 static const int noise_size = 10000000;   // use 10MB noise buffer
-static const char *file_pes = "test.all2.pes";
+static const char *file_pes = "a.madp.mix.pes";
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
@@ -68,11 +68,13 @@ public:
     /////////////////////////////////////////////////////////
     // Transform test
 
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.ac3.pes", &t, "test.ac3");
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.dts.pes", &t, "test.dts");
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.mp2.pes", &t, "test.mp2");
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.lpcm.pes", &t, "test.lpcm");
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "test.all2.pes", &t, "test.all2");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mp2.005.pes", &t, "a.mp2.005.mp2");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mp2.002.pes", &t, "a.mp2.002.mp2");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.ac3.03f.pes", &t, "a.ac3.03f.ac3");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.ac3.005.pes", &t, "a.ac3.005.ac3");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.dts.03f.pes", &t, "a.dts.03f.dts");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.pcm.005.pes", &t, "a.pcm.005.lpcm");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", &t, "a.madp.mix.madp");
   }
 
   void speed_noise()

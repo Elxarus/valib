@@ -130,11 +130,11 @@ public:
   {
     log->open_group("Parser error detection test");
 
-    parser_test(&mpa, 500, "test.mp2");
-    parser_test(&mpa, 500, "test.mp2.spdif");
+    parser_test(&mpa, 500, "a.mp2.005.mp2");
+    parser_test(&mpa, 500, "a.mp2.005.spdif");
 
-    parser_test(&ac3, 375, "test.ac3");
-    parser_test(&ac3, 375, "test.ac3.spdif");
+    parser_test(&ac3, 375, "a.ac3.03f.ac3");
+    parser_test(&ac3, 375, "a.ac3.03f.spdif");
 
     ///////////////////////////////////////////////////////
     // Some notes about DTS
@@ -149,8 +149,8 @@ public:
     // Possibly, this test should be moved to parsers test
     // later and do not only scan but decode test also...
 
-    parser_test(&dts, 1125, "test.dts");
-    parser_test(&dts, 1125, "test.dts.spdif");
+    parser_test(&dts, 1125, "a.dts.03f.dts");
+    parser_test(&dts, 1125, "a.dts.03f.spdif");
 
     log->close_group();
   }

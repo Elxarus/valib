@@ -43,8 +43,8 @@ static const vtime_t time_per_test = 1.0; // 1 sec for each speed test
 static const int noise_size = 10000000;
 
 // file speed test
-static const char *file_raw   = "test.all";
-static const char *file_spdif = "test.all.spdif";
+static const char *file_raw   = "a.mad.mix.mad";
+static const char *file_spdif = "a.mad.mix.spdif";
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
@@ -81,15 +81,19 @@ public:
     // high-bitrate dts passthrough test
     compare_file(log, Speakers(FORMAT_DTS, 0, 0), "e:\\samples\\dts\\DTS-AudioCD\\Music\\Mendelssohn_2.dts", &t, "e:\\samples\\dts\\DTS-AudioCD\\Music\\Mendelssohn_2.dts");
     // raw stream -> spdif stream
-    compare_file(log, Speakers(FORMAT_AC3, 0, 0), "test.ac3", &t, "test.ac3.spdif");
-    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts", &t, "test.dts.spdif");
-    compare_file(log, Speakers(FORMAT_MPA, 0, 0), "test.mp2", &t, "test.mp2.spdif");
-    compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "test.all", &t, "test.all.spdif");
+    compare_file(log, Speakers(FORMAT_MPA, 0, 0), "a.mp2.005.mp2", &t, "a.mp2.005.spdif");
+    compare_file(log, Speakers(FORMAT_MPA, 0, 0), "a.mp2.002.mp2", &t, "a.mp2.002.spdif");
+    compare_file(log, Speakers(FORMAT_AC3, 0, 0), "a.ac3.03f.ac3", &t, "a.ac3.03f.spdif");
+    compare_file(log, Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3", &t, "a.ac3.005.spdif");
+    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "a.dts.03f.dts", &t, "a.dts.03f.spdif");
+    compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "a.mad.mix.mad", &t, "a.mad.mix.spdif");
     // spdif stream -> spdif stream
-    compare_file(log, Speakers(FORMAT_AC3, 0, 0), "test.ac3.spdif", &t, "test.ac3.spdif");
-    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "test.dts.spdif", &t, "test.dts.spdif");
-    compare_file(log, Speakers(FORMAT_MPA, 0, 0), "test.mp2.spdif", &t, "test.mp2.spdif");
-    compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "test.all.spdif", &t, "test.all.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mp2.005.spdif", &t, "a.mp2.005.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mp2.002.spdif", &t, "a.mp2.002.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.ac3.03f.spdif", &t, "a.ac3.03f.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.ac3.005.spdif", &t, "a.ac3.005.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.dts.03f.spdif", &t, "a.dts.03f.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif", &t, "a.mad.mix.spdif");
   }
 
   void speed_noise()

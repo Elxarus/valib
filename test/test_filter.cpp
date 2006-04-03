@@ -148,7 +148,9 @@ int test_rules(Log *log)
   Converter      conv_lr(2048);
   Converter      conv_rl(2048);
   AudioDecoder   dec_mpa;
+  AudioDecoder   dec_mpa_mix;
   AudioDecoder   dec_ac3;
+  AudioDecoder   dec_ac3_mix;
   AudioDecoder   dec_dts;
   Demux          demux;
   Spdifer        spdifer;
@@ -209,28 +211,28 @@ int test_rules(Log *log)
   // Rawdata (ofdd) filters
 
   test_rules_filter(log, &dec_mpa, "AudioDecoder (MPA)",
-    Speakers(FORMAT_MPA, MODE_STEREO, 48000), "test.mp2",
-    Speakers(FORMAT_MPA, 0, 0), "test.mp2",
+    Speakers(FORMAT_MPA, MODE_STEREO, 48000), "a.mp2.005.mp2",
+    Speakers(FORMAT_MPA, 0, 0), "a.mp2.002.mp2",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &dec_ac3, "AudioDecoder (AC3)",
-    Speakers(FORMAT_AC3, MODE_STEREO, 48000), "test.ac3",
-    Speakers(FORMAT_AC3, 0, 0), "test.ac3",
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.03f.ac3",
+    Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &dec_dts, "AudioDecoder (DTS)",
-    Speakers(FORMAT_DTS, MODE_STEREO, 48000), "test.dts",
-    Speakers(FORMAT_DTS, 0, 0), "test.dts",
+    Speakers(FORMAT_DTS, MODE_STEREO, 48000), "a.dts.03f.dts",
+    Speakers(FORMAT_DTS, 0, 0), "a.dts.03f.dts",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &demux, "Demuxer",
-    Speakers(FORMAT_PES, 0, 0), "test.all2.pes",
-    Speakers(FORMAT_PES, MODE_STEREO, 48000), "test.ac3.pes",
+    Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
+    Speakers(FORMAT_PES, MODE_STEREO, 48000), "a.ac3.03f.pes",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &spdifer, "Spdifer",
-    Speakers(FORMAT_UNKNOWN, 0, 0), "test.all",
-    Speakers(FORMAT_AC3, 0, 0), "test.ac3",
+    Speakers(FORMAT_UNKNOWN, 0, 0), "a.mad.mix.mad",
+    Speakers(FORMAT_AC3, 0, 0), "a.ac3.03f.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   // Linear format processing filters
