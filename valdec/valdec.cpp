@@ -344,6 +344,9 @@ int main(int argc, char *argv[])
         printf("-nothing : ambigous output mode\n");
         return 1;
       }
+
+      sink = &null;
+      mode = mode_nothing;
       continue;
     }
     
