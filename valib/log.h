@@ -44,9 +44,10 @@ public:
   int     get_total_errors();
   vtime_t get_total_time();
 
+  void status(const char *msg, ...);
   void msg(const char *msg, ...);
   int  err(const char *msg, ...);
-  void status(const char *msg, ...);
+  int  err_close(const char *msg, ...);
 };
 
 

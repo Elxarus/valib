@@ -215,3 +215,19 @@ Log::err(const char *_msg, ...)
   errors[level]++;
   return errors[level];
 }
+
+int 
+Log::err_close(const char *_msg, ...)
+{
+  print_header(level);
+
+  log_print(flags, f, "! error: ");
+  va_list list;
+  va_start(list, _msg);
+  log_print(flags, f, _msg, list);
+  va_end(list);
+  log_print(flags, f, "\n");
+
+  errors[level]++;
+  return close_group();
+}
