@@ -560,6 +560,12 @@ Spdifer::reset()
 }
 
 bool
+Spdifer::is_ofdd() const
+{
+  return true;
+}
+
+bool
 Spdifer::query_input(Speakers _spk) const
 {
   return (FORMAT_MASK(_spk.format) & format_mask) != 0;

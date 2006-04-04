@@ -25,21 +25,15 @@ protected:
   Log    *log;
 
   Speakers spk_input;  // input format
-  bool     ofdd;       // output format is data-dependent
   Speakers spk_output; // output format
 
   bool     stream;     // filter has started a stream
-  bool     flushing;   // filter must flush the started stream
+  bool     flushing;   // filter must flush started stream
 
   void update_formats()
   {
     spk_input = filter->get_input();
     spk_output = filter->get_output();
-
-    // output format may depend on data for some input formats
-    // and may not depend for others so status may change...
-    // see [f3] rule
-    ofdd = (spk_output == spk_unknown);
   }
 
   void check_formats(const char *caller)
@@ -50,7 +44,7 @@ protected:
     spk_input = filter->get_input(); // suppress this error report afterwards
 
     // check output format
-    if (ofdd)
+    if (filter->is_ofdd())
     {
       if (stream && filter->get_output() != spk_output)
         log->err("[x] %s: output format was illegaly changed", caller);
@@ -76,7 +70,7 @@ protected:
 
   void check_reset(const char *caller)
   {
-    if (ofdd && (filter->get_output() != spk_unknown))
+    if (filter->is_ofdd() && (filter->get_output() != spk_unknown))
       log->err("[f1] %s: output format did not change to spk_unknown", caller);
 
     if (!filter->is_empty())
@@ -125,6 +119,12 @@ public:
 
     check_reset("after reset()");
     check_formats("after reset()");
+  }
+
+  bool is_ofdd() const
+  {
+    if (!filter) return false;
+    return filter->is_ofdd();
   }
 
   /////////////////////////////////////////////////////////
@@ -240,9 +240,6 @@ public:
           // formats must stay unchanged
           check_formats("after set_input()");
       }
-      // we cannot know ofdd status on process() format change
-      // so we have to set it to true (do not check output format)
-      ofdd = true;
     }
     else
     {

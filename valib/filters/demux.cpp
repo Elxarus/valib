@@ -71,6 +71,12 @@ Demux::reset()
   ps.reset();
 }
 
+bool
+Demux::is_ofdd() const
+{
+  return true;
+}
+
 bool 
 Demux::query_input(Speakers _spk) const
 {

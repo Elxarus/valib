@@ -103,6 +103,13 @@ AudioProcessor::reset()
   chain.reset();
 }
 
+bool
+AudioProcessor::is_ofdd() const
+{
+  return false;
+}
+
+
 bool 
 AudioProcessor::query_input(Speakers _spk) const
 {

@@ -31,6 +31,13 @@ AudioDecoder::reset()
 }
 
 bool
+AudioDecoder::is_ofdd() const
+{
+  return true;
+}
+
+
+bool
 AudioDecoder::query_input(Speakers _spk) const
 {
   return (FORMAT_MASK(_spk.format) & format_mask) != 0;

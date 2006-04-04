@@ -705,6 +705,7 @@ class Filter: public Sink, public Source
 {
 public:
   virtual void reset() = 0;
+  virtual bool is_ofdd() const = 0;
 
   virtual bool query_input(Speakers spk) const = 0;
   virtual bool set_input(Speakers spk) = 0;
@@ -833,7 +834,12 @@ public:
     time = 0;
     sync = false;
     flushing = false;
-  }                            
+  }
+  
+  virtual bool is_ofdd() const
+  {
+    return false;
+  }
 
   virtual bool query_input(Speakers _spk) const
   { 

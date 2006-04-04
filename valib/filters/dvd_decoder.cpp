@@ -69,6 +69,15 @@ DVDDecoder::reset()
   state_ptr = 0;
 }
 
+bool
+DVDDecoder::is_ofdd() const
+{
+  if (FORMAT_MASK(in_spk.format) & (FORMAT_MASK_LINEAR | FORMAT_CLASS_PCM))
+    return false;
+  else
+    return true;
+}
+
 bool 
 DVDDecoder::query_input(Speakers _spk) const
 {

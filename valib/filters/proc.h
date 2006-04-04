@@ -117,6 +117,7 @@ public:
   // Filter interface
 
   virtual void reset();
+  virtual bool is_ofdd() const;
 
   virtual bool query_input(Speakers spk) const;
   virtual Speakers get_input() const;
