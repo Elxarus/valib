@@ -49,22 +49,20 @@ Format change
 =============
 
 * Forced format change.
+  Buffer size (cycled state, process):
+  * very small buffer (5 bytes)
+  * very large buffer (32Kb)
+
   Filter state:
-  * filter is empty and does not contain data
+  * filter is in clear state
   * filter is full (only set_input())
   * filter is cycled through full state to empty
   * filter is cycled and full again (only set_input())
-  * (ofdd) filter just changed its output format (either full or empty)
-  * (ofdd) filter has changed its output format and cycled
-  * (ofdd) filter has changed its output format and cycled and full (only set_input())
   Methods:
   * set_input()
   * process() with empty chunk
   * process() with data chunk
-  * (ofdd) process() with data chunk with format change
-  Buffer size (cycled state, process):
-  * very small buffer (5 bytes)
-  * very large buffer (32Kb)
+  * (ofdd) process() with data chunk with stream change
   New format:
   * same format
   * new format
@@ -77,12 +75,11 @@ Format change
 
 * Flushing
   Filter state:
-  * filter is empty and does not contain data
+  * filter is in clear state
   * filter is cycled through full state to empty
   Methods:
   * process() with empty eos-chunk
   * process() with data eos-chunk
-  * process() with data eos-chunk with format change
   New format:
   * same format
   * new format
@@ -90,6 +87,28 @@ Format change
 
   Total: 12 cases
 
+
+* OFDD Forced format change
+  Filter state:
+  * filter is in clear state
+  * filter is cycled through full state to empty
+
+  * (ofdd) filter is in pre-stream change format state
+  * (ofdd) filter is in transition state (we may not have this state)
+  * (ofdd) filter is in empty state after stream change
+  * (ofdd) filter is cycled after stream change
+  Methods:
+  * process() with empty chunk
+  * process() with data chunk
+  * process() with empty eos-chunk
+  * process() with data eos-chunk
+  * (ofdd) process() with data chunk with format change (same format only)
+  New format:
+  * same format
+  * new format
+  * unsupported format
+
+  we may need to test set_input() only after stream change
 */
 
 #include "log.h"
@@ -134,14 +153,12 @@ int test_rules(Log *log);
 int test_rules_filter(Log *log, Filter *filter, const char *filter_name, 
   Speakers spk_supported1, const char *file_name1, 
   Speakers spk_supported2, const char *file_name2, 
-  Speakers spk_unsupported, 
-  bool ofdd = false);
+  Speakers spk_unsupported);
 int test_rules_filter_int(Log *log, Filter *filter,
   Speakers spk_supported, const char *filename, 
   Speakers spk_supported2, const char *filename2, 
   Speakers spk_unsupported, 
-  size_t data_size, 
-  size_t format_change1 = 0, size_t format_change2 = 0);
+  size_t data_size);
 
 int test_rules(Log *log)
 {
@@ -223,8 +240,7 @@ int test_rules(Log *log)
   test_rules_filter(log, &dec_mpa_mix, "AudioDecoder (MPA)",
     Speakers(FORMAT_MPA, MODE_STEREO, 48000), "a.mp2.mix.mp2",
     Speakers(FORMAT_MPA, 0, 0), "a.mp2.002.mp2",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000),
-    true);
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &dec_ac3, "AudioDecoder (AC3)",
     Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.03f.ac3",
@@ -234,8 +250,7 @@ int test_rules(Log *log)
   test_rules_filter(log, &dec_ac3_mix, "AudioDecoder (AC3)",
     Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.mix.ac3",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000),
-    true);
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &dec_dts, "AudioDecoder (DTS)",
     Speakers(FORMAT_DTS, MODE_STEREO, 48000), "a.dts.03f.dts",
@@ -245,14 +260,12 @@ int test_rules(Log *log)
   test_rules_filter(log, &demux, "Demuxer",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_PES, MODE_STEREO, 48000), "a.ac3.03f.pes",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000),
-    true);
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &spdifer, "Spdifer",
     Speakers(FORMAT_UNKNOWN, 0, 0), "a.mad.mix.mad",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.03f.ac3",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000),
-    true);
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   // Linear format processing filters
 
@@ -307,8 +320,7 @@ int test_rules(Log *log)
 int test_rules_filter(Log *log, Filter *filter, const char *filter_name, 
   Speakers spk_supported, const char *filename, 
   Speakers spk_supported2, const char *filename2, 
-  Speakers spk_unsupported,
-  bool ofdd)
+  Speakers spk_unsupported)
 {
   const size_t small_data_size = 5;
   const size_t large_data_size = 32768;
@@ -335,169 +347,6 @@ int test_rules_filter(Log *log, Filter *filter, const char *filter_name,
 
   if (f.is_ofdd())
     log->msg("Output format is data-dependent");
-  else if (ofdd)
-  {
-    log->err("OFDD tests are unavailable!");
-    ofdd = false;
-  }
-
-  /////////////////////////////////////////////////////////
-  // Determine stream change positions
-
-  size_t fill_pos = 0;
-  size_t format_change1 = 0;
-  size_t transition_size1 = 0;
-  size_t format_change2 = 0;
-  size_t transition_size2 = 0;
-
-  if (ofdd && !filename)
-  {
-    log->err("Cannot do OFDD tests on noise source");
-    ofdd = false;
-  }
-
-  if (ofdd)
-  {
-    log->msg("Search stream change positions");
-
-    Chunk chunk;
-    NullSink null;
-    bool stream_change;
-
-    RAWSource src(spk_supported, filename, 1);
-    if (!src.is_open())
-      return log->err_close("Cannot open file %s", filename);
-
-    f.reset();
-
-    ///////////////////////////////////////////////////////
-    // find fill point
-
-    while (f.get_output() == spk_unknown)
-    {
-      if (src.is_empty())
-        return log->err_close("cannot find 1st stream");
-
-      if (!src.get_chunk(&chunk))
-        return log->err_close("src.get_chunk() error");
-
-      fill_pos++;
-
-      if (!f.process(&chunk))
-        return log->err("f.process() error");
-
-      while (!f.is_empty())
-        if (!f.get_chunk(&chunk))
-          return log->err("f.get_chunk() error");
-    }
-    Speakers spk1 = f.get_output();
-
-    ///////////////////////////////////////////////////////
-    // find first stream change
-
-    stream_change = false;
-    format_change1 = fill_pos;
-    while (!stream_change)
-    {
-      if (src.is_empty())
-        return log->err_close("cannot find 1st stream change point");
-
-      if (!src.get_chunk(&chunk))
-        return log->err_close("src.get_chunk() error");
-
-      format_change1++;
-
-      if (!f.process(&chunk))
-        return log->err("f.process() error");
-
-      while (!f.is_empty())
-      {
-        if (!f.get_chunk(&chunk))
-          return log->err("f.get_chunk() error");
-        stream_change |= chunk.eos;
-      }
-    }
-  
-    ///////////////////////////////////////////////////////
-    // skip transition (spk_unknown) stage
-
-    format_change2 = format_change1;
-    while (f.get_output() == spk_unknown)
-    {
-      if (src.is_empty())
-        return log->err_close("cannot find 2nd stream");
-
-      if (!src.get_chunk(&chunk))
-        return log->err_close("src.get_chunk() error");
-
-      format_change2++;
-      transition_size1++;
-
-      if (!f.process(&chunk))
-        return log->err("f.process() error");
-
-      while (!f.is_empty())
-        if (!f.get_chunk(&chunk))
-          return log->err("f.get_chunk() error");
-    }
-    Speakers spk2 = f.get_output();
-
-    ///////////////////////////////////////////////////////
-    // find second stream change
-
-    stream_change = false;
-    while (!stream_change)
-    {
-      if (src.is_empty())
-        return log->err_close("cannot find 2nd stream change point");
-
-      if (!src.get_chunk(&chunk))
-        return log->err_close("src.get_chunk() error");
-
-      format_change2++;
-
-      if (!f.process(&chunk))
-        return log->err("f.process() error");
-
-      while (!f.is_empty())
-      {
-        if (!f.get_chunk(&chunk))
-          return log->err("f.get_chunk() error");
-        stream_change |= chunk.eos;
-      }
-    }
-
-    ///////////////////////////////////////////////////////
-    // skip transition (spk_unknown) stage
-
-    while (f.get_output() == spk_unknown)
-    {
-      if (src.is_empty())
-        return log->err_close("cannot find 3rd stream");
-
-      if (!src.get_chunk(&chunk))
-        return log->err_close("src.get_chunk() error");
-
-      transition_size2++;
-
-      if (!f.process(&chunk))
-        return log->err("f.process() error");
-
-      while (!f.is_empty())
-        if (!f.get_chunk(&chunk))
-          return log->err("f.get_chunk() error");
-    }
-    Speakers spk3 = f.get_output();
-
-    log->msg("Initial stream format known at %i: %s %s %i",
-      fill_pos, spk1.format_text(), spk1.mode_text(), spk1.sample_rate);
-
-    log->msg("First stream change at %i to %s %s %i with transition size %i",
-      format_change1, spk2.format_text(), spk2.mode_text(), spk2.sample_rate, transition_size1);
-
-    log->msg("Second stream change at %i to %s %s %i with transition size %i",
-      format_change2, spk3.format_text(), spk3.mode_text(), spk3.sample_rate, transition_size2);
-  }
 
   /////////////////////////////////////////////////////////
   // Format change crash test.
@@ -516,15 +365,13 @@ int test_rules_filter(Log *log, Filter *filter, const char *filter_name,
   test_rules_filter_int(log, filter, 
     spk_supported, filename, 
     spk_supported2, filename2, 
-    spk_unsupported, small_data_size,
-    format_change1, format_change2);
+    spk_unsupported, small_data_size);
 
   log->msg("Large buffer (%i)", large_data_size);
   test_rules_filter_int(log, filter, 
     spk_supported, filename, 
     spk_supported2, filename2, 
-    spk_unsupported, large_data_size,
-    format_change1, format_change2);
+    spk_unsupported, large_data_size);
 
   return log->close_group();
 }
@@ -533,8 +380,8 @@ int test_rules_filter(Log *log, Filter *filter, const char *filter_name,
 int test_rules_filter_int(Log *log, Filter *filter,
   Speakers spk_supported, const char *filename, 
   Speakers spk_supported2, const char *filename2, 
-  Speakers spk_unsupported, size_t data_size,
-  size_t format_change1, size_t format_change2)
+  Speakers spk_unsupported, 
+  size_t data_size)
 {
   TestSource src;
   Chunk chunk;
@@ -894,33 +741,6 @@ int test_rules_filter_int(Log *log, Filter *filter,
   POST_NEW_CYCLE(spk_supported, filename);
 
   /////////////////////////////////////////////////////////
-  // OFDD Forced format change
-  //
-  // Test format change scenarios. Most of work is done by 
-  // FilterTester so we do not explicitly check a filter
-  // to actually change the stream. We just run different
-  // scenarios to force our traps to work...
-  // 
-  // All this tests are done only for OFDD filters and 
-  // after first output format change. I.e. filter is 
-  // initailized, data processed up to first output format
-  // change and only after this test is performed.
-  // 
-  // List of tests:                 format: same new wrong
-  // 1. Empty filter, set_input()            +    +    +
-  // 2. Empty filter, process(empty chunk)   +    +    +
-  // 3. Empty filter, process(data chunk)    +    +    +  
-  // 4. Full filter, set_input()             +    +    +   
-  // 5. Cycled filter, set_input()           +    +    +   
-  // 6. Cycled filter, process(empty chunk)  -    +    +   
-  // 7. Cycled filter, process(data chunk)   -    +    +   
-  // 8. Cycled full filter, set_input()      +    +    +
-  //
-  // Total scenarios: 22
-  /////////////////////////////////////////////////////////
-
-
-  /////////////////////////////////////////////////////////
   // Flushing
   //
   // Test flushing scenarios. Most of work is done by 
@@ -1082,115 +902,10 @@ int test_rules_filter_int(Log *log, Filter *filter,
   chunk.eos = true;
   PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
 
-
-  /////////////////////////////////////////////////////////
-  // OFDD tests ONLY
-
-  if (format_change1)
-  {
-    TestSource src2;
-    Speakers pre_spk;
-    Speakers post_spk;
-
-    /////////////////////////////////////////////////////////
-    // Flushing 5. 
-    // Empty filter, process(data chunk with format change)
-
-    log->msg("Flushing 5. Empty filter, process(data chunk with format change)");
-
-    // 5.1 same format
-    INIT_EMPTY(spk_supported);
-    src.open(spk_supported, filename, format_change1);
-    src.get_chunk(&chunk);
-    chunk.eos = true;
-
-    PROCESS_OK(chunk,               "process(%s %s %i) failed");
-    if (f.is_empty())
-      return log->err("Filter was not filled");
-
-    pre_spk = f.get_output();
-    EMPTY_FILTER;
-    post_spk = f.get_output();
-
-    if (pre_spk == post_spk)
-      return log->err("Format was not changed");
- 
-    // 5.2 new format (forced format change and then flush new stream)
-    INIT_EMPTY(spk_supported);
-    src.open(spk_supported2, filename2, format_change1);
-    src.get_chunk(&chunk);
-    chunk.eos = true;
-
-    PROCESS_OK(chunk,               "process(%s %s %i) failed");
-    if (f.is_empty())
-      return log->err("Filter was not filled");
-
-    pre_spk = f.get_output();
-    EMPTY_FILTER;
-    post_spk = f.get_output();
-
-    if (pre_spk == post_spk)
-      return log->err("Format was not changed");
- 
-    // 5.3 unsupported format
-    INIT_EMPTY(spk_supported);
-    src.open(spk_unsupported, 0, format_change1);
-    src.get_chunk(&chunk);
-    chunk.eos = true;
-    PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
-
-    /////////////////////////////////////////////////////////
-    // Flushing 6. 
-    // Cycled filter, process(data chunk with format change)
-
-    log->msg("Flushing 6. Cycled filter, process(data chunk with format change)");
-
-    // 6.1 same format (just flush the stream)
-    INIT_EMPTY(spk_supported);
-    src.open(spk_supported, filename, data_size);
-    FILL_FILTER;
-    EMPTY_FILTER;
-    src.get_chunk(&chunk);
-    chunk.eos = true;
-
-    PROCESS_OK(chunk,               "process(%s %s %i) failed");
-    if (f.is_empty())
-      return log->err("Filter was not filled");
-
-    pre_spk = f.get_output();
-    EMPTY_FILTER;
-    post_spk = f.get_output();
-
-    if (pre_spk == post_spk)
-      return log->err("Format was not changed");
-  
-    // 6.2 new format (forced format change and then flush new stream)
-    INIT_CYCLED(spk_supported2, filename2);
-    src.open(spk_supported, filename, format_change1);
-    src.get_chunk(&chunk);
-    chunk.eos = true;
-
-    PROCESS_OK(chunk,               "process(%s %s %i) failed");
-    if (f.is_empty())
-      return log->err("Filter was not filled");
-
-    pre_spk = f.get_output();
-    EMPTY_FILTER;
-    post_spk = f.get_output();
-
-    if (pre_spk == post_spk)
-      return log->err("Format was not changed");
-  
-    // 6.3 unsupported format
-    INIT_CYCLED(spk_supported, filename);
-    src.open(spk_unsupported, 0, format_change1);
-    src.get_chunk(&chunk);
-    chunk.eos = true;
-    PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
-  }
-
   /////////////////////////////////////////////////////////
   // Full processing cycle test. 
+
+  int stream_changes1 = 0;
 
   log->msg("Full processing cycle test");
 
@@ -1199,8 +914,55 @@ int test_rules_filter_int(Log *log, Filter *filter,
   while (!src.is_empty())
   {
     FILL_FILTER;
-    EMPTY_FILTER;
+    while (!f.is_empty())
+    {
+      GET_CHUNK_OK(chunk, "get_chunk() failed");
+      if (chunk.eos)
+        stream_changes1++;
+    }
   }
+
+  stream_changes1--; // do not take in account end of stream
+
+  if (stream_changes1 > 1)
+    log->msg("Number of stream changes: %i", stream_changes1);
+
+  /////////////////////////////////////////////////////////
+  // All at once porcessing
+
+  int stream_changes2 = 0;
+
+  if (filename)
+  {
+    log->msg("All-at-once processing test");
+
+    RAWSource file(spk_supported, filename);
+    if (!file.is_open())
+      return log->err("Cannot open file %s", filename);
+
+    size_t filesize = file.size();
+    file.open(spk_supported, filename, filesize);
+    if (!file.is_open())
+      return log->err("Cannot open file %s at once", filename);
+
+    file.get_chunk(&chunk);
+    chunk.eos = true;
+
+    PROCESS_OK(chunk,               "process(%s %s %i) failed");
+    while (!f.is_empty())
+    {
+      GET_CHUNK_OK(chunk, "get_chunk() failed");
+      if (chunk.eos)
+        stream_changes2++;
+    }
+
+    stream_changes2--; // do not take in account end of stream
+
+    if (stream_changes1 != stream_changes2)
+      log->err("Number of stream changes differ. Full processing: %i. All-at-once: %i", 
+        stream_changes1, stream_changes2);
+  }
+
 
   return 0;
 }
