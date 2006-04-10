@@ -30,10 +30,7 @@ Demux::process()
       // detect stream change
       if ((stream && stream != ps.stream) ||
           (stream && substream && substream != ps.substream))
-      {
-        flushing = true;
         break;
-      }
 
       // update stream info
       stream     = ps.stream;
@@ -117,23 +114,31 @@ Demux::get_chunk(Chunk *_chunk)
   (
     out_spk, 
     out_rawdata, out_size, 
-    sync, time, 
-    flushing
+    sync, time
   );
 
-  if (flushing)
+  // stream change
+  if (ps.spk() != out_spk)
   {
-    // stream is finished
-    // forget about current stream and
-    // possibly change stream format
+    _chunk->eos = true;
+
+    // switch stream
     stream = 0;
     substream = 0;
     out_spk = ps.spk();
   }
 
-  sync = false;
-  flushing = false;
+  // we must not send end-of-stream if there're data left
+  if (!size && flushing)
+  {
+    _chunk->eos = true;
+    flushing = false;
 
+    // go to clear state after flushing
+    reset();
+  }
+
+  sync = false;
   process();
   return true;
 }
