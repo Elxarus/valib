@@ -30,6 +30,7 @@
 #include "filters\decoder.h"
 #include "filters\demux.h"
 #include "filters\spdifer.h"
+#include "parsers\ac3\ac3_enc.h"
 
 // Processing
 #include "filters\agc.h"
@@ -42,5 +43,4 @@
 // Aggregates
 #include "filters\proc.h"
 #include "filters\filter_chain.h"
-#include "filters\dvd_decoder.h"
-
+#include "filter_graph.h"

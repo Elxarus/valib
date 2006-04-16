@@ -247,19 +247,15 @@ SOURCE=..\valib\filters\demux.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\filters\dvd_decoder.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filters\dvd_decoder.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\filters\filter_chain.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\filters\filter_chain.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filter_graph.h
 # End Source File
 # Begin Source File
 

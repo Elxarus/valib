@@ -116,6 +116,8 @@ Format change
 #include "test_source.h"
 #include "all_filters.h"
 
+#include "filter_graph.h"
+
 static const int formats[] = 
 { 
   FORMAT_UNKNOWN, // unspecified format
@@ -188,7 +190,9 @@ int test_rules(Log *log)
   Syncer         dejitter;
 
   // Aggregate filters
-  DVDDecoder     dvd;
+  DVDGraph       dvd;
+  DVDGraph       dvd_spdif;
+
   FilterChain    chain;
   AudioProcessor proc(2048);
 
@@ -203,9 +207,11 @@ int test_rules(Log *log)
   bass_redir_ip.set_enabled(true);
   bass_redir_ib.set_freq(120);
   bass_redir_ib.set_enabled(true);
+  dvd_spdif.use_spdif = true;
 
   log->open_group("Test filters");
 
+/*
   // Base filter
 
   test_rules_filter(log, &null,    "NullFilter", 
@@ -237,7 +243,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_MPA, 0, 0), "a.mp2.002.mp2",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dec_mpa_mix, "AudioDecoder (MPA)",
+  test_rules_filter(log, &dec_mpa_mix, "AudioDecoder (MPA mix)",
     Speakers(FORMAT_MPA, MODE_STEREO, 48000), "a.mp2.mix.mp2",
     Speakers(FORMAT_MPA, 0, 0), "a.mp2.002.mp2",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
@@ -247,7 +253,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dec_ac3_mix, "AudioDecoder (AC3)",
+  test_rules_filter(log, &dec_ac3_mix, "AudioDecoder (AC3 mix)",
     Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.mix.ac3",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
@@ -308,9 +314,18 @@ int test_rules(Log *log)
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
-
+*/
   // Aggregate filters
 
+  test_rules_filter(log, &dvd, "DVDDecoder",
+    Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
+    Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
+    Speakers(FORMAT_OGG, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &dvd_spdif, "DVDDecoder (spdif)",
+    Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
+    Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
+    Speakers(FORMAT_OGG, MODE_STEREO, 48000));
 
   return log->close_group();
 }
@@ -538,7 +553,6 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 1. Empty filter, set_input()            +    +    +
   // 2. Empty filter, process(empty chunk)   +    +    +
   // 3. Empty filter, process(data chunk)    +    +    +  
-  // 3. Empty filter, process(fc chunk)      +    +    +  
   // 4. Full filter, set_input()             +    +    +   
   // 5. Cycled filter, set_input()           +    +    +   
   // 6. Cycled filter, process(empty chunk)  -    +    +   
@@ -593,31 +607,6 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // Empty filter, process(data chunk)
 
   log->msg("Forced format change 3. Empty filter, process(data chunk)");
-
-  // 3.1 - format change to the same format
-  INIT_EMPTY(spk_supported);
-  src.open(spk_supported, filename, data_size);
-  src.get_chunk(&chunk);
-  PROCESS_OK(chunk,               "process(same format: %s %s %i) failed");
-
-  // 3.2 - format change to the new format
-  INIT_EMPTY(spk_supported);
-  src.open(spk_supported2, filename2, data_size);
-  src.get_chunk(&chunk);
-  PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
-
-  // 3.3 - format change to the unsupported format
-  // (use noise source for unsupported format)
-  INIT_EMPTY(spk_supported);
-  src.open(spk_unsupported, 0, data_size);
-  src.get_chunk(&chunk);
-  PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
-
-  /////////////////////////////////////////////////////////
-  // Forced format change 3. 
-  // Empty filter, process(fc chunk)
-
-  log->msg("Forced format change 3. Empty filter, process(fc chunk)");
 
   // 3.1 - format change to the same format
   INIT_EMPTY(spk_supported);
@@ -782,8 +771,8 @@ int test_rules_filter_int(Log *log, Filter *filter,
     if (size)
       log->err("Empty filter generates output on flushing");
   }
-  else
-    log->msg("Empty filter does not pass eos-chunk");
+//  else
+//    log->msg("Empty filter does not pass eos-chunk");
 
   // 1.2 new format (forced format change and then flush new stream)
   INIT_EMPTY(spk_supported);
@@ -800,8 +789,8 @@ int test_rules_filter_int(Log *log, Filter *filter,
     if (size)
       log->err("Empty filter generates output on flushing");
   }
-  else
-    log->msg("Empty filter does not pass eos-chunk");
+//  else
+//    log->msg("Empty filter does not pass eos-chunk");
 
   // 1.3 unsupported format (terminate current stream)
   INIT_EMPTY(spk_supported);
@@ -820,9 +809,9 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
-  if (f.is_empty())
-    log->msg("Filter does not pass eos-chunk");
-  else
+//  if (f.is_empty())
+//    log->msg("Filter does not pass eos-chunk");
+//  else
     EMPTY_FILTER;
  
   // 2.2 new format (forced format change and then flush new stream)
@@ -831,9 +820,9 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
-  if (f.is_empty())
-    log->msg("Filter does not pass eos-chunk");
-  else
+//  if (f.is_empty())
+//    log->msg("Filter does not pass eos-chunk");
+//  else
     EMPTY_FILTER;
 
   // 2.3 unsupported format
@@ -860,9 +849,9 @@ int test_rules_filter_int(Log *log, Filter *filter,
   INIT_CYCLED(spk_supported, filename);
   chunk.set_empty(spk_supported2, false, 0, true);
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
-  if (f.is_empty())
-    log->msg("Filter does not pass eos-chunk");
-  else
+//  if (f.is_empty())
+//    log->msg("Filter does not pass eos-chunk");
+//  else
     EMPTY_FILTER;
 
   // 3.3 unsupported format
@@ -890,9 +879,9 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
-  if (f.is_empty())
-    log->msg("Filter does not pass eos-chunk");
-  else
+//  if (f.is_empty())
+//    log->msg("Filter does not pass eos-chunk");
+//  else
     EMPTY_FILTER;
 
   // 4.3 unsupported format

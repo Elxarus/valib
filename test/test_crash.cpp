@@ -10,7 +10,7 @@
 #include "filters\demux.h"
 #include "filters\spdifer.h"
 #include "filters\decoder.h"
-#include "filters\dvd_decoder.h"
+#include "filter_graph.h"
 
 #include "source\noise.h"
 
@@ -26,7 +26,7 @@ int test_crash(Log *log)
   Demux        demux;
   Spdifer      spdifer;
   AudioDecoder dec;
-  DVDDecoder   dvd;
+  DVDGraph     dvd;
 
   test_crash_filter(log, Speakers(FORMAT_PES,     0, 0), &demux, "Demux");
 
