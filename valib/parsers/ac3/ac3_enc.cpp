@@ -1,5 +1,5 @@
-#include <math.h>
-#include <crtdbg.h>
+#include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 #include "ac3_bitalloc.h"
 #include "ac3_enc.h"
@@ -642,7 +642,7 @@ AC3Enc::encode_frame()
   fsnroffst = (snroffset >> 2) - ((csnroffst - 15) << 4);
 
   // debug:
-  _ASSERT(((((csnroffst - 15) << 4) + fsnroffst) << 2) == snroffset);
+  assert(((((csnroffst - 15) << 4) + fsnroffst) << 2) == snroffset);
   
   // Finished with bit allocation
   ///////////////////////////////////////////////////////////////////
@@ -1043,7 +1043,7 @@ AC3Enc::encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLE
       ngrps = s1;
       break;
 
-    default: _ASSERT(false); // we should never be here;
+    default: assert(false); // we should never be here;
   }
 
   // encode differential exponents
@@ -1093,7 +1093,7 @@ AC3Enc::encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLE
     case EXP_D15:         
       for (s = 1; s < endmant; s++)
       {
-        _ASSERT(exp[s] >= e + expcod[s] - 2);
+        assert(exp[s] >= e + expcod[s] - 2);
 
         exp[s] =
           e += expcod[s] - 2;
@@ -1103,8 +1103,8 @@ AC3Enc::encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLE
     case EXP_D25:
       for (s = 1, s1 = 1; s < endmant; s += 2, s1++)
       {
-        _ASSERT(exp[s+0] >= e + expcod[s1] - 2);
-        _ASSERT(exp[s+1] >= e + expcod[s1] - 2);
+        assert(exp[s+0] >= e + expcod[s1] - 2);
+        assert(exp[s+1] >= e + expcod[s1] - 2);
 
         exp[s+1] = exp[s] = 
           e += expcod[s1] - 2;
@@ -1114,17 +1114,17 @@ AC3Enc::encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLE
     case EXP_D45:
       for (s = 1, s1 = 1; s < endmant; s += 4, s1++)
       {
-        _ASSERT(exp[s+0] >= e + expcod[s1] - 2);
-        _ASSERT(exp[s+1] >= e + expcod[s1] - 2);
-        _ASSERT(exp[s+2] >= e + expcod[s1] - 2);
-        _ASSERT(exp[s+3] >= e + expcod[s1] - 2);
+        assert(exp[s+0] >= e + expcod[s1] - 2);
+        assert(exp[s+1] >= e + expcod[s1] - 2);
+        assert(exp[s+2] >= e + expcod[s1] - 2);
+        assert(exp[s+3] >= e + expcod[s1] - 2);
 
         exp[s+3] = exp[s+2] = exp[s+1] = exp[s] = 
           e += expcod[s1] - 2;
       }
       break;
 
-    default: _ASSERT(false); // we should never be here;
+    default: assert(false); // we should never be here;
   }
 
   // exponent grouping

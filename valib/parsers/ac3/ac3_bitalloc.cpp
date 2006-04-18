@@ -238,7 +238,7 @@ const uint8_t latab[260] =
   0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
-static const int hth[3][50] =
+const int hth[3][50] =
 {
   {                 
     0x04d0, 0x04d0, 0x0440, 0x0400, 0x03e0, 0x03c0, 0x03b0, 0x03b0,  
@@ -267,7 +267,7 @@ static const int hth[3][50] =
   }
 };
 
-static const uint8_t masktab[253] =
+const uint8_t masktab[253] =
 {
    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 
   16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 28, 28, 29, 
@@ -287,7 +287,7 @@ static const uint8_t masktab[253] =
   49, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49, 49 
 };
 
-static const uint8_t bndtab[51] =
+const uint8_t bndtab[51] =
 {
    0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  
   10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  
@@ -297,7 +297,7 @@ static const uint8_t bndtab[51] =
   0
 };
 
-static const uint8_t bndsz[50] =
+const uint8_t bndsz[50] =
 {
    1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  
    1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  
@@ -307,7 +307,7 @@ static const uint8_t bndsz[50] =
 };
 
 
-static const uint8_t baptab[64] = 
+const uint8_t baptab[64] =
 {
    0,  1,  1,  1,  1,  1,  2,  2,  
    3,  3,  3,  4,  4,  5,  5,  6,

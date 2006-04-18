@@ -9,7 +9,12 @@
 
 // constant is number of 100ns intervals between 
 // January 1, 1601 and January 1, 1970.
+
+#if defined(GCC)
+static const __int64 epoch_adj = 0x019db1ded53e8000LL;
+#else
 static const __int64 epoch_adj = 0x019db1ded53e8000;
+#endif
 
 vtime_t utc_time()
 {
@@ -33,7 +38,7 @@ vtime_t local_time()
 
 vtime_t to_local(vtime_t _time)
 {
-  __int64 utc = __int64(_time * 10000000 + epoch_adj);
+  __int64 utc = (__int64)(_time * 10000000 + epoch_adj);
   __int64 local;
 
   FileTimeToLocalFileTime((FILETIME*)&utc, (FILETIME*)&local);
@@ -42,7 +47,7 @@ vtime_t to_local(vtime_t _time)
 
 vtime_t to_utc(vtime_t _time)
 {
-  __int64 local = __int64(_time * 10000000 + epoch_adj);
+  __int64 local = (__int64)(_time * 10000000 + epoch_adj);
   __int64 utc;
 
   LocalFileTimeToFileTime((FILETIME*)&local, (FILETIME*)&utc);

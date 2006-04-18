@@ -11,7 +11,7 @@ static const int node_err = -1;
 
 class FilterGraph : public Filter
 {
-private:
+protected:
   Speakers in_spk;
   Speakers out_spk;
   bool ofdd;

@@ -50,4 +50,4 @@ public:
   virtual bool get_chunk(Chunk *chunk);
 };
 
-#endif;
+#endif
