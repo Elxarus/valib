@@ -1,6 +1,6 @@
 @echo off
 
 cd ..\..\samples\test
-..\..\valib\test\release\test.exe
+..\..\valib\test\test.exe
 move test.log ..\..\valib\test
 cd ..\..\valib\test

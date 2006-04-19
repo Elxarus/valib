@@ -211,7 +211,6 @@ int test_rules(Log *log)
 
   log->open_group("Test filters");
 
-/*
   // Base filter
 
   test_rules_filter(log, &null,    "NullFilter", 
@@ -314,9 +313,9 @@ int test_rules(Log *log)
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
-*/
-  // Aggregate filters
 
+  // Aggregate filters
+/*
   test_rules_filter(log, &dvd, "DVDDecoder",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
@@ -326,7 +325,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
     Speakers(FORMAT_OGG, MODE_STEREO, 48000));
-
+*/
   return log->close_group();
 }
 

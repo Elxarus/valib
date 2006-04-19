@@ -163,8 +163,8 @@ public:
 
   int bytestream_test(int poly, int power, const char *poly_name)
   {
-    const max_size = 16;
-    const max_shift = 16;
+    static const int max_size = 16;
+    static const int max_shift = 16;
 
     int i;
     RNG rng;
@@ -222,8 +222,8 @@ public:
 
   int bitstream_test(int poly, int power, const char *poly_name)
   {
-    const max_size = 16*8;  // in bits!!!
-    const max_shift = 16*8; // in bits!!!
+    static const int max_size = 16*8;  // in bits!!!
+    static const int max_shift = 16*8; // in bits!!!
 
     int i;
     RNG rng;

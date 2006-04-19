@@ -74,8 +74,8 @@ public:
     {
       log->err("s = %0.4f; mant = %.4f (%.4f), exp = %i (%i)", 
         s, 
-        double(sample_mant(s))/2147483648, 
-        double(mant)/2147483648, 
+        double(sample_mant(s))/2147483648.0,
+        double(mant)/2147483648.0,
         sample_exp(s),
         exp);
       return 1;
