@@ -168,6 +168,35 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
   #define swab_s16(i) int16_t(swab_u16(i))
   inline int32_t  swab_s24(int24_t i)  { return swab_s32(i) >> 8; }
 
+#elif defined(_M_IX86) & defined(GCC)
+
+  inline uint32_t swab_u32(uint32_t x)
+  {
+    asm("bswap %0" : "=r" (x) : "0" (x));
+    return x;
+  };
+  
+  inline int32_t swab_s32(int32_t x)
+  {
+    asm("bswap %0" : "=r" (x) : "0" (x));
+    return x;
+  }
+  inline uint16_t swab_u16(uint16_t x)
+  {
+    asm("bswap %0; shr %0, 16" : "=r" (x) : "0" (x));
+    return x;
+  }
+  inline int16_t swab_s16(int16_t x)
+  {
+    asm("bswap %0; shr %0, 16" : "=r" (x) : "0" (x));
+    return x;
+  }
+  inline int32_t swab_s24(int24_t x)
+  {
+    asm("bswap %0; sar %0, 8" : "=r" (x) : "0" (x));
+    return x;
+  }
+
 #elif defined(_M_IX86)
 
   // use asm inline functions

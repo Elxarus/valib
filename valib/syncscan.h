@@ -403,7 +403,7 @@
 #ifndef SYNCSCAN_H
 #define SYNCSCAN_H
 
-#include <defs.h>
+#include "defs.h"
 
 ///////////////////////////////////////////////////////////
 // Syncpoint indexes
