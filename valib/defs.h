@@ -5,22 +5,43 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#include <basetyps.h>
-#include <stddef.h>
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////// COMPILER-DEPENDENT SECTION //////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+// define MSVC-specific keywords to null
+#if !defined(_MSC_VER) && !defined(__forceinline)
+#define __forceinline inline
+#endif
+
+// these headers are required with GCC
+// in MSVC both types are built-in
+#include <stddef.h>     // size_t
+#include <basetyps.h>   // __int64
+
+// MSVC8: disable depreciation warning
+#ifdef _MSC_VER
+  #pragma warning(disable: 4996)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
-// Basic constants
+/////////////////////////////// BASE CONSTANTS ////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// maximum number of channels supported by library
 
 #define NCHANNELS 6
+
+///////////////////////////////////////////////////////////////////////////////
+// pi constant
 
 #ifndef M_PI
   #define M_PI 3.1415926535897932384626433832795029
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
-// Level multipliers
-///////////////////////////////////////////////////////////////////////////////
+// level multipliers
 
 #define LEVEL_PLUS6DB 2.0
 #define LEVEL_PLUS3DB 1.4142135623730951
@@ -28,33 +49,8 @@
 #define LEVEL_45DB    0.5946035575013605
 #define LEVEL_6DB     0.5
 
-
 ///////////////////////////////////////////////////////////////////////////////
-// Audio sample
-///////////////////////////////////////////////////////////////////////////////
-
-#ifndef FLOAT_SAMPLE
-
-  typedef double   sample_t;
-
-#else
-
-  typedef float    sample_t;
-
-  #if _MSC_VER >= 1200
-    // warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-    // warning C4305: 'initializing' : truncation from 'const double' to 'const float'
-    #pragma warning (disable: 4244 4305)
-  #endif
-
-#endif
-
-#define SAMPLE_THRESHOLD (1e-10)
-#define EQUAL_SAMPLES(s1, s2) (fabs(s1 - s2) < SAMPLE_THRESHOLD)
-
-///////////////////////////////////////////////////////////////////////////////
-// Bitstream types
-///////////////////////////////////////////////////////////////////////////////
+// bitstream types
 
 #define BITSTREAM_8     0
 #define BITSTREAM_16BE  1
@@ -64,17 +60,13 @@
 #define BITSTREAM_14BE  5  // DTS bitstream
 #define BITSTREAM_14LE  6  // DTS bitstream
 
-///////////////////////////////////////////////////////////////////////////////
-// GCC vs MSVC
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef GCC
-#define __forceinline inline
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
-// Base word types
+/////////////////////////////// TYPE DEFINITIONS //////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// base word types
 
 typedef signed char      int8_t;
 typedef signed short     int16_t;
@@ -88,7 +80,7 @@ typedef unsigned __int64 uint64_t;
 #pragma pack(push, 1)   // do not justify following structure
 struct int24_t // int24_t is a low-endian structure
 {
-  uint16_t low; 
+  uint16_t low;
   int8_t   high;
 
   int24_t() {}
@@ -111,7 +103,32 @@ struct int24_t // int24_t is a low-endian structure
 #pragma pack(pop)
 
 ///////////////////////////////////////////////////////////////////////////////
-// Other type definitions
+// sample_t - audio sample type
+
+#ifndef FLOAT_SAMPLE
+
+  typedef double   sample_t;
+
+#else
+
+  typedef float    sample_t;
+
+  #if _MSC_VER >= 1200
+    // warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+    // warning C4305: 'initializing' : truncation from 'const double' to 'const float'
+    #pragma warning (disable: 4244 4305)
+  #endif
+
+#endif
+
+#define SAMPLE_THRESHOLD (1e-10)
+#define EQUAL_SAMPLES(s1, s2) (fabs(s1 - s2) < SAMPLE_THRESHOLD)
+
+///////////////////////////////////////////////////////////////////////////////
+// Valib-specific type definitions:
+//
+//   vtime_t    - time type (see vtime.h)
+//   matrix_t   - mixing matrix (see filters\mixer.h)
 ///////////////////////////////////////////////////////////////////////////////
 
 typedef double vtime_t;
@@ -161,14 +178,15 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 
 #if defined(_DEBUG)
 
-  // do not use inline functions for debug version (faaaaster)
+  // do not use inline functions for debug version
+  // it is MUCH faster because in debug version functions are not inlined
   #define swab_u32(i) uint32_t((uint32_t(i) >> 24) | (uint32_t(i) >> 8) & 0xff00 | (uint32_t(i) << 8) & 0xff0000 | (uint32_t(i) << 24))
   #define swab_s32(i) int32_t(swab_u32(i))
   #define swab_u16(i) uint16_t((uint16_t(i) << 8) | (uint16_t(i) >> 8))
   #define swab_s16(i) int16_t(swab_u16(i))
   inline int32_t  swab_s24(int24_t i)  { return swab_s32(i) >> 8; }
 
-#elif defined(_M_IX86) & defined(GCC)
+#elif defined(_M_IX86) && defined(__GNUC__)
 
   inline uint32_t swab_u32(uint32_t x)
   {
@@ -237,12 +255,12 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
   // use general inline functions
   inline uint32_t swab_u32(uint32_t i) { return (i >> 24) | (i >> 8) & 0xff00 | (i << 8) & 0xff0000 | (i << 24); }
   inline int32_t  swab_s32(int32_t i)  { return (int32_t)swab_u32((uint32_t)i); }
-  inline uint16_t swab_u16(uint16_t i) { return (i << 8) | (i >> 8); };
-  inline int16_t  swab_s16(int16_t i)  { return (int16_t)swab_u16((uint16_t)i); };
+  inline uint16_t swab_u16(uint16_t i) { return (i << 8) | (i >> 8); }
+  inline int16_t  swab_s16(int16_t i)  { return (int16_t)swab_u16((uint16_t)i); }
   inline int32_t  swab_s24(int24_t i)  { return swab_s32(i) >> 8; }
 #endif
 
-inline float    swab_float(float f) { uint32_t i = swab_u32(*(uint32_t *)&f); return *(float *)&i; };
+inline float    swab_float(float f) { uint32_t i = swab_u32(*(uint32_t *)&f); return *(float *)&i; }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Byteorder conversion
@@ -276,11 +294,5 @@ inline float    swab_float(float f) { uint32_t i = swab_u32(*(uint32_t *)&f); re
 #define be2uint16(i) swab_u16(i)
 #define le2uint16(i) (i)
 
-
-///////////////////////////////////////////////////////////////////////////////
-// MSVC8: disable depreciation warning
-///////////////////////////////////////////////////////////////////////////////
-
-#pragma warning(disable: 4996)
 
 #endif
