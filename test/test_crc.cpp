@@ -493,7 +493,7 @@ public:
   int speed_test_table(uint8_t *data, size_t size, uint32_t crc_test)
   {
     // table method speed test
-    uint32_t result;
+    uint32_t result = 0;
     CPUMeter cpu;
 
     int runs = 0;
@@ -520,7 +520,7 @@ public:
 
   int speed_test(int bs_type, const char *bs_text, uint8_t *data, size_t size, uint32_t crc_test)
   {
-    uint32_t result;
+    uint32_t result = 0;
     CPUMeter cpu;
 
     int runs = 0;

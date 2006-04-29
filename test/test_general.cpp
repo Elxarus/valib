@@ -139,12 +139,6 @@ public:
     int16_t  *pi16  = (int16_t *)buf;
     uint16_t *pui16 = (uint16_t *)buf;
 
-    int32_t   i32  = 0x01020304;
-    uint32_t  ui32 = 0x01020304;
-    int24_t   i24  = 0x010203;
-    int16_t   i16  = 0x0102;
-    uint16_t  ui16 = 0x0102;
-
     ///////////////////////////////////////////////////////
     // Determine machine endian
 

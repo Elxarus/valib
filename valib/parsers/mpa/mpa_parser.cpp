@@ -409,7 +409,6 @@ MPAParser::II_decode_frame()
   /////////////////////////////////////////////////////////
   // Decode fraction and synthesis
 
-  int clip = 0;  
   sample_t *sptr[MPA_NCH];
 
   for (int i = 0; i < SCALE_BLOCK; i++) 
@@ -560,7 +559,6 @@ MPAParser::I_decode_frame()
 {
   int ch, sb;
   int nch     = bsi.nch;
-  int sblimit = bsi.sblimit;
   int jsbound = bsi.jsbound;
   
   int16_t  bit_alloc[MPA_NCH][SBLIMIT]; 
@@ -606,7 +604,6 @@ MPAParser::I_decode_frame()
   /////////////////////////////////////////////////////////
   // Decode fraction and synthesis
 
-  int clip = 0;
   sample_t *sptr[2];
   for (int i = 0; i < SCALE_BLOCK * SBLIMIT; i += SBLIMIT) 
   {
@@ -630,7 +627,6 @@ MPAParser::I_decode_fraction(
 {
   int sb, ch;
   int nch     = bsi.nch;
-  int sblimit = bsi.sblimit;
   int jsbound = bsi.jsbound;
 
   int sample[MPA_NCH][SBLIMIT];

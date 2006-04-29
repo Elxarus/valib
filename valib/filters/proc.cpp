@@ -7,7 +7,7 @@ static const int format_mask =
   FORMAT_MASK_PCMFLOAT;
 
 AudioProcessor::AudioProcessor(size_t _nsamples)
-:conv1(_nsamples), conv2(_nsamples), mixer(_nsamples)
+:conv1(_nsamples), mixer(_nsamples), conv2(_nsamples)
 {
   rebuild_chain();
 }

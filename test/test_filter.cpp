@@ -512,7 +512,6 @@ int test_rules_filter_int(Log *log, Filter *filter,
   {
     size_t size = 0;
     bool empty_chunks = false;
-    bool buffering = false;
 
     src.open(spk_supported, filename, 1);
     src.get_chunk(&chunk);

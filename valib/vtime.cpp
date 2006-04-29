@@ -10,7 +10,7 @@
 // constant is number of 100ns intervals between 
 // January 1, 1601 and January 1, 1970.
 
-#if defined(GCC)
+#if defined(__GNUC__)
 static const __int64 epoch_adj = 0x019db1ded53e8000LL;
 #else
 static const __int64 epoch_adj = 0x019db1ded53e8000;
