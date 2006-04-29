@@ -88,6 +88,8 @@
 class Parser
 {
 public:
+  virtual ~Parser() {};
+
   virtual void reset() = 0;
 
   // Frame load operations
