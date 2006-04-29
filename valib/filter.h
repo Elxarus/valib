@@ -329,7 +329,13 @@ public:
   /////////////////////////////////////////////////////////
   // Utilities
 
-  Chunk(): spk(spk_unknown), sync(false), time(0), eos(false), size(0), rawdata(0)
+  Chunk():
+    spk(spk_unknown),
+    rawdata(0),
+    size(0),
+    sync(false),
+    time(0),
+    eos(false)
   {}
 
   Chunk(Speakers _spk, 
@@ -526,6 +532,8 @@ public:
 class Sink
 {
 public:
+  virtual ~Sink() {};
+
   virtual bool query_input(Speakers spk) const = 0;
   virtual bool set_input(Speakers spk) = 0;
   virtual Speakers get_input() const = 0;
@@ -576,6 +584,8 @@ public:
 class Source
 {
 public:
+  virtual ~Source() {};
+
   virtual Speakers get_output() const = 0;
   virtual bool is_empty() const = 0;
   virtual bool get_chunk(Chunk *chunk) = 0;
@@ -704,6 +714,8 @@ public:
 class Filter: public Sink, public Source
 {
 public:
+  virtual ~Filter() {};
+
   virtual void reset() = 0;
   virtual bool is_ofdd() const = 0;
 
