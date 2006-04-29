@@ -1,46 +1,53 @@
 /*
-  Basic data types, constants and utility finctions
+  Basic data types, compiler-dependent options, constants and utility finctions
 */
 
 #ifndef DEFS_H
 #define DEFS_H
 
 ///////////////////////////////////////////////////////////////////////////////
-///////////////////////// COMPILER-DEPENDENT SECTION //////////////////////////
+//
+//                        Compiler-dependent section
+//
 ///////////////////////////////////////////////////////////////////////////////
 
-// define MSVC-specific keywords to null
+// __forceinline is MSVC-specific keyword so we have to redefine
+// it to usual inline keyword for other compilers
+// (define it to always-inline attribute for GCC?)
+
 #if !defined(_MSC_VER) && !defined(__forceinline)
-#define __forceinline inline
+  #define __forceinline inline
 #endif
 
 // these headers are required with GCC
 // in MSVC both types are built-in
+
 #include <stddef.h>     // size_t
 #include <basetyps.h>   // __int64
 
 // MSVC8: disable depreciation warning
+
 #ifdef _MSC_VER
   #pragma warning(disable: 4996)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
-/////////////////////////////// BASE CONSTANTS ////////////////////////////////
+//
+//                              Base constants
+//
 ///////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////
+// one of the most important constants:
 // maximum number of channels supported by library
 
 #define NCHANNELS 6
 
-///////////////////////////////////////////////////////////////////////////////
 // pi constant
 
 #ifndef M_PI
   #define M_PI 3.1415926535897932384626433832795029
 #endif
 
-///////////////////////////////////////////////////////////////////////////////
 // level multipliers
 
 #define LEVEL_PLUS6DB 2.0
@@ -49,7 +56,6 @@
 #define LEVEL_45DB    0.5946035575013605
 #define LEVEL_6DB     0.5
 
-///////////////////////////////////////////////////////////////////////////////
 // bitstream types
 
 #define BITSTREAM_8     0
@@ -62,11 +68,12 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/////////////////////////////// TYPE DEFINITIONS //////////////////////////////
+//
+//                              Type definitions
+//
 ///////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////
-// base word types
+// integer types
 
 typedef signed char      int8_t;
 typedef signed short     int16_t;
@@ -103,7 +110,19 @@ struct int24_t // int24_t is a low-endian structure
 #pragma pack(pop)
 
 ///////////////////////////////////////////////////////////////////////////////
+// Valib-specific type definitions:
+//
 // sample_t - audio sample type
+//   All internal audio processing is done with this type. There're 2 sample
+//   types supported now: float and double. To use single-precision float type
+//   define FLOAT_SAMPLE global symbol.
+//
+//   SAMPLE_THRESHOLD - minimum difference between samples
+//   EQUAL_SAMPLES    - macro to compare two samples
+//
+//   vtime_t    - time type (see vtime.h)
+//   matrix_t   - mixing matrix (see filters\mixer.h)
+///////////////////////////////////////////////////////////////////////////////
 
 #ifndef FLOAT_SAMPLE
 
@@ -114,6 +133,8 @@ struct int24_t // int24_t is a low-endian structure
   typedef float    sample_t;
 
   #if _MSC_VER >= 1200
+    // most of tables use double-precision constants
+    // with float type sample it leads to tons of non-informative warnings
     // warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
     // warning C4305: 'initializing' : truncation from 'const double' to 'const float'
     #pragma warning (disable: 4244 4305)
@@ -123,13 +144,6 @@ struct int24_t // int24_t is a low-endian structure
 
 #define SAMPLE_THRESHOLD (1e-10)
 #define EQUAL_SAMPLES(s1, s2) (fabs(s1 - s2) < SAMPLE_THRESHOLD)
-
-///////////////////////////////////////////////////////////////////////////////
-// Valib-specific type definitions:
-//
-//   vtime_t    - time type (see vtime.h)
-//   matrix_t   - mixing matrix (see filters\mixer.h)
-///////////////////////////////////////////////////////////////////////////////
 
 typedef double vtime_t;
 typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
