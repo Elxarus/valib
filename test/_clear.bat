@@ -5,6 +5,7 @@ del *.plg 2> nul
 del *.opt 2> nul
 del *.dep 2> nul
 del Makefile.win 2> nul
+del test.layout 2> nul
 
 rmdir /s /q debug 2> nul
 rmdir /s /q gcc 2> nul
