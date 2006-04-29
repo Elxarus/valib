@@ -19,6 +19,22 @@ int test_proc(Log *log);
 int main(int argc, char **argv)
 {
   Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
+  log.msg("Compilation info: "
+
+#if defined(_MSC_VER)
+  "MSVC %i%s", _MSC_VER,
+#elif defined(__GNUC__)
+  "GCC %s%s", __VERSION__,
+#else
+  "Unknown%s",
+#endif
+
+#ifdef _DEBUG
+  " (Debug)");
+#elif
+  " (Release)");
+#endif
+
   log.open_group("Test session");
 
   test_general(&log);
