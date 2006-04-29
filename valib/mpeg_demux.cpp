@@ -95,10 +95,10 @@ PSParser::reset()
 bool
 PSParser::is_audio()
 {
-  return (((stream    & 0xe0) != 0xc0) ||   // MPEG audio stream
-          ((substream & 0xf8) != 0x80) ||   // AC3 audio substream
-          ((substream & 0xf8) != 0x88) ||   // DTS audio substream
-          ((substream & 0xf8) != 0xA0));    // LPCM audio substream
+  return (((stream    & 0xe0) == 0xc0) ||   // MPEG audio stream
+          ((substream & 0xf8) == 0x80) ||   // AC3 audio substream
+          ((substream & 0xf8) == 0x88) ||   // DTS audio substream
+          ((substream & 0xf8) == 0xA0));    // LPCM audio substream
 }
 
 Speakers 
