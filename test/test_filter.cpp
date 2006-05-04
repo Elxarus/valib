@@ -62,8 +62,8 @@ Format change
   * set_input()
   * process() with empty chunk
   * process() with data chunk
-  * (ofdd) process() with data chunk with stream change
   New format:
+  * dummy
   * same format
   * new format
   * unsupported format
@@ -547,17 +547,17 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // this cycle are not tested yet. Tests 5-7 use post 
   // cycle to ensure filter state correctness.
   //
-  // List of tests:                 format: same new wrong
-  // 1. Empty filter, set_input()            +    +    +
-  // 2. Empty filter, process(empty chunk)   +    +    +
-  // 3. Empty filter, process(data chunk)    +    +    +  
-  // 4. Full filter, set_input()             +    +    +   
-  // 5. Cycled filter, set_input()           +    +    +   
-  // 6. Cycled filter, process(empty chunk)  -    +    +   
-  // 7. Cycled filter, process(data chunk)   -    +    +   
-  // 8. Cycled full filter, set_input()      +    +    +
+  // List of tests:                 format: same new wrong dummy
+  // 1. Empty filter, set_input()            +    +    +     -
+  // 2. Empty filter, process(empty chunk)   +    +    +     +
+  // 3. Empty filter, process(data chunk)    +    +    +     +
+  // 4. Full filter, set_input()             +    +    +     -
+  // 5. Cycled filter, set_input()           +    +    +     -
+  // 6. Cycled filter, process(empty chunk)  -    +    +     +
+  // 7. Cycled filter, process(data chunk)   -    +    +     +
+  // 8. Cycled full filter, set_input()      +    +    +     -
   //
-  // Total scenarios: 22
+  // Total scenarios: 26
   /////////////////////////////////////////////////////////
 
 
@@ -600,6 +600,11 @@ int test_rules_filter_int(Log *log, Filter *filter,
   chunk.set_empty(spk_unsupported);
   PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
 
+  // 2.4 - dummy processing
+  INIT_EMPTY(spk_supported);
+  chunk.set_empty(spk_unknown);
+  PROCESS_OK(chunk,               "process(dummy) failed");
+
   /////////////////////////////////////////////////////////
   // Forced format change 3. 
   // Empty filter, process(data chunk)
@@ -624,6 +629,13 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.open(spk_unsupported, 0, data_size);
   src.get_chunk(&chunk);
   PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
+
+  // 3.4 - dummy processing
+  // (use noise source for unknown format)
+  INIT_EMPTY(spk_supported);
+  src.open(spk_unknown, 0, data_size);
+  src.get_chunk(&chunk);
+  PROCESS_OK(chunk,               "process(dummy) failed");
 
   /////////////////////////////////////////////////////////
   // Forced format change 4. 
@@ -682,6 +694,12 @@ int test_rules_filter_int(Log *log, Filter *filter,
   PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
   POST_NEW_CYCLE(spk_supported, filename);
 
+  // 6.3 - dummy processing
+  INIT_CYCLED(spk_supported, filename);
+  chunk.set_empty(spk_unknown);
+  PROCESS_OK(chunk,               "process(dummy) failed");
+  POST_CYCLE(spk_supported2, filename2);
+
   /////////////////////////////////////////////////////////
   // Forced format change 7.
   // Cycled filter, process(data chunk)
@@ -701,6 +719,14 @@ int test_rules_filter_int(Log *log, Filter *filter,
   src.open(spk_unsupported, 0, data_size);
   src.get_chunk(&chunk);
   PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
+  POST_NEW_CYCLE(spk_supported, filename);
+
+  // 7.3 - dummy processing
+  // (use noise source for unknown format)
+  INIT_CYCLED(spk_supported, filename);
+  src.open(spk_unknown, 0, data_size);
+  src.get_chunk(&chunk);
+  PROCESS_OK(chunk,               "process(dummy) failed");
   POST_NEW_CYCLE(spk_supported, filename);
 
   /////////////////////////////////////////////////////////
