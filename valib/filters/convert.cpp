@@ -258,7 +258,11 @@ Converter::get_output() const
 bool 
 Converter::process(const Chunk *_chunk)
 {
-  FILTER_SAFE(NullFilter::process(_chunk));
+  // we must ignore dummy chunks
+  if (_chunk->spk == spk_unknown)
+    return true;
+
+  FILTER_SAFE(receive_chunk(_chunk));
 
   if (spk.format == FORMAT_LINEAR)
     samples.reorder_from_std(spk, order);

@@ -99,8 +99,11 @@ Delay::reset()
 bool 
 Delay::process(const Chunk *_chunk)
 {
-  if (!receive_chunk(_chunk))
-    return false;
+  // we must ignore dummy chunks
+  if (_chunk->spk == spk_unknown)
+    return true;
+
+  FILTER_SAFE(receive_chunk(_chunk));
 
   if (!enabled)
     return true; 

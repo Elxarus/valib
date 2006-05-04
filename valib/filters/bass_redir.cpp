@@ -123,8 +123,11 @@ BassRedir::set_input(Speakers _spk)
 bool 
 BassRedir::process(const Chunk *_chunk)
 {
-  if (!receive_chunk(_chunk))
-    return false;
+  // we must ignore dummy chunks
+  if (_chunk->spk == spk_unknown)
+    return true;
+
+  FILTER_SAFE(receive_chunk(_chunk));
 
   if (!enabled || !spk.lfe())
     return true;

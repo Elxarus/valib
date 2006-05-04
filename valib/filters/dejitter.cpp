@@ -71,6 +71,10 @@ Syncer::reset()
 bool 
 Syncer::process(const Chunk *_chunk)
 {
+  // we must ignore dummy chunks
+  if (_chunk->spk == spk_unknown)
+    return true;
+
   bool    old_sync = sync;
   vtime_t old_time = time;
 

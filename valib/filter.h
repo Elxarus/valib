@@ -862,8 +862,8 @@ public:
 
   virtual bool set_input(Speakers _spk)
   {
-    reset(); // may be overwritten
-    if (!query_input(_spk)) // may be overwritten
+    reset();                // required because it may be overwritten
+    if (!query_input(_spk)) // required because it may be overwritten
       return false;
 
     spk = _spk;
@@ -877,6 +877,11 @@ public:
 
   virtual bool process(const Chunk *_chunk)
   {
+    // we must ignore dummy chunks
+    if (_chunk->spk == spk_unknown)
+      return true;
+
+    // load chunk data
     return receive_chunk(_chunk);
   }
 

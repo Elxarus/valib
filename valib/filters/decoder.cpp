@@ -64,11 +64,14 @@ AudioDecoder::set_input(Speakers _spk)
 bool 
 AudioDecoder::process(const Chunk *_chunk)
 {
-  if (!NullFilter::process(_chunk))
-    return false;
-
   if (!parser)
     return false;
+
+  // we must ignore dummy chunks
+  if (_chunk->spk == spk_unknown)
+    return true;
+
+  FILTER_SAFE(receive_chunk(_chunk));
 
   sync_helper.receive_sync(sync, time);
   sync = false;

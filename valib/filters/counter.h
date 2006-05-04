@@ -34,7 +34,11 @@ public:
   };
   virtual bool process(const Chunk *_chunk)
   {
-    FILTER_SAFE(NullFilter::receive_chunk(_chunk));
+    // we must ignore dummy chunks
+    if (_chunk->spk == spk_unknown)
+      return true;
+
+    FILTER_SAFE(receive_chunk(_chunk));
     counter += _chunk->size;
     return true;
   };

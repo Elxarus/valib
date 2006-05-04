@@ -62,10 +62,6 @@ protected:
     if ((filter->get_input() == spk_unknown) && !filter->is_empty())
       log->err("[f5] %s: filter is not empty in uninitialized state", caller);
 */
-    // check output format in full state
-    if ((filter->get_output() == spk_unknown) && !filter->is_empty())
-      log->err("[s3] %s: filter generates spk_unknown chunk", caller);
-
   }
 
   void check_reset(const char *caller)
@@ -185,6 +181,7 @@ public:
   bool process(const Chunk *_chunk)
   {
     if (!filter) return false;
+    bool dummy = false;
     bool input_format_change = false;
     bool query = true;
 
@@ -203,7 +200,13 @@ public:
     }
 
     // detect input format change
-    if (_chunk->spk != get_input())
+    if (_chunk->spk == spk_unknown)
+    {
+      // dummy chunk
+      // filter must be empty after processing
+      dummy = true;
+    }
+    else if (_chunk->spk != get_input())
     {
       input_format_change = true;
       query = filter->query_input(_chunk->spk);
@@ -250,6 +253,10 @@ public:
         // formats must stay unchanged
         check_formats("after process()");
     }
+
+    // filter must ignore dummy chunks
+    if (dummy && !is_empty())
+      log->err("process(): filter is not empty after dummy chunk processing");
 
     // filter starts a stream when it fills
     if (!is_empty())

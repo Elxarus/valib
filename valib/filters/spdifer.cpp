@@ -606,6 +606,10 @@ Spdifer::set_input(Speakers _spk)
 bool 
 Spdifer::process(const Chunk *_chunk)
 {
+  // we must ignore dummy chunks
+  if (_chunk->spk == spk_unknown)
+    return true;
+
   FILTER_SAFE(receive_chunk(_chunk));
 
   // receive sync
