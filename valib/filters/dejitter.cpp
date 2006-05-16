@@ -72,7 +72,7 @@ bool
 Syncer::process(const Chunk *_chunk)
 {
   // we must ignore dummy chunks
-  if (_chunk->spk == spk_unknown)
+  if (_chunk->is_dummy())
     return true;
 
   bool    old_sync = sync;

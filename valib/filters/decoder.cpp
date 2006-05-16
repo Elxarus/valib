@@ -68,7 +68,7 @@ AudioDecoder::process(const Chunk *_chunk)
     return false;
 
   // we must ignore dummy chunks
-  if (_chunk->spk == spk_unknown)
+  if (_chunk->is_dummy())
     return true;
 
   FILTER_SAFE(receive_chunk(_chunk));

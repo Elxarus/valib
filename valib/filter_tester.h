@@ -200,7 +200,7 @@ public:
     }
 
     // detect input format change
-    if (_chunk->spk == spk_unknown)
+    if (_chunk->is_dummy())
     {
       // dummy chunk
       // filter must be empty after processing

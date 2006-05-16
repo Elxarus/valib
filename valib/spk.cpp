@@ -5,7 +5,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 /*
 // special-purpose formats
-#define FORMAT_UNKNOWN     0
+#define FORMAT_UNKNOWN     -1
+#define FORMAT_RAWDATA     0
 #define FORMAT_LINEAR      1
 
 // PCM low-endian formats

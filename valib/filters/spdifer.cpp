@@ -111,7 +111,7 @@
 #define SYNC_BUFFER_SIZE     32784  // sync buffer size
 
 // formats supported
-static const int format_mask = FORMAT_MASK_UNKNOWN | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF;
+static const int format_mask = FORMAT_MASK_RAWDATA | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF;
 
 struct spdif_header_t
 {
@@ -577,7 +577,7 @@ Spdifer::set_input(Speakers _spk)
   reset();
   switch (_spk.format)
   {
-    case FORMAT_UNKNOWN:
+    case FORMAT_RAWDATA:
     case FORMAT_SPDIF:
     case FORMAT_PCM16:
       scanner.clear_all();
@@ -607,7 +607,7 @@ bool
 Spdifer::process(const Chunk *_chunk)
 {
   // we must ignore dummy chunks
-  if (_chunk->spk == spk_unknown)
+  if (_chunk->is_dummy())
     return true;
 
   FILTER_SAFE(receive_chunk(_chunk));

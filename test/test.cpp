@@ -31,18 +31,19 @@ int main(int argc, char **argv)
 
 #ifdef _DEBUG
   " (Debug)");
-#elif
+#else
   " (Release)");
 #endif
 
   log.open_group("Test session");
 
   test_general(&log);
-  test_crc(&log);
-  test_syncer(&log);
 
   test_null(&log);
   test_rules(&log);
+
+  test_crc(&log);
+  test_syncer(&log);
 
   test_crash(&log);
   test_demux(&log);

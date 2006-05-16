@@ -268,7 +268,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &spdifer, "Spdifer",
-    Speakers(FORMAT_UNKNOWN, 0, 0), "a.mad.mix.mad",
+    Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.03f.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 

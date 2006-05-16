@@ -55,7 +55,8 @@
   Sink
   ----
 
-  [k1] Input format must be equal to spk_unknown when sink requires 
+  [k1] Input format must be equal to 
+spk_unknown when sink requires 
     initialization (after creation, errors, etc). Others must not call
     processing functions on uninitialized sink.
 
@@ -363,6 +364,17 @@ public:
   }
 
 
+  inline void set_dummy()
+  {
+    spk = spk_unknown;
+    rawdata = 0;
+    samples.zero();
+    size = 0;
+    sync = false;
+    time = 0;
+    eos = false;
+  }
+  
   inline void set_empty(Speakers _spk, 
     bool _sync = false, vtime_t _time = 0, bool _eos  = false)
   {
@@ -429,6 +441,11 @@ public:
   inline void set_eos(bool _eos = true)
   {
     eos = _eos;
+  }
+
+  inline bool is_dummy() const
+  {
+    return spk.format == FORMAT_UNKNOWN;
   }
 
   inline bool is_empty() const
@@ -878,7 +895,7 @@ public:
   virtual bool process(const Chunk *_chunk)
   {
     // we must ignore dummy chunks
-    if (_chunk->spk == spk_unknown)
+    if (_chunk->is_dummy())
       return true;
 
     // load chunk data

@@ -178,7 +178,7 @@ protected:
 
   virtual bool process(const Chunk *_chunk)
   {
-    if (_chunk->spk == spk_unknown)
+    if (_chunk->is_dummy())
       return true;
 
     return write(_chunk);

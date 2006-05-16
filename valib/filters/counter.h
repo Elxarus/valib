@@ -35,7 +35,7 @@ public:
   virtual bool process(const Chunk *_chunk)
   {
     // we must ignore dummy chunks
-    if (_chunk->spk == spk_unknown)
+    if (_chunk->is_dummy())
       return true;
 
     FILTER_SAFE(receive_chunk(_chunk));

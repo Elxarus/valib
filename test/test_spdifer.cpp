@@ -86,7 +86,7 @@ public:
     compare_file(log, Speakers(FORMAT_AC3, 0, 0), "a.ac3.03f.ac3", &t, "a.ac3.03f.spdif");
     compare_file(log, Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3", &t, "a.ac3.005.spdif");
     compare_file(log, Speakers(FORMAT_DTS, 0, 0), "a.dts.03f.dts", &t, "a.dts.03f.spdif");
-    compare_file(log, Speakers(FORMAT_UNKNOWN, 0, 0), "a.mad.mix.mad", &t, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad", &t, "a.mad.mix.spdif");
     // spdif stream -> spdif stream
     compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mp2.005.spdif", &t, "a.mp2.005.spdif");
     compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mp2.002.spdif", &t, "a.mp2.002.spdif");

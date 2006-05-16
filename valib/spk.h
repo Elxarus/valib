@@ -87,7 +87,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // special-purpose formats
-#define FORMAT_UNKNOWN     0
+#define FORMAT_UNKNOWN     (-1)
+#define FORMAT_RAWDATA     0
 #define FORMAT_LINEAR      1
 
 // PCM low-endian formats
@@ -124,7 +125,7 @@
 #define FORMAT_MASK(format)  (1 << format)
 
 // special-purpose format masks
-#define FORMAT_MASK_UNKNOWN      FORMAT_MASK(FORMAT_UNKNOWN)
+#define FORMAT_MASK_RAWDATA      FORMAT_MASK(FORMAT_RAWDATA)
 #define FORMAT_MASK_LINEAR       FORMAT_MASK(FORMAT_LINEAR)
 
 // PCM low-endian format masks
@@ -431,6 +432,7 @@ Speakers::format_text() const
 {
   switch (format)
   {
+    case FORMAT_RAWDATA:     return "Raw data";
     case FORMAT_LINEAR:      return "Linear PCM";
 
     case FORMAT_PCM16:       return "PCM16";
