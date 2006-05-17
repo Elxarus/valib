@@ -339,6 +339,6 @@ AGC::get_chunk(Chunk *_chunk)
   // assert: size == 0 
   // no more input data left to process
 
-  _chunk->set_empty(spk);
+  _chunk->set_dummy();
   return true;
 }

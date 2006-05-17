@@ -312,22 +312,25 @@ public:
     if (!filter->get_chunk(_chunk))
       return false;
 
-    if (_chunk->spk != spk)
-      log->err("[s1] get_chunk(): get_output() lies");
+    if (!_chunk->is_dummy())
+    {
+      if (_chunk->spk != spk)
+        log->err("[s1] get_chunk(): get_output() lies");
 
-    // filter has ended a stream
-    if (_chunk->eos)
-      stream = false;
+      // filter has ended a stream
+      if (_chunk->eos)
+        stream = false;
 
-    check_formats("after get_chunk()");
+      check_formats("after get_chunk()");
 
-    // filter continues a stream or starts a new one
-    if (!is_empty())
-      stream = true;
+      // filter continues a stream or starts a new one
+      if (!is_empty())
+        stream = true;
 
-    // filter must end the stream in flushing mode
-    if (flushing && stream && is_empty())
-      log->err("get_chunk(): filter did not end the stream");
+      // filter must end the stream in flushing mode
+      if (flushing && stream && is_empty())
+        log->err("get_chunk(): filter did not end the stream");
+    }
 
     return true;
   }

@@ -121,7 +121,7 @@ AudioDecoder::get_chunk(Chunk *_chunk)
   {
     // decoding error
     // send dummy chunk and load next frame
-    _chunk->set_empty(out_spk);
+    _chunk->set_dummy();
     load_frame();
     return true;
   }
