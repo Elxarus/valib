@@ -242,9 +242,16 @@ public:
 
   virtual bool process(const Chunk *chunk)
   {
+    if (chunk->is_dummy())
+      return true;
+
     int node = get_next(node_end, chunk->spk);
+
     if (node != next[node_end])
     {
+      if (node == node_err)
+        return false;
+
       FILTER_SAFE(add_node(node_end, chunk->spk));
       FILTER_SAFE(build_chain(node));
     }
