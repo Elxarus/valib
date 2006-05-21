@@ -55,8 +55,7 @@
   Sink
   ----
 
-  [k1] Input format must be equal to 
-spk_unknown when sink requires 
+  [k1] Input format must be equal to spk_unknown when sink requires 
     initialization (after creation, errors, etc). Others must not call
     processing functions on uninitialized sink.
 
