@@ -315,17 +315,17 @@ int test_rules(Log *log)
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
   // Aggregate filters
-/*
-  test_rules_filter(log, &dvd, "DVDDecoder",
+
+  test_rules_filter(log, &dvd, "DVDGraph",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
     Speakers(FORMAT_OGG, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dvd_spdif, "DVDDecoder (spdif)",
+  test_rules_filter(log, &dvd_spdif, "DVDGraph (spdif)",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
     Speakers(FORMAT_OGG, MODE_STEREO, 48000));
-*/
+
   return log->close_group();
 }
 
