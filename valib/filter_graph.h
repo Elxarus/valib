@@ -3,6 +3,7 @@
 
 
 #include "filter.h"
+#include "stdio.h" // snprint
 
 static const int graph_nodes = 32;
  
@@ -21,6 +22,7 @@ protected:
   Filter *filter[graph_nodes];
 
 public:
+  virtual const char *get_name(int node) const = 0;
   virtual const Filter *get_filter(int node) const = 0;
   virtual Filter *init_filter(int node, Speakers spk) = 0;
 
@@ -190,6 +192,43 @@ public:
     return true;
   }
 
+  int chain_text(char *buf, size_t buf_size)
+  {
+    int i;
+    Speakers spk;
+
+    char *buf_ptr = buf;
+    int node = next[node_end];
+
+    if (node != node_end)
+    {
+      spk = filter[node]->get_input();
+
+      if (spk.mask || spk.sample_rate)
+        i = _snprintf(buf_ptr, buf_size, "(%s %s %i)", spk.format_text(), spk.mode_text(), spk.sample_rate);
+      else
+        i = _snprintf(buf_ptr, buf_size, "(%s)", spk.format_text());
+
+      buf_ptr += i;
+      buf_size = (buf_size > i)? buf_size - i: 0;
+    }
+
+    while (node != node_end)
+    {
+      spk = filter[node]->get_output();
+
+      if (spk.mask || spk.sample_rate)
+        i = _snprintf(buf_ptr, buf_size, " -> %s -> (%s %s %i)", get_name(node), spk.format_text(), spk.mode_text(), spk.sample_rate);
+      else
+        i = _snprintf(buf_ptr, buf_size, " -> %s -> (%s)", get_name(node), spk.format_text());
+      buf_ptr += i;
+      buf_size = (buf_size > i)? buf_size - i: 0;
+
+      node = next[node];
+    }
+    return buf_ptr - buf;
+  }
+
   // Filter interface
   virtual void reset()
   {
@@ -350,6 +389,20 @@ protected:
   AC3Enc         enc;
 
   enum state_t { state_input = 1, state_demux, state_pt, state_dec, state_proc, state_enc, state_spdif };
+
+  virtual const char *get_name(int node) const
+  {
+    switch (node)
+    {
+      case state_demux: return "Demux";
+      case state_pt:    return "Spdifer";
+      case state_dec:   return "Decoder";
+      case state_proc:  return "Processor";
+      case state_enc:   return "Encoder";
+      case state_spdif: return "Spdifer";
+    }
+    return 0;
+  }
 
   virtual const Filter *get_filter(int node) const
   {
