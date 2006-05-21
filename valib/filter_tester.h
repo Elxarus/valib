@@ -55,13 +55,10 @@ protected:
         log->err("[f2] %s: output format was illegaly changed", caller);
     }
     spk_output = filter->get_output(); // suppress this error report afterwards
-/*
+
     // check unininitialized state
-    // commented because filter may have spk_unknown input format and
-    // therefore it may not be empty but have spk_unknonwn input format.
     if ((filter->get_input() == spk_unknown) && !filter->is_empty())
       log->err("[f5] %s: filter is not empty in uninitialized state", caller);
-*/
   }
 
   void check_reset(const char *caller)
