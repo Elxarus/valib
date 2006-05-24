@@ -40,7 +40,7 @@ AudioProcessor::set_output(Speakers _spk)
 {
   if (out_spk != _spk)
   {
-    if (!query_spk(_spk)) 
+    if (FORMAT_MASK(_spk.format) & format_mask == 0)
       return false;
 
     out_spk = _spk;
@@ -125,6 +125,9 @@ AudioProcessor::get_input() const
 bool 
 AudioProcessor::process(const Chunk *_chunk)
 {
+  if (_chunk->is_dummy())
+    return true;
+
   if (_chunk->spk != in_spk && !set_input(_chunk->spk))
     return false;
   else
