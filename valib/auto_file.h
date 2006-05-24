@@ -5,6 +5,7 @@
 #ifndef AUTO_FILE_H
 #define AUTO_FILE_H
 
+#include "defs.h"  // rquired to disable depreciation warning in msvc8 (use compiler-dependent options)
 #include <stdio.h>
 
 class AutoFile
