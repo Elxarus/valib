@@ -10,7 +10,7 @@
 #include "filters\demux.h"
 #include "filters\spdifer.h"
 #include "filters\decoder.h"
-#include "filter_graph.h"
+#include "filters\dvd_graph.h"
 
 #include "source\noise.h"
 
@@ -40,15 +40,15 @@ int test_crash(Log *log)
   test_crash_filter(log, Speakers(FORMAT_MPA,     0, 0), &dec, "Decoder");
   test_crash_filter(log, Speakers(FORMAT_DTS,     0, 0), &dec, "Decoder");
 
-  test_crash_filter(log, Speakers(FORMAT_PCM16,   MODE_STEREO, 48000), &dvd, "DVDDecoder");
-  test_crash_filter(log, Speakers(FORMAT_PCM24,   MODE_STEREO, 48000), &dvd, "DVDDecoder");
-  test_crash_filter(log, Speakers(FORMAT_PCM32,   MODE_STEREO, 48000), &dvd, "DVDDecoder");
+  test_crash_filter(log, Speakers(FORMAT_PCM16,   MODE_STEREO, 48000), &dvd, "DVDGraph");
+  test_crash_filter(log, Speakers(FORMAT_PCM24,   MODE_STEREO, 48000), &dvd, "DVDGraph");
+  test_crash_filter(log, Speakers(FORMAT_PCM32,   MODE_STEREO, 48000), &dvd, "DVDGraph");
 
-  test_crash_filter(log, Speakers(FORMAT_AC3,     0, 0), &dvd, "DVDDecoder");
-  test_crash_filter(log, Speakers(FORMAT_MPA,     0, 0), &dvd, "DVDDecoder");
-  test_crash_filter(log, Speakers(FORMAT_DTS,     0, 0), &dvd, "DVDDecoder");
+  test_crash_filter(log, Speakers(FORMAT_AC3,     0, 0), &dvd, "DVDGraph");
+  test_crash_filter(log, Speakers(FORMAT_MPA,     0, 0), &dvd, "DVDGraph");
+  test_crash_filter(log, Speakers(FORMAT_DTS,     0, 0), &dvd, "DVDGraph");
 
-  test_crash_filter(log, Speakers(FORMAT_PES,     0, 0), &dvd, "DVDDecoder");
+  test_crash_filter(log, Speakers(FORMAT_PES,     0, 0), &dvd, "DVDGraph");
 
   return log->close_group();
 }
