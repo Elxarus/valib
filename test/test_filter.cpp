@@ -207,6 +207,7 @@ int test_rules(Log *log)
   bass_redir_ip.set_enabled(true);
   bass_redir_ib.set_freq(120);
   bass_redir_ib.set_enabled(true);
+  proc.set_output(Speakers(FORMAT_PCM16, 0, 0));
   dvd_spdif.use_spdif = true;
 
   log->open_group("Test filters");
@@ -315,6 +316,11 @@ int test_rules(Log *log)
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
   // Aggregate filters
+
+  test_rules_filter(log, &proc, "Processor",
+    Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
   test_rules_filter(log, &dvd, "DVDGraph",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
@@ -602,7 +608,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
 
   // 2.4 - dummy processing
   INIT_EMPTY(spk_supported);
-  chunk.set_empty(spk_unknown);
+  chunk.set_dummy();
   PROCESS_OK(chunk,               "process(dummy) failed");
 
   /////////////////////////////////////////////////////////
@@ -696,7 +702,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
 
   // 6.3 - dummy processing
   INIT_CYCLED(spk_supported, filename);
-  chunk.set_empty(spk_unknown);
+  chunk.set_dummy();
   PROCESS_OK(chunk,               "process(dummy) failed");
   POST_CYCLE(spk_supported2, filename2);
 

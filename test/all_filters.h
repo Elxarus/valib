@@ -43,4 +43,4 @@
 // Aggregates
 #include "filters\proc.h"
 #include "filters\filter_chain.h"
-#include "filter_graph.h"
+#include "filters\dvd_graph.h"
