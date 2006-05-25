@@ -9,6 +9,7 @@ static const int format_mask =
 AudioProcessor::AudioProcessor(size_t _nsamples)
 :conv1(_nsamples), mixer(_nsamples), conv2(_nsamples)
 {
+  user_spk = spk_unknown;
   rebuild_chain();
 }
 
@@ -23,13 +24,13 @@ AudioProcessor::query_spk(Speakers _spk) const
 bool 
 AudioProcessor::set_input(Speakers _spk)
 {
+  reset();
+
   if (!query_spk(_spk)) 
     return false;
 
   in_spk = _spk;
-
-  // todo: add sample rate convertor and remove this
-  out_spk.sample_rate = in_spk.sample_rate;
+  out_spk = user2output(in_spk, user_spk);
 
   rebuild_chain();
   return true;
@@ -43,15 +44,31 @@ AudioProcessor::set_output(Speakers _spk)
     if (FORMAT_MASK(_spk.format) & format_mask == 0)
       return false;
 
-    out_spk = _spk;
-
-    // todo: add sample rate convertor and remove this
-    out_spk.sample_rate = in_spk.sample_rate;
-
+    out_spk = user2output(in_spk, user_spk);
     rebuild_chain();
   }
   return true;
 }
+
+Speakers 
+AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
+{
+  Speakers result = _in_spk;
+  if (_user_spk.format != FORMAT_UNKNOWN)
+  {
+    result.format = _user_spk.format;
+    result.level = _user_spk.level;
+  }
+
+  if (_user_spk.mask)
+    result.mask = _user_spk.mask;
+
+  if (_user_spk.relation)
+    result.relation = _user_spk.relation;
+
+  return result;
+}
+
 
 void 
 AudioProcessor::rebuild_chain()
@@ -68,7 +85,7 @@ AudioProcessor::rebuild_chain()
     spk.sample_rate = in_spk.sample_rate;
 
   // processing chain
-  chain.clear();
+  chain.drop();
   chain.add_back(&in_levels, "Input levels");
   chain.add_back(&mixer,     "Mixer");
   chain.add_back(&bass_redir,"Bass redirection");

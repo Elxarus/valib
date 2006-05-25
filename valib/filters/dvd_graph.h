@@ -22,7 +22,6 @@ public:
     use_spdif = false;
 
     spdif_pt = FORMAT_MASK_AC3;
-    drop_chain();
   };
 
 protected:

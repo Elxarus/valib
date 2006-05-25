@@ -76,14 +76,15 @@
 #include "filters\delay.h"
 #include "filters\dejitter.h"
 #include "filters\convert.h"
-#include "filters\filter_chain.h"
+#include "filter_graph.h"
 
 
 class AudioProcessor : public Filter
 {
 protected:
-  Speakers in_spk;
-  Speakers out_spk;
+  Speakers in_spk;   // actual input format
+  Speakers user_spk; // user-specified format (may be partially-specified)
+  Speakers out_spk;  // actual output format
 
   // filters
   Converter  conv1;
@@ -112,6 +113,7 @@ public:
 
   bool set_input(Speakers spk);
   bool set_output(Speakers spk);
+  Speakers user2output(Speakers in_spk, Speakers user_spk) const;
 
   /////////////////////////////////////////////////////////
   // Filter interface

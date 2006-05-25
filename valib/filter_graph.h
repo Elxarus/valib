@@ -6,26 +6,47 @@
 
 static const int graph_nodes = 32;
  
-static const int node_end = 0; 
 static const int node_err = -1;
+static const int node_end = graph_nodes;
 
 class FilterGraph : public Filter
 {
 protected:
-  Speakers in_spk;
-  Speakers out_spk;
-  bool ofdd;
+  /////////////////////////////////////////////////////////
+  // Two-way filter chain structure
+  //
+  // Last element is a special end-node
+  // node_end index points to the end-node
+  // next[node_end] points to the first node
+  // prev[node_end] points to the last node
+  // filter[node_end] does not exist
 
-  int next[graph_nodes];
-  int prev[graph_nodes];
+  int next[graph_nodes + 1];
+  int prev[graph_nodes + 1];
   Filter *filter[graph_nodes];
 
+  bool ofdd;
+
 public:
+  FilterGraph()
+  {
+    drop_chain();
+  };
+
+  virtual ~FilterGraph()
+  {};
+
+  /////////////////////////////////////////////////////////
+  // Overridable functions
+
   virtual const char *get_name(int node) const = 0;
   virtual const Filter *get_filter(int node) const = 0;
   virtual Filter *init_filter(int node, Speakers spk) = 0;
 
   virtual int get_next(int node, Speakers spk) const = 0;
+
+  /////////////////////////////////////////////////////////
+  // Chain data flow
 
   bool process_internal()
   {
@@ -87,8 +108,6 @@ public:
 
   void drop_chain()
   {
-    in_spk = spk_unknown;
-    out_spk = spk_unknown;
     ofdd = false;
 
     next[node_end] = node_end;
@@ -108,13 +127,12 @@ public:
   bool add_node(int node, Speakers spk)
   {
     ///////////////////////////////////////////////////////
-    // ofdd filter in transition state
-    // drop the rest of the chain and 
-    // set output format to spk_unknown
+    // if ofdd filter is in transition state then drop 
+    // the rest of the chain and set output format to 
+    // spk_unknown
 
     if (spk == spk_unknown)
     {
-      out_spk = spk_unknown;
       ofdd = true;
 
       next[node] = node_end;
@@ -128,8 +146,13 @@ public:
     int next_node = get_next(node, spk);
 
     // runtime protection
-    if ((next_node == node_err) || (next_node >= graph_nodes) || (next_node < 0))
-      return false;
+    // we may check get_next() result only here because
+    // in all other cases wrong get_next() result forces
+    // chain to rebuild and we'll get here anyway
+
+    if (next_node == node_err || next_node != node_end)
+      if (next_node < 0 || next_node >= graph_nodes)
+        return false;
   
     ///////////////////////////////////////////////////////
     // end of the filter chain
@@ -138,7 +161,6 @@ public:
 
     if (next_node == node_end)
     {
-      out_spk = spk;
       next[node] = node_end;
       prev[node_end] = node;
       return true;
@@ -151,11 +173,16 @@ public:
     filter[next_node] = init_filter(next_node, spk);
 
     // runtime protection
+    // must do it BEFORE updating of filter lists
+    // otherwise filter list may be broken
+
     if (!filter[next_node])
       return false;
 
     // init filter
-    // (must do it BEFORE updating of filter lists)
+    // must do it BEFORE updating of filter lists
+    // otherwise filter list may be broken
+
     FILTER_SAFE(filter[next_node]->set_input(spk));
 
     // update ofdd status
@@ -191,9 +218,17 @@ public:
     return true;
   }
 
+  /////////////////////////////////////////////////////////
+  // Print chain
+  //
+  // int chain_text(char *buf, size_t buf_size)
+  // buf - output buffer
+  // buf_size - output buffer size
+  // returns number of printed bytes
+
   int chain_text(char *buf, size_t buf_size)
   {
-    int i;
+    size_t i;
     Speakers spk;
 
     char *buf_ptr = buf;
@@ -228,7 +263,9 @@ public:
     return buf_ptr - buf;
   }
 
+  /////////////////////////////////////////////////////////
   // Filter interface
+
   virtual void reset()
   {
     int node = next[node_end];
@@ -266,7 +303,6 @@ public:
     drop_chain();
     FILTER_SAFE(add_node(node_end, spk));
     FILTER_SAFE(build_chain(next[node_end]));
-    in_spk = spk;
     return true;
   }
 
@@ -329,12 +365,6 @@ public:
     Filter *f = filter[prev[node_end]];
 
     ///////////////////////////////////////////////////////
-    // out_spk may change in process_internal
-    // therefore we must prepare empty chunk now
-
-    chunk->set_empty(out_spk);
-
-    ///////////////////////////////////////////////////////
     // if there're something to output from the last chunk
     // get it...
 
@@ -350,10 +380,110 @@ public:
       return f->get_chunk(chunk);
 
     ///////////////////////////////////////////////////////
-    // return empty chunk (prepared before)
+    // return dummy chunk
+
+    chunk->set_dummy();
 
     return true;
   };
 };
+
+
+class FilterChain : public FilterGraph
+{
+protected:
+  Filter *chain[graph_nodes];
+  char   *desc[graph_nodes];
+  int     chain_size;
+
+public:
+  FilterChain()
+  {
+    chain_size = 0;
+  };
+
+  ~FilterChain()
+  {
+    drop();
+  };
+
+  /////////////////////////////////////////////////////////
+  // FilterChain interface
+
+  bool add_front(Filter *_filter, const char *_desc)
+  {
+    if (chain_size >= graph_nodes)
+      return false;
+
+    for (int i = chain_size; i > 0; i--)
+    {
+      chain[i] = chain[i-1];
+      desc[i] = desc[i-1];
+    }
+
+    chain[0] = _filter;
+    desc[0] = strdup(_desc);
+    chain_size++;
+    return true;
+  }
+
+  bool add_back(Filter *_filter, const char *_desc)
+  {
+    if (chain_size >= graph_nodes)
+      return false;
+
+    chain[chain_size] = _filter;
+    desc[chain_size] = strdup(_desc);
+    chain_size++;
+    return true;
+  }
+
+  void drop()
+  {
+    drop_chain();
+    for (int i = 0; i < chain_size; i++)
+      if (desc[i]) delete desc[i];
+    chain_size = 0;
+  }
+
+  /////////////////////////////////////////////////////////
+  // FilterGraph overrides
+
+  const char *get_name(int _node) const
+  {
+    if (_node >= chain_size)
+      return 0;
+
+    return desc[_node];
+  }
+
+  const Filter *get_filter(int _node) const
+  {
+    if (_node >= chain_size)
+      return 0;
+
+    return chain[_node];
+  }
+
+  Filter *init_filter(int _node, Speakers _spk)
+  {
+    if (_node >= chain_size)
+      return 0;
+
+    return chain[_node];
+  }
+
+  int get_next(int _node, Speakers _spk) const
+  {
+    if (_node == node_end)
+      return chain_size? 0: node_end;
+
+    if (_node >= chain_size - 1)
+      return node_end;
+
+    return _node + 1;
+  }
+};
+
 
 #endif
