@@ -6,7 +6,7 @@
 
 int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter)
 {
-  // if reference format is FORMAT_UNKNOWN then filter output
+  // if reference format is FORMAT_RAWDATA then filter output
   // format is supposed to be raw format (not FORMAT_LINEAR)
 
   // todo: add couters to prevent infinite loop
@@ -48,6 +48,9 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
         SAFE_CALL(src_filter->get_chunk(&so_chunk))
       else
         continue;
+
+      if (so_chunk.is_dummy())
+        continue;
     }
 
     if (!ro_chunk.size)
@@ -67,22 +70,28 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
           SAFE_CALL(ref_filter->get_chunk(&ro_chunk))
         else
           continue;
+
+        if (ro_chunk.is_dummy())
+          continue;
       }
       else
       {
         // try to get data
         if (ref->is_empty()) break;
         SAFE_CALL(ref->get_chunk(&ro_chunk));
+
+        if (ro_chunk.is_dummy())
+          continue;
       }
     }
 
     ///////////////////////////////////////////////////////
     // Check that stream configurstions are equal
-    // Do not check if output is raw and reference format is FORMT_UNKNOWN 
+    // Do not check if output is raw and reference format is FORMAT_RAWDATA 
     // (reference format is unspecified)
 
     if (ro_chunk.spk != so_chunk.spk)
-      if (so_chunk.spk.format == FORMAT_LINEAR || ro_chunk.spk.format != FORMAT_UNKNOWN)
+      if (so_chunk.spk.format == FORMAT_LINEAR || ro_chunk.spk.format != FORMAT_RAWDATA)
         return log->err("Different speaker configurations");
 
     ///////////////////////////////////////////////////////
@@ -166,7 +175,7 @@ int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter,
   RAWSource src;
   RAWSource ref;
 
-  Speakers spk_ref(FORMAT_UNKNOWN, 0, 0);
+  Speakers spk_ref(FORMAT_RAWDATA, 0, 0);
 
   log->msg("Testing transform %s => %s", fn_src, fn_ref);
 
