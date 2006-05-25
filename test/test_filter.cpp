@@ -121,6 +121,7 @@ Format change
 static const int formats[] = 
 { 
   FORMAT_UNKNOWN, // unspecified format
+  FORMAT_RAWDATA,
   FORMAT_LINEAR,
   FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32,
   FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE, 
