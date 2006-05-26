@@ -31,7 +31,7 @@ protected:
   AudioProcessor proc;
   AC3Enc         enc;
 
-  enum state_t { state_input = 1, state_demux, state_pt, state_dec, state_proc, state_enc, state_spdif };
+  enum state_t { state_demux = 0, state_pt, state_dec, state_proc, state_enc, state_spdif };
 
   virtual const char *get_name(int node) const
   {
