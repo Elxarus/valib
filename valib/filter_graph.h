@@ -25,77 +25,23 @@ protected:
   int prev[graph_nodes + 1];
   Filter *filter[graph_nodes];
 
-  bool ofdd;
-
-public:
-  FilterGraph()
-  {
-    drop_chain();
-  };
-
-  virtual ~FilterGraph()
-  {};
-
   /////////////////////////////////////////////////////////
-  // Overridable functions
+  // Build filter chain after the specified node
+  //
+  // bool build_chain(int node)
+  // node - existing node after which we must build 
+  //   the chain
+  // updates nothing (uses add_node() to update the chain)
 
-  virtual const char *get_name(int node) const = 0;
-  virtual const Filter *get_filter(int node) const = 0;
-  virtual Filter *init_filter(int node, Speakers spk) = 0;
-
-  virtual int get_next(int node, Speakers spk) const = 0;
-
-  /////////////////////////////////////////////////////////
-  // Chain data flow
-
-  bool process_internal()
+  bool build_chain(int node)
   {
-    int next_node;
     Speakers spk;
-    Chunk chunk;
-
-    int node = prev[node_end];
     while (node != node_end)
     {
-      /////////////////////////////////////////////////////
-      // find full filter
-
-      if (filter[node]->is_empty())
-      {
-        // we need more data from upstream.
-        node = prev[node];
-        continue;
-      }
-
-      /////////////////////////////////////////////////////
-      // filter is full so get_output() must always
-      // report format of next output chunk and
-      // therefore we can always find next node
-
       spk = filter[node]->get_output();
-      next_node = get_next(node, spk);
-
-      /////////////////////////////////////////////////////
-      // rebuild the filter chain if changed
-
-      if (next_node != node[next])
-      {
-        FILTER_SAFE(build_chain(node));
-        next_node = next[node];
-      }
-
-      /////////////////////////////////////////////////////
-      // process data downstream
-
-      if (next_node != node_end)
-      {
-        FILTER_SAFE(filter[node]->get_chunk(&chunk));
-        FILTER_SAFE(filter[next_node]->process(&chunk));
-      }
-
-      node = next_node;
+      FILTER_SAFE(add_node(node, spk));
+      node = next[node];
     }
-
     return true;
   }
 
@@ -185,38 +131,100 @@ public:
 
     FILTER_SAFE(filter[next_node]->set_input(spk));
 
-    // update ofdd status
-    if (filter[next_node]->is_ofdd())
-      ofdd = true;
-
     // update filter lists
     next[node] = next_node;
     prev[next_node] = node;
     next[next_node] = node_end;
     prev[node_end] = next_node;
 
+    // update ofdd status
+    // aggregate is data-dependent if chain has
+    // at least one ofdd filter
+    ofdd = false;
+    node = next[node_end];
+    while (node != node_end)
+    {
+      ofdd |= filter[node]->is_ofdd();
+      node = next[node];
+    }
+
     return true;
   }
 
   /////////////////////////////////////////////////////////
-  // Build filter chain after the specified node
-  //
-  // bool build_chain(int node)
-  // node - existing node after which we must build 
-  //   the chain
-  // updates nothing (uses add_node() to update the chain)
+  // Chain data flow
 
-  bool build_chain(int node)
+  bool process_internal()
   {
+    int next_node;
     Speakers spk;
+    Chunk chunk;
+
+    int node = prev[node_end];
     while (node != node_end)
     {
+      /////////////////////////////////////////////////////
+      // find full filter
+
+      if (filter[node]->is_empty())
+      {
+        // we need more data from upstream.
+        node = prev[node];
+        continue;
+      }
+
+      /////////////////////////////////////////////////////
+      // filter is full so get_output() must always
+      // report format of next output chunk and
+      // therefore we can always find next node
+
       spk = filter[node]->get_output();
-      FILTER_SAFE(add_node(node, spk));
-      node = next[node];
+      next_node = get_next(node, spk);
+
+      /////////////////////////////////////////////////////
+      // rebuild the filter chain if changed
+
+      if (next_node != node[next])
+      {
+        FILTER_SAFE(build_chain(node));
+        next_node = next[node];
+      }
+
+      /////////////////////////////////////////////////////
+      // process data downstream
+
+      if (next_node != node_end)
+      {
+        FILTER_SAFE(filter[node]->get_chunk(&chunk));
+        FILTER_SAFE(filter[next_node]->process(&chunk));
+      }
+
+      node = next_node;
     }
+
     return true;
   }
+
+protected:
+  bool ofdd;
+
+public:
+  FilterGraph()
+  {
+    drop_chain();
+  };
+
+  virtual ~FilterGraph()
+  {};
+
+  /////////////////////////////////////////////////////////
+  // Overridable functions
+
+  virtual const char *get_name(int node) const = 0;
+  virtual const Filter *get_filter(int node) const = 0;
+  virtual Filter *init_filter(int node, Speakers spk) = 0;
+
+  virtual int get_next(int node, Speakers spk) const = 0;
 
   /////////////////////////////////////////////////////////
   // Print chain
