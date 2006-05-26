@@ -39,11 +39,15 @@ AudioProcessor::set_input(Speakers _spk)
 bool 
 AudioProcessor::set_output(Speakers _spk)
 {
-  if (out_spk != _spk)
+  // now we do not do sample rate conversion
+  _spk.sample_rate = 0;
+
+  if (user_spk != _spk)
   {
     if (FORMAT_MASK(_spk.format) & format_mask == 0)
       return false;
 
+    user_spk = _spk;
     out_spk = user2output(in_spk, user_spk);
     rebuild_chain();
   }
