@@ -23,7 +23,8 @@ protected:
 
   int next[graph_nodes + 1];
   int prev[graph_nodes + 1];
-  Filter *filter[graph_nodes];
+  Filter  *filter[graph_nodes];     // node filter
+  Speakers filter_spk[graph_nodes]; // input format of node filter
 
   /////////////////////////////////////////////////////////
   // Build filter chain after the specified node
@@ -116,18 +117,20 @@ protected:
     // build new filter into the filter chain
 
     // create filter
+
     filter[next_node] = init_filter(next_node, spk);
+    filter_spk[next_node] = spk;
 
     // runtime protection
     // must do it BEFORE updating of filter lists
-    // otherwise filter list may be broken
+    // otherwise filter list may be broken in case of failure
 
     if (!filter[next_node])
       return false;
 
     // init filter
     // must do it BEFORE updating of filter lists
-    // otherwise filter list may be broken
+    // otherwise filter list may be broken in case of failure
 
     FILTER_SAFE(filter[next_node]->set_input(spk));
 
@@ -140,6 +143,7 @@ protected:
     // update ofdd status
     // aggregate is data-dependent if chain has
     // at least one ofdd filter
+
     ofdd = false;
     node = next[node_end];
     while (node != node_end)
@@ -182,9 +186,9 @@ protected:
       next_node = get_next(node, spk);
 
       /////////////////////////////////////////////////////
-      // rebuild the filter chain if changed
+      // rebuild the filter chain if something was changed
 
-      if (next_node != node[next])
+      if (next_node != node[next] || spk != filter_spk[next_node])
       {
         FILTER_SAFE(build_chain(node));
         next_node = next[node];
