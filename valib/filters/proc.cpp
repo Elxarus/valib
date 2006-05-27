@@ -14,32 +14,10 @@ AudioProcessor::AudioProcessor(size_t _nsamples)
 }
 
 bool 
-AudioProcessor::query_spk(Speakers _spk) const
-{
-  return (FORMAT_MASK(_spk.format) & format_mask) && 
-         _spk.sample_rate && 
-         _spk.mask;
-}
-
-bool 
-AudioProcessor::set_input(Speakers _spk)
-{
-  reset();
-
-  if (!query_spk(_spk)) 
-    return false;
-
-  in_spk = _spk;
-  out_spk = user2output(in_spk, user_spk);
-
-  rebuild_chain();
-  return true;
-}
-
-bool 
-AudioProcessor::set_output(Speakers _spk)
+AudioProcessor::set_user(Speakers _spk)
 {
   // now we do not do sample rate conversion
+  // so user format sample rate must be undefined
   _spk.sample_rate = 0;
 
   if (user_spk != _spk)
@@ -58,6 +36,7 @@ Speakers
 AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
 {
   Speakers result = _in_spk;
+
   if (_user_spk.format != FORMAT_UNKNOWN)
   {
     result.format = _user_spk.format;
@@ -134,7 +113,23 @@ AudioProcessor::is_ofdd() const
 bool 
 AudioProcessor::query_input(Speakers _spk) const
 {
-  return query_spk(_spk);
+  return (FORMAT_MASK(_spk.format) & format_mask) && 
+         _spk.sample_rate && 
+         _spk.mask;
+}
+
+bool 
+AudioProcessor::set_input(Speakers _spk)
+{
+  reset();
+  if (!query_input(_spk)) 
+    return false;
+
+  in_spk = _spk;
+  out_spk = user2output(in_spk, user_spk);
+
+  rebuild_chain();
+  return true;
 }
 
 Speakers

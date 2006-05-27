@@ -109,10 +109,7 @@ public:
   size_t get_buffer() const;
   void   set_buffer(size_t nsamples);
  
-  bool query_spk(Speakers spk) const;
-
-  bool set_input(Speakers spk);
-  bool set_output(Speakers spk);
+  bool set_user(Speakers spk);
   Speakers user2output(Speakers in_spk, Speakers user_spk) const;
 
   /////////////////////////////////////////////////////////
@@ -122,6 +119,7 @@ public:
   virtual bool is_ofdd() const;
 
   virtual bool query_input(Speakers spk) const;
+  virtual bool set_input(Speakers spk);
   virtual Speakers get_input() const;
   virtual bool process(const Chunk *chunk);
 
