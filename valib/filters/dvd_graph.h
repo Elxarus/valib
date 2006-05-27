@@ -8,21 +8,41 @@
 #include "filters\spdifer.h"
 #include "parsers\ac3\ac3_enc.h"
 
+///////////////////////////////////////////////////////////
+// SPDIF status constants
+// Zero spdif status means that spdif is disabled
+// Positive spdif status means spdif work status
+// Negative spdif status means that something prevents
+// spdif operation
+
+#define SPDIF_DISABLED            0
+#define SPDIF_PASSTHROUGH         1
+#define SPDIF_ENCODE              2
+#define SPDIF_STEREO_PASSTHROUGH (-1)
+#define SPDIF_CANNOT_ENCODE      (-2)
+#define SPDIF_SINK_REFUSED       (-3)
+
 class DVDGraph : public FilterGraph
 {
 public:
   Speakers user_spk;
+
   bool     use_spdif;
   int      spdif_pt;
+  bool     spdif_stereo_pt;
 
   DVDGraph()
   :proc(4096)
   {
-    user_spk = spk_unknown;
+    user_spk = Speakers(FORMAT_PCM16, 0, 0);
     use_spdif = false;
 
     spdif_pt = FORMAT_MASK_AC3;
+    spdif_stereo_pt = true;
+    spdif_status = SPDIF_DISABLED;
   };
+
+  int get_spdif_status() { return spdif_status; };
 
 protected:
   Demux          demux;
@@ -32,13 +52,18 @@ protected:
   AC3Enc         enc;
 
   enum state_t { state_demux = 0, state_pt, state_dec, state_proc, state_enc, state_spdif };
+  int spdif_status;
+
+
+  /////////////////////////////////////////////////////////////////////////////
+  // FilterGraph overrides
 
   virtual const char *get_name(int node) const
   {
     switch (node)
     {
       case state_demux: return "Demux";
-      case state_pt:    return "Spdifer";
+      case state_pt:    return "Spdifer (passthrough)";
       case state_dec:   return "Decoder";
       case state_proc:  return "Processor";
       case state_enc:   return "Encoder";
@@ -66,31 +91,57 @@ protected:
     switch (node)
     {
       case state_demux: return &demux;
-      case state_pt:    return &spdifer;
+      case state_pt:    
+        spdif_status = SPDIF_PASSTHROUGH;
+        return &spdifer;
+
       case state_dec:   return &dec;
       case state_proc:
       {
-        Speakers proc_out = user_spk;
-        if (proc_out.format == FORMAT_UNKNOWN)
-          proc_out.format = spk.format;
+        Speakers proc_user = user_spk;
 
-        if (proc_out.mask == FORMAT_UNKNOWN)
-          proc_out.mask = spk.mask;
-
-        proc_out.sample_rate = spk.sample_rate;
+        // AC3Encoder accepts only linear format at input
+        // and may refuse some formats...
+        // So we must check if encoding is possible and
+        // force AudioProcessor to produre linear output
 
         if (use_spdif)
         {
-          Speakers enc_spk = proc_out;
+          // Find processour's output format
+
+          Speakers enc_spk = proc.user2output(spk, user_spk);
+          if (enc_spk.is_unknown())
+            return 0;
           enc_spk.format = FORMAT_LINEAR;
-          if (enc.query_input(enc_spk))
-            proc_out = enc_spk;
+
+          if (spdif_stereo_pt && enc_spk.mask == MODE_STEREO)
+          {
+            // Do not encode stereo PCM
+            spdif_status = SPDIF_STEREO_PASSTHROUGH;
+          }
+          else
+          {
+            // Is encoder can encode processor's output?
+            if (enc.query_input(enc_spk))
+            {
+              spdif_status = SPDIF_ENCODE;
+              proc_user.format = FORMAT_LINEAR;
+            }
+            else
+              spdif_status = SPDIF_CANNOT_ENCODE;
+          }
+        }
+        else // if (use_spdif)
+        {
+          spdif_status = SPDIF_DISABLED;
         }
 
-        if (!proc.set_input(spk)) 
+        // Setup audio processor
+
+        if (!proc.set_input(spk))
           return 0;
 
-        if (!proc.set_output(spk)) 
+        if (!proc.set_user(proc_user))
           return 0;
 
         return &proc;
@@ -104,6 +155,14 @@ protected:
 
   virtual int get_next(int node, Speakers spk) const
   {
+    ///////////////////////////////////////////////////////
+    // When get_next() is called graph must guarantee
+    // that all previous filters was initialized
+    // So we may use upstream filters' status
+    // (here we use spdif_status updated at init_filter)
+    // First filter in the chain must not use any
+    // information from other filters (it has no upstream)
+
     switch (node)
     {
       /////////////////////////////////////////////////////
@@ -144,7 +203,15 @@ protected:
 
         return node_err;
 
+      /////////////////////////////////////////////////////
+      // state_pt -> finish
+      // state_pt -> state_dec
+
       case state_pt:
+
+        // Spdifer may return return high-bitrare DTS stream
+        // that is impossible to passthrough
+
         if (spk.format != FORMAT_SPDIF)
           return state_dec;
         else
@@ -158,14 +225,23 @@ protected:
 
       /////////////////////////////////////////////////////
       // state_proc -> state_enc
-      // state_proc -> state_output
+      // state_proc -> finish
 
       case state_proc:
+      {
+        Speakers proc_user = user_spk;
         if (use_spdif)
-          if (enc.query_input(spk))
-            return state_enc;
+        {
+          Speakers enc_spk = proc.user2output(spk, user_spk);
+          if (enc_spk.is_unknown()) return 0;
+          enc_spk.format = FORMAT_LINEAR;
+          if (!spdif_stereo_pt || enc_spk.mask != MODE_STEREO)
+            if (enc.query_input(enc_spk))
+              return state_enc;
+        }
 
         return node_end;
+      }
 
       /////////////////////////////////////////////////////
       // state_enc -> state_spdif
@@ -175,7 +251,7 @@ protected:
 
       /////////////////////////////////////////////////////
       // state_spdif -> state_dec
-      // state_spdif -> state_output
+      // state_spdif -> finish
 
       case state_spdif:
         if (spk.format != FORMAT_SPDIF)
