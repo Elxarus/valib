@@ -74,7 +74,7 @@ int test_proc(Log *log)
       src.set_seed(seed);
       ref.set_seed(seed);
 
-      if (!proc.set_input(spk) || !proc.set_output(spk))
+      if (!proc.set_input(spk) || !proc.set_user(spk))
       {
         log->err("Cannot init processor");
         continue;
