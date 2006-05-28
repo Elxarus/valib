@@ -30,6 +30,8 @@ protected:
   bool     stream;     // filter has started a stream
   bool     flushing;   // filter must flush started stream
 
+  int      streams;    // number of eos chunks found
+
   void update_formats()
   {
     spk_input = filter->get_input();
@@ -98,6 +100,9 @@ public:
     filter = 0;
     log = 0;
   }
+
+  void reset_streams()     { streams = 0;    }
+  int  get_streams() const { return streams; }
 
   void reset()
   {
@@ -316,7 +321,10 @@ public:
 
       // filter has ended a stream
       if (_chunk->eos)
+      {
         stream = false;
+        streams++;
+      }
 
       check_formats("after get_chunk()");
 

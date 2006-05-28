@@ -925,32 +925,25 @@ int test_rules_filter_int(Log *log, Filter *filter,
   /////////////////////////////////////////////////////////
   // Full processing cycle test. 
 
-  int stream_changes1 = 0;
-
   log->msg("Full processing cycle test");
 
+  f.reset_streams();
   INIT_EMPTY(spk_supported);
   src.open(spk_supported, filename, data_size);
   while (!src.is_empty())
   {
     FILL_FILTER;
-    while (!f.is_empty())
-    {
-      GET_CHUNK_OK(chunk, "get_chunk() failed");
-      if (chunk.eos)
-        stream_changes1++;
-    }
+    EMPTY_FILTER;
   }
 
-  stream_changes1--; // do not take in account end of stream
-
-  if (stream_changes1 > 1)
-    log->msg("Number of stream changes: %i", stream_changes1);
+  int streams1 = f.get_streams();
+  if (streams1 < 1)
+    log->msg("Stream was not finished");
+  else if (streams1 > 1)
+    log->msg("Number of streams: %i", streams1);
 
   /////////////////////////////////////////////////////////
-  // All at once porcessing
-
-  int stream_changes2 = 0;
+  // All at once processing
 
   if (filename)
   {
@@ -968,19 +961,16 @@ int test_rules_filter_int(Log *log, Filter *filter,
     file.get_chunk(&chunk);
     chunk.eos = true;
 
+    f.reset_streams();
     PROCESS_OK(chunk,               "process(%s %s %i) failed");
-    while (!f.is_empty())
-    {
-      GET_CHUNK_OK(chunk, "get_chunk() failed");
-      if (chunk.eos)
-        stream_changes2++;
-    }
+    EMPTY_FILTER;
 
-    stream_changes2--; // do not take in account end of stream
-
-    if (stream_changes1 != stream_changes2)
-      log->err("Number of stream changes differ. Full processing: %i. All-at-once: %i", 
-        stream_changes1, stream_changes2);
+    int streams2 = f.get_streams();
+    if (streams2 < 1)
+      log->msg("Stream was not finished");
+    else if (streams1 != streams2)
+      log->err("Number of streams differ. Full processing: %i. All-at-once: %i", 
+        streams1, streams2);
   }
 
 
