@@ -26,7 +26,6 @@ class DVDGraph : public FilterGraph
 {
 public:
   Speakers user_spk;
-
   bool     use_spdif;
   int      spdif_pt;
   bool     spdif_stereo_pt;
@@ -34,7 +33,7 @@ public:
   DVDGraph()
   :proc(4096)
   {
-    user_spk = Speakers(FORMAT_PCM16, 0, 0);
+    user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
     use_spdif = false;
 
     spdif_pt = FORMAT_MASK_AC3;
@@ -107,12 +106,13 @@ protected:
 
         if (use_spdif)
         {
-          // Find processour's output format
+          // Determine encoder's input format
 
           Speakers enc_spk = proc.user2output(spk, user_spk);
           if (enc_spk.is_unknown())
             return 0;
           enc_spk.format = FORMAT_LINEAR;
+          enc_spk.level = 1.0;
 
           if (spdif_stereo_pt && enc_spk.mask == MODE_STEREO)
           {
@@ -126,6 +126,7 @@ protected:
             {
               spdif_status = SPDIF_ENCODE;
               proc_user.format = FORMAT_LINEAR;
+              proc_user.level = 1.0;
             }
             else
               spdif_status = SPDIF_CANNOT_ENCODE;
@@ -235,6 +236,7 @@ protected:
           Speakers enc_spk = proc.user2output(spk, user_spk);
           if (enc_spk.is_unknown()) return 0;
           enc_spk.format = FORMAT_LINEAR;
+          enc_spk.level = 1.0;
           if (!spdif_stereo_pt || enc_spk.mask != MODE_STEREO)
             if (enc.query_input(enc_spk))
               return state_enc;
