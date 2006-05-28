@@ -2,7 +2,8 @@
 #define FILTER_GRAPH_H
 
 #include "filter.h"
-#include "stdio.h" // snprint
+#include "stdio.h"  // snprint
+#include "string.h" // strdup
 
 static const int graph_nodes = 32;
  
