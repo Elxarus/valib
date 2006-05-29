@@ -156,6 +156,10 @@ SOURCE=.\test_demux.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_dvdgraph.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_filter.cpp
 # End Source File
 # Begin Source File
