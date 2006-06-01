@@ -173,6 +173,7 @@ protected:
     {
       next[node] = node_end;
       prev[node_end] = node;
+      filter_spk[node_end] = filter[node]->get_output();
       return true;
     }
 
