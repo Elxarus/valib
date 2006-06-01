@@ -2,6 +2,7 @@
 #include "demux.h"
 
 Demux::Demux()
+:NullFilter(FORMAT_MASK_PES)
 {
   reset();
 }
@@ -72,12 +73,6 @@ bool
 Demux::is_ofdd() const
 {
   return true;
-}
-
-bool 
-Demux::query_input(Speakers _spk) const
-{
-  return _spk.format == FORMAT_PES;
 }
 
 bool 

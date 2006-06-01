@@ -52,15 +52,7 @@ protected:
   convert_t find_conversion(int _format, Speakers _spk) const;
 
 public:
-  Converter(int _nsamples)
-  {
-    convert = 0;
-    format = FORMAT_UNKNOWN;
-    memcpy(order, std_order, sizeof(order));
-    nsamples = _nsamples;
-    out_size = 0;
-    part_size = 0;
-  }
+  Converter(int _nsamples);
 
   /////////////////////////////////////////////////////////
   // Converter interface

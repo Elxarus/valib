@@ -7,6 +7,7 @@
 #define LEVEL_PLUS_100DB 100000.0
 
 AGC::AGC(size_t _nsamples)
+:NullFilter(FORMAT_MASK_LINEAR)
 {
   block       = 0;
 

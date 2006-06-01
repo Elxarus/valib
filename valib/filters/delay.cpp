@@ -11,6 +11,7 @@
 const float sonic_speed = 330; // [m/s]
 
 Delay::Delay()
+:NullFilter(FORMAT_MASK_LINEAR)
 {
   enabled = false;
   units = DELAY_SP;

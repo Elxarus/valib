@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include "decoder.h"
 
-static const int format_mask = FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS;
-
 AudioDecoder::AudioDecoder()
+:NullFilter(FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS)
 {
   parser = 0;
   reset();
@@ -36,12 +35,6 @@ AudioDecoder::is_ofdd() const
   return true;
 }
 
-
-bool
-AudioDecoder::query_input(Speakers _spk) const
-{
-  return (FORMAT_MASK(_spk.format) & format_mask) != 0;
-}
 
 bool
 AudioDecoder::set_input(Speakers _spk)

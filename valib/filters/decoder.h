@@ -55,7 +55,6 @@ public:
 
   virtual void reset();
   virtual bool is_ofdd() const;
-  virtual bool query_input(Speakers spk) const;
   virtual bool set_input(Speakers _spk);
   virtual bool process(const Chunk *chunk);
 

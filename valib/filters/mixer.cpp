@@ -24,6 +24,7 @@ static const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {
 };
 
 Mixer::Mixer(size_t _nsamples)
+:NullFilter(FORMAT_MASK_LINEAR)
 {
   nsamples = _nsamples;
 

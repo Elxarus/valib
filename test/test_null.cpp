@@ -7,13 +7,6 @@
 #include "source\noise.h"
 #include "common.h"
 
-class PassthroughFilter : public NullFilter
-{
-public:
-  PassthroughFilter() {};
-  bool query_input(Speakers _spk) const { return true; }
-};
-
 int test_null(Log *log)
 {
   log->open_group("NullFilter noise passthrough test");
@@ -22,7 +15,7 @@ int test_null(Log *log)
   int seed = 2435346;
   Noise src;
   Noise ref;
-  PassthroughFilter filter;
+  NullFilter filter(-1);
 
   // Rawdata test
   log->msg("Rawdata test");

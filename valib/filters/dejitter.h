@@ -39,6 +39,7 @@ protected:
 
 public:
   Syncer()
+  :NullFilter(FORMAT_MASK_LINEAR)
   {
     time_shift  = 0;
     time_factor = 1.0;

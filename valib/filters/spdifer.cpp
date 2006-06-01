@@ -110,9 +110,6 @@
 #define HEADER_SIZE          16     // header size required to catch syncpoint
 #define SYNC_BUFFER_SIZE     32784  // sync buffer size
 
-// formats supported
-static const int format_mask = FORMAT_MASK_RAWDATA | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF;
-
 struct spdif_header_t
 {
   uint32_t zero1;
@@ -143,6 +140,7 @@ const uint8_t spdif_pause[] =
 };
 
 Spdifer::Spdifer()
+:NullFilter(FORMAT_MASK_RAWDATA | FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS | FORMAT_MASK_SPDIF)
 {
   scanner.set_standard(SYNCMASK_MAD);
   frame_buf.allocate(SYNC_BUFFER_SIZE + SPDIF_MAX_FRAME_SIZE);
@@ -563,12 +561,6 @@ bool
 Spdifer::is_ofdd() const
 {
   return true;
-}
-
-bool
-Spdifer::query_input(Speakers _spk) const
-{
-  return (FORMAT_MASK(_spk.format) & format_mask) != 0;
 }
 
 bool

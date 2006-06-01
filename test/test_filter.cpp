@@ -166,7 +166,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
 int test_rules(Log *log)
 {
   // Base filter
-  NullFilter     null;
+  NullFilter     null(FORMAT_MASK_LINEAR);
 
   // Rawdata filters
   Converter      conv_ll(2048);

@@ -94,6 +94,7 @@ LPF::update()
 ///////////////////////////////////////////////////////////////////////////////
 
 BassRedir::BassRedir()
+:NullFilter(FORMAT_MASK_LINEAR)
 {
   // use default lpf filter setup (passthrough)
   enabled = false;

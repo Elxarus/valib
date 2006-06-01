@@ -783,6 +783,8 @@ protected:
   samples_t samples;
   size_t    size;
 
+  int       format_mask;
+
   inline bool receive_chunk(const Chunk *_chunk)
   {
     // format change
@@ -847,13 +849,14 @@ protected:
   }
 
 public:
-  NullFilter() 
+  NullFilter(int _format_mask) 
   {
     spk  = spk_unknown;
     size = 0;
     time = 0;
     sync = false;
     flushing = false;
+    format_mask = _format_mask;
   }
 
   virtual void reset()
@@ -871,9 +874,11 @@ public:
 
   virtual bool query_input(Speakers _spk) const
   { 
-    // general audio processing filter works only with linear format
-    // channel mask and sample rate must be defined
-    return _spk.format == FORMAT_LINEAR && _spk.mask && _spk.sample_rate;
+    // channel mask and sample rate must be defined for linear format
+    if (_spk.format == FORMAT_LINEAR)
+      return (FORMAT_MASK_LINEAR & format_mask) != 0 && _spk.mask != 0 && _spk.sample_rate != 0;
+    else
+      return (FORMAT_MASK(_spk.format) & format_mask) != 0;
   }
 
   virtual bool set_input(Speakers _spk)

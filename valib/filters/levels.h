@@ -99,6 +99,7 @@ protected:
  
 public:
   Levels(int _nsamples = 1024, int _dbpb = 5)
+  :NullFilter(FORMAT_MASK_LINEAR)
   {
     set_nsamples(_nsamples);
     set_dbpb(_dbpb);

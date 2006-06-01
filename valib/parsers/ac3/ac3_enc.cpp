@@ -92,7 +92,8 @@ const uint16_t fgain_tbl[8]  = { 0x0080, 0x0100, 0x0180, 0x0200, 0x0280, 0x0300,
 
 
 AC3Enc::AC3Enc()
-:mdct(7)
+:NullFilter(0), // use own query_input()
+ mdct(7)
 {
   frames = 0;
   bitrate = 640000;

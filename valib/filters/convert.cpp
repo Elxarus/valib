@@ -51,7 +51,7 @@ inline int16_t s2i16(sample_t s) { return (int16_t)s; }
 
 typedef void (Converter::*convert_t)();
 static const int formats_tbl[] = { FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE, FORMAT_PCMFLOAT };
-static const int format_mask = FORMAT_MASK_LINEAR | FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE | FORMAT_MASK_PCMFLOAT;
+static const int converter_formats = FORMAT_MASK_LINEAR | FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE | FORMAT_MASK_PCMFLOAT;
 
 static const convert_t linear2pcm_tbl[NCHANNELS][7] = {
  { &Converter::linear_pcm16_1ch, &Converter::linear_pcm24_1ch, &Converter::linear_pcm32_1ch, &Converter::linear_pcm16_be_1ch, &Converter::linear_pcm24_be_1ch, &Converter::linear_pcm32_be_1ch, &Converter::linear_pcmfloat_1ch },
@@ -71,6 +71,18 @@ static const convert_t pcm2linear_tbl[NCHANNELS][7] = {
  { &Converter::pcm16_linear_6ch, &Converter::pcm24_linear_6ch, &Converter::pcm32_linear_6ch, &Converter::pcm16_be_linear_6ch, &Converter::pcm24_be_linear_6ch, &Converter::pcm32_be_linear_6ch, &Converter::pcmfloat_linear_6ch },
 };
 
+
+
+Converter::Converter(int _nsamples)
+:NullFilter(0) // use own query_input()
+{
+  convert = 0;
+  format = FORMAT_UNKNOWN;
+  memcpy(order, std_order, sizeof(order));
+  nsamples = _nsamples;
+  out_size = 0;
+  part_size = 0;
+}
 
 convert_t 
 Converter::find_conversion(int _format, Speakers _spk) const
@@ -192,7 +204,7 @@ Converter::get_format() const
 bool 
 Converter::set_format(int _format)
 {
-  if ((FORMAT_MASK(_format) & format_mask) == 0)
+  if ((FORMAT_MASK(_format) & converter_formats) == 0)
     return false;
 
   format = _format;
@@ -226,7 +238,7 @@ Converter::reset()
 bool 
 Converter::query_input(Speakers _spk) const
 {
-  if ((FORMAT_MASK(_spk.format) & format_mask) == 0)
+  if ((FORMAT_MASK(_spk.format) & converter_formats) == 0)
     return false;
 
   if (find_conversion(format, _spk) == 0)

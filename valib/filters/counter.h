@@ -11,6 +11,7 @@ protected:
 
 public:
   Counter()
+  :NullFilter(-1)
   {
     counter = 0;
   };
@@ -28,10 +29,6 @@ public:
     NullFilter::reset();
     counter = 0;
   }
-  virtual bool query_input(Speakers _spk) const 
-  { 
-    return true; 
-  };
   virtual bool process(const Chunk *_chunk)
   {
     // we must ignore dummy chunks
