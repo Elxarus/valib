@@ -16,23 +16,49 @@ protected:
   /////////////////////////////////////////////////////////
   // Two-way filter chain structure
   //
+  // next[]       - points to the next node
+  // prev[]       - points to the previous node
+  // filter[]     - node filter
+  // filter_spk[] - input format of the node filter
+  //
   // Last element is a special end-node
   // node_end index points to the end-node
-  // next[node_end] points to the first node
-  // prev[node_end] points to the last node
-  // filter[node_end] does not exist
+  //
+  // Values stored at the end-node:
+  //
+  //   next[node_end] points to the first node
+  //     contains node_end if chain is empty
+  //
+  //   prev[node_end] points to the last node
+  //     contains node_end if chain is empty
+  //
+  //   filter[node_end] does not exist (must not be used)
+  //
+  //   filter_spk[node_end] output format of the last filter
+  //     in the chain ( = graph output format)
+  //     contains spk_unknown if chain is empty
+  //
+  // Other interesting values:
+  //   filter_spk[prev[node_end]] chain input format
+  //     equals to filter_spk[node_end] that in order 
+  //     equals to spk_unknown if chain is empty
+  //
+  // Only following functions can modify the chain:
+  //   add_node()
+  //   build_chain() (uses add_node, but modifies filter_spk[node_end])
+  //   drop_chain()
+
 
   int next[graph_nodes + 1];
   int prev[graph_nodes + 1];
-  Filter  *filter[graph_nodes];     // node filter
-  Speakers filter_spk[graph_nodes + 1]; // input format of node filter
+  Filter  *filter[graph_nodes];
+  Speakers filter_spk[graph_nodes + 1];
 
   /////////////////////////////////////////////////////////
   // Build filter chain after the specified node
   //
   // bool build_chain(int node)
-  // node - existing node after which we must build 
-  //   the chain
+  // node - existing node after which we must build the chain
   // updates nothing (uses add_node() to update the chain)
 
   bool build_chain(int node)
@@ -44,12 +70,6 @@ protected:
       FILTER_SAFE(add_node(node, spk));
       node = next[node];
     }
-
-    // update output format
-    if (prev[node_end] != node_end)
-      filter_spk[node_end] = filter[prev[node_end]]->get_output();
-    else
-      filter_spk[node_end] = spk_unknown;
 
     return true;
   }
@@ -67,14 +87,15 @@ protected:
 
     next[node_end] = node_end;
     prev[node_end] = node_end;
+    filter_spk[node_end] = spk_unknown;
   }
 
   /////////////////////////////////////////////////////////
   // Add new node into the chain
   // 
   // bool add_node(int node, Speakers spk)
-  // node = parent node
-  // spk = input format for a new node
+  // node - parent node
+  // spk - input format for a new node
   //
   // updates filter lists (forward and reverse)
   // updates output format and ofdd status
@@ -92,11 +113,12 @@ protected:
 
       next[node] = node_end;
       prev[node_end] = node;
+      filter_spk[node_end] = spk_unknown;
       return true;
     }
 
     ///////////////////////////////////////////////////////
-    // find the next filter
+    // find the next node
 
     int next_node = get_next(node, spk);
 
@@ -147,6 +169,7 @@ protected:
     prev[next_node] = node;
     next[next_node] = node_end;
     prev[node_end] = next_node;
+    filter_spk[node_end] = filter[next_node]->get_output();
 
     // update ofdd status
     // aggregate is data-dependent if chain has
@@ -341,10 +364,7 @@ public:
 
   virtual Speakers get_input() const
   {
-    if (next[node_end] == node_end)
-      return spk_unknown;
-    else      
-      return filter[next[node_end]]->get_input();
+    return filter_spk[next[node_end]];
   };
 
   virtual bool process(const Chunk *chunk)
@@ -370,10 +390,7 @@ public:
 
   virtual Speakers get_output() const
   {
-    if (prev[node_end] == node_end)
-      return spk_unknown;
-    else
-      return filter[prev[node_end]]->get_output();
+    return filter_spk[node_end];
   };
 
   virtual bool is_empty() const
