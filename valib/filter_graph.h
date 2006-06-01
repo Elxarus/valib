@@ -447,17 +447,20 @@ public:
 
   virtual bool get_chunk(Chunk *chunk)
   {
+    if (prev[node_end] == node_end)
+      return false;
+
     Filter *f = filter[prev[node_end]];
 
     ///////////////////////////////////////////////////////
-    // if there're something to output from the last chunk
+    // if there're something to output from the last filter
     // get it...
 
     if (!f->is_empty())
       return f->get_chunk(chunk);
 
     ///////////////////////////////////////////////////////
-    // if the last chunk is empty process data internally
+    // if the last filter is empty process data internally
     // and try to get output afterwards
 
     FILTER_SAFE(process_internal(false));
