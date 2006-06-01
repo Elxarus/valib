@@ -90,7 +90,7 @@ public:
     // Check all possible transition between spdif modes
     // (decode, passthrough, encode, stereo passthrough)
 
-    RAWSource src(spk, file_name);
+    RAWSource src(spk, file_name, 2048);
     if (!src.is_open())
       return log->err("Cannot open file %s", file_name);
 
