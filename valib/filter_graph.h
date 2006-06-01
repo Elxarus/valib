@@ -1,3 +1,36 @@
+/*
+  FilterGraph - base class for other aggregate filters. Implements logic of
+    dynamic filter chain rebuilding.
+
+  FilterChain - an easy way to combine set of filters into one filter. Useful
+    for applications to build own chains:
+
+    // Source, sink and filters
+    SomeSource src;
+    SomeSink sink;
+
+    Filter1 f1;
+    Filter2 f2;
+    Filter3 f3;
+
+    // Build chain
+    FilterChain chain;
+    chain.add_back(&f1, "f1");
+    chain.add_back(&f2, "f2");
+    chain.add_back(&f3, "f3");
+
+    // Setup chain
+    chain.set_input(src.get_output());
+
+    // Print chain
+    char chain_text[255];
+    chain.chain_text(chain_text, sizeof(chain_text));
+    printf("Transform chain: %s", chain_text);
+
+    // Transform data with chain of filters
+    chain.transform(src, sink);
+*/
+
 #ifndef FILTER_GRAPH_H
 #define FILTER_GRAPH_H
 
@@ -372,16 +405,18 @@ public:
     if (chunk->is_dummy())
       return true;
 
+    /////////////////////////////////////////////////////
+    // rebuild the filter chain if something was changed
+
     int node = get_next(node_end, chunk->spk);
-
-    if (node != next[node_end])
+    if (node != next[node_end] || chunk->spk != filter_spk[next[node_end]])
     {
-      if (node == node_err)
-        return false;
-
       FILTER_SAFE(add_node(node_end, chunk->spk));
       FILTER_SAFE(build_chain(node));
     }
+
+    /////////////////////////////////////////////////////
+    // process data
 
     FILTER_SAFE(filter[next[node_end]]->process(chunk));
     FILTER_SAFE(process_internal(true));
