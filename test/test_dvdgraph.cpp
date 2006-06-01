@@ -20,14 +20,6 @@ static const size_t min_data_size = 2048*4; // minimum data size to generate aft
 // noise speed test
 static const int noise_size = 10000000;
 
-// file speed test
-static const char *file1_src = "a.mad.mix.pes";
-static const char *file1_out = "a.mad.mix.spdif";
-static const char *file2_src = "a.madp.mix.pes";
-static const char *file2_out = "a.madp.mix.spdif";
-static const char *file3_src = "a.mad.mix.spdif";
-static const char *file4_out = "a.mad.mix.spdif";
-
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
 
@@ -59,6 +51,7 @@ public:
   {
     /////////////////////////////////////////////////////////
     // Transform test
+    log->open_group("Transform test");
 
     // PES to SPDIF transform with format changes
     dvd.use_spdif = true;
@@ -67,26 +60,39 @@ public:
     dvd.spdif_stereo_pt = true;
     dvd.user_spk = Speakers(FORMAT_PCM16_BE, 0, 0, 32768);
 
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), file1_src, f, file1_out);
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), file2_src, f, file2_out);
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes",  f, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", f, "a.madp.mix.spdif");
 
-    // SPDIF to SPDIF transfrm with format changes (todo)
-    // dvd.use_spdif = true;
-    // dvd.user_spk = Speakers(FORMAT_PCM16, 0, 0);
-    // compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), file3_src, &t, file3_out);
-
-    // todo: transform test with decode
+    log->close_group();
   }
 
   void spdif_rebuild()
   {
-    spdif_rebuild("a.ac3.03f.ac3", Speakers(FORMAT_AC3, 0, 0));
-    spdif_rebuild("a.dts.03f.dts", Speakers(FORMAT_DTS, 0, 0));
-    spdif_rebuild("a.mpa.005.mpa", Speakers(FORMAT_MPA, 0, 0));
+    /////////////////////////////////////////////////////////
+    // Dynamical graph rebuild
+    log->open_group("Dynamical graph rebuild");
+
+    // Raw streams
+    spdif_rebuild("a.ac3.03f.ac3", Speakers(FORMAT_AC3, 0, 0), true);
+    spdif_rebuild("a.dts.03f.dts", Speakers(FORMAT_DTS, 0, 0), true);
+    spdif_rebuild("a.mp2.005.mp2", Speakers(FORMAT_MPA, 0, 0), true);
+
+    // PES streams
+    spdif_rebuild("a.ac3.03f.pes", Speakers(FORMAT_PES, 0, 0), true);
+    spdif_rebuild("a.dts.03f.pes", Speakers(FORMAT_PES, 0, 0), true);
+    spdif_rebuild("a.mp2.005.pes", Speakers(FORMAT_PES, 0, 0), true);
+
+    // PCM streams
+    spdif_rebuild("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 48000), false);
+    spdif_rebuild("a.pcm.005.pes",  Speakers(FORMAT_PES, 0, 0), false);
+
+    log->close_group();
   }
 
-  int spdif_rebuild(const char *file_name, Speakers spk)
+  int spdif_rebuild(const char *file_name, Speakers spk, bool is_spdifable)
   {
+    log->msg("Testing %s (%s)", file_name, spk.format_text());
+
     // Check all possible transition between spdif modes
     // (decode, passthrough, encode, stereo passthrough)
 
@@ -95,25 +101,38 @@ public:
       return log->err("Cannot open file %s", file_name);
 
     if (!f->set_input(spk))
-      return log->err("dvd.set_input(%s %s %nHz) failed", 
+      return log->err("dvd.set_input(%s %s %iHz) failed", 
         spk.format_text(), spk.mode_text(), spk.sample_rate);
 
-    test_decode(&src);
-    test_passthrough(&src);
-    test_encode(&src);
-    test_stereo_passthrough(&src);
+    if (is_spdifable)
+    {
+      test_decode(&src);
+      test_passthrough(&src);
+      test_encode(&src);
+      test_stereo_passthrough(&src);
 
-    test_decode(&src);
-    test_encode(&src);
-    test_decode(&src);
+      test_decode(&src);
+      test_encode(&src);
+      test_decode(&src);
 
-    test_stereo_passthrough(&src);
-    test_passthrough(&src);
-    test_stereo_passthrough(&src);
+      test_stereo_passthrough(&src);
+      test_passthrough(&src);
+      test_stereo_passthrough(&src);
 
-    test_encode(&src);
-    test_passthrough(&src);
-    test_decode(&src);
+      test_encode(&src);
+      test_passthrough(&src);
+      test_decode(&src);
+    }
+    else
+    {
+      test_decode(&src);
+      test_encode(&src);
+      test_stereo_passthrough(&src);
+      test_decode(&src);
+      test_stereo_passthrough(&src);
+      test_encode(&src);
+      test_decode(&src);
+    }
 
     Chunk chunk;
     while (!src.is_empty())
@@ -124,7 +143,7 @@ public:
         return log->err("dvd.process() failed");
     }
 
-    // todo: check number of output streams (should be 7)
+    // todo: check number of output streams
     return 0;
   }
 
