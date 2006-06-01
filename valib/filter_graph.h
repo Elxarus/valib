@@ -25,7 +25,7 @@ protected:
   int next[graph_nodes + 1];
   int prev[graph_nodes + 1];
   Filter  *filter[graph_nodes];     // node filter
-  Speakers filter_spk[graph_nodes]; // input format of node filter
+  Speakers filter_spk[graph_nodes + 1]; // input format of node filter
 
   /////////////////////////////////////////////////////////
   // Build filter chain after the specified node
@@ -44,6 +44,13 @@ protected:
       FILTER_SAFE(add_node(node, spk));
       node = next[node];
     }
+
+    // update output format
+    if (prev[node_end] != node_end)
+      filter_spk[node_end] = filter[prev[node_end]]->get_output();
+    else
+      filter_spk[node_end] = spk_unknown;
+
     return true;
   }
 
@@ -159,7 +166,7 @@ protected:
   /////////////////////////////////////////////////////////
   // Chain data flow
 
-  bool process_internal()
+  bool process_internal(bool rebuild)
   {
     int next_node;
     Speakers spk;
@@ -180,16 +187,29 @@ protected:
 
       /////////////////////////////////////////////////////
       // filter is full so get_output() must always
-      // report format of next output chunk and
-      // therefore we can always find next node
+      // report format of next output chunk
 
       spk = filter[node]->get_output();
-      next_node = get_next(node, spk);
 
       /////////////////////////////////////////////////////
       // rebuild the filter chain if something was changed
+      //
+      // We can rebuild graph according to changes in 
+      // get_next() call ONLY when we do it from the top
+      // of the chain, i.e. 'rebuild' flag should be set
+      // in process() and clear in get_chunk() call.
+      // (otherwise partially changed graph is possible)
+      //
+      // We can always rebuild graph according to format
+      // changes because it changes according to data flow
+      // from top to bottom of the chain.
 
-      if (next_node != node[next] || spk != filter_spk[next_node])
+      if (rebuild)
+        next_node = get_next(node, spk);
+      else
+        next_node = next[node];
+
+      if (next_node != next[node] || spk != filter_spk[next_node])
       {
         FILTER_SAFE(build_chain(node));
         next_node = next[node];
@@ -344,7 +364,7 @@ public:
     }
 
     FILTER_SAFE(filter[next[node_end]]->process(chunk));
-    FILTER_SAFE(process_internal());
+    FILTER_SAFE(process_internal(true));
     return true;
   };
 
@@ -388,7 +408,7 @@ public:
     // if the last chunk is empty process data internally
     // and try to get output afterwards
 
-    FILTER_SAFE(process_internal());
+    FILTER_SAFE(process_internal(false));
     if (!f->is_empty())
       return f->get_chunk(chunk);
 
