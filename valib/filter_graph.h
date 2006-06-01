@@ -407,8 +407,12 @@ public:
 
     /////////////////////////////////////////////////////
     // rebuild the filter chain if something was changed
+    // (we cannot process if next node is the end-node)
 
     int node = get_next(node_end, chunk->spk);
+    if (node == node_end || node == node_err)
+      return false;
+
     if (node != next[node_end] || chunk->spk != filter_spk[next[node_end]])
     {
       FILTER_SAFE(add_node(node_end, chunk->spk));
@@ -460,8 +464,8 @@ public:
       return f->get_chunk(chunk);
 
     ///////////////////////////////////////////////////////
-    // if the last filter is empty process data internally
-    // and try to get output afterwards
+    // if the last filter is empty then do internal data
+    // processing and try to get output afterwards
 
     FILTER_SAFE(process_internal(false));
     if (!f->is_empty())
