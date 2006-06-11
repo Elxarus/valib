@@ -336,6 +336,11 @@ public:
       if (flushing && stream && is_empty())
         log->err("get_chunk(): filter did not end the stream");
     }
+    else
+    {
+      // we must check formats even after dummy chunks
+      check_formats("after get_chunk()");
+    }
 
     return true;
   }
