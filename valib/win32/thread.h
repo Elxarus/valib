@@ -28,14 +28,14 @@ public:
   Thread(bool suspended = false);
   virtual ~Thread();
 
-  void suspend();
-  void resume();
-  void terminate(int timeout_ms = 1000, DWORD exit_code = 0);
+  virtual void suspend();
+  virtual void resume();
+  virtual void terminate(int timeout_ms = 1000, DWORD exit_code = 0);
 
-  HANDLE handle()      { return f_thread; }
-  bool   terminating() { return f_terminate; }
-  bool   terminated()  { return !f_thread; }
-  bool   suspended()   { return f_thread? f_suspended: true; }
+  HANDLE handle()      const { return f_thread; }
+  bool   terminating() const { return f_terminate; }
+  bool   terminated()  const { return !f_thread; }
+  bool   suspended()   const { return f_thread? f_suspended: true; }
 };
 
 
