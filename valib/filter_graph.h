@@ -65,7 +65,9 @@ protected:
   //   prev[node_end] points to the last node
   //     contains node_end if chain is empty
   //
-  //   filter[node_end] does not exist (must not be used)
+  //   filter[node_end] - NullFilter
+  //     it is used when chain is empty and
+  //     when we need to generate a special output
   //
   //   filter_spk[node_end] output format of the last filter
   //     in the chain ( = graph output format)
@@ -84,8 +86,9 @@ protected:
 
   int next[graph_nodes + 1];
   int prev[graph_nodes + 1];
-  Filter  *filter[graph_nodes];
+  Filter  *filter[graph_nodes + 1];
   Speakers filter_spk[graph_nodes + 1];
+  NullFilter null;
 
   /////////////////////////////////////////////////////////
   // Build filter chain after the specified node
@@ -275,12 +278,8 @@ protected:
       /////////////////////////////////////////////////////
       // process data downstream
 
-      if (next_node != node_end)
-      {
-        FILTER_SAFE(filter[node]->get_chunk(&chunk));
-        FILTER_SAFE(filter[next_node]->process(&chunk));
-      }
-
+      FILTER_SAFE(filter[node]->get_chunk(&chunk));
+      FILTER_SAFE(filter[next_node]->process(&chunk));
       node = next_node;
     }
 
@@ -292,7 +291,9 @@ protected:
 
 public:
   FilterGraph()
+  :null(-1)
   {
+    filter[node_end] = &null;
     drop_chain();
   };
 
@@ -300,13 +301,34 @@ public:
   {};
 
   /////////////////////////////////////////////////////////
-  // Overridable functions
+  // Overridable functions (placeholders)
 
-  virtual const char *get_name(int node) const = 0;
-  virtual const Filter *get_filter(int node) const = 0;
-  virtual Filter *init_filter(int node, Speakers spk) = 0;
+  virtual const char *get_name(int node) const
+  {
+    // This function should return the name of the node filter
+    return 0;
+  }
 
-  virtual int get_next(int node, Speakers spk) const = 0;
+  virtual const Filter *get_filter(int node) const
+  {
+    // This function must return constant pointer to the node filter
+    return 0;
+  }
+
+  virtual Filter *init_filter(int node, Speakers spk)
+  {
+    // This function must initialize node filter and return pointer to it
+    return 0;
+  }
+
+  virtual int get_next(int node, Speakers spk) const
+  {
+    // This function must determine node next to given node
+    // It must return node_err when it detects graph error. In this case
+    //  processing cannot continue and will be stopped.
+    // It must return node_end after the last graph node
+    return node_end;
+  }
 
   /////////////////////////////////////////////////////////
   // Print chain
@@ -324,22 +346,19 @@ public:
     char *buf_ptr = buf;
     int node = next[node_end];
 
-    if (node != node_end)
-    {
-      spk = filter[node]->get_input();
+    spk = filter_spk[node];
 
-      if (spk.mask || spk.sample_rate)
-        i = _snprintf(buf_ptr, buf_size, "(%s %s %i)", spk.format_text(), spk.mode_text(), spk.sample_rate);
-      else
-        i = _snprintf(buf_ptr, buf_size, "(%s)", spk.format_text());
+    if (spk.mask || spk.sample_rate)
+      i = _snprintf(buf_ptr, buf_size, "(%s %s %i)", spk.format_text(), spk.mode_text(), spk.sample_rate);
+    else
+      i = _snprintf(buf_ptr, buf_size, "(%s)", spk.format_text());
 
-      buf_ptr += i;
-      buf_size = (buf_size > i)? buf_size - i: 0;
-    }
+    buf_ptr += i;
+    buf_size = (buf_size > i)? buf_size - i: 0;
 
     while (node != node_end)
     {
-      spk = filter[node]->get_output();
+      spk = filter_spk[next[node]];
 
       if (spk.mask || spk.sample_rate)
         i = _snprintf(buf_ptr, buf_size, " -> %s -> (%s %s %i)", get_name(node), spk.format_text(), spk.mode_text(), spk.sample_rate);
@@ -358,9 +377,8 @@ public:
 
   virtual void reset()
   {
-    int node = next[node_end];
-    while (node != node_end)
-    {
+    int node = node_end;
+    do {
       filter[node]->reset();
       if (filter[node]->is_ofdd())
       {
@@ -369,7 +387,7 @@ public:
         return;
       }
       node = next[node];
-    }
+    } while (node != node_end);
   }
 
   virtual bool is_ofdd() const
@@ -379,8 +397,10 @@ public:
 
   virtual bool query_input(Speakers spk) const
   {
+    const Filter *f = &null;
     int node = get_next(node_end, spk);
-    const Filter *f = get_filter(node);
+    if (node != node_end)
+      f = get_filter(node);
     return f? f->query_input(spk): false;
   }
 
@@ -391,6 +411,7 @@ public:
       return false;
 
     drop_chain();
+    FILTER_SAFE(null.set_input(spk));
     FILTER_SAFE(add_node(node_end, spk));
     FILTER_SAFE(build_chain(next[node_end]));
     return true;
@@ -408,12 +429,8 @@ public:
 
     /////////////////////////////////////////////////////
     // rebuild the filter chain if something was changed
-    // (we cannot process if next node is the end-node)
 
     int node = get_next(node_end, chunk->spk);
-    if (node == node_end || node == node_err)
-      return false;
-
     if (node != next[node_end] || chunk->spk != filter_spk[next[node_end]])
     {
       FILTER_SAFE(add_node(node_end, chunk->spk));
@@ -439,38 +456,32 @@ public:
     // graph is not empty if there're at least one 
     // non-empty filter
 
-    int node = prev[node_end];
-    while (node != node_end)
-    {
+    int node = node_end;
+    do {
       if (!filter[node]->is_empty())
         return false;
 
       node = prev[node];
-    }
+    } while (node != node_end);
     return true;
   };
 
   virtual bool get_chunk(Chunk *chunk)
   {
-    if (prev[node_end] == node_end)
-      return false;
-
-    Filter *f = filter[prev[node_end]];
-
     ///////////////////////////////////////////////////////
     // if there're something to output from the last filter
     // get it...
 
-    if (!f->is_empty())
-      return f->get_chunk(chunk);
+    if (!null.is_empty())
+      return null.get_chunk(chunk);
 
     ///////////////////////////////////////////////////////
     // if the last filter is empty then do internal data
     // processing and try to get output afterwards
 
     FILTER_SAFE(process_internal(false));
-    if (!f->is_empty())
-      return f->get_chunk(chunk);
+    if (!null.is_empty())
+      return null.get_chunk(chunk);
 
     ///////////////////////////////////////////////////////
     // return dummy chunk
