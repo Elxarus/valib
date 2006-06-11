@@ -164,6 +164,10 @@ SOURCE=.\test_filter.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_filtergraph.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_general.cpp
 # End Source File
 # Begin Source File
