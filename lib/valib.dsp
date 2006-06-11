@@ -142,6 +142,14 @@ SOURCE=..\valib\filter.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filter_graph.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filter_tester.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\log.cpp
 # End Source File
 # Begin Source File
@@ -234,6 +242,10 @@ SOURCE=..\valib\filters\convert.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\counter.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\decoder.cpp
 # End Source File
 # Begin Source File
@@ -266,19 +278,7 @@ SOURCE=..\valib\filters\demux.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\filters\dvd_decoder.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filters\dvd_decoder.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filters\filter_chain.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filters\filter_chain.h
+SOURCE=..\valib\filters\dvd_graph.h
 # End Source File
 # Begin Source File
 
