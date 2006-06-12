@@ -24,6 +24,7 @@ protected:
 
 public:
   FilterGraph_test(Log *_log)
+  :filter_graph(-1)
   {
     log = _log;
     t.link(&filter_graph, log);

@@ -31,7 +31,7 @@ public:
   bool     spdif_stereo_pt;
 
   DVDGraph()
-  :proc(4096)
+  :FilterGraph(-1), proc(4096)
   {
     user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
     use_spdif = false;

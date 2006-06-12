@@ -167,7 +167,7 @@ int test_rules(Log *log)
 {
   // Base filters
   NullFilter     null(FORMAT_MASK_LINEAR);
-  FilterGraph    filter_graph;
+  FilterGraph    filter_graph(FORMAT_MASK_LINEAR);
 
   // Rawdata filters
   Converter      conv_ll(2048);
@@ -223,8 +223,8 @@ int test_rules(Log *log)
 
   test_rules_filter(log, &filter_graph, "FilterGraph", 
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
-    Speakers(FORMAT_RAWDATA, 0, 0), 0,
-    Speakers(FORMAT_UNKNOWN, MODE_STEREO, 48000));
+    Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_RAWDATA, MODE_STEREO, 48000));
 
   // Rawdata filters
 
@@ -348,6 +348,17 @@ int test_rules_filter(Log *log, Filter *filter, const char *filter_name,
   Speakers spk_supported, const char *filename, 
   Speakers spk_supported2, const char *filename2, 
   Speakers spk_unsupported)
+/*
+This test ensures that filter complies all format change rules.
+
+Processing is done on 2 chunk sizes - large and small chunks because some 
+format change problems appears only with small or only with large chunks.
+
+To do the test we need data sources. Test uses file source if filename was
+specified and noise source otherwise.
+
+We need 2 data sources to verify correctness of switching between streams.
+*/
 {
   const size_t small_data_size = 5;
   const size_t large_data_size = 32768;

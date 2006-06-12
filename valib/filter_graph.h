@@ -290,8 +290,8 @@ protected:
   bool ofdd;
 
 public:
-  FilterGraph()
-  :null(-1)
+  FilterGraph(int _format_mask)
+  :null(_format_mask)
   {
     filter[node_end] = &null;
     drop_chain();
@@ -501,7 +501,8 @@ protected:
   int     chain_size;
 
 public:
-  FilterChain()
+  FilterChain(int _format_mask = -1)
+  :FilterGraph(_format_mask)
   {
     chain_size = 0;
   };
