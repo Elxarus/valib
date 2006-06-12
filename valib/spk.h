@@ -122,7 +122,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // macro to convert format number to format mask
-#define FORMAT_MASK(format)  (1 << format)
+#define FORMAT_MASK(format)  (1 << (format))
 
 // special-purpose format masks
 #define FORMAT_MASK_RAWDATA      FORMAT_MASK(FORMAT_RAWDATA)
