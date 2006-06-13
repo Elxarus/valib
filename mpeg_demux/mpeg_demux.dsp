@@ -106,6 +106,14 @@ SOURCE=..\valib\spk.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\syncscan.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\syncscan.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\vtime.cpp
 # End Source File
 # Begin Source File

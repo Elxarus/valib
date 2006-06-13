@@ -692,7 +692,7 @@ int main(int argc, char *argv[])
     spk.format = format_tbl[iformat];
     spk.level = level_tbl[iformat];
 
-    if (!proc.set_output(spk))
+    if (!proc.set_user(spk))
     {
       printf("Error: unsupported output format");
       return 1;

@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "source\noise.h"
-#include "filters\filter_chain.h"
+#include "filter_graph.h"
 #include "sink\sink_dsound.h"
 
 

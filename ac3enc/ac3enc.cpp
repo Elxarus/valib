@@ -6,7 +6,7 @@
 #include "parsers\ac3\ac3_enc.h"
 
 #include "filters\convert.h"
-#include "filters\filter_chain.h"
+#include "filter_graph.h"
 
 #include "sink\sink_raw.h"
 #include "win32\cpu.h"
