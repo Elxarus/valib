@@ -265,7 +265,7 @@ public:
       stream = true;
 
     // filter must flush a started stream
-    if (_chunk->eos && stream)
+    if (_chunk->eos && stream && !dummy)
       if (is_empty())
         log->err("process(): filter does not want to end the stream");
       else
