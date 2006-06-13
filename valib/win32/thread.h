@@ -25,17 +25,18 @@ protected:
   virtual DWORD process() = 0;
 
 public:
-  Thread(bool suspended = false);
+  Thread();
   virtual ~Thread();
 
+  virtual bool create(bool suspended = true);
   virtual void suspend();
   virtual void resume();
   virtual void terminate(int timeout_ms = 1000, DWORD exit_code = 0);
 
-  HANDLE handle()      const { return f_thread; }
-  bool   terminating() const { return f_terminate; }
-  bool   terminated()  const { return !f_thread; }
-  bool   suspended()   const { return f_thread? f_suspended: true; }
+  HANDLE handle()        const { return f_thread; }
+  bool   thread_exists() const { return f_thread != 0; }
+  bool   terminating()   const { return f_terminate; }
+  bool   suspended()     const { return f_thread? f_suspended: true; }
 };
 
 
