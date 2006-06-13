@@ -213,7 +213,7 @@ int test_rules(Log *log)
   dvd_spdif.use_spdif = true;
 
   log->open_group("Test filters");
-
+/*
   // Base filters
 
   test_rules_filter(log, &null,    "NullFilter", 
@@ -264,12 +264,12 @@ int test_rules(Log *log)
     Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.mix.ac3",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
-
+*/
   test_rules_filter(log, &dec_dts, "AudioDecoder (DTS)",
     Speakers(FORMAT_DTS, MODE_STEREO, 48000), "a.dts.03f.dts",
     Speakers(FORMAT_DTS, 0, 0), "a.dts.03f.dts",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
-
+/*
   test_rules_filter(log, &demux, "Demuxer",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_PES, MODE_STEREO, 48000), "a.ac3.03f.pes",
@@ -338,7 +338,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
     Speakers(FORMAT_OGG, MODE_STEREO, 48000));
-
+*/
   return log->close_group();
 }
 
@@ -748,10 +748,12 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 7.3 - dummy processing
   // (use noise source for unknown format)
   INIT_CYCLED(spk_supported, filename);
-  src.open(spk_unknown, 0, data_size);
-  src.get_chunk(&chunk);
-  PROCESS_OK(chunk,               "process(dummy) failed");
-  POST_NEW_CYCLE(spk_supported, filename);
+  {
+    Noise noise(spk_unknown, data_size, data_size);
+    noise.get_chunk(&chunk);
+    PROCESS_OK(chunk,               "process(dummy) failed");
+  }
+  POST_CYCLE;
 
   /////////////////////////////////////////////////////////
   // Forced format change 8. 
