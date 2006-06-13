@@ -87,7 +87,6 @@ protected:
   int next[graph_nodes + 1];
   int prev[graph_nodes + 1];
   Filter  *filter[graph_nodes + 1];
-  Speakers filter_spk[graph_nodes + 1];
   NullFilter null;
 
   /////////////////////////////////////////////////////////
@@ -123,7 +122,6 @@ protected:
 
     next[node_end] = node_end;
     prev[node_end] = node_end;
-    filter_spk[node_end] = spk_unknown;
   }
 
   /////////////////////////////////////////////////////////
@@ -149,7 +147,6 @@ protected:
 
       next[node] = node_end;
       prev[node_end] = node;
-      filter_spk[node_end] = spk_unknown;
       return true;
     }
 
@@ -176,7 +173,6 @@ protected:
     {
       next[node] = node_end;
       prev[node_end] = node;
-      filter_spk[node_end] = filter[node]->get_output();
       return true;
     }
 
@@ -186,7 +182,6 @@ protected:
     // create filter
 
     filter[next_node] = init_filter(next_node, spk);
-    filter_spk[next_node] = spk;
 
     // runtime protection
     // must do it BEFORE updating of filter lists
@@ -206,7 +201,6 @@ protected:
     prev[next_node] = node;
     next[next_node] = node_end;
     prev[node_end] = next_node;
-    filter_spk[node_end] = filter[next_node]->get_output();
 
     // update ofdd status
     // aggregate is data-dependent if chain has
@@ -254,7 +248,7 @@ protected:
       /////////////////////////////////////////////////////
       // rebuild the filter chain if something was changed
       //
-      // We can rebuild graph according to changes in 
+      // We should rebuild graph according to changes in 
       // get_next() call ONLY when we do it from the top
       // of the chain, i.e. 'rebuild' flag should be set
       // in process() and clear in get_chunk() call.
@@ -269,7 +263,7 @@ protected:
       else
         next_node = next[node];
 
-      if (next_node != next[node] || spk != filter_spk[next_node])
+      if (next_node != next[node] || spk != filter[next_node]->get_input())
       {
         FILTER_SAFE(build_chain(node));
         next_node = next[node];
@@ -346,7 +340,7 @@ public:
     char *buf_ptr = buf;
     int node = next[node_end];
 
-    spk = filter_spk[node];
+    spk = filter[node]->get_input();
 
     if (spk.mask || spk.sample_rate)
       i = _snprintf(buf_ptr, buf_size, "(%s %s %i)", spk.format_text(), spk.mode_text(), spk.sample_rate);
@@ -358,7 +352,7 @@ public:
 
     while (node != node_end)
     {
-      spk = filter_spk[next[node]];
+      spk = filter[node]->get_output();
 
       if (spk.mask || spk.sample_rate)
         i = _snprintf(buf_ptr, buf_size, " -> %s -> (%s %s %i)", get_name(node), spk.format_text(), spk.mode_text(), spk.sample_rate);
@@ -419,7 +413,7 @@ public:
 
   virtual Speakers get_input() const
   {
-    return filter_spk[next[node_end]];
+    return filter[next[node_end]]->get_input();
   };
 
   virtual bool process(const Chunk *chunk)
@@ -431,7 +425,7 @@ public:
     // rebuild the filter chain if something was changed
 
     int node = get_next(node_end, chunk->spk);
-    if (node != next[node_end] || chunk->spk != filter_spk[next[node_end]])
+    if (node != next[node_end] || chunk->spk != filter[next[node_end]]->get_input())
     {
       FILTER_SAFE(add_node(node_end, chunk->spk));
       FILTER_SAFE(build_chain(node));
@@ -447,7 +441,7 @@ public:
 
   virtual Speakers get_output() const
   {
-    return filter_spk[node_end];
+    return filter[prev[node_end]]->get_output();
   };
 
   virtual bool is_empty() const
