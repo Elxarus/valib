@@ -510,11 +510,27 @@ SOURCE=..\valib\win32\winspk.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\valib\source\dsound_source.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\dsound_source.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\source\noise.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\source\noise.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\raw_source.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\raw_source.h
 # End Source File
 # End Group
 # End Target
