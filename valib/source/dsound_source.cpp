@@ -36,6 +36,8 @@ DSoundSource::zero_all()
 bool
 DSoundSource::open(Speakers _spk, size_t _buf_size_ms, LPCGUID _device)
 {
+  spk = _spk;
+
   WAVEFORMATEXTENSIBLE wfx;
   memset(&wfx, 0, sizeof(wfx));
 
@@ -47,7 +49,7 @@ DSoundSource::open(Speakers _spk, size_t _buf_size_ms, LPCGUID _device)
     if (open((WAVEFORMATEX*)(&wfx), _buf_size_ms, _device))
       return true;
 
-  spk = _spk;
+  zero_all();
   return false;
 }
 
