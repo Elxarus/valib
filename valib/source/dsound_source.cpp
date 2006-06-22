@@ -26,11 +26,17 @@ DSoundSource::~DSoundSource()
 void 
 DSoundSource::zero_all()
 {
-  spk = spk_unknown;
-  ds_capture = 0;
-  ds_buf     = 0;
-  buf_size   = 0;
-  cur        = 0;
+  spk         = spk_unknown;
+  buf_size    = 0;
+  buf_size_ms = 0;
+  bytes2time  = 0.0;
+
+  ds_capture  = 0;
+  ds_buf      = 0;
+
+  capturing   = false;
+  cur         = 0;
+  time        = 0;
 }
 
 bool
@@ -56,9 +62,9 @@ DSoundSource::open(Speakers _spk, size_t _buf_size_ms, LPCGUID _device)
 bool
 DSoundSource::open(WAVEFORMATEX *wf, size_t _buf_size_ms, LPCGUID _device)
 {
-  buf_size = wf->nBlockAlign * wf->nSamplesPerSec * _buf_size_ms / 1000;
-  if (!out_buf.allocate(buf_size))
-    return false;
+  buf_size_ms = _buf_size_ms;
+  buf_size = wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000;
+  bytes2time = 1.0 / wf->nAvgBytesPerSec;
 
   // DirectSound buffer description
   DSCBUFFERDESC dscbd;
@@ -67,17 +73,23 @@ DSoundSource::open(WAVEFORMATEX *wf, size_t _buf_size_ms, LPCGUID _device)
   dscbd.dwBufferBytes = buf_size;
   dscbd.lpwfxFormat   = wf;
 
-  // Create everything
+  // Open DirectSound
   if FAILED(DirectSoundCaptureCreate(_device, &ds_capture, 0))
-  {
-    zero_all();
     return false;
-  }
 
   if FAILED(ds_capture->CreateCaptureBuffer(&dscbd, &ds_buf, 0))
   {
     ds_capture->Release();
-    zero_all();
+    return false;
+  }
+
+  // Allocate audio buffer
+  // We do this last because DirectSound allocation 
+  // may fail and we may not require this buffer
+  if (!out_buf.allocate(buf_size))
+  {
+    ds_buf->Release();
+    ds_capture->Release();
     return false;
   }
 
@@ -106,19 +118,32 @@ DSoundSource::is_open() const
   return ds_buf != 0;
 }
 
+
+bool
+DSoundSource::is_started() const
+{
+  return capturing;
+}
+
 bool 
 DSoundSource::start()
 {
   if (!ds_buf) return false;
-  ds_buf->Start(DSCBSTART_LOOPING);
-  return true;
+
+  time = 0;
+  if SUCCEEDED(ds_buf->Start(DSCBSTART_LOOPING))
+    capturing = true;
+
+  return capturing;
 }
 
 void 
 DSoundSource::stop()
 {
   if (!ds_buf) return;
+
   ds_buf->Stop();
+  capturing = false;
 }
 
 size_t 
@@ -136,10 +161,10 @@ DSoundSource::captured_size() const
     return read_cur + buf_size - cur;
 }
 
-size_t 
-DSoundSource::captured_ms() const
+vtime_t
+DSoundSource::captured_time() const
 {
-  return captured_size() * 1000 / spk.sample_rate;
+  return captured_size() * bytes2time;
 }
 
 Speakers
@@ -148,11 +173,14 @@ DSoundSource::get_output() const
   return spk;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Source interface
+
 bool
 DSoundSource::is_empty() const
 {
   if (chunk_size_ms)
-    return captured_ms() < chunk_size_ms;
+    return captured_time() * 1000 < chunk_size_ms;
   else
     return ds_buf != 0;
 }
@@ -195,6 +223,32 @@ DSoundSource::get_chunk(Chunk *_chunk)
   if FAILED(ds_buf->Unlock(data1, len1, data2, len2))
     return false;
 
-  _chunk->set_rawdata(spk, out_buf.get_data(), len1 + len2);
+  _chunk->set_rawdata(spk, out_buf.get_data(), len1 + len2, true, time);
+  time += (len1 + len2) * bytes2time;
   return true;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// TimeControl interface
+
+bool 
+DSoundSource::is_clock() const
+{
+  return true;
+}
+
+vtime_t 
+DSoundSource::get_time() const
+{
+  return time + captured_size() * bytes2time;
+}
+
+bool 
+DSoundSource::can_sync() const
+{
+  return false;
+}
+
+void
+DSoundSource::set_sync(Clock *sync_source)
+{}
