@@ -16,7 +16,7 @@ int main(int argc, const char **argv)
   bool stat = true;  // display statistics
 
   RAWSource src;
-  RAWRenderer dst;
+  RAWSink   dst;
 
   if (argc < 3)
   {

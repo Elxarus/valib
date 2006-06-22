@@ -5,70 +5,85 @@
 #ifndef SINK_RAW_H
 #define SINK_RAW_H
 
-#include "sink.h"
 #include "auto_file.h"
 
-class RAWRenderer : public NullRenderer
+class RAWSink : public Sink
 {
 protected:
+  Speakers spk;
   AutoFile f;
 
 public:
-  RAWRenderer() 
+  RAWSink() 
   {}
 
-  RAWRenderer(const char *_filename): 
+  RAWSink(const char *_filename): 
   f(_filename, "wb") 
   {}
 
-  RAWRenderer(FILE *_f): 
+  RAWSink(FILE *_f): 
   f(_f) 
   {}
 
   /////////////////////////////////////////////////////////
-  // RAWRenderer interface
+  // RAWSink interface
 
-  bool open_file(const char *_filename)
+  bool open(const char *_filename)
   {
     return f.open(_filename, "wb");
   }
 
-  bool open_file(FILE *_f)
+  bool open(FILE *_f)
   {
     return f.open(_f);
   }
 
-  void close_file()
+  void close()
   {
-    close();
     f.close();
+    spk = spk_unknown;
   }
 
-  bool is_file_open() const
+  bool is_open() const
   {
     return f.is_open();
   }
 
   /////////////////////////////////////////////////////////
-  // AudioRenderer interface
+  // Sink interface
 
-  // Device open/close
-  virtual bool query(Speakers _spk) const  
+  virtual bool query_input(Speakers _spk) const  
   { 
     // cannot write linear format
-    return _spk.format != FORMAT_LINEAR;
+    return f.is_open() && _spk.format != FORMAT_LINEAR;
+  }
+
+  virtual bool set_input(Speakers _spk)
+  { 
+    if (!query_input(_spk))
+      return false;
+
+    spk = _spk;
+    return true;
+  }
+
+  virtual Speakers get_input() const
+  {
+    return spk;
   }
 
   // data write
-  virtual bool write(const Chunk *_chunk)               
-  { 
-    if (!receive_chunk(_chunk))
-      return false;
+  virtual bool process(const Chunk *_chunk)               
+  {
+    if (_chunk->is_dummy())
+      return true;
+
+    if (spk != _chunk->spk)
+      if (!set_input(_chunk->spk))
+        return false;
 
     return f.write(_chunk->rawdata, _chunk->size) == _chunk->size;
   }
 };
-
-
 
 #endif

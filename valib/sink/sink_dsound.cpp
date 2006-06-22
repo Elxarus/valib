@@ -10,273 +10,255 @@
 #define SAFE_RELEASE(p) { if (p) p->Release(); p = 0; }
 
 
-#define MAX_CACHE 256
-class SpeakersCache
-{
-protected:
-  Speakers allow_cache[MAX_CACHE];
-  Speakers deny_cache[MAX_CACHE];
-  int      allow_cache_size;
-  int      deny_cache_size;
-
-public:
-  SpeakersCache(): allow_cache_size(0), deny_cache_size(0) {};
-
-  bool is_allowed(Speakers spk)
-  {
-    for (int i = 0; i < allow_cache_size; i++)
-      if (spk == allow_cache[i])
-        return true;
-    return false;
-  }
-
-  bool is_denied(Speakers spk)
-  {
-    for (int i = 0; i < deny_cache_size; i++)
-      if (spk == deny_cache[i])
-        return true;
-    return false;
-  }
-
-  void allow(Speakers spk)
-  {
-    if (allow_cache_size < MAX_CACHE)
-    {
-      allow_cache[allow_cache_size] = spk;
-      allow_cache_size++;
-    }
-  }
-
-  void deny(Speakers spk)
-  {
-    if (deny_cache_size < MAX_CACHE)
-    {
-      deny_cache[deny_cache_size] = spk;
-      deny_cache_size++;
-    }
-  }
-
-};
-
-SpeakersCache ds_cache;
-
-
-DSRenderer::DSRenderer(HWND _hwnd, int _ds_buf_size_ms, int _preload_ms)
+DSoundSink::DSoundSink(HWND _hwnd, int _buf_size_ms, int _preload_ms, LPCGUID _device)
 {
   hwnd = _hwnd;
   if (!hwnd) hwnd = GetForegroundWindow();
   if (!hwnd) hwnd = GetDesktopWindow();
 
-  ds       = 0;
-  ds_buf   = 0;
-#ifdef DSOUND_SINK_PRIMARY_BUFFER
-  ds_buf_prim = 0;
-#endif
+  device       = _device;
+  buf_size_ms  = _buf_size_ms;
+  preload_ms   = _preload_ms;
+
+  spk          = spk_unknown;
+  buf_size     = 0;
+  preload_size = 0;
+  bytes2time   = 0.0;
+
+  ds      = 0;
+  ds_buf  = 0;
+
+  cur     = 0;
+  time    = 0;
+  playing = false;
+  paused  = true;
+}
+
+DSoundSink::~DSoundSink()
+{
+  close();
+}
+
+bool
+DSoundSink::init(int _buf_size_ms, int _preload_ms, LPCGUID _device)
+{
+  close();
+  buf_size_ms = _buf_size_ms;
+  preload_ms = _preload_ms;
+  device = _device;
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Resource allocation
+
+bool
+DSoundSink::open(Speakers _spk)
+{
+  AutoLock autolock(&lock);
+
+  spk = _spk;
+
+  WAVEFORMATEXTENSIBLE wfx;
   memset(&wfx, 0, sizeof(wfx));
 
-  buf_size     = 0;
-  buf_size_ms  = _ds_buf_size_ms;
-  preload_size = 0;
-  preload_ms   = _preload_ms;
-  cur          = 0;
-  time         = 0;
+  if (spk2wfx(_spk, (WAVEFORMATEX*)(&wfx), true))
+    if (open((WAVEFORMATEX*)(&wfx)))
+      return true;
 
-  playing  = false;
-  paused   = true;
+  if (spk2wfx(_spk, (WAVEFORMATEX*)&wfx, false))
+    if (open((WAVEFORMATEX*)(&wfx)))
+      return true;
 
-  vol = 1.0;
-  pan = 0;
+  close();
+  return false;
+}
 
-  if FAILED(DirectSoundCreate(0, &ds, 0))
+bool
+DSoundSink::open(WAVEFORMATEX *wf)
+{
+  AutoLock autolock(&lock);
+
+  buf_size = wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000;
+  preload_size = wf->nBlockAlign * wf->nSamplesPerSec * preload_ms / 1000;
+  bytes2time = 1.0 / wf->nAvgBytesPerSec;
+
+  // DirectSound buffer description
+  DSBUFFERDESC dsbdesc;
+  memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
+  dsbdesc.dwSize        = sizeof(DSBUFFERDESC);
+  dsbdesc.dwFlags       = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
+  dsbdesc.dwBufferBytes = buf_size;
+  dsbdesc.lpwfxFormat   = wf;
+
+  // Open DirectSound
+  if FAILED(DirectSoundCreate(device, &ds, 0))
   {
-    ds = 0;
-    return;
+    SAFE_RELEASE(ds);
+    return false;
   }
 
   if FAILED(ds->SetCooperativeLevel(hwnd, DSSCL_PRIORITY))
   {
     SAFE_RELEASE(ds);
-    return;
+    return false;
   }
-#ifdef DSOUND_SINK_PRIMARY_BUFFER
-  DSBUFFERDESC dsbdesc;
-  ZeroMemory(&dsbdesc, sizeof(DSBUFFERDESC));
-  dsbdesc.dwSize  = sizeof(DSBUFFERDESC);
-  dsbdesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
- 
-  if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf_prim, 0))
+
+
+  if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf, 0)) 
   {
+    SAFE_RELEASE(ds_buf);
     SAFE_RELEASE(ds);
-    return;
-  }
-#endif
-}
-
-DSRenderer::~DSRenderer()
-{
-  close();
-  if (ds) ds->Release();
-}
-
-
-
-
-bool 
-DSRenderer::query(Speakers _spk) const
-{
-  if (!ds) return false;
-
-  if (ds_cache.is_allowed(_spk)) return true;
-  if (ds_cache.is_denied (_spk)) return false;
-
-  IDirectSoundBuffer  *ds_buf_test;
-  WAVEFORMATEXTENSIBLE wfx_test;
-
-  if (!spk2wfx(_spk, (WAVEFORMATEX *)&wfx_test, true))
-  {
-    ds_cache.deny(_spk);
     return false;
   }
 
-  DSBUFFERDESC dsbdesc;
-  ZeroMemory(&dsbdesc, sizeof(DSBUFFERDESC));
-  dsbdesc.dwSize        = sizeof(DSBUFFERDESC);
-  dsbdesc.dwFlags       = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
-  if (!_spk.is_spdif())
-    dsbdesc.dwFlags    |= DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLPAN;
-  dsbdesc.dwBufferBytes = buf_size_ms * wfx_test.Format.nSamplesPerSec * wfx_test.Format.nBlockAlign / 1000;
-  dsbdesc.lpwfxFormat   = (WAVEFORMATEX *)&wfx_test;
-
-  if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf_test, 0)) 
-  {
-    ds_cache.deny(_spk);
-    return false;
-  }
-
-  ds_buf_test->Release();
-  ds_cache.allow(_spk);
-  return true;
-}
-
-bool 
-DSRenderer::open(Speakers _spk)
-{
-  if (!ds) return false;
-  if (!query(_spk)) return false; // update cache
-
-  AutoLock autolock(&lock);
-
-  if (ds_buf) close();
-
-  spk = _spk;
-  if (!spk2wfx(spk, (WAVEFORMATEX *)&wfx, true))
-    return false;
-
-  buf_size = buf_size_ms * wfx.Format.nSamplesPerSec * wfx.Format.nBlockAlign / 1000;
-  preload_size = preload_ms * wfx.Format.nSamplesPerSec * wfx.Format.nBlockAlign / 1000;
-  if (preload_size > buf_size / 2)
-  {
-    buf_size = preload_size * 2;
-    buf_size_ms = preload_ms * 2;
-  }
-
-  DSBUFFERDESC dsbdesc;
-  ZeroMemory(&dsbdesc, sizeof(DSBUFFERDESC));
-  dsbdesc.dwSize        = sizeof(DSBUFFERDESC);
-  dsbdesc.dwFlags       = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
-  if (!spk.is_spdif())
-    dsbdesc.dwFlags    |= DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLPAN;
-  dsbdesc.dwBufferBytes = buf_size;
-  dsbdesc.lpwfxFormat   = (WAVEFORMATEX *)&wfx;
-
-  if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf, 0)) return false;
-
+  // Zero playback buffer
   void *data;
   DWORD data_bytes;
   if FAILED(ds_buf->Lock(0, buf_size, &data, &data_bytes, 0, 0, 0)) 
   {
     SAFE_RELEASE(ds_buf);
+    SAFE_RELEASE(ds);
     return false;
   }
 
-  // Zero buffer???
-  ZeroMemory(data, data_bytes);
+  memset(data, 0, data_bytes);
   if FAILED(ds_buf->Unlock(data, data_bytes, 0, 0))
   {
     SAFE_RELEASE(ds_buf);
+    SAFE_RELEASE(ds);
     return false;
   }
 
+  // Prepare to playback
   ds_buf->SetCurrentPosition(0);
+  cur = 0;
+  time = 0;
   playing = false;
   paused = false;
-  cur = 0;
-
-  set_vol(vol);
-  set_pan(pan);
-
   return true;
 }
 
-void 
-DSRenderer::close()
+bool 
+DSoundSink::try_open(Speakers _spk) const
+{
+  WAVEFORMATEXTENSIBLE wfx;
+  memset(&wfx, 0, sizeof(wfx));
+
+  if (spk2wfx(_spk, (WAVEFORMATEX*)(&wfx), true))
+    if (try_open((WAVEFORMATEX*)(&wfx)))
+      return true;
+
+  if (spk2wfx(_spk, (WAVEFORMATEX*)&wfx, false))
+    if (try_open((WAVEFORMATEX*)(&wfx)))
+      return true;
+
+  return false;
+}
+
+bool
+DSoundSink::try_open(WAVEFORMATEX *wf) const
+{
+  IDirectSound *test_ds;
+  IDirectSoundBuffer *test_ds_buf;
+
+  DWORD test_buf_size = wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000;
+  DWORD test_preload_size = wf->nBlockAlign * wf->nSamplesPerSec * preload_ms / 1000;
+
+  // DirectSound buffer description
+  DSBUFFERDESC dsbdesc;
+  memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
+  dsbdesc.dwSize        = sizeof(DSBUFFERDESC);
+  dsbdesc.dwFlags       = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
+  dsbdesc.dwBufferBytes = buf_size;
+  dsbdesc.lpwfxFormat   = wf;
+
+  // Open DirectSound
+  if FAILED(DirectSoundCreate(device, &test_ds, 0))
+  {
+    SAFE_RELEASE(test_ds);
+    return false;
+  }
+
+  if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0)) 
+  {
+    SAFE_RELEASE(test_ds_buf);
+    SAFE_RELEASE(test_ds);
+    return false;
+  }
+  return true;
+}
+
+void
+DSoundSink::close()
 {
   AutoLock autolock(&lock);
 
-  if (ds_buf) SAFE_RELEASE(ds_buf);
+  spk          = spk_unknown;
+  buf_size     = 0;
+  preload_size = 0;
+  bytes2time   = 0.0;
+
+  SAFE_RELEASE(ds_buf);
+  SAFE_RELEASE(ds);
+
+  cur     = 0;
+  time    = 0;
+  playing = false;
+  paused  = false;
 }
 
-bool 
-DSRenderer::is_open() const
+///////////////////////////////////////////////////////////////////////////////
+// Own interface
+
+size_t 
+DSoundSink::buffered_size() const
 {
-  return ds_buf != 0;
-}
+  if (!ds_buf) return 0;
 
-Speakers
-DSRenderer::get_spk() const
-{
-  return spk;
-}
+  DWORD play_cur;
+  ds_buf->GetCurrentPosition(&play_cur, 0);
 
-
-
-
-bool 
-DSRenderer::is_time() const
-{
-  return true;
+  if (play_cur > cur)
+    return buf_size + cur - play_cur;
+  else if (play_cur < cur)
+    return cur - play_cur;
+  else
+    // if playback cursor is equal to buffer write position it may mean:
+    // * playback is stopped/paused so both pointers are equal (buffered size = 0)
+    // * buffer is full so both pointers are equal (buffered size = buf_size)
+    // * buffer underrun (we do not take this in account because in either case
+    //   it produces playback glitch)
+    return playing? 0: buf_size;
 }
 
 vtime_t
-DSRenderer::get_time() const
+DSoundSink::buffered_time() const
 {
-  if (!ds_buf) return 0;
-  DWORD play_cur, write_cur;
-  ds_buf->GetCurrentPosition(&play_cur, &write_cur);
-  if (play_cur < cur)
-    return time - (cur - play_cur) / wfx.Format.nBlockAlign;
-  else if (play_cur > cur)
-    return time - (buf_size - play_cur + cur) / wfx.Format.nBlockAlign;
-  else
-    return 0;
+  return buffered_size() * bytes2time;
 }
 
-
+bool 
+DSoundSink::is_playing() const
+{
+  return playing;
+}
 
 void 
-DSRenderer::stop()
+DSoundSink::start()
 {
   if (!ds_buf) return;
   AutoLock autolock(&lock);
 
-  ds_buf->Stop();
-  ds_buf->SetCurrentPosition(0);
-  playing = false;
-  cur = 0;
+  // We may have buffered data already
+  // so we must not drop cursor position
+
+  ds_buf->Play(0, 0, DSBPLAY_LOOPING);
+  playing = true;
 }
 
 void 
-DSRenderer::flush()
+DSoundSink::flush()
 {
   if (!ds_buf) return;
   AutoLock autolock(&lock);
@@ -312,7 +294,7 @@ DSRenderer::flush()
   if (data_size > buf_size / 2)
   {
     data_size -= buf_size / 2;
-    Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+    Sleep(DWORD(data_size * bytes2time * 1000 + 1));
   }
 
   /////////////////////////////////////////////////////////
@@ -349,7 +331,7 @@ DSRenderer::flush()
   // Sleep until the end of playback
 
   data_size = buf_size - data_size;
-  Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+  Sleep(DWORD(data_size * bytes2time * 1000 + 1));
 
   /////////////////////////////////////////////////////////
   // Stop the playback
@@ -360,7 +342,28 @@ DSRenderer::flush()
   cur = 0;
 }
 
-void DSRenderer::pause()
+void 
+DSoundSink::stop()
+{
+  if (!ds_buf) return;
+  AutoLock autolock(&lock);
+
+  ds_buf->Stop();
+  playing = false;
+
+  // Drop cursor positions
+  ds_buf->SetCurrentPosition(0);
+  cur = 0;
+}
+
+bool 
+DSoundSink::is_paused() const
+{
+  return paused;
+}
+
+void
+DSoundSink::pause()
 {
   if (!ds_buf) return;
   AutoLock autolock(&lock);
@@ -369,122 +372,61 @@ void DSRenderer::pause()
   paused = true;
 }
 
-void DSRenderer::unpause()
+void 
+DSoundSink::unpause()
 {
+  if (!ds_buf) return;
   AutoLock autolock(&lock);
 
-  if (!ds_buf) return;
   if (playing)
     ds_buf->Play(0, 0, DSBPLAY_LOOPING);
+
   paused = false;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Sink interface
+
 bool 
-DSRenderer::is_paused() const
+DSoundSink::query_input(Speakers _spk) const
 {
-  return paused;
-}
-
-
-
-bool
-DSRenderer::is_vol() const
-{
-  return true;
-}
-
-double
-DSRenderer::get_vol() const
-{
-  return vol;
-}
-
-void 
-DSRenderer::set_vol(double _vol)
-{
-  AutoLock autolock(&lock);
-
-  vol = _vol;
-  if (ds_buf)
-  {
-    // Convert volume value [0;1] to decibels
-    // In DirectSound volume is specified in hundredths of decibels
-    // Zero volume is converted to -100dB
-
-    int v = -10000;
-    if (vol > 0)
-      v = int(log(vol) * 2000);
-    else
-      vol = 0;
-    ds_buf->SetVolume(v);
-  }
+  return try_open(_spk);
 }
 
 bool 
-DSRenderer::is_pan() const
-{
-  return true;
-}
-
-double 
-DSRenderer::get_pan() const
-{
-  return pan;
-}
-
-void 
-DSRenderer::set_pan(double _pan)
+DSoundSink::set_input(Speakers _spk)
 {
   AutoLock autolock(&lock);
 
-  pan = _pan;
-
-  if (ds_buf)
-  {
-    // Convert pan value [-1; 1] to decibels
-    // The volume is specified in hundredths of decibels
-    // Boundaries are converted to +/-100dB
-    int p = 0;
-    if (pan >= 1.0)       p = +10000;
-    else if (pan <= -1.0) p = -10000;
-    else if (pan > 0)     p = int(-log(1 - pan) * 2000);
-    else if (pan < 0)     p = int(+log(1 + pan) * 2000);
-    ds_buf->SetPan(p);
-  }
+  close();
+  return open(_spk);
 }
 
+Speakers
+DSoundSink::get_input() const
+{
+  return spk;
+}
 
-size_t 
-DSRenderer::get_buffer_size() const
+bool DSoundSink::process(const Chunk *_chunk)
 {
   if (!ds_buf) return false;
-  DWORD play_cur;
-
-  ds_buf->GetCurrentPosition(&play_cur, 0);
-  if (play_cur > cur)
-    return play_cur - cur;
-  else if (play_cur < cur)
-    return play_cur + buf_size - cur;
-  else // play_cur = cur
-    if (!playing) 
-      return 0;
-    else 
-      return buf_size;
-}
-
-bool DSRenderer::write(const Chunk *chunk)
-{
   AutoLock autolock(&lock);
 
-  if (!ds_buf) return false;
+  if (_chunk->is_dummy())
+    return true;
+
+  if (_chunk->spk != spk)
+    if (!set_input(_chunk->spk))
+      return false;
 
   void *data1, *data2;
   DWORD data1_bytes, data2_bytes;
   DWORD play_cur;
   size_t data_size;
 
-  size_t  size = chunk->size;
-  uint8_t *buf = chunk->rawdata;
+  size_t  size = _chunk->size;
+  uint8_t *buf = _chunk->rawdata;
 
   while (size)
   {
@@ -496,18 +438,20 @@ bool DSRenderer::write(const Chunk *chunk)
     if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
       return false;
 
-    data_size = buf_size + play_cur - cur;
-    if (data_size >= buf_size)
-      data_size -= buf_size;
-
-    if (!playing && !data_size)
-      data_size = buf_size;
+    if (play_cur > cur)
+      data_size = play_cur - cur;
+    else if (play_cur < cur)
+      data_size = buf_size + play_cur - cur;
+    else
+      // if playback cursor is equal to buffer write position it may mean:
+      // * playback is stopped/paused so both pointers are equal (free buffer = buf_soze)
+      // * buffer is full so both pointers are equal (free buffer = 0)
+      // * buffer underrun (we do not take this in account because in either case
+      //   it produces playback glitch)
+      data_size = playing? 0: buf_size;
 
     if (data_size > size)
       data_size = size;
-
-    if (!data_size)
-      data_size = data_size;
 
     ///////////////////////////////////////////////////////
     // Put data to playback buffer
@@ -540,7 +484,7 @@ bool DSRenderer::write(const Chunk *chunk)
     if (!playing && cur > preload_size)
     {
       if (!paused)
-        ds_buf->Play(0, 0, DSBPLAY_LOOPING);
+        HRESULT hr = ds_buf->Play(0, 0, DSBPLAY_LOOPING);
       playing = true;
     }
 
@@ -558,21 +502,46 @@ bool DSRenderer::write(const Chunk *chunk)
     if (size)
     {
       // sleep until we can put all remaining data or 
-      // we have free at half of playback buffer
+      // we have free at least half of playback buffer
       data_size = min(size, buf_size / 2);
-      Sleep(data_size / (wfx.Format.nBlockAlign * wfx.Format.nSamplesPerSec / 1000) + 1);
+      Sleep(DWORD(data_size * bytes2time * 1000 + 1));
       continue;
     }
   }
 
-  size = chunk->size / wfx.Format.nBlockAlign;
-  if (chunk->sync)
-    time = chunk->time + size;
-  else
-    time += size;
+//  if (_chunk->sync)
+//    time = _chunk->time + _chunk->size * bytes2time;
+//  else
+    time += _chunk->size * bytes2time;
 
-  if (chunk->eos)
+  if (_chunk->eos)
     flush();
 
   return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// TimeControl interface
+
+bool 
+DSoundSink::is_clock() const
+{
+  return true;
+}
+
+vtime_t 
+DSoundSink::get_time() const
+{
+  return time - buffered_time();
+}
+
+bool 
+DSoundSink::can_sync() const
+{
+  return true;
+}
+
+void 
+DSoundSink::set_sync(Clock *sync_clock)
+{
 }

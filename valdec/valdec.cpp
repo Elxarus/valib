@@ -211,10 +211,12 @@ int main(int argc, char *argv[])
   // Sinks
   /////////////////////////////////////////////////////////
 
-  RAWRenderer    raw;
-  DSRenderer     dsound(0);
-  NullRenderer   null;
-  AudioRenderer *sink = &dsound;
+  RAWSink    raw;
+  DSoundSink dsound(0);
+  NullSink   null;
+
+  Sink      *sink = &dsound;
+  Clock     *clock = &dsound;
 
   /////////////////////////////////////////////////////////
   // Filters
@@ -289,6 +291,7 @@ int main(int argc, char *argv[])
       }
 
       sink = &null;
+      clock = 0;
       mode = mode_decode;
       continue;
     }
@@ -304,6 +307,7 @@ int main(int argc, char *argv[])
       }
 
       sink = &dsound;
+      clock = &dsound;
       mode = mode_play;
       continue;
     }
@@ -324,18 +328,19 @@ int main(int argc, char *argv[])
       }
 
       const char *filename = argv[++iarg];
-      if (!raw.open_file(filename))
+      if (!raw.open(filename))
       {
         printf("Error: failed to open file '%s'", filename);
         return 1;
       }
 
       sink = &raw;
+      clock = 0;
       mode = mode_raw;
       continue;
     }
 
-    // -n[othing] - play
+    // -n[othing] - no output
     if (is_arg(argv[iarg], "n", argt_exist) || 
         is_arg(argv[iarg], "nothing", argt_exist))
     {
@@ -346,6 +351,7 @@ int main(int argc, char *argv[])
       }
 
       sink = &null;
+      clock = 0;
       mode = mode_nothing;
       continue;
     }
@@ -716,7 +722,7 @@ int main(int argc, char *argv[])
   /////////////////////////////////////////////////////////
 
   printf("Opening %s %s %iHz audio output...\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
-  if (!sink->open(spk))
+  if (!sink->set_input(spk))
   {
     printf("Error: Cannot open audio output!");
     return 1;
@@ -775,9 +781,9 @@ int main(int argc, char *argv[])
         old_ms = ms;
 
         // Levels
-        if (!spdif)
+        if (!spdif && clock)
         {
-          proc.get_output_levels(sink->get_time(), levels);
+          proc.get_output_levels(clock->get_time(), levels);
           level = levels[0];
           for (i = 1; i < NCHANNELS; i++)
             if (levels[i] > level)

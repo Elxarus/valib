@@ -8,82 +8,115 @@
 #include <dsound.h>
 #include <ks.h>
 #include <ksmedia.h>
-#include "sink.h"
+#include "filter.h"
+#include "vtime.h"
 #include "win32\thread.h"
 
-// uncomment the following string to create primary audio buffer
-//#define DSOUND_SINK_PRIMARY_BUFFER
-
-class DSRenderer : public AudioRenderer
+class DSoundSink : public Sink, public Clock
 {
 protected:
-  IDirectSound        *ds;
-#ifdef DSOUND_SINK_PRIMARY_BUFFER
-  IDirectSoundBuffer  *ds_prim;
-#endif
-  IDirectSoundBuffer  *ds_buf;
-  WAVEFORMATEXTENSIBLE wfx;
+  /////////////////////////////////////////////////////////
+  // Init parameters set by user (must not clear)
 
   HWND     hwnd;
-  CritSec  lock;
+  LPCGUID  device;        // DirectSound device
+  int      buf_size_ms;   // buffer size in ms
+  int      preload_ms;    // preload size in ms
 
-  DWORD    buf_size_ms;   // buffer size in ms
+  Clock   *sync_source;   // Clock we must sync with
+
+  /////////////////////////////////////////////////////////
+  // Parameters that depend on initialization
+  // (do not change on processing)
+
+  Speakers spk;           // playback format
   DWORD    buf_size;      // buffer size in bytes
-  DWORD    preload_ms;    // preload size in ms
   DWORD    preload_size;  // preload size in bytes
+  double   bytes2time;    // factor to convert bytes to seconds
 
-  DWORD    cur;           // Cursor in sound buffer
+  /////////////////////////////////////////////////////////
+  // DirectSound
 
-  // AudioRenderer
-  Speakers spk;           // Configuration
+  IDirectSound        *ds;
+  IDirectSoundBuffer  *ds_buf;
 
+  /////////////////////////////////////////////////////////
+  // Processing parameters
+
+  DWORD    cur;           // cursor in sound buffer
+  vtime_t  time;          // time of last sample received
   bool     playing;       // playing state
   bool     paused;        // paused state
-  
-  double   vol;           // volume
-  double   pan;           // panning
 
-  vtime_t  time;          // time of last sample received
-
-public:
-  DSRenderer(HWND hwnd, int buf_size_ms = 2000, int preload_ms = 500);
-  ~DSRenderer();
-
-public:
   /////////////////////////////////////////////////////////
-  // AudioRenderer interface
+  // Threading
 
-  // Open/close output device
-  virtual bool query(Speakers spk) const;
-  virtual bool open(Speakers spk);
-  virtual void close();
-  virtual bool is_open() const;
-  virtual Speakers get_spk() const;
+  CritSec  lock;
 
-  // playback control
-  virtual void stop();
-  virtual void flush();
+  /////////////////////////////////////////////////////////
+  // Resource allocation
 
-  virtual void pause();
-  virtual void unpause();
-  virtual bool is_paused() const;
- 
-  // timing
-  virtual bool    is_time() const;
+  void zero_all();
+  bool open(Speakers spk);
+  bool open(WAVEFORMATEX *wfx);
+  bool try_open(Speakers spk) const;
+  bool try_open(WAVEFORMATEX *wf) const;
+  void close();
+
+public:
+  DSoundSink(HWND hwnd, int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
+  ~DSoundSink();
+
+  /////////////////////////////////////////////////////////
+  // Own interface
+
+  bool init(int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
+
+  // This functions report output buffer fullness
+  size_t  buffered_size() const;
+  vtime_t buffered_time() const;
+
+  // Playback control functions
+  // * we should not normally call start() manually because
+  //   playback is started automatically after prebuffering
+  // * we may call either flush() or stop() to stop playback.
+  //   Both functions stops playback but flush() does flushing
+  //   and blocks until end of buffered playback when stop() 
+  //   stops playback immediately.
+  // * flush() is called from process() and stops playback
+  //   so normally we may not call flush() before stop()
+  // * stop() should be called after the end of porcessing
+  //   just to ensure that playback is stopped.
+  // * pause() must be called from control thread,
+  //   deadlock is possible if called from working thread)
+  // * we can pause when playing but cannot unpause when not
+  //   playing.
+
+  bool is_playing() const;
+  void start();
+  void flush();
+  void stop();
+
+  bool is_paused() const;
+  void pause();
+  void unpause();
+
+  /////////////////////////////////////////////////////////
+  // Sink interface
+
+  virtual bool query_input(Speakers _spk) const;
+  virtual bool set_input(Speakers _spk);
+  virtual Speakers get_input() const;
+  virtual bool process(const Chunk *_chunk);
+
+  /////////////////////////////////////////////////////////
+  // TimeControl interface
+
+  virtual bool is_clock() const;
   virtual vtime_t get_time() const;
 
-  // volume & pan
-  virtual bool   is_vol() const;
-  virtual double get_vol() const;
-  virtual void   set_vol(double vol);
-
-  virtual bool   is_pan() const;
-  virtual double get_pan() const;
-  virtual void   set_pan(double pan);
-
-  // data write
-  virtual size_t get_buffer_size() const;
-  virtual bool   write(const Chunk *chunk);
+  virtual bool can_sync() const;
+  virtual void set_sync(Clock *);
 };
 
 #endif

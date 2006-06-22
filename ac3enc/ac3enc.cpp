@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   Converter   conv(2048);
   AC3Enc      enc;
   AC3Parser   dec;
-  RAWRenderer sink;
+  RAWSink     sink;
 
   FilterChain chain;
   chain.add_back(&conv, "Converter");
