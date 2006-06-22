@@ -13,7 +13,6 @@
 #include "filters\proc.h"
 #include "filters\spdifer.h"
 
-#include "sink.h"
 #include "sink\sink_raw.h"
 #include "sink\sink_dsound.h"
 
