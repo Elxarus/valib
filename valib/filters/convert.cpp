@@ -136,6 +136,7 @@ Converter::initialize()
   {
     // no conversion required
     // no buffer required
+    time_factor = 1.0;
     convert = &Converter::passthrough;
     return true; 
   }
@@ -162,6 +163,8 @@ Converter::initialize()
 
   if (format == FORMAT_LINEAR)
   {
+    time_factor = spk.sample_rate;
+
     // set channel pointers
     out_samples[0] = (sample_t *)buf.get_data();
     for (int ch = 1; ch < spk.nch(); ch++)
@@ -171,6 +174,8 @@ Converter::initialize()
   }
   else
   {
+    time_factor = 1.0 / spk.sample_rate;
+
     // set rawdata pointer
     out_rawdata = buf.get_data();
     out_samples.zero();
@@ -300,12 +305,13 @@ Converter::get_chunk(Chunk *_chunk)
   (
     get_output(), 
     out_rawdata, out_samples, out_size, 
-    sync, time, 
+    sync, time * time_factor, 
     flushing && !size
   );
 
   flushing = flushing && size;
   sync = false;
+  time = 0;
   return true;
 }
 

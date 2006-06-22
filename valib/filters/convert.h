@@ -28,6 +28,7 @@ protected:
   // conversion function pointer
   typedef void (Converter::*convert_t)();
   convert_t convert;       // conversion function
+  vtime_t time_factor;     // time conversion factor
 
   // format
   int  format;             // format to convert to
