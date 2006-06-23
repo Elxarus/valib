@@ -39,6 +39,7 @@ public:
   Clock() {};
   virtual ~Clock() {};
 
+  virtual bool is_counting() const = 0;
   virtual vtime_t get_time() const = 0;
 
   virtual bool can_sync() const = 0;

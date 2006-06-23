@@ -112,7 +112,7 @@ public:
   /////////////////////////////////////////////////////////
   // TimeControl interface
 
-  virtual bool is_clock() const;
+  virtual bool is_counting() const;
   virtual vtime_t get_time() const;
 
   virtual bool can_sync() const;

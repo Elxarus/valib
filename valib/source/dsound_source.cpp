@@ -232,9 +232,9 @@ DSoundSource::get_chunk(Chunk *_chunk)
 // TimeControl interface
 
 bool 
-DSoundSource::is_clock() const
+DSoundSource::is_counting() const
 {
-  return true;
+  return capturing;
 }
 
 vtime_t 

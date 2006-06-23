@@ -524,9 +524,9 @@ bool DSoundSink::process(const Chunk *_chunk)
 // TimeControl interface
 
 bool 
-DSoundSink::is_clock() const
+DSoundSink::is_counting() const
 {
-  return true;
+  return playing && !paused;
 }
 
 vtime_t 
