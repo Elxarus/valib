@@ -52,7 +52,6 @@ protected:
   // next[]       - points to the next node
   // prev[]       - points to the previous node
   // filter[]     - node filter
-  // filter_spk[] - input format of the node filter
   //
   // Last element is a special end-node
   // node_end index points to the end-node
@@ -68,15 +67,6 @@ protected:
   //   filter[node_end] - NullFilter
   //     it is used when chain is empty and
   //     when we need to generate a special output
-  //
-  //   filter_spk[node_end] output format of the last filter
-  //     in the chain ( = graph output format)
-  //     contains spk_unknown if chain is empty
-  //
-  // Other interesting values:
-  //   filter_spk[prev[node_end]] chain input format
-  //     equals to filter_spk[node_end] that in order 
-  //     equals to spk_unknown if chain is empty
   //
   // Only following functions can modify the chain:
   //   add_node()
