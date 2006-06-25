@@ -20,6 +20,21 @@ static const size_t min_data_size = 2048*4; // minimum data size to generate aft
 // noise speed test
 static const int noise_size = 10000000;
 
+class SinkAcceptSpdif : public NullSink
+{
+public:
+  SinkAcceptSpdif() {};
+};
+
+class SinkRefuseSpdif : public NullSink
+{
+public:
+  SinkRefuseSpdif() {};
+
+  bool query_input(Speakers _spk) const
+  { return _spk.format != FORMAT_SPDIF; }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
 
@@ -54,6 +69,8 @@ public:
     log->open_group("Transform test");
 
     // PES to SPDIF transform with format changes
+    dvd.set_sink(0);
+
     dvd.use_spdif = true;
     dvd.spdif_pt = FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS;
 
@@ -73,78 +90,95 @@ public:
     log->open_group("Dynamical graph rebuild");
 
     // Raw streams
-    spdif_rebuild("a.ac3.03f.ac3", Speakers(FORMAT_AC3, 0, 0), true);
-    spdif_rebuild("a.dts.03f.dts", Speakers(FORMAT_DTS, 0, 0), true);
-    spdif_rebuild("a.mp2.005.mp2", Speakers(FORMAT_MPA, 0, 0), true);
+    spdif_rebuild("a.ac3.03f.ac3", Speakers(FORMAT_AC3, 0, 0), true, true);
+    spdif_rebuild("a.dts.03f.dts", Speakers(FORMAT_DTS, 0, 0), true, true);
+    spdif_rebuild("a.mp2.005.mp2", Speakers(FORMAT_MPA, 0, 0), true, true);
 
     // PES streams
-    spdif_rebuild("a.ac3.03f.pes", Speakers(FORMAT_PES, 0, 0), true);
-    spdif_rebuild("a.dts.03f.pes", Speakers(FORMAT_PES, 0, 0), true);
-    spdif_rebuild("a.mp2.005.pes", Speakers(FORMAT_PES, 0, 0), true);
+    spdif_rebuild("a.ac3.03f.pes", Speakers(FORMAT_PES, 0, 0), true, true);
+    spdif_rebuild("a.dts.03f.pes", Speakers(FORMAT_PES, 0, 0), true, true);
+    spdif_rebuild("a.mp2.005.pes", Speakers(FORMAT_PES, 0, 0), true, true);
 
     // PCM streams
-    spdif_rebuild("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 48000), false);
-    spdif_rebuild("a.pcm.005.pes",  Speakers(FORMAT_PES, 0, 0), false);
+    spdif_rebuild("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 48000), false, true);
+    spdif_rebuild("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 45000), false, false);
+    spdif_rebuild("a.pcm.005.pes",  Speakers(FORMAT_PES, 0, 0), false, true);
 
     log->close_group();
   }
 
-  int spdif_rebuild(const char *file_name, Speakers spk, bool is_spdifable)
+  int spdif_rebuild(const char *file_name, Speakers spk, bool is_spdifable, bool can_encode)
   {
-    log->msg("Testing %s (%s)", file_name, spk.format_text());
+    log->open_group("Testing %s (%s)", file_name, spk.format_text());
 
-    // Check all possible transition between spdif modes
-    // (decode, passthrough, encode, stereo passthrough)
+    // Check all sink modes
+    // (no sink, spdif allowed, spdif refused)
 
-    RAWSource src(spk, file_name, 2048);
-    if (!src.is_open())
-      return log->err("Cannot open file %s", file_name);
+    SinkAcceptSpdif sink_accept_spdif;
+    SinkRefuseSpdif sink_refuse_spdif;
+    const Sink *sink[] = { 0, &sink_accept_spdif, &sink_refuse_spdif };
+    const bool spdif_allowed[] = { true, true, false };
+    const char *sink_name[] = { "no sink", "sink that accepts spdif", "sink that refuses spdif" };
 
-    if (!f->set_input(spk))
-      return log->err("dvd.set_input(%s %s %iHz) failed", 
-        spk.format_text(), spk.mode_text(), spk.sample_rate);
-
-    if (is_spdifable)
+    for (int isink = 0; isink < array_size(sink); isink++)
     {
-      test_decode(&src);
-      test_passthrough(&src);
-      test_encode(&src);
-      test_stereo_passthrough(&src);
+      // Check all possible transition between spdif modes
+      // (decode, passthrough, encode, stereo passthrough)
 
-      test_decode(&src);
-      test_encode(&src);
-      test_decode(&src);
+      log->msg("Test with %s", sink_name[isink]);
 
-      test_stereo_passthrough(&src);
-      test_passthrough(&src);
-      test_stereo_passthrough(&src);
+      RAWSource src(spk, file_name, 2048);
+      if (!src.is_open())
+        return log->err_close("Cannot open file %s", file_name);
 
-      test_encode(&src);
-      test_passthrough(&src);
-      test_decode(&src);
-    }
-    else
-    {
-      test_decode(&src);
-      test_encode(&src);
-      test_stereo_passthrough(&src);
-      test_decode(&src);
-      test_stereo_passthrough(&src);
-      test_encode(&src);
-      test_decode(&src);
-    }
+      if (!f->set_input(spk))
+        return log->err_close("dvd.set_input(%s %s %iHz) failed", 
+          spk.format_text(), spk.mode_text(), spk.sample_rate);
 
-    Chunk chunk;
-    while (!src.is_empty())
-    {
-      if (!src.get_chunk(&chunk))
-        return log->err("src.get_chunk() failed");
-      if (!f->process(&chunk))
-        return log->err("dvd.process() failed");
+      dvd.set_sink(sink[isink]);
+
+      if (is_spdifable)
+      {
+        test_decode(&src);
+        test_passthrough(&src, spdif_allowed[isink]);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_stereo_passthrough(&src);
+
+        test_decode(&src);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_decode(&src);
+
+        test_stereo_passthrough(&src);
+        test_passthrough(&src, spdif_allowed[isink]);
+        test_stereo_passthrough(&src);
+
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_passthrough(&src, spdif_allowed[isink]);
+        test_decode(&src);
+      }
+      else
+      {
+        test_decode(&src);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_stereo_passthrough(&src);
+        test_decode(&src);
+        test_stereo_passthrough(&src);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_decode(&src);
+      }
+
+      Chunk chunk;
+      while (!src.is_empty())
+      {
+        if (!src.get_chunk(&chunk))
+          return log->err_close("src.get_chunk() failed");
+        if (!f->process(&chunk))
+          return log->err_close("dvd.process() failed");
+      }
     }
 
     // todo: check number of output streams
-    return 0;
+    return log->close_group();
   }
 
   int test_decode(Source *src)
@@ -152,25 +186,35 @@ public:
     dvd.user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
     dvd.use_spdif = false;
     dvd.spdif_stereo_pt = false;
-    return test_cycle("test_decode()", src, SPDIF_DISABLED, FORMAT_PCM16);
+    return test_cycle("test_decode()", src, SPDIF_DISABLED, "decode", FORMAT_PCM16);
   }
 
-  int test_passthrough(Source *src)
+  int test_passthrough(Source *src, bool spdif_allowed)
   {
     dvd.user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
     dvd.use_spdif = true;
     dvd.spdif_stereo_pt = false;
     dvd.spdif_pt = FORMAT_CLASS_SPDIFABLE;
-    return test_cycle("test_passthrough()", src, SPDIF_PASSTHROUGH, FORMAT_SPDIF);
+    if (spdif_allowed)
+      return test_cycle("test_passthrough()", src, SPDIF_PASSTHROUGH, "spdif passthrough", FORMAT_SPDIF);
+    else
+      return test_cycle("test_passthrough()", src, SPDIF_SINK_REFUSED, "sink refused", FORMAT_PCM16);
   }
 
-  int test_encode(Source *src)
+  int test_encode(Source *src, bool spdif_allowed, bool can_encode)
   {
     dvd.user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
     dvd.use_spdif = true;
     dvd.spdif_stereo_pt = false;
     dvd.spdif_pt = 0;
-    return test_cycle("test_encode()", src, SPDIF_ENCODE, FORMAT_SPDIF);
+
+    if (!can_encode)
+      return test_cycle("test_encode()", src, SPDIF_CANNOT_ENCODE, "cannot encode", FORMAT_PCM16);
+
+    if (spdif_allowed)
+      return test_cycle("test_encode()", src, SPDIF_ENCODE, "ac3 encode", FORMAT_SPDIF);
+    else
+      return test_cycle("test_encode()", src, SPDIF_SINK_REFUSED, "sink refused", FORMAT_PCM16);
   }
 
   int test_stereo_passthrough(Source *src)
@@ -179,10 +223,10 @@ public:
     dvd.use_spdif = true;
     dvd.spdif_stereo_pt = true;
     dvd.spdif_pt = 0;
-    return test_cycle("test_stereo_passthrough()", src, SPDIF_STEREO_PASSTHROUGH, FORMAT_PCM16);
+    return test_cycle("test_stereo_passthrough()", src, SPDIF_STEREO_PASSTHROUGH, "stereo pcm passthrough", FORMAT_PCM16);
   }
 
-  int test_cycle(const char *caller, Source *src, int status, int out_format)
+  int test_cycle(const char *caller, Source *src, int status, const char *status_text, int out_format)
   {
     Chunk chunk;
 
@@ -205,7 +249,7 @@ public:
       }
 
     if (dvd.get_spdif_status() != status)
-      return log->err("%s: cannot switch to decode state", caller);
+      return log->err("%s: cannot switch to %s state", caller, status_text);
 
     // ensure correct data generation in new state
     // (filter may be either full or empty)
