@@ -30,7 +30,10 @@ public:
   int      spdif_pt;
   bool     spdif_stereo_pt;
 
-  DVDGraph();
+  DVDGraph(const Sink *sink = 0);
+
+  void set_sink(const Sink *sink);
+  const Sink *get_sink() const;
 
   int get_spdif_status() const;
 
@@ -41,7 +44,20 @@ protected:
   AudioProcessor proc;
   AC3Enc         enc;
 
-  enum state_t { state_demux = 0, state_pt, state_dec, state_proc_decode, state_proc_spdif, state_proc_stereo, state_enc, state_spdif };
+  const Sink *sink;
+  enum state_t 
+  { 
+    state_demux = 0,          // PES demux
+    state_pt,                 // SPDIF passthrough
+    state_dec,                // decode
+    state_proc_decode,        // processing for no spdif: spdif disabled
+    state_proc_stereo,        // processing for no spdif: stereo passthrough
+    state_proc_cannot_encode, // processing for no spdif: cannot encode
+    state_proc_sink_refused,  // processing for no spdif: sink refused
+    state_proc_spdif,         // processing for spdif: ac3 encode
+    state_enc,                // AC3 encode
+    state_spdif               // wrap encoded AC3 to SPDIF
+  };            
   int spdif_status;
 
 

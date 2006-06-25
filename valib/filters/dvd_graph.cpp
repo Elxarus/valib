@@ -2,7 +2,7 @@
 
 
 
-DVDGraph::DVDGraph()
+DVDGraph::DVDGraph(const Sink *_sink)
 :FilterGraph(-1), proc(4096)
 {
   user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
@@ -11,13 +11,30 @@ DVDGraph::DVDGraph()
   spdif_pt = FORMAT_MASK_AC3;
   spdif_stereo_pt = true;
   spdif_status = SPDIF_DISABLED;
+
+  sink = _sink;
 };
+
+void 
+DVDGraph::set_sink(const Sink *_sink)
+{
+  sink = _sink;
+}
+
+const Sink *
+DVDGraph::get_sink() const
+{
+  return sink;
+}
 
 int 
 DVDGraph::get_spdif_status() const
 { 
   return spdif_status; 
 };
+
+/////////////////////////////////////////////////////////////////////////////
+// FilterGraph overrides
 
 const char *
 DVDGraph::get_name(int node) const
@@ -27,9 +44,12 @@ DVDGraph::get_name(int node) const
     case state_demux:       return "Demux";
     case state_pt:          return "Spdifer (passthrough)";
     case state_dec:         return "Decoder";
-    case state_proc_decode: return "Processor";
-    case state_proc_spdif:  return "Processor";
-    case state_proc_stereo: return "Processor";
+    case state_proc_decode:
+    case state_proc_stereo:
+    case state_proc_cannot_encode:
+    case state_proc_sink_refused:
+    case state_proc_spdif:
+                            return "Processor";
     case state_enc:         return "Encoder";
     case state_spdif:       return "Spdifer";
   }
@@ -44,9 +64,12 @@ DVDGraph::get_filter(int node) const
     case state_demux:       return &demux;
     case state_pt:          return &spdifer;
     case state_dec:         return &dec;
-    case state_proc_decode: return &proc;
-    case state_proc_spdif:  return &proc;
-    case state_proc_stereo: return &proc;
+    case state_proc_decode:
+    case state_proc_stereo:
+    case state_proc_cannot_encode:
+    case state_proc_sink_refused:
+    case state_proc_spdif:
+                            return &proc;
     case state_enc:         return &enc;
     case state_spdif:       return &spdifer;
   }
@@ -69,22 +92,17 @@ DVDGraph::init_filter(int node, Speakers spk)
       return &dec;
 
     case state_proc_decode:
-    {
-      // If spdif is enabled we can get here only 
-      // when encoder does not support current output format
-
-      spdif_status = use_spdif? SPDIF_CANNOT_ENCODE: SPDIF_DISABLED;
-
-      // Setup audio processor
-      if (!proc.set_user(user_spk))
-        return 0;
-
-      return &proc;
-    }
-
     case state_proc_stereo:
+    case state_proc_cannot_encode:
+    case state_proc_sink_refused:
     {
-      spdif_status = SPDIF_STEREO_PASSTHROUGH;
+      switch (node)
+      {
+        case state_proc_decode:        spdif_status = SPDIF_DISABLED; break;
+        case state_proc_stereo:        spdif_status = SPDIF_STEREO_PASSTHROUGH; break;
+        case state_proc_cannot_encode: spdif_status = SPDIF_CANNOT_ENCODE; break;
+        case state_proc_sink_refused:  spdif_status = SPDIF_SINK_REFUSED; break;
+      }
 
       // Setup audio processor
       if (!proc.set_user(user_spk))
@@ -133,9 +151,7 @@ DVDGraph::get_next(int node, Speakers spk) const
     // input -> state_demux
     // input -> state_pt
     // input -> state_dec
-    // input -> state_proc_decode
-    // input -> state_proc_spdif
-    // input -> state_proc_stereo
+    // input -> state_proc_xxxx
 
     case node_end:
       if (demux.query_input(spk)) 
@@ -154,9 +170,7 @@ DVDGraph::get_next(int node, Speakers spk) const
 
     /////////////////////////////////////////////////////
     // state_demux -> state_pt
-    // state_demux -> state_proc_decode
-    // state_demux -> state_proc_spdif
-    // state_demux -> state_proc_stereo
+    // state_demux -> state_proc_xxxx
     // state_demux -> state_dec
 
     case state_demux:
@@ -185,9 +199,7 @@ DVDGraph::get_next(int node, Speakers spk) const
         return node_end;
 
     /////////////////////////////////////////////////////
-    // state_dec -> state_proc_decode
-    // state_dec -> state_proc_spdif
-    // state_dec -> state_proc_stereo
+    // state_dec -> state_proc_xxxx
 
     case state_dec:
       return decide_processor(spk);
@@ -195,9 +207,13 @@ DVDGraph::get_next(int node, Speakers spk) const
     /////////////////////////////////////////////////////
     // state_proc_decode -> output
     // state_proc_stereo -> output
+    // state_proc_cannot_encode -> output
+    // state_proc_sink_refused  -> output
 
     case state_proc_decode:
     case state_proc_stereo:
+    case state_proc_cannot_encode:
+    case state_proc_sink_refused:
       return node_end;
 
     /////////////////////////////////////////////////////
@@ -232,16 +248,19 @@ int
 DVDGraph::decide_processor(Speakers spk) const
 {
   // AC3Encoder accepts only linear format at input
-  // and may refuse some formats.
+  // and may refuse some channel configs and sample rates.
   // We should not encode stereo PCM because it
   // reduces audio quality without any benefit.
+  // We should query sink about spdif support.
   //
-  // Because we need to distinguish different
-  // processing mode and do different setup
-  // of AudioProcessor it is 3 different states:
+  // We MUST change state in when conditions change 
+  // because we may need different setup of AudioPorcessor
+  // and we must update spdif_state. So there're 5 states:
   // * state_proc_decode - just decode without spdif output
   // * state_proc_spdif  - setup processor for ac3 encoder
-  // * stare_proc_stereo - stereo passthrough (do not encode)
+  // * stare_proc_stereo - stereo passthrough (no spdif)
+  // * stare_proc_cannot_encode - encoder cannot encode given format (no spdif)
+  // * stare_proc_sink_refused  - sink refuses spdif format (no spdif)
 
   if (use_spdif)
   {
@@ -257,9 +276,18 @@ DVDGraph::decide_processor(Speakers spk) const
       return state_proc_stereo;
 
     // Query encoder
-    if (enc.query_input(enc_spk))
-      return state_proc_spdif;
-  }
+    if (!enc.query_input(enc_spk))
+      return state_proc_cannot_encode;
 
-  return state_proc_decode;
+    // Query sink
+    if (!sink)
+      return state_proc_spdif;
+
+    if (sink->query_input(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
+      return state_proc_spdif;
+    else
+      return state_proc_sink_refused;
+  }
+  else
+    return state_proc_decode;
 }
