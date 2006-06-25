@@ -142,6 +142,10 @@ SOURCE=..\valib\filter.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filter_graph.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filter_graph.h
 # End Source File
 # Begin Source File

@@ -109,10 +109,10 @@ public:
 
   int spdif_rebuild(const char *file_name, Speakers spk, bool is_spdifable, bool can_encode)
   {
-    log->open_group("Testing %s (%s) %s %s", 
+    log->open_group("Testing %s (%s)%s%s", 
       file_name, spk.format_text(), 
-      is_spdifable? "": "(not spdifable)",
-      can_encode? "": "(cannot encode)");
+      is_spdifable? "": " (not spdifable)",
+      can_encode? "": " (cannot encode)");
 
     RAWSource src(spk, file_name, 2048);
     if (!src.is_open())
