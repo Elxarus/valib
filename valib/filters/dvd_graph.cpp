@@ -15,6 +15,35 @@ DVDGraph::DVDGraph(const Sink *_sink)
   sink = _sink;
 };
 
+///////////////////////////////////////////////////////////
+// User format
+
+bool
+DVDGraph::query_user(Speakers _user_spk) const
+{
+  return proc.query_user(_user_spk);
+}
+
+bool
+DVDGraph::set_user(Speakers _user_spk)
+{
+  if (!query_user(_user_spk))
+    return false;
+
+  _user_spk.sample_rate = 0;
+  user_spk = _user_spk;
+  return true;
+}
+
+Speakers              
+DVDGraph::get_user() const
+{
+  return user_spk;
+}
+
+///////////////////////////////////////////////////////////
+// Sink to query
+
 void 
 DVDGraph::set_sink(const Sink *_sink)
 {
@@ -26,6 +55,9 @@ DVDGraph::get_sink() const
 {
   return sink;
 }
+
+///////////////////////////////////////////////////////////
+// SPDIF status
 
 int 
 DVDGraph::get_spdif_status() const

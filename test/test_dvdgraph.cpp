@@ -75,7 +75,7 @@ public:
     dvd.spdif_pt = FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS;
 
     dvd.spdif_stereo_pt = true;
-    dvd.user_spk = Speakers(FORMAT_PCM16_BE, 0, 0, 32768);
+    dvd.set_user(Speakers(FORMAT_PCM16_BE, 0, 0, 32768));
 
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes",  f, "a.mad.mix.spdif");
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", f, "a.madp.mix.spdif");
@@ -185,7 +185,7 @@ public:
 
   int test_decode(Source *src)
   {
-    dvd.user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
+    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32768));
     dvd.use_spdif = false;
     dvd.spdif_stereo_pt = false;
     return test_cycle("test_decode()", src, SPDIF_DISABLED, "decode", FORMAT_PCM16);
@@ -193,7 +193,7 @@ public:
 
   int test_passthrough(Source *src, bool spdif_allowed)
   {
-    dvd.user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
+    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32768));
     dvd.use_spdif = true;
     dvd.spdif_stereo_pt = false;
     dvd.spdif_pt = FORMAT_CLASS_SPDIFABLE;
@@ -205,7 +205,7 @@ public:
 
   int test_encode(Source *src, bool spdif_allowed, bool can_encode)
   {
-    dvd.user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
+    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32768));
     dvd.use_spdif = true;
     dvd.spdif_stereo_pt = false;
     dvd.spdif_pt = 0;
@@ -221,7 +221,7 @@ public:
 
   int test_stereo_passthrough(Source *src)
   {
-    dvd.user_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 0, 32768);
+    dvd.set_user(Speakers(FORMAT_PCM16, MODE_STEREO, 0, 32768));
     dvd.use_spdif = true;
     dvd.spdif_stereo_pt = true;
     dvd.spdif_pt = 0;
