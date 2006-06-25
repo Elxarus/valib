@@ -10,17 +10,10 @@
 
 ///////////////////////////////////////////////////////////
 // SPDIF status constants
-// Zero spdif status means that spdif is disabled
-// Positive spdif status means spdif work status
-// Negative spdif status means that something prevents
-// spdif operation
 
 #define SPDIF_DISABLED            0
 #define SPDIF_PASSTHROUGH         1
 #define SPDIF_ENCODE              2
-#define SPDIF_STEREO_PASSTHROUGH (-1)
-#define SPDIF_CANNOT_ENCODE      (-2)
-#define SPDIF_SINK_REFUSED       (-3)
 
 class DVDGraph : public FilterGraph
 {
@@ -47,16 +40,13 @@ protected:
   const Sink *sink;
   enum state_t 
   { 
-    state_demux = 0,          // PES demux
-    state_pt,                 // SPDIF passthrough
-    state_dec,                // decode
-    state_proc_decode,        // processing for no spdif: spdif disabled
-    state_proc_stereo,        // processing for no spdif: stereo passthrough
-    state_proc_cannot_encode, // processing for no spdif: cannot encode
-    state_proc_sink_refused,  // processing for no spdif: sink refused
-    state_proc_spdif,         // processing for spdif: ac3 encode
-    state_enc,                // AC3 encode
-    state_spdif               // wrap encoded AC3 to SPDIF
+    state_demux = 0,
+    state_passthrough,
+    state_decode,
+    state_proc,
+    state_proc_encode,
+    state_encode,
+    state_spdif
   };            
   int spdif_status;
 
@@ -70,6 +60,7 @@ protected:
   virtual int get_next(int node, Speakers spk) const;
 
   int decide_processor(Speakers spk) const;
+  bool query_sink(Speakers spk) const;
 };
 
 
