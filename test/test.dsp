@@ -255,6 +255,10 @@ SOURCE=..\valib\filters\demux.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\dvd_graph.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\dvd_graph.h
 # End Source File
 # Begin Source File
