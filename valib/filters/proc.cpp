@@ -14,6 +14,12 @@ AudioProcessor::AudioProcessor(size_t _nsamples)
 }
 
 bool 
+AudioProcessor::query_user(Speakers _spk) const
+{
+  return FORMAT_MASK(_spk.format) & format_mask != 0;
+}
+
+bool 
 AudioProcessor::set_user(Speakers _spk)
 {
   // now we do not do sample rate conversion
@@ -30,6 +36,12 @@ AudioProcessor::set_user(Speakers _spk)
     rebuild_chain();
   }
   return true;
+}
+
+Speakers
+AudioProcessor::get_user() const
+{
+  return user_spk;
 }
 
 Speakers 
