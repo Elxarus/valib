@@ -14,24 +14,24 @@ AudioProcessor::AudioProcessor(size_t _nsamples)
 }
 
 bool 
-AudioProcessor::query_user(Speakers _spk) const
+AudioProcessor::query_user(Speakers _user_spk) const
 {
-  return FORMAT_MASK(_spk.format) & format_mask != 0;
+  return (FORMAT_MASK(_user_spk.format) & format_mask) != 0;
 }
 
 bool 
-AudioProcessor::set_user(Speakers _spk)
+AudioProcessor::set_user(Speakers _user_spk)
 {
   // now we do not do sample rate conversion
   // so user format sample rate must be undefined
-  _spk.sample_rate = 0;
+  _user_spk.sample_rate = 0;
 
-  if (user_spk != _spk)
+  if (user_spk != _user_spk)
   {
-    if (FORMAT_MASK(_spk.format) & format_mask == 0)
+    if ((FORMAT_MASK(_user_spk.format) & format_mask) == 0)
       return false;
 
-    user_spk = _spk;
+    user_spk = _user_spk;
     out_spk = user2output(in_spk, user_spk);
     rebuild_chain();
   }

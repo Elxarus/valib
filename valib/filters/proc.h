@@ -109,8 +109,8 @@ public:
   size_t get_buffer() const;
   void   set_buffer(size_t nsamples);
 
-  bool query_user(Speakers spk) const;
-  bool set_user(Speakers spk);
+  bool query_user(Speakers user_spk) const;
+  bool set_user(Speakers user_spk);
   Speakers get_user() const;
 
   Speakers user2output(Speakers in_spk, Speakers user_spk) const;
