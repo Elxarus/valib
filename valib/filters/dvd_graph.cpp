@@ -170,7 +170,7 @@ DVDGraph::get_next(int node, Speakers spk) const
     // input -> state_proc
     // input -> state_proc_encode
 
-    case node_end:
+    case node_start:
       if (demux.query_input(spk)) 
         return state_demux;
 

@@ -4,9 +4,10 @@
 
 
 FilterGraph::FilterGraph(int _format_mask)
-:null(_format_mask)
+:start(_format_mask), end(-1)
 {
-  filter[node_end] = &null;
+  filter[node_start] = &start;
+  filter[node_end]   = &end;
   drop_chain();
 };
 
@@ -50,8 +51,10 @@ FilterGraph::drop_chain()
 {
   ofdd = false;
 
-  next[node_end] = node_end;
-  prev[node_end] = node_end;
+  next[node_start] = node_end;
+  prev[node_start] = node_end;
+  next[node_end] = node_start;
+  prev[node_end] = node_start;
 }
 
 /////////////////////////////////////////////////////////
@@ -76,6 +79,7 @@ FilterGraph::add_node(int node, Speakers spk)
   {
     ofdd = true;
 
+    end.set_input(spk);
     next[node] = node_end;
     prev[node_end] = node;
     return true;
@@ -91,7 +95,10 @@ FilterGraph::add_node(int node, Speakers spk)
   // in all other cases wrong get_next() result forces
   // chain to rebuild and we'll get here anyway
 
-  if (next_node == node_err || next_node != node_end)
+  if (next_node == node_err)
+    return false;
+
+  if (next_node != node_start && next_node != node_end)
     if (next_node < 0 || next_node >= graph_nodes)
       return false;
 
@@ -102,6 +109,7 @@ FilterGraph::add_node(int node, Speakers spk)
 
   if (next_node == node_end)
   {
+    end.set_input(spk);
     next[node] = node_end;
     prev[node_end] = node;
     return true;
@@ -138,7 +146,7 @@ FilterGraph::add_node(int node, Speakers spk)
   // at least one ofdd filter
 
   ofdd = false;
-  node = next[node_end];
+  node = next[node_start];
   while (node != node_end)
   {
     ofdd |= filter[node]->is_ofdd();
@@ -228,7 +236,7 @@ FilterGraph::chain_text(char *buf, size_t buf_size) const
   Speakers spk;
 
   char *buf_ptr = buf;
-  int node = next[node_end];
+  int node = node_start;
 
   spk = filter[node]->get_input();
 
@@ -263,7 +271,7 @@ FilterGraph::chain_text(char *buf, size_t buf_size) const
 void
 FilterGraph::reset()
 {
-  int node = node_end;
+  int node = node_start;
   do {
     filter[node]->reset();
     if (filter[node]->is_ofdd())
@@ -273,7 +281,7 @@ FilterGraph::reset()
       return;
     }
     node = next[node];
-  } while (node != node_end);
+  } while (node != node_start);
 }
 
 bool
@@ -283,55 +291,44 @@ FilterGraph::is_ofdd() const
 }
 
 bool
-FilterGraph::query_input(Speakers spk) const
+FilterGraph::query_input(Speakers _spk) const
 {
-  const Filter *f = &null;
-  int node = get_next(node_end, spk);
+  const Filter *f = &start;
+  int node = get_next(node_start, _spk);
   if (node != node_end)
     f = get_filter(node);
-  return f? f->query_input(spk): false;
+  return f? f->query_input(_spk): false;
 }
 
 bool
-FilterGraph::set_input(Speakers spk)
+FilterGraph::set_input(Speakers _spk)
 {
   reset();
-  if (!query_input(spk))
+  if (!query_input(_spk))
     return false;
 
   drop_chain();
-  FILTER_SAFE(null.set_input(spk));
-  FILTER_SAFE(add_node(node_end, spk));
-  FILTER_SAFE(build_chain(next[node_end]));
+  FILTER_SAFE(start.set_input(_spk));
+  FILTER_SAFE(build_chain(node_start));
   return true;
 }
 
 Speakers
 FilterGraph::get_input() const
 {
-  return filter[next[node_end]]->get_input();
+  return start.get_input();
 };
 
 bool
-FilterGraph::process(const Chunk *chunk)
+FilterGraph::process(const Chunk *_chunk)
 {
-  if (chunk->is_dummy())
+  if (_chunk->is_dummy())
     return true;
 
-  /////////////////////////////////////////////////////
-  // rebuild the filter chain if something was changed
+  if (_chunk->spk != filter[next[node_start]]->get_input())
+    FILTER_SAFE(set_input(_chunk->spk));
 
-  int node = get_next(node_end, chunk->spk);
-  if (node != next[node_end] || chunk->spk != filter[next[node_end]]->get_input())
-  {
-    FILTER_SAFE(add_node(node_end, chunk->spk));
-    FILTER_SAFE(build_chain(node));
-  }
-
-  /////////////////////////////////////////////////////
-  // process data
-
-  FILTER_SAFE(filter[next[node_end]]->process(chunk));
+  FILTER_SAFE(start.process(_chunk))
   FILTER_SAFE(process_internal(true));
   return true;
 };
@@ -339,7 +336,7 @@ FilterGraph::process(const Chunk *chunk)
 Speakers
 FilterGraph::get_output() const
 {
-  return filter[prev[node_end]]->get_output();
+  return end.get_output();
 };
 
 bool
@@ -366,16 +363,16 @@ FilterGraph::get_chunk(Chunk *chunk)
   // if there're something to output from the last filter
   // get it...
 
-  if (!null.is_empty())
-    return null.get_chunk(chunk);
+  if (!end.is_empty())
+    return end.get_chunk(chunk);
 
   ///////////////////////////////////////////////////////
   // if the last filter is empty then do internal data
   // processing and try to get output afterwards
 
   FILTER_SAFE(process_internal(false));
-  if (!null.is_empty())
-    return null.get_chunk(chunk);
+  if (!end.is_empty())
+    return end.get_chunk(chunk);
 
   ///////////////////////////////////////////////////////
   // return dummy chunk
@@ -488,7 +485,7 @@ FilterChain::init_filter(int _node, Speakers _spk)
 int
 FilterChain::get_next(int _node, Speakers _spk) const
 {
-  if (_node == node_end)
+  if (_node == node_start)
     return chain_size? 0: node_end;
 
   if (_node >= chain_size - 1)

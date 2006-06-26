@@ -38,8 +38,9 @@
 
 static const int graph_nodes = 32;
  
-static const int node_err = -1;
-static const int node_end = graph_nodes;
+static const int node_start = graph_nodes;
+static const int node_end   = graph_nodes + 1;
+static const int node_err   = -1;
 
 class FilterGraph : public Filter
 {
@@ -71,10 +72,12 @@ protected:
   //   build_chain() (uses add_node, but modifies filter_spk[node_end])
   //   drop_chain()
 
-  int next[graph_nodes + 1];
-  int prev[graph_nodes + 1];
-  Filter  *filter[graph_nodes + 1];
-  NullFilter null;
+  NullFilter start;
+  NullFilter end;
+
+  int next[graph_nodes + 2];
+  int prev[graph_nodes + 2];
+  Filter  *filter[graph_nodes + 2];
 
   /////////////////////////////////////////////////////////
   // Chain operation
@@ -130,7 +133,7 @@ public:
   {
     // This function must determine node next to given node
     // It must return node_err when it detects graph error. In this case
-    //  processing cannot continue and will be stopped.
+    // processing cannot continue and will be stopped.
     // It must return node_end after the last graph node
     return node_end;
   }
