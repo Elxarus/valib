@@ -13,9 +13,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Test constants
 
-static const vtime_t time_per_test = 1.0;   // 1 sec for each speed test
-static const size_t min_data_size = 2048*4; // minimum data size to generate after state change
-                                            // size of pcm16 data with maximum number of samples per frame
+static const vtime_t time_per_test = 1.0;    // 1 sec for each speed test
+static const size_t min_data_size = 4096*12; // minimum data size to generate after state change:
+                                             // size of 6-channel pcm16 data with more than maximum number of samples per frame
 
 // noise speed test
 static const int noise_size = 10000000;
@@ -173,10 +173,18 @@ public:
     Chunk chunk;
     while (!src.is_empty())
     {
-      if (!src.get_chunk(&chunk))
-        return log->err_close("src.get_chunk() failed");
-      if (!f->process(&chunk))
-        return log->err_close("dvd.process() failed");
+      if (f->is_empty())
+      {
+        if (!src.get_chunk(&chunk))
+          return log->err_close("src.get_chunk() failed");
+        if (!f->process(&chunk))
+          return log->err_close("dvd.process() failed");
+      }
+      else
+      {
+        if (!f->get_chunk(&chunk))
+          return log->err_close("dvd.get_chunk() failed");
+      }
     }
 
     // todo: check number of output streams
