@@ -51,6 +51,8 @@ FilterGraph::drop_chain()
 {
   ofdd = false;
 
+  start.reset();
+  end.reset();
   next[node_start] = node_end;
   prev[node_start] = node_end;
   next[node_end] = node_start;
@@ -303,11 +305,10 @@ FilterGraph::query_input(Speakers _spk) const
 bool
 FilterGraph::set_input(Speakers _spk)
 {
-  reset();
+  drop_chain();
   if (!query_input(_spk))
     return false;
 
-  drop_chain();
   FILTER_SAFE(start.set_input(_spk));
   FILTER_SAFE(build_chain(node_start));
   return true;

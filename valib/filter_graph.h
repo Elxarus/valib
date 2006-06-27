@@ -77,7 +77,7 @@ protected:
 
   int next[graph_nodes + 2];
   int prev[graph_nodes + 2];
-  Filter  *filter[graph_nodes + 2];
+  Filter *filter[graph_nodes + 2];
 
   /////////////////////////////////////////////////////////
   // Chain operation
