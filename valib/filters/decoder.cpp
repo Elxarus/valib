@@ -9,7 +9,7 @@ AudioDecoder::AudioDecoder()
 }
 
 void 
-AudioDecoder::get_info(char *_buf, int _len)
+AudioDecoder::get_info(char *_buf, int _len) const
 {
   if (parser)
     parser->get_info(_buf, _len);

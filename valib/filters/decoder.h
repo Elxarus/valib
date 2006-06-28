@@ -45,7 +45,7 @@ public:
   /////////////////////////////////////////////////////////
   // AudioDecoder interface
 
-  void get_info(char *buf, int len);
+  void get_info(char *buf, int len) const;
 
   inline int get_frames();
   inline int get_errors();
