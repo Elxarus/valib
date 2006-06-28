@@ -57,7 +57,16 @@ FilterGraph::drop_chain()
   prev[node_start] = node_end;
   next[node_end] = node_start;
   prev[node_end] = node_start;
+  node_state[node_start] = ns_ok;
+  node_state[node_end] = ns_ok;
 }
+
+void 
+FilterGraph::rebuild(int node)
+{
+  node_state[node] = ns_flush;
+}
+
 
 /////////////////////////////////////////////////////////
 // Add new node into the chain
@@ -142,6 +151,7 @@ FilterGraph::add_node(int node, Speakers spk)
   prev[next_node] = node;
   next[next_node] = node_end;
   prev[node_end] = next_node;
+  node_state[next_node] = ns_ok;
 
   // update ofdd status
   // aggregate is data-dependent if chain has
@@ -165,7 +175,6 @@ FilterGraph::add_node(int node, Speakers spk)
 bool
 FilterGraph::process_internal(bool rebuild)
 {
-  int next_node;
   Speakers spk;
   Chunk chunk;
 
@@ -189,35 +198,54 @@ FilterGraph::process_internal(bool rebuild)
     spk = filter[node]->get_output();
 
     /////////////////////////////////////////////////////
-    // rebuild the filter chain if something was changed
-    //
-    // We should rebuild graph according to changes in 
-    // get_next() call ONLY when we do it from the top
-    // of the chain, i.e. 'rebuild' flag should be set
-    // in process() and clear in get_chunk() call.
-    // (otherwise partially changed graph is possible)
-    //
-    // We can always rebuild graph according to format
-    // changes because it changes according to data flow
-    // from top to bottom of the chain.
+    // Rebuild the filter chain
 
-    if (rebuild)
-      next_node = get_next(node, spk);
-    else
-      next_node = next[node];
-
-    if (next_node != next[node] || spk != filter[next_node]->get_input())
+    if (spk != filter[next[node]]->get_input())
     {
+      // Rebuild the chain according to format changes
+      // during normal data flow.
+      //
+      // If format was changed it means that flushing was
+      // send before (see format change rules) and we may
+      // rebuild the chain right now
       FILTER_SAFE(build_chain(node));
-      next_node = next[node];
+    }
+    else if (node_state[next[node]] == ns_rebuild)
+    {
+      // Rebuild the chain after flushing.
+      // We have flushed downstream and may rebuild it now.
+      FILTER_SAFE(build_chain(node));
+    }
+    else if (rebuild && (next[node] != get_next(node, spk)))
+    {
+      // We should rebuild graph according to changes in 
+      // get_next() call ONLY when we do it from the top
+      // of the chain, i.e. 'rebuild' flag should be set
+      // in process() and clear in get_chunk() call.
+      // (otherwise partially changed graph is possible)
+      //
+      // If chain changes without format change we must
+      // flush downstream before rebuilding the chain.
+      node_state[next[node]] = ns_flush;
     }
 
     /////////////////////////////////////////////////////
     // process data downstream
 
-    FILTER_SAFE(filter[node]->get_chunk(&chunk));
-    FILTER_SAFE(filter[next_node]->process(&chunk));
-    node = next_node;
+    if (node_state[next[node]] == ns_flush)
+    {
+      // flush downstream
+      chunk.set_empty(spk, false, 0, true);
+      FILTER_SAFE(filter[next[node]]->process(&chunk));
+      node_state[next[node]] = ns_rebuild;
+    }
+    else
+    {
+      // process data
+      FILTER_SAFE(filter[node]->get_chunk(&chunk));
+      FILTER_SAFE(filter[next[node]]->process(&chunk));
+    }
+    node = next[node];
   }
 
   return true;

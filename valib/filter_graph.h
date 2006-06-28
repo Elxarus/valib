@@ -44,33 +44,41 @@ static const int node_err   = -1;
 
 class FilterGraph : public Filter
 {
-protected:
+private:
+  bool ofdd; // we have ofdd filter in the chain flag
+
   /////////////////////////////////////////////////////////
   // Two-way filter chain structure
   //
   // next[]       - points to the next node
   // prev[]       - points to the previous node
   // filter[]     - node filter
+  // node_state[] - node state
   //
-  // Last element is a special end-node
-  // node_end index points to the end-node
+  // Last 2 elements contain special start and end nodes
+  // (just null filters used as fixed chain start and end).
+  // 
+  // node_start index constant points to the start-node
+  // node_end index constant points to the end-node
   //
-  // Values stored at the end-node:
+  // Constant values stored at start and the end nodes:
+  //   prev[node_start] = node_end;
+  //   next[node_end] = node_start;
+  //   filter[node_start] = &start;
+  //   filter[node_end] = &end;
   //
-  //   next[node_end] points to the first node
-  //     contains node_end if chain is empty
-  //
-  //   prev[node_end] points to the last node
-  //     contains node_end if chain is empty
-  //
-  //   filter[node_end] - NullFilter
-  //     it is used when chain is empty and
-  //     when we need to generate a special output
+  // Node state is used for chain rebuilding:
+  //   ns_ok      - nothing to do with this node
+  //   ns_flush   - we must flush this node
+  //   ns_rebuild - node is flushed and ready for rebuild
   //
   // Only following functions can modify the chain:
   //   add_node()
-  //   build_chain() (uses add_node, but modifies filter_spk[node_end])
   //   drop_chain()
+  //   build_chain() uses add_node and do not change chain
+  //     directly
+  //   process_internal() and rebuild() functions can
+  //     change node_state[]
 
   NullFilter start;
   NullFilter end;
@@ -78,12 +86,12 @@ protected:
   int next[graph_nodes + 2];
   int prev[graph_nodes + 2];
   Filter *filter[graph_nodes + 2];
+  enum { ns_ok, ns_flush, ns_rebuild } node_state[graph_nodes + 2];
 
   /////////////////////////////////////////////////////////
-  // Chain operation
+  // Chain operations
 
   bool build_chain(int node);
-  void drop_chain();
   bool add_node(int node, Speakers spk);
 
   /////////////////////////////////////////////////////////
@@ -92,21 +100,11 @@ protected:
   bool process_internal(bool rebuild);
 
 protected:
-  bool ofdd;
-
-public:
-  FilterGraph(int _format_mask);
-  virtual ~FilterGraph();
-
   /////////////////////////////////////////////////////////
-  // Print chain
-  //
-  // int chain_text(char *buf, size_t buf_size)
-  // buf - output buffer
-  // buf_size - output buffer size
-  // returns number of printed bytes
+  // public chain operations
 
-  int chain_text(char *buf, size_t buf_size) const;
+  void drop_chain();
+  void rebuild(int node);
 
   /////////////////////////////////////////////////////////
   // Overridable functions (placeholders)
@@ -138,6 +136,20 @@ public:
     return node_end;
   }
 
+public:
+  FilterGraph(int _format_mask);
+  virtual ~FilterGraph();
+
+  /////////////////////////////////////////////////////////
+  // Print chain
+  //
+  // int chain_text(char *buf, size_t buf_size)
+  // buf - output buffer
+  // buf_size - output buffer size
+  // returns number of printed bytes
+
+  int chain_text(char *buf, size_t buf_size) const;
+
   /////////////////////////////////////////////////////////
   // Filter interface
 
@@ -162,6 +174,15 @@ protected:
   char   *desc[graph_nodes];
   int     chain_size;
 
+  /////////////////////////////////////////////////////////
+  // FilterGraph overrides
+
+  const char *get_name(int _node) const;
+  const Filter *get_filter(int _node) const;
+  Filter *init_filter(int _node, Speakers _spk);
+
+  int get_next(int _node, Speakers _spk) const;
+
 public:
   FilterChain(int _format_mask = -1);
   virtual ~FilterChain();
@@ -173,15 +194,6 @@ public:
   bool add_back(Filter *_filter, const char *_desc);
 
   void drop();
-
-  /////////////////////////////////////////////////////////
-  // FilterGraph overrides
-
-  const char *get_name(int _node) const;
-  const Filter *get_filter(int _node) const;
-  Filter *init_filter(int _node, Speakers _spk);
-
-  int get_next(int _node, Speakers _spk) const;
 };
 
 
