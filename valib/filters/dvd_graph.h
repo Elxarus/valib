@@ -32,6 +32,7 @@ public:
   const Sink *get_sink() const;
 
   int get_spdif_status() const;
+  void get_info(char *_info, int _len) const;
 
 protected:
   Speakers user_spk;

@@ -71,6 +71,16 @@ DVDGraph::get_spdif_status() const
   return spdif_status; 
 };
 
+void
+DVDGraph::get_info(char *_buf, int _len) const
+{
+  if (spdif_status == SPDIF_PASSTHROUGH)
+    spdifer.get_info(_buf, _len);
+  else
+    dec.get_info(_buf, _len);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // FilterGraph overrides
 
