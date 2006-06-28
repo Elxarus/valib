@@ -31,7 +31,13 @@ DVDGraph::set_user(Speakers _user_spk)
     return false;
 
   _user_spk.sample_rate = 0;
-  user_spk = _user_spk;
+  if (user_spk != _user_spk)
+  {
+    user_spk = _user_spk;
+    rebuild(state_proc);
+    rebuild(state_proc_encode);
+  }
+
   return true;
 }
 
