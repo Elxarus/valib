@@ -73,7 +73,7 @@ public:
 
   Speakers get_sync() const;
   int  get_frames() const;
-  void get_info(char *buf, size_t len);
+  void get_info(char *buf, size_t len) const;
 
   /////////////////////////////////////////////////////////
   // Filter interface

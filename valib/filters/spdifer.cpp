@@ -1019,7 +1019,7 @@ Spdifer::dts_syncinfo(const uint8_t *_buf)
 
 
 void 
-Spdifer::get_info(char *_buf, size_t _len)
+Spdifer::get_info(char *_buf, size_t _len) const
 {
   char info[1024];
   const char *format = 0;
