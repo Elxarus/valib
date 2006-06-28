@@ -1,5 +1,8 @@
 /*
   DVDGraph filter test
+  * file transform test with format changes
+  * dynamical user format change
+  * dynamical graph rebuild
 */
 
 #include "log.h"
@@ -58,6 +61,7 @@ public:
   {
     log->open_group("DVDGraph test");
     transform();
+    user_format_change();
     spdif_rebuild();
     return log->close_group();
   }
@@ -81,6 +85,94 @@ public:
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", f, "a.madp.mix.spdif");
 
     log->close_group();
+  }
+
+  void user_format_change()
+  {
+    log->open_group("Dynamical user format change");
+
+    user_format_change("a.ac3.03f.ac3", Speakers(FORMAT_AC3, MODE_5_1, 48000));
+    user_format_change("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 48000));
+
+    log->close_group();
+  }
+
+  int user_format_change(const char *file_name, Speakers spk)
+  {
+    Speakers formats[] = {
+      Speakers(FORMAT_PCM16, 0, 0),            // pcm16 as-is
+      Speakers(FORMAT_PCM16, MODE_STEREO, 0),  // pcm16 stereo (possible downmix)
+      Speakers(FORMAT_PCM16, MODE_5_1, 0),     // pcm16 5.1 (possible upmix)
+      Speakers(FORMAT_PCM32, 0, 0),            // pcm32 as-is
+      Speakers(FORMAT_PCM32, MODE_STEREO, 0),  // pcm32 stereo (possible downmix)
+      Speakers(FORMAT_PCM32, MODE_5_1, 0),     // pcm32 5.1 (possible upmix)
+      // spdif pt
+      Speakers(FORMAT_PCM16, 0, 0),            // pcm16 as-is
+      Speakers(FORMAT_PCM16, MODE_STEREO, 0),  // pcm16 stereo (possible downmix)
+      Speakers(FORMAT_PCM16, MODE_5_1, 0),     // pcm16 5.1 (possible upmix)
+      Speakers(FORMAT_PCM32, 0, 0),            // pcm32 as-is
+      Speakers(FORMAT_PCM32, MODE_STEREO, 0),  // pcm32 stereo (possible downmix)
+      Speakers(FORMAT_PCM32, MODE_5_1, 0),     // pcm32 5.1 (possible upmix)
+    };
+    bool spdif_stereo_pt[] = {
+      false, false, false, false, false, false, 
+      true,  true,  true,  true,  true,  true,
+    };
+
+    log->open_group("Testing %s (%s %s %i)", file_name, 
+      spk.format_text(), spk.mode_text(), spk.sample_rate);
+
+    Chunk chunk;
+    RAWSource src(spk, file_name, 2048);
+    if (!src.is_open())
+      return log->err_close("Cannot open file %s", file_name);
+
+    dvd.use_spdif = false;
+    dvd.spdif_pt = 0;
+    dvd.spdif_stereo_pt = false;
+    for (int i = 0; i < array_size(formats); i++)
+    {
+      dvd.set_user(formats[i]);
+      dvd.use_spdif = spdif_stereo_pt[i];
+      dvd.spdif_stereo_pt = spdif_stereo_pt[i];
+
+      Speakers test_spk = spk;
+      if (formats[i].format)  test_spk.format = formats[i].format;
+      if (formats[i].mask)    test_spk.mask   = formats[i].mask;
+
+      if (spdif_stereo_pt[i] && test_spk.mask != MODE_STEREO)
+        test_spk.format = FORMAT_SPDIF;
+
+      while (!src.is_empty() && f->get_output() != test_spk)
+        if (f->is_empty())
+        {
+          if (!src.get_chunk(&chunk))
+            return log->err_close("src->get_chunk() failed");
+
+          if (!f->process(&chunk))
+            return log->err_close("dvd.process() failed");
+        }
+        else
+        {
+          if (!f->get_chunk(&chunk))
+            return log->err_close("dvd.get_chunk() failed");
+        }
+
+      if (f->get_output() != test_spk)
+        return log->err_close("cannot change format: %s%s %s -> %s %s",
+          spdif_stereo_pt[i]? "(SPDIF/stereo passthrough) ": "",
+          formats[i].format? formats[i].format_text(): "as-is",
+          formats[i].mask? formats[i].mode_text(): "as-is",
+          test_spk.format_text(), test_spk.mode_text());
+      else
+        log->msg("successful format change: %s%s %s -> %s %s",
+          spdif_stereo_pt[i]? "(SPDIF/stereo passthrough) ": "",
+          formats[i].format? formats[i].format_text(): "as-is",
+          formats[i].mask? formats[i].mode_text(): "as-is",
+          test_spk.format_text(), test_spk.mode_text());
+    }
+
+    return log->close_group();
   }
 
   void spdif_rebuild()
@@ -171,7 +263,7 @@ public:
     }
 
     Chunk chunk;
-    while (!src.is_empty())
+    while (!src.is_empty() || !f->is_empty())
     {
       if (f->is_empty())
       {
