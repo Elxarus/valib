@@ -86,7 +86,7 @@ private:
   int next[graph_nodes + 2];
   int prev[graph_nodes + 2];
   Filter *filter[graph_nodes + 2];
-  enum { ns_ok, ns_flush, ns_rebuild } node_state[graph_nodes + 2];
+  enum { ns_ok, ns_dirty, ns_flush, ns_rebuild } node_state[graph_nodes + 2];
 
   /////////////////////////////////////////////////////////
   // Chain operations
@@ -104,7 +104,9 @@ protected:
   // public chain operations
 
   void drop_chain();
-  void rebuild(int node);
+  void set_dirty(int node);
+  void invalidate_chain();
+  void rebuild_node(int node);
 
   /////////////////////////////////////////////////////////
   // Overridable functions (placeholders)

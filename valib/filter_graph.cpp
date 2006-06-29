@@ -61,12 +61,60 @@ FilterGraph::drop_chain()
   node_state[node_end] = ns_ok;
 }
 
-void 
-FilterGraph::rebuild(int node)
+/////////////////////////////////////////////////////////
+// Mark nodes dirty
+//
+// set_dirty() marks node as dirty when get_next() result
+// for this node may change. In this case process_internal()
+// will call get_next() for this node again and rebuild
+// the chain if nessesary.
+//
+// invalidate_chain() marks all nodes as dirty to re-check
+// all chain.
+//
+// Note that start node can be set dirty and end node 
+// cannot. It is because get_next() is never called for 
+// the end node but always called for the start node.
+
+void
+FilterGraph::set_dirty(int node)
 {
-  node_state[node] = ns_flush;
+  if (node == node_end || node < 0 || node > graph_nodes)
+    return;
+
+  if (node_state[node] == ns_ok)
+    node_state[node] = ns_dirty;
 }
 
+void 
+FilterGraph::invalidate_chain()
+{
+  int node = node_start;
+  while (node != node_end)
+  {
+    if (node_state[node] == ns_ok)
+      node_state[node] = ns_dirty;
+    node = next[node];
+  }
+}
+
+/////////////////////////////////////////////////////////
+// Mark node to rebuild
+//
+// It is nessesary when graph parameters change and some
+// nodes are required to be reinitialized. In his case
+// process_internal() will flush this node (and therefore
+// downstream nodes will be flushed too) and then remove
+// it and rebuild the chain starting from this node.
+
+void 
+FilterGraph::rebuild_node(int node)
+{
+  if (node < 0 || node > graph_nodes)
+    return;
+
+  node_state[node] = ns_flush;
+}
 
 /////////////////////////////////////////////////////////
 // Add new node into the chain
@@ -216,7 +264,7 @@ FilterGraph::process_internal(bool rebuild)
       // We have flushed downstream and may rebuild it now.
       FILTER_SAFE(build_chain(node));
     }
-    else if (rebuild && (next[node] != get_next(node, spk)))
+    else if (rebuild && node_state[node] == ns_dirty)
     {
       // We should rebuild graph according to changes in 
       // get_next() call ONLY when we do it from the top
@@ -226,7 +274,10 @@ FilterGraph::process_internal(bool rebuild)
       //
       // If chain changes without format change we must
       // flush downstream before rebuilding the chain.
-      node_state[next[node]] = ns_flush;
+      if (next[node] != get_next(node, spk))
+        node_state[next[node]] = ns_flush;
+      else
+        node_state[node] = ns_ok;
     }
 
     /////////////////////////////////////////////////////

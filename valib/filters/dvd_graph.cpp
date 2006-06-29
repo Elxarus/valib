@@ -37,8 +37,8 @@ DVDGraph::set_user(Speakers _user_spk)
   if (user_spk != _user_spk)
   {
     user_spk = _user_spk;
-    rebuild(state_proc);
-    rebuild(state_proc_encode);
+    rebuild_node(state_proc);
+    rebuild_node(state_proc_encode);
   }
 
   return true;
@@ -66,7 +66,55 @@ DVDGraph::get_sink() const
 }
 
 ///////////////////////////////////////////////////////////
-// SPDIF status
+// SPDIF options
+
+void
+DVDGraph::set_spdif(bool _use_spdif, int _spdif_pt, bool _spdif_stereo_pt)
+{
+  use_spdif = _use_spdif;
+  spdif_pt = _spdif_pt;
+  spdif_stereo_pt = _spdif_stereo_pt;
+  invalidate_chain();
+}
+
+bool
+DVDGraph::get_use_spdif() const
+{
+  return use_spdif;
+}
+
+void
+DVDGraph::set_use_spdif(bool _use_spdif)
+{
+  use_spdif = _use_spdif;
+  invalidate_chain();
+}
+
+int
+DVDGraph::get_spdif_pt() const
+{
+  return spdif_pt;
+}
+
+void
+DVDGraph::set_spdif_pt(int _spdif_pt)
+{
+  spdif_pt = _spdif_pt;
+  invalidate_chain();
+}
+
+bool
+DVDGraph::get_spdif_stereo_pt() const
+{
+  return spdif_stereo_pt;
+}
+
+void
+DVDGraph::set_spdif_stereo_pt(bool _spdif_stereo_pt)
+{
+  spdif_stereo_pt = _spdif_stereo_pt;
+  invalidate_chain();
+}
 
 int 
 DVDGraph::get_spdif_status() const

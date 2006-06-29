@@ -24,10 +24,6 @@ public:
   AudioProcessor proc;
   AC3Enc         enc;
 
-  bool     use_spdif;
-  int      spdif_pt;
-  bool     spdif_stereo_pt;
-
 public:
   DVDGraph(const Sink *sink = 0);
 
@@ -40,11 +36,25 @@ public:
   void set_sink(const Sink *sink);
   const Sink *get_sink() const;
 
+  // SPDIF options
+  void set_spdif(bool use_spdif, int spdif_pt, bool spdif_stereo_pt);
+
+  bool get_use_spdif() const;
+  void set_use_spdif(bool use_spdif);
+  int  get_spdif_pt() const;
+  void set_spdif_pt(int spdif_pt);
+  bool get_spdif_stereo_pt() const;
+  void set_spdif_stereo_pt(bool spdif_stereo_pt);
+
   int get_spdif_status() const;
+
   void get_info(char *_info, int _len) const;
 
 protected:
   Speakers user_spk;
+  bool     use_spdif;
+  int      spdif_pt;
+  bool     spdif_stereo_pt;
 
   const Sink *sink;
   enum state_t 
