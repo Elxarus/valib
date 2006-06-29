@@ -49,6 +49,9 @@ AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
 {
   Speakers result = _in_spk;
 
+  if (!query_input(_in_spk) || !query_user(_user_spk))
+    return spk_unknown;
+
   if (_user_spk.format != FORMAT_UNKNOWN)
   {
     result.format = _user_spk.format;
