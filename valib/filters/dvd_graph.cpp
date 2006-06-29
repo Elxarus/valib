@@ -21,6 +21,9 @@ DVDGraph::DVDGraph(const Sink *_sink)
 bool
 DVDGraph::query_user(Speakers _user_spk) const
 {
+  if (!user_spk.format)
+    return false;
+
   return proc.query_user(_user_spk);
 }
 

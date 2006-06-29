@@ -18,16 +18,25 @@
 class DVDGraph : public FilterGraph
 {
 public:
+  Demux          demux;
+  Spdifer        spdifer;
+  AudioDecoder   dec;
+  AudioProcessor proc;
+  AC3Enc         enc;
+
   bool     use_spdif;
   int      spdif_pt;
   bool     spdif_stereo_pt;
 
+public:
   DVDGraph(const Sink *sink = 0);
 
+  // User format
   bool query_user(Speakers user_spk) const;
   bool set_user(Speakers user_spk);
   Speakers get_user() const;
 
+  // Sink
   void set_sink(const Sink *sink);
   const Sink *get_sink() const;
 
@@ -36,12 +45,6 @@ public:
 
 protected:
   Speakers user_spk;
-
-  Demux          demux;
-  Spdifer        spdifer;
-  AudioDecoder   dec;
-  AudioProcessor proc;
-  AC3Enc         enc;
 
   const Sink *sink;
   enum state_t 
