@@ -336,7 +336,7 @@ bool is_compatible(Speakers _spk, WAVEFORMATEX *_wfx)
     return false;
 
   if (_wfx->cbSize == wfx_tmp.Format.cbSize)
-    if (!memcmp(_wfx, &wfx_tmp, wfx_tmp.Format.cbSize))
+    if (memcmp(_wfx, &wfx_tmp, wfx_tmp.Format.cbSize))
       return true;
 
   return false;
