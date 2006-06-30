@@ -11,6 +11,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+const char *valib_compilation_info();
+
 // __forceinline is MSVC-specific keyword so we have to redefine
 // it to usual inline keyword for other compilers
 // (define it to always-inline attribute for GCC?)

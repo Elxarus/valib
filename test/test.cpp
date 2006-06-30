@@ -22,24 +22,9 @@ int test_proc(Log *log);
 int main(int argc, char **argv)
 {
   Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
-  log.msg("Compilation info: "
+  log.msg("Compilation info:\n%s", valib_compilation_info());
 
-#if defined(_MSC_VER)
-  "MSVC %i%s", _MSC_VER,
-#elif defined(__GNUC__)
-  "GCC %s%s", __VERSION__,
-#else
-  "Unknown%s",
-#endif
-
-#ifdef _DEBUG
-  " (Debug)");
-#else
-  " (Release)");
-#endif
-
-  log.open_group("Test session");
-
+  log.msg("Start test session");
   test_general(&log);
 
   test_null(&log);
@@ -56,8 +41,6 @@ int main(int argc, char **argv)
 
   test_filtergraph(&log);
   test_dvdgraph(&log);
-
-  log.close_group();
   log.msg("-----------------------------------------------------------");
 
   int total_time = (int)log.get_total_time();
