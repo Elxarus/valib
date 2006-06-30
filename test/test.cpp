@@ -22,7 +22,7 @@ int test_proc(Log *log);
 int main(int argc, char **argv)
 {
   Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
-  log.msg("Compilation info:\n%s", valib_compilation_info());
+  log.msg("Valib build info:\n%s", valib_build_info());
 
   log.msg("Start test session");
   test_general(&log);

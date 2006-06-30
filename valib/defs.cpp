@@ -3,7 +3,7 @@
 
 static char info_str[1024];
 
-const char *valib_compilation_info()
+const char *valib_build_info()
 {
   static bool init = false;
   if (!init)

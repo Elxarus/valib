@@ -5,13 +5,13 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+const char *valib_build_info();
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                        Compiler-dependent section
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-const char *valib_compilation_info();
 
 // __forceinline is MSVC-specific keyword so we have to redefine
 // it to usual inline keyword for other compilers
