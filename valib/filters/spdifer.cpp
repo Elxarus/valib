@@ -360,8 +360,8 @@ Spdifer::load_frame()
       memmove(frame_ptr, frame_ptr + spdif_payload_size, frame_data - spdif_payload_size);
       frame_data -= spdif_payload_size;
 
-	  // say that we have drop current frame
-	  out_size = 0;
+      // say that we have drop current frame
+      out_size = 0;
 
       // no break: now we go to state_spdif...
       state = state_spdif;
@@ -425,7 +425,7 @@ Spdifer::load_frame()
       frame_data += spdif_payload_size - frame_size;
 
       // convert stream format
-	  // SPDIF uses low-endian stream format
+      // SPDIF uses low-endian stream format
       if (bs_type == BITSTREAM_16BE ||
           bs_type == BITSTREAM_14BE ||
           bs_type == BITSTREAM_8)
@@ -471,8 +471,8 @@ Spdifer::load_frame()
       memmove(frame_ptr, frame_ptr + frame_size, frame_data - frame_size);
       frame_data -= frame_size;
 
-	  // say that we have drop current frame
-	  out_size = 0;
+      // say that we have drop current frame
+      out_size = 0;
 
       // no break: now we go to state_passthrough...
       state = state_passthrough;
