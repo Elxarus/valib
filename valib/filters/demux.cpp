@@ -116,7 +116,8 @@ Demux::get_chunk(Chunk *_chunk)
   );
 
   // stream change
-  if (ps.spk() != out_spk)
+  if ((stream && stream != ps.stream) ||
+      (stream && substream && substream != ps.substream))
   {
     _chunk->eos = true;
 
