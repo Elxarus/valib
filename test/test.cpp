@@ -25,6 +25,7 @@ int main(int argc, char **argv)
   log.msg("Valib build info:\n%s", valib_build_info());
 
   log.msg("Start test session");
+
   test_general(&log);
 
   test_null(&log);
@@ -34,6 +35,7 @@ int main(int argc, char **argv)
   test_syncer(&log);
 
   test_crash(&log);
+
   test_demux(&log);
   test_spdifer(&log);
 
@@ -41,6 +43,7 @@ int main(int argc, char **argv)
 
   test_filtergraph(&log);
   test_dvdgraph(&log);
+
   log.msg("-----------------------------------------------------------");
 
   int total_time = (int)log.get_total_time();
