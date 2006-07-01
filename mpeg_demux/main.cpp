@@ -170,10 +170,10 @@ void demux(FILE *f, FILE *out, int stream, int substream, bool pes)
         int(processed * 100 / float(file_size)),
         in_pos / 1000000, int(processed/elapsed/1000000), out_pos / 1000);
 
-      if (ps.substream)
-        printf(" stream:%02x/%02x\r", ps.stream, ps.substream);
+      if (substream)
+        printf(" stream:%02x/%02x\r", stream? stream: ps.stream, stream? substream: ps.substream);
       else
-        printf(" stream:%02x   \r", ps.stream);
+        printf(" stream:%02x   \r", stream? stream: ps.stream);
     }
   }
 
@@ -263,7 +263,12 @@ int main(int argc, char **argv)
            "  -d - demux to elementary stream\n"
            "  -p - demux to pes stream\n"
            "  -s=xx  - demux stream xx (hex)\n"
-           "  -ss=xx - demux substream xx (hex)\n");
+           "  -ss=xx - demux substream xx (hex)\n"
+           "\n"
+           "Note: if stream/substream is not specified demuxer will dump contents of all\n"
+           "packets found. This mode is useful to demux PES streams (not multiplexed) even\n"
+           "with format changes.\n"
+           );
     exit(0);
   }
 
