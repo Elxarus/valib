@@ -70,10 +70,17 @@ public:
 
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mp2.005.pes", &t, "a.mp2.005.mp2");
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mp2.002.pes", &t, "a.mp2.002.mp2");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mp2.mix.pes", &t, "a.mp2.mix.mp2");
+
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.ac3.03f.pes", &t, "a.ac3.03f.ac3");
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.ac3.005.pes", &t, "a.ac3.005.ac3");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.ac3.mix.pes", &t, "a.ac3.mix.ac3");
+
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.dts.03f.pes", &t, "a.dts.03f.dts");
+
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.pcm.005.pes", &t, "a.pcm.005.lpcm");
+
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes", &t, "a.mad.mix.mad");
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", &t, "a.madp.mix.madp");
   }
 
