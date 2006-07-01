@@ -232,6 +232,14 @@ public:
         // filter must update input and output formats
         if (filter->get_input() != _chunk->spk)
           log->err("[k4] process(): new format was not set");
+
+        // if filter have received empty chunk with no data
+        // but with format change it must just reset the filter
+        // (except flushing chunks because flushing may force
+        // the filter to generate flushing)
+        if (_chunk->is_empty() && !_chunk->eos)
+          check_reset("process()");
+
         update_formats();
       }
       else
