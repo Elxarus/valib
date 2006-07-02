@@ -152,23 +152,6 @@ DVDGraph::get_name(int node) const
   return 0;
 }
 
-const Filter *
-DVDGraph::get_filter(int node) const
-{
-  switch (node)
-  {
-    case state_demux:       return &demux;
-    case state_passthrough: return &spdifer;
-    case state_decode:      return &dec;
-    case state_proc:
-    case state_proc_encode:
-                            return &proc;
-    case state_encode:      return &enc;
-    case state_spdif:       return &spdifer;
-  }
-  return 0;
-}
-
 Filter *
 DVDGraph::init_filter(int node, Speakers spk)
 {

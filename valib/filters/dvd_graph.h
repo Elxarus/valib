@@ -74,7 +74,6 @@ protected:
   // FilterGraph overrides
 
   virtual const char *get_name(int node) const;
-  virtual const Filter *get_filter(int node) const;
   virtual Filter *init_filter(int node, Speakers spk);
   virtual int get_next(int node, Speakers spk) const;
 

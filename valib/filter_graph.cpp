@@ -3,6 +3,12 @@
 #include "string.h" // strdup
 
 
+inline static bool is_invalid(int node)
+{
+  return (node != node_end) && (node == node_err || node < 0 || node > graph_nodes);
+}
+
+
 FilterGraph::FilterGraph(int _format_mask)
 :start(_format_mask), end(-1)
 {
@@ -106,11 +112,15 @@ FilterGraph::invalidate_chain()
 // process_internal() will flush this node (and therefore
 // downstream nodes will be flushed too) and then remove
 // it and rebuild the chain starting from this node.
+//
+// Note that we can mark end node to rebuild (in this
+// case flushing will be sent to output) but cannot mark
+// start node.
 
 void 
 FilterGraph::rebuild_node(int node)
 {
-  if (node < 0 || node > graph_nodes)
+  if (node == node_start || node < 0 || node > graph_nodes)
     return;
 
   node_state[node] = ns_flush;
@@ -154,12 +164,8 @@ FilterGraph::add_node(int node, Speakers spk)
   // in all other cases wrong get_next() result forces
   // chain to rebuild and we'll get here anyway
 
-  if (next_node == node_err)
+  if (is_invalid(node))
     return false;
-
-  if (next_node != node_start && next_node != node_end)
-    if (next_node < 0 || next_node >= graph_nodes)
-      return false;
 
   ///////////////////////////////////////////////////////
   // end of the filter chain
@@ -374,11 +380,12 @@ FilterGraph::is_ofdd() const
 bool
 FilterGraph::query_input(Speakers _spk) const
 {
-  const Filter *f = &start;
-  int node = get_next(node_start, _spk);
-  if (node != node_end)
-    f = get_filter(node);
-  return f? f->query_input(_spk): false;
+  // format mask based test
+  if (!start.query_input(_spk))
+    return false;
+
+  // get_next() test
+  return !is_invalid(get_next(node_start, _spk));
 }
 
 bool
@@ -544,15 +551,6 @@ FilterChain::get_name(int _node) const
   return desc[_node];
 }
 
-const Filter *
-FilterChain::get_filter(int _node) const
-{
-  if (_node >= chain_size)
-    return 0;
-
-  return chain[_node];
-}
-
 Filter *
 FilterChain::init_filter(int _node, Speakers _spk)
 {
@@ -571,5 +569,8 @@ FilterChain::get_next(int _node, Speakers _spk) const
   if (_node >= chain_size - 1)
     return node_end;
 
-  return _node + 1;
+  if (chain[_node+1]->query_input(_spk))
+    return _node + 1;
+  else
+    return node_err;
 }

@@ -117,12 +117,6 @@ protected:
     return 0;
   }
 
-  virtual const Filter *get_filter(int node) const
-  {
-    // This function must return constant pointer to the node filter
-    return 0;
-  }
-
   virtual Filter *init_filter(int node, Speakers spk)
   {
     // This function must initialize node filter and return pointer to it
@@ -131,10 +125,20 @@ protected:
 
   virtual int get_next(int node, Speakers spk) const
   {
-    // This function must determine node next to given node
-    // It must return node_err when it detects graph error. In this case
-    // processing cannot continue and will be stopped.
-    // It must return node_end after the last graph node
+    // This function determines what node is next to given node
+    // * It must return node_end after the last graph node
+    // * It must return node_err when it detects graph error. In this case 
+    //   processing cannot continue and will be stopped.
+    // * To determine the first node in the graph following call is used:
+    //     get_next(node_start, spk)
+    // * It cannot return node_start
+    // * If get_next() returns correct node value it must guarantee that
+    //   format given to get_next() is supported by node filter.
+    // * get_next(spk, node_start) is used in query_input() to determine
+    //   format support. If get_next() returns correct node value it
+    //   means that graph can handle this format. Therefore get_next()
+    //   should always call query_input() on the first filter.
+
     return node_end;
   }
 
@@ -180,9 +184,7 @@ protected:
   // FilterGraph overrides
 
   const char *get_name(int _node) const;
-  const Filter *get_filter(int _node) const;
   Filter *init_filter(int _node, Speakers _spk);
-
   int get_next(int _node, Speakers _spk) const;
 
 public:
