@@ -21,6 +21,19 @@ foreach (@system)
 #  print "$type $value";
 }
 
+# compilation info
+
+print "\n";
+$_ = <>;
+while ($_)
+{
+  $_ = <>;
+  chomp;
+  print "$_\n" if $_;
+}
+
+# find all speed tests
+
 while (<>) 
 {
   print m/\* .+/gi, "\n" if (/speed/);
