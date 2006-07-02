@@ -2,7 +2,7 @@
 #include "win32\winspk.h"
 
 // uncomment this to log timing information into DirectShow log
-//#define DSHOWSINK_LOG_TIMING
+#define DSHOWSINK_LOG_TIMING
 
 DEFINE_GUID(MEDIASUBTYPE_AVI_AC3, 
 0x00002000, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
@@ -324,11 +324,10 @@ DShowSink::process(const Chunk *chunk)
     // Timestamp
     if (chunk->sync)
     {
-      REFERENCE_TIME begin = __int64(double(chunk->time) / spk.sample_rate * 10000000);
-      REFERENCE_TIME end   = __int64(double(chunk->time + chunk->size) / spk.sample_rate * 10000000);
-      sample->SetTime(&begin, &end);
+      REFERENCE_TIME begin = __int64(chunk->time * 10000000);
+      sample->SetTime(&begin, 0);
 #ifdef DSHOWSINK_LOG_TIMING
-      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->time));
+      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->time * 1000));
 #endif
     }
     else
