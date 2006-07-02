@@ -170,7 +170,7 @@ void demux(FILE *f, FILE *out, int stream, int substream, bool pes)
         int(processed * 100 / float(file_size)),
         in_pos / 1000000, int(processed/elapsed/1000000), out_pos / 1000);
 
-      if (substream)
+      if (stream? substream: ps.substream)
         printf(" stream:%02x/%02x\r", stream? stream: ps.stream, stream? substream: ps.substream);
       else
         printf(" stream:%02x   \r", stream? stream: ps.stream);
