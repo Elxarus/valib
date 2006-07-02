@@ -25,7 +25,7 @@ const char *valib_build_info()
       "Release\n");
     #endif
 
-    ptr += sprintf(info_str + ptr, "Build date: " __TIMESTAMP__ "\n");
+    ptr += sprintf(info_str + ptr, "Build date: " __DATE__ " " __TIME__"\n");
     ptr += sprintf(info_str + ptr, "Number of channels: %i\n", NCHANNELS);
     ptr += sprintf(info_str + ptr, "Sample format: "
     #ifdef FLOAT_SAMPLE
