@@ -105,7 +105,7 @@ AGC::fill_buffer()
       memcpy(buf[block][ch] + sample[block], samples[ch], n * sizeof(sample_t));
 
     sample[block] = nsamples;
-    time += n / spk.sample_rate;
+    time += vtime_t(n) / spk.sample_rate;
     drop_samples(n);
 
     return true;
