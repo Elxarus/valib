@@ -161,58 +161,10 @@ AudioDecoder::load_frame()
   }
   else
   {
-    sync_helper.set_syncing(false);
+    // we must not drop sync_helper's syncing state 
+    // if it was no data to loaded
+    if (size) sync_helper.set_syncing(false);
     drop_rawdata(buf_ptr - rawdata);
     return false;
   }
 }
-
-
-/*
-bool 
-AudioDecoder::get_chunk(Chunk *_chunk)
-{
-  if (!parser) 
-    return false;
-
-  sync_helper.receive_sync(sync, time);
-  sync = false;
-
-  uint8_t *buf_ptr = rawdata;
-  uint8_t *end_ptr = rawdata + size;
-
-  while (buf_ptr < end_ptr)
-    if (parser->load_frame(&buf_ptr, end_ptr))
-    {
-      drop(buf_ptr - rawdata);
-
-      // decode
-      if (!parser->decode_frame())
-        return false;
-
-      // fill output chunk
-      _chunk->set
-      (
-        parser->get_spk(),
-        parser->get_samples(), parser->get_nsamples(),
-        0, 0,
-        flushing && !size
-      );
-      // timimg
-      sync_helper.send_sync(_chunk);
-      sync_helper.set_syncing(true);
-      // end-of-stream
-      flushing = flushing && size;
-
-      // quick hack to overcome bug in splitters that report incorrect sample rate
-      // _chunk->time *= double(_out->spk.sample_rate) / spk.sample_rate;
-
-
-      return true;
-    } // if (parser->load_frame(&buf, end))
-
-  sync_helper.set_syncing(false);
-  drop(buf_ptr - rawdata);
-  return true;
-}
-*/
