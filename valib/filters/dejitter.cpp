@@ -103,7 +103,7 @@ Syncer::process(const Chunk *_chunk)
   // dejitter
   if (dejitter)
   {
-    if (fabs(time - old_time) / spk.sample_rate > threshold)
+    if (fabs(time - old_time) > threshold)
     {
 //      istat.reset();
 //      ostat.reset();
@@ -138,7 +138,7 @@ Syncer::get_chunk(Chunk *_chunk)
   (
     spk, 
     samples, size, 
-    sync, time * time_factor + time_shift * spk.sample_rate, 
+    sync, time * time_factor + time_shift, 
     flushing
   );
 

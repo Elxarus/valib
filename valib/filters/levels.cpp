@@ -140,7 +140,7 @@ Levels::get_chunk(Chunk *_chunk)
     size_t block_size = MIN(n, nsamples - sample);
     n -= block_size;
     sample += block_size;
-    time += block_size;
+    time += block_size / spk.sample_rate;
 
     for (int ch = 0; ch < nch; ch++)
     {
@@ -181,53 +181,4 @@ Levels::get_chunk(Chunk *_chunk)
 
   size = 0;
   return true;
-/*
-
-  sample_t levels_loc[NCHANNELS];
-  sample_t max;
-  sample_t *sptr;
-  sample_t *send;
-
-  while (n)
-  {
-    block_size = MIN(n, nsamples - sample);
-
-    for (ch = 0; ch < nch; ch++)
-    {
-      max = 0;
-      sptr = samples[ch];
-      send = sptr + block_size;
-      while (sptr < send)
-        if *
-
-      i = block_size;
-      while (i--)
-      {
-        if (*sptr > max)
-          max = *sptr;
-        sptr++;
-      }
-
-      max /= spk.level;
-      if (max > levels[order[ch]])
-        levels[order[ch]] = max;
-    }
-
-    n -= block_size;
-    sample += block_size;
-    if (time >= 0) 
-      time += block_size;
-
-    if (sample >= nsamples)
-    {
-      add_levels(time, levels);
-      memset(levels, 0, sizeof(sample_t) * NCHANNELS);
-      sample = 0;
-    }
-  }
-
-
-  size = 0;
-  return true;
-*/
 }

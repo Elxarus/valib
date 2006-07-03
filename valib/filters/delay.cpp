@@ -110,7 +110,7 @@ Delay::process(const Chunk *_chunk)
     return true; 
 
   if (sync)
-    time += lag;
+    time += lag / spk.sample_rate;
 
   size_t delay;
   sample_t *ptr1;

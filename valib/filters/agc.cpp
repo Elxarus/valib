@@ -88,7 +88,7 @@ AGC::fill_buffer()
       memcpy(buf[block][ch] + sample[block], samples[ch], size * sizeof(sample_t));
 
     sample[block] += size;
-    time += size;
+    time += size / spk.sample_rate;
     drop_samples(size);
 
     if (!flushing)
@@ -105,7 +105,7 @@ AGC::fill_buffer()
       memcpy(buf[block][ch] + sample[block], samples[ch], n * sizeof(sample_t));
 
     sample[block] = nsamples;
-    time += n;
+    time += n / spk.sample_rate;
     drop_samples(n);
 
     return true;
