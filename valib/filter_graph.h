@@ -69,8 +69,25 @@ private:
   //
   // Node state is used for chain rebuilding:
   //   ns_ok      - nothing to do with this node
+  //   ns_dirty   - we must check get_next() for this node
   //   ns_flush   - we must flush this node
-  //   ns_rebuild - node is flushed and ready for rebuild
+  //   ns_rebuild - node is flushed and ready to be rebuilt
+  //
+  // Note that states are listed in order of 'importance'.
+  // So we may safely change node state from ns_ok to 
+  // ns_dirty or ns_flush but should not change ns_rebuild
+  // to ns_dirty.
+  //
+  // ns_rebuild is the last state in the node's life. Node
+  // with this state is destroyed at next process_internal()
+  // call (and may be possibly re-created after).
+  //
+  // Typical node state change scenarios:
+  //
+  // * ns_ok -> ns_dirty -> process_internal() -> ns_ok
+  // * ns_ok -> ns_dirty -> process_internal() -> ns_flush ->
+  //   -> process_internal() -> ns_rebuild
+  // * ns_ok -> ns_flush -> process_internal() -> ns_rebuild
   //
   // Only following functions can modify the chain:
   //   add_node()
