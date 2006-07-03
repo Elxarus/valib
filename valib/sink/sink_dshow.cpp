@@ -321,18 +321,6 @@ DShowSink::process(const Chunk *chunk)
       send_discontinuity = false;
     }
     
-    // Timestamp
-    if (chunk->sync)
-    {
-      REFERENCE_TIME begin = __int64(chunk->time * 10000000);
-      sample->SetTime(&begin, 0);
-#ifdef DSHOWSINK_LOG_TIMING
-      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->time * 1000));
-#endif
-    }
-    else
-      sample->SetTime(0, 0);
-
     // Other sample flags
     sample->SetSyncPoint(true);
     sample->SetMediaTime(0, 0);
@@ -348,6 +336,29 @@ DShowSink::process(const Chunk *chunk)
     memcpy(sample_buf, chunk_buf, sample_size);
     chunk_buf  += sample_size;
     chunk_size -= sample_size;
+
+    // Timestamp
+    // (uses sample_size determined before)
+    if (chunk->sync)
+    {
+      REFERENCE_TIME begin = __int64(chunk->time * 10000000);
+
+      WAVEFORMATEX *wfx = (WAVEFORMATEX *)m_mt.Format();
+      if (wfx->nAvgBytesPerSec)
+      {
+        vtime_t len = vtime_t(sample_size) / wfx->nAvgBytesPerSec;
+        REFERENCE_TIME end   = __int64(chunk->time * 10000000) + __int64(len * 10000000);
+        sample->SetTime(&begin, &end);
+      }
+      else
+        sample->SetTime(&begin, 0);
+
+#ifdef DSHOWSINK_LOG_TIMING
+      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->time * 1000));
+#endif
+    }
+    else
+      sample->SetTime(0, 0);
 
     // Send
     hr = Deliver(sample);
