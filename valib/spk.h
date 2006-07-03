@@ -156,10 +156,12 @@
 // Format classes (bitmasks)
 ///////////////////////////////////////////////////////////////////////////////
 
-#define FORMAT_CLASS_PCM         0x003fc
-#define FORMAT_CLASS_CONTAINER   0x00c00
+#define FORMAT_CLASS_PCM_LE      (FORMAT_MASK_PCM16    | FORMAT_MASK_PCM24    | FORMAT_MASK_PCM32)
+#define FORMAT_CLASS_PCM_BE      (FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE)
+#define FORMAT_CLASS_PCM         (FORMAT_CLASS_PCM_LE  | FORMAT_CLASS_PCM_BE  | FORMAT_MASK_PCMFLOAT)
+#define FORMAT_CLASS_CONTAINER   (FORMAT_MASK_PES | FORMAT_MASK_SPDIF)
+#define FORMAT_CLASS_SPDIFABLE   (FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_MPA)
 #define FORMAT_CLASS_COMPRESSED  0x1f000
-#define FORMAT_CLASS_SPDIFABLE   0x07000
 
 ///////////////////////////////////////////////////////////////////////////////
 // Channel numbers (that also define 'standard' channel order)
