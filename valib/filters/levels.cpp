@@ -140,7 +140,7 @@ Levels::get_chunk(Chunk *_chunk)
     size_t block_size = MIN(n, nsamples - sample);
     n -= block_size;
     sample += block_size;
-    time += block_size / spk.sample_rate;
+    time += vtime_t(block_size) / spk.sample_rate;
 
     for (int ch = 0; ch < nch; ch++)
     {
