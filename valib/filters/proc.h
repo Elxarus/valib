@@ -171,7 +171,10 @@ public:
   inline vtime_t  get_time_factor();
   inline bool     get_dejitter();
   inline vtime_t  get_threshold();
-  inline vtime_t  get_jitter();
+  inline vtime_t  get_input_mean();
+  inline vtime_t  get_input_stddev();
+  inline vtime_t  get_output_mean();
+  inline vtime_t  get_output_stddev();
   // Input/output levels
   inline void     get_input_levels(vtime_t time, sample_t input_levels[NCHANNELS]); // r/o
   inline void     get_output_levels(vtime_t time, sample_t output_levels[NCHANNELS]); // r/o
@@ -348,9 +351,21 @@ inline vtime_t
 AudioProcessor::get_threshold()
 { return syncer.get_threshold(); }
 
-inline vtime_t  
-AudioProcessor::get_jitter()
-{ return syncer.get_jitter(); }
+inline vtime_t
+AudioProcessor::get_input_mean()
+{ return syncer.get_input_mean(); }
+
+inline vtime_t
+AudioProcessor::get_input_stddev()
+{ return syncer.get_input_stddev(); }
+
+inline vtime_t
+AudioProcessor::get_output_mean()
+{ return syncer.get_output_mean(); }
+
+inline vtime_t
+AudioProcessor::get_output_stddev()
+{ return syncer.get_output_stddev(); }
 
 inline void     
 AudioProcessor::get_input_levels(vtime_t _time, sample_t _input_levels[NCHANNELS])

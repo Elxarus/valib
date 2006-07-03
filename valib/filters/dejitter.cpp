@@ -26,8 +26,7 @@ Syncer::SyncerStat::reset()
 void   
 Syncer::SyncerStat::add(vtime_t _val)
 {
-  for (int i = array_size(stat)-1; i > 0; i--)
-    stat[i] = stat[i-1];
+  memmove(stat + 1, stat, sizeof(stat) - sizeof(stat[0]));
   stat[0] = _val;
 }
 
@@ -35,8 +34,9 @@ vtime_t
 Syncer::SyncerStat::stddev() const
 {
   vtime_t sum = 0;
+  vtime_t avg = mean();
   for (int i = 0; i < array_size(stat); i++)
-    sum += stat[i] * stat[i];
+    sum += (stat[i] - avg) * (stat[i] - avg);
   return sqrt(sum/array_size(stat));
 }
 
@@ -148,7 +148,7 @@ Syncer::get_chunk(Chunk *_chunk)
     sync = false;
 
   flushing = false;
-  time += size;
+  time += vtime_t(size) / spk.sample_rate;
   size = 0;
   return true;
 }

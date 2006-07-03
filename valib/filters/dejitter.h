@@ -67,8 +67,10 @@ public:
   vtime_t get_threshold() const                  { return threshold; }
   void    set_threshold(vtime_t _threshold)      { threshold = _threshold; }
 
-  vtime_t get_jitter() const                     { return ostat.stddev() / spk.sample_rate; }
-  vtime_t get_drift() const                      { return ostat.mean() / spk.sample_rate; }
+  vtime_t get_input_mean() const                 { return istat.mean(); }
+  vtime_t get_input_stddev() const               { return istat.stddev(); }
+  vtime_t get_output_mean() const                { return ostat.mean(); }
+  vtime_t get_output_stddev() const              { return ostat.stddev(); }
 
   /////////////////////////////////////////////////////////
   // Filter interface
