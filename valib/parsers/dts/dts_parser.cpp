@@ -92,6 +92,9 @@ DTSParser::DTSParser()
 
   // setup syncronization scanner
   scanner.set_standard(SYNCMASK_DTS);
+
+  // clean everything
+  reset();
 }
 
 void 
@@ -210,6 +213,14 @@ void
 DTSParser::reset()
 {
   BaseParser::reset();
+
+  frame_type      = 0;
+  samples_deficit = 0;
+  crc_present     = 0;
+  sample_blocks   = 0;
+  amode           = 0;
+  sample_rate     = 0;
+  bit_rate        = 0;
 
   memset(subband_samples_hist, 0, sizeof(subband_samples_hist));
   memset(subband_fir_hist, 0, sizeof(subband_fir_hist));
