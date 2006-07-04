@@ -37,7 +37,7 @@ DVDGraph::set_user(Speakers _user_spk)
   {
     user_spk = _user_spk;
     rebuild_node(state_proc);
-    rebuild_node(state_proc_encode);
+    rebuild_node(state_proc_enc);
   }
 
   return true;
@@ -139,7 +139,7 @@ void
 DVDGraph::get_info(char *_buf, int _len) const
 {
   if (spdif_status == SPDIF_PASSTHROUGH)
-    spdifer.get_info(_buf, _len);
+    spdifer_pt.get_info(_buf, _len);
   else
     dec.get_info(_buf, _len);
 }
@@ -152,10 +152,11 @@ void
 DVDGraph::reset()
 {
   demux.reset();
-  spdifer.reset();
+  spdifer_pt.reset();
   dec.reset();
   proc.reset();
   enc.reset();
+  spdifer_enc.reset();
   spdif2pcm.reset();
 
   FilterGraph::reset();
@@ -170,14 +171,14 @@ DVDGraph::get_name(int node) const
   switch (node)
   {
     case state_demux:       return "Demux";
-    case state_passthrough: return "Spdifer";
+    case state_spdif_pt:    return "Spdifer";
     case state_decode:      return "Decoder";
     case state_proc:
-    case state_proc_encode:
+    case state_proc_enc:
                             return "Processor";
     case state_encode:      return "Encoder";
-    case state_spdif:       return "Spdifer";
-    case state_spdif2pcm:   return "Spdif->PCM";
+    case state_spdif_enc:   return "Spdifer";
+    case state_spdif2pcm:   return "SPDIF->PCM";
   }
   return 0;
 }
@@ -190,13 +191,13 @@ DVDGraph::init_filter(int node, Speakers spk)
     case state_demux:
       return &demux;
 
-    case state_passthrough:    
+    case state_spdif_pt:    
       // resetAudioProcessor to indicate no processing 
       // activity in spdif passthrough mode
       proc.reset();
 
       spdif_status = SPDIF_PASSTHROUGH;
-      return &spdifer;
+      return &spdifer_pt;
 
     case state_decode:
       return &dec;
@@ -212,7 +213,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       return &proc;
     }
 
-    case state_proc_encode:
+    case state_proc_enc:
     {
       spdif_status = SPDIF_ENCODE;
 
@@ -225,11 +226,11 @@ DVDGraph::init_filter(int node, Speakers spk)
       return &proc;
     }
 
-    case state_encode:   
+    case state_encode:
       return &enc;
 
-    case state_spdif: 
-      return &spdifer;
+    case state_spdif_enc:
+      return &spdifer_enc;
 
     case state_spdif2pcm:
       return &spdif2pcm;
@@ -252,10 +253,10 @@ DVDGraph::get_next(int node, Speakers spk) const
   {
     /////////////////////////////////////////////////////
     // input -> state_demux
-    // input -> state_passthrough
+    // input -> state_spdif_pt
     // input -> state_decode
     // input -> state_proc
-    // input -> state_proc_encode
+    // input -> state_proc_enc
 
     case node_start:
       if (demux.query_input(spk)) 
@@ -264,10 +265,10 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (use_spdif && (spdif_pt & FORMAT_MASK(spk.format)))
       {
         if (spdif_as_pcm)
-          return state_passthrough;
+          return state_spdif_pt;
 
         if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
-          return state_passthrough;
+          return state_spdif_pt;
       }
 
       if (dec.query_input(spk))
@@ -279,19 +280,19 @@ DVDGraph::get_next(int node, Speakers spk) const
       return node_err;
 
     /////////////////////////////////////////////////////
-    // state_demux -> state_passthrough
+    // state_demux -> state_spdif_pt
     // state_demux -> state_decode
     // state_demux -> state_proc
-    // state_demux -> state_proc_encode
+    // state_demux -> state_proc_enc
 
     case state_demux:
       if (use_spdif && (spdif_pt & FORMAT_MASK(spk.format)))
       {
         if (spdif_as_pcm)
-          return state_passthrough;
+          return state_spdif_pt;
 
         if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
-          return state_passthrough;
+          return state_spdif_pt;
       }
 
       if (dec.query_input(spk))
@@ -303,10 +304,10 @@ DVDGraph::get_next(int node, Speakers spk) const
       return node_err;
 
     /////////////////////////////////////////////////////
-    // state_passthrough -> output
-    // state_passthrough -> state_decode
+    // state_spdif_pt -> output
+    // state_spdif_pt -> state_decode
 
-    case state_passthrough:
+    case state_spdif_pt:
       // Spdifer may return return high-bitrare DTS stream
       // that is impossible to passthrough
       if (spk.format != FORMAT_SPDIF)
@@ -319,7 +320,7 @@ DVDGraph::get_next(int node, Speakers spk) const
 
     /////////////////////////////////////////////////////
     // state_decode -> state_proc
-    // state_decode -> state_proc_encode
+    // state_decode -> state_proc_enc
 
     case state_decode:
       return decide_processor(spk);
@@ -331,25 +332,22 @@ DVDGraph::get_next(int node, Speakers spk) const
       return node_end;
 
     /////////////////////////////////////////////////////
-    // state_proc_encode -> state_encode
+    // state_proc_enc -> state_encode
 
-    case state_proc_encode:
+    case state_proc_enc:
       return state_encode;
 
     /////////////////////////////////////////////////////
-    // state_encode -> state_spdif
+    // state_encode -> state_spdif_enc
 
     case state_encode:
-      return state_spdif;
+      return state_spdif_enc;
 
     /////////////////////////////////////////////////////
-    // state_spdif -> state_decode
-    // state_spdif -> output
+    // state_spdif_enc -> state_decode
+    // state_spdif_enc -> output
 
-    case state_spdif:
-      if (spk.format != FORMAT_SPDIF)
-        return state_decode;
-
+    case state_spdif_enc:
       if (spdif_as_pcm)
         return state_spdif2pcm;
       else
@@ -395,10 +393,10 @@ DVDGraph::decide_processor(Speakers spk) const
 
     // Query sink
     if (spdif_as_pcm)
-      return state_proc_encode;
+      return state_proc_enc;
 
     if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
-      return state_proc_encode;
+      return state_proc_enc;
     else
       return state_proc;
   }

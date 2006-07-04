@@ -27,10 +27,11 @@ class DVDGraph : public FilterGraph
 {
 public:
   Demux          demux;
-  Spdifer        spdifer;
+  Spdifer        spdifer_pt;
   AudioDecoder   dec;
   AudioProcessor proc;
   AC3Enc         enc;
+  Spdifer        spdifer_enc;
   Spdif2PCM      spdif2pcm;
 
 public:
@@ -80,12 +81,12 @@ protected:
   enum state_t 
   { 
     state_demux = 0,
-    state_passthrough,
+    state_spdif_pt,
     state_decode,
     state_proc,
-    state_proc_encode,
+    state_proc_enc,
     state_encode,
-    state_spdif, 
+    state_spdif_enc, 
     state_spdif2pcm
   };            
   int spdif_status;
