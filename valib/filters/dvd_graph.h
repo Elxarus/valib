@@ -15,6 +15,14 @@
 #define SPDIF_PASSTHROUGH         1
 #define SPDIF_ENCODE              2
 
+class Spdif2PCM : public NullFilter
+{
+public:
+  Spdif2PCM();
+  virtual Speakers get_output() const;
+  virtual bool get_chunk(Chunk *_chunk);
+};
+
 class DVDGraph : public FilterGraph
 {
 public:
@@ -23,6 +31,7 @@ public:
   AudioDecoder   dec;
   AudioProcessor proc;
   AC3Enc         enc;
+  Spdif2PCM      spdif2pcm;
 
 public:
   DVDGraph(const Sink *sink = 0);
@@ -37,7 +46,7 @@ public:
   const Sink *get_sink() const;
 
   // SPDIF options
-  void set_spdif(bool use_spdif, int spdif_pt, bool spdif_stereo_pt);
+  void set_spdif(bool use_spdif, int spdif_pt, bool spdif_stereo_pt, bool spdif_as_pcm);
 
   bool get_use_spdif() const;
   void set_use_spdif(bool use_spdif);
@@ -45,6 +54,8 @@ public:
   void set_spdif_pt(int spdif_pt);
   bool get_spdif_stereo_pt() const;
   void set_spdif_stereo_pt(bool spdif_stereo_pt);
+  bool get_spdif_as_pcm() const;
+  void set_spdif_as_pcm(bool spdif_as_pcm);
 
   int get_spdif_status() const;
 
@@ -55,6 +66,7 @@ protected:
   bool     use_spdif;
   int      spdif_pt;
   bool     spdif_stereo_pt;
+  bool     spdif_as_pcm;
 
   const Sink *sink;
   enum state_t 
@@ -65,7 +77,8 @@ protected:
     state_proc,
     state_proc_encode,
     state_encode,
-    state_spdif
+    state_spdif, 
+    state_spdif2pcm
   };            
   int spdif_status;
 

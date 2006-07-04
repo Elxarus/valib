@@ -74,12 +74,19 @@ public:
 
     // PES to SPDIF transform with format changes
     dvd.set_sink(0);
-
-    dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, true);
     dvd.set_user(Speakers(FORMAT_PCM16_BE, 0, 0, 32767));
 
+    log->open_group("Test PES->SPDIF transform");
+    dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, true, false);
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes",  f, "a.mad.mix.spdif");
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", f, "a.madp.mix.spdif");
+    log->close_group();
+
+    log->open_group("Test PES->SPDIF transform with SPDIF as PCM output");
+    dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, true, true);
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes",  f, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", f, "a.madp.mix.spdif");
+    log->close_group();
 
     log->close_group();
   }
@@ -132,7 +139,7 @@ public:
     for (int i = 0; i < array_size(formats); i++)
     {
       dvd.set_user(formats[i]);
-      dvd.set_spdif(spdif_stereo_pt[i], 0, spdif_stereo_pt[i]);
+      dvd.set_spdif(spdif_stereo_pt[i], 0, spdif_stereo_pt[i], false);
 
       Speakers test_spk = spk;
       if (formats[i].format)
@@ -293,14 +300,14 @@ public:
   int test_decode(Source *src)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
-    dvd.set_spdif(false, 0, false);
+    dvd.set_spdif(false, 0, false, false);
     return test_cycle("test_decode()", src, SPDIF_DISABLED, "decode", FORMAT_PCM16);
   }
 
   int test_passthrough(Source *src, bool spdif_allowed)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
-    dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false);
+    dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, false);
     if (spdif_allowed)
       return test_cycle("test_passthrough()", src, SPDIF_PASSTHROUGH, "spdif passthrough", FORMAT_SPDIF);
     else
@@ -310,7 +317,7 @@ public:
   int test_encode(Source *src, bool spdif_allowed, bool can_encode)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
-    dvd.set_spdif(true, 0, false);
+    dvd.set_spdif(true, 0, false, false);
 
     if (!can_encode)
       return test_cycle("test_encode()", src, SPDIF_DISABLED, "cannot encode", FORMAT_PCM16);
@@ -324,7 +331,7 @@ public:
   int test_stereo_passthrough(Source *src)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, MODE_STEREO, 0, 32767));
-    dvd.set_spdif(true, 0, true);
+    dvd.set_spdif(true, 0, true, false);
     return test_cycle("test_stereo_passthrough()", src, SPDIF_DISABLED, "stereo pcm passthrough", FORMAT_PCM16);
   }
 

@@ -1,15 +1,14 @@
 #include "dvd_graph.h"
 
-
-
 DVDGraph::DVDGraph(const Sink *_sink)
 :FilterGraph(-1), proc(4096)
 {
   user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
-  use_spdif = false;
 
+  use_spdif = false;
   spdif_pt = FORMAT_MASK_AC3;
   spdif_stereo_pt = true;
+  spdif_as_pcm = false;
   spdif_status = SPDIF_DISABLED;
 
   sink = _sink;
@@ -69,11 +68,12 @@ DVDGraph::get_sink() const
 // SPDIF options
 
 void
-DVDGraph::set_spdif(bool _use_spdif, int _spdif_pt, bool _spdif_stereo_pt)
+DVDGraph::set_spdif(bool _use_spdif, int _spdif_pt, bool _spdif_stereo_pt, bool _spdif_as_pcm)
 {
   use_spdif = _use_spdif;
   spdif_pt = _spdif_pt;
   spdif_stereo_pt = _spdif_stereo_pt;
+  spdif_as_pcm = _spdif_as_pcm;
   invalidate_chain();
 }
 
@@ -116,6 +116,19 @@ DVDGraph::set_spdif_stereo_pt(bool _spdif_stereo_pt)
   invalidate_chain();
 }
 
+bool
+DVDGraph::get_spdif_as_pcm() const
+{
+  return spdif_as_pcm;
+}
+
+void
+DVDGraph::set_spdif_as_pcm(bool _spdif_as_pcm)
+{
+  spdif_as_pcm = _spdif_as_pcm;
+  invalidate_chain();
+}
+
 int 
 DVDGraph::get_spdif_status() const
 { 
@@ -148,6 +161,7 @@ DVDGraph::get_name(int node) const
                             return "Processor";
     case state_encode:      return "Encoder";
     case state_spdif:       return "Spdifer";
+    case state_spdif2pcm:   return "Spdif->PCM";
   }
   return 0;
 }
@@ -196,6 +210,9 @@ DVDGraph::init_filter(int node, Speakers spk)
 
     case state_spdif: 
       return &spdifer;
+
+    case state_spdif2pcm:
+      return &spdif2pcm;
   }
   return 0;
 }
@@ -225,8 +242,13 @@ DVDGraph::get_next(int node, Speakers spk) const
         return state_demux;
 
       if (use_spdif && (spdif_pt & FORMAT_MASK(spk.format)))
+      {
+        if (spdif_as_pcm)
+          return state_passthrough;
+
         if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
           return state_passthrough;
+      }
 
       if (dec.query_input(spk))
         return state_decode;
@@ -244,8 +266,13 @@ DVDGraph::get_next(int node, Speakers spk) const
 
     case state_demux:
       if (use_spdif && (spdif_pt & FORMAT_MASK(spk.format)))
+      {
+        if (spdif_as_pcm)
+          return state_passthrough;
+
         if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
           return state_passthrough;
+      }
 
       if (dec.query_input(spk))
         return state_decode;
@@ -264,6 +291,9 @@ DVDGraph::get_next(int node, Speakers spk) const
       // that is impossible to passthrough
       if (spk.format != FORMAT_SPDIF)
         return state_decode;
+
+      if (spdif_as_pcm)
+        return state_spdif2pcm;
       else
         return node_end;
 
@@ -299,8 +329,18 @@ DVDGraph::get_next(int node, Speakers spk) const
     case state_spdif:
       if (spk.format != FORMAT_SPDIF)
         return state_decode;
+
+      if (spdif_as_pcm)
+        return state_spdif2pcm;
       else
         return node_end;
+
+    /////////////////////////////////////////////////////
+    // state_spdif2pcm -> output
+
+    case state_spdif2pcm:
+      return node_end;
+
   }
 
   // never be here...
@@ -334,6 +374,9 @@ DVDGraph::decide_processor(Speakers spk) const
       return state_proc;
 
     // Query sink
+    if (spdif_as_pcm)
+      return state_proc_encode;
+
     if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
       return state_proc_encode;
     else
@@ -350,4 +393,30 @@ DVDGraph::query_sink(Speakers _spk) const
     return true;
   else
     return sink->query_input(_spk);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Spdif2PCM class
+///////////////////////////////////////////////////////////////////////////////
+
+Spdif2PCM::Spdif2PCM(): NullFilter(-1) 
+{};
+
+Speakers
+Spdif2PCM::get_output() const
+{
+  if (spk.format == FORMAT_SPDIF)
+    return Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
+  else
+    return spk;
+}
+bool
+Spdif2PCM::get_chunk(Chunk *_chunk)
+{ 
+  send_chunk_inplace(_chunk, size);
+  if (_chunk->spk.format == FORMAT_SPDIF)
+    _chunk->spk = Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
+  return true;
 }

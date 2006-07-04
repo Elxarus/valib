@@ -210,7 +210,7 @@ int test_rules(Log *log)
   bass_redir_ib.set_freq(120);
   bass_redir_ib.set_enabled(true);
   proc.set_user(Speakers(FORMAT_PCM16, 0, 0));
-  dvd_spdif.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false);
+  dvd_spdif.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, false);
 
   log->open_group("Test filters");
 
