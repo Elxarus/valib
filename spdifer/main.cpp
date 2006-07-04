@@ -53,13 +53,13 @@ int main(int argc, const char **argv)
   if (!strcmp(argv[2], "-"))
   {
     _setmode(_fileno(stdout), _O_BINARY);
-    dst.open_file(stdout);
+    dst.open(stdout);
     stat = false;
   }
   else
-    dst.open_file(argv[2]);
+    dst.open(argv[2]);
 
-  if (!dst.is_file_open())
+  if (!dst.is_open())
   {
     fprintf(stderr, "Cannot open output file\n");
     return 1;
@@ -101,7 +101,7 @@ int main(int argc, const char **argv)
       }
       osize += chunk.size;
 
-      if (!dst.write(&chunk))
+      if (!dst.process(&chunk))
       {
         fprintf(stderr, "Cannot write data\n");
         return 1;

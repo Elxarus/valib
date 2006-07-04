@@ -10,7 +10,7 @@ int main()
   Speakers    spk(FORMAT_PCM16, MODE_STEREO, 48000);
 
   Noise       noise(spk, spk.sample_rate * spk.nch() * spk.sample_size());
-  DSRenderer  ds(0);
+  DSoundSink  ds(0);
   FilterChain filter;
 
   Sink *sink = &ds;
@@ -20,7 +20,7 @@ int main()
   /////////////////////////////////////////////////////////
 
   printf("Opening %s %s %iHz audio output...\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
-  if (!ds.open(spk))
+  if (!ds.set_input(spk))
   {
     printf("Error: Cannot open audio output!");
     return 1;

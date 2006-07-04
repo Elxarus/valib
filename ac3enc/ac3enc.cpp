@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  if (!sink.open_file(argv[2]))
+  if (!sink.open(argv[2]))
   {
     printf("Cannot open file %s for writing!\n", argv[2]);
     return 1;
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
         return 1;
       }
 
-      sink.write(&ac3_chunk);
+      sink.process(&ac3_chunk);
       frames++;
 
       /////////////////////////////////////////////////////
