@@ -115,6 +115,14 @@ AudioProcessor::rebuild_chain()
 void 
 AudioProcessor::reset()
 {
+  in_levels.reset();
+  mixer.reset();
+  bass_redir.reset();
+  agc.reset();
+  delay.reset();
+  out_levels.reset();
+  syncer.reset();
+
   chain.reset();
 }
 

@@ -36,6 +36,9 @@ public:
 public:
   DVDGraph(const Sink *sink = 0);
 
+  /////////////////////////////////////////////////////////////////////////////
+  // DVDGraph interface
+
   // User format
   bool query_user(Speakers user_spk) const;
   bool set_user(Speakers user_spk);
@@ -60,6 +63,11 @@ public:
   int get_spdif_status() const;
 
   void get_info(char *_info, int _len) const;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Filter overrides
+
+  virtual void reset();
 
 protected:
   Speakers user_spk;

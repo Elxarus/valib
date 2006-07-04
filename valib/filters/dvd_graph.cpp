@@ -146,6 +146,22 @@ DVDGraph::get_info(char *_buf, int _len) const
 
 
 /////////////////////////////////////////////////////////////////////////////
+// Filter overrides
+
+void 
+DVDGraph::reset()
+{
+  demux.reset();
+  spdifer.reset();
+  dec.reset();
+  proc.reset();
+  enc.reset();
+  spdif2pcm.reset();
+
+  FilterGraph::reset();
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // FilterGraph overrides
 
 const char *
@@ -175,6 +191,10 @@ DVDGraph::init_filter(int node, Speakers spk)
       return &demux;
 
     case state_passthrough:    
+      // resetAudioProcessor to indicate no processing 
+      // activity in spdif passthrough mode
+      proc.reset();
+
       spdif_status = SPDIF_PASSTHROUGH;
       return &spdifer;
 
