@@ -39,10 +39,10 @@ int main(int argc, const char **argv)
   if (!strcmp(argv[1], "-"))
   {
     _setmode(_fileno(stdin), _O_BINARY);
-    src.open(spk_unknown, stdin);
+    src.open(Speakers(FORMAT_RAWDATA, 0, 0), stdin);
   }
   else
-    src.open(spk_unknown, argv[1]);
+    src.open(Speakers(FORMAT_RAWDATA, 0, 0), argv[1]);
 
   if (!src.is_open())
   {
