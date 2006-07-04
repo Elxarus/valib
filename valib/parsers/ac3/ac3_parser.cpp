@@ -195,7 +195,7 @@ AC3Parser::crc_check()
   // but it is included to 5/8 of frame size. So we must 
   // check 5/8*frame_size - 2 bytes.
 
-  size_t frame_size1 = (frame_size >> 1) + (frame_size >> 3);
+  size_t frame_size1 = ((frame_size >> 2) + (frame_size >> 4)) << 1;
   crc = crc16.calc(0, frame + 2, frame_size1 - 2, bs_type);
   if (crc) 
     return false;
