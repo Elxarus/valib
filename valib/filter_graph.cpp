@@ -358,17 +358,7 @@ FilterGraph::chain_text(char *buf, size_t buf_size) const
 void
 FilterGraph::reset()
 {
-  int node = node_start;
-  do {
-    filter[node]->reset();
-    if (filter[node]->is_ofdd())
-    {
-      // cut the chain at ofdd filter
-      build_chain(node);
-      return;
-    }
-    node = next[node];
-  } while (node != node_start);
+  drop_chain();
 }
 
 bool
