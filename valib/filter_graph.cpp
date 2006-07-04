@@ -63,7 +63,7 @@ FilterGraph::drop_chain()
   prev[node_start] = node_end;
   next[node_end] = node_start;
   prev[node_end] = node_start;
-  node_state[node_start] = ns_ok;
+  node_state[node_start] = ns_dirty;
   node_state[node_end] = ns_ok;
 }
 
