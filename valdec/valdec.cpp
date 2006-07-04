@@ -750,7 +750,7 @@ int main(int argc, char *argv[])
     if (file.load_frame())
     {
       if (spdif)
-        chunk.set_rawdata(Speakers(FORMAT_UNKNOWN, 0, 0), parser->get_frame(), parser->get_frame_size());
+        chunk.set_rawdata(Speakers(FORMAT_AC3, 0, 0), parser->get_frame(), parser->get_frame_size());
       else
       {
         // Decode
