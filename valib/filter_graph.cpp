@@ -323,7 +323,7 @@ FilterGraph::chain_text(char *buf, size_t buf_size) const
   Speakers spk;
 
   char *buf_ptr = buf;
-  int node = node_start;
+  int node = next[node_start];
 
   spk = filter[node]->get_input();
 

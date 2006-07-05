@@ -120,6 +120,9 @@ protected:
   /////////////////////////////////////////////////////////
   // public chain operations
 
+  inline int chain_next(int node) const { return next[node]; }
+  inline int chain_prev(int node) const { return prev[node]; }
+
   void drop_chain();
   void set_dirty(int node);
   void invalidate_chain();
