@@ -109,7 +109,7 @@ public:
   virtual Speakers get_spk() const = 0;
   virtual unsigned get_frame_size() const = 0;
   virtual unsigned get_nsamples() const = 0;
-  virtual void     get_info(char *buf, size_t len) const = 0;
+  virtual int      get_info(char *buf, size_t len) const = 0;
 
   virtual unsigned get_frames() const = 0;
   virtual unsigned get_errors() const = 0;

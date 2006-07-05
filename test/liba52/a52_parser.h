@@ -40,7 +40,7 @@ public:
   virtual Speakers get_spk()        const { return spk;        }
   virtual unsigned get_frame_size() const { return frame_size; }
   virtual unsigned get_nsamples()   const { return 1536; }
-  virtual void     get_info(char *, unsigned) const {}
+  virtual int      get_info(char *buf, size_t len) const { return 0; }
 
   virtual unsigned get_frames()     const { return frames;     }
   virtual unsigned get_errors()     const { return errors;     }

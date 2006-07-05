@@ -47,11 +47,12 @@ MPAParser::reset()
   if (synth[1]) synth[1]->reset();
 }
 
-void 
-MPAParser::get_info(char *buf, unsigned len) const 
+int
+MPAParser::get_info(char *_buf, size_t _len) const 
 {
   char info[1024];
-  sprintf(info, 
+
+  size_t len = sprintf(info, 
     "MPEG Audio\n"
     "speakers: %s\n"
     "ver: %s\n"
@@ -68,7 +69,11 @@ MPAParser::get_info(char *buf, unsigned len) const
     bsi.freq,
     bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2,
     bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2);
-  memcpy(buf, info, MIN(len, strlen(info)+1));
+
+  if (len + 1 > _len) len = _len - 1;
+  memcpy(_buf, info, len + 1);
+  _buf[len] = 0;
+  return len;
 }
 
 bool 

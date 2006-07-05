@@ -143,7 +143,7 @@ public:
 
   void reset();
   bool decode_frame();
-  void get_info(char *buf, unsigned len) const;
+  int  get_info(char *buf, size_t len) const;
 
 protected:
 

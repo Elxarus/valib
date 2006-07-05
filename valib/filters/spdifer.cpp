@@ -1018,7 +1018,7 @@ Spdifer::dts_syncinfo(const uint8_t *_buf)
 }
 
 
-void 
+int 
 Spdifer::get_info(char *_buf, size_t _len) const
 {
   char info[1024];
@@ -1029,9 +1029,9 @@ Spdifer::get_info(char *_buf, size_t _len) const
     case FORMAT_MPA: format = "SPDIF/MPEG Audio"; break;
     case FORMAT_DTS: format = "SPDIF/DTS"; break;
     default:
-      sprintf(info, "-");
+      sprintf(info, "-\n");
       memcpy(_buf, info, MIN(_len, strlen(info)+1));
-      return;
+      return 2;
   }
 
   const char *bs_type_text = 0;
@@ -1044,7 +1044,7 @@ Spdifer::get_info(char *_buf, size_t _len) const
     case BITSTREAM_14LE: bs_type_text = "14bit LE"; break;
   }
 
-  sprintf(info,
+  size_t len = sprintf(info,
     "%s\n"
     "speakers: %s\n"
     "sample rate: %iHz\n"
@@ -1057,5 +1057,9 @@ Spdifer::get_info(char *_buf, size_t _len) const
     bs_type_text,
     frame_size,
     nsamples);
-  memcpy(_buf, info, MIN(_len, strlen(info)+1));
+
+  if (len + 1 > _len) len = _len - 1;
+  memcpy(_buf, info, len + 1);
+  _buf[len] = 0;
+  return len;
 }

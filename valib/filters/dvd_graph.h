@@ -63,7 +63,7 @@ public:
 
   int get_spdif_status() const;
 
-  void get_info(char *_info, int _len) const;
+  int get_info(char *_buf, size_t _len) const;
 
   /////////////////////////////////////////////////////////////////////////////
   // Filter overrides

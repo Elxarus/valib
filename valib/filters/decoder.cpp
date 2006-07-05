@@ -8,13 +8,10 @@ AudioDecoder::AudioDecoder()
   reset();
 }
 
-void 
-AudioDecoder::get_info(char *_buf, int _len) const
+int
+AudioDecoder::get_info(char *_buf, size_t _len) const
 {
-  if (parser)
-    parser->get_info(_buf, _len);
-  else
-    if (_len) *_buf = 0;
+  return parser? parser->get_info(_buf, _len): 0;
 }
 
 void

@@ -267,8 +267,8 @@ DTSParser::decode_frame()
   return true;
 }
 
-void 
-DTSParser::get_info(char *buf, unsigned len) const
+int
+DTSParser::get_info(char *_buf, size_t _len) const
 {
   char info[1024];
 
@@ -281,7 +281,7 @@ DTSParser::get_info(char *buf, unsigned len) const
     case BITSTREAM_14LE: stream = "14bit LE"; break;
   }
 
-  sprintf(info,
+  size_t len = sprintf(info,
     "DTS\n"
     "speakers:  %s\n"
     "sample rate: %iHz\n"
@@ -301,7 +301,11 @@ DTSParser::get_info(char *buf, unsigned len) const
     amode,
     crc_present? "CRC protected\n": "No CRC"
     );
-  memcpy(buf, info, MIN(len, strlen(info)+1));
+
+  if (len + 1 > _len) len = _len - 1;
+  memcpy(_buf, info, len + 1);
+  _buf[len] = 0;
+  return len;
 }
 
 

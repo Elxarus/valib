@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "dvd_graph.h"
 
 DVDGraph::DVDGraph(const Sink *_sink)
@@ -135,13 +136,84 @@ DVDGraph::get_spdif_status() const
   return spdif_status; 
 };
 
-void
-DVDGraph::get_info(char *_buf, int _len) const
+int
+DVDGraph::get_info(char *_buf, size_t _len) const
 {
-  if (spdif_status == SPDIF_PASSTHROUGH)
-    spdifer_pt.get_info(_buf, _len);
-  else
-    dec.get_info(_buf, _len);
+  Speakers spk;
+  static const buf_size = 2048;
+  char buf[buf_size];
+  size_t pos = 0;
+
+  spk = get_input();
+  pos += sprintf(buf + pos, "Input format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
+
+  spk = user_spk;
+  pos += sprintf(buf + pos, "User format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
+
+  spk = get_output();
+  pos += sprintf(buf + pos, "Output format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
+
+  if (use_spdif)
+  {
+    pos += sprintf(buf + pos, "\nUse SPDIF:\n");
+    pos += sprintf(buf + pos, "  SPDIF passthrough for: ");
+    if (spdif_pt & FORMAT_MASK_MPA) pos += sprintf(buf + pos, "MPA ");
+    if (spdif_pt & FORMAT_MASK_AC3) pos += sprintf(buf + pos, "AC3 ");
+    if (spdif_pt & FORMAT_MASK_DTS) pos += sprintf(buf + pos, "DTS ");
+    pos += sprintf(buf + pos, spdif_pt? "\n": "-\n");
+
+    if (spdif_stereo_pt)
+      pos += sprintf(buf + pos, "  Do not encode stereo PCM\n");
+
+    if (spdif_as_pcm)
+      pos += sprintf(buf + pos, "  SPDIF as PCM output");
+  }
+
+  pos += sprintf(buf + pos, "\nDecoding chain:\n");
+  pos += chain_text(buf + pos, buf_size - pos);
+
+  pos += sprintf(buf + pos, "\n\nFilters info (in order of processing):\n\n");
+  int node = chain_next(node_start);
+  while (node != node_end)
+  {
+    const char *filter_name = get_name(node);
+    if (!filter_name) filter_name = "Unknown filter";
+    pos += sprintf(buf + pos, "%s:\n", filter_name);
+
+    switch (node)
+    {
+    case state_spdif_pt:
+      pos += sprintf(buf + pos, "%s", filter_name);
+
+      pos += spdifer_pt.get_info(buf + pos, buf_size - pos);
+      break;
+
+    case state_decode:
+      pos += dec.get_info(buf + pos, buf_size - pos);
+      break;
+
+    case state_proc:
+    case state_proc_enc:
+      pos += proc.get_info(buf + pos, buf_size - pos);
+      pos += sprintf(buf + pos, "\n");
+      break;
+
+    case state_spdif_enc:
+      pos += spdifer_enc.get_info(buf + pos, buf_size - pos);
+      break;
+
+    default:
+      pos += sprintf(buf + pos, "-\n");
+      break;
+    }
+    pos += sprintf(buf + pos, "\n");
+    node = chain_next(node);
+  }
+
+  if (pos + 1 > _len) pos = _len - 1;
+  memcpy(_buf, buf, pos + 1);
+  _buf[pos] = 0;
+  return pos;
 }
 
 

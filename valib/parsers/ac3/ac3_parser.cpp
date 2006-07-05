@@ -270,14 +270,14 @@ AC3Parser::decode_block()
   return true;
 }
 
-void 
-AC3Parser::get_info(char *buf, unsigned len) const 
+int
+AC3Parser::get_info(char *_buf, size_t _len) const 
 {
   char info[1024];
   int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * spk.sample_rate / 512000;
   int cpl_freq = cplinu? cplstrtmant * spk.sample_rate / 512000: max_freq;
 
-  sprintf(info,
+  size_t len = sprintf(info,
     "AC3\n"
     "speakers: %s\n"
     "sample rate: %iHz\n"
@@ -301,7 +301,11 @@ AC3Parser::get_info(char *buf, unsigned len) const
     value2db(slev), slev,
     dialnorm,
     cpl_freq, max_freq);
-  memcpy(buf, info, MIN(len, strlen(info)+1));
+
+  if (len + 1 > _len) len = _len - 1;
+  memcpy(_buf, info, len + 1);
+  _buf[len] = 0;
+  return len;
 }
 
 

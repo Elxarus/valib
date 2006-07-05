@@ -106,6 +106,8 @@ public:
   /////////////////////////////////////////////////////////
   // AudioProcessior interface
 
+  int get_info(char *buf, size_t len) const;
+
   size_t get_buffer() const;
   void   set_buffer(size_t nsamples);
 
