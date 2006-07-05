@@ -99,7 +99,7 @@ DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
 
   spk = spk_unknown;
   send_mt = false;
-  send_discontinuity = false;
+  send_dc = false;
   hr = S_OK;
 }
 
@@ -267,7 +267,7 @@ DShowSink::get_input() const
 bool 
 DShowSink::process(const Chunk *chunk)
 {
-  if (chunk->is_empty())
+  if (chunk->is_dummy())
     return true;
 
   // Process speaker configuraion changes
@@ -314,11 +314,11 @@ DShowSink::process(const Chunk *chunk)
     }
 
     // Discontinuity
-    if (send_discontinuity)
+    if (send_dc)
     {
       DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Sending discontiniuity...", this));
       sample->SetDiscontinuity(true);
-      send_discontinuity = false;
+      send_dc = false;
     }
     
     // Other sample flags

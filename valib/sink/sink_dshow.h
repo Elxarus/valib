@@ -16,7 +16,7 @@ class DShowSink : public CTransformOutputPin, public Sink
 protected:
   Speakers spk;             // output configuration
   bool send_mt;             // send media type with next sample
-  bool send_discontinuity;  // send discontinuity with next sample
+  bool send_dc;             // send discontinuity with next sample
   HRESULT hr;               // result of sending sample
 
   bool query_downstream(const CMediaType *mt) const;
@@ -27,13 +27,12 @@ protected:
 
 public:
   DShowSink(CTransformFilter* pFilter, HRESULT* phr);
-/*
-  void send_discontinuity()          { send_discontinuity = true; }
-  void send_mediatype()              { send_mt = true;            }
-  void send_spdif_pause()            { send_spdif_pause = true;   }
-*/
-  void reset_hresult()               { hr = S_OK;            }
-  HRESULT get_hresult()              { return hr;            }
+
+  void send_discontinuity()          { send_dc = true; }
+  void send_mediatype()              { send_mt = true; }
+
+  void reset_hresult()               { hr = S_OK;      }
+  HRESULT get_hresult()              { return hr;      }
 
   // Sink interface
   virtual bool query_input(Speakers spk) const;
