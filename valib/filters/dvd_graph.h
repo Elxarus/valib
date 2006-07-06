@@ -63,7 +63,7 @@ public:
   void set_query_sink(bool query_sink);
 
   // SPDIF options
-  void set_spdif(bool use_spdif, int spdif_pt, bool spdif_stereo_pt, bool spdif_as_pcm);
+  void set_spdif(bool use_spdif, int spdif_pt, bool spdif_as_pcm, bool spdif_encode, bool spdif_stereo_pt);
 
   bool get_use_spdif() const;
   void set_use_spdif(bool use_spdif);
@@ -71,14 +71,14 @@ public:
   int  get_spdif_pt() const;
   void set_spdif_pt(int spdif_pt);
 
-  bool get_spdif_stereo_pt() const;
-  void set_spdif_stereo_pt(bool spdif_stereo_pt);
-
   bool get_spdif_as_pcm() const;
   void set_spdif_as_pcm(bool spdif_as_pcm);
 
   bool get_spdif_encode() const;
   void set_spdif_encode(bool spdif_encode);
+
+  bool get_spdif_stereo_pt() const;
+  void set_spdif_stereo_pt(bool spdif_stereo_pt);
 
   // SPDIF sample rate check
   void set_spdif_sr(bool spdif_check_sr, bool spdif_allow_48, bool spdif_allow_44, bool spdif_allow_32);
@@ -97,7 +97,6 @@ public:
 
   // SPDIF status
   int get_spdif_status() const;
-  int get_spdif_err() const;
 
   // Summary information
   int get_info(char *_buf, size_t _len) const;
@@ -109,11 +108,12 @@ public:
 
 protected:
   Speakers user_spk;
+
   bool     use_spdif;
   int      spdif_pt;
-  bool     spdif_stereo_pt;
   bool     spdif_as_pcm;
   bool     spdif_encode;
+  bool     spdif_stereo_pt;
 
   bool     spdif_check_sr;
   bool     spdif_allow_48;

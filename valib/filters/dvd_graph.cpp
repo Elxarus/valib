@@ -8,14 +8,16 @@ DVDGraph::DVDGraph(const Sink *_sink)
 
   use_spdif = false;
   spdif_pt = FORMAT_MASK_AC3;
-  spdif_stereo_pt = true;
   spdif_as_pcm = false;
-  spdif_status = SPDIF_MODE_NONE;
+  spdif_encode = true;
+  spdif_stereo_pt = true;
 
   spdif_check_sr = false;
   spdif_allow_48 = true;
   spdif_allow_44 = false;
   spdif_allow_32 = false;
+
+  spdif_status = SPDIF_MODE_NONE;
 
   sink = _sink;
   query_sink = true;
@@ -89,12 +91,13 @@ DVDGraph::set_query_sink(bool _query_sink)
 // SPDIF options
 
 void
-DVDGraph::set_spdif(bool _use_spdif, int _spdif_pt, bool _spdif_stereo_pt, bool _spdif_as_pcm)
+DVDGraph::set_spdif(bool _use_spdif, int _spdif_pt, bool _spdif_as_pcm, bool _spdif_encode, bool _spdif_stereo_pt)
 {
   use_spdif = _use_spdif;
   spdif_pt = _spdif_pt;
-  spdif_stereo_pt = _spdif_stereo_pt;
   spdif_as_pcm = _spdif_as_pcm;
+  spdif_encode = _spdif_encode;
+  spdif_stereo_pt = _spdif_stereo_pt;
   invalidate_chain();
 }
 
@@ -125,19 +128,6 @@ DVDGraph::set_spdif_pt(int _spdif_pt)
 }
 
 bool
-DVDGraph::get_spdif_stereo_pt() const
-{
-  return spdif_stereo_pt;
-}
-
-void
-DVDGraph::set_spdif_stereo_pt(bool _spdif_stereo_pt)
-{
-  spdif_stereo_pt = _spdif_stereo_pt;
-  invalidate_chain();
-}
-
-bool
 DVDGraph::get_spdif_as_pcm() const
 {
   return spdif_as_pcm;
@@ -147,6 +137,32 @@ void
 DVDGraph::set_spdif_as_pcm(bool _spdif_as_pcm)
 {
   spdif_as_pcm = _spdif_as_pcm;
+  invalidate_chain();
+}
+
+bool
+DVDGraph::get_spdif_encode() const
+{
+  return spdif_encode;
+}
+
+void
+DVDGraph::set_spdif_encode(bool _spdif_encode)
+{
+  spdif_encode = _spdif_encode;
+  invalidate_chain();
+}
+
+bool
+DVDGraph::get_spdif_stereo_pt() const
+{
+  return spdif_stereo_pt;
+}
+
+void
+DVDGraph::set_spdif_stereo_pt(bool _spdif_stereo_pt)
+{
+  spdif_stereo_pt = _spdif_stereo_pt;
   invalidate_chain();
 }
 
@@ -216,15 +232,6 @@ DVDGraph::get_spdif_status() const
 {
   return spdif_status;
 }
-
-int
-DVDGraph::get_spdif_err() const
-{
-  if (spdif_status != SPDIF_MODE_DISABLED)
-    return spdif_status;
-  else
-    return check_spdif_encode(proc.get_input());
-};
 
 int
 DVDGraph::get_info(char *_buf, size_t _len) const
