@@ -254,7 +254,7 @@ DVDGraph::get_info(char *_buf, size_t _len) const
   {
     pos += sprintf(buf + pos, "\nUse SPDIF\n");
 
-    pos += sprintf(buf + pos, "Current SPDIF output status: ");
+    pos += sprintf(buf + pos, "  SPDIF status: ");
     switch (spdif_status)
     {
       case SPDIF_MODE_NONE:        pos += sprintf(buf + pos, "No data\n"); break;
@@ -264,18 +264,31 @@ DVDGraph::get_info(char *_buf, size_t _len) const
       default:                     pos += sprintf(buf + pos, "Unknown\n"); break;
     }
 
-    pos += sprintf(buf + pos, "  SPDIF passthrough for: ");
-    if (spdif_pt & FORMAT_MASK_MPA) pos += sprintf(buf + pos, "MPA ");
-    if (spdif_pt & FORMAT_MASK_AC3) pos += sprintf(buf + pos, "AC3 ");
-    if (spdif_pt & FORMAT_MASK_DTS) pos += sprintf(buf + pos, "DTS ");
-    pos += sprintf(buf + pos, spdif_pt? "\n": "-\n");
+    if (spdif_status == SPDIF_MODE_DISABLED)
+    {
+      pos += sprintf(buf + pos, "  SPDIF error: ");
+      switch (check_spdif_encode(proc.get_input()))
+      {
+        case SPDIF_ERR_STEREO_PCM:       pos += sprintf(buf + pos, "Do not encode stereo PCM\n"); break;
+        case SPDIF_ERR_FORMAT:           pos += sprintf(buf + pos, "Format is not allowed for passthrough\n"); break;
+        case SPDIF_ERR_SAMPLE_RATE:      pos += sprintf(buf + pos, "Disallowed sample rate\n"); break;
+        case SPDIF_ERR_SINK:             pos += sprintf(buf + pos, "SPDIF output is not supported\n"); break;
+        case SPDIF_ERR_ENCODER_DISABLED: pos += sprintf(buf + pos, "AC3 encoder disabled\n"); break;
+        case SPDIF_ERR_PROC:             pos += sprintf(buf + pos, "Cannot determine format ot encode\n"); break;
+        case SPDIF_ERR_ENCODER:          pos += sprintf(buf + pos, "Encoder does not support given format\n"); break;
+        default:                         pos += sprintf(buf + pos, "Unknown\n"); break;
+      }
+    }
+
+    pos += sprintf(buf + pos, "  SPDIF passthrough for:");
+    if (spdif_pt & FORMAT_MASK_MPA) pos += sprintf(buf + pos, " MPA");
+    if (spdif_pt & FORMAT_MASK_AC3) pos += sprintf(buf + pos, " AC3");
+    if (spdif_pt & FORMAT_MASK_DTS) pos += sprintf(buf + pos, " DTS");
+    pos += sprintf(buf + pos, spdif_pt? "\n": " -\n");
 
     if (spdif_encode)
-    {
-      pos += sprintf(buf + pos, "  Use AC3 encoder\n");
-      if (spdif_stereo_pt)
-        pos += sprintf(buf + pos, "  Do not encode stereo PCM\n");
-    }
+      pos += sprintf(buf + pos, "  Use AC3 encoder (%s)\n",
+        spdif_stereo_pt? "do not encode stereo PCM": "encode stereo PCM");
     else
       pos += sprintf(buf + pos, "  Do not use AC3 encoder\n");
 
