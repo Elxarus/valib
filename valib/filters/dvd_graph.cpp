@@ -258,7 +258,7 @@ DVDGraph::get_info(char *_buf, size_t _len) const
     switch (spdif_status)
     {
       case SPDIF_MODE_NONE:        pos += sprintf(buf + pos, "No data\n"); break;
-      case SPDIF_MODE_DISABLED:    pos += sprintf(buf + pos, "Disabled\n"); break;
+      case SPDIF_MODE_DISABLED:    pos += sprintf(buf + pos, "Disabled "); break;
       case SPDIF_MODE_PASSTHROUGH: pos += sprintf(buf + pos, "SPDIF passthrough\n"); break;
       case SPDIF_MODE_ENCODE:      pos += sprintf(buf + pos, "AC3 encode\n"); break;
       default:                     pos += sprintf(buf + pos, "Unknown\n"); break;
@@ -266,17 +266,16 @@ DVDGraph::get_info(char *_buf, size_t _len) const
 
     if (spdif_status == SPDIF_MODE_DISABLED)
     {
-      pos += sprintf(buf + pos, "  SPDIF error: ");
       switch (check_spdif_encode(proc.get_input()))
       {
-        case SPDIF_ERR_STEREO_PCM:       pos += sprintf(buf + pos, "Do not encode stereo PCM\n"); break;
-        case SPDIF_ERR_FORMAT:           pos += sprintf(buf + pos, "Format is not allowed for passthrough\n"); break;
-        case SPDIF_ERR_SAMPLE_RATE:      pos += sprintf(buf + pos, "Disallowed sample rate\n"); break;
-        case SPDIF_ERR_SINK:             pos += sprintf(buf + pos, "SPDIF output is not supported\n"); break;
-        case SPDIF_ERR_ENCODER_DISABLED: pos += sprintf(buf + pos, "AC3 encoder disabled\n"); break;
-        case SPDIF_ERR_PROC:             pos += sprintf(buf + pos, "Cannot determine format ot encode\n"); break;
-        case SPDIF_ERR_ENCODER:          pos += sprintf(buf + pos, "Encoder does not support given format\n"); break;
-        default:                         pos += sprintf(buf + pos, "Unknown\n"); break;
+        case SPDIF_ERR_STEREO_PCM:       pos += sprintf(buf + pos, "(Do not encode stereo PCM)\n"); break;
+        case SPDIF_ERR_FORMAT:           pos += sprintf(buf + pos, "(Format is not allowed for passthrough)\n"); break;
+        case SPDIF_ERR_SAMPLE_RATE:      pos += sprintf(buf + pos, "(Disallowed sample rate)\n"); break;
+        case SPDIF_ERR_SINK:             pos += sprintf(buf + pos, "(SPDIF output is not supported)\n"); break;
+        case SPDIF_ERR_ENCODER_DISABLED: pos += sprintf(buf + pos, "(AC3 encoder disabled)\n"); break;
+        case SPDIF_ERR_PROC:             pos += sprintf(buf + pos, "(Cannot determine format ot encode)\n"); break;
+        case SPDIF_ERR_ENCODER:          pos += sprintf(buf + pos, "(Encoder does not support given format)\n"); break;
+        default:                         pos += sprintf(buf + pos, "(Unknown reason)\n"); break;
       }
     }
 
@@ -312,45 +311,48 @@ DVDGraph::get_info(char *_buf, size_t _len) const
       pos += sprintf(buf + pos, "  Do not check SPDIF sample rate\n");
   }
 
-  pos += sprintf(buf + pos, "\nDecoding chain:\n");
-  pos += chain_text(buf + pos, buf_size - pos);
-
-  pos += sprintf(buf + pos, "\n\nFilters info (in order of processing):\n\n");
-  int node = chain_next(node_start);
-  while (node != node_end)
+  if (chain_next(node_start) != node_end)
   {
-    const char *filter_name = get_name(node);
-    if (!filter_name) filter_name = "Unknown filter";
-    pos += sprintf(buf + pos, "%s:\n", filter_name);
+    pos += sprintf(buf + pos, "\nDecoding chain:\n");
+    pos += chain_text(buf + pos, buf_size - pos);
 
-    switch (node)
+    pos += sprintf(buf + pos, "\n\nFilters info (in order of processing):\n\n");
+    int node = chain_next(node_start);
+    while (node != node_end)
     {
-    case state_spdif_pt:
-      pos += sprintf(buf + pos, "%s", filter_name);
+      const char *filter_name = get_name(node);
+      if (!filter_name) filter_name = "Unknown filter";
+      pos += sprintf(buf + pos, "%s:\n", filter_name);
 
-      pos += spdifer_pt.get_info(buf + pos, buf_size - pos);
-      break;
+      switch (node)
+      {
+      case state_spdif_pt:
+        pos += sprintf(buf + pos, "%s", filter_name);
 
-    case state_decode:
-      pos += dec.get_info(buf + pos, buf_size - pos);
-      break;
+        pos += spdifer_pt.get_info(buf + pos, buf_size - pos);
+        break;
 
-    case state_proc:
-    case state_proc_enc:
-      pos += proc.get_info(buf + pos, buf_size - pos);
+      case state_decode:
+        pos += dec.get_info(buf + pos, buf_size - pos);
+        break;
+
+      case state_proc:
+      case state_proc_enc:
+        pos += proc.get_info(buf + pos, buf_size - pos);
+        pos += sprintf(buf + pos, "\n");
+        break;
+
+      case state_spdif_enc:
+        pos += spdifer_enc.get_info(buf + pos, buf_size - pos);
+        break;
+
+      default:
+        pos += sprintf(buf + pos, "-\n");
+        break;
+      }
       pos += sprintf(buf + pos, "\n");
-      break;
-
-    case state_spdif_enc:
-      pos += spdifer_enc.get_info(buf + pos, buf_size - pos);
-      break;
-
-    default:
-      pos += sprintf(buf + pos, "-\n");
-      break;
+      node = chain_next(node);
     }
-    pos += sprintf(buf + pos, "\n");
-    node = chain_next(node);
   }
 
   if (pos + 1 > _len) pos = _len - 1;
