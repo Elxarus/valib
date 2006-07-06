@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Static Library" 0x0104
 
-CFG=valib - Win32 Debug
+CFG=valib - Win32 Debug Libc
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,13 +13,15 @@ CFG=valib - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "valib.mak" CFG="valib - Win32 Debug"
+!MESSAGE NMAKE /f "valib.mak" CFG="valib - Win32 Debug Libc"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "valib - Win32 Release" (based on "Win32 (x86) Static Library")
 !MESSAGE "valib - Win32 Debug" (based on "Win32 (x86) Static Library")
 !MESSAGE "valib - Win32 Perf" (based on "Win32 (x86) Static Library")
+!MESSAGE "valib - Win32 Debug Libc" (based on "Win32 (x86) Static Library")
+!MESSAGE "valib - Win32 Release Libc" (based on "Win32 (x86) Static Library")
 !MESSAGE 
 
 # Begin Project
@@ -98,6 +100,52 @@ LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
 
+!ELSEIF  "$(CFG)" == "valib - Win32 Debug Libc"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "valib___Win32_Debug_Libc"
+# PROP BASE Intermediate_Dir "valib___Win32_Debug_Libc"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "Debug_Libc"
+# PROP Intermediate_Dir "Debug_Libc"
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /G6 /MDd /W3 /Gm /Zi /Od /I "..\valib" /D "WIN32" /D "_DEBUG.DEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /GZ /c
+# ADD CPP /nologo /G6 /MTd /W3 /Gm /Zi /Od /I "..\valib" /D "WIN32" /D "_DEBUG.DEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /GZ /c
+# ADD BASE RSC /l 0x419 /d "_DEBUG"
+# ADD RSC /l 0x419 /d "_DEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+
+!ELSEIF  "$(CFG)" == "valib - Win32 Release Libc"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "valib___Win32_Release_Libc"
+# PROP BASE Intermediate_Dir "valib___Win32_Release_Libc"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Release_Libc"
+# PROP Intermediate_Dir "Release_Libc"
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /G6 /MD /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /c
+# ADD CPP /nologo /G6 /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /YX /FD /c
+# ADD BASE RSC /l 0x417 /d "NDEBUG"
+# ADD RSC /l 0x417 /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo
+# ADD LIB32 /nologo
+
 !ENDIF 
 
 # Begin Target
@@ -105,6 +153,8 @@ LIB32=link.exe -lib
 # Name "valib - Win32 Release"
 # Name "valib - Win32 Debug"
 # Name "valib - Win32 Perf"
+# Name "valib - Win32 Debug Libc"
+# Name "valib - Win32 Release Libc"
 # Begin Group "common"
 
 # PROP Default_Filter ""
