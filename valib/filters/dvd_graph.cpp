@@ -273,8 +273,8 @@ DVDGraph::get_info(char *_buf, size_t _len) const
         case SPDIF_ERR_SAMPLE_RATE:      pos += sprintf(buf + pos, "(Disallowed sample rate)\n"); break;
         case SPDIF_ERR_SINK:             pos += sprintf(buf + pos, "(SPDIF output is not supported)\n"); break;
         case SPDIF_ERR_ENCODER_DISABLED: pos += sprintf(buf + pos, "(AC3 encoder disabled)\n"); break;
-        case SPDIF_ERR_PROC:             pos += sprintf(buf + pos, "(Cannot determine format ot encode)\n"); break;
-        case SPDIF_ERR_ENCODER:          pos += sprintf(buf + pos, "(Encoder does not support given format)\n"); break;
+        case SPDIF_ERR_PROC:             pos += sprintf(buf + pos, "(Cannot determine format to encode)\n"); break;
+        case SPDIF_ERR_ENCODER:          pos += sprintf(buf + pos, "(Encoder does not support the format given)\n"); break;
         default:                         pos += sprintf(buf + pos, "(Unknown reason)\n"); break;
       }
     }
