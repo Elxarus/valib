@@ -66,10 +66,11 @@ public:
     return log->close_group();
   }
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Transform test
+
   void transform()
   {
-    /////////////////////////////////////////////////////////
-    // Transform test
     log->open_group("Transform test");
 
     // PES to SPDIF transform with format changes
@@ -90,6 +91,9 @@ public:
 
     log->close_group();
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Dynamical user format change test
 
   void user_format_change()
   {
@@ -188,6 +192,10 @@ public:
 
     return log->close_group();
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Test transitions between main SPDIF modes
+  // (decode, passthrough, encode, stereo passthrough)
 
   void spdif_rebuild()
   {
@@ -301,7 +309,7 @@ public:
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
     dvd.set_spdif(false, 0, false, false);
-    return test_cycle("test_decode()", src, SPDIF_DISABLED, "decode", FORMAT_PCM16);
+    return test_cycle("test_decode()", src, SPDIF_MODE_DISABLED, "decode", FORMAT_PCM16);
   }
 
   int test_passthrough(Source *src, bool spdif_allowed)
@@ -309,9 +317,9 @@ public:
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, false);
     if (spdif_allowed)
-      return test_cycle("test_passthrough()", src, SPDIF_PASSTHROUGH, "spdif passthrough", FORMAT_SPDIF);
+      return test_cycle("test_passthrough()", src, SPDIF_MODE_PASSTHROUGH, "spdif passthrough", FORMAT_SPDIF);
     else
-      return test_cycle("test_passthrough()", src, SPDIF_DISABLED, "sink refused", FORMAT_PCM16);
+      return test_cycle("test_passthrough()", src, SPDIF_MODE_DISABLED, "sink refused", FORMAT_PCM16);
   }
 
   int test_encode(Source *src, bool spdif_allowed, bool can_encode)
@@ -320,19 +328,19 @@ public:
     dvd.set_spdif(true, 0, false, false);
 
     if (!can_encode)
-      return test_cycle("test_encode()", src, SPDIF_DISABLED, "cannot encode", FORMAT_PCM16);
+      return test_cycle("test_encode()", src, SPDIF_MODE_DISABLED, "cannot encode", FORMAT_PCM16);
 
     if (spdif_allowed)
-      return test_cycle("test_encode()", src, SPDIF_ENCODE, "ac3 encode", FORMAT_SPDIF);
+      return test_cycle("test_encode()", src, SPDIF_MODE_ENCODE, "ac3 encode", FORMAT_SPDIF);
     else
-      return test_cycle("test_encode()", src, SPDIF_DISABLED, "sink refused", FORMAT_PCM16);
+      return test_cycle("test_encode()", src, SPDIF_MODE_DISABLED, "sink refused", FORMAT_PCM16);
   }
 
   int test_stereo_passthrough(Source *src)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, MODE_STEREO, 0, 32767));
     dvd.set_spdif(true, 0, true, false);
-    return test_cycle("test_stereo_passthrough()", src, SPDIF_DISABLED, "stereo pcm passthrough", FORMAT_PCM16);
+    return test_cycle("test_stereo_passthrough()", src, SPDIF_MODE_DISABLED, "stereo pcm passthrough", FORMAT_PCM16);
   }
 
   int test_cycle(const char *caller, Source *src, int status, const char *status_text, int out_format)
@@ -350,6 +358,8 @@ public:
 
         if (!f->process(&chunk))
           return log->err("%s: dvd.process() failed before status change", caller);
+
+        chunk.set_dummy();
       }
       else
       {
@@ -359,6 +369,13 @@ public:
 
     if (dvd.get_spdif_status() != status)
       return log->err("%s: cannot switch to %s state", caller, status_text);
+
+    if (!chunk.is_dummy())
+    {
+      if (chunk.spk.format != out_format)
+        return log->err("%s: incorrect output format", caller);
+    }
+
 
     // ensure correct data generation in new state
     // (filter may be either full or empty)
@@ -379,15 +396,23 @@ public:
           return log->err("%s: dvd.get_chunk() failed after status change", caller);
 
         if (!chunk.is_dummy())
+        {
           if (chunk.spk.format != out_format)
             return log->err("%s: incorrect output format", caller);
-        data_size += chunk.size;
+          data_size += chunk.size;
+        }
       }
 
     // well done...
     // (filter may be either full or empty)
     return 0;
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // SPDIF errors test
+
+
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -4,15 +4,21 @@
 DVDGraph::DVDGraph(const Sink *_sink)
 :FilterGraph(-1), proc(4096)
 {
-  user_spk = Speakers(FORMAT_PCM16, 0, 0, 32768);
+  user_spk = Speakers(FORMAT_PCM16, 0, 0, 32767);
 
   use_spdif = false;
   spdif_pt = FORMAT_MASK_AC3;
   spdif_stereo_pt = true;
   spdif_as_pcm = false;
-  spdif_status = SPDIF_DISABLED;
+  spdif_status = SPDIF_MODE_NONE;
+
+  spdif_check_sr = false;
+  spdif_allow_48 = true;
+  spdif_allow_44 = false;
+  spdif_allow_32 = false;
 
   sink = _sink;
+  query_sink = true;
 };
 
 ///////////////////////////////////////////////////////////
@@ -64,6 +70,20 @@ DVDGraph::get_sink() const
 {
   return sink;
 }
+
+bool
+DVDGraph::get_query_sink() const
+{
+  return query_sink;
+}
+
+void
+DVDGraph::set_query_sink(bool _query_sink)
+{
+  query_sink = _query_sink;
+  invalidate_chain();
+}
+
 
 ///////////////////////////////////////////////////////////
 // SPDIF options
@@ -130,10 +150,80 @@ DVDGraph::set_spdif_as_pcm(bool _spdif_as_pcm)
   invalidate_chain();
 }
 
+///////////////////////////////////////////////////////////
+// SPDIF sample rate check
+
+void
+DVDGraph::set_spdif_sr(bool _spdif_check_sr, bool _spdif_allow_48, bool _spdif_allow_44, bool _spdif_allow_32)
+{
+  spdif_check_sr = _spdif_check_sr;
+  spdif_allow_48 = _spdif_allow_48;
+  spdif_allow_44 = _spdif_allow_44;
+  spdif_allow_32 = _spdif_allow_32;
+  invalidate_chain();
+}
+
+bool
+DVDGraph::get_spdif_check_sr() const
+{
+  return spdif_check_sr;
+}
+void
+DVDGraph::set_spdif_check_sr(bool _spdif_check_sr)
+{
+  spdif_check_sr = _spdif_check_sr;
+  invalidate_chain();
+}
+
+bool
+DVDGraph::get_spdif_allow_48() const
+{
+  return spdif_allow_48;
+}
+void
+DVDGraph::set_spdif_allow_48(bool _spdif_allow_48)
+{
+  spdif_allow_48 = _spdif_allow_48;
+  invalidate_chain();
+}
+
+bool
+DVDGraph::get_spdif_allow_44() const
+{
+  return spdif_allow_44;
+}
+void
+DVDGraph::set_spdif_allow_44(bool _spdif_allow_44)
+{
+  spdif_allow_44 = _spdif_allow_44;
+  invalidate_chain();
+}
+
+bool
+DVDGraph::get_spdif_allow_32() const
+{
+  return spdif_allow_32;
+}
+void
+DVDGraph::set_spdif_allow_32(bool _spdif_allow_32)
+{
+  spdif_allow_32 = _spdif_allow_32;
+  invalidate_chain();
+}
+
 int 
 DVDGraph::get_spdif_status() const
-{ 
-  return spdif_status; 
+{
+  return spdif_status;
+}
+
+int
+DVDGraph::get_spdif_err() const
+{
+  if (spdif_status != SPDIF_MODE_DISABLED)
+    return spdif_status;
+  else
+    return check_spdif_encode(proc.get_input());
 };
 
 int
@@ -155,18 +245,51 @@ DVDGraph::get_info(char *_buf, size_t _len) const
 
   if (use_spdif)
   {
-    pos += sprintf(buf + pos, "\nUse SPDIF:\n");
+    pos += sprintf(buf + pos, "\nUse SPDIF\n");
+
+    pos += sprintf(buf + pos, "Current SPDIF output status: ");
+    switch (spdif_status)
+    {
+      case SPDIF_MODE_NONE:        pos += sprintf(buf + pos, "No data\n"); break;
+      case SPDIF_MODE_DISABLED:    pos += sprintf(buf + pos, "Disabled\n"); break;
+      case SPDIF_MODE_PASSTHROUGH: pos += sprintf(buf + pos, "SPDIF passthrough\n"); break;
+      case SPDIF_MODE_ENCODE:      pos += sprintf(buf + pos, "AC3 encode\n"); break;
+      default:                     pos += sprintf(buf + pos, "Unknown\n"); break;
+    }
+
     pos += sprintf(buf + pos, "  SPDIF passthrough for: ");
     if (spdif_pt & FORMAT_MASK_MPA) pos += sprintf(buf + pos, "MPA ");
     if (spdif_pt & FORMAT_MASK_AC3) pos += sprintf(buf + pos, "AC3 ");
     if (spdif_pt & FORMAT_MASK_DTS) pos += sprintf(buf + pos, "DTS ");
     pos += sprintf(buf + pos, spdif_pt? "\n": "-\n");
 
-    if (spdif_stereo_pt)
-      pos += sprintf(buf + pos, "  Do not encode stereo PCM\n");
+    if (spdif_encode)
+    {
+      pos += sprintf(buf + pos, "  Use AC3 encoder\n");
+      if (spdif_stereo_pt)
+        pos += sprintf(buf + pos, "  Do not encode stereo PCM\n");
+    }
+    else
+      pos += sprintf(buf + pos, "  Do not use AC3 encoder\n");
 
     if (spdif_as_pcm)
       pos += sprintf(buf + pos, "  SPDIF as PCM output");
+
+    if (spdif_check_sr)
+    {
+      if (!spdif_allow_48 && !spdif_allow_44 && !spdif_allow_32)
+        pos += sprintf(buf + pos, "  Check SPDIF sample rate: NO ONE SAMPLE RATE ALLOWED!\n");
+      else
+      {
+        pos += sprintf(buf + pos, "  Check SPDIF sample rate\nAllow: ");
+        if (spdif_allow_48) pos += sprintf(buf + pos, "48kHz ");
+        if (spdif_allow_44) pos += sprintf(buf + pos, "44.1kHz ");
+        if (spdif_allow_32) pos += sprintf(buf + pos, "32kHz ");
+        pos += sprintf(buf + pos, "\n");
+      }
+    }
+    else
+      pos += sprintf(buf + pos, "  Do not check SPDIF sample rate\n");
   }
 
   pos += sprintf(buf + pos, "\nDecoding chain:\n");
@@ -223,6 +346,8 @@ DVDGraph::get_info(char *_buf, size_t _len) const
 void 
 DVDGraph::reset()
 {
+  spdif_status = use_spdif? SPDIF_MODE_NONE: SPDIF_MODE_DISABLED;
+
   demux.reset();
   spdifer_pt.reset();
   dec.reset();
@@ -268,7 +393,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       // activity in spdif passthrough mode
       proc.reset();
 
-      spdif_status = SPDIF_PASSTHROUGH;
+      spdif_status = SPDIF_MODE_PASSTHROUGH;
       return &spdifer_pt;
 
     case state_decode:
@@ -276,7 +401,7 @@ DVDGraph::init_filter(int node, Speakers spk)
 
     case state_proc:
     {
-      spdif_status = SPDIF_DISABLED;
+      spdif_status = SPDIF_MODE_DISABLED;
 
       // Setup audio processor
       if (!proc.set_user(user_spk))
@@ -287,7 +412,7 @@ DVDGraph::init_filter(int node, Speakers spk)
 
     case state_proc_enc:
     {
-      spdif_status = SPDIF_ENCODE;
+      spdif_status = SPDIF_MODE_ENCODE;
 
       // Setup audio processor
       Speakers proc_user = user_spk;
@@ -334,20 +459,17 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (demux.query_input(spk)) 
         return state_demux;
 
-      if (use_spdif && (spdif_pt & FORMAT_MASK(spk.format)))
-      {
-        if (spdif_as_pcm)
-          return state_spdif_pt;
-
-        if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
-          return state_spdif_pt;
-      }
+      if (check_spdif_passthrough(spk) == SPDIF_MODE_PASSTHROUGH)
+        return state_spdif_pt;
 
       if (dec.query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
-        return decide_processor(spk);
+        if (check_spdif_encode(spk) == SPDIF_MODE_ENCODE)
+          return state_proc_enc;
+        else
+          return state_proc;
 
       return node_err;
 
@@ -358,20 +480,17 @@ DVDGraph::get_next(int node, Speakers spk) const
     // state_demux -> state_proc_enc
 
     case state_demux:
-      if (use_spdif && (spdif_pt & FORMAT_MASK(spk.format)))
-      {
-        if (spdif_as_pcm)
-          return state_spdif_pt;
-
-        if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
-          return state_spdif_pt;
-      }
+      if (check_spdif_passthrough(spk) == SPDIF_MODE_PASSTHROUGH)
+        return state_spdif_pt;
 
       if (dec.query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
-        return decide_processor(spk);
+        if (check_spdif_encode(spk) == SPDIF_MODE_ENCODE)
+          return state_proc_enc;
+        else
+          return state_proc;
 
       return node_err;
 
@@ -395,7 +514,13 @@ DVDGraph::get_next(int node, Speakers spk) const
     // state_decode -> state_proc_enc
 
     case state_decode:
-      return decide_processor(spk);
+      if (proc.query_input(spk))
+        if (check_spdif_encode(spk) == SPDIF_MODE_ENCODE)
+          return state_proc_enc;
+        else
+          return state_proc;
+
+      return node_err;
 
     /////////////////////////////////////////////////////
     // state_proc -> output
@@ -437,52 +562,72 @@ DVDGraph::get_next(int node, Speakers spk) const
   return node_err;
 }
 
-int 
-DVDGraph::decide_processor(Speakers spk) const
+int
+DVDGraph::check_spdif_passthrough(Speakers _spk) const
 {
-  // AC3Encoder accepts only linear format at input
-  // and may refuse some channel configs and sample rates.
-  // We should not encode stereo PCM because it
-  // reduces audio quality without any benefit.
-  // We should query sink about spdif support.
+  // SPDIF-1 check (passthrough)
 
-  if (use_spdif)
-  {
-    // Determine encoder's input format
-    Speakers enc_spk = proc.user2output(spk, user_spk);
-    if (enc_spk.is_unknown())
-      return node_err;
-    enc_spk.format = FORMAT_LINEAR;
-    enc_spk.level = 1.0;
+  if (!use_spdif)
+    return SPDIF_MODE_DISABLED;
 
-    // Do not encode stereo PCM
-    if (spdif_stereo_pt && enc_spk.mask == MODE_STEREO)
-      return state_proc;
+  // check format
+  if ((spdif_pt & FORMAT_MASK(_spk.format)) == 0)
+    return SPDIF_ERR_FORMAT;
 
-    // Query encoder
-    if (!enc.query_input(enc_spk))
-      return state_proc;
+  // check sample rate
+  if (spdif_check_sr && _spk.sample_rate)
+    if ((!spdif_allow_48 || _spk.sample_rate != 48000) && 
+        (!spdif_allow_44 || _spk.sample_rate != 44100) && 
+        (!spdif_allow_32 || _spk.sample_rate != 32000))
+      return SPDIF_ERR_SAMPLE_RATE;
 
-    // Query sink
-    if (spdif_as_pcm)
-      return state_proc_enc;
+  // check sink
+  if (sink && query_sink && !spdif_as_pcm)
+    if (!sink->query_input(Speakers(FORMAT_SPDIF, _spk.mask, _spk.sample_rate)))
+      return SPDIF_ERR_SINK;
 
-    if (query_sink(Speakers(FORMAT_SPDIF, spk.mask, spk.sample_rate)))
-      return state_proc_enc;
-    else
-      return state_proc;
-  }
-  else
-    return state_proc;
+  return SPDIF_MODE_PASSTHROUGH;
 }
 
-bool
-DVDGraph::query_sink(Speakers _spk) const
+int
+DVDGraph::check_spdif_encode(Speakers _spk) const
 {
-  if (!sink)
-    return true;
-  else
-    return sink->query_input(_spk);
+  // SPDIF-2 check (encode)
+
+  if (!use_spdif)
+    return SPDIF_MODE_DISABLED;
+
+  if (!spdif_encode)
+    return SPDIF_ERR_ENCODER_DISABLED;
+
+  // determine encoder's input format
+  Speakers enc_spk = proc.user2output(_spk, user_spk);
+  if (enc_spk.is_unknown())
+    return SPDIF_ERR_PROC;
+  enc_spk.format = FORMAT_LINEAR;
+  enc_spk.level = 1.0;
+
+  // do not encode stereo PCM
+  if (spdif_stereo_pt && enc_spk.mask == MODE_STEREO)
+    return SPDIF_ERR_STEREO_PCM;
+
+  // check sample rate
+  if (spdif_check_sr && enc_spk.sample_rate)
+    if ((!spdif_allow_48 || enc_spk.sample_rate != 48000) && 
+        (!spdif_allow_44 || enc_spk.sample_rate != 44100) && 
+        (!spdif_allow_32 || enc_spk.sample_rate != 32000))
+      return SPDIF_ERR_SAMPLE_RATE;
+
+  // check encoder
+  if (!enc.query_input(enc_spk))
+    return SPDIF_ERR_ENCODER;
+
+  // check sink
+  if (sink && query_sink && !spdif_as_pcm)
+    if (!sink->query_input(Speakers(FORMAT_SPDIF, _spk.mask, _spk.sample_rate)))
+      return SPDIF_ERR_SINK;
+
+  return SPDIF_MODE_ENCODE;
 }
 
 

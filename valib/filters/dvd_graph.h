@@ -11,9 +11,19 @@
 ///////////////////////////////////////////////////////////
 // SPDIF status constants
 
-#define SPDIF_DISABLED            0
-#define SPDIF_PASSTHROUGH         1
-#define SPDIF_ENCODE              2
+#define SPDIF_MODE_NONE             0  // no data (cannot determine spdif mode)
+#define SPDIF_MODE_DISABLED         1  // spdif is disabled
+#define SPDIF_MODE_PASSTHROUGH      2  // spdif passthrough
+#define SPDIF_MODE_ENCODE           3  // ac3 encode
+
+#define SPDIF_ERR_STEREO_PCM        4  // do not encode stereo pcm
+#define SPDIF_ERR_FORMAT            5  // format is not allowed for passthrough
+#define SPDIF_ERR_SAMPLE_RATE       6  // sample rate is restricted
+#define SPDIF_ERR_SINK              7  // sink refuses spdif output
+#define SPDIF_ERR_ENCODER_DISABLED  8  // ac3 encode mode is disabled
+#define SPDIF_ERR_PROC              9  // cannot determine encoder format
+#define SPDIF_ERR_ENCODER           10 // encoder cannot encode given format
+
 
 class Spdif2PCM : public NullFilter
 {
@@ -49,20 +59,47 @@ public:
   void set_sink(const Sink *sink);
   const Sink *get_sink() const;
 
+  bool get_query_sink() const;
+  void set_query_sink(bool query_sink);
+
   // SPDIF options
   void set_spdif(bool use_spdif, int spdif_pt, bool spdif_stereo_pt, bool spdif_as_pcm);
 
   bool get_use_spdif() const;
   void set_use_spdif(bool use_spdif);
+
   int  get_spdif_pt() const;
   void set_spdif_pt(int spdif_pt);
+
   bool get_spdif_stereo_pt() const;
   void set_spdif_stereo_pt(bool spdif_stereo_pt);
+
   bool get_spdif_as_pcm() const;
   void set_spdif_as_pcm(bool spdif_as_pcm);
 
-  int get_spdif_status() const;
+  bool get_spdif_encode() const;
+  void set_spdif_encode(bool spdif_encode);
 
+  // SPDIF sample rate check
+  void set_spdif_sr(bool spdif_check_sr, bool spdif_allow_48, bool spdif_allow_44, bool spdif_allow_32);
+
+  bool get_spdif_check_sr() const;
+  void set_spdif_check_sr(bool spdif_check_sr);
+
+  bool get_spdif_allow_48() const;
+  void set_spdif_allow_48(bool spdif_allow_48);
+
+  bool get_spdif_allow_44() const;
+  void set_spdif_allow_44(bool spdif_allow_44);
+
+  bool get_spdif_allow_32() const;
+  void set_spdif_allow_32(bool spdif_allow_32);
+
+  // SPDIF status
+  int get_spdif_status() const;
+  int get_spdif_err() const;
+
+  // Summary information
   int get_info(char *_buf, size_t _len) const;
 
   /////////////////////////////////////////////////////////////////////////////
@@ -76,8 +113,18 @@ protected:
   int      spdif_pt;
   bool     spdif_stereo_pt;
   bool     spdif_as_pcm;
+  bool     spdif_encode;
+
+  bool     spdif_check_sr;
+  bool     spdif_allow_48;
+  bool     spdif_allow_44;
+  bool     spdif_allow_32;
+
+  int      spdif_status;
 
   const Sink *sink;
+  bool query_sink;
+
   enum state_t 
   { 
     state_demux = 0,
@@ -89,7 +136,6 @@ protected:
     state_spdif_enc, 
     state_spdif2pcm
   };            
-  int spdif_status;
 
 
   /////////////////////////////////////////////////////////////////////////////
@@ -99,8 +145,9 @@ protected:
   virtual Filter *init_filter(int node, Speakers spk);
   virtual int get_next(int node, Speakers spk) const;
 
-  int decide_processor(Speakers spk) const;
-  bool query_sink(Speakers spk) const;
+  // helper functions
+  int check_spdif_passthrough(Speakers spk) const;
+  int check_spdif_encode(Speakers spk) const;
 };
 
 
