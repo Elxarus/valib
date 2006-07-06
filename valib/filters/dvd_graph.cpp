@@ -300,15 +300,20 @@ DVDGraph::get_info(char *_buf, size_t _len) const
         pos += sprintf(buf + pos, "  Check SPDIF sample rate: NO ONE SAMPLE RATE ALLOWED!\n");
       else
       {
-        pos += sprintf(buf + pos, "  Check SPDIF sample rate\nAllow: ");
-        if (spdif_allow_48) pos += sprintf(buf + pos, "48kHz ");
-        if (spdif_allow_44) pos += sprintf(buf + pos, "44.1kHz ");
-        if (spdif_allow_32) pos += sprintf(buf + pos, "32kHz ");
-        pos += sprintf(buf + pos, "\n");
+        pos += sprintf(buf + pos, "  Check SPDIF sample rate (allow:");
+        if (spdif_allow_48) pos += sprintf(buf + pos, " 48kHz");
+        if (spdif_allow_44) pos += sprintf(buf + pos, " 44.1kHz");
+        if (spdif_allow_32) pos += sprintf(buf + pos, " 32kHz");
+        pos += sprintf(buf + pos, ")\n");
       }
     }
     else
       pos += sprintf(buf + pos, "  Do not check SPDIF sample rate\n");
+
+    if (query_sink)
+      pos += sprintf(buf + pos, "  Query for SPDIF output support\n");
+    else
+      pos += sprintf(buf + pos, "  Do not query for SPDIF output support\n");
   }
 
   if (chain_next(node_start) != node_end)
