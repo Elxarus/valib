@@ -136,7 +136,7 @@ AC3Enc::fill_buffer()
       memcpy(frame_samples[ch] + sample, samples[ch], size * sizeof(sample_t));
 
     sample += size;
-    time += size;
+    time += vtime_t(size) / spk.sample_rate;
     drop_samples(size);
 
     return false;
@@ -147,7 +147,7 @@ AC3Enc::fill_buffer()
       memcpy(frame_samples[ch] + sample, samples[ch], n * sizeof(sample_t));
 
     sample = 0;
-    time += n;
+    time += vtime_t(n) / spk.sample_rate;
     drop_samples(n);
 
     return true;
@@ -287,13 +287,8 @@ AC3Enc::get_chunk(Chunk *_chunk)
   }
   else
   {
-    // empty chunk
-    _chunk->set_empty
-    (
-      get_output(), 
-      false, 0, 
-      flushing && !size
-    );
+    // dummy chunk
+    _chunk->set_dummy();
   }
 
   // reset after flushing
