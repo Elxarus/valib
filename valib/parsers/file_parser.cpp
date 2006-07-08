@@ -113,13 +113,13 @@ FileParser::probe()
   bool failed = false;
 
   /////////////////////////////////////////////////////////
-  // Try as PES
+  // Try as pure stream
 
   seek(old_pos);
-  is_pes  = true;
+  is_pes  = false;
 
   failed = false;
-  for (i = 0; i < 50; i++)  // try to decode 50 frames
+  for (i = 0; i < 100; i++)  // try to decode 100 frames
     if (!frame())
     {
       failed = true;
@@ -128,13 +128,13 @@ FileParser::probe()
   if (!failed) goto probe_ok;
 
   /////////////////////////////////////////////////////////
-  // Try as pure stream
+  // Try as PES
 
   seek(old_pos);
-  is_pes  = false;
+  is_pes  = true;
 
   failed = false;
-  for (i = 0; i < 50; i++)  // try to decode 50 frames
+  for (i = 0; i < 100; i++)  // try to decode 100 frames
     if (!frame())
     {
       failed = true;
