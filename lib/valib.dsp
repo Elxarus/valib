@@ -184,6 +184,10 @@ SOURCE=..\valib\data.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\defs.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\defs.h
 # End Source File
 # Begin Source File
@@ -305,10 +309,6 @@ SOURCE=..\valib\filters\decoder.cpp
 # Begin Source File
 
 SOURCE=..\valib\filters\decoder.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\defs.cpp
 # End Source File
 # Begin Source File
 
