@@ -1,10 +1,17 @@
+#include <memory.h>
 #include "wav_source.h"
 #include "win32\winspk.h"
 
-const uint32_t fcc_riff = 'RIFF';
-const uint32_t fcc_wave = 'WAVE';
-const uint32_t fcc_fmt  = 'fmt ';
-const uint32_t fcc_data = 'data';
+const uint32_t fcc_riff = be2int32('RIFF');
+const uint32_t fcc_wave = be2int32('WAVE');
+const uint32_t fcc_fmt  = be2int32('fmt ');
+const uint32_t fcc_data = be2int32('data');
+
+struct ChunkHeader
+{
+  uint32_t fcc;
+  uint32_t size;
+};
 
 struct RIFFChunk
 {
@@ -18,12 +25,6 @@ struct FMTChunk
   uint32_t fcc;
   uint32_t size;
   WAVEFORMATEX wfx;
-};
-
-struct DataChunk
-{
-  uint32_t fcc;
-  uint32_t size;
 };
 
 WAVSource::WAVSource()
@@ -80,21 +81,21 @@ WAVSource::open_riff()
   // Initializes spk, data_start and data_size
 
   uint8_t buf[255];
-  size_t data_size;
+  size_t buf_data;
 
-  RIFFChunk *riff = (RIFFChunk *)buf;
-  FMTChunk  *fmt  = (FMTChunk *)buf;
-  DataChunk *data = (DataChunk *)buf;
+  ChunkHeader *header = (ChunkHeader *)buf;
+  RIFFChunk   *riff   = (RIFFChunk *)buf;
+  FMTChunk    *fmt    = (FMTChunk *)buf;
 
   /////////////////////////////////////////////////////////
   // Check RIFF header
 
   f.seek(0);
-  data_size = f.read(buf, sizeof(RIFFChunk));
-  if (data_size < sizeof(RIFFChunk) ||
+  buf_data = f.read(buf, sizeof(RIFFChunk));
+  if (buf_data < sizeof(RIFFChunk) ||
       riff->fcc != fcc_riff || 
       riff->type != fcc_wave)
-    return false;;
+    return false;
 
   /////////////////////////////////////////////////////////
   // Seek fmt-chunk
@@ -104,31 +105,30 @@ WAVSource::open_riff()
   while (1)
   {
     ///////////////////////////////////////////////////////
-    // Read a chunk header and hope that it is fmt-chunk
+    // Read a chunk header
 
     f.seek(next);
-    data_size = f.read(buf, sizeof(FMTChunk));
-    if (data_size < sizeof(FMTChunk))
+    buf_data = f.read(buf, sizeof(ChunkHeader));
+    if (buf_data < sizeof(ChunkHeader))
       return false;
 
     ///////////////////////////////////////////////////////
-    // Check FCC and point to the next chunk if it fails
+    // Check FCC and go to the next chunk if it is not fmt
 
-    if (fmt->fcc != fcc_fmt)
+    if (header->fcc != fcc_fmt)
     {
-      next += fmt->size + 8;
+      next += header->size + sizeof(ChunkHeader);
       continue;
     }
 
     ///////////////////////////////////////////////////////
-    // Load format extension
+    // Load format chunk
 
-    if (fmt->wfx.cbSize)
-    {
-      data_size += f.read(buf + data_size, fmt->wfx.cbSize);
-      if (data_size < sizeof(FMTChunk) + fmt->wfx.cbSize)
-        return false;
-    }
+    memset(&fmt->wfx, 0, sizeof(fmt->wfx));
+    buf_data = f.read(buf + buf_data, header->size);
+
+    if (buf_data < header->size)
+      return false;
 
     ///////////////////////////////////////////////////////
     // Convert format
@@ -139,13 +139,13 @@ WAVSource::open_riff()
     ///////////////////////////////////////////////////////
     // Ok
 
-    next += fmt->size + 8;
+    next += fmt->size + sizeof(ChunkHeader);
     break;
   }
 
   /////////////////////////////////////////////////////////
   // Seek data-chunk
-  // Init data_start and data_size
+  // Init data_start and buf_data
 
   while (1)
   {
@@ -153,25 +153,28 @@ WAVSource::open_riff()
     // Read a chunk header
 
     f.seek(next);
-    data_size = f.read(buf, sizeof(DataChunk));
-    if (data_size < sizeof(DataChunk))
+    buf_data = f.read(buf, sizeof(ChunkHeader));
+    if (buf_data < sizeof(ChunkHeader))
       return false;
 
     ///////////////////////////////////////////////////////
-    // Check FCC and point to the next chunk if it fails
+    // Check FCC and go to the next chunk if it is not data
 
-    if (data->fcc != fcc_data)
+    if (header->fcc != fcc_data)
     {
-      next += data->size + 8;
+      next += header->size + sizeof(ChunkHeader);
       continue;
     }
 
     ///////////////////////////////////////////////////////
     // Determine actual data size (cut file possible)
 
-    data_start = next + 8;
-    f.seek(data_start + data->size);
+    data_start = next + sizeof(ChunkHeader);
+    f.seek(data_start + header->size);
     data_size = f.pos() - data_start;
+
+    f.seek(data_start);
+    data_remains = data_size;
     return true;
   }
 }
@@ -246,6 +249,6 @@ WAVSource::get_chunk(Chunk *_chunk)
   else
     data_remains -= len;
 
-  _chunk->set_rawdata(spk, buf, data_read, false, 0, data_remains > 0);
+  _chunk->set_rawdata(spk, buf, data_read, false, 0, data_remains <= 0);
   return true;
 }
