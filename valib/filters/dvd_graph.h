@@ -6,6 +6,7 @@
 #include "filters\decoder.h"
 #include "filters\proc.h"
 #include "filters\spdifer.h"
+#include "filters\dejitter.h"
 #include "parsers\ac3\ac3_enc.h"
 
 ///////////////////////////////////////////////////////////
@@ -43,6 +44,7 @@ public:
   AC3Enc         enc;
   Spdifer        spdifer_enc;
   Spdif2PCM      spdif2pcm;
+  Syncer         syncer;
 
 public:
   DVDGraph(const Sink *sink = 0);
@@ -61,7 +63,23 @@ public:
 
   bool get_query_sink() const;
   void set_query_sink(bool query_sink);
+/*
+  // Syncronization
+  vtime_t  get_time_shift();
+  vtime_t  get_time_factor();
+  void     set_time_shift(vtime_t time_shift);
+  void     set_time_factor(vtime_t time_factor);
 
+  bool     get_dejitter();
+  vtime_t  get_threshold();
+  void     set_dejitter(bool dejitter);
+  void     set_threshold(vtime_t threshold);
+
+  vtime_t  get_input_mean();
+  vtime_t  get_input_stddev();
+  vtime_t  get_output_mean();
+  vtime_t  get_output_stddev();
+*/
   // SPDIF options
   void set_spdif(bool use_spdif, int spdif_pt, bool spdif_as_pcm, bool spdif_encode, bool spdif_stereo_pt);
 
@@ -134,7 +152,8 @@ protected:
     state_proc_enc,
     state_encode,
     state_spdif_enc, 
-    state_spdif2pcm
+    state_spdif2pcm,
+    state_dejitter
   };            
 
 

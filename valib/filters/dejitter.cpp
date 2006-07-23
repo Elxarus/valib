@@ -9,6 +9,8 @@
 #include <streams.h>
 #endif
 
+static const int format_mask_dejitter = FORMAT_CLASS_PCM | FORMAT_MASK_LINEAR | FORMAT_MASK_SPDIF;
+
 ///////////////////////////////////////////////////////////
 // SyncerStat
 
@@ -57,6 +59,60 @@ Syncer::SyncerStat::len() const
 
 ///////////////////////////////////////////////////////////
 // Filter interface
+
+bool
+Syncer::query_input(Speakers _spk) const
+{
+  if (!_spk.sample_rate)
+    return false;
+
+  return (FORMAT_MASK(_spk.format) & format_mask_dejitter) != 0;
+}
+
+bool
+Syncer::set_input(Speakers _spk)
+{
+  reset();
+
+  if (!_spk.sample_rate)
+    return false;
+
+  switch (_spk.format)
+  {
+    case FORMAT_LINEAR:
+      size2time = 1.0 / _spk.sample_rate;
+      break;
+
+    case FORMAT_PCM16:
+    case FORMAT_PCM16_BE:
+      size2time = 1.0 / 2.0 / _spk.nch()  / _spk.sample_rate;
+      break;
+
+    case FORMAT_PCM24:
+    case FORMAT_PCM24_BE:
+      size2time = 1.0 / 3.0 / _spk.nch()  / _spk.sample_rate; 
+      break;
+
+    case FORMAT_PCM32:
+    case FORMAT_PCM32_BE:
+      size2time = 1.0 / 4.0 / _spk.nch()  / _spk.sample_rate;
+      break;
+
+    case FORMAT_PCMFLOAT:
+      size2time = 1.0 / sizeof(float) / _spk.nch()  / _spk.sample_rate;
+      break;
+
+    case FORMAT_SPDIF:
+      size2time = 1.0 / 4.0 / _spk.sample_rate;
+      break;
+
+    default:
+      return false;
+  }
+
+  return NullFilter::set_input(_spk);
+}
+
 
 void 
 Syncer::reset()
@@ -134,10 +190,10 @@ Syncer::process(const Chunk *_chunk)
 bool 
 Syncer::get_chunk(Chunk *_chunk)
 {
-  _chunk->set_linear
+  _chunk->set
   (
     spk, 
-    samples, size, 
+    rawdata, samples, size, 
     sync, time * time_factor + time_shift, 
     flushing
   );
@@ -148,7 +204,7 @@ Syncer::get_chunk(Chunk *_chunk)
     sync = false;
 
   flushing = false;
-  time += vtime_t(size) / spk.sample_rate;
+  time += size * size2time;
   size = 0;
   return true;
 }

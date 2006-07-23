@@ -403,6 +403,7 @@ DVDGraph::get_name(int node) const
     case state_encode:      return "Encoder";
     case state_spdif_enc:   return "Spdifer";
     case state_spdif2pcm:   return "SPDIF->PCM";
+    case state_dejitter:    return "Dejitter";
   }
   return 0;
 }
@@ -458,6 +459,9 @@ DVDGraph::init_filter(int node, Speakers spk)
 
     case state_spdif2pcm:
       return &spdif2pcm;
+
+    case state_dejitter:
+      return &syncer;
   }
   return 0;
 }
@@ -522,7 +526,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       return node_err;
 
     /////////////////////////////////////////////////////
-    // state_spdif_pt -> output
+    // state_spdif_pt -> state_dejitter
     // state_spdif_pt -> state_decode
 
     case state_spdif_pt:
@@ -534,7 +538,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (spdif_as_pcm)
         return state_spdif2pcm;
       else
-        return node_end;
+        return state_dejitter;
 
     /////////////////////////////////////////////////////
     // state_decode -> state_proc
@@ -550,10 +554,10 @@ DVDGraph::get_next(int node, Speakers spk) const
       return node_err;
 
     /////////////////////////////////////////////////////
-    // state_proc -> output
+    // state_proc -> state_dejitter
 
     case state_proc:
-      return node_end;
+      return state_dejitter;
 
     /////////////////////////////////////////////////////
     // state_proc_enc -> state_encode
@@ -569,18 +573,24 @@ DVDGraph::get_next(int node, Speakers spk) const
 
     /////////////////////////////////////////////////////
     // state_spdif_enc -> state_decode
-    // state_spdif_enc -> output
+    // state_spdif_enc -> state_dejitter
 
     case state_spdif_enc:
       if (spdif_as_pcm)
         return state_spdif2pcm;
       else
-        return node_end;
+        return state_dejitter;
 
     /////////////////////////////////////////////////////
-    // state_spdif2pcm -> output
+    // state_spdif2pcm -> state_dejitter
 
     case state_spdif2pcm:
+      return state_dejitter;
+
+    /////////////////////////////////////////////////////
+    // state_dejitter -> output
+
+    case state_dejitter:
       return node_end;
 
   }

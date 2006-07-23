@@ -97,7 +97,6 @@ AudioProcessor::rebuild_chain()
   chain.add_back(&agc,       "AGC");
   chain.add_back(&delay,     "Delay");
   chain.add_back(&out_levels,"Output levels");
-  chain.add_back(&syncer,    "Synchronizer");
 
   // setup mixer
   mixer.set_output(spk);
@@ -128,7 +127,6 @@ AudioProcessor::reset()
   agc.reset();
   delay.reset();
   out_levels.reset();
-  syncer.reset();
 
   chain.reset();
 }

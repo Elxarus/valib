@@ -7,10 +7,13 @@
 
 #include "filter.h"
 
+#define STAT_SIZE 64
 
 class Syncer : public NullFilter
 {
 protected:
+  double size2time;
+
   // linear time transform
   vtime_t time_shift;
   vtime_t time_factor;
@@ -23,7 +26,7 @@ protected:
   class SyncerStat
   {
   protected:
-    vtime_t stat[32];
+    vtime_t stat[STAT_SIZE];
 
   public:
     SyncerStat();
@@ -39,8 +42,9 @@ protected:
 
 public:
   Syncer()
-  :NullFilter(FORMAT_MASK_LINEAR)
+  :NullFilter(FORMAT_MASK_LINEAR | FORMAT_CLASS_PCM | FORMAT_MASK_SPDIF)
   {
+    size2time   = 1.0;
     time_shift  = 0;
     time_factor = 1.0;
 
@@ -76,7 +80,11 @@ public:
   // Filter interface
 
   void reset();
+
+  bool query_input(Speakers spk) const;
+  bool set_input(Speakers spk);
   bool process(const Chunk *_chunk);
+
   bool get_chunk(Chunk *_chunk);
 };
 

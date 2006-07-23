@@ -74,7 +74,6 @@
 #include "filters\bass_redir.h"
 #include "filters\agc.h"
 #include "filters\delay.h"
-#include "filters\dejitter.h"
 #include "filters\convert.h"
 #include "filter_graph.h"
 
@@ -93,7 +92,6 @@ protected:
   BassRedir  bass_redir;
   AGC        agc;
   Delay      delay;
-  Syncer     syncer;
   Levels     out_levels;
   Converter  conv2;
 
@@ -168,15 +166,6 @@ public:
   inline bool     get_delay();
   inline int      get_delay_units();
   inline void     get_delays(float delays[NCHANNELS]);
-  // Syncronization
-  inline vtime_t  get_time_shift();
-  inline vtime_t  get_time_factor();
-  inline bool     get_dejitter();
-  inline vtime_t  get_threshold();
-  inline vtime_t  get_input_mean();
-  inline vtime_t  get_input_stddev();
-  inline vtime_t  get_output_mean();
-  inline vtime_t  get_output_stddev();
   // Input/output levels
   inline void     get_input_levels(vtime_t time, sample_t input_levels[NCHANNELS]); // r/o
   inline void     get_output_levels(vtime_t time, sample_t output_levels[NCHANNELS]); // r/o
@@ -219,11 +208,6 @@ public:
   inline void     set_delay(bool delay);
   inline void     set_delay_units(int delay_units);
   inline void     set_delays(float delays[NCHANNELS]);
-  // Syncronization
-  inline void     set_time_shift(vtime_t time_shift);
-  inline void     set_time_factor(vtime_t time_factor);
-  inline void     set_dejitter(bool dejitter);
-  inline void     set_threshold(vtime_t threshold);
   // Histogram
   inline void     set_dbpb(int dbpb);
 };
@@ -336,38 +320,6 @@ AudioProcessor::get_delay_units()
 inline void     
 AudioProcessor::get_delays(float _delays[NCHANNELS])
 { delay.get_delays(_delays); }
-
-inline vtime_t  
-AudioProcessor::get_time_shift()
-{ return syncer.get_time_shift(); }
-
-inline vtime_t  
-AudioProcessor::get_time_factor()
-{ return syncer.get_time_factor(); }
-
-inline bool     
-AudioProcessor::get_dejitter()
-{ return syncer.get_dejitter(); }
-
-inline vtime_t  
-AudioProcessor::get_threshold()
-{ return syncer.get_threshold(); }
-
-inline vtime_t
-AudioProcessor::get_input_mean()
-{ return syncer.get_input_mean(); }
-
-inline vtime_t
-AudioProcessor::get_input_stddev()
-{ return syncer.get_input_stddev(); }
-
-inline vtime_t
-AudioProcessor::get_output_mean()
-{ return syncer.get_output_mean(); }
-
-inline vtime_t
-AudioProcessor::get_output_stddev()
-{ return syncer.get_output_stddev(); }
 
 inline void     
 AudioProcessor::get_input_levels(vtime_t _time, sample_t _input_levels[NCHANNELS])
@@ -492,23 +444,6 @@ AudioProcessor::set_delay_units(int _delay_units)
 inline void     
 AudioProcessor::set_delays(float _delays[NCHANNELS])
 { delay.set_delays(_delays); }
-
-inline void 
-AudioProcessor::set_time_shift(vtime_t _time_shift)
-{ syncer.set_time_shift(_time_shift); }
-
-inline void 
-AudioProcessor::set_time_factor(vtime_t _time_factor)
-{ syncer.set_time_factor(_time_factor); }
-
-inline void 
-AudioProcessor::set_dejitter(bool _dejitter)
-{ syncer.set_dejitter(_dejitter); }
-
-inline void 
-AudioProcessor::set_threshold(vtime_t _threshold)
-{ syncer.set_threshold(_threshold); }
-
 
 inline void     
 AudioProcessor::set_dbpb(int _dbpb)
