@@ -612,7 +612,10 @@ Spdifer::process(const Chunk *_chunk)
   }
 
   // load next frame
-  load_frame();
+  if (load_frame())
+    sync_helper.set_syncing(true);
+  else
+    sync_helper.set_syncing(false);
 
   // if we did not start a stream we must
   // forget about current stream on flushing
@@ -641,12 +644,16 @@ bool
 Spdifer::get_chunk(Chunk *_chunk)
 {
   if (!out_size && !out_flushing)
-    load_frame();
+    if (load_frame())
+      sync_helper.set_syncing(true);
+    else
+      sync_helper.set_syncing(false);
 
   if (out_size)
   {
     // send data chunk
     _chunk->set_rawdata(out_spk, out_rawdata, out_size);
+    sync_helper.send_sync(_chunk);
     out_size = 0;
   }
   else if (out_flushing)
@@ -681,11 +688,6 @@ Spdifer::get_chunk(Chunk *_chunk)
     _chunk->set_empty(out_spk);
   }
 
-  // timing
-  // note thet filter flushing will be untimed
-  // because of reset() call (is it a problem???)
-  sync_helper.send_sync(_chunk);
-  sync_helper.set_syncing(true);
   return true;
 };
 
