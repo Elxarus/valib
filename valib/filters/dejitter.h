@@ -2,8 +2,8 @@
 */
 
 
-#ifndef SyncGen_H
-#define SyncGen_H
+#ifndef DEJITTER_H
+#define DEJITTER_H
 
 #include "filter.h"
 
@@ -13,6 +13,10 @@ class Syncer : public NullFilter
 {
 protected:
   double size2time;
+
+  // continious time
+  bool    continuous_sync;
+  vtime_t continuous_time;
 
   // linear time transform
   vtime_t time_shift;
@@ -45,6 +49,10 @@ public:
   :NullFilter(FORMAT_MASK_LINEAR | FORMAT_CLASS_PCM | FORMAT_MASK_SPDIF)
   {
     size2time   = 1.0;
+
+    continuous_sync = false;
+    continuous_time = 0.0;
+
     time_shift  = 0;
     time_factor = 1.0;
 
