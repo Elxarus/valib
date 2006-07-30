@@ -124,7 +124,16 @@ Demux::get_chunk(Chunk *_chunk)
     // switch stream
     stream = 0;
     substream = 0;
+
+    // If sample rate is specified at input we will trust
+    // it and pass to downstream. 
+    // It is requred to determine SPDIF passthrough
+    // possibility just after demuxer. In future it will
+    // be a special filter to determine parameters of
+    // comressed spdifable stream, but now we can only
+    // trust upstream.
     out_spk = ps.spk();
+    out_spk.sample_rate = spk.sample_rate;
   }
 
   // we must not send end-of-stream if there're data left
