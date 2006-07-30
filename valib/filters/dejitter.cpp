@@ -3,7 +3,7 @@
 #include "dejitter.h"
 
 // uncomment this to log timing information into DirectShow log
-#define SYNCER_LOG_TIMING
+//#define SYNCER_LOG_TIMING
 
 #ifdef SYNCER_LOG_TIMING
 #include <streams.h>
