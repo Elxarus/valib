@@ -36,7 +36,16 @@ Demux::process()
       // update stream info
       stream     = ps.stream;
       substream  = ps.substream;
-      out_spk    = ps.spk();
+
+      // If sample rate is specified at input we will trust
+      // it and pass to downstream. 
+      // It is requred to determine SPDIF passthrough
+      // possibility just after demuxer. In future it will
+      // be a special filter to determine parameters of
+      // comressed spdifable stream, but now we can only
+      // trust upstream.
+      out_spk = ps.spk();
+      out_spk.sample_rate = spk.sample_rate;
 
       // demux
       memmove(out_rawdata + out_size, rawdata, len);
