@@ -45,7 +45,8 @@ Demux::process()
       // comressed spdifable stream, but now we can only
       // trust upstream.
       out_spk = ps.spk();
-      out_spk.sample_rate = spk.sample_rate;
+      if (out_spk.sample_rate == 0)
+        out_spk.sample_rate = spk.sample_rate;
 
       // demux
       memmove(out_rawdata + out_size, rawdata, len);
@@ -142,7 +143,8 @@ Demux::get_chunk(Chunk *_chunk)
     // comressed spdifable stream, but now we can only
     // trust upstream.
     out_spk = ps.spk();
-    out_spk.sample_rate = spk.sample_rate;
+    if (out_spk.sample_rate == 0)
+      out_spk.sample_rate = spk.sample_rate;
   }
 
   // we must not send end-of-stream if there're data left
