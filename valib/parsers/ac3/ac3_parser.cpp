@@ -602,9 +602,13 @@ AC3Parser::parse_block()
         rematflg |= bs.get(1) << bnd;         // rematflg[bnd] - rematrix flag
       while (rematrix_tbl[bnd++] < endbin);
     }
+/*
+    This check is disabled because some buggy encoder exists that
+    breaks this rule.
+
     else if (block == 0)                      // rematstr <> 0 for block 0 (constraint p41 s5.4.3.19)
       return false;
-
+*/
   /////////////////////////////////////////////////////////
   // Exponents
   /////////////////////////////////////////////////////////
