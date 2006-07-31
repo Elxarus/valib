@@ -223,7 +223,7 @@ AGC::process()
 
   // adjust gain on overflow
 
-  max = MAX(level, old_level) * factor;
+  max = level * factor + old_level * old_factor;
   if (auto_gain && max > 1.0)
     if (max < attack_factor)
     {
