@@ -32,6 +32,7 @@ protected:
   int buf_data;
   int buf_pos;
 
+  void detect_pes(size_t scan_size = 512 * 1024, int packets = 5);
   bool fill_buf();
   void file_stats();
 
@@ -46,7 +47,7 @@ public:
   bool open(Parser *parser, const char *filename, unsigned max_scan = 32768);
   void close();
 
-  bool probe();
+  bool probe(size_t scan_size = 512 * 1024, int packets = 5);
   void stats(int nframes = 100);
 
   void set_mpeg_stream(int stream = 0, int substream = 0);

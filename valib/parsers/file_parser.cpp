@@ -69,6 +69,7 @@ FileParser::open(Parser *_parser, const char *_filename, unsigned _max_scan)
   frames_overhead = parser->get_frames();
   errors_overhead = parser->get_errors() + demux.parser.errors;
 
+  detect_pes();
   reset();
   return true;
 }
@@ -99,63 +100,136 @@ FileParser::close()
   is_pes = false;
 }
 
+void
+FileParser::detect_pes(size_t scan_size, int npackets)
+{
+  // This function scans the file and search for a sequence
+  // of packets of the same stream.
+
+  PSParser ps;
+
+  size_t old_pos = get_pos();
+
+  uint8_t *ps_pos;
+  uint8_t *ps_end;
+
+  int ps_stream = 0;
+  int ps_substream = 0;
+
+  int packet_size = 0;
+  int packets = 0;
+
+  is_pes = false;
+  while (1)
+  { 
+    // Fill buffer
+
+    if (!scan_size)
+    {
+      seek(old_pos);
+      return;
+    }
+
+    ps_pos = buf;
+    ps_end = buf;
+    ps_end += fread(ps_pos, 1, buf_size, f);
+    scan_size -= (ps_end - ps_pos);
+    if (ps_pos == ps_end)
+    {
+      seek(old_pos);
+      return;
+    }
+
+    // Parse buffer
+
+    while (ps_pos < ps_end)
+    {
+      if (packet_size)
+      {
+        // drop packet
+        if (packet_size > ps_end - ps_pos)
+        {
+          packet_size -= ps_end - ps_pos;
+          ps_pos = ps_end;
+        }
+        else
+        {
+          ps_pos += packet_size;
+          packet_size = 0;
+        }
+      }
+      else if (packet_size = ps.parse(&ps_pos, ps_end))
+      {
+        // count consecutive packets of the same stream
+        if ((ps_stream && ps_stream != ps.stream) ||
+            (ps_substream && ps.substream != ps.substream))
+        {
+          ps_stream = ps.stream;
+          ps_substream = ps.substream;
+          packets = 0;
+        }
+        else
+        {
+          ps_stream = ps.stream;
+          ps_substream = ps.substream;
+
+          packets++;
+          if (packets >= npackets)
+          {
+            is_pes = true;
+            seek(old_pos);
+            return;
+          }
+        }
+      } // if (packet_size = ps.parse(&ps_pos, ps_end))
+    }
+  } // while (1)
+
+  // never be here
+}
+
 bool 
-FileParser::probe()
+FileParser::probe(size_t scan_size, int nframes)
 {
   if (!f) return false;
 
-  int old_pos = get_pos();
+  size_t old_pos = get_pos();
   int old_parser_frames = parser->get_frames();
   int old_parser_errors = parser->get_errors();
   int old_demux_errors  = demux.parser.errors;
 
-  int i;
-  bool failed = false;
+  int frames = 0;
 
-  /////////////////////////////////////////////////////////
-  // Try as pure stream
-
-  seek(old_pos);
-  is_pes  = false;
-
-  failed = false;
-  for (i = 0; i < 100; i++)  // try to decode 100 frames
-    if (!frame())
+  while (1)
+  { 
+    if (frame())
     {
-      failed = true;
-      break;
+      frames++;
+      if (frames > nframes)
+      {
+        // probe succeeded
+        seek(old_pos);
+        frames_overhead += parser->get_frames() - old_parser_frames;
+        errors_overhead += parser->get_errors() - old_parser_errors;
+        errors_overhead += demux.parser.errors - old_demux_errors;
+        return true;
+      }
     }
-  if (!failed) goto probe_ok;
+    else
+      frames = 0;
 
-  /////////////////////////////////////////////////////////
-  // Try as PES
-
-  seek(old_pos);
-  is_pes  = true;
-
-  failed = false;
-  for (i = 0; i < 100; i++)  // try to decode 100 frames
-    if (!frame())
+    if (eof() || (get_pos() - old_pos > scan_size))
     {
-      failed = true;
-      break;
+      // probe failed
+      seek(old_pos);
+      frames_overhead += parser->get_frames() - old_parser_frames;
+      errors_overhead += parser->get_errors() - old_parser_frames;
+      errors_overhead += demux.parser.errors - old_demux_errors;
+      return false;
     }
-  if (!failed) goto probe_ok;
+  } // while (1)
 
-  // probe failed
-  seek(old_pos);
-  frames_overhead += parser->get_frames() - old_parser_frames;
-  errors_overhead += parser->get_errors() - old_parser_frames;
-  errors_overhead += demux.parser.errors - old_demux_errors;
-  return false;
-
-probe_ok:
-  // probe succeeded
-  seek(old_pos);
-  frames_overhead += parser->get_frames() - old_parser_frames;
-  errors_overhead += parser->get_errors() - old_parser_errors;
-  errors_overhead += demux.parser.errors - old_demux_errors;
-  return true;
+  // never be here
 }
 
 void
@@ -377,15 +451,17 @@ FileParser::get_info(char *buf, size_t len) const
     "size: %i bytes\n"
     "frames: %i\n"
     "length: %i:%02i\n"
-    "avg. frame size: %i bytes\n"
+    "%s"
+    "avg. frame size: %i bytes%s\n"
     "avg. samples/frame: %i\n"
     "\n",
 
     get_filename(), 
     size_bytes, 
-    size_frames, 
+    size_frames,
     int(size_sec / 60), int(size_sec % 60),
-    frame_size, 
+    is_pes? "PES-wrapped stream\n": "",
+    frame_size, is_pes? " (including PES overhead)": "",
     frame_samples);
 
   info_len = MIN(len, strlen(info)+1);
