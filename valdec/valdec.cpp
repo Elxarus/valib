@@ -830,6 +830,7 @@ int main(int argc, char *argv[])
   cpu_current.stop();
   cpu_total.stop();
 
+  printf("Frames/errors: %i/%i\n", file.get_frames(), file.get_errors());
   printf("System time: %ims\n", int(cpu_total.get_system_time() * 1000));
   printf("Process time: %ims\n", int(cpu_total.get_thread_time() * 1000 ));
   printf("Approx. %.2f%% realtime CPU usage\n", double(cpu_total.get_thread_time() * 100000) / file.get_size(file.ms));
