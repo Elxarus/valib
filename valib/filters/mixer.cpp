@@ -27,6 +27,7 @@ Mixer::Mixer(size_t _nsamples)
 :NullFilter(FORMAT_MASK_LINEAR)
 {
   nsamples = _nsamples;
+  out_spk = spk_unknown;
 
   // Options
   auto_matrix      = true;
@@ -69,8 +70,11 @@ Mixer::prepare_matrix()
 
   const int *in_order = spk.order();
   const int *out_order = out_spk.order();
+  sample_t factor = 1.0;
 
-  sample_t factor = out_spk.level / spk.level * gain;
+  if (spk.level > 0.0)
+    sample_t factor = out_spk.level / spk.level * gain;
+
   for (int ch1 = 0; ch1 < spk.nch(); ch1++)
     for (int ch2 = 0; ch2 < out_spk.nch(); ch2++)
       m[ch1][ch2] = 
