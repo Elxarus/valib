@@ -432,7 +432,8 @@ DVDGraph::init_filter(int node, Speakers spk)
       spdif_status = SPDIF_MODE_DISABLED;
 
       // Setup audio processor
-      if (!proc.set_user(user_spk))
+      Speakers agreed_spk = agree_output_pcm(spk, user_spk);
+      if (!proc.set_user(agreed_spk))
         return 0;
 
       return &proc;
@@ -667,6 +668,71 @@ DVDGraph::check_spdif_encode(Speakers _spk) const
   return SPDIF_MODE_ENCODE;
 }
 
+Speakers
+DVDGraph::agree_output_pcm(Speakers _spk, Speakers _user_spk) const
+{
+  if (!sink || !query_sink)
+    return _user_spk;
+
+  // Apply user_spk to the input format
+
+  if (_user_spk.format != FORMAT_UNKNOWN)
+  {
+    _spk.format = _user_spk.format;
+    _spk.level = _user_spk.level;
+  }
+  if (_user_spk.mask)
+    _spk.mask = _user_spk.mask;
+
+  if (_user_spk.relation)
+    _spk.relation = _user_spk.relation;
+
+  // Query direct user format
+
+  if (sink->query_input(_spk) && proc.query_user(_spk))
+    return _spk;
+
+  // We're failed. 
+  // Try to downgrade the format on the first pass.
+  // Try do downgrage the format and the number of channels on the second pass.
+
+  for (int i = 0; i < 2; i++)
+  {
+    Speakers enum_spk = _spk;
+    if (i > 0) enum_spk.mask = MODE_STEREO;
+
+    while (!enum_spk.is_unknown())
+    {
+      if (sink->query_input(enum_spk) && proc.query_user(enum_spk))
+        return enum_spk;
+
+      switch (enum_spk.format)
+      {
+        case FORMAT_LINEAR:   enum_spk.format = FORMAT_PCMFLOAT; break;
+        case FORMAT_PCMFLOAT: enum_spk.format = FORMAT_PCM32; break;
+        case FORMAT_PCM32:    enum_spk.format = FORMAT_PCM24; break;
+        case FORMAT_PCM24:    enum_spk.format = FORMAT_PCM16; break;
+        case FORMAT_PCM16:    enum_spk.format = FORMAT_UNKNOWN; break;
+
+        case FORMAT_PCM32_BE: enum_spk.format = FORMAT_PCM24_BE; break;
+        case FORMAT_PCM24_BE: enum_spk.format = FORMAT_PCM16_BE; break;
+        case FORMAT_PCM16_BE: enum_spk.format = FORMAT_UNKNOWN; break;
+        default:
+          enum_spk.format = FORMAT_UNKNOWN; break;
+      }
+    }
+  }
+
+  // Failed to downgrade the format and number of channels.
+  // Try to use format of the sink.
+
+  _spk = sink->get_input();
+  if (proc.query_user(_spk))
+    return _spk;
+
+  // Everything failed. Use user_spk in the hope that it still may work...
+  return _user_spk;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
