@@ -1,7 +1,7 @@
 #include <math.h>
 #include <string.h>
 #include "agc.h"
-
+    
 #define LEVEL_MINUS_50DB 0.0031622776601683793319988935444327
 #define LEVEL_MINUS_100DB 0.00001
 #define LEVEL_PLUS_100DB 100000.0
@@ -223,11 +223,11 @@ AGC::process()
 
   // adjust gain on overflow
 
-  max = level * factor + old_level * old_factor;
+  max = MAX(level, old_level) * factor;
   if (auto_gain && max > 1.0)
     if (max < attack_factor)
     {
-      // no overflow
+      // corrected with no overflow
       factor /= max;
       gain   /= max;
       max     = 1.0;
@@ -276,8 +276,10 @@ AGC::process()
 
   ///////////////////////////////////////
   // Clipping
+  // Note that we must clip even in case
+  // of previous block overflow...
 
-  if (max > 1.0)
+  if (level * factor > 1.0 || old_level * old_factor > 1.0)
     for (ch = 0; ch < nch; ch++)
     {
       sptr = buf[block][ch];
