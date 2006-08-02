@@ -3,6 +3,7 @@
   * file transform test with format changes
   * dynamical user format change
   * dynamical graph rebuild
+  * format agreement procedure
 */
 
 #include "log.h"
@@ -38,6 +39,43 @@ public:
   { return _spk.format != FORMAT_SPDIF; }
 };
 
+class SinkAllow : public NullSink
+{
+protected:
+  Speakers allow;
+
+public:
+  SinkAllow(Speakers _allow)
+  { allow = _allow; }
+
+  bool query_input(Speakers _spk) const
+  {
+    // Check correctness of the proposed format
+
+    if (_spk.format == FORMAT_UNKNOWN)
+      return false;
+
+    if (!_spk.sample_rate)
+      return false;
+
+    if (!_spk.mask)
+      return false;
+
+    // Check format compatibility
+
+    if (allow.format != FORMAT_UNKNOWN && _spk.format != allow.format)
+      return false;
+
+    if (allow.mask && _spk.mask != allow.mask)
+      return false;
+
+    if (allow.sample_rate && _spk.sample_rate != allow.sample_rate)
+      return false;
+
+    return true;
+  }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
 
@@ -61,6 +99,7 @@ public:
   {
     log->open_group("DVDGraph test");
     transform();
+    format_agreement();
     user_format_change();
     spdif_rebuild();
     return log->close_group();
@@ -282,6 +321,8 @@ public:
         test_encode(&src, spdif_allowed[isink], can_encode);
         test_decode(&src);
       }
+      // have to drop sink because it will be deleted...
+      dvd.set_sink(0);
     }
 
     Chunk chunk;
@@ -409,9 +450,138 @@ public:
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // SPDIF errors test
+  // Format agreement test
+  //
+  // Use following sink format restrictions:
+  // * sink allows any format
+  // * sink allows only pam16 and any number of channels
+  // * sink allows only stereo and any format
+  // * sink allows only stereo pcm16
+  // * sink is fixed to quadro pcm24 and do not allow format changes
+  //
+  // Then enumerate all:
+  // * user formats
+  // * input formats
+  //
+  // Test is passed if output format is allowed by the sink for all
+  // combinations of user and input formats for all sinks.
 
+  void format_agreement()
+  {
+    int formats[] = 
+    { 
+      FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCMFLOAT, FORMAT_LINEAR, 
+      FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE,
+    };
 
+    int masks[] = 
+    { 
+       0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 
+      10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+      20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+      30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+      40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+      50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+      60, 61, 62, 63
+    };
+
+    int sample_rates[] = 
+    {
+      48000
+    };
+
+    Speakers sink_allow[] = 
+    {
+      Speakers(FORMAT_PCM24, MODE_QUADRO, 0),     // sink is fixed to 24bit quadro
+      Speakers(FORMAT_UNKNOWN, MODE_STEREO, 0),   // sink accepts only stereo/any any format
+      Speakers(FORMAT_UNKNOWN, 0, 0),             // sink accepts anything
+      Speakers(FORMAT_PCM16, 0, 0),               // sink accepts only 16bit format/any channels
+      Speakers(FORMAT_PCM16, MODE_STEREO, 0),     // sink accepts only 16bit stereo
+    };
+
+    Speakers sink_state[] = 
+    {
+      Speakers(FORMAT_PCM24, MODE_QUADRO, 48000), // sink is fixed to 24bit quadro
+      Speakers(FORMAT_PCM16, MODE_STEREO, 48000), // sink accepts only stereo/any any format
+      Speakers(FORMAT_PCM16, MODE_STEREO, 48000), // sink accepts anything
+      Speakers(FORMAT_PCM16, MODE_STEREO, 48000), // sink accepts only 16bit format/any channels
+      Speakers(FORMAT_PCM16, MODE_STEREO, 48000), // sink accepts only 16bit stereo
+    };
+
+    log->open_group("Format agreement test");
+
+    for (int isink_format = 0; isink_format < array_size(sink_allow); isink_format++)
+    {
+      SinkAllow sink(sink_allow[isink_format]);
+      sink.set_input(sink_state[isink_format]);
+      log->msg("Trying sink with allowed format: %s %s %i", 
+        sink_allow[isink_format].format_text(), 
+        sink_allow[isink_format].mode_text(),
+        sink_allow[isink_format].sample_rate);
+
+      dvd.set_spdif(false, 0, false, false, false);
+      dvd.set_query_sink(true);
+      dvd.set_sink(&sink);
+
+      /////////////////////////////////////////////////////
+      // User format enumeration
+      // Note that user format must have zero sample rate
+      for (int uformat = 0; uformat < array_size(formats); uformat++)
+      for (int umask = 0; umask < array_size(masks); umask++)
+      {
+        // Statistics
+        log->status("User format number %i of %i",
+          uformat * array_size(masks) + umask, 
+          array_size(formats) * array_size(masks)
+        );
+
+        // Set user format
+        Speakers user_spk = Speakers(formats[uformat], masks[umask], 0);
+        if (!dvd.set_user(user_spk))
+        {
+          log->err_close("Cannot set user format %s %s %i", 
+            user_spk.format_text(), user_spk.mode_text(), user_spk.sample_rate);
+          return;
+        }
+
+        /////////////////////////////////////////////////////
+        // Input format enumeration
+        // Note that input format must have non-zero mask
+        for (int iformat = 0; iformat < array_size(formats); iformat++)
+        for (int imask = 1; imask < array_size(masks); imask++)
+        for (int isample_rate = 0; isample_rate < array_size(sample_rates); isample_rate++)
+        {
+          // Set input format
+          Speakers in_spk = Speakers(formats[iformat], masks[imask], sample_rates[isample_rate]);
+          if (!dvd.set_input(in_spk))
+          {
+            log->err_close("Cannot set input format %s %s %i", 
+              in_spk.format_text(), in_spk.mode_text(), in_spk.sample_rate);
+            // have to drop the sink because it will be destroyed
+            dvd.set_sink(0);  
+            return;
+          }
+
+          // Check sink compatibility
+          if (!sink.query_input(dvd.get_output()))
+          {
+            log->err_close("Input format: %s %s %i; User format: %s %s %i; Output format set to %s %s %i (incompatible with the sink format)", 
+              in_spk.format_text(), in_spk.mode_text(), in_spk.sample_rate,
+              user_spk.format_text(), user_spk.mode_text(), user_spk.sample_rate,
+              dvd.get_output().format_text(), dvd.get_output().mode_text(), dvd.get_output().sample_rate);
+            // have to drop the sink because it will be destroyed
+            dvd.set_sink(0);  
+            return;
+          }
+        }
+      }
+
+      // have to drop the sink because it will be destroyed
+      dvd.set_sink(0);  
+    }
+
+    log->close_group();
+  }
 
 };
 
