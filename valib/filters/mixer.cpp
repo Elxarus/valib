@@ -74,6 +74,8 @@ Mixer::prepare_matrix()
 
   if (spk.level > 0.0)
     factor = out_spk.level / spk.level * gain;
+  else
+    factor = out_spk.level * gain;
 
   for (int ch1 = 0; ch1 < spk.nch(); ch1++)
     for (int ch2 = 0; ch2 < out_spk.nch(); ch2++)
