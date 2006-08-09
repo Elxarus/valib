@@ -297,9 +297,13 @@ Syncer::get_chunk(Chunk *_chunk)
   if (dejitter)
   {
     sync = continuous_sync;
-    time = continuous_time;
+    time = continuous_time * time_factor + time_shift;
     continuous_time += size * size2time;
   }
+  else if (sync)
+    time = time * time_factor + time_shift;
+
   send_chunk_inplace(_chunk, size);
+  sync = false;
   return true;
 }
