@@ -214,8 +214,8 @@ int main(int argc, char *argv[])
   DSoundSink dsound(0);
   NullSink   null;
 
-  Sink      *sink = &dsound;
-  Clock     *clock = &dsound;
+  Sink *sink = &dsound;
+  PlaybackControl *control = &dsound;
 
   /////////////////////////////////////////////////////////
   // Filters
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
       }
 
       sink = &null;
-      clock = 0;
+      control = 0;
       mode = mode_decode;
       continue;
     }
@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
       }
 
       sink = &dsound;
-      clock = &dsound;
+      control = &dsound;
       mode = mode_play;
       continue;
     }
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
       }
 
       sink = &raw;
-      clock = 0;
+      control = 0;
       mode = mode_raw;
       continue;
     }
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
       }
 
       sink = &null;
-      clock = 0;
+      control = 0;
       mode = mode_nothing;
       continue;
     }
@@ -780,9 +780,9 @@ int main(int argc, char *argv[])
         old_ms = ms;
 
         // Levels
-        if (!spdif && clock)
+        if (!spdif && control)
         {
-          proc.get_output_levels(clock->get_time(), levels);
+          proc.get_output_levels(control->get_playback_time(), levels);
           level = levels[0];
           for (i = 1; i < NCHANNELS; i++)
             if (levels[i] > level)
