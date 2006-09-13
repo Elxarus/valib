@@ -88,6 +88,12 @@ public:
   virtual size_t  get_data_size()     const;
   virtual vtime_t get_data_time()     const;
 
+  virtual double get_vol()            const;
+  virtual void   set_vol(double vol);
+
+  virtual double get_pan()            const;
+  virtual void   set_pan(double pan);
+
   /////////////////////////////////////////////////////////
   // Sink interface
 

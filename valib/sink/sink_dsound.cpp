@@ -88,6 +88,7 @@ DSoundSink::open(WAVEFORMATEX *wf)
   memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
   dsbdesc.dwSize        = sizeof(DSBUFFERDESC);
   dsbdesc.dwFlags       = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
+  dsbdesc.dwFlags      |= DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLPAN;
   dsbdesc.dwBufferBytes = buf_size;
   dsbdesc.lpwfxFormat   = wf;
 
@@ -104,12 +105,17 @@ DSoundSink::open(WAVEFORMATEX *wf)
     return false;
   }
 
-
+  // Try to create buffer with volume and pan controls
   if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf, 0)) 
   {
-    SAFE_RELEASE(ds_buf);
-    SAFE_RELEASE(ds);
-    return false;
+    // Try to create buffer without volume and pan controls
+    dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
+    if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf, 0))
+    {
+      SAFE_RELEASE(ds_buf);
+      SAFE_RELEASE(ds);
+      return false;
+    }
   }
 
   // Zero playback buffer
@@ -170,6 +176,7 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
   memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
   dsbdesc.dwSize        = sizeof(DSBUFFERDESC);
   dsbdesc.dwFlags       = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
+  dsbdesc.dwFlags      |= DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLPAN;
   dsbdesc.dwBufferBytes = buf_size;
   dsbdesc.lpwfxFormat   = wf;
 
@@ -180,11 +187,17 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
     return false;
   }
 
+  // Try to create buffer with volume and pan controls
   if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0)) 
   {
-    SAFE_RELEASE(test_ds_buf);
-    SAFE_RELEASE(test_ds);
-    return false;
+    // Try to create buffer without volume and pan controls
+    dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
+    if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0))
+    {
+      SAFE_RELEASE(test_ds_buf);
+      SAFE_RELEASE(test_ds);
+      return false;
+    }
   }
   return true;
 }
@@ -403,6 +416,47 @@ DSoundSink::flush()
   playing = false;
   cur = 0;
 }
+
+double 
+DSoundSink::get_vol() const
+{
+  if (ds_buf)
+  {
+    LONG vol;
+    if SUCCEEDED(ds_buf->GetVolume(&vol))
+      return (double)(vol / 100);
+  }
+  return 0;
+}
+
+void 
+DSoundSink::set_vol(double vol)
+{
+  AutoLock autolock(&lock);
+  if (ds_buf)
+    ds_buf->SetVolume((LONG)(vol * 100));
+}
+
+double 
+DSoundSink::get_pan() const
+{
+  if (ds_buf)
+  {
+    LONG pan;
+    if SUCCEEDED(ds_buf->GetPan(&pan))
+      return (double)(pan / 100);
+  }
+  return 0;
+}
+
+void 
+DSoundSink::set_pan(double pan)
+{
+  AutoLock autolock(&lock);
+  if (ds_buf)
+    ds_buf->SetPan((LONG)(pan * 100));
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Sink interface
