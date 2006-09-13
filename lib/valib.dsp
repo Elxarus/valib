@@ -232,6 +232,10 @@ SOURCE=..\valib\parser.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\renderer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\rng.cpp
 # End Source File
 # Begin Source File
