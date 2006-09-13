@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "file_parser.h"
 
 #define swab16(x) (((x) >> 8) & 0xff | (((x) & 0xff) << 8))
@@ -247,23 +248,42 @@ FileParser::stats(int nframes)
   int old_parser_errors = parser->get_errors();
   int old_demux_errors  = demux.parser.errors;
 
+  int file_frame_size;
+  vtime_t old_length;
+  vtime_t new_length;
+
+  old_length = 0;
   for (int i = 0; i < nframes; i++)
   {
     int file_pos = int((double)rand() * filesize / RAND_MAX);
     seek(file_pos);
 
-    if (!load_frame() || !decode_frame())
-      continue;
+    ///////////////////////////////////////////////////////
+    // Determie frame size including overhead
+    // (padding and PES headers)
 
+    if (!load_frame() || !decode_frame()) continue;
     file_pos = get_pos();
+    if (!load_frame() || !decode_frame()) continue;
+    file_frame_size = get_pos() - file_pos;
 
-    if (!load_frame() || !decode_frame())
-      continue;
+    ///////////////////////////////////////////////////////
+    // Update stat
 
-    frame_size     += get_pos() - file_pos;;
+    frame_size     += file_frame_size;
     frame_samples  += parser->get_nsamples();
     sample_rate    += parser->get_spk().sample_rate;
     cnt++;
+
+    ///////////////////////////////////////////////////////
+    // Finish scanning if we have enough accuracy
+
+    new_length = cnt * filesize / frame_size * frame_samples / sample_rate;
+
+    if (cnt > 5 && fabs(old_length - new_length) < 0.5)
+      break;
+    else
+      old_length = new_length;
   }
 
   if (cnt)
