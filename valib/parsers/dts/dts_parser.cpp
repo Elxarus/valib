@@ -458,7 +458,7 @@ DTSParser::parse_frame_header()
   int mask = amode2mask_tbl[amode];
   int relation = amode2rel_tbl[amode];
   if (lfe) mask |= CH_MASK_LFE;
-  spk.set(FORMAT_LINEAR, mask, dts_sample_rates[sample_rate], 1.0, relation);
+  spk.set(FORMAT_DTS, mask, dts_sample_rates[sample_rate], 1.0, relation);
 
   // todo: support short frames
   nsamples = sample_blocks * 32;
