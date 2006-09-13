@@ -227,28 +227,3 @@ DSoundSource::get_chunk(Chunk *_chunk)
   time += (len1 + len2) * bytes2time;
   return true;
 };
-
-///////////////////////////////////////////////////////////////////////////////
-// TimeControl interface
-
-bool 
-DSoundSource::is_counting() const
-{
-  return capturing;
-}
-
-vtime_t 
-DSoundSource::get_time() const
-{
-  return time + captured_size() * bytes2time;
-}
-
-bool 
-DSoundSource::can_sync() const
-{
-  return false;
-}
-
-void
-DSoundSource::set_sync(Clock *sync_source)
-{}

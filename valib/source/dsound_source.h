@@ -6,7 +6,7 @@
 #include "data.h"
 #include "vtime.h"
 
-class DSoundSource : public Source, public Clock
+class DSoundSource : public Source
 {
 protected:
   /////////////////////////////////////////////////////////
@@ -59,15 +59,6 @@ public:
   virtual Speakers get_output() const;
   virtual bool is_empty() const;
   virtual bool get_chunk(Chunk *chunk);
-
-  /////////////////////////////////////////////////////////
-  // TimeControl interface
-
-  virtual bool is_counting() const;
-  virtual vtime_t get_time() const;
-
-  virtual bool can_sync() const;
-  virtual void set_sync(Clock *);
 };
 
 #endif

@@ -10,9 +10,10 @@
 #include <ksmedia.h>
 #include "filter.h"
 #include "vtime.h"
+#include "renderer.h"
 #include "win32\thread.h"
 
-class DSoundSink : public Sink, public Clock
+class DSoundSink : public Sink, public PlaybackControl
 {
 protected:
   /////////////////////////////////////////////////////////
@@ -22,8 +23,6 @@ protected:
   LPCGUID  device;        // DirectSound device
   int      buf_size_ms;   // buffer size in ms
   int      preload_ms;    // preload size in ms
-
-  Clock   *sync_source;   // Clock we must sync with
 
   /////////////////////////////////////////////////////////
   // Parameters that depend on initialization
@@ -72,34 +71,22 @@ public:
 
   bool init(int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
 
-  // This functions report output buffer fullness
-  size_t  buffered_size() const;
-  vtime_t buffered_time() const;
+  /////////////////////////////////////////////////////////
+  // Playback control
 
-  // Playback control functions
-  // * we should not normally call start() manually because
-  //   playback is started automatically after prebuffering
-  // * we may call either flush() or stop() to stop playback.
-  //   Both functions stops playback but flush() does flushing
-  //   and blocks until end of buffered playback when stop() 
-  //   stops playback immediately.
-  // * flush() is called from process() and stops playback
-  //   so normally we may not call flush() before stop()
-  // * stop() should be called after the end of porcessing
-  //   just to ensure that playback is stopped.
-  // * pause() must be called from control thread,
-  //   deadlock is possible if called from working thread)
-  // * we can pause when playing but cannot unpause when not
-  //   playing.
+  virtual void pause();
+  virtual void unpause();
+  virtual bool is_paused() const;
 
-  bool is_playing() const;
-  void start();
-  void flush();
-  void stop();
+  virtual void stop();
+  virtual void flush();
 
-  bool is_paused() const;
-  void pause();
-  void unpause();
+  virtual vtime_t get_playback_time() const;
+
+  virtual size_t  get_buffer_size()   const;
+  virtual vtime_t get_buffer_time()   const;
+  virtual size_t  get_data_size()     const;
+  virtual vtime_t get_data_time()     const;
 
   /////////////////////////////////////////////////////////
   // Sink interface
@@ -108,15 +95,6 @@ public:
   virtual bool set_input(Speakers _spk);
   virtual Speakers get_input() const;
   virtual bool process(const Chunk *_chunk);
-
-  /////////////////////////////////////////////////////////
-  // TimeControl interface
-
-  virtual bool is_counting() const;
-  virtual vtime_t get_time() const;
-
-  virtual bool can_sync() const;
-  virtual void set_sync(Clock *);
 };
 
 #endif

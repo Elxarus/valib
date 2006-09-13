@@ -23,27 +23,4 @@ vtime_t local_time();        // current system time, local time
 vtime_t to_local(vtime_t); // convert UTC time to local time
 vtime_t to_utc(vtime_t);   // convert local time to UTC time
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Abstract clock interface
-//
-// Clock is a time source class. It may be any device that can count the time:
-// * audio capture can be a clock and it is syncronized with the audio input
-// * audio renderer can be a clock and it is syncronized with the audio output
-// * OS can be a clock but generally OS provides very low signal resolution and 
-//   stability compared with audio clocks.
-
-class Clock
-{
-public:
-  Clock() {};
-  virtual ~Clock() {};
-
-  virtual bool is_counting() const = 0;
-  virtual vtime_t get_time() const = 0;
-
-  virtual bool can_sync() const = 0;
-  virtual void set_sync(Clock *) = 0;
-};
-
 #endif

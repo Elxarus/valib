@@ -211,8 +211,55 @@ DSoundSink::close()
 ///////////////////////////////////////////////////////////////////////////////
 // Own interface
 
+///////////////////////////////////////////////////////////////////////////////
+// Playback control
+
+void
+DSoundSink::pause()
+{
+  if (!ds_buf) return;
+
+  ds_buf->Stop();
+  paused = true;
+}
+
+void 
+DSoundSink::unpause()
+{
+  if (!ds_buf) return;
+
+  if (playing)
+    ds_buf->Play(0, 0, DSBPLAY_LOOPING);
+  paused = false;
+}
+
+bool 
+DSoundSink::is_paused() const
+{
+  return paused;
+}
+
+vtime_t 
+DSoundSink::get_playback_time() const
+{
+  return time - get_data_time();
+}
+
 size_t 
-DSoundSink::buffered_size() const
+DSoundSink::get_buffer_size() const
+{
+  return buf_size;
+}
+
+vtime_t
+DSoundSink::get_buffer_time() const
+{
+  return buf_size * bytes2time;
+}
+
+
+size_t 
+DSoundSink::get_data_size() const
 {
   if (!ds_buf) return 0;
 
@@ -229,15 +276,16 @@ DSoundSink::buffered_size() const
     // * buffer is full so both pointers are equal (buffered size = buf_size)
     // * buffer underrun (we do not take this in account because in either case
     //   it produces playback glitch)
-    return playing? 0: buf_size;
+    return playing? buf_size: 0;
 }
 
 vtime_t
-DSoundSink::buffered_time() const
+DSoundSink::get_data_time() const
 {
-  return buffered_size() * bytes2time;
+  return get_data_size() * bytes2time;
 }
 
+/*
 bool 
 DSoundSink::is_playing() const
 {
@@ -255,6 +303,20 @@ DSoundSink::start()
 
   ds_buf->Play(0, 0, DSBPLAY_LOOPING);
   playing = true;
+}
+*/
+void 
+DSoundSink::stop()
+{
+  if (!ds_buf) return;
+  AutoLock autolock(&lock);
+
+  ds_buf->Stop();
+  playing = false;
+
+  // Drop cursor positions
+  ds_buf->SetCurrentPosition(0);
+  cur = 0;
 }
 
 void 
@@ -342,48 +404,6 @@ DSoundSink::flush()
   cur = 0;
 }
 
-void 
-DSoundSink::stop()
-{
-  if (!ds_buf) return;
-  AutoLock autolock(&lock);
-
-  ds_buf->Stop();
-  playing = false;
-
-  // Drop cursor positions
-  ds_buf->SetCurrentPosition(0);
-  cur = 0;
-}
-
-bool 
-DSoundSink::is_paused() const
-{
-  return paused;
-}
-
-void
-DSoundSink::pause()
-{
-  if (!ds_buf) return;
-  AutoLock autolock(&lock);
-
-  ds_buf->Stop();
-  paused = true;
-}
-
-void 
-DSoundSink::unpause()
-{
-  if (!ds_buf) return;
-  AutoLock autolock(&lock);
-
-  if (playing)
-    ds_buf->Play(0, 0, DSBPLAY_LOOPING);
-
-  paused = false;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Sink interface
 
@@ -431,6 +451,13 @@ bool DSoundSink::process(const Chunk *_chunk)
   while (size)
   {
     ///////////////////////////////////////////////////////
+    // Here we put chunk data to DirectSound buffer. If 
+    // it is too much of chunk data we have to put it by
+    // parts. When we put part of data we wait until some
+    // data is played and part of buffer frees so we can
+    // put next part. 
+
+    ///////////////////////////////////////////////////////
     // Determine how much data to output (data_size)
     // (check free space in playback buffer and size of 
     // remaining input data)
@@ -444,7 +471,7 @@ bool DSoundSink::process(const Chunk *_chunk)
       data_size = buf_size + play_cur - cur;
     else
       // if playback cursor is equal to buffer write position it may mean:
-      // * playback is stopped/paused so both pointers are equal (free buffer = buf_soze)
+      // * playback is stopped/paused so both pointers are equal (free buffer = buf_size)
       // * buffer is full so both pointers are equal (free buffer = 0)
       // * buffer underrun (we do not take this in account because in either case
       //   it produces playback glitch)
@@ -509,9 +536,9 @@ bool DSoundSink::process(const Chunk *_chunk)
     }
   }
 
-//  if (_chunk->sync)
-//    time = _chunk->time + _chunk->size * bytes2time;
-//  else
+  if (_chunk->sync)
+    time = _chunk->time + _chunk->size * bytes2time;
+  else
     time += _chunk->size * bytes2time;
 
   if (_chunk->eos)
@@ -520,28 +547,3 @@ bool DSoundSink::process(const Chunk *_chunk)
   return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TimeControl interface
-
-bool 
-DSoundSink::is_counting() const
-{
-  return playing && !paused;
-}
-
-vtime_t 
-DSoundSink::get_time() const
-{
-  return time - buffered_time();
-}
-
-bool 
-DSoundSink::can_sync() const
-{
-  return true;
-}
-
-void 
-DSoundSink::set_sync(Clock *sync_clock)
-{
-}
