@@ -298,26 +298,6 @@ DSoundSink::get_data_time() const
   return get_data_size() * bytes2time;
 }
 
-/*
-bool 
-DSoundSink::is_playing() const
-{
-  return playing;
-}
-
-void 
-DSoundSink::start()
-{
-  if (!ds_buf) return;
-  AutoLock autolock(&lock);
-
-  // We may have buffered data already
-  // so we must not drop cursor position
-
-  ds_buf->Play(0, 0, DSBPLAY_LOOPING);
-  playing = true;
-}
-*/
 void 
 DSoundSink::stop()
 {
