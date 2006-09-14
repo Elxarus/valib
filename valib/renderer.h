@@ -25,10 +25,10 @@ public:
   virtual size_t  get_data_size()     const { return 0; };
   virtual vtime_t get_data_time()     const { return 0; };
 
-  virtual double get_vol()            const { return 1.0; };
+  virtual double get_vol()            const { return 0; };
   virtual void   set_vol(double vol)  {};
 
-  virtual double get_pan()            const { return 0.5; };
+  virtual double get_pan()            const { return 0; };
   virtual void   set_pan(double pan)  {};
 };
 
