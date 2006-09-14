@@ -178,6 +178,7 @@ FileParser::detect_pes(size_t scan_size, int npackets)
           if (packets >= npackets)
           {
             is_pes = true;
+            demux.set(ps_stream, ps_substream);
             seek(old_pos);
             return;
           }
@@ -280,7 +281,7 @@ FileParser::stats(int nframes)
 
     new_length = cnt * filesize / frame_size * frame_samples / sample_rate;
 
-    if (cnt > 5 && fabs(old_length - new_length) < 0.5)
+    if (cnt > 10 && fabs(old_length - new_length) < 0.5)
       break;
     else
       old_length = new_length;

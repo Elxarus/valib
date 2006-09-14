@@ -32,7 +32,7 @@ protected:
   int buf_data;
   int buf_pos;
 
-  void detect_pes(size_t scan_size = 512 * 1024, int packets = 5);
+  void detect_pes(size_t scan_size = 512 * 1024, int packets = 10);
   bool fill_buf();
   void file_stats();
 
