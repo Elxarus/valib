@@ -199,6 +199,9 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
       return false;
     }
   }
+
+  SAFE_RELEASE(test_ds_buf);
+  SAFE_RELEASE(test_ds);
   return true;
 }
 
