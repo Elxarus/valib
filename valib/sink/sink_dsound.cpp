@@ -32,17 +32,21 @@ DSoundSink::DSoundSink(HWND _hwnd, int _buf_size_ms, int _preload_ms, LPCGUID _d
   time    = 0;
   playing = false;
   paused  = true;
+
+  ev_stop = CreateEvent(0, true, false, 0);
 }
 
 DSoundSink::~DSoundSink()
 {
   close();
+  CloseHandle(ev_stop);
 }
 
 bool
 DSoundSink::init(int _buf_size_ms, int _preload_ms, LPCGUID _device)
 {
   close();
+
   buf_size_ms = _buf_size_ms;
   preload_ms = _preload_ms;
   device = _device;
@@ -55,12 +59,13 @@ DSoundSink::init(int _buf_size_ms, int _preload_ms, LPCGUID _device)
 bool
 DSoundSink::open(Speakers _spk)
 {
-  AutoLock autolock(&lock);
-
-  spk = _spk;
+  AutoLock autolock(&dsound_lock);
 
   WAVEFORMATEXTENSIBLE wfx;
   memset(&wfx, 0, sizeof(wfx));
+
+  close();
+  spk = _spk;
 
   if (spk2wfx(_spk, (WAVEFORMATEX*)(&wfx), true))
     if (open((WAVEFORMATEX*)(&wfx)))
@@ -77,7 +82,8 @@ DSoundSink::open(Speakers _spk)
 bool
 DSoundSink::open(WAVEFORMATEX *wf)
 {
-  AutoLock autolock(&lock);
+  // This function is called only from open() and therefore
+  // we do not take any lock here.
 
   buf_size = wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000;
   preload_size = wf->nBlockAlign * wf->nSamplesPerSec * preload_ms / 1000;
@@ -148,6 +154,9 @@ DSoundSink::open(WAVEFORMATEX *wf)
 bool 
 DSoundSink::try_open(Speakers _spk) const
 {
+  // This function do not use shared DirectSound and
+  // therefore we do not take any lock here.
+
   WAVEFORMATEXTENSIBLE wfx;
   memset(&wfx, 0, sizeof(wfx));
 
@@ -165,6 +174,9 @@ DSoundSink::try_open(Speakers _spk) const
 bool
 DSoundSink::try_open(WAVEFORMATEX *wf) const
 {
+  // This function do not use shared DirectSound and
+  // therefore we do not take any lock here.
+
   IDirectSound *test_ds;
   IDirectSoundBuffer *test_ds_buf;
 
@@ -208,7 +220,18 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
 void
 DSoundSink::close()
 {
-  AutoLock autolock(&lock);
+  AutoLock autolock(&dsound_lock);
+
+  /////////////////////////////////////////////////////////
+  // Unblock playback and take playback lock. It is safe
+  // because ev_stop remains signaled (manual-reset event)
+  // and playback functions cannot block anymore.
+
+  SetEvent(ev_stop);
+  AutoLock playback(&playback_lock);
+
+  /////////////////////////////////////////////////////////
+  // Close everything
 
   spk          = spk_unknown;
   buf_size     = 0;
@@ -222,6 +245,11 @@ DSoundSink::close()
   time    = 0;
   playing = false;
   paused  = false;
+
+  /////////////////////////////////////////////////////////
+  // Reset ev_stop
+
+  ResetEvent(ev_stop);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -233,18 +261,17 @@ DSoundSink::close()
 void
 DSoundSink::pause()
 {
-  if (!ds_buf) return;
-
-  ds_buf->Stop();
+  AutoLock autolock(&dsound_lock);
+  if (ds_buf)
+    ds_buf->Stop();
   paused = true;
 }
 
 void 
 DSoundSink::unpause()
 {
-  if (!ds_buf) return;
-
-  if (playing)
+  AutoLock autolock(&dsound_lock);
+  if (ds_buf && playing)
     ds_buf->Play(0, 0, DSBPLAY_LOOPING);
   paused = false;
 }
@@ -278,6 +305,7 @@ size_t
 DSoundSink::get_data_size() const
 {
   if (!ds_buf) return 0;
+  AutoLock autolock(&dsound_lock);
 
   DWORD play_cur;
   ds_buf->GetCurrentPosition(&play_cur, 0);
@@ -304,22 +332,39 @@ DSoundSink::get_data_time() const
 void 
 DSoundSink::stop()
 {
-  if (!ds_buf) return;
-  AutoLock autolock(&lock);
+  AutoLock autolock(&dsound_lock);
 
-  ds_buf->Stop();
+  /////////////////////////////////////////////////////////
+  // Unblock playback and take playback lock. It is safe
+  // because ev_stop remains signaled (manual-reset event)
+  // and playback functions cannot block anymore.
+
+  SetEvent(ev_stop);
+  AutoLock playback(&playback_lock);
+
+  /////////////////////////////////////////////////////////
+  // Stop and drop cursor positions
+
+  if (ds_buf)
+  {
+    ds_buf->Stop();
+    ds_buf->SetCurrentPosition(0);
+  }
+
   playing = false;
-
-  // Drop cursor positions
-  ds_buf->SetCurrentPosition(0);
   cur = 0;
+
+  ResetEvent(ev_stop);
 }
 
 void 
 DSoundSink::flush()
 {
-  if (!ds_buf) return;
-  AutoLock autolock(&lock);
+  /////////////////////////////////////////////////////////
+  // We may not take output lock here because close() tries
+  // to take playback lock before closing audio output.
+
+  AutoLock autolock(&playback_lock);
 
   void *data1, *data2;
   DWORD data1_bytes, data2_bytes;
@@ -348,11 +393,13 @@ DSoundSink::flush()
 
   ///////////////////////////////////////////////////////
   // Sleep until we have half of playback buffer free
+  // Note that we must finish immediately on ev_stop
 
   if (data_size > buf_size / 2)
   {
     data_size -= buf_size / 2;
-    Sleep(DWORD(data_size * bytes2time * 1000 + 1));
+    if (WaitForSingleObject(ev_stop, DWORD(data_size * bytes2time * 1000 + 1)) == WAIT_OBJECT_0)
+      return;
   }
 
   /////////////////////////////////////////////////////////
@@ -387,57 +434,56 @@ DSoundSink::flush()
 
   /////////////////////////////////////////////////////////
   // Sleep until the end of playback
+  // Note that we must finish immediately on ev_stop
 
   data_size = buf_size - data_size;
-  Sleep(DWORD(data_size * bytes2time * 1000 + 1));
+  if (WaitForSingleObject(ev_stop, DWORD(data_size * bytes2time * 1000 + 1)) == WAIT_OBJECT_0)
+    return;
 
   /////////////////////////////////////////////////////////
   // Stop the playback
 
-  ds_buf->Stop();
-  ds_buf->SetCurrentPosition(0);
-  playing = false;
-  cur = 0;
+  stop();
 }
 
 double 
 DSoundSink::get_vol() const
 {
-  if (ds_buf)
-  {
-    LONG vol;
-    if SUCCEEDED(ds_buf->GetVolume(&vol))
-      return (double)(vol / 100);
-  }
+  if (!ds_buf) return 0;
+  AutoLock autolock(&dsound_lock);
+
+  LONG vol;
+  if SUCCEEDED(ds_buf->GetVolume(&vol))
+    return (double)(vol / 100);
   return 0;
 }
 
 void 
 DSoundSink::set_vol(double vol)
 {
-  AutoLock autolock(&lock);
-  if (ds_buf)
-    ds_buf->SetVolume((LONG)(vol * 100));
+  if (!ds_buf) return;
+  AutoLock autolock(&dsound_lock);
+  ds_buf->SetVolume((LONG)(vol * 100));
 }
 
 double 
 DSoundSink::get_pan() const
 {
-  if (ds_buf)
-  {
-    LONG pan;
-    if SUCCEEDED(ds_buf->GetPan(&pan))
-      return (double)(pan / 100);
-  }
+  if (!ds_buf) return 0;
+  AutoLock autolock(&dsound_lock);
+
+  LONG pan;
+  if SUCCEEDED(ds_buf->GetPan(&pan))
+    return (double)(pan / 100);
   return 0;
 }
 
 void 
 DSoundSink::set_pan(double pan)
 {
-  AutoLock autolock(&lock);
-  if (ds_buf)
-    ds_buf->SetPan((LONG)(pan * 100));
+  if (!ds_buf) return;
+  AutoLock autolock(&dsound_lock);
+  ds_buf->SetPan((LONG)(pan * 100));
 }
 
 
@@ -453,7 +499,7 @@ DSoundSink::query_input(Speakers _spk) const
 bool 
 DSoundSink::set_input(Speakers _spk)
 {
-  AutoLock autolock(&lock);
+  AutoLock autolock(&dsound_lock);
 
   close();
   return open(_spk);
@@ -467,11 +513,19 @@ DSoundSink::get_input() const
 
 bool DSoundSink::process(const Chunk *_chunk)
 {
-  if (!ds_buf) return false;
-  AutoLock autolock(&lock);
+  /////////////////////////////////////////////////////////
+  // We may not take output lock here because close() tries
+  // to take playback lock before closing audio output.
+
+  AutoLock autolock(&playback_lock);
 
   if (_chunk->is_dummy())
     return true;
+
+  /////////////////////////////////////////////////////////
+  // process() automatically opens audio output if it is
+  // not open. It is because input format in uninitialized
+  // state = spk_unknown. It is exactly what we want.
 
   if (_chunk->spk != spk)
     if (!set_input(_chunk->spk))
@@ -565,10 +619,13 @@ bool DSoundSink::process(const Chunk *_chunk)
 
     if (size)
     {
-      // sleep until we can put all remaining data or 
+      // Sleep until we can put all remaining data or 
       // we have free at least half of playback buffer
+      // Note that we must finish immediately on ev_stop
+
       data_size = min(size, buf_size / 2);
-      Sleep(DWORD(data_size * bytes2time * 1000 + 1));
+      if (WaitForSingleObject(ev_stop, DWORD(data_size * bytes2time * 1000 + 1)) == WAIT_OBJECT_0)
+        return true;
       continue;
     }
   }

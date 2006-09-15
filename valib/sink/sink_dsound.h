@@ -1,15 +1,29 @@
 /*
+  DSoundSink
+  ==========
+
   DirectSound audio renderer (win32)
+  Implements PlaybackControl and Sink interfaces.
+
+  PlaybackContol interface must be thread-safe. Therefore we need to serialize
+  function calls. To serialize DirectSound usage 'dsound_lock' is used.
+
+  Blocking functions (process() and flush()) cannot take output lock for a long
+  time because it may block control thread and lead to deadlock. Therefore to
+  serialize playback functions 'playback_lock' is used.
+
+  stop() must force blocking functions to finish. To signal these functions to
+  unblock 'ev_stop' is used. Blocking functions must wait on this event and
+  stop execution immediately when signaled.
 */
 
-#ifndef SINK_DS_H
-#define SINK_DS_H
+#ifndef SINK_DSOUND_H
+#define SINK_DSOUND_H
 
 #include <dsound.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include "filter.h"
-#include "vtime.h"
 #include "renderer.h"
 #include "win32\thread.h"
 
@@ -50,17 +64,16 @@ protected:
   /////////////////////////////////////////////////////////
   // Threading
 
-  CritSec  lock;
+  mutable CritSec dsound_lock;
+  mutable CritSec playback_lock;
+  HANDLE  ev_stop;
 
   /////////////////////////////////////////////////////////
   // Resource allocation
 
-  void zero_all();
-  bool open(Speakers spk);
   bool open(WAVEFORMATEX *wfx);
   bool try_open(Speakers spk) const;
   bool try_open(WAVEFORMATEX *wf) const;
-  void close();
 
 public:
   DSoundSink(HWND hwnd, int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
@@ -70,6 +83,8 @@ public:
   // Own interface
 
   bool init(int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
+  bool open(Speakers spk);
+  void close();
 
   /////////////////////////////////////////////////////////
   // Playback control
