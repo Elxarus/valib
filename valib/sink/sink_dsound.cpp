@@ -6,15 +6,12 @@
 #define SAFE_RELEASE(p) { if (p) p->Release(); p = 0; }
 
 
-DSoundSink::DSoundSink(HWND _hwnd, int _buf_size_ms, int _preload_ms, LPCGUID _device)
+DSoundSink::DSoundSink()
 {
-  hwnd = _hwnd;
-  if (!hwnd) hwnd = GetForegroundWindow();
-  if (!hwnd) hwnd = GetDesktopWindow();
-
-  device       = _device;
-  buf_size_ms  = _buf_size_ms;
-  preload_ms   = _preload_ms;
+  hwnd         = 0;
+  device       = 0;
+  buf_size_ms  = 0;
+  preload_ms   = 0;
 
   spk          = spk_unknown;
   buf_size     = 0;
@@ -35,13 +32,32 @@ DSoundSink::DSoundSink(HWND _hwnd, int _buf_size_ms, int _preload_ms, LPCGUID _d
 DSoundSink::~DSoundSink()
 {
   close();
+  close_dsound();
+
   CloseHandle(ev_stop);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Resource allocation
+
 bool
-DSoundSink::init(int _buf_size_ms, int _preload_ms, LPCGUID _device)
+DSoundSink::open_dsound(HWND _hwnd, int _buf_size_ms, int _preload_ms, LPCGUID _device)
 {
-  close();
+  if (ds)
+    close_dsound();
+
+  // Open DirectSound
+
+  if FAILED(DirectSoundCreate(_device, &ds, 0))
+    return false;
+
+  if (!_hwnd) _hwnd = GetForegroundWindow();
+  if (!_hwnd) _hwnd = GetDesktopWindow();
+  if FAILED(ds->SetCooperativeLevel(_hwnd, DSSCL_PRIORITY))
+  {
+    SAFE_RELEASE(ds);
+    return false;
+  }
 
   buf_size_ms = _buf_size_ms;
   preload_ms = _preload_ms;
@@ -49,12 +65,18 @@ DSoundSink::init(int _buf_size_ms, int _preload_ms, LPCGUID _device)
   return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Resource allocation
+void
+DSoundSink::close_dsound()
+{
+  close();
+  if (ds)
+    SAFE_RELEASE(ds);
+}
 
 bool
 DSoundSink::open(Speakers _spk)
 {
+  if (!ds) return false;
   AutoLock autolock(&dsound_lock);
 
   WAVEFORMATEXTENSIBLE wfx;
@@ -94,19 +116,6 @@ DSoundSink::open(WAVEFORMATEX *wf)
   dsbdesc.dwBufferBytes = buf_size;
   dsbdesc.lpwfxFormat   = wf;
 
-  // Open DirectSound
-  if FAILED(DirectSoundCreate(device, &ds, 0))
-  {
-    SAFE_RELEASE(ds);
-    return false;
-  }
-
-  if FAILED(ds->SetCooperativeLevel(hwnd, DSSCL_PRIORITY))
-  {
-    SAFE_RELEASE(ds);
-    return false;
-  }
-
   // Try to create buffer with volume and pan controls
   if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf, 0)) 
   {
@@ -115,7 +124,6 @@ DSoundSink::open(WAVEFORMATEX *wf)
     if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf, 0))
     {
       SAFE_RELEASE(ds_buf);
-      SAFE_RELEASE(ds);
       return false;
     }
   }
@@ -150,7 +158,9 @@ DSoundSink::open(WAVEFORMATEX *wf)
 bool 
 DSoundSink::try_open(Speakers _spk) const
 {
-  // This function do not use shared DirectSound and
+  if (!ds) return false;
+
+  // This function do not use shared DirectSound buffer and
   // therefore we do not take any lock here.
 
   WAVEFORMATEXTENSIBLE wfx;
@@ -170,10 +180,9 @@ DSoundSink::try_open(Speakers _spk) const
 bool
 DSoundSink::try_open(WAVEFORMATEX *wf) const
 {
-  // This function do not use shared DirectSound and
+  // This function do not use shared DirectSound buffer and
   // therefore we do not take any lock here.
 
-  IDirectSound *test_ds = 0;
   IDirectSoundBuffer *test_ds_buf = 0;
 
   DWORD test_buf_size = wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000;
@@ -188,28 +197,19 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
   dsbdesc.dwBufferBytes = test_buf_size;
   dsbdesc.lpwfxFormat   = wf;
 
-  // Open DirectSound
-  if FAILED(DirectSoundCreate(device, &test_ds, 0))
-  {
-    SAFE_RELEASE(test_ds);
-    return false;
-  }
-
   // Try to create buffer with volume and pan controls
-  if FAILED(test_ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0)) 
+  if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0)) 
   {
     // Try to create buffer without volume and pan controls
     dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
-    if FAILED(test_ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0))
+    if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0))
     {
       SAFE_RELEASE(test_ds_buf);
-      SAFE_RELEASE(test_ds);
       return false;
     }
   }
 
   SAFE_RELEASE(test_ds_buf);
-  SAFE_RELEASE(test_ds);
   return true;
 }
 
@@ -235,7 +235,6 @@ DSoundSink::close()
   bytes2time   = 0.0;
 
   SAFE_RELEASE(ds_buf);
-  SAFE_RELEASE(ds);
 
   cur     = 0;
   time    = 0;

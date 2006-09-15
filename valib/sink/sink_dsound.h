@@ -76,13 +76,15 @@ protected:
   bool try_open(WAVEFORMATEX *wf) const;
 
 public:
-  DSoundSink(HWND hwnd, int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
+  DSoundSink();
   ~DSoundSink();
 
   /////////////////////////////////////////////////////////
   // Own interface
 
-  bool init(int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
+  bool open_dsound(HWND _hwnd, int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
+  void close_dsound();
+
   bool open(Speakers spk);
   void close();
 
