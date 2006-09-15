@@ -346,8 +346,9 @@ DSoundSink::stop()
     ds_buf->SetCurrentPosition(0);
   }
 
-  playing = false;
   cur = 0;
+  time = 0;
+  playing = false;
 
   ResetEvent(ev_stop);
 }
