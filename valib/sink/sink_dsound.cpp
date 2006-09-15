@@ -173,8 +173,8 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
   // This function do not use shared DirectSound and
   // therefore we do not take any lock here.
 
-  IDirectSound *test_ds;
-  IDirectSoundBuffer *test_ds_buf;
+  IDirectSound *test_ds = 0;
+  IDirectSoundBuffer *test_ds_buf = 0;
 
   DWORD test_buf_size = wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000;
   DWORD test_preload_size = wf->nBlockAlign * wf->nSamplesPerSec * preload_ms / 1000;
@@ -185,7 +185,7 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
   dsbdesc.dwSize        = sizeof(DSBUFFERDESC);
   dsbdesc.dwFlags       = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
   dsbdesc.dwFlags      |= DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLPAN;
-  dsbdesc.dwBufferBytes = buf_size;
+  dsbdesc.dwBufferBytes = test_buf_size;
   dsbdesc.lpwfxFormat   = wf;
 
   // Open DirectSound
@@ -196,11 +196,11 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
   }
 
   // Try to create buffer with volume and pan controls
-  if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0)) 
+  if FAILED(test_ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0)) 
   {
     // Try to create buffer without volume and pan controls
     dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
-    if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0))
+    if FAILED(test_ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0))
     {
       SAFE_RELEASE(test_ds_buf);
       SAFE_RELEASE(test_ds);
