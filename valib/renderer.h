@@ -10,60 +10,55 @@
 // do audio output and want to control it. Primary purpose is to use it in
 // conjunction with Sink interface in objects that implements audio playback.
 //
+// Note that PlaybackControl functions may be called from both control and
+// working threads when Sink functions can be called only from working thread.
+// Threrfore PlaybackControl functions must be thread-safe.
+//
 // Playback control functions
 // ==========================
 //
-// pause()
+// pause() [non-blocking]
 //   Pause audio playback. Do not close anything, just stop the playback. This
 //   call may block working thread if called from another thread. It must not
 //   block the thread it was called from therefore it may be also called from
 //   the working thread.
 //
 //   It may be called when playback was not actually started. In this case
-//   audio output shuold fill output buffer and stop without actually starting
-//   the playback. unpause() will actually start playback in this case.
+//   working thread should fill output buffer and stop without actually 
+//   starting the playback. unpause() will actually start playback in this
+//   case.
 //
 //   If pausing is not supported is_paused() must report unpaused state after
 //   this call.
 //
-// unpause()
+// unpause() [non-blocking]
 //   Continue paused playback. Do nothing if playback was not paused.
 //
-// is_paused()
-//   Report about current pause status. If pausing is not it must report
-//   unpaused state after pause().
+// is_paused() [non-blocking]
+//   Report about current pause status. If pausing is not supported it must
+//   report unpaused state after pause().
 //
-// stop()
-//   Immediately stop playback and drop buffered data. This function should
-//   not block either working nor control threads. If working theread
-//  (Sink interface) continues to receive audio data it should proceed and
-//  restart audio playback in the normal way. This function may not actually
-//  close audio output and free allocated resources. Primary purpose of this
-//  function is to drop buffered data and prepare to continue playback of a
-//  new stream and/or from a new position.
+// stop() [non-blocking]
+//   Immediately stop playback and drop buffered data. Primary purpose of this
+//   function is to drop buffered data and prepare to continue playback of a
+//   new stream and/or from a new position. This function shuold not actually
+//   close audio output, just stop playback.
 //
-// flush()
-//   Wait until all buffered data is played and stop playback. This function
-//   blocks until the end of playback. This function may use stop() to finish
-//   audio playback. Sink::process() should use this function after receiving
-//   eos-chunk. Implementation example:
+//   All functions blocked on plyback (flush(), Sink::process()) must unblock
+//   and return normally (it is not an error condition) without processing of
+//   data remaining to process.
 //
-//   void Renderer::flush()
-//   {
-//     int buffered_ms = (int)(get_buffered_time() * 1000);
-//     Sleep(buffered_ms);
-//     stop();
-//   }
+//   Sink::set_input() may use this function to stop current playback before
+//   opening of a new stream.
 //
-//   void Renderer::process(const *Chunk _chunk)
-//   {
-//     // Do audio output
-//     ......
+// flush() [blocking]
+//   Wait until all buffered data is played and stop playback. Purpose of this
+//   function is to finish playback correctly without loosing buffered tail.
+//   This function blocks until the end of playback. This function may use
+//   stop() to finish audio playback. Sink::process() may use this function
+//   after receiving eos-chunk.
 //
-//     // Flushing
-//     if (_chunk->eos)
-//       flush();
-//   }
+//   This function must exit immediately on stop() call.
 //
 // Timing and buffering
 // ====================
