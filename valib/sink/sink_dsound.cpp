@@ -1,7 +1,3 @@
-#include <dsound.h>
-#include <mmreg.h>
-#include <ks.h>
-#include <ksmedia.h>
 #include <math.h>
 #include "sink_dsound.h"
 #include "win32\winspk.h"
