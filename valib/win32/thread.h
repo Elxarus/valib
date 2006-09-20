@@ -34,6 +34,7 @@ public:
   virtual void terminate(int timeout_ms = 1000, DWORD exit_code = 0);
 
   HANDLE handle()        const { return f_thread; }
+  DWORD  thread_id()     const { return f_threadId; }
   bool   thread_exists() const { return f_thread != 0; }
   bool   terminating()   const { return f_terminate; }
   bool   suspended()     const { return f_thread? f_suspended: true; }
