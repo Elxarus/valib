@@ -10,6 +10,37 @@ DEFINE_GUID(MEDIASUBTYPE_AVI_AC3,
 DEFINE_GUID(MEDIASUBTYPE_AVI_DTS, 
 0x00002001, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
+///////////////////////////////////////////////////////////////////////////////
+// Speakers class format can be converted to DirectShow media type in number
+// of ways because of media type redundancy and ambiguity. But each media type
+// defines exactly one format. (One-to-many relation)
+//
+// Therefore we can convert media type to Speakers unambiguously but have to
+// enumerate media types when converting from Speakers to media type.
+//
+// Also we cannot compare Speakers and media type and have to enumerate all
+// possible conversions.
+//
+// To convert Speakers to media type following variations are used:
+//
+// 1) for PCM formats:
+//    Media type:    MEDIATYPE_Audio
+//    Media subtype: MEDIASUBTYPE_PCM
+// 1.1) Wave format tag: WAVE_FORMAT_PCM / WAVE_FORMAT_IEEE_FLOAT
+// 1.1) Wave format tag: WAVE_FORMAT_EXTENSIBLE
+//      Subformat: KSDATAFORMAT_SUBTYPE_PCM / KSDATAFORMAT_SUBTYPE_IEEE_FLOAT
+//
+// 2) for SPDIF format:
+// 2.1) Media type:      MEDIATYPE_Audio
+//      Media subtype:   MEDIASUBTYPE_DOLBY_AC3_SPDIF
+//      Wave format tag: WAVE_FORMAT_DOLBY_AC3_SPDIF
+// 2.2) Media type:      MEDIATYPE_Audio
+//      Media subtype:   MEDIASUBTYPE_PCM
+//      Wave format tag: WAVE_FORMAT_DOLBY_AC3_SPDIF
+//
+// Extensible format is not used for SPDIF...
+// Other formats (MPA, AC3, etc) are not used currently.
+
 bool mt2spk(CMediaType mt, Speakers &spk)
 {
   int sample_rate = 0;
@@ -77,14 +108,30 @@ bool mt2spk(CMediaType mt, Speakers &spk)
 bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx)
 {
   WAVEFORMATEXTENSIBLE wfx;
-  if (!spk2wfx(spk, (WAVEFORMATEX *)&wfx, use_wfx))
-    return false;
 
-  mt.SetType(&MEDIATYPE_Audio);
   if (spk.format == FORMAT_SPDIF)
-    mt.SetSubtype(&MEDIASUBTYPE_DOLBY_AC3_SPDIF);
+  {
+    // SPDIF media types
+
+    mt.SetType(&MEDIATYPE_Audio);
+    if (!spk2wfx(spk, (WAVEFORMATEX *)&wfx, false))
+      return false;
+
+    if (use_wfx)
+      mt.SetSubtype(&MEDIASUBTYPE_PCM);
+    else
+      mt.SetSubtype(&MEDIASUBTYPE_DOLBY_AC3_SPDIF);
+  }
   else
+  {
+    // PCM Media types
+
+    mt.SetType(&MEDIATYPE_Audio);
     mt.SetSubtype(&MEDIASUBTYPE_PCM);
+    if (!spk2wfx(spk, (WAVEFORMATEX *)&wfx, use_wfx))
+      return false;
+  }
+
   mt.SetFormatType(&FORMAT_WaveFormatEx);
   mt.SetFormat((BYTE*)&wfx, sizeof(WAVEFORMATEX) + wfx.Format.cbSize);
   return true;
