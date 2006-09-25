@@ -14,6 +14,7 @@
 #include "filters\spdifer.h"
 
 #include "sink\sink_raw.h"
+#include "sink\sink_wav.h"
 #include "sink\sink_dsound.h"
 
 #include "win32\cpu.h"
@@ -119,6 +120,7 @@ int main(int argc, char *argv[])
            "    -d[ecode] - just decode (used for testing and performance measurements)\n"
            "    -p[lay]   - play file (*)\n"
            "    -r[aw]    - decode to RAW file\n"
+           "    -w[av]    - decode to WAV file\n"
            "    -n[othing]- do nothing (to be used with -i option)\n"
            "  \n"
            "  output options:\n"
@@ -172,7 +174,7 @@ int main(int argc, char *argv[])
   }
 
   const char *input_filename = argv[1];
-  enum { mode_undefined, mode_nothing, mode_play, mode_raw, mode_decode } mode = mode_undefined;
+  enum { mode_undefined, mode_nothing, mode_play, mode_raw, mode_wav, mode_decode } mode = mode_undefined;
 
   bool spdif = false;
   int imask = 2;
@@ -210,8 +212,11 @@ int main(int argc, char *argv[])
   // Sinks
   /////////////////////////////////////////////////////////
 
+  const char *out_filename = 0;
+
   RAWSink    raw;
-  DSoundSink dsound(0);
+  WAVSink    wav;
+  DSoundSink dsound;
   NullSink   null;
 
   Sink *sink = &dsound;
@@ -326,16 +331,32 @@ int main(int argc, char *argv[])
         return 1;
       }
 
-      const char *filename = argv[++iarg];
-      if (!raw.open(filename))
-      {
-        printf("Error: failed to open file '%s'", filename);
-        return 1;
-      }
-
+      out_filename = argv[++iarg];
       sink = &raw;
       control = 0;
       mode = mode_raw;
+      continue;
+    }
+
+    // -w[av] - WAV output
+    if (is_arg(argv[iarg], "w", argt_exist) ||
+        is_arg(argv[iarg], "wav", argt_exist))
+    {
+      if (argc - iarg < 1)
+      {
+        printf("-wav : specify a file name\n");
+        return 1;
+      }
+      if (mode != mode_undefined)
+      {
+        printf("-wav : ambigous output mode\n");
+        return 1;
+      }
+
+      out_filename = argv[++iarg];
+      sink = &wav;
+      control = 0;
+      mode = mode_wav;
       continue;
     }
 
@@ -613,8 +634,6 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  Speakers spk;
-
   /////////////////////////////////////////////////////////
   // Open file
   /////////////////////////////////////////////////////////
@@ -655,10 +674,12 @@ int main(int argc, char *argv[])
   // Setup processing
   /////////////////////////////////////////////////////////
 
-  // spk = input format
-
-  spk = file.get_spk();
-  spk.format = FORMAT_LINEAR;
+  Speakers in_spk;
+  Speakers out_spk;
+  
+  in_spk = file.get_spk();
+  in_spk.format = FORMAT_LINEAR;
+  out_spk = in_spk;
 
   if (spdif)
   {
@@ -670,7 +691,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      spk.format = FORMAT_SPDIF;
+      out_spk.format = FORMAT_SPDIF;
       filter = &spdifer;
     }
   }
@@ -685,28 +706,27 @@ int main(int argc, char *argv[])
     proc.set_input_order(std_order);
     proc.set_output_order(win_order);
 
-    if (!proc.set_input(spk))
+    if (!proc.set_input(in_spk))
     {
       printf("Error: unsupported input format");
       return 1;
     }
 
     if (imask)
-      spk.mask = mask_tbl[imask];
+      out_spk.mask = mask_tbl[imask];
 
-    spk.format = format_tbl[iformat];
-    spk.level = level_tbl[iformat];
+    out_spk.format = format_tbl[iformat];
+    out_spk.level = level_tbl[iformat];
 
-    if (!proc.set_user(spk))
+    if (!proc.set_user(out_spk))
     {
       printf("Error: unsupported output format");
       return 1;
     }
-    if (spk != proc.get_output())
+
+    if (out_spk != proc.get_output())
       printf("Warning: using different output format\n");
   }
-
-  // spk = output format
 
   /////////////////////////////////////////////////////////
   // Print processing options
@@ -720,8 +740,29 @@ int main(int argc, char *argv[])
   // Setup output
   /////////////////////////////////////////////////////////
 
-  printf("Opening %s %s %iHz audio output...\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
-  if (!sink->set_input(spk))
+  printf("Opening %s %s %iHz audio output...\n", out_spk.format_text(), out_spk.mode_text(), out_spk.sample_rate);
+  switch (mode)
+  {
+    case mode_raw:
+      if (!out_filename || !raw.open(out_filename))
+      {
+        printf("Error: failed to open file '%s'", out_filename);
+        return 1;
+      }
+      break;
+
+    case mode_wav:
+      if (!out_filename || !wav.open(out_filename, out_spk))
+      {
+        printf("Error: failed to open file '%s'", out_filename);
+        return 1;
+      }
+      break;
+
+    // do nothing for other modes
+  }
+
+  if (!sink->set_input(out_spk))
   {
     printf("Error: Cannot open audio output!");
     return 1;
@@ -757,9 +798,9 @@ int main(int argc, char *argv[])
         if (!file.decode_frame())
           continue;
 
-        spk = file.get_spk();
-        spk.format = FORMAT_LINEAR;
-        chunk.set_linear(spk, file.get_samples(), file.get_nsamples());
+        in_spk = file.get_spk();
+        in_spk.format = FORMAT_LINEAR;
+        chunk.set_linear(in_spk, file.get_samples(), file.get_nsamples());
       }
 
       /////////////////////////////////////////////////////
@@ -803,10 +844,7 @@ int main(int argc, char *argv[])
   /////////////////////////////////////////////////////
   // Flushing
 
-  if (spdif)
-    chunk.set_empty(Speakers(FORMAT_UNKNOWN, 0, 0));
-  else
-    chunk.set_empty(spk);
+  chunk.set_empty(in_spk);
   chunk.eos = true;
 
   if (!filter->process_to(&chunk, sink))
