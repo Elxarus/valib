@@ -542,6 +542,14 @@ SOURCE=..\valib\sink\sink_dsound.h
 
 SOURCE=..\valib\sink\sink_raw.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink\sink_wav.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink\sink_wav.h
+# End Source File
 # End Group
 # Begin Group "win32"
 
