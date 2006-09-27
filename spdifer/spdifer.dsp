@@ -85,11 +85,23 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\valib\auto_file.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\bitstream.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\bitstream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\crc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\defs.h
 # End Source File
 # Begin Source File
 
@@ -102,6 +114,14 @@ SOURCE=..\valib\source\raw_source.h
 # Begin Source File
 
 SOURCE=..\valib\sink\sink_raw.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink\sink_wav.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink\sink_wav.h
 # End Source File
 # Begin Source File
 
@@ -121,6 +141,10 @@ SOURCE=..\valib\spk.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\sync.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\syncscan.cpp
 # End Source File
 # Begin Source File
@@ -134,6 +158,14 @@ SOURCE=..\valib\vtime.cpp
 # Begin Source File
 
 SOURCE=..\valib\vtime.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\win32\winspk.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\win32\winspk.h
 # End Source File
 # End Group
 # Begin Source File
