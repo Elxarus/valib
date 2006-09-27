@@ -37,8 +37,13 @@ DEFINE_GUID(MEDIASUBTYPE_AVI_DTS,
 // 2.2) Media type:      MEDIATYPE_Audio
 //      Media subtype:   MEDIASUBTYPE_PCM
 //      Wave format tag: WAVE_FORMAT_DOLBY_AC3_SPDIF
+//      This format is used by DivX Player. It does not understand any other
+//      SPDIF format
 //
-// Extensible format is not used for SPDIF...
+// Extensible format is not used for SPDIF because I wanted to make as small
+// changes as possible. Enumerating of all possible SPDIF formats will require
+// much more changes.
+//
 // Other formats (MPA, AC3, etc) are not used currently.
 
 bool mt2spk(CMediaType mt, Speakers &spk)
