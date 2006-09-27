@@ -5,6 +5,7 @@
 #include "filters\spdifer.h"
 #include "source\raw_source.h"
 #include "sink\sink_raw.h"
+#include "sink\sink_wav.h"
 #include "vtime.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,13 +23,13 @@ int main(int argc, const char **argv)
   {
     printf("Spdifer\n"
            "Encapsulates AC3/DTS/MPEG Audio stream into SPDIF according to IEC 61937\n"
-           "This utility is part of AC3Filter project (http://ac3filter.sourceforge.net)\n"
+           "This utility is part of AC3Filter project (http://ac3filter.net)\n"
            "Copyright (c) 2006 by Alexander Vigovsky\n\n");
 
     printf("Usage:\n"
-           "  Spdifer input_file output_file\n"
+           "  spdifer input_file output_file [options]\n"
            "\n"
-           "You may use a fictive file name - to indicate standard input/output.\n"
+           "You may use a fictive file name '-' to indicate standard input/output.\n"
            "Examples:\n"
            "  > spdifer file.ac3 file.ac3.spdif transform file.ac3 to file.ac3.spdif\n"
            "  > spdifer file.ac3 -              transform file.ac3 to standard output\n"
