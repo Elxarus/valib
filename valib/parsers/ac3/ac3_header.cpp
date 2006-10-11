@@ -37,7 +37,7 @@ static const int acmod2mask_tbl[] =
 };
 
 bool
-AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *h) const
+AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 {
   int fscod;
   int frmsizecod;
@@ -57,7 +57,7 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *h) const
     if (hdr[5] >= 0x60)         return false;   // 'bsid'
     if ((hdr[4] & 0x3f) > 0x25) return false;   // 'frmesizecod'
     if ((hdr[4] & 0xc0) > 0x80) return false;   // 'fscod'
-    if (!h) return true;
+    if (!hinfo) return true;
 
     fscod      = hdr[4] >> 6;
     frmsizecod = hdr[4] & 0x3f;
@@ -72,7 +72,7 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *h) const
     halfrate   = halfrate_tbl[hdr[5] >> 3];
     bitrate    = bitrate_tbl[frmsizecod >> 1];
 
-    h->bs_type = BITSTREAM_8;
+    hinfo->bs_type = BITSTREAM_8;
   }
   /////////////////////////////////////////////////////////
   // 16 bit low endian stream sync
@@ -82,7 +82,7 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *h) const
     if (hdr[4] >= 0x60)         return false;   // 'bsid'
     if ((hdr[5] & 0x3f) > 0x25) return false;   // 'frmesizecod'
     if ((hdr[5] & 0xc0) > 0x80) return false;   // 'fscod'
-    if (!h) return true;
+    if (!hinfo) return true;
 
     fscod      = hdr[5] >> 6;
     frmsizecod = hdr[5] & 0x3f;
@@ -97,7 +97,7 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *h) const
     halfrate   = halfrate_tbl[hdr[4] >> 3];
     bitrate    = bitrate_tbl[frmsizecod >> 1];
 
-    h->bs_type = BITSTREAM_16LE;
+    hinfo->bs_type = BITSTREAM_16LE;
   }
   else
     return false;
@@ -105,23 +105,23 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *h) const
   switch (fscod) 
   {
     case 0:    
-      h->frame_size = 4 * bitrate;
+      hinfo->frame_size = 4 * bitrate;
       sample_rate = 48000 >> halfrate;
       break;
 
     case 1: 
-      h->frame_size = 2 * (320 * bitrate / 147 + (frmsizecod & 1));
+      hinfo->frame_size = 2 * (320 * bitrate / 147 + (frmsizecod & 1));
       sample_rate = 44100 >> halfrate;
       break;
 
     case 2: 
-      h->frame_size = 6 * bitrate;
+      hinfo->frame_size = 6 * bitrate;
       sample_rate = 32000 >> halfrate;
   }
 
-  h->spk = Speakers(FORMAT_AC3, acmod2mask_tbl[acmod], sample_rate, 1.0, dolby);
-  h->nsamples = 1536;
-  h->spdif_type = 1; // SPDIF Pc burst-info (data type = AC3) 
+  hinfo->spk = Speakers(FORMAT_AC3, acmod2mask_tbl[acmod], sample_rate, 1.0, dolby);
+  hinfo->nsamples = 1536;
+  hinfo->spdif_type = 1; // SPDIF Pc burst-info (data type = AC3) 
   return true;
 }
 
