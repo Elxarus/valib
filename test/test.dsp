@@ -184,6 +184,10 @@ SOURCE=.\test_spdifer.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_streambuf.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_syncer.cpp
 # End Source File
 # End Group
@@ -323,6 +327,14 @@ SOURCE=..\valib\parsers\ac3\ac3_enc.cpp
 # Begin Source File
 
 SOURCE=..\valib\parsers\ac3\ac3_enc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\ac3\ac3_header.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\ac3\ac3_header.h
 # End Source File
 # Begin Source File
 

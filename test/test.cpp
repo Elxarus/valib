@@ -6,6 +6,7 @@
 int test_general(Log *log);
 int test_crc(Log *log);
 int test_syncer(Log *log);
+int test_streambuffer(Log *log);
 
 int test_null(Log *log);
 int test_rules(Log *log);
@@ -33,6 +34,7 @@ int main(int argc, char **argv)
 
   test_crc(&log);
   test_syncer(&log);
+  test_streambuffer(&log);
 
   test_crash(&log);
 

@@ -10,6 +10,248 @@
 #include "syncscan.h"
 #include "bitstream.h"
 
+struct HeaderInfo;
+class HeaderParser;
+class FrameParser;
+
+class StreamBuffer;
+class ParserBuffer;
+
+///////////////////////////////////////////////////////////////////////////////
+// HeaderParser
+// HeaderInfo
+//
+// Abstract interface for scanning and detecting compressed stream and header
+// information structure.
+//
+// Sometimes we need to scan the stream without actually decoding. Of course, 
+// parser can do this, but we don't need most of its features, buffers, tables,
+// etc in this case. For example, application that just detects format of
+// compressed stream will contain all code required to decode it and create
+// unneeded memory buffers. To avoid this we need a lightweight interface to
+// work only with frame headers.
+//
+// Header parser is a class without internal state, just a set of functoins.
+// Therefore we may create one constant class and use it everywhere. For
+// example frame parser should return header parser that corresponds to given
+// frame parser.
+//
+// General syncronization scan procedure:
+// * load enough data to parse header (header_size() call)
+// * check that this syncword points to correct frame header (frame_size() call)
+// * determine frame size and find next syncword after (frame_size() call)
+// * ensure that both syncwords belong to the same stream (compare_headers())
+//
+///////////////////////////////////////////////////////////////////////////////
+// HeaderInfo
+//
+// spk
+//   Format of the stream. If header was parsed correctly it must not be equal
+//   to FORMAT_UNKNOWN.
+//
+// frame_size
+//   Frame size (including the header):
+//   0  - frame size is unknown (free format stream)
+//   >0 - correct header, frame size is returned
+//
+// nsamples
+//   Number of samples at the given frame.
+//
+//   We can derive current bitrate from frame size, stream format and number of
+//   samples: bitrate = spk.sample_rate * frame_size * 8 / nsamples;
+//
+// bs_type
+//   Bitstream type. BITSTREAM_XXXX constants (see bitstream.h).
+//
+// spdif_type
+//   If given format is spdifable it defines spdif packet type (Pc burst-info).
+//   Zero otherwise. This field may be used to determine spdifable format.
+//
+///////////////////////////////////////////////////////////////////////////////
+// HeaderParser
+//
+// header_size()
+//   Minimum number of bytes required to parse header.
+//
+// min_frame_size()
+//   Minimum frame size possible. Must be >= header size.
+//
+// max_frame_size()
+//   Maximum frame size possible. Must be >= minimum frame size.
+//   Note that for spdifable formats we must take in account maximum spdif
+//   frame size to be able to parse spdif-padded format.
+//
+// parse_header()
+//   Parse header and write header information.
+//
+//   Size of header buffer given must be >= header_size() (it is not verified
+//   and may lead to memory fault).
+//
+// compare_headers()
+//   Veryfy that both headers belong to the same stream. Some compressed formats
+//   may determine stream changes with some additional header info (not only
+//   frame size and stream format). Given headers must be correct headers
+//   (checked with frame_size() call). This call may not do all headers checks.
+//   Note that when headers are equal, format of both headers must be same:
+//
+//   parse_header(phdr1, hdr1);
+//   parse_header(phdr2, hdr2);
+//   if (compare_headers(phdr1, phdr2)
+//   {
+//     assert(hdr1.spk == hdr2.spk);
+//     assert(hdr1.bs_type == hdr2.bs_type);
+//     assert(hdr1.spdif_type == hdr2.spdif_type);
+//     // frame size may differ for variable bitrate
+//     // nsamples - ?
+//   }
+//
+//   Size of header buffers given must be >= header_size() (it is not verified
+//   and may lead to memory fault).
+//
+// header_info()
+//   Dump stream information that may be useful to track problems. Default
+//   implementation shows HeaderInfo parameters.
+//
+//   Size of header buffer given must be >= header_size() (it is not verified
+//   and may lead to memory fault).
+
+struct HeaderInfo
+{
+  Speakers spk;
+  size_t   frame_size;
+  size_t   nsamples;
+  int      bs_type;
+  uint16_t spdif_type;
+
+  HeaderInfo(): 
+    spk(spk_unknown),
+    frame_size(0),
+    nsamples(0),
+    bs_type(0),
+    spdif_type(0) {};
+
+  inline void drop()
+  {
+    spk        = spk_unknown;
+    frame_size = 0;
+    nsamples   = 0;
+    bs_type    = 0;
+    spdif_type = 0;
+  }
+};
+
+class HeaderParser
+{
+public:
+  HeaderParser() {};
+  virtual ~HeaderParser() {};
+
+  virtual size_t   header_size() const = 0;
+  virtual size_t   min_frame_size() const = 0;
+  virtual size_t   max_frame_size() const = 0;
+
+  virtual bool     parse_header(const uint8_t *hdr, HeaderInfo *h = 0) const = 0;
+  virtual bool     compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
+  virtual size_t   header_info(const uint8_t *hdr, char *buf, size_t size) const;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// StreamBuffer
+//
+// Implements stream scanning algorithm. This includes reliable syncronization
+// algorithm with 3 consecutive syncpoints and frame load algorithn. May be
+// used when we need:
+// * reliable stream syncronization
+// * frame-based stream walk
+//
+// It is a difference between the size of frame and frame interval. Frame
+// intercal is a distance between consecutive syncpoints. Frame size is size of
+// frame data. Frame interval may be larger than frame size because of SPDIF
+// padding for example.
+//
+// We can parse 2 types of streams: streams with frame size known from the
+// header and streams with unknown frame size.
+//
+// For known frame size we load only known frame data and all other data is
+// skipped. Frame interval is known only after successful frame load and it is
+// a distance between *previous* frame header and current frame's header.
+//
+// To detect stream changes we search for new stream header after the end of
+// the frame laoded. If we cannot find a header of the same stream before
+// maximum frame size we do resync.
+//
+// For unknown frame size frame interval is constant and determined at stream
+// syncronization procedure. We always load all frame interval data therefore
+// frame size and frame interval are always equal in this case and stream is
+// known to be of constant bitrate.
+//
+// If header of the same stream is not found exactly after the end of loaded
+// frame we do resync.
+
+class StreamBuffer
+{
+protected:
+  DataBuf       buf;
+
+  // Header-related info
+
+  const HeaderParser *hparser;   // header parser
+  HeaderInfo    hdr;             // header info
+
+  size_t        header_size;     // cached header size
+  size_t        min_frame_size;  // cached min frame size
+  size_t        max_frame_size;  // cached max frame size
+
+  // Flags
+
+  bool in_sync;                  // we're in sync with the stream
+  bool new_stream;               // frame loaded belongs to a new stream
+  bool frame_loaded;             // frame is loaded
+
+  // Frame-related info
+
+  uint8_t *frame;                // pointer to the start of the frame buffer
+  size_t   frame_data;           // data loaded to the frame buffer
+  size_t   frame_size;           // size of the frame loaded
+  size_t   frame_interval;       // frame interval
+
+  bool sync(uint8_t **data, uint8_t *data_end);
+
+public:
+  StreamBuffer();
+  StreamBuffer(const HeaderParser *hparser);
+  virtual ~StreamBuffer();
+
+  bool set_hparser(const HeaderParser *hparser);
+  const HeaderParser *get_hparser() const { return hparser; }
+
+  void reset();
+  bool load_frame(uint8_t **data, uint8_t *end);
+
+  bool is_in_sync()             const { return in_sync;      }
+  bool is_new_stream()          const { return new_stream;   }
+  bool is_frame_loaded()        const { return frame_loaded; }
+
+  Speakers get_spk()            const { return hdr.spk;        }
+  uint8_t *get_frame()          const { return frame;          }
+  size_t   get_frame_size()     const { return frame_size;     }
+  size_t   get_frame_interval() const { return frame_interval; }
+
+  size_t   stream_info(char *buf, size_t size) const;
+};
+
+
+
+
+
+
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Parser
 //
