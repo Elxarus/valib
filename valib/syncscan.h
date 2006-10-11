@@ -361,7 +361,8 @@
     if (!scanner.get_sync(frame_buf))
     {
       gone = scanner.scan(frame_buf, input_buf, input_size);
-      input_buf += gone;
+      input_buf  += gone;
+      input_size -= gone;
       if (!scanner.get_sync(frame_buf))
       {
         // no syncpoint
