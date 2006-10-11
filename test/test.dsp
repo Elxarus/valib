@@ -374,6 +374,14 @@ SOURCE=..\valib\parsers\mpa\mpa_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\parsers\mpa\mpa_header.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\mpa\mpa_header.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parsers\mpa\mpa_parser.cpp
 # End Source File
 # Begin Source File
@@ -403,6 +411,14 @@ SOURCE=..\valib\parsers\mpa\mpa_tables.h
 # Begin Source File
 
 SOURCE=..\valib\parsers\dts\dts_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\dts\dts_header.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\dts\dts_header.h
 # End Source File
 # Begin Source File
 

@@ -7,8 +7,9 @@
 #include "win32\cpu.h"
 
 #include "parsers\ac3\ac3_header.h"
-//#include "parsers\dts\dts_header.h"
-//#include "parsers\mpa\mpa_header.h"
+#include "parsers\dts\dts_header.h"
+#include "parsers\mpa\mpa_header.h"
+#include "parsers\uni_header.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test constants
@@ -22,29 +23,43 @@ static const int noise_size = 10000000;   // noise speed test buffer size
 class StreamBuffer_test
 {
 protected:
-  StreamBuffer syncbuf;
+  StreamBuffer streambuf;
   Log *log;
 
 public:
-  StreamBuffer_test(Log *_log, const HeaderParser *_hparser)
+  StreamBuffer_test(Log *_log)
   {
     log = _log;
-    syncbuf.set_hparser(_hparser);
   }
 
   int test()
   {
     log->open_group("StreamBuffer test");
-    speed_noise();
-    speed_file("a.ac3.03f.ac3", 1, 375);
-    speed_file("a.ac3.03f.spdif", 1, 375);
-    speed_file("a.ac3.mix.ac3", 3, 1500);
-    speed_file("a.ac3.mix.spdif", 3, 1500);
+    speed_noise(&ac3_header);
+
+    speed_file("a.mp2.002.mp2",   &mpa_header, 1, 500);
+    speed_file("a.mp2.005.mp2",   &mpa_header, 1, 500);
+    speed_file("a.mp2.mix.mp2",   &mpa_header, 3, 1500);
+    speed_file("a.mp2.005.spdif", &mpa_header, 1, 500);
+
+    speed_file("a.ac3.005.ac3",   &ac3_header, 1, 375);
+    speed_file("a.ac3.03f.ac3",   &ac3_header, 1, 375);
+    speed_file("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
+    speed_file("a.ac3.03f.spdif", &ac3_header, 1, 375);
+
+    speed_file("a.dts.03f.dts",   &dts_header, 1, 1125);
+    speed_file("a.dts.03f.spdif", &dts_header, 1, 1125);
+
+    speed_file("a.mad.mix.mad",   &uni_header, 7, 4375);
+    speed_file("a.mad.mix.spdif", &uni_header, 7, 4375);
+
     return log->close_group();
   }
 
-  int speed_noise()
+  int speed_noise(const HeaderParser *hparser)
   {
+    streambuf.set_hparser(hparser);
+
     CPUMeter cpu;
     Chunk chunk;
     Noise noise(spk_unknown, noise_size, noise_size);
@@ -60,7 +75,7 @@ public:
       // Try to load a frame
       uint8_t *ptr = chunk.rawdata;
       uint8_t *end = ptr + chunk.size;
-      if (syncbuf.load_frame(&ptr, end))
+      if (streambuf.load_frame(&ptr, end))
         return log->err("Syncronized on noise!");
 
       // Ensure that all data was gone
@@ -75,12 +90,14 @@ public:
     return 0;
   }
 
-  int speed_file(const char *filename, int file_streams, int file_frames)
+  int speed_file(const char *filename, const HeaderParser *hparser, int file_streams, int file_frames)
   {
     CPUMeter cpu;
     AutoFile f(filename);
     if (!f.is_open())
       return log->err("Cannot open file %s", filename);
+
+    streambuf.set_hparser(hparser);
 
     size_t buf_size = f.size();
     uint8_t *buf = new uint8_t[buf_size];
@@ -99,13 +116,13 @@ public:
       // Process the whole file
       uint8_t *ptr = buf;
       uint8_t *end = ptr + buf_size;
-      syncbuf.reset();
+      streambuf.reset();
       while (1)
       {
-        if (syncbuf.load_frame(&ptr, end))
+        if (streambuf.load_frame(&ptr, end))
         {
           frames++;
-          if (syncbuf.is_new_stream())
+          if (streambuf.is_new_stream())
             streams++;
         }
         else if (ptr >= end)
@@ -135,6 +152,6 @@ public:
 
 int test_streambuffer(Log *log)
 {
-  StreamBuffer_test test(log, &ac3_header);
+  StreamBuffer_test test(log);
   return test.test();
 }
