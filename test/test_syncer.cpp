@@ -44,7 +44,7 @@ static bool mpa_be_sync(const uint8_t *_buf)
   if ((_buf[0] == 0xff)         && // sync
      ((_buf[1] & 0xf0) == 0xf0) && // sync
      ((_buf[1] & 0x06) != 0x00) && // layer
-     ((_buf[2] & 0xf0) != 0xf0) && // biterate
+     ((_buf[2] & 0xf0) != 0xf0) && // bitrate
      ((_buf[2] & 0x0c) != 0x0c))   // sample rate
     return true;
   else
