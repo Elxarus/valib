@@ -157,6 +157,74 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// FrameParser
+//
+// Interface for frame decoding. Unlike HeaderParser interface FrameParser has
+// an internal state and must receive frames in correct order because frames in
+// a stream are almost always related with each other. To prepare parser to
+// receive a new stream and set it into initial state we must call reset().
+// We should reset frame parser with new stream detected by header parser.
+//
+// All other things are very strightforward: we load a frame with help of
+// HeaderParser and give the frame loaded to FrameParser. FrameParser decodes
+// it and stores decoded data at internal buffer accessible through its
+// interface.
+//
+// parse_frame() should not fail with all detected stream errors if error
+// detected is handled with a kind of restoration procedure that produces some
+// output.
+//
+// header_parser()
+//   Returns header parser corresponding to this parser
+//
+// reset()
+//   Set parser into initial state. Drop all internal buffers and state
+//   variables.
+//
+// parse_frame()
+//   Parse next frame of a stream and load output buffer.
+//
+// get_spk()
+//   Format of decoded stream. Must be correct linear format after successful
+//   parse_frame() call.
+//
+// get_samples()
+//   Returns pointers to samples.
+//
+// get_nsamples()
+//   Numer of samples stored at samples buffer.
+//
+// stream_info()
+//   Dump stream information. It may be more informative than header info but
+//   should contain only stream-wide information (that does not change from
+//   frame to frame).
+//
+// frame_info()
+//   Dump frmae information. Most detailed information for sertain frame. May
+//   not include info dumped with stream_info() call.
+
+class FrameParser
+{
+public:
+  FrameParser() {};
+  virtual ~FrameParser() {};
+
+  virtual const HeaderParser *header_parser() = 0;
+
+  virtual void reset();
+  virtual bool parse_frame(uint8_t *frame, size_t size) = 0;
+
+  virtual Speakers  get_spk() = 0;
+  virtual samples_t get_samples() = 0;
+  virtual size_t    get_nsamples() = 0;
+
+  virtual size_t stream_info(char *buf, size_t size) const = 0;
+  virtual size_t frame_info(char *buf, size_t size) const = 0;
+};
+
+
+
+///////////////////////////////////////////////////////////////////////////////
 // StreamBuffer
 //
 // Implements stream scanning algorithm. This includes reliable syncronization
