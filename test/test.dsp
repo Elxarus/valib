@@ -330,6 +330,14 @@ SOURCE=..\valib\parsers\ac3\ac3_enc.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\parsers\ac3\ac3_frame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\ac3\ac3_frame.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parsers\ac3\ac3_header.cpp
 # End Source File
 # Begin Source File
@@ -455,11 +463,11 @@ SOURCE=..\valib\parsers\dts\dts_tables_vq.h
 # End Group
 # Begin Source File
 
-SOURCE=..\valib\parsers\file_parser.cpp
+SOURCE=..\valib\parsers\uni_header.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\file_parser.h
+SOURCE=..\valib\parsers\uni_header.h
 # End Source File
 # End Group
 # Begin Group "sink"

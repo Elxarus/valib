@@ -31,6 +31,10 @@ class ParserBuffer;
 // unneeded memory buffers. To avoid this we need a lightweight interface to
 // work only with frame headers.
 //
+// Therefore implementation of HeaderParser should be separated from other
+// parser parts so we can use it alone. Ideally it should be 2 files (.h and
+// .cpp) without other files required.
+//
 // Header parser is a class without internal state, just a set of functoins.
 // Therefore we may create one constant class and use it everywhere. For
 // example frame parser should return header parser that corresponds to given
@@ -211,12 +215,12 @@ public:
 
   virtual const HeaderParser *header_parser() = 0;
 
-  virtual void reset();
+  virtual void reset() = 0;
   virtual bool parse_frame(uint8_t *frame, size_t size) = 0;
 
-  virtual Speakers  get_spk() = 0;
-  virtual samples_t get_samples() = 0;
-  virtual size_t    get_nsamples() = 0;
+  virtual Speakers  get_spk() const = 0;
+  virtual samples_t get_samples() const = 0;
+  virtual size_t    get_nsamples() const = 0;
 
   virtual size_t stream_info(char *buf, size_t size) const = 0;
   virtual size_t frame_info(char *buf, size_t size) const = 0;
