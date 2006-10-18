@@ -268,7 +268,7 @@ protected:
 
   // Header-related info
 
-  const HeaderParser *hparser;   // header parser
+  const HeaderParser *parser;    // header parser
   HeaderInfo    hdr;             // header info
 
   size_t        header_size;     // cached header size
@@ -295,8 +295,8 @@ public:
   StreamBuffer(const HeaderParser *hparser);
   virtual ~StreamBuffer();
 
-  bool set_hparser(const HeaderParser *hparser);
-  const HeaderParser *get_hparser() const { return hparser; }
+  bool set_parser(const HeaderParser *parser);
+  const HeaderParser *get_parser() const { return parser; }
 
   void reset();
   bool load_frame(uint8_t **data, uint8_t *end);

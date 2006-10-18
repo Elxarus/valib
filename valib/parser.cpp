@@ -58,34 +58,34 @@ HeaderParser::header_info(const uint8_t *hdr, char *buf, size_t size) const
 
 StreamBuffer::StreamBuffer()
 {
-  hparser = 0;
+  parser = 0;
   frame = 0;
   reset();
 }
 
-StreamBuffer::StreamBuffer(const HeaderParser *_hparser)
+StreamBuffer::StreamBuffer(const HeaderParser *_parser)
 {
-  hparser = 0;
+  parser = 0;
   frame = 0;
   reset();
 
-  set_hparser(_hparser);
+  set_parser(_parser);
 }
 
 StreamBuffer::~StreamBuffer()
 {}
 
 bool 
-StreamBuffer::set_hparser(const HeaderParser *_hparser)
+StreamBuffer::set_parser(const HeaderParser *_parser)
 {
-  if (!_hparser) return false;
-  if  (!buf.allocate(_hparser->max_frame_size() * 2 + _hparser->header_size()))
+  if (!_parser) return false;
+  if  (!buf.allocate(_parser->max_frame_size() * 2 + _parser->header_size()))
     return false;
 
-  hparser        = _hparser;
-  header_size    = hparser->header_size();
-  min_frame_size = hparser->min_frame_size();
-  max_frame_size = hparser->max_frame_size();
+  parser        = _parser;
+  header_size    = parser->header_size();
+  min_frame_size = parser->min_frame_size();
+  max_frame_size = parser->max_frame_size();
   hdr.drop();
 
   frame = buf.get_data();
@@ -149,7 +149,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
   while (1)
   {
     LOAD(header_size);
-    if (!hparser->parse_header(frame, &hdr))
+    if (!parser->parse_header(frame, &hdr))
     {
       DROP(1);
       continue;
@@ -181,7 +181,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
     while (frame2 <= frame2_max)
     {
       LOAD(frame2 - frame + header_size);
-      if (!hparser->compare_headers(frame, frame2) || !hparser->parse_header(frame2, &hdr))
+      if (!parser->compare_headers(frame, frame2) || !parser->parse_header(frame2, &hdr))
       {
         frame2++;
         continue;
@@ -223,7 +223,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
       while (frame3 <= frame3_max)
       {
         LOAD(frame3 - frame + header_size);
-        if (!hparser->compare_headers(frame2, frame3) || !hparser->parse_header(frame3, &hdr))
+        if (!parser->compare_headers(frame2, frame3) || !parser->parse_header(frame3, &hdr))
         {
           frame3++;
           continue;
@@ -236,7 +236,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
         new_stream = true;
         frame_loaded = true;
 
-        hparser->parse_header(frame, &hdr);
+        parser->parse_header(frame, &hdr);
         frame_interval = frame2 - frame;
         frame_size = hdr.frame_size? hdr.frame_size: frame_interval;
 
@@ -260,7 +260,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
 bool 
 StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
 {
-  if (!hparser)
+  if (!parser)
     return false;
 
   /////////////////////////////////////////////////////////////////////////////
@@ -300,7 +300,7 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
   while (frame2 <= frame2_max)
   {
     LOAD(frame2 - frame + header_size);
-    if (!hparser->compare_headers(frame, frame2) || !hparser->parse_header(frame2, &hdr))
+    if (!parser->compare_headers(frame, frame2) || !parser->parse_header(frame2, &hdr))
     {
       frame2++;
       continue;
@@ -331,7 +331,7 @@ StreamBuffer::stream_info(char *buf, size_t size) const
   char info[1024];
   size_t info_size = 0;
 
-  info_size += hparser->header_info(frame, info, sizeof(info));
+  info_size += parser->header_info(frame, info, sizeof(info));
   info_size += sprintf(info + info_size, "Frame interval: %i\n", frame_interval);
   if (frame_interval > 0 && hdr.nsamples > 0)
     info_size += sprintf(info + info_size, "Actual bitrate: %ikbps\n", frame_interval * hdr.spk.sample_rate * 8 / hdr.nsamples / 1000);

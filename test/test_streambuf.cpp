@@ -58,7 +58,7 @@ public:
 
   int speed_noise(const HeaderParser *hparser)
   {
-    streambuf.set_hparser(hparser);
+    streambuf.set_parser(hparser);
 
     CPUMeter cpu;
     Chunk chunk;
@@ -97,7 +97,7 @@ public:
     if (!f.is_open())
       return log->err("Cannot open file %s", filename);
 
-    streambuf.set_hparser(hparser);
+    streambuf.set_parser(hparser);
 
     size_t buf_size = f.size();
     uint8_t *buf = new uint8_t[buf_size];
