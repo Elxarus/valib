@@ -250,10 +250,10 @@ public:
 // a distance between *previous* frame header and current frame's header.
 //
 // To detect stream changes we search for new stream header after the end of
-// the frame laoded. If we cannot find a header of the same stream before
+// the frame loaded. If we cannot find a header of the same stream before
 // maximum frame size we do resync.
 //
-// For unknown frame size frame interval is constant and determined at stream
+// For unknown frame size frame interval is a constant determined at stream
 // syncronization procedure. We always load all frame interval data therefore
 // frame size and frame interval are always equal in this case and stream is
 // known to be of constant bitrate.
