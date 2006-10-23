@@ -5,6 +5,7 @@
 #ifndef SINK_RAW_H
 #define SINK_RAW_H
 
+#include "filter.h"
 #include "auto_file.h"
 
 class RAWSink : public Sink
