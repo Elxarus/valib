@@ -1,4 +1,8 @@
 /*
+  Decoder filter
+  Uses parser to decode the stream
+
+
   Unified audio decoder
 
   Input formats: AC3, MPA, DTS, SPDIF
@@ -22,6 +26,56 @@
 #include "parsers\ac3\ac3_parser.h"
 #include "parsers\mpa\mpa_parser.h"
 #include "parsers\dts\dts_parser.h"
+
+class Decoder : public NullFilter
+{
+protected:
+  enum state_t 
+  {
+    state_transition, 
+    state_frame_decoded, 
+    state_frame_loaded, 
+    state_no_data, 
+    state_format_change, 
+    state_flushing 
+  };
+
+  FrameParser *parser;    // parser to use
+  StreamBuffer stream;    // stream buffer
+
+  Speakers out_spk;       // output format
+  state_t  state;         // filter state
+  bool     new_stream;    // new stream found
+  Sync     sync_helper;   // syncronization helper
+
+  bool load_frame();
+  bool decode_frame();
+  bool load_decode_frame();
+
+public:
+  Decoder();
+  Decoder(FrameParser *parser);
+  ~Decoder();
+
+  /////////////////////////////////////////////////////////
+  // Own interface
+
+  bool set_parser(FrameParser *parser);
+  const FrameParser *get_parser() const;
+
+  /////////////////////////////////////////////////////////
+  // Filter interface
+
+  virtual void reset();
+  virtual bool is_ofdd() const;
+  virtual bool process(const Chunk *chunk);
+
+  virtual Speakers get_output() const;
+  virtual bool is_empty() const;
+  virtual bool get_chunk(Chunk *chunk);
+};
+
+
 
 class AudioDecoder : public NullFilter
 {
