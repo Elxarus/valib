@@ -35,8 +35,8 @@ bool
 UNIHeader::can_parse(int format) const
 {
   for (int i = 0; i < array_size(hparsers); i++)
-   if (hparsers[i]->can_parse(format))
-     return true;
+    if (hparsers[i]->can_parse(format))
+      return true;
   return false;
 }
 
@@ -44,8 +44,8 @@ bool
 UNIHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 {
   for (int i = 0; i < array_size(hparsers); i++)
-   if (hparsers[i]->parse_header(hdr, hinfo))
-     return true;
+    if (hparsers[i]->parse_header(hdr, hinfo))
+      return true;
   return false;
 }
 
@@ -53,7 +53,7 @@ bool
 UNIHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 {
   for (int i = 0; i < array_size(hparsers); i++)
-   if (hparsers[i]->compare_headers(hdr1, hdr2))
-     return true;
+    if (hparsers[i]->compare_headers(hdr1, hdr2))
+      return true;
   return false;
 }

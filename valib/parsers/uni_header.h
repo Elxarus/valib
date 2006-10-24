@@ -1,3 +1,7 @@
+/*
+  Universal header parser
+*/
+
 #ifndef UNI_HEADER_H
 #define UNI_HEADER_H
 
