@@ -86,15 +86,10 @@ DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
   int mask = amode2mask_tbl[amode];
   int relation = amode2rel_tbl[amode];
   if (lff) mask |= CH_MASK_LFE;
+
   hinfo->spk = Speakers(FORMAT_DTS, mask, sample_rate, 1.0, relation);
-
-  if (bs_type == BITSTREAM_14LE || bs_type == BITSTREAM_14BE)
-    hinfo->frame_size = 0;
-  else
-    hinfo->frame_size = frame_size;
-
+  hinfo->frame_size = 0; // do not rely on the frame size specified at header!!!
   hinfo->bs_type = bs_type;
-
   hinfo->nsamples = nblks * 32;
 
   switch (hinfo->nsamples)
