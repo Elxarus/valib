@@ -32,6 +32,15 @@ UNIHeader::UNIHeader()
 }
 
 bool
+UNIHeader::can_parse(int format) const
+{
+  for (int i = 0; i < array_size(hparsers); i++)
+   if (hparsers[i]->can_parse(format))
+     return true;
+  return false;
+}
+
+bool
 UNIHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 {
   for (int i = 0; i < array_size(hparsers); i++)

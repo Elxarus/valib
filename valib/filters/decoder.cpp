@@ -189,7 +189,7 @@ flushing        transition      get_chunk(eos)  output format changes to unknown
 
 
 Decoder::Decoder()
-:NullFilter(FORMAT_MASK_RAWDATA)
+:NullFilter(-1)
 {
   parser = 0;
 
@@ -199,7 +199,7 @@ Decoder::Decoder()
 }
 
 Decoder::Decoder(FrameParser *_parser)
-:NullFilter(FORMAT_MASK_RAWDATA)
+:NullFilter(-1)
 {
   parser = 0;
 
@@ -258,6 +258,17 @@ bool
 Decoder::is_ofdd() const
 {
   return true;
+}
+
+bool
+Decoder::query_input(Speakers spk) const
+{
+  if (!parser) 
+    return false;
+  else if (spk.format == FORMAT_RAWDATA) 
+    return true;
+  else
+    return parser->header_parser()->can_parse(spk.format);
 }
 
 bool

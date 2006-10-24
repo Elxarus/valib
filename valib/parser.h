@@ -85,6 +85,11 @@ class ParserBuffer;
 //   Note that for spdifable formats we must take in account maximum spdif
 //   frame size to be able to parse spdif-padded format.
 //
+// can_parse()
+//   Deternine that we can parse the format given. (Or, that parser can detect
+//   this format). For example if some_parser.can_parse(FORMAT_AC3) == true
+//   this parser can parse ac3 format, or can detect in in raw data.
+//   
 // parse_header()
 //   Parse header and write header information.
 //
@@ -153,6 +158,7 @@ public:
   virtual size_t   header_size() const = 0;
   virtual size_t   min_frame_size() const = 0;
   virtual size_t   max_frame_size() const = 0;
+  virtual bool     can_parse(int format) const = 0;
 
   virtual bool     parse_header(const uint8_t *hdr, HeaderInfo *h = 0) const = 0;
   virtual bool     compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
