@@ -35,25 +35,145 @@ public:
   int test()
   {
     log->open_group("StreamBuffer test");
+
+    passthrough("a.mp2.002.mp2",   &mpa_header, 1, 500);
+    passthrough("a.mp2.005.mp2",   &mpa_header, 1, 500);
+    passthrough("a.mp2.mix.mp2",   &mpa_header, 3, 1500);
+    passthrough("a.mp2.005.spdif", &mpa_header, 1, 500, true);
+                                   
+    passthrough("a.ac3.005.ac3",   &ac3_header, 1, 375);
+    passthrough("a.ac3.03f.ac3",   &ac3_header, 1, 375);
+    passthrough("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
+    passthrough("a.ac3.03f.spdif", &ac3_header, 1, 375, true);
+                                   
+    passthrough("a.dts.03f.dts",   &dts_header, 1, 1125);
+    passthrough("a.dts.03f.spdif", &dts_header, 1, 1125, true);
+                                   
+    passthrough("a.mad.mix.mad",   &uni_header, 7, 4375);
+    passthrough("a.mad.mix.spdif", &uni_header, 7, 4375, true);
+
     speed_noise(&ac3_header);
 
-    speed_file("a.mp2.002.mp2",   &mpa_header, 1, 500);
-    speed_file("a.mp2.005.mp2",   &mpa_header, 1, 500);
-    speed_file("a.mp2.mix.mp2",   &mpa_header, 3, 1500);
-    speed_file("a.mp2.005.spdif", &mpa_header, 1, 500);
+    speed_file("a.mp2.002.mp2",   &mpa_header);
+    speed_file("a.mp2.005.mp2",   &mpa_header);
+    speed_file("a.mp2.mix.mp2",   &mpa_header);
+    speed_file("a.mp2.005.spdif", &mpa_header);
 
-    speed_file("a.ac3.005.ac3",   &ac3_header, 1, 375);
-    speed_file("a.ac3.03f.ac3",   &ac3_header, 1, 375);
-    speed_file("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
-    speed_file("a.ac3.03f.spdif", &ac3_header, 1, 375);
+    speed_file("a.ac3.005.ac3",   &ac3_header);
+    speed_file("a.ac3.03f.ac3",   &ac3_header);
+    speed_file("a.ac3.mix.ac3",   &ac3_header);
+    speed_file("a.ac3.03f.spdif", &ac3_header);
 
-    speed_file("a.dts.03f.dts",   &dts_header, 1, 1125);
-    speed_file("a.dts.03f.spdif", &dts_header, 1, 1125);
+    speed_file("a.dts.03f.dts",   &dts_header);
+    speed_file("a.dts.03f.spdif", &dts_header);
 
-    speed_file("a.mad.mix.mad",   &uni_header, 7, 4375);
-    speed_file("a.mad.mix.spdif", &uni_header, 7, 4375);
+    speed_file("a.mad.mix.mad",   &uni_header);
+    speed_file("a.mad.mix.spdif", &uni_header);
 
     return log->close_group();
+  }
+
+  int passthrough(const char *filename, const HeaderParser *hparser, int file_streams, int file_frames, bool is_spdif = false)
+  {
+    AutoFile f(filename);
+    if (!f.is_open())
+      return log->err("Cannot open file %s", filename);
+
+    log->msg("Passthrough test %s", filename);
+
+    // load file into memory
+    size_t buf_size = f.size();
+    uint8_t *buf = new uint8_t[buf_size];
+    f.read(buf, buf_size);
+
+    // setup pointers
+    uint8_t *ptr = buf;
+    uint8_t *end = ptr + buf_size;
+    uint8_t *ref_ptr = buf;
+
+    // setup cycle
+    uint8_t *frame;
+    size_t frame_size;
+
+    int frames = 0;
+    int streams = 0;
+    bool data_differ = false;
+
+    streambuf.set_parser(hparser);
+    while (streambuf.load_frame(&ptr, end))
+    {
+      // count frames and streams
+      frames++;
+      if (streambuf.is_new_stream())
+        streams++;
+
+      // compare data
+      frame = streambuf.get_frame();
+      frame_size = streambuf.get_frame_size();
+
+      if (ref_ptr + frame_size > end)
+      {
+        log->err("Frame ends after the end of reference file");
+        break; // while (streambuf.load_frame(&ptr, end))
+      }
+      else
+      {
+        if (is_spdif)
+        {
+          // Spdif stream has a header and padding.
+          // Therefore we must seek a frame start to compare data.
+          static const size_t max_spdif_frame_size = 4096 * 4;
+          size_t shift, i;
+          data_differ = true;
+
+          for (shift = 0; shift < (max_spdif_frame_size - frame_size); shift++)
+          {
+            for (i = 0; i < frame_size; i++)
+              if (ref_ptr[shift + i] != frame[i])
+                break; // for (i = 0; i < frame_size; i++)
+
+            if (i == frame_size)
+            {
+              data_differ = false;
+              break; // for (size_t shift = 0; shift < max_spdif_frame_size - frame_size; shift++)
+            }
+          }
+
+          if (data_differ)
+            log->err("Cannot find frame data at frame %i, starting from pos %i", frames, ref_ptr - buf);
+
+          ref_ptr += frame_size + shift;
+        }
+        else
+        {
+          // Compare data directly
+          data_differ = false;
+          for (size_t i = 0; i < frame_size; i++)
+            if (ref_ptr[i] != frame[i])
+            {
+              data_differ = true;
+              log->err("Data differ at frame %i, pos %i", frames, ref_ptr - buf + i);
+              break;
+            }
+          ref_ptr += frame_size;
+        }
+
+        if (data_differ)
+          break;
+      }       
+    }
+
+    if (!data_differ && ptr < end)
+      log->err("Frame load error");
+
+    if (!data_differ && file_frames > 0 && frames != file_frames)
+      log->err("Wrong number of frames; found: %i, but must be %i", frames, file_frames);
+
+    if (!data_differ && file_streams > 0 && streams != file_streams)
+      log->err("Wrong number of streams; found: %i, but must be %i", streams, file_streams);
+
+    delete buf;
+    return log->get_errors();
   }
 
   int speed_noise(const HeaderParser *hparser)
@@ -90,7 +210,7 @@ public:
     return 0;
   }
 
-  int speed_file(const char *filename, const HeaderParser *hparser, int file_streams, int file_frames)
+  int speed_file(const char *filename, const HeaderParser *hparser)
   {
     CPUMeter cpu;
     AutoFile f(filename);
@@ -104,8 +224,6 @@ public:
     f.read(buf, buf_size);
 
     int runs = 0;
-    int frames = 0;
-    int streams = 0;
 
     cpu.reset();
     cpu.start();
@@ -117,31 +235,15 @@ public:
       uint8_t *ptr = buf;
       uint8_t *end = ptr + buf_size;
       streambuf.reset();
-      while (1)
-      {
-        if (streambuf.load_frame(&ptr, end))
-        {
-          frames++;
-          if (streambuf.is_new_stream())
-            streams++;
-        }
-        else if (ptr >= end)
-          break;
-      }
+      while (ptr < end)
+        streambuf.load_frame(&ptr, end);
     }
     cpu.stop();
-    frames /= runs;
-    streams /= runs;
 
-    log->msg("StreamBuffer speed on %s: %iMB/s, Streams: %i, Frames : %i", 
-      filename, int(double(buf_size) * runs / cpu.get_thread_time() / 1000000), streams, frames);
+    log->msg("StreamBuffer speed on %s: %iMB/s", 
+      filename, int(double(buf_size) * runs / cpu.get_thread_time() / 1000000));
 
-    if (file_frames > 0 && frames != file_frames)
-      log->err("Wrong number of frames; found: %i, but must be %i", frames, file_frames);
-
-    if (file_streams > 0 && streams != file_streams)
-      log->err("Wrong number of streams; found: %i, but must be %i", streams, file_streams);
-
+    delete buf;
     return log->get_errors();
   }
 };
