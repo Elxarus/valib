@@ -307,13 +307,17 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // DONE! Drop old frame and prepare new frame output.
+    // Load the rest of the frame
 
-    frame_loaded = true;
     frame_interval = frame2 - frame;
     frame_size = hdr.frame_size? hdr.frame_size: frame_interval;
-    DROP(frame_interval);
+    LOAD(frame2 - frame + frame_size);
 
+    ///////////////////////////////////////////////////////////////////////////
+    // DONE! Drop old frame and prepare new frame output.
+
+    DROP(frame_interval);
+    frame_loaded = true;
     return true;
   }
 
