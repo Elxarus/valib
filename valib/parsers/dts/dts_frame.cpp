@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdio.h>
-#include "dts_parser.h"
+#include "dts_frame.h"
+#include "dts_header.h"
 
 #include "dts_tables.h"
 #include "dts_tables_huffman.h"
@@ -78,27 +79,21 @@ decode_blockcode(int code, int levels, int *values)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// DTSParser
+// DTSFrame
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 // Init
 
-DTSParser::DTSParser()
+DTSFrame::DTSFrame()
 {
   init_cosmod();
-  frame.allocate(DTS_MAX_FRAME_SIZE);
   samples.allocate(DTS_NCHANNELS, DTS_MAX_SAMPLES);
-
-  // setup syncronization scanner
-  scanner.set_standard(SYNCMASK_DTS);
-
-  // clean everything
   reset();
 }
 
 void 
-DTSParser::init_cosmod()
+DTSFrame::init_cosmod()
 {
   int i, j, k;
   
@@ -118,101 +113,21 @@ DTSParser::init_cosmod()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// BaseParser overrides
+// FrameParser overrides
 
-size_t 
-DTSParser::header_size() const
+const HeaderParser *
+DTSFrame::header_parser()
 {
-  return 16;
+  return &dts_header;
 }
 
-bool 
-DTSParser::load_header(uint8_t *_buf)
-{
-  ReadBS bs_tmp;
-
-  // 16 bits big endian bitstream
-  if (_buf[0] == 0x7f && _buf[1] == 0xfe &&
-           _buf[2] == 0x80 && _buf[3] == 0x01)
-    bs_type = BITSTREAM_16BE;
-  // 16 bits low endian bitstream
-  else if (_buf[0] == 0xfe && _buf[1] == 0x7f &&
-           _buf[2] == 0x01 && _buf[3] == 0x80)
-    bs_type = BITSTREAM_16LE;
-  // 14 bits big endian bitstream
-  else if (_buf[0] == 0x1f && _buf[1] == 0xff &&
-           _buf[2] == 0xe8 && _buf[3] == 0x00 &&
-           _buf[4] == 0x07 && (_buf[5] & 0xf0) == 0xf0)
-    bs_type = BITSTREAM_14BE;
-  // 14 bits low endian bitstream
-  else if (_buf[0] == 0xff && _buf[1] == 0x1f &&
-      _buf[2] == 0x00 && _buf[3] == 0xe8 &&
-      (_buf[4] & 0xf0) == 0xf0 && _buf[5] == 0x07)
-    bs_type = BITSTREAM_14LE;
-  else
-  // no sync
-    return 0;
-
-  bs_tmp.set_ptr(_buf, bs_type);
-  bs_tmp.get(32);                         // Sync
-  bs_tmp.get(6);                          // Frame type(1), Deficit sample count(5)
-  int cpf = bs_tmp.get(1);                // CRC present flag
-
-  int nblks = bs_tmp.get(7) + 1;          // Number of PCM sample blocks
-  if (nblks < 5) return false;            // constraint
-
-  frame_size = bs_tmp.get(14) + 1;        // Primary frame byte size
-  if (frame_size < 95) return false;      // constraint
-
-  if (bs_tmp.get_type() == BITSTREAM_14LE ||
-      bs_tmp.get_type() == BITSTREAM_14BE)
-    frame_size = frame_size * 16 / 14;
-
-
-  int amode = bs_tmp.get(6);              // Audio channel arrangement
-  if (amode > 0xc) return false;          // we don't work with more than 6 channels
-
-  int sfreq = bs_tmp.get(4);              // Core audio sampling frequency
-  if (!dts_sample_rates[sfreq])           // constraint
-    return false; 
-
-  bs_tmp.get(15);                         // Transmission bit rate(5), and other flags....
-
-  int lff = bs_tmp.get(2);                // Low frequency effects flag
-  if (lff == 3) return false;             // constraint
-
-  if (cpf)
-  {
-    int hcrc = bs_tmp.get(16);            // Header CRC
-    // todo: header CRC check
-  }
-
-  nsamples = nblks * 32;
-
-  int sample_rate = dts_sample_rates[sfreq];
-  int mask = amode2mask_tbl[amode];
-  int relation = amode2rel_tbl[amode];
-  if (lff) mask |= CH_MASK_LFE;
-  spk = Speakers(FORMAT_DTS, mask, sample_rate, 1.0, relation);
-
-  return true;
-}
-
-bool 
-DTSParser::prepare()
-{
-  bs.set_ptr(frame, bs_type);
-  return parse_frame_header();
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Parser overrides
 
 void 
-DTSParser::reset()
+DTSFrame::reset()
 {
-  BaseParser::reset();
+  spk = spk_unknown;
+  frame_size = 0;
+  nsamples = 0;
 
   frame_type      = 0;
   samples_deficit = 0;
@@ -229,9 +144,23 @@ DTSParser::reset()
 }
 
 bool
-DTSParser::decode_frame()
+DTSFrame::parse_frame(uint8_t *frame, size_t size)
 {
-  if (!is_frame_loaded())
+  HeaderInfo hinfo;
+
+  if (!dts_header.parse_header(frame, &hinfo))
+    return false;
+
+  if (hinfo.frame_size > size)
+    return false;
+
+  spk = hinfo.spk;
+  spk.format = FORMAT_LINEAR;
+  frame_size = hinfo.frame_size;
+  bs_type = hinfo.bs_type;
+
+  bs.set_ptr(frame, bs_type);
+  if (!parse_frame_header())
     return false;
 
   // 8 samples per subsubframe and per subband
@@ -267,8 +196,8 @@ DTSParser::decode_frame()
   return true;
 }
 
-int
-DTSParser::get_info(char *_buf, size_t _len) const
+size_t
+DTSFrame::stream_info(char *buf, size_t size) const
 {
   char info[1024];
 
@@ -302,12 +231,18 @@ DTSParser::get_info(char *_buf, size_t _len) const
     crc_present? "CRC protected\n": "No CRC"
     );
 
-  if (len + 1 > _len) len = _len - 1;
-  memcpy(_buf, info, len + 1);
-  _buf[len] = 0;
+  if (len + 1 > size) len = size - 1;
+  memcpy(buf, info, len + 1);
+  buf[len] = 0;
   return len;
 }
 
+size_t
+DTSFrame::frame_info(char *buf, size_t size) const 
+{
+  if (buf && size) buf[0] = 0;
+  return 0;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //                         FRAME HEADER
@@ -316,7 +251,7 @@ DTSParser::get_info(char *_buf, size_t _len) const
 
 
 bool 
-DTSParser::parse_frame_header()
+DTSFrame::parse_frame_header()
 {
   int i, j;
   static const float adj_table[] = { 1.0, 1.1250, 1.2500, 1.4375 };
@@ -450,7 +385,7 @@ DTSParser::parse_frame_header()
 
   if (amode >= sizeof(amode2mask_tbl) / sizeof(amode2mask_tbl[0]))
     return false;
-
+/*
   if (bs.get_type() == BITSTREAM_14LE ||
       bs.get_type() == BITSTREAM_14BE)
     frame_size = frame_size * 16 / 14;
@@ -462,6 +397,7 @@ DTSParser::parse_frame_header()
 
   // todo: support short frames
   nsamples = sample_blocks * 32;
+*/
   return true;
 }
 
@@ -474,7 +410,7 @@ DTSParser::parse_frame_header()
 
 
 bool 
-DTSParser::parse_subframe_header()
+DTSFrame::parse_subframe_header()
 {
   // Primary audio coding side information
   int ch, k;
@@ -684,7 +620,7 @@ DTSParser::parse_subframe_header()
 
 
 bool
-DTSParser::parse_subsubframe()
+DTSFrame::parse_subsubframe()
 {
   int ch, l;
   int subsubframe = current_subsubframe;
@@ -958,7 +894,7 @@ DTSParser::parse_subsubframe()
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
-DTSParser::parse_subframe_footer()
+DTSFrame::parse_subframe_footer()
 {
   int aux_data_count = 0, i;
   int lfe_samples;
@@ -992,7 +928,7 @@ DTSParser::parse_subframe_footer()
 
 
 int 
-DTSParser::InverseQ(const huff_entry_t *huff)
+DTSFrame::InverseQ(const huff_entry_t *huff)
 {
   int value = 0;
   int length = 0, j;
@@ -1018,7 +954,7 @@ DTSParser::InverseQ(const huff_entry_t *huff)
 
 
 void 
-DTSParser::qmf_32_subbands (int ch, double samples_in[32][8], sample_t *samples_out,
+DTSFrame::qmf_32_subbands (int ch, double samples_in[32][8], sample_t *samples_out,
                             double scale)
 {           
   const double *prCoeff;
@@ -1153,7 +1089,7 @@ DTSParser::qmf_32_subbands (int ch, double samples_in[32][8], sample_t *samples_
 }
 
 void 
-DTSParser::lfe_interpolation_fir(int nDecimationSelect, int nNumDeciSample,
+DTSFrame::lfe_interpolation_fir(int nDecimationSelect, int nNumDeciSample,
                                  double *samples_in, sample_t *samples_out,
                                  double scale)
 {

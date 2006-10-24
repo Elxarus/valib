@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-double fir_32bands_perfect[] =
+const double fir_32bands_perfect[] =
 {
 +1.135985195E-010,
 -6.022448247E-007,
@@ -536,7 +536,7 @@ double fir_32bands_perfect[] =
 -1.135985195E-010
 };
 
-double fir_32bands_nonperfect[] =
+const double fir_32bands_nonperfect[] =
 {
 -1.390191784E-007,
 -1.693738625E-007,
@@ -1052,7 +1052,7 @@ double fir_32bands_nonperfect[] =
 +1.390191784E-007
 };
 
-double lfe_fir_64[] =
+const double lfe_fir_64[] =
 {
 2.6584343868307770E-004,
 8.1793652498163280E-005,
@@ -1568,7 +1568,7 @@ double lfe_fir_64[] =
 2.6584343868307770E-004
 };
 
-double lfe_fir_128[] =
+const double lfe_fir_128[] =
 {
 0.00053168571,
 0.00016358691,

@@ -2,15 +2,16 @@
   DTS parser class
 */
 
-#ifndef DTS_PARSER
-#define DTS_PARSER
+#ifndef DTS_FRAME_H
+#define DTS_FRAME_H
 
 #include "spk.h"
 #include "dts_defs.h"
 #include "bitstream.h"
 #include "parser.h"
 
-
+#include "dts_parser.h"
+/*
 class DTSInfo
 {
 public:
@@ -72,7 +73,7 @@ public:
   int high_freq_vq[DTS_PRIM_CHANNELS_MAX][DTS_SUBBANDS];
 
   // Low frequency effect data
-  double lfe_data[2*DTS_SUBSUBFAMES_MAX*DTS_LFE_MAX * 2 /*history*/];
+  double lfe_data[2*DTS_SUBSUBFAMES_MAX*DTS_LFE_MAX * 2];
   int lfe_scale_factor;
 
   // Subband samples history (for ADPCM)
@@ -80,33 +81,40 @@ public:
   double subband_fir_hist[DTS_PRIM_CHANNELS_MAX][512];
   double subband_fir_noidea[DTS_PRIM_CHANNELS_MAX][64];
 };
+*/
 
-class DTSParser : public BaseParser, public DTSInfo
+
+class DTSFrame : public FrameParser, public DTSInfo
 {
 public:
-  DTSParser();
+  DTSFrame();
 
   /////////////////////////////////////////////////////////
-  // Parser overrides
+  // FrameParser overrides
 
-  void reset();
-  bool decode_frame();
-  int  get_info(char *buf, size_t len) const;
+  virtual const HeaderParser *header_parser();
+
+  virtual void reset();
+  virtual bool parse_frame(uint8_t *frame, size_t size);
+
+  virtual Speakers  get_spk()      const { return spk;      }
+  virtual samples_t get_samples()  const { return samples;  }
+  virtual size_t    get_nsamples() const { return nsamples; }
+
+  virtual size_t stream_info(char *buf, size_t size) const;
+  virtual size_t frame_info(char *buf, size_t size) const;
 
 protected:
-
-  /////////////////////////////////////////////////////////
-  // BaseParser overrides
-
-  virtual size_t header_size() const;
-  virtual bool   load_header(uint8_t *_buf);
-  virtual bool   prepare();
-
   /////////////////////////////////////////////////////////
   // DTS parse
 
-  // bitstream
+  Speakers  spk;
+  size_t    frame_size;
+  int       nsamples;
+  int       bs_type;
+
   ReadBS    bs;
+  SampleBuf samples;
 
   int current_subframe;
   int current_subsubframe;
@@ -116,7 +124,6 @@ protected:
   void init_cosmod();
 
   // parse functions
-  unsigned dts_sync(uint8_t *buf) const;
   bool parse_frame_header();
   bool parse_subframe_header();
   bool parse_subsubframe();
