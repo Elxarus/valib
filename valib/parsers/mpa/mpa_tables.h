@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Table: bitrate_tbl
-// Used in: decode_header()
+// Used in: parse_header()
 // Memonics: bitrate_tbl[ver][layer][bitrate_index]
 // Returns: bitrate in kbps
 // Desc:
@@ -22,7 +22,7 @@ const int bitrate_tbl[2][3][15] =
 
 ///////////////////////////////////////////////////////////////////////////////
 // Table: freq_tbl
-// Used in: decode_header()
+// Used in: parse_header()
 // Memonics: freq_tbl[ver][freq_index]
 // Returns: sampling frequency in Hz
 // Desc:
@@ -36,7 +36,7 @@ const int freq_tbl[2][3] =
 
 ///////////////////////////////////////////////////////////////////////////////
 // Table: slots_tbl
-// Used in: decode_header()
+// Used in: parse_header()
 // Memonics: slots_tbl[layer]
 // Returns: frame size factor
 // Desc:
@@ -47,7 +47,7 @@ const int slots_tbl[3]      = {12, 144, 144};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Table: jsbound_tbl
-// Used in: decode_header()
+// Used in: parse_header()
 // Memonics: jsbound[layer][mode_ext]
 // Returns: joint stereo subband bound
 // Desc:
@@ -67,7 +67,7 @@ const int jsbound_tbl[3][4] =
 
 ///////////////////////////////////////////////////////////////////////////////
 // Table: II_half_bitrate_tbl
-// Used in: decode_header()
+// Used in: parse_header()
 // Memonics: II_half_bitrate_tbl[bitrate_index]
 // Returns: bitrate index corresponding to half-bitrate
 // Desc:
@@ -79,7 +79,7 @@ const int II_half_bitrate_tbl[15] =
 
 ///////////////////////////////////////////////////////////////////////////////
 // Table: II_table_tbl
-// Used in: decode_header()
+// Used in: parse_header()
 // Memonics: II_table_tbl[freq_index][bitrate_index]
 // Returns: allocation table number
 // Desc:
@@ -93,7 +93,7 @@ const int II_table_tbl[3][15] =
 
 ///////////////////////////////////////////////////////////////////////////////
 // Table: II_sblimit_tbl
-// Used in: decode_header()
+// Used in: parse_header()
 // Memonics: II_sblimit_tbl[table]
 // Returns: number of subbands
 // Desc:
@@ -110,7 +110,7 @@ const int II_sblimit_tbl[5] = { 27, 30, 8, 12, 30 };  // II_sblimit_tbl[table]
 //   FFT is a linear operation so we can pre-scale frequency coefficients
 //   up to output level
 
-sample_t scale_tbl[64] = 
+const sample_t scale_tbl[64] = 
 {                                                                                                                                                      
   2.00000000000000, 1.58740105196820, 1.25992104989487,
   1.00000000000000, 0.79370052598410, 0.62996052494744, 0.50000000000000,
