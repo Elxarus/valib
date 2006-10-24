@@ -382,6 +382,14 @@ SOURCE=..\valib\parsers\mpa\mpa_defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\parsers\mpa\mpa_frame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\mpa\mpa_frame.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parsers\mpa\mpa_header.cpp
 # End Source File
 # Begin Source File
@@ -419,6 +427,14 @@ SOURCE=..\valib\parsers\mpa\mpa_tables.h
 # Begin Source File
 
 SOURCE=..\valib\parsers\dts\dts_defs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\dts\dts_frame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\dts\dts_frame.h
 # End Source File
 # Begin Source File
 
@@ -461,6 +477,14 @@ SOURCE=..\valib\parsers\dts\dts_tables_quantization.h
 SOURCE=..\valib\parsers\dts\dts_tables_vq.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\valib\parsers\uni_frame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\uni_frame.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\valib\parsers\uni_header.cpp
