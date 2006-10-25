@@ -46,8 +46,10 @@ public:
     passthrough("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
     passthrough("a.ac3.03f.spdif", &ac3_header, 1, 375, true);
                                    
+    // We cannot load the last frame of SPDIF/DTS stream.
+    // See note at StreamBuffer class comments...
     passthrough("a.dts.03f.dts",   &dts_header, 1, 1125);
-    passthrough("a.dts.03f.spdif", &dts_header, 1, 1125, true);
+    passthrough("a.dts.03f.spdif", &dts_header, 1, 1124, true);
                                    
     passthrough("a.mad.mix.mad",   &uni_header, 7, 4375);
     passthrough("a.mad.mix.spdif", &uni_header, 7, 4375, true);
