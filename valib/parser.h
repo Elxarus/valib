@@ -257,7 +257,7 @@ public:
 //
 // To detect stream changes we search for new stream header after the end of
 // the frame loaded. If we cannot find a header of the same stream before
-// maximum frame size we do resync.
+// we reach maximum frame size we do resync.
 //
 // For unknown frame size frame interval is a constant determined at stream
 // syncronization procedure. We always load all frame interval data therefore
@@ -266,6 +266,49 @@ public:
 //
 // If header of the same stream is not found exactly after the end of loaded
 // frame we do resync.
+//
+// Important note!!!
+// =================
+//
+// For unknown frame size and SPDIF stream we cannot load the last frame of
+// the stream correctly!
+//
+// If stream ends after the last frame the last frame is not loaded at all.
+// It is because we must load full inter-stream interval but we cannot do this
+// because SPDIF header is not transmitted after the last frame:
+//
+//                +------------- frame interval ---------+
+//                V                                      V
+// +--------------------------------------+--------------------------------------+
+// | SPDIF header | Frame1 data | padding | SPDIF header | Frame2 data | padding |
+// +--------------------------------------+--------------------------------------+
+//                                                       ^                       ^
+//                         Less than frame interval -----+-----------------------+
+//
+// We can correctly handle switch between different types of SPDIF stream, but
+// we cannot correctly handle switch between SPDIF with unknown frame size to
+// non-SPDIF stream (we loose at least one frame of a new stream):
+//
+//                +------------ frame interval --------+
+//                V                                    V
+// +------------------------------------+------------------------------------+
+// | SPDIF header | DTS frame | padding | SPDIF header | AC3 frame | padding |
+// +------------------------------------+------------------------------------+
+//                                                     ^
+//                                                     +-- correct stream switch
+//
+//                +------------ frame interval --------+
+//                V                                    V
+// +------------------------------------+----------------------------------+
+// | SPDIF header | DTS frame | padding | AC3 frame | AC3Frame | AC3 frame |
+// +------------------------------------+----------------------------------+
+//                                      ^                      ^
+//                                      +---- lost frames -----+--- stream switch
+//
+// Therefroe in spite of the fact that we CAN work with SPDIF stream it is
+// recommended to demux SPDIF stream before working with contained stream.
+// We can demux SPDIF stream correctly because SPDIF header contains real
+// frame size of the contained stream.
 
 class StreamBuffer
 {
