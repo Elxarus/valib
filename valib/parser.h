@@ -359,6 +359,8 @@ public:
   size_t   get_frame_size()     const { return frame_size;     }
   size_t   get_frame_interval() const { return frame_interval; }
 
+  const HeaderInfo &header_info() const { return hdr; }
+
   size_t   stream_info(char *buf, size_t size) const;
 };
 
