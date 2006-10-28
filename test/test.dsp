@@ -479,19 +479,19 @@ SOURCE=..\valib\parsers\dts\dts_tables_vq.h
 # End Group
 # Begin Source File
 
-SOURCE=..\valib\parsers\uni_frame.cpp
+SOURCE=..\valib\parsers\multi_frame.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\uni_frame.h
+SOURCE=..\valib\parsers\multi_frame.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\uni_header.cpp
+SOURCE=..\valib\parsers\multi_header.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\uni_header.h
+SOURCE=..\valib\parsers\multi_header.h
 # End Source File
 # End Group
 # Begin Group "sink"
