@@ -15,6 +15,7 @@ protected:
 public:
   MultiFrame();
   MultiFrame(FrameParser **parsers, size_t nparsers);
+  ~MultiFrame();
 
   bool set_parsers(FrameParser **parsers, size_t nparsers);
   void release_parsers();

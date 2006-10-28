@@ -21,6 +21,7 @@ public:
   MultiHeader();
   MultiHeader(const FrameParser *const *parsers, size_t nparsers);
   MultiHeader(const HeaderParser *const *parsers, size_t nparsers);
+  ~MultiHeader();
 
   bool set_parsers(const FrameParser *const *parsers, size_t nparsers);
   bool set_parsers(const HeaderParser *const *parsers, size_t nparsers);

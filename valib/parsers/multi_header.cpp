@@ -34,6 +34,11 @@ MultiHeader::MultiHeader(const FrameParser *const *_parsers, size_t _nparsers)
   set_parsers(_parsers, _nparsers);
 }
 
+MultiHeader::~MultiHeader()
+{
+  release_parsers();
+}
+
 bool
 MultiHeader::set_parsers(const HeaderParser *const *_parsers, size_t _nparsers)
 {

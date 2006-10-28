@@ -17,6 +17,11 @@ MultiFrame::MultiFrame(FrameParser **_parsers, size_t _nparsers)
   set_parsers(_parsers, _nparsers);
 }
 
+MultiFrame::~MultiFrame()
+{
+  release_parsers();
+}
+
 bool
 MultiFrame::set_parsers(FrameParser **_parsers, size_t _nparsers)
 {
