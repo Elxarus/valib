@@ -103,7 +103,7 @@ AC3Frame::crc_check()
 // FrameParser overrides
 
 const HeaderParser *
-AC3Frame::header_parser()
+AC3Frame::header_parser() const
 {
   return &ac3_header;
 }

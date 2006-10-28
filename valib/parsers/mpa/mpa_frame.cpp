@@ -32,7 +32,7 @@ MPAFrame::~MPAFrame()
 // FrameParser overrides
 
 const HeaderParser *
-MPAFrame::header_parser()
+MPAFrame::header_parser() const
 {
   return &mpa_header;
 }

@@ -219,7 +219,7 @@ public:
   FrameParser() {};
   virtual ~FrameParser() {};
 
-  virtual const HeaderParser *header_parser() = 0;
+  virtual const HeaderParser *header_parser() const = 0;
 
   virtual void reset() = 0;
   virtual bool parse_frame(uint8_t *frame, size_t size) = 0;

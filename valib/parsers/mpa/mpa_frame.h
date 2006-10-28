@@ -68,7 +68,7 @@ public:
   /////////////////////////////////////////////////////////
   // FrameParser overrides
 
-  virtual const HeaderParser *header_parser();
+  virtual const HeaderParser *header_parser() const;
 
   virtual void reset();
   virtual bool parse_frame(uint8_t *frame, size_t size);

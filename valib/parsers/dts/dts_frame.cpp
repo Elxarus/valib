@@ -116,7 +116,7 @@ DTSFrame::init_cosmod()
 // FrameParser overrides
 
 const HeaderParser *
-DTSFrame::header_parser()
+DTSFrame::header_parser() const
 {
   return &dts_header;
 }
