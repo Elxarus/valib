@@ -1,23 +1,28 @@
 /*
-  Universal frame parser
+  Use multiple frame parsers at one time
 */
 
-#ifndef UNI_FRAME_H
-#define UNI_FRAME_H
+#ifndef MULTI_FRAME_H
+#define MULTI_FRAME_H
 
-#include "parsers\mpa\mpa_frame.h"
-#include "parsers\ac3\ac3_frame.h"
-#include "parsers\dts\dts_frame.h"
+#include "parser.h"
+#include "multi_header.h"
 
-class UNIFrame : public FrameParser
+class MultiFrame : public FrameParser
 {
+protected:
+
 public:
-  UNIFrame();
+  MultiFrame();
+  MultiFrame(FrameParser **parsers, size_t nparsers);
+
+  bool set_parsers(FrameParser **parsers, size_t nparsers);
+  void release_parsers();
 
   /////////////////////////////////////////////////////////
   // FrameParser overrides
 
-  virtual const HeaderParser *header_parser();
+  virtual const HeaderParser *header_parser() const { return &multi_header; }
 
   virtual void reset();
   virtual bool parse_frame(uint8_t *frame, size_t size);
@@ -30,15 +35,19 @@ public:
   virtual size_t frame_info(char *buf, size_t size) const;
 
 protected:
+  bool switch_parser(uint8_t *frame, size_t size);
+
   Speakers  spk;
   samples_t samples;
   int       nsamples;
 
-  FrameParser *parser;
+  FrameParser **parsers;
+  size_t nparsers;
 
-  MPAFrame mpa;
-  AC3Frame ac3;
-  DTSFrame dts;
+  FrameParser *parser;
+  const HeaderParser *hparser;
+
+  MultiHeader multi_header;
 };
 
 #endif

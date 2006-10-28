@@ -121,7 +121,7 @@ Format change
 #include "parsers\mpa\mpa_frame.h"
 #include "parsers\ac3\ac3_frame.h"
 #include "parsers\dts\dts_frame.h"
-#include "parsers\uni_frame.h"
+#include "parsers\multi_frame.h"
 
 static const int formats[] = 
 { 
@@ -174,7 +174,9 @@ int test_rules(Log *log)
   MPAFrame mpa_parser;
   AC3Frame ac3_parser;
   DTSFrame dts_parser;
-  UNIFrame uni_parser;
+
+  FrameParser *parsers[] = { &mpa_parser, &ac3_parser, &dts_parser };
+  MultiFrame multi_parser(parsers, array_size(parsers));
 
   // Base filters
   NullFilter     null(FORMAT_MASK_LINEAR);
@@ -190,7 +192,7 @@ int test_rules(Log *log)
   Decoder        dec_ac3(&ac3_parser);
   Decoder        dec_ac3_mix(&ac3_parser);
   Decoder        dec_dts(&dts_parser);
-  Decoder        dec_uni(&uni_parser);
+  Decoder        dec_multi(&multi_parser);
 /*
   AudioDecoder   dec_mpa;
   AudioDecoder   dec_mpa_mix;
@@ -265,7 +267,7 @@ int test_rules(Log *log)
 
   // Rawdata (ofdd) filters
 
-  test_rules_filter(log, &dec_uni, "Decoder (mix)",
+  test_rules_filter(log, &dec_multi, "Decoder (mix)",
     Speakers(FORMAT_RAWDATA, 0, 48000), "a.mad.mix.mad",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));

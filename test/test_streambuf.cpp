@@ -9,7 +9,7 @@
 #include "parsers\ac3\ac3_header.h"
 #include "parsers\dts\dts_header.h"
 #include "parsers\mpa\mpa_header.h"
-#include "parsers\uni_header.h"
+#include "parsers\multi_header.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test constants
@@ -34,6 +34,9 @@ public:
 
   int test()
   {
+    const HeaderParser *headers[] = { &ac3_header, &mpa_header, &dts_header };
+    MultiHeader multi_header(headers, array_size(headers));
+
     log->open_group("StreamBuffer test");
 
     passthrough("a.mp2.002.mp2",   &mpa_header, 1, 500);
@@ -51,8 +54,8 @@ public:
     passthrough("a.dts.03f.dts",   &dts_header, 1, 1125);
     passthrough("a.dts.03f.spdif", &dts_header, 1, 1124, true);
                                    
-    passthrough("a.mad.mix.mad",   &uni_header, 7, 4375);
-    passthrough("a.mad.mix.spdif", &uni_header, 7, 4375, true);
+    passthrough("a.mad.mix.mad",   &multi_header, 7, 4375);
+    passthrough("a.mad.mix.spdif", &multi_header, 7, 4375, true);
 
     speed_noise(&ac3_header);
 
@@ -69,8 +72,8 @@ public:
     speed_file("a.dts.03f.dts",   &dts_header);
     speed_file("a.dts.03f.spdif", &dts_header);
 
-    speed_file("a.mad.mix.mad",   &uni_header);
-    speed_file("a.mad.mix.spdif", &uni_header);
+    speed_file("a.mad.mix.mad",   &multi_header);
+    speed_file("a.mad.mix.spdif", &multi_header);
 
     return log->close_group();
   }
