@@ -120,7 +120,16 @@ MultiHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 {
   for (size_t i = 0; i < nparsers; i++)
     if (parsers[i]->parse_header(hdr, hinfo))
+    {
+      if (i)
+      {
+        // Place the parser used to the first place
+        const HeaderParser *tmp = parsers[0];
+        parsers[0] = parsers[i];
+        parsers[i] = tmp;
+      }
       return true;
+    }
   return false;
 }
 
@@ -132,3 +141,4 @@ MultiHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       return true;
   return false;
 }
+
