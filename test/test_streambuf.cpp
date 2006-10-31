@@ -1,3 +1,41 @@
+/*
+  Stream buffer test
+  Uses samples\test files
+
+  Tests:
+  * Passthrough test
+  * Noise speed test
+  * File speed test
+
+  All tests use MultiHeader with MPA, AC3 and DTS parsers.
+
+  Passthrough test
+  ================
+
+  This test ensures that we load frames correctly and stream constructed back
+  of loaded frames is eqal to the original stream. 
+
+  We also count and check number of streams and frames in a file.
+ 
+  Notes
+  -----
+  * we load the whole file into memory
+  * load_frame() must either load a frame or process all data given.
+  * SPDIF file is added and have SPDIF headers so we should skip all this.
+
+  Noise speed test
+  ================
+
+  Measure the speed of syncronization scanning.
+
+  File speed test
+  ================
+
+  Measure the speed of stream walk for different file formats.
+
+*/
+
+
 #include "log.h"
 #include "auto_file.h"
 #include "filter_tester.h"

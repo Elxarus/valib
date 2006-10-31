@@ -1,18 +1,40 @@
 /*
-  SyncScan test.
+  SyncScan test
 
-  1. Test that scanner can find given list of syncwords. Test internal and
-     external buffer modes.
+  Tests:
+  * Syncword catch test
+  * MPA sync test
+  * Speed test
 
-  1.1 try different syncword offsets
-  1.2 try different block sizes
-  1.3 try different pointer offsets
+  Syncword catch test
+  ===================
 
-  3. Test MPA syncronization: try all possible syncpoints and compare scanner
-     verdict with direct header check.
+  Ensure that we can catch a syncword in any case:
+  * using different syncwords
+  * using using internal and external interface
+  * with different syncword offsets
+  * with different pointer offsets
+
+  Notes
+  -----
+  * scan() functions must either catch a syncword or process all data
+  * check that bytes gone is less than input bytes
+  * check correct syncpoint offset
+  * internal buffer must contain 4 bytes after catch
+  * ensure that we catch correct syncpoint mask
+
+  MPA sync test
+  =============
+
+  Try all possible syncpoints and compare scanner verdict with direct header
+  check.
+
+  Speed test
+  ==========
  
-  4. Speed test. Count syncpoints found and validate syncpoints with direct
-     header check.
+  Count syncpoints found at large noise buffer and validate syncpoints with
+  direct header check.
+
 */
 
 #include <string.h>
