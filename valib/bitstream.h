@@ -66,6 +66,57 @@ public:
   int get_pos() const;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// Bitstream conversion functions
+//
+// All conversion functions take input buffer, process it to output and return
+// number of output bytes. Note that only 2 conversion functions change data
+// size: conversion from and to 14bit stream.
+//
+// All conversion functions can work in-place. I.e. you can specify the same
+// buffer as input and output. But you cannot use overlapped buffers.
+//
+// find_conversion()
+//   Tries to find a conversion function between 2 stream types.
+//   Returns 0 if conversion was not found.
+//
+// bs_conv_none()
+//   No stream conversion required. Just copies input buffer to output.
+//   Output size is equal to input size.
+//
+// bs_conv_swab16()
+//   Swaps bytes in 16bit words.
+//   If input size is off it adds a zero byte to the end of the stream.
+//   Output size is equal to input size.
+//
+// bs_conv_8_14be()
+//   Convert byte stream to 14bit stream (16bit words with 14 data bits).
+//   Output size is 8/7 larger than input.
+//
+// bs_conv_14be_8()
+//   Convert 14bit stream (16bit words with 14 data bits) to byte stream.
+//   Input size MUST be even.
+//   Output size is 7/8 smaller than input.
+
+size_t bs_convert(uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs);
+
+typedef size_t (*bs_conv_t)(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+bs_conv_t find_conversion(int bs_from, int bs_to);
+
+size_t bs_conv_copy(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_swab16(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+
+size_t bs_conv_8_14be(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_8_14le(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_14be_8(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_14le_8(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+
+size_t bs_conv_16le_14be(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_16le_14le(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_14be_16le(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_14le_16le(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // ReadBS inlines
