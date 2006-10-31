@@ -193,13 +193,7 @@ int test_rules(Log *log)
   Decoder        dec_ac3_mix(&ac3_parser);
   Decoder        dec_dts(&dts_parser);
   Decoder        dec_multi(&multi_parser);
-/*
-  AudioDecoder   dec_mpa;
-  AudioDecoder   dec_mpa_mix;
-  AudioDecoder   dec_ac3;
-  AudioDecoder   dec_ac3_mix;
-  AudioDecoder   dec_dts;
-*/
+
   Demux          demux;
   Spdifer        spdifer;
 
@@ -296,32 +290,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_DTS, MODE_5_1, 48000), "a.dts.03f.dts",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.dts.03f.dts",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
-/*
-  test_rules_filter(log, &dec_mpa, "AudioDecoder (MPA)",
-    Speakers(FORMAT_MPA, MODE_STEREO, 48000), "a.mp2.005.mp2",
-    Speakers(FORMAT_MPA, 0, 0), "a.mp2.002.mp2",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dec_mpa_mix, "AudioDecoder (MPA mix)",
-    Speakers(FORMAT_MPA, MODE_STEREO, 48000), "a.mp2.mix.mp2",
-    Speakers(FORMAT_MPA, 0, 0), "a.mp2.002.mp2",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
-
-  test_rules_filter(log, &dec_ac3, "AudioDecoder (AC3)",
-    Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.03f.ac3",
-    Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
-
-  test_rules_filter(log, &dec_ac3_mix, "AudioDecoder (AC3 mix)",
-    Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.mix.ac3",
-    Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
-
-  test_rules_filter(log, &dec_dts, "AudioDecoder (DTS)",
-    Speakers(FORMAT_DTS, MODE_STEREO, 48000), "a.dts.03f.dts",
-    Speakers(FORMAT_DTS, 0, 0), "a.dts.03f.dts",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
-*/
   test_rules_filter(log, &demux, "Demuxer",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_PES, MODE_STEREO, 48000), "a.ac3.03f.pes",
@@ -380,7 +349,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
-
+/*
   test_rules_filter(log, &dvd, "DVDGraph",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
@@ -390,7 +359,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3",
     Speakers(FORMAT_OGG, MODE_STEREO, 48000));
-
+*/
   return log->close_group();
 }
 
