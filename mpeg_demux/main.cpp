@@ -253,7 +253,7 @@ int main(int argc, char **argv)
   FILE *out = 0;
 
   printf("MPEG Program Stream demuxer.\n"
-         "This utility is part of AC3Filter project (http://ac3filter.sourceforge.net)\n"
+         "This utility is part of AC3Filter project (http://ac3filter.net)\n"
          "Copyright (c) 2006 by Alexander Vigovsky\n\n");
   if (argc < 2)
   {
