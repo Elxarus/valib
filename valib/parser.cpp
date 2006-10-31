@@ -36,7 +36,7 @@ HeaderParser::header_info(const uint8_t *hdr, char *buf, size_t size) const
     if (h.frame_size > 0 && h.nsamples > 0)
       info_size += sprintf(info + info_size, "Bitrate: %ikbps\n", h.frame_size * h.spk.sample_rate * 8 / h.nsamples / 1000);
     else
-      info_size += sprintf(info + info_size, "Bitrate: unknown");
+      info_size += sprintf(info + info_size, "Bitrate: unknown\n");
 
     if (h.spdif_type)
       info_size += sprintf(info + info_size, "SPDIF stream type: 0x%x\n", h.spdif_type);
