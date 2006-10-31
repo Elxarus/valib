@@ -144,6 +144,10 @@ SOURCE=.\liba52\tables.h
 # End Group
 # Begin Source File
 
+SOURCE=.\test_bs_convert.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_crash.cpp
 # End Source File
 # Begin Source File
