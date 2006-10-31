@@ -115,7 +115,7 @@ static const bs_conv_t conv[7][7] =
   { bs_conv_14le_8, bs_conv_14le_8, bs_conv_14le_16le, bs_conv_swab16,    bs_conv_copy      }, // 14le
 };
 
-bs_conv_t find_conversion(int bs_from, int bs_to)
+bs_conv_t bs_conversion(int bs_from, int bs_to)
 {
   int i = 0;
   int ibs_from = -1;
@@ -143,7 +143,7 @@ bs_conv_t find_conversion(int bs_from, int bs_to)
 
 size_t bs_convert(uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs)
 {
-  bs_conv_t conv = find_conversion(in_bs, out_bs);
+  bs_conv_t conv = bs_conversion(in_bs, out_bs);
   if (conv)
     return (*conv)(in_buf, size, out_buf);
   else

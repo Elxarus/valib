@@ -101,7 +101,7 @@ public:
 size_t bs_convert(uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs);
 
 typedef size_t (*bs_conv_t)(uint8_t *in_buf, size_t size, uint8_t *out_buf);
-bs_conv_t find_conversion(int bs_from, int bs_to);
+bs_conv_t bs_conversion(int bs_from, int bs_to);
 
 size_t bs_conv_copy(uint8_t *in_buf, size_t size, uint8_t *out_buf);
 size_t bs_conv_swab16(uint8_t *in_buf, size_t size, uint8_t *out_buf);
