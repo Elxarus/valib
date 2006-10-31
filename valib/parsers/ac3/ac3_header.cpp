@@ -158,9 +158,9 @@ AC3Header::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
     // * crc (bytes 2 and 3)
     // * 'compr' field (may occupy last 2 bits of byte 6)
     return
-      hdr1[0] == hdr2[0] && hdr1[1] == hdr2[1] &&
-      hdr1[4] == hdr2[4] && hdr1[5] == hdr2[5] && 
-      hdr1[6] == hdr2[6] && (hdr1[7] & 0xfc) == (hdr2[7] & 0xfc);
+      hdr1[1] == hdr2[1] && hdr1[0] == hdr2[0] &&
+      hdr1[5] == hdr2[5] && hdr1[4] == hdr2[4] && 
+      hdr1[7] == hdr2[7] && (hdr1[6] & 0xfc) == (hdr2[6] & 0xfc);
   }
 
   return false;
