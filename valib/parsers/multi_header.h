@@ -37,6 +37,7 @@ public:
 
   virtual bool     parse_header(const uint8_t *hdr, HeaderInfo *hinfo = 0) const;
   virtual bool     compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const;
+  virtual size_t   header_info(const uint8_t *hdr, char *buf, size_t size) const;
 };
 
 #endif

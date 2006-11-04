@@ -96,10 +96,10 @@ MultiHeader::set_parsers(const FrameParser *const *_parsers, size_t _nparsers)
 void
 MultiHeader::release_parsers()
 {
-  nparsers = 0;
   if (parsers)
     delete parsers;
   parsers = 0;
+  nparsers = 0;
 
   f_header_size = 0;
   f_min_frame_size = 0;
@@ -120,16 +120,7 @@ MultiHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 {
   for (size_t i = 0; i < nparsers; i++)
     if (parsers[i]->parse_header(hdr, hinfo))
-    {
-      if (i)
-      {
-        // Place the parser used to the first place
-        const HeaderParser *tmp = parsers[0];
-        parsers[0] = parsers[i];
-        parsers[i] = tmp;
-      }
       return true;
-    }
   return false;
 }
 
@@ -142,3 +133,11 @@ MultiHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
   return false;
 }
 
+size_t
+MultiHeader::header_info(const uint8_t *hdr, char *buf, size_t size) const
+{
+  for (size_t i = 0; i < nparsers; i++)
+    if (parsers[i]->parse_header(hdr))
+      return parsers[i]->header_info(hdr, buf, size);
+  return 0;
+}
