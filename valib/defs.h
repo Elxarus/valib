@@ -61,6 +61,7 @@ const char *valib_credits();
 
 // bitstream types
 
+#define BITSTREAM_NONE  (-1)
 #define BITSTREAM_8     0
 #define BITSTREAM_16BE  1
 #define BITSTREAM_16LE  2
