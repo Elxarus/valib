@@ -71,11 +71,13 @@ public:
   virtual const HeaderParser *header_parser() const;
 
   virtual void reset();
-  virtual bool parse_frame(uint8_t *frame, size_t size);
+  virtual bool parse_frame(const uint8_t *frame, size_t size);
 
   virtual Speakers  get_spk()      const { return spk;      }
   virtual samples_t get_samples()  const { return samples;  }
   virtual size_t    get_nsamples() const { return bsi.nsamples; }
+  virtual const uint8_t *get_rawdata() const { return 0; }
+  virtual size_t         get_rawsize() const { return 0; }
 
   virtual size_t stream_info(char *buf, size_t size) const;
   virtual size_t frame_info(char *buf, size_t size) const;
@@ -91,7 +93,7 @@ private:
   /////////////////////////////////////////////////////////
   // Common decoding functions
 
-  bool parse_header(uint8_t *frame, size_t size);
+  bool parse_header(const uint8_t *frame, size_t size);
 
   /////////////////////////////////////////////////////////
   // Layer I

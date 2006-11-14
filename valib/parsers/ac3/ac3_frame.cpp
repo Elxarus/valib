@@ -124,7 +124,7 @@ AC3Frame::reset()
 }
 
 bool
-AC3Frame::parse_frame(uint8_t *frame, size_t size)
+AC3Frame::parse_frame(const uint8_t *frame, size_t size)
 {
   HeaderInfo hinfo;
 

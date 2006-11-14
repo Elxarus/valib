@@ -47,7 +47,7 @@ MPAFrame::reset()
 }
 
 bool
-MPAFrame::parse_frame(uint8_t *frame, size_t size)
+MPAFrame::parse_frame(const uint8_t *frame, size_t size)
 {
   if (!parse_header(frame, size))
     return false;
@@ -126,7 +126,7 @@ MPAFrame::crc_check()
 //////////////////////////////////////////////////////////////////////
 
 bool 
-MPAFrame::parse_header(uint8_t *frame, size_t size)
+MPAFrame::parse_header(const uint8_t *frame, size_t size)
 {
   // 8 bit or 16 bit big endian steram sync
   if ((frame[0] == 0xff)         && // sync
