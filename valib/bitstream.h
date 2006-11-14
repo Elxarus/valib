@@ -98,23 +98,23 @@ public:
 //   Input size MUST be even.
 //   Output size is 7/8 smaller than input.
 
-size_t bs_convert(uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs);
+size_t bs_convert(const uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs);
 
-typedef size_t (*bs_conv_t)(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+typedef size_t (*bs_conv_t)(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
 bs_conv_t bs_conversion(int bs_from, int bs_to);
 
-size_t bs_conv_copy(uint8_t *in_buf, size_t size, uint8_t *out_buf);
-size_t bs_conv_swab16(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_copy(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_swab16(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
 
-size_t bs_conv_8_14be(uint8_t *in_buf, size_t size, uint8_t *out_buf);
-size_t bs_conv_8_14le(uint8_t *in_buf, size_t size, uint8_t *out_buf);
-size_t bs_conv_14be_8(uint8_t *in_buf, size_t size, uint8_t *out_buf);
-size_t bs_conv_14le_8(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_8_14be(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_8_14le(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_14be_8(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_14le_8(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
 
-size_t bs_conv_16le_14be(uint8_t *in_buf, size_t size, uint8_t *out_buf);
-size_t bs_conv_16le_14le(uint8_t *in_buf, size_t size, uint8_t *out_buf);
-size_t bs_conv_14be_16le(uint8_t *in_buf, size_t size, uint8_t *out_buf);
-size_t bs_conv_14le_16le(uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_16le_14be(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_16le_14le(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_14be_16le(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+size_t bs_conv_14le_16le(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
 
 
 

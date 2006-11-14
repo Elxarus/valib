@@ -141,7 +141,7 @@ bs_conv_t bs_conversion(int bs_from, int bs_to)
     return conv[ibs_from][ibs_to];
 }
 
-size_t bs_convert(uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs)
+size_t bs_convert(const uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs)
 {
   bs_conv_t conv = bs_conversion(in_bs, out_bs);
   if (conv)
@@ -152,13 +152,13 @@ size_t bs_convert(uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int
 
 
 
-size_t bs_conv_copy(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_copy(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 { 
   memcpy(out_buf, in_buf, size);
   return size; 
 }
 
-size_t bs_conv_swab16(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_swab16(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   // If input size is odd we add a zero byte to the end.
   // Therefore output buffer size MUST BE LARGER than input buffer.
@@ -179,7 +179,7 @@ size_t bs_conv_swab16(uint8_t *in_buf, size_t size, uint8_t *out_buf)
 //                               byte <-> 14be
 ///////////////////////////////////////////////////////////////////////////////
 
-size_t bs_conv_8_14be(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_8_14be(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   // We expand the buffer size so output buffer size MUST BE LARGER than
   // input size specified.
@@ -197,7 +197,7 @@ size_t bs_conv_8_14be(uint8_t *in_buf, size_t size, uint8_t *out_buf)
 
   size_t n = size / 7;
   size_t r = size % 7;
-  uint8_t *src = in_buf + n * 7;
+  const uint8_t *src = in_buf + n * 7;
   uint8_t *dst = out_buf + n * 8;
 
   size = n * 8 + inc[r];
@@ -236,7 +236,7 @@ size_t bs_conv_8_14be(uint8_t *in_buf, size_t size, uint8_t *out_buf)
   return size;
 }
 
-size_t bs_conv_14be_8(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_14be_8(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   // Input frame size MUST BE EVEN!!!
   assert((size & 1) == 0);
@@ -248,7 +248,7 @@ size_t bs_conv_14be_8(uint8_t *in_buf, size_t size, uint8_t *out_buf)
 
   size_t n = size / 8;
   size_t r = size % 8;
-  uint8_t *src = in_buf;
+  const uint8_t *src = in_buf;
   uint8_t *dst = out_buf;
 
   size = n * 7 + r;
@@ -288,7 +288,7 @@ size_t bs_conv_14be_8(uint8_t *in_buf, size_t size, uint8_t *out_buf)
 ///////////////////////////////////////////////////////////////////////////////
 
 
-size_t bs_conv_8_14le(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_8_14le(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   // We expand the buffer size so output buffer size MUST BE LARGER than
   // input size specified.
@@ -306,7 +306,7 @@ size_t bs_conv_8_14le(uint8_t *in_buf, size_t size, uint8_t *out_buf)
 
   size_t n = size / 7;
   size_t r = size % 7;
-  uint8_t *src = in_buf + n * 7;
+  const uint8_t *src = in_buf + n * 7;
   uint8_t *dst = out_buf + n * 8;
 
   size = n * 8 + inc[r];
@@ -348,7 +348,7 @@ size_t bs_conv_8_14le(uint8_t *in_buf, size_t size, uint8_t *out_buf)
   return size;
 }
 
-size_t bs_conv_14le_8(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_14le_8(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   // Input frame size MUST BE EVEN!!!
   assert((size & 1) == 0);
@@ -360,7 +360,7 @@ size_t bs_conv_14le_8(uint8_t *in_buf, size_t size, uint8_t *out_buf)
 
   size_t n = size / 8;
   size_t r = size % 8;
-  uint8_t *src = in_buf;
+  const uint8_t *src = in_buf;
   uint8_t *dst = out_buf;
 
   size = n * 7 + r;
@@ -403,28 +403,28 @@ size_t bs_conv_14le_8(uint8_t *in_buf, size_t size, uint8_t *out_buf)
 //                              16bit <-> 14bit
 ///////////////////////////////////////////////////////////////////////////////
 
-size_t bs_conv_16le_14be(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_16le_14be(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   size = bs_conv_swab16(in_buf, size, out_buf);
   size = bs_conv_8_14be(out_buf, size, out_buf);
   return size; 
 }
 
-size_t bs_conv_16le_14le(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_16le_14le(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   size = bs_conv_swab16(in_buf, size, out_buf);
   size = bs_conv_8_14le(out_buf, size, out_buf);
   return size; 
 }
 
-size_t bs_conv_14be_16le(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_14be_16le(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   size = bs_conv_14be_8(in_buf, size, out_buf);
   size = bs_conv_swab16(out_buf, size, out_buf);
   return size; 
 }
 
-size_t bs_conv_14le_16le(uint8_t *in_buf, size_t size, uint8_t *out_buf)
+size_t bs_conv_14le_16le(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
 {
   size = bs_conv_14le_8(in_buf, size, out_buf);
   size = bs_conv_swab16(out_buf, size, out_buf);
