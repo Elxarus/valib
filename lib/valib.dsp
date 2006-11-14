@@ -582,6 +582,22 @@ SOURCE=..\valib\parsers\multi_header.cpp
 
 SOURCE=..\valib\parsers\multi_header.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_frame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_frame.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_header.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_header.h
+# End Source File
 # End Group
 # Begin Group "sink"
 
