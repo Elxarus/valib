@@ -13,7 +13,13 @@
   ================
 
   This test ensures that we load frames correctly and stream constructed back
-  of loaded frames is eqal to the original stream. 
+  of loaded frames is eqal to the original stream.
+
+  Because spdif stream has header and padding we have to scan input stream to
+  find start of the data to compare loaded frame with.
+
+  Also this test checks correct frame loading after inplace frame processing.
+  To simulate such processing we zap the frame buffer after comparing.
 
   We also count and check number of streams and frames in a file.
  
@@ -47,6 +53,7 @@
 #include "parsers\ac3\ac3_header.h"
 #include "parsers\dts\dts_header.h"
 #include "parsers\mpa\mpa_header.h"
+#include "parsers\spdif_header.h"
 #include "parsers\multi_header.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,47 +79,75 @@ public:
 
   int test()
   {
-    const HeaderParser *headers[] = { &ac3_header, &mpa_header, &dts_header };
+    const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
     MultiHeader multi_header(headers, array_size(headers));
 
     log->open_group("StreamBuffer test");
 
+    log->open_group("Passthrough test");
+
+    log->msg("MPAHeader test");
     passthrough("a.mp2.002.mp2",   &mpa_header, 1, 500);
     passthrough("a.mp2.005.mp2",   &mpa_header, 1, 500);
     passthrough("a.mp2.mix.mp2",   &mpa_header, 3, 1500);
     passthrough("a.mp2.005.spdif", &mpa_header, 1, 500, true);
                                    
+    log->msg("AC3Header test");
     passthrough("a.ac3.005.ac3",   &ac3_header, 1, 375);
     passthrough("a.ac3.03f.ac3",   &ac3_header, 1, 375);
     passthrough("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
     passthrough("a.ac3.03f.spdif", &ac3_header, 1, 375, true);
                                    
     // We cannot load the last frame of SPDIF/DTS stream.
-    // See note at StreamBuffer class comments...
+    // See note at StreamBuffer class comments.
+    log->msg("DTSHeader test");
     passthrough("a.dts.03f.dts",   &dts_header, 1, 1125);
     passthrough("a.dts.03f.spdif", &dts_header, 1, 1124, true);
                                    
+    // SPDIFHeader must work with SPDIF/DTS stream correctly
+    log->msg("SPDIFHeader test");
+    passthrough("a.mp2.005.spdif", &spdif_header, 1, 500, true);
+    passthrough("a.ac3.03f.spdif", &spdif_header, 1, 375, true);
+    passthrough("a.dts.03f.spdif", &spdif_header, 1, 1125, true);
+    passthrough("a.mad.mix.spdif", &spdif_header, 7, 4375, true);
+                                   
+    log->msg("MultiHeader test");
     passthrough("a.mad.mix.mad",   &multi_header, 7, 4375);
     passthrough("a.mad.mix.spdif", &multi_header, 7, 4375, true);
 
+    log->close_group();
+
+    log->open_group("Speed test");
+
     speed_noise(&ac3_header);
 
+    log->msg("MPAHeader test");
     speed_file("a.mp2.002.mp2",   &mpa_header);
     speed_file("a.mp2.005.mp2",   &mpa_header);
     speed_file("a.mp2.mix.mp2",   &mpa_header);
     speed_file("a.mp2.005.spdif", &mpa_header);
 
+    log->msg("AC3Header test");
     speed_file("a.ac3.005.ac3",   &ac3_header);
     speed_file("a.ac3.03f.ac3",   &ac3_header);
     speed_file("a.ac3.mix.ac3",   &ac3_header);
     speed_file("a.ac3.03f.spdif", &ac3_header);
 
+    log->msg("DTSHeader test");
     speed_file("a.dts.03f.dts",   &dts_header);
     speed_file("a.dts.03f.spdif", &dts_header);
 
+    log->msg("SPDIFHeader test");
+    speed_file("a.mp2.005.spdif", &spdif_header);
+    speed_file("a.ac3.03f.spdif", &spdif_header);
+    speed_file("a.dts.03f.spdif", &spdif_header);
+    speed_file("a.mad.mix.spdif", &spdif_header);
+
+    log->msg("MultiHeader test");
     speed_file("a.mad.mix.mad",   &multi_header);
     speed_file("a.mad.mix.spdif", &multi_header);
 
+    log->close_group();
     return log->close_group();
   }
 
@@ -203,6 +238,9 @@ public:
 
         if (data_differ)
           break;
+
+        // zap the frame buffer to simulate in-place processing
+        memset(frame, 0, frame_size);
       }       
     }
 
