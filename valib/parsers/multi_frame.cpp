@@ -73,6 +73,8 @@ MultiFrame::reset()
   spk = spk_unknown;
   nsamples = 0;
   samples.zero();
+  rawdata = 0;
+  rawsize = 0;
 
   parser = 0;
   hparser = 0;
@@ -98,6 +100,8 @@ MultiFrame::parse_frame(uint8_t *frame, size_t size)
     spk = parser->get_spk();
     samples = parser->get_samples();
     nsamples = parser->get_nsamples();
+    rawdata = parser->get_rawdata();
+    rawsize = parser->get_rawsize();
     return true;
   }
   else

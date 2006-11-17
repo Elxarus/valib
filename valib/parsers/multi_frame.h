@@ -31,6 +31,8 @@ public:
   virtual Speakers  get_spk()      const { return spk;      }
   virtual samples_t get_samples()  const { return samples;  }
   virtual size_t    get_nsamples() const { return nsamples; }
+  virtual uint8_t  *get_rawdata()  const { return rawdata;  }
+  virtual size_t    get_rawsize()  const { return rawsize;  }
 
   virtual size_t stream_info(char *buf, size_t size) const;
   virtual size_t frame_info(char *buf, size_t size) const;
@@ -41,6 +43,8 @@ protected:
   Speakers  spk;
   samples_t samples;
   int       nsamples;
+  uint8_t  *rawdata;
+  size_t    rawsize;
 
   FrameParser **parsers;
   size_t nparsers;
