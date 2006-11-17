@@ -47,7 +47,7 @@ MPAFrame::reset()
 }
 
 bool
-MPAFrame::parse_frame(const uint8_t *frame, size_t size)
+MPAFrame::parse_frame(uint8_t *frame, size_t size)
 {
   if (!parse_header(frame, size))
     return false;

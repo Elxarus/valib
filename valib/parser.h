@@ -222,12 +222,12 @@ public:
   virtual const HeaderParser *header_parser() const = 0;
 
   virtual void reset() = 0;
-  virtual bool parse_frame(const uint8_t *frame, size_t size) = 0;
+  virtual bool parse_frame(uint8_t *frame, size_t size) = 0;
 
   virtual Speakers  get_spk() const = 0;
   virtual samples_t get_samples() const = 0;
   virtual size_t    get_nsamples() const = 0;
-  virtual const uint8_t *get_rawdata() const = 0;
+  virtual uint8_t  *get_rawdata() const = 0;
   virtual size_t    get_rawsize() const = 0;
 
   virtual size_t stream_info(char *buf, size_t size) const = 0;

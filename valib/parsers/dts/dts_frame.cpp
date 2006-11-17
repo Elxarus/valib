@@ -144,7 +144,7 @@ DTSFrame::reset()
 }
 
 bool
-DTSFrame::parse_frame(const uint8_t *frame, size_t size)
+DTSFrame::parse_frame(uint8_t *frame, size_t size)
 {
   HeaderInfo hinfo;
 

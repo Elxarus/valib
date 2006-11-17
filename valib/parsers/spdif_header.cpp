@@ -33,11 +33,11 @@ SPDIFHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
   if ((hdr[0] != 0x72) || (hdr[1] != 0xf8) || (hdr[2] != 0x1f) || (hdr[3] != 0x4e))
     return false;
 
-  const spdif_header_s *spdif_header = (spdif_header_s *)hdr;
+  const spdif_header_s *header = (spdif_header_s *)hdr;
   const uint8_t *subheader = hdr + sizeof(spdif_header_s);
   HeaderInfo subinfo;
 
-  const HeaderParser *parser = find_parser(spdif_header->type);
+  const HeaderParser *parser = find_parser(header->type);
 
   if (!parser)
     return false;
@@ -61,7 +61,7 @@ SPDIFHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     hinfo->spk.format = FORMAT_SPDIF;
     hinfo->frame_size = subinfo.nsamples * 4 - 8;
     hinfo->nsamples = subinfo.nsamples;
-    hinfo->spdif_type = spdif_header->type;
+    hinfo->spdif_type = header->type;
   }
   return true;
 }
@@ -73,8 +73,8 @@ SPDIFHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       (hdr2[0] != 0x72) || (hdr2[1] != 0xf8) || (hdr2[2] != 0x1f) || (hdr2[3] != 0x4e))
     return false;
 
-  const spdif_header_s *spdif_header = (spdif_header_s *)hdr1;
-  const HeaderParser *parser = find_parser(spdif_header->type);
+  const spdif_header_s *header = (spdif_header_s *)hdr1;
+  const HeaderParser *parser = find_parser(header->type);
   if (parser)
     return parser->compare_headers(hdr1 + sizeof(spdif_header_s), hdr2 + sizeof(spdif_header_s));
   else
@@ -89,11 +89,11 @@ SPDIFHeader::header_info(const uint8_t *hdr, char *buf, size_t size) const
 
   if ((hdr[0] == 0x72) && (hdr[1] == 0xf8) && (hdr[2] == 0x1f) && (hdr[3] == 0x4e))
   {
-    spdif_header_s *spdif_header = (spdif_header_s *)hdr;
+    spdif_header_s *header = (spdif_header_s *)hdr;
     const uint8_t *subheader = hdr + sizeof(spdif_header_s);
     HeaderInfo subinfo;
 
-    const HeaderParser *parser = find_parser(spdif_header->type);
+    const HeaderParser *parser = find_parser(header->type);
     if (parser)
     {
       if (parser->parse_header(subheader, &subinfo))

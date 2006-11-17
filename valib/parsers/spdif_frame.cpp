@@ -52,20 +52,20 @@ SPDIFFrame::reset()
 }
 
 bool
-SPDIFFrame::parse_frame(const uint8_t *frame, size_t size)
+SPDIFFrame::parse_frame(uint8_t *frame, size_t size)
 {
   if ((frame[0] != 0x72) || (frame[1] != 0xf8) || (frame[2] != 0x1f) || (frame[3] != 0x4e))
     return false;
 
-  const spdif_header_s *spdif_header = (spdif_header_s *)frame;
-  const uint8_t *subheader = frame + sizeof(spdif_header_s);
+  const spdif_header_s *header = (spdif_header_s *)frame;
+  uint8_t *subheader = frame + sizeof(spdif_header_s);
 
-  const HeaderParser *parser = find_parser(spdif_header->type);
+  const HeaderParser *parser = find_parser(header->type);
   if (parser)
     if (parser->parse_header(subheader, &hdr))
     {
       data = subheader;
-      data_size = spdif_header->len / 8;
+      data_size = header->len / 8;
       return true;
     }
 

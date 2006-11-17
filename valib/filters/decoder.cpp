@@ -344,7 +344,10 @@ Decoder::get_chunk(Chunk *_chunk)
   {
     case state_frame_decoded:
       // send the decoded frame
-      _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
+      if (out_spk.is_linear())
+        _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
+      else
+        _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
       sync_helper.send_sync(_chunk);
 
       // load next frame
@@ -358,8 +361,10 @@ Decoder::get_chunk(Chunk *_chunk)
       // decode and send the frame
       if (!decode_frame())
         _chunk->set_empty(out_spk);
+      else if (out_spk.is_linear())
+        _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
       else
-       _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
+        _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
       sync_helper.send_sync(_chunk);
 
       // load next frame
