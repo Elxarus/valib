@@ -339,6 +339,14 @@ protected:
   size_t   frame_size;           // size of the frame loaded
   size_t   frame_interval;       // frame interval
 
+  // Pointer to the copy of the header of the last frame loaded.
+  // We need this header to load next frame, but frame data of the current
+  // frame loaded may be changed by in-place frame processing. Threrfore we
+  // have to keep a copy of the header...
+
+  uint8_t *header;               
+                                 
+
   bool sync(uint8_t **data, uint8_t *data_end);
 
 public:

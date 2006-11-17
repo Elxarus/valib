@@ -79,7 +79,7 @@ bool
 StreamBuffer::set_parser(const HeaderParser *_parser)
 {
   if (!_parser) return false;
-  if  (!buf.allocate(_parser->max_frame_size() * 2 + _parser->header_size()))
+  if  (!buf.allocate(_parser->max_frame_size() * 3 + _parser->header_size()))
     return false;
 
   parser        = _parser;
@@ -88,7 +88,8 @@ StreamBuffer::set_parser(const HeaderParser *_parser)
   max_frame_size = parser->max_frame_size();
   hdr.drop();
 
-  frame = buf.get_data();
+  header = buf.get_data();
+  frame = buf.get_data() + header_size;
 
   in_sync = false;
   new_stream = false;
@@ -236,7 +237,8 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
         new_stream = true;
         frame_loaded = true;
 
-        parser->parse_header(frame, &hdr);
+        memcpy(header, frame, header_size);
+        parser->parse_header(header, &hdr);
         frame_interval = frame2 - frame;
         frame_size = hdr.frame_size? hdr.frame_size: frame_interval;
 
@@ -300,7 +302,7 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
   while (frame2 <= frame2_max)
   {
     LOAD(frame2 - frame + header_size);
-    if (!parser->compare_headers(frame, frame2) || !parser->parse_header(frame2, &hdr))
+    if (!parser->compare_headers(header, frame2) || !parser->parse_header(frame2, &hdr))
     {
       frame2++;
       continue;
@@ -317,6 +319,7 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
     // DONE! Drop old frame and prepare new frame output.
 
     DROP(frame_interval);
+    memcpy(header, frame, header_size);
     frame_loaded = true;
     return true;
   }
