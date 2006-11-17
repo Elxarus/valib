@@ -157,21 +157,21 @@ public:
   {
     bs_conv_t conv1 = 0, conv2 = 0, conv3 = 0;
 
-    conv1 = find_conversion(bs_type1, bs_type2);
+    conv1 = bs_conversion(bs_type1, bs_type2);
     if (!conv1) return log->err("Cannot find conversion %s -> %s", bs_name(bs_type1), bs_name(bs_type2));
 
     if (bs_type3 == -1)
     {
-      conv2 = find_conversion(bs_type2, bs_type1);
+      conv2 = bs_conversion(bs_type2, bs_type1);
       if (!conv2) return log->err("Cannot find conversion %s -> %s", bs_name(bs_type2), bs_name(bs_type1));
 
       log->msg("Conversion %s-%s", bs_name(bs_type1), bs_name(bs_type2));
     }
     else
     {
-      conv2 = find_conversion(bs_type2, bs_type3);
+      conv2 = bs_conversion(bs_type2, bs_type3);
       if (!conv2) return log->err("Cannot find conversion %s -> %s", bs_name(bs_type2), bs_name(bs_type3));
-      conv3 = find_conversion(bs_type3, bs_type1);
+      conv3 = bs_conversion(bs_type3, bs_type1);
       if (!conv3) return log->err("Cannot find conversion %s -> %s", bs_name(bs_type3), bs_name(bs_type1));
 
       log->msg("Conversion %s-%s-%s", bs_name(bs_type1), bs_name(bs_type2), bs_name(bs_type3));
