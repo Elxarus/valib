@@ -5,6 +5,11 @@ cd ac3enc
 call _clear.bat
 cd ..
 
+echo bsconvert...
+cd bsconvert
+call _clear.bat
+cd ..
+
 echo lib...
 cd lib
 call _clear.bat
