@@ -58,14 +58,24 @@ HeaderParser::header_info(const uint8_t *hdr, char *buf, size_t size) const
 
 StreamBuffer::StreamBuffer()
 {
+  frames = 0;
+
   parser = 0;
+  header_size = 0;
+  min_frame_size = 0;
+  max_frame_size = 0;
   frame = 0;
   reset();
 }
 
 StreamBuffer::StreamBuffer(const HeaderParser *_parser)
 {
+  frames = 0;
+
   parser = 0;
+  header_size = 0;
+  min_frame_size = 0;
+  max_frame_size = 0;
   frame = 0;
   reset();
 
@@ -79,7 +89,7 @@ bool
 StreamBuffer::set_parser(const HeaderParser *_parser)
 {
   if (!_parser) return false;
-  if  (!buf.allocate(_parser->max_frame_size() * 3 + _parser->header_size()))
+  if  (!buf.allocate(_parser->max_frame_size() * 2 + _parser->header_size() * 4))
     return false;
 
   parser        = _parser;
@@ -119,7 +129,7 @@ StreamBuffer::reset()
 #define LOAD(required_size)                           \
 if (frame_data < required_size)                       \
 {                                                     \
-  size_t load_size = required_size - frame_data;      \
+  int load_size = required_size - frame_data;         \
   if (*data + load_size > end)                        \
   {                                                   \
     load_size = end - *data;                          \
@@ -149,35 +159,60 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
 {
   while (1)
   {
-    LOAD(header_size);
-    if (!parser->parse_header(frame, &hdr))
+    ///////////////////////////////////////////////////////////////////////////
+    // Search 1st syncpoint
+
+    if (frame_data + (end - *data) < header_size)
     {
-      DROP(1);
-      continue;
+      size_t load_size = end - *data;
+      memcpy(frame + frame_data, *data, load_size);
+      frame_data += load_size;
+      *data += load_size;
+      return false;
     }
+    else if (frame_data < max_frame_size * 2)
+    {
+      size_t load_size = MIN(max_frame_size * 2 - frame_data, size_t(end - *data));
+      memcpy(frame + frame_data, *data, load_size);
+      frame_data += load_size;
+      *data += load_size;
+    }
+
+    for (size_t i = 0; i <= frame_data - header_size; i++)
+      if (parser->parse_header(frame + i, &hdr))
+        break;
+
+    DROP(i);
+    if (frame_data < header_size)
+      continue;
  
     ///////////////////////////////////////////////////////////////////////////
-    // Find 2nd syncpoint
-    // * If frame size can be determined from header we must search next
-    //   syncpoint after the end of the frame but not further than maximum
-    //   frame size.
-    // * If frame size is unknown from the header info we must search next
-    //   syncpoint in between of minimum and maximum frame sizes.
+    // Search 2nd syncpoint
+    // * If frame size can be determined from the header we must search next
+    //   syncpoint after the end of the frame but not further than scan size
+    //   (only if scan size if specified, do not scan at all otherwise).
+    // * If frame size is unknown from the header we must search next syncpoint
+    //   after the minimum frame size and the scan size (or maximum frame size
+    //   if scan interval is not specified).
 
-    uint8_t *frame2     = frame;
-    uint8_t *frame2_max = frame + max_frame_size;
-
-    // Skip first frame data (if we know the frame size) or minimum frame size
+    uint8_t *frame2;
+    uint8_t *frame2_max;
 
     if (hdr.frame_size)
-      frame2 += hdr.frame_size;
+    {
+      frame2 = frame + hdr.frame_size;
+      frame2_max = frame + MAX(hdr.scan_size, hdr.frame_size);
+    }
     else
-      frame2 += min_frame_size;
+    {
+      frame2 = frame + min_frame_size;
+      frame2_max = frame + (hdr.scan_size? hdr.scan_size: max_frame_size);
+    }
 
-    // Scan second synpoint position. If we have found correct header then
-    // try to locate 3rd syncpoint. If we cannot find 3rd syncpoint we must
-    // continue 2nd syncpoint scanning because frame data may contain something
-    // that looks like correct frame header but it is not.
+    // Search second synpoint. If we have found correct header then try to
+    // locate 3rd syncpoint. If we cannot find 3rd syncpoint we must continue
+    // 2nd syncpoint scanning because frame data may contain something that
+    // looks like correct frame header but it is not.
 
     while (frame2 <= frame2_max)
     {
@@ -209,7 +244,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
       if (hdr.frame_size)
       {
         frame3     = frame2 + hdr.frame_size;
-        frame3_max = frame2 + max_frame_size;
+        frame3_max = frame2 + MAX(hdr.scan_size, hdr.frame_size);
       }
       else
       {
@@ -242,6 +277,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
         frame_interval = frame2 - frame;
         frame_size = hdr.frame_size? hdr.frame_size: frame_interval;
 
+        frames++;
         return true;
       }
 
@@ -281,15 +317,15 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
   new_stream = false;
   frame_loaded = false;
 
-  uint8_t *frame2     = frame;
-  uint8_t *frame2_max = frame2 + max_frame_size;
+  uint8_t *frame2;
+  uint8_t *frame2_max;
 
   // Skip first frame data and set maximum scan range
 
   if (hdr.frame_size)
   {
-    frame2     = frame + hdr.frame_size;
-    frame2_max = frame + max_frame_size;
+    frame2 = frame + hdr.frame_size;
+    frame2_max = frame + MAX(hdr.scan_size, hdr.frame_size);
   }
   else
   {
@@ -321,6 +357,8 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
     DROP(frame_interval);
     memcpy(header, frame, header_size);
     frame_loaded = true;
+
+    frames++;
     return true;
   }
 

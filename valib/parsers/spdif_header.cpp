@@ -60,6 +60,7 @@ SPDIFHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     hinfo->spk = subinfo.spk;
     hinfo->spk.format = FORMAT_SPDIF;
     hinfo->frame_size = subinfo.nsamples * 4 - 8;
+    hinfo->scan_size = subinfo.nsamples * 4;
     hinfo->nsamples = subinfo.nsamples;
     hinfo->spdif_type = header->type;
   }

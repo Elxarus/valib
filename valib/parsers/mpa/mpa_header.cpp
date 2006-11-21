@@ -119,7 +119,7 @@ MPAHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     hinfo->frame_size *= 4;
 
   hinfo->nsamples = layer == 0? 384: 1152;
-
+  hinfo->scan_size = hinfo->nsamples * 4; // can work with SPDIF stream
   hinfo->bs_type = bs_type;
 
   if (ver)

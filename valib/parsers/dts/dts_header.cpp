@@ -91,6 +91,7 @@ DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
   hinfo->frame_size = 0; // do not rely on the frame size specified at header!!!
   hinfo->bs_type = bs_type;
   hinfo->nsamples = nblks * 32;
+  hinfo->scan_size = 16384; // always scan up to maximum DTS frame size
 
   switch (hinfo->nsamples)
   {

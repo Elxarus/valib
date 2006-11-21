@@ -58,6 +58,11 @@ class ParserBuffer;
 //   0  - frame size is unknown (free format stream)
 //   >0 - correct header, frame size is returned
 //
+// scan_size
+//   Use scanning to locate next syncpoint
+//   0  - do not use scanning
+//   >0 - maximum distance between syncpoints to scan
+//
 // nsamples
 //   Number of samples at the given frame.
 //
@@ -128,6 +133,7 @@ struct HeaderInfo
 {
   Speakers spk;
   size_t   frame_size;
+  size_t   scan_size;
   size_t   nsamples;
   int      bs_type;
   uint16_t spdif_type;
@@ -135,14 +141,17 @@ struct HeaderInfo
   HeaderInfo(): 
     spk(spk_unknown),
     frame_size(0),
+    scan_size(0),
     nsamples(0),
     bs_type(0),
-    spdif_type(0) {};
+    spdif_type(0)
+    {};
 
   inline void drop()
   {
     spk        = spk_unknown;
     frame_size = 0;
+    scan_size  = 0;
     nsamples   = 0;
     bs_type    = BITSTREAM_NONE;
     spdif_type = 0;
@@ -331,6 +340,7 @@ protected:
   bool in_sync;                  // we're in sync with the stream
   bool new_stream;               // frame loaded belongs to a new stream
   bool frame_loaded;             // frame is loaded
+  int  frames;                   // number of frames loaded
 
   // Frame-related info
 
@@ -363,6 +373,7 @@ public:
   bool is_in_sync()             const { return in_sync;      }
   bool is_new_stream()          const { return new_stream;   }
   bool is_frame_loaded()        const { return frame_loaded; }
+  int  get_frames()             const { return frames;       }
 
   Speakers get_spk()            const { return hdr.spk;        }
   uint8_t *get_frame()          const { return frame;          }
