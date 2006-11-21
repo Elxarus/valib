@@ -63,6 +63,9 @@ public:
   bool set_parser(FrameParser *parser);
   const FrameParser *get_parser() const;
 
+  int  get_frames() const { return stream.get_frames(); }
+  int  stream_info(char *buf, size_t len) const { return stream.stream_info(buf, len); }
+
   /////////////////////////////////////////////////////////
   // Filter interface
 
