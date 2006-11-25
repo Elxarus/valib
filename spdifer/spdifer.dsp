@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "TIME_WIN32" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "TIME_WIN32" /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x419 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -62,9 +62,10 @@ LINK32=link.exe
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\valib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "TIME_WIN32" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\valib" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "TIME_WIN32" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -80,94 +81,6 @@ LINK32=link.exe
 
 # Name "spdifer - Win32 Release"
 # Name "spdifer - Win32 Debug"
-# Begin Group "valib"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\valib\auto_file.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\bitstream.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\bitstream.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\crc.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\defs.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\source\raw_source.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\source\raw_source.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\sink\sink_raw.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\sink\sink_wav.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\sink\sink_wav.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filters\spdifer.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filters\spdifer.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\spk.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\spk.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\sync.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\syncscan.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\syncscan.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\vtime.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\vtime.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\win32\winspk.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\win32\winspk.h
-# End Source File
-# End Group
 # Begin Source File
 
 SOURCE=.\main.cpp

@@ -112,7 +112,7 @@ int main(int argc, const char **argv)
     if (stat) if (src.eof() || local_time() > old_time + 0.1)
     {
       int n;
-      Speakers sync = spdifer.get_sync();
+      Speakers sync = spdifer.header_info().spk;
       old_time = local_time();
 
       float processed = float(isize);
