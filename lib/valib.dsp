@@ -90,7 +90,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Perf"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "DOUBLE_SAMPLE" /YX /FD /c
-# ADD CPP /nologo /G6 /MT /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /FR /YX /FD /c
+# ADD CPP /nologo /G6 /MT /W3 /Zi /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "TIME_WIN32" /FR /YX /FD /c
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
 # ADD RSC /l 0x417 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -364,6 +364,14 @@ SOURCE=..\valib\filters\mixer.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\parser_filter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\parser_filter.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\proc.cpp
 # End Source File
 # Begin Source File
@@ -443,14 +451,6 @@ SOURCE=..\valib\parsers\ac3\ac3_mdct.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\ac3\ac3_parser.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\ac3\ac3_parser.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\parsers\ac3\ac3_tables.h
 # End Source File
 # End Group
@@ -476,14 +476,6 @@ SOURCE=..\valib\parsers\mpa\mpa_header.cpp
 # Begin Source File
 
 SOURCE=..\valib\parsers\mpa\mpa_header.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\mpa\mpa_parser.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\mpa\mpa_parser.h
 # End Source File
 # Begin Source File
 
@@ -524,14 +516,6 @@ SOURCE=..\valib\parsers\dts\dts_header.cpp
 # Begin Source File
 
 SOURCE=..\valib\parsers\dts\dts_header.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\dts\dts_parser.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\dts\dts_parser.h
 # End Source File
 # Begin Source File
 
@@ -597,6 +581,14 @@ SOURCE=..\valib\parsers\spdif_header.cpp
 # Begin Source File
 
 SOURCE=..\valib\parsers\spdif_header.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_wrapper.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_wrapper.h
 # End Source File
 # End Group
 # Begin Group "sink"
