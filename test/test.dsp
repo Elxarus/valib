@@ -50,8 +50,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /debug /machine:I386
-# SUBTRACT LINK32 /map /nodefaultlib
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /debug /debugtype:both /machine:I386
+# SUBTRACT LINK32 /nodefaultlib
 
 !ELSEIF  "$(CFG)" == "test - Win32 Debug"
 
@@ -287,6 +287,14 @@ SOURCE=..\valib\filters\mixer.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\parser_filter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\parser_filter.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\proc.cpp
 # End Source File
 # Begin Source File
@@ -366,14 +374,6 @@ SOURCE=..\valib\parsers\ac3\ac3_mdct.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\ac3\ac3_parser.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\ac3\ac3_parser.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\parsers\ac3\ac3_tables.h
 # End Source File
 # End Group
@@ -399,14 +399,6 @@ SOURCE=..\valib\parsers\mpa\mpa_header.cpp
 # Begin Source File
 
 SOURCE=..\valib\parsers\mpa\mpa_header.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\mpa\mpa_parser.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\mpa\mpa_parser.h
 # End Source File
 # Begin Source File
 
@@ -450,14 +442,6 @@ SOURCE=..\valib\parsers\dts\dts_header.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\dts\dts_parser.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\dts\dts_parser.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\parsers\dts\dts_tables.h
 # End Source File
 # Begin Source File
@@ -483,6 +467,14 @@ SOURCE=..\valib\parsers\dts\dts_tables_vq.h
 # End Group
 # Begin Source File
 
+SOURCE=..\valib\parsers\file_parser.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\file_parser.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parsers\multi_frame.cpp
 # End Source File
 # Begin Source File
@@ -496,6 +488,30 @@ SOURCE=..\valib\parsers\multi_header.cpp
 # Begin Source File
 
 SOURCE=..\valib\parsers\multi_header.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_frame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_frame.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_header.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_header.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_wrapper.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif_wrapper.h
 # End Source File
 # End Group
 # Begin Group "sink"

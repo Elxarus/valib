@@ -7,9 +7,6 @@
   * Test CRC of large noise buffer with different bitstreams
   * Test CRC speed of different bitstreams
   * Test speed of simple CRC16 table algorithm
-  * Test parsers' CRC check with different parsers and bitstreams
-  * Test error detection coverage with different parsers
-  * Determine CRC overhead in parsers
 */
 
 #include "log.h"
@@ -17,11 +14,6 @@
 #include "source\noise.h"
 #include "source\raw_source.h"
 #include "win32\cpu.h"
-
-#include "parsers\ac3\ac3_parser.h"
-#include "parsers\dts\dts_parser.h"
-#include "parsers\mpa\mpa_parser.h"
-
 
 static const vtime_t time_per_test = 1.0; // 1 sec for each speed test
 static const int size = 10000000;         // use 10MB noise buffer
@@ -65,11 +57,7 @@ class CRCTest
 {
 protected:
   Log *log;
-
   CRC crc;
-  MPAParser mpa;
-  AC3Parser ac3;
-  DTSParser dts;
 
 public:
   CRCTest(Log *_log)
@@ -82,7 +70,6 @@ public:
     log->open_group("CRC test");
     math_test();
     speed_test();
-    parser_test();
     return log->close_group();
   }
 
@@ -120,38 +107,6 @@ public:
     speed_test(BITSTREAM_16LE, "16bit LE",    chunk.rawdata, chunk.size, 0x826f0000);
     speed_test(BITSTREAM_32BE, "32bit BE",    chunk.rawdata, chunk.size, 0x75890000);
     speed_test(BITSTREAM_32LE, "32bit LE",    chunk.rawdata, chunk.size, 0x00470000);
-    log->close_group();
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  // Test all parsers
-
-  void parser_test()
-  {
-    log->open_group("Parser error detection test");
-
-    parser_test(&mpa, 500, "a.mp2.005.mp2");
-    parser_test(&mpa, 500, "a.mp2.005.spdif");
-
-    parser_test(&ac3, 375, "a.ac3.03f.ac3");
-    parser_test(&ac3, 375, "a.ac3.03f.spdif");
-
-    ///////////////////////////////////////////////////////
-    // Some notes about DTS
-    // 1. DTSParser does not do CRC check currently
-    // 2. CRC protected DTS stream is uncommon case
-    // But parser test allows us to know error detection
-    // coverage and stream scan speed. It is useful and 
-    // therefore it is included in this test, regardless of
-    // the fact that it is not a CRC test but general error
-    // detection test.
-    //
-    // Possibly, this test should be moved to parsers test
-    // later and do not only scan but decode test also...
-
-    parser_test(&dts, 1125, "a.dts.03f.dts");
-    parser_test(&dts, 1125, "a.dts.03f.spdif");
-
     log->close_group();
   }
 
@@ -238,9 +193,6 @@ public:
       for (int size = 0; size < max_size; size++)
         for (int shift = 0; shift < max_shift; shift++)
         {
-          if (size == 3 && shift == 23)
-            size = size;
-
           int bpw = word_bits[bs_index]; // bits per word
           int start_word = shift / bpw;
           int end_word   = (shift + size) / bpw;
@@ -318,173 +270,6 @@ public:
               bs_name[bs_index], size, shift, crc_test, crc_msg);
         }
     return 0;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////
-  // Parser test
-  //
-  // Scan (not decode) file 3 times:
-  // * without crc check
-  // * with crc check
-  // * break some frames
-  //
-  // This allows us to determine:
-  // * correct frame load with and without crc detection enabled
-  // * find error detection coverage
-  // * find crc performance overhead
-
-  int parser_test(BaseParser *parser, int frames, const char *filename)
-  {
-    log->open_group("Scanning file %s (%i frames):", filename, frames);
-    parser_test_int(parser, frames, filename);
-    return log->close_group();
-  }
-
-  int parser_test_int(BaseParser *parser, int frames, const char *filename)
-  {
-    int runs;
-    int frame_count;
-    int broken_frames;
-    float speed_nocrc;
-    float speed_crc;
-    float speed_broken;
-
-    uint8_t *ptr;
-    uint8_t *end;
-
-    Chunk chunk;
-    RAWSource f;
-    CPUMeter cpu;
-
-    if (!f.open(spk_unknown, filename))
-      return log->err("Cannot open file %s", filename);
-
-    ///////////////////////////////////////////////////////
-    // Load all frames without CRC check
-
-    runs = 0;
-    frame_count = 0;
-    parser->do_crc = false;
-    parser->reset();
-    cpu.reset();
-    cpu.start();
-    while (cpu.get_thread_time() < time_per_test)
-    {
-      runs++;
-
-      if (!f.open(spk_unknown, filename))
-        return log->err("Cannot open file %s", filename);
-
-      while (!f.is_empty()) 
-      {
-        f.get_chunk(&chunk);
-        ptr = chunk.rawdata;
-        end = chunk.rawdata + chunk.size;
-        while (ptr < end)
-          if (parser->load_frame(&ptr, end))
-//            if (parser->decode_frame())
-              frame_count++;
-      }
-    }
-    cpu.stop();
-    speed_nocrc = (float)(f.size() * runs / cpu.get_thread_time() / 1000000);
-    frame_count /= runs;
-
-    if (frame_count != frames)
-      return log->err("Frames found without CRC check: %i (must be %i)", frame_count, frames);
-
-
-    ///////////////////////////////////////////////////////
-    // Load all frames with CRC check
-
-    runs = 0;
-    frame_count = 0;
-    parser->do_crc = true;
-    parser->reset();
-    cpu.reset();
-    cpu.start();
-    while (cpu.get_thread_time() < time_per_test)
-    {
-      runs++;
-
-      if (!f.open(spk_unknown, filename))
-        return log->err("Cannot open file %s", filename);
-
-      while (!f.is_empty()) 
-      {
-        f.get_chunk(&chunk);
-        ptr = chunk.rawdata;
-        end = chunk.rawdata + chunk.size;
-        while (ptr < end)
-          if (parser->load_frame(&ptr, end))
-//            if (parser->decode_frame())
-              frame_count++;
-      }
-    }
-    cpu.stop();
-    speed_crc = (float)(f.size() * runs / cpu.get_thread_time() / 1000000);
-    frame_count /= runs;
-
-    if (frame_count != frames)
-      return log->err("Frames found with CRC check: %i (must be %i)", frame_count, frames);
-
-
-    ///////////////////////////////////////////////////////
-    // Break some frames
-    // Do not change 0 value because 0 is used at spdif -
-    // wrapped stream as padding and does not participate 
-    // at crc check.
-
-    runs = 0;
-    frame_count = 0;
-    broken_frames = 0;
-    parser->do_crc = true;
-    parser->reset();
-    cpu.reset();
-    cpu.start();
-    while (cpu.get_thread_time() < time_per_test)
-    {
-      runs++;
-
-      if (!f.open(spk_unknown, filename))
-        return log->err("Cannot open file %s", filename);
-
-      while (!f.is_empty()) 
-      {
-        f.get_chunk(&chunk);
-        ptr = chunk.rawdata;
-        end = chunk.rawdata + chunk.size;
-
-        for (size_t i = err_dist; i < chunk.size; i += err_dist)
-          if (ptr[i] != 0)
-          {
-            ptr[i] = 0;
-            broken_frames++;
-          }
-
-        while (ptr < end)
-        {
-          if (parser->load_frame(&ptr, end))
-//            if (parser->decode_frame())
-              frame_count++;
-        }
-      }
-    }
-    cpu.stop();
-    speed_broken = (float)(f.size() * runs / cpu.get_thread_time() / 1000000);
-    frame_count /= runs;
-    broken_frames /= runs;
-
-    if (broken_frames)
-      log->msg("Broken frames: %i Detected: %i (%i%% detected)", 
-        broken_frames, frames - frame_count, (frames - frame_count) * 100 / broken_frames);
-    else
-      log->err("No broken frames produced");
-
-    log->msg("No CRC: %.0fMB/s CRC: %.0fMB/s (%.1f times speed diff)", 
-      speed_nocrc, speed_crc, speed_nocrc / speed_crc);
-
-    return log->get_errors();
   }
 
   ///////////////////////////////////////////////////////////////////////////////

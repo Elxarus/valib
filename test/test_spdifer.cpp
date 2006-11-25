@@ -28,7 +28,6 @@
 #include "log.h"
 #include "filter_tester.h"
 #include "filters\spdifer.h"
-#include "filters\demux.h"
 #include <source\noise.h>
 #include <source\raw_source.h>
 #include <win32\cpu.h>
@@ -53,14 +52,14 @@ class Spdifer_test
 {
 protected:
   FilterTester t;
-  Spdifer s;
+  Spdifer spdifer;
   Log *log;
 
 public:
   Spdifer_test(Log *_log)
   {
     log = _log;
-    t.link(&s, log);
+    t.link(&spdifer, log);
   }
 
   int test()

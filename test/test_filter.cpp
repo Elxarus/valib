@@ -118,11 +118,6 @@ Format change
 
 #include "filter_graph.h"
 
-#include "parsers\mpa\mpa_frame.h"
-#include "parsers\ac3\ac3_frame.h"
-#include "parsers\dts\dts_frame.h"
-#include "parsers\multi_frame.h"
-
 static const int formats[] = 
 { 
   FORMAT_UNKNOWN, // unspecified format
@@ -170,14 +165,6 @@ int test_rules_filter_int(Log *log, Filter *filter,
 
 int test_rules(Log *log)
 {
-  // parsers
-  MPAFrame mpa_parser;
-  AC3Frame ac3_parser;
-  DTSFrame dts_parser;
-
-  FrameParser *parsers[] = { &mpa_parser, &ac3_parser, &dts_parser };
-  MultiFrame multi_parser(parsers, array_size(parsers));
-
   // Base filters
   NullFilter     null(FORMAT_MASK_LINEAR);
   FilterGraph    filter_graph(FORMAT_MASK_LINEAR);
@@ -187,12 +174,12 @@ int test_rules(Log *log)
   Converter      conv_lr(2048);
   Converter      conv_rl(2048);
 
-  Decoder        dec_mpa(&mpa_parser);
-  Decoder        dec_mpa_mix(&mpa_parser);
-  Decoder        dec_ac3(&ac3_parser);
-  Decoder        dec_ac3_mix(&ac3_parser);
-  Decoder        dec_dts(&dts_parser);
-  Decoder        dec_multi(&multi_parser);
+  AudioDecoder   dec_mpa;
+  AudioDecoder   dec_mpa_mix;
+  AudioDecoder   dec_ac3;
+  AudioDecoder   dec_ac3_mix;
+  AudioDecoder   dec_dts;
+  AudioDecoder   dec_mix;
 
   Demux          demux;
   Spdifer        spdifer;
@@ -261,27 +248,22 @@ int test_rules(Log *log)
 
   // Rawdata (ofdd) filters
 
-  test_rules_filter(log, &dec_multi, "Decoder (mix)",
-    Speakers(FORMAT_RAWDATA, 0, 48000), "a.mad.mix.mad",
-    Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad",
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
-
-  test_rules_filter(log, &dec_mpa, "Decoder (MPA)",
+  test_rules_filter(log, &dec_mpa, "AudioDecoder (MPA)",
     Speakers(FORMAT_MPA, MODE_STEREO, 48000), "a.mp2.005.mp2",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.mp2.002.mp2",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dec_mpa_mix, "Decoder (MPA mix)",
+  test_rules_filter(log, &dec_mpa_mix, "AudioDecoder (MPA mix)",
     Speakers(FORMAT_MPA, 0, 48000), "a.mp2.mix.mp2",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.mp2.002.mp2",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dec_ac3, "Decoder (AC3)",
+  test_rules_filter(log, &dec_ac3, "AudioDecoder (AC3)",
     Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.03f.ac3",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.005.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dec_ac3_mix, "Decoder (AC3 mix)",
+  test_rules_filter(log, &dec_ac3_mix, "AudioDecoder (AC3 mix)",
     Speakers(FORMAT_AC3, 0, 48000), "a.ac3.mix.ac3",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.005.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
@@ -294,6 +276,11 @@ int test_rules(Log *log)
   test_rules_filter(log, &demux, "Demuxer",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_PES, MODE_STEREO, 48000), "a.ac3.03f.pes",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &dec_mix, "AudioDecoder (mix)",
+    Speakers(FORMAT_RAWDATA, 0, 48000), "a.mad.mix.mad",
+    Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   test_rules_filter(log, &spdifer, "Spdifer",

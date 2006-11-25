@@ -444,6 +444,9 @@ public:
         }
       }
 
+    if (data_size < min_data_size)
+      return log->err("Filter does not gernerate data!");
+
     // well done...
     // (filter may be either full or empty)
     return 0;
