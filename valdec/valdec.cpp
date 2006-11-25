@@ -5,18 +5,23 @@
 #include <conio.h>
 #include <math.h>
     
-#include "parsers\ac3\ac3_parser.h"
-#include "parsers\dts\dts_parser.h"
-#include "parsers\mpa\mpa_parser.h"
+// parsers
 #include "parsers\file_parser.h"
 
-#include "filters\proc.h"
-#include "filters\spdifer.h"
+#include "parsers\ac3\ac3_header.h"
+#include "parsers\dts\dts_header.h"
+#include "parsers\mpa\mpa_header.h"
+#include "parsers\multi_header.h"
 
+// sinks
 #include "sink\sink_raw.h"
 #include "sink\sink_wav.h"
 #include "sink\sink_dsound.h"
 
+// filters
+#include "filters\dvd_graph.h"
+
+// other
 #include "win32\cpu.h"
 
 
@@ -126,9 +131,9 @@ int main(int argc, char *argv[])
            "  output options:\n"
            "    -spdif - spdif output (no other options will work in this mode)\n"
            "    -spk:n - set number of output channels:\n"
-           "          0 - from file     4 - 2/2 (quadro)\n" 
+           "      (*) 0 - from file     4 - 2/2 (quadro)\n" 
            "          1 - 1/0 (mono)    5 - 3/2 (5 ch)\n"
-           "      (*) 2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
+           "          2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
            "          3 - 3/0 (surround)\n"
            "    -fmt:n - set sample format:\n"
            "      (*) 0 - PCM 16        3 - PCM 16 (big endian)\n"
@@ -173,45 +178,51 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  const char *input_filename = argv[1];
-  enum { mode_undefined, mode_nothing, mode_play, mode_raw, mode_wav, mode_decode } mode = mode_undefined;
-
-  bool spdif = false;
-  int imask = 2;
-  int iformat = 0;
-
+  int i;
   bool print_info = false;
   bool print_opt  = false;
   bool print_hist = false;
 
-  int delay_units = DELAY_SP;
-  float delays[NCHANNELS];
-  memset(delays, 0, sizeof(delays));
-
-  sample_t gains[NCHANNELS];
-  gains[0] = 1.0;
-  gains[1] = 1.0;
-  gains[2] = 1.0;
-  gains[3] = 1.0;
-  gains[4] = 1.0;
-  gains[5] = 1.0;
-
   /////////////////////////////////////////////////////////
-  // Parsers
-  /////////////////////////////////////////////////////////
+  // Input file
 
-  Parser *parser = 0;
-
-  AC3Parser ac3;
-  DTSParser dts;
-  MPAParser mpa;
-
+  const char *input_filename = argv[1];
   FileParser file;
 
   /////////////////////////////////////////////////////////
-  // Sinks
-  /////////////////////////////////////////////////////////
+  // Parsers
 
+  AC3Header ac3;
+  DTSHeader dts;
+  MPAHeader mpa;
+
+  const HeaderParser *parser_list[] = { &ac3, &dts, &mpa };
+  MultiHeader multi_parser(parser_list, array_size(parser_list));
+
+  HeaderParser *parser = 0;
+
+  /////////////////////////////////////////////////////////
+  // Arrays
+
+  int delay_units = DELAY_SP;
+  float delays[NCHANNELS];
+  for (i = 0; i < NCHANNELS; i++)
+    delays[i] = 0;
+
+  sample_t gains[NCHANNELS];
+  for (i = 0; i < NCHANNELS; i++)
+    gains[i] = 1.0;
+
+  /////////////////////////////////////////////////////////
+  // Output format
+
+  int iformat = 0;
+  int imask = 0;
+
+  /////////////////////////////////////////////////////////
+  // Sinks
+
+  enum { mode_undefined, mode_nothing, mode_play, mode_raw, mode_wav, mode_decode } mode = mode_undefined;
   const char *out_filename = 0;
 
   RAWSink    raw;
@@ -219,17 +230,14 @@ int main(int argc, char *argv[])
   DSoundSink dsound;
   NullSink   null;
 
-  Sink *sink = &dsound;
-  PlaybackControl *control = &dsound;
+  Sink *sink = 0;
+  PlaybackControl *control = 0;
 
   /////////////////////////////////////////////////////////
   // Filters
   /////////////////////////////////////////////////////////
 
-  Filter *filter;
-
-  AudioProcessor proc(2048);
-  Spdifer spdifer;
+  DVDGraph dvd_graph;
 
   /////////////////////////////////////////////////////////
   // Parse arguments
@@ -281,112 +289,16 @@ int main(int argc, char *argv[])
     }
 
     ///////////////////////////////////////////////////////
-    // Output mode
+    // Output format
     ///////////////////////////////////////////////////////
-
-    // -d[ecode] - decode
-    if (is_arg(argv[iarg], "d", argt_exist) || 
-        is_arg(argv[iarg], "decode", argt_exist))
-    {
-      if (mode != mode_undefined)
-      {
-        printf("-decode : ambigous output mode\n");
-        return 1;
-      }
-
-      sink = &null;
-      control = 0;
-      mode = mode_decode;
-      continue;
-    }
-
-    // -p[lay] - play
-    if (is_arg(argv[iarg], "p", argt_exist) || 
-        is_arg(argv[iarg], "play", argt_exist))
-    {
-      if (mode != mode_undefined)
-      {
-        printf("-play : ambigous output mode\n");
-        return 1;
-      }
-
-      sink = &dsound;
-      control = &dsound;
-      mode = mode_play;
-      continue;
-    }
-    
-    // -r[aw] - RAW output
-    if (is_arg(argv[iarg], "r", argt_exist) ||
-        is_arg(argv[iarg], "raw", argt_exist))
-    {
-      if (argc - iarg < 1)
-      {
-        printf("-raw : specify a file name\n");
-        return 1;
-      }
-      if (mode != mode_undefined)
-      {
-        printf("-raw : ambigous output mode\n");
-        return 1;
-      }
-
-      out_filename = argv[++iarg];
-      sink = &raw;
-      control = 0;
-      mode = mode_raw;
-      continue;
-    }
-
-    // -w[av] - WAV output
-    if (is_arg(argv[iarg], "w", argt_exist) ||
-        is_arg(argv[iarg], "wav", argt_exist))
-    {
-      if (argc - iarg < 1)
-      {
-        printf("-wav : specify a file name\n");
-        return 1;
-      }
-      if (mode != mode_undefined)
-      {
-        printf("-wav : ambigous output mode\n");
-        return 1;
-      }
-
-      out_filename = argv[++iarg];
-      sink = &wav;
-      control = 0;
-      mode = mode_wav;
-      continue;
-    }
-
-    // -n[othing] - no output
-    if (is_arg(argv[iarg], "n", argt_exist) || 
-        is_arg(argv[iarg], "nothing", argt_exist))
-    {
-      if (mode != mode_undefined)
-      {
-        printf("-nothing : ambigous output mode\n");
-        return 1;
-      }
-
-      sink = &null;
-      control = 0;
-      mode = mode_nothing;
-      continue;
-    }
-    
-    ///////////////////////////////////////////////////////
-    // Output options
-    ///////////////////////////////////////////////////////
-
+/*
     // -spdif - enable SPDIF output
     if (is_arg(argv[iarg], "spdif", argt_exist))
     {
       spdif = true;
       continue;
     }
-
+*/
     // -spk - number of speakers
     if (is_arg(argv[iarg], "spk", argt_num))
     {
@@ -412,6 +324,102 @@ int main(int argc, char *argv[])
       continue;
     }
 
+    ///////////////////////////////////////////////////////
+    // Sinks
+    ///////////////////////////////////////////////////////
+
+    // -d[ecode] - decode
+    if (is_arg(argv[iarg], "d", argt_exist) || 
+        is_arg(argv[iarg], "decode", argt_exist))
+    {
+      if (sink)
+      {
+        printf("-decode : ambigous output mode\n");
+        return 1;
+      }
+
+      sink = &null;
+      control = 0;
+      mode = mode_decode;
+      continue;
+    }
+
+    // -p[lay] - play
+    if (is_arg(argv[iarg], "p", argt_exist) || 
+        is_arg(argv[iarg], "play", argt_exist))
+    {
+      if (sink)
+      {
+        printf("-play : ambigous output mode\n");
+        return 1;
+      }
+
+      sink = &dsound;
+      control = &dsound;
+      mode = mode_play;
+      continue;
+    }
+    
+    // -r[aw] - RAW output
+    if (is_arg(argv[iarg], "r", argt_exist) ||
+        is_arg(argv[iarg], "raw", argt_exist))
+    {
+      if (sink)
+      {
+        printf("-raw : ambigous output mode\n");
+        return 1;
+      }
+      if (argc - iarg < 1)
+      {
+        printf("-raw : specify a file name\n");
+        return 1;
+      }
+
+      out_filename = argv[++iarg];
+      sink = &raw;
+      control = 0;
+      mode = mode_raw;
+      continue;
+    }
+
+    // -w[av] - WAV output
+    if (is_arg(argv[iarg], "w", argt_exist) ||
+        is_arg(argv[iarg], "wav", argt_exist))
+    {
+      if (sink)
+      {
+        printf("-wav : ambigous output mode\n");
+        return 1;
+      }
+      if (argc - iarg < 1)
+      {
+        printf("-wav : specify a file name\n");
+        return 1;
+      }
+
+      out_filename = argv[++iarg];
+      sink = &wav;
+      control = 0;
+      mode = mode_wav;
+      continue;
+    }
+
+    // -n[othing] - no output
+    if (is_arg(argv[iarg], "n", argt_exist) || 
+        is_arg(argv[iarg], "nothing", argt_exist))
+    {
+      if (sink)
+      {
+        printf("-nothing : ambigous output mode\n");
+        return 1;
+      }
+
+      sink = &null;
+      control = 0;
+      mode = mode_nothing;
+      continue;
+    }
+    
     ///////////////////////////////////////////////////////
     // Info
     ///////////////////////////////////////////////////////
@@ -444,56 +452,56 @@ int main(int argc, char *argv[])
     // -auto_matrix
     if (is_arg(argv[iarg], "auto_matrix", argt_bool))
     {
-      proc.set_auto_matrix(arg_bool(argv[iarg]));
+      dvd_graph.proc.set_auto_matrix(arg_bool(argv[iarg]));
       continue;
     }
 
     // -normalize_matrix
     if (is_arg(argv[iarg], "normalize_matrix", argt_bool))
     {
-      proc.set_normalize_matrix(arg_bool(argv[iarg]));
+      dvd_graph.proc.set_normalize_matrix(arg_bool(argv[iarg]));
       continue;
     }
 
     // -voice_control
     if (is_arg(argv[iarg], "voice_control", argt_bool))
     {
-      proc.set_voice_control(arg_bool(argv[iarg]));
+      dvd_graph.proc.set_voice_control(arg_bool(argv[iarg]));
       continue;
     }
 
     // -expand_stereo
     if (is_arg(argv[iarg], "expand_stereo", argt_bool))
     {
-      proc.set_expand_stereo(arg_bool(argv[iarg]));
+      dvd_graph.proc.set_expand_stereo(arg_bool(argv[iarg]));
       continue;
     }
 
     // -clev
     if (is_arg(argv[iarg], "clev", argt_num))
     {
-      proc.set_clev(db2value(arg_num(argv[iarg])));
+      dvd_graph.proc.set_clev(db2value(arg_num(argv[iarg])));
       continue;
     }
 
     // -slev
     if (is_arg(argv[iarg], "slev", argt_num))
     {
-      proc.set_slev(db2value(arg_num(argv[iarg])));
+      dvd_graph.proc.set_slev(db2value(arg_num(argv[iarg])));
       continue;
     }
 
     // -lfelev
     if (is_arg(argv[iarg], "lfelev", argt_num))
     {
-      proc.set_lfelev(db2value(arg_num(argv[iarg])));
+      dvd_graph.proc.set_lfelev(db2value(arg_num(argv[iarg])));
       continue;
     }
 
     // -gain
     if (is_arg(argv[iarg], "gain", argt_num))
     {
-      proc.set_master(db2value(arg_num(argv[iarg])));
+      dvd_graph.proc.set_master(db2value(arg_num(argv[iarg])));
       continue;
     }
 
@@ -541,29 +549,29 @@ int main(int argc, char *argv[])
     // -normalize
     if (is_arg(argv[iarg], "normalize", argt_bool))
     {
-      proc.set_normalize(arg_bool(argv[iarg]));
+      dvd_graph.proc.set_normalize(arg_bool(argv[iarg]));
       continue;
     }
 
     // -drc
     if (is_arg(argv[iarg], "drc", argt_bool))
     {
-      proc.set_drc(arg_bool(argv[iarg]));
+      dvd_graph.proc.set_drc(arg_bool(argv[iarg]));
       continue;
     }
 
     // -drc_power
     if (is_arg(argv[iarg], "drc_power", argt_num))
     {
-      proc.set_drc(true);
-      proc.set_drc_power(arg_num(argv[iarg]));
+      dvd_graph.proc.set_drc(true);
+      dvd_graph.proc.set_drc_power(arg_num(argv[iarg]));
       continue;
     }
 
     // -release
     if (is_arg(argv[iarg], "release", argt_num))
     {
-      proc.set_release(db2value(arg_num(argv[iarg])));
+      dvd_graph.proc.set_release(db2value(arg_num(argv[iarg])));
       continue;
     }
 
@@ -574,7 +582,7 @@ int main(int argc, char *argv[])
     // -delay
     if (is_arg(argv[iarg], "delay", argt_bool))
     {
-      proc.set_delay(arg_bool(argv[iarg]));
+      dvd_graph.proc.set_delay(arg_bool(argv[iarg]));
       continue;
     }
 
@@ -635,36 +643,45 @@ int main(int argc, char *argv[])
   }
 
   /////////////////////////////////////////////////////////
-  // Open file
+  // Open input file and load the first frame
   /////////////////////////////////////////////////////////
 
-  printf("Opening file %s...\n", input_filename);
+  if (!parser)
+    parser = &multi_parser;
 
-  if (parser && file.open(parser, input_filename))
-    ; // use format specified by user
-  else if (file.open(&ac3, input_filename) && file.probe())
-    parser = &ac3;
-  else if (file.open(&dts, input_filename) && file.probe())
-    parser = &dts;
-  else if (file.open(&mpa, input_filename) && file.probe())
-    parser = &mpa;
-  else
+  if (!file.open(input_filename, parser))
   {
-    printf("Error: Cannot open file '%s' or incorrect file format!", input_filename);
+    printf("Error: Cannot open file '%s'\n", input_filename);
+    return 1;
+  }
+    
+  if (!file.stats())
+  {
+    printf("Error: Cannot detect input file format\n", input_filename);
     return 1;
   }
 
-  file.stats();
+  while (!file.eof())
+    if (file.load_frame())
+      break;
+
+  if (!file.is_frame_loaded())
+  {
+    printf("Error: Cannot load the first frame\n");
+    return 1;
+  }
 
   /////////////////////////////////////////////////////////
-  // Print bitstream info
+  // Print file info
   /////////////////////////////////////////////////////////
 
   if (print_info)
   {
     char info[1024];
-    file.get_info(info, 1024);
+    file.file_info(info, sizeof(info));
     printf("%s\n", info);
+    file.stream_info(info, sizeof(info));
+    printf("%s", info);
   }
 
   if (mode == mode_nothing)
@@ -674,59 +691,35 @@ int main(int argc, char *argv[])
   // Setup processing
   /////////////////////////////////////////////////////////
 
-  Speakers in_spk;
-  Speakers out_spk;
+  dvd_graph.proc.set_delay_units(delay_units);
+  dvd_graph.proc.set_delays(delays);
+
+  dvd_graph.proc.set_output_gains(gains);
+
+  dvd_graph.proc.set_input_order(std_order);
+  dvd_graph.proc.set_output_order(win_order);
   
-  in_spk = file.get_spk();
-  in_spk.format = FORMAT_LINEAR;
-  out_spk = in_spk;
-
-  if (spdif)
+  Speakers user_spk(format_tbl[iformat], mask_tbl[imask], 0, level_tbl[iformat]);
+  if (!dvd_graph.set_user(user_spk))
   {
-    if (parser != &ac3 && parser != &dts && parser != &mpa)
-    {
-      printf("This format does not allow SPDIF transmision.\n");
-      printf("Using general audio output.\n");
-      spdif = false;
-    }
-    else
-    {
-      out_spk.format = FORMAT_SPDIF;
-      filter = &spdifer;
-    }
+    printf("Error: unsupported user format (%s %s %i)\n", 
+      user_spk.format_text(), user_spk.mode_text(), user_spk.sample_rate);
+    return 1;
   }
 
-  if (!spdif)
+  Speakers in_spk = file.get_spk();
+  if (!dvd_graph.set_input(in_spk))
   {
-    filter = &proc;
-
-    proc.set_delay_units(delay_units);
-    proc.set_delays(delays);
-    proc.set_output_gains(gains);
-    proc.set_input_order(std_order);
-    proc.set_output_order(win_order);
-
-    if (!proc.set_input(in_spk))
-    {
-      printf("Error: unsupported input format");
-      return 1;
-    }
-
-    if (imask)
-      out_spk.mask = mask_tbl[imask];
-
-    out_spk.format = format_tbl[iformat];
-    out_spk.level = level_tbl[iformat];
-
-    if (!proc.set_user(out_spk))
-    {
-      printf("Error: unsupported output format");
-      return 1;
-    }
-
-    if (out_spk != proc.get_output())
-      printf("Warning: using different output format\n");
+    printf("Error: unsupported input format (%s %s %i)\n", 
+      in_spk.format_text(), in_spk.mode_text(), in_spk.sample_rate);
+    return 1;
   }
+
+  Speakers out_spk = user_spk;
+  if (!out_spk.mask)
+    out_spk.mask = in_spk.mask;
+  if (!out_spk.sample_rate)
+    out_spk.sample_rate = in_spk.sample_rate;
 
   /////////////////////////////////////////////////////////
   // Print processing options
@@ -737,35 +730,43 @@ int main(int argc, char *argv[])
   //
 
   /////////////////////////////////////////////////////////
-  // Setup output
+  // Open output file
   /////////////////////////////////////////////////////////
 
-  printf("Opening %s %s %iHz audio output...\n", out_spk.format_text(), out_spk.mode_text(), out_spk.sample_rate);
+  if (!sink)
+  {
+    sink = &dsound;
+    control = &dsound;
+    mode = mode_play;
+  }
+   
   switch (mode)
   {
     case mode_raw:
       if (!out_filename || !raw.open(out_filename))
       {
-        printf("Error: failed to open file '%s'", out_filename);
+        printf("Error: failed to open output file '%s'\n", out_filename);
         return 1;
       }
       break;
 
     case mode_wav:
-      if (!out_filename || !wav.open(out_filename, out_spk))
+      if (!out_filename || !wav.open(out_filename))
       {
-        printf("Error: failed to open file '%s'", out_filename);
+        printf("Error: failed to open output file '%s'\n", out_filename);
+        return 1;
+      }
+      break;
+
+    case mode_play:
+      if (!dsound.open_dsound(0))
+      {
+        printf("Error: failed to init DirectSound\n");
         return 1;
       }
       break;
 
     // do nothing for other modes
-  }
-
-  if (!sink->set_input(out_spk))
-  {
-    printf("Error: Cannot open audio output!");
-    return 1;
   }
 
   /////////////////////////////////////////////////////////
@@ -780,111 +781,177 @@ int main(int argc, char *argv[])
   cpu_current.start();
   cpu_total.start();
 
-  double ms = 0;
-  double old_ms = 0;
+  double time = 0;
+  double old_time = 0;
+
   sample_t levels[NCHANNELS];
   sample_t level;
-  int i;
 
-  fprintf(stderr, " 0.0%% Frs:      0 Err: 0 Time:   0:00.000i Level:    0dB FPS:    0 CPU: 0%%\r"); 
+  int streams = 0;
+
+//  fprintf(stderr, " 0.0%% Frs:      0 Err: 0 Time:   0:00.000i Level:    0dB FPS:    0 CPU: 0%%\r"); 
+
+  file.seek(0);
+
+  #define PRINT_STAT                                                                                           \
+  {                                                                                                            \
+    if (control)                                                                                               \
+    {                                                                                                          \
+      dvd_graph.proc.get_output_levels(control->get_playback_time(), levels);                                  \
+      level = levels[0];                                                                                       \
+      for (i = 1; i < NCHANNELS; i++)                                                                          \
+        if (levels[i] > level)                                                                                 \
+          level = levels[i];                                                                                   \
+    }                                                                                                          \
+                                                                                                               \
+    fprintf(stderr, "%4.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \r",  \
+      file.get_pos(file.relative) * 100,                                                                       \
+      file.get_frames(), dvd_graph.dec.get_errors(),                                                           \
+      int(time/60), int(time) % 60, int(time * 1000) % 1000,                                                   \
+      int(value2db(level)),                                                                                    \
+      int(file.get_frames() / time),                                                                           \
+      cpu_current.usage() * 100);                                                                              \
+  }
+
+  #define DROP_STAT \
+    printf("                                                                             \r");
+
+  /////////////////////////////////////////////////////
+  // Now we already have a frame loaded
+  // To avoid resyncing again we will use this frame...
+
   while (!file.eof())
-    if (file.load_frame())
+  {
+    if (file.is_frame_loaded())
     {
-      if (spdif)
-        chunk.set_rawdata(Speakers(FORMAT_AC3, 0, 0), parser->get_frame(), parser->get_frame_size());
-      else
-      {
-        // Decode
-        if (!file.decode_frame())
-          continue;
+      /////////////////////////////////////////////////////
+      // Switch to a new stream
 
-        in_spk = file.get_spk();
-        in_spk.format = FORMAT_LINEAR;
-        chunk.set_linear(in_spk, file.get_samples(), file.get_nsamples());
+      if (file.is_new_stream())
+      {
+        if (streams > 0)
+          PRINT_STAT;
+
+        if (streams > 0 && print_info)
+        {
+          char info[1024];
+          file.stream_info(info, sizeof(info));
+          printf("\n\n%s", info);
+        }
+
+        streams++;
+        if (mode == mode_nothing)
+          return 0;
       }
 
       /////////////////////////////////////////////////////
-      // Processing & output
+      // Process data
 
-      if (!filter->process_to(&chunk, sink))
+      chunk.set_rawdata(file.get_spk(), file.get_frame(), file.get_frame_size());
+      if (!dvd_graph.process(&chunk))
       {
-        printf("\nProcessing error!\n");
+        printf("\nError in dvd_graph.process()\n");
         return 1;
       }
 
-      /////////////////////////////////////////////////////
-      // Statistics
-
-      ms = double(cpu_total.get_system_time() * 1000);
-      if (ms > old_ms + 100)
+      while (!dvd_graph.is_empty())
       {
-        old_ms = ms;
-
-        // Levels
-        if (!spdif && control)
+        if (!dvd_graph.get_chunk(&chunk))
         {
-          proc.get_output_levels(control->get_playback_time(), levels);
-          level = levels[0];
-          for (i = 1; i < NCHANNELS; i++)
-            if (levels[i] > level)
-              level = levels[i];
+          printf("\nError in dvd_graph.get_chunk()\n");
+          return 1;
         }
 
-        fprintf(stderr, "%4.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \r", 
-          file.get_pos(file.relative) * 100, 
-          file.get_frames(), file.get_errors(),
-          int(ms/60000), int(ms) % 60000/1000, int(ms) % 1000,
-          int(value2db(level)),
-          int(file.get_frames() * 1000 / (ms+1)),
-          cpu_current.usage() * 100);
-      }
-    } // if (file.frame())
-  // while (!file.eof()) 
+        /////////////////////////////////////////////////////
+        // Do audio output
+
+        if (!chunk.is_dummy())
+        {
+          if (chunk.spk != sink->get_input())
+          {
+            if (sink->query_input(chunk.spk))
+            {
+              DROP_STAT;
+              printf("Opening audio output %s %s %i...\n",
+                chunk.spk.format_text(), chunk.spk.mode_text(), chunk.spk.sample_rate);
+            }
+            else
+            {
+              printf("\nOutput format %s %s %i is unsupported\n",
+                chunk.spk.format_text(), chunk.spk.mode_text(), chunk.spk.sample_rate);
+              return 1;
+            }
+          }
+
+          if (!sink->process(&chunk))
+          {
+            printf("\nError in sink->process()\n");
+            return 1;
+          }
+        }
+      } // while (!dvd_graph.is_empty())
+
+    }
+
+    /////////////////////////////////////////////////////
+    // Load next frame
+
+    file.load_frame();
+
+    /////////////////////////////////////////////////////
+    // Statistics
+
+    time = cpu_total.get_system_time();
+    if (time > old_time + 0.1)
+    {
+      old_time = time;
+      PRINT_STAT;
+    }
+
+  } // while (!file.eof()) 
 
   /////////////////////////////////////////////////////
   // Flushing
 
-  chunk.set_empty(in_spk);
+  chunk.set_empty(dvd_graph.get_input());
   chunk.eos = true;
 
-  if (!filter->process_to(&chunk, sink))
+  if (!dvd_graph.process_to(&chunk, sink))
   {
     printf("\nProcessing error!\n");
     return 1;
   }
 
   /////////////////////////////////////////////////////
-  // Final statistics
-
-  ms = double(cpu_total.get_system_time() * 1000);
-  fprintf(stderr, "%2.1f%% Frs: %-6i Err: %-i Time: %3i:%02i.%03i Level: %-4idB FPS: %-4i CPU: %.1f%%  \n", 
-    file.get_pos(file.relative) * 100, 
-    file.get_frames(), file.get_errors(),
-    int(ms/60000), int(ms) % 60000/1000, int(ms) % 1000,
-    int(value2db(level)),
-    int(file.get_frames() * 1000 / (ms+1)),
-    cpu_current.usage() * 100);
+  // Stop
 
   cpu_current.stop();
   cpu_total.stop();
 
-  printf("Frames/errors: %i/%i\n", file.get_frames(), file.get_errors());
+  /////////////////////////////////////////////////////
+  // Final statistics
+
+  PRINT_STAT;
+  printf("\n---------------------------------------\n");
+  if (streams)
+    printf("Streams found: %i\n", streams);
+  printf("Frames/errors: %i/%i\n", file.get_frames(), dvd_graph.dec.get_errors());
   printf("System time: %ims\n", int(cpu_total.get_system_time() * 1000));
   printf("Process time: %ims\n", int(cpu_total.get_thread_time() * 1000 ));
-  printf("Approx. %.2f%% realtime CPU usage\n", double(cpu_total.get_thread_time() * 100000) / file.get_size(file.ms));
+  printf("Approx. %.2f%% realtime CPU usage\n", double(cpu_total.get_thread_time() * 100) / file.get_size(file.time));
 
   /////////////////////////////////////////////////////////
   // Print levels histogram
   /////////////////////////////////////////////////////////
 
-  if (print_hist && !spdif)
+  if (print_hist)
   {
     double hist[MAX_HISTOGRAM];
     int dbpb;
     int i, j;
 
-    proc.get_output_histogram(hist, MAX_HISTOGRAM);
-    dbpb = proc.get_dbpb();
+    dvd_graph.proc.get_output_histogram(hist, MAX_HISTOGRAM);
+    dbpb = dvd_graph.proc.get_dbpb();
 
     printf("\nHistogram:\n");
     printf("------------------------------------------------------------------------------\n");

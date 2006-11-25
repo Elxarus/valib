@@ -92,7 +92,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /c
+# ADD CPP /nologo /MD /W3 /Zi /O2 /Ob2 /I "..\valib" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x417 /d "NDEBUG"
 # ADD RSC /l 0x417 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -100,7 +100,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 msvcrt.lib oldnames.lib kernel32.lib user32.lib dsound.lib /nologo /subsystem:console /machine:I386 /nodefaultlib
-# ADD LINK32 msvcrt.lib oldnames.lib kernel32.lib user32.lib dsound.lib /nologo /subsystem:console /profile /debug /machine:I386 /nodefaultlib
+# ADD LINK32 msvcrt.lib oldnames.lib kernel32.lib user32.lib dsound.lib /nologo /subsystem:console /profile /debug /debugtype:both /machine:I386 /nodefaultlib
 
 !ENDIF 
 
