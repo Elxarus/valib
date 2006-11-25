@@ -6,102 +6,93 @@
 #define FILE_PARSER_H
 
 #include <stdio.h>
+#include "filter.h"
 #include "parser.h"
 #include "mpeg_demux.h"
 
-class FileParser
+
+class FileParser // : public Source
 {
 protected:
+  StreamBuffer stream;
+
   FILE *f;
   char *filename;
   int   filesize;
-
-  // file statistics
-  int   sample_rate;    // sample rate
-  int   frame_size;     // average frame size
-  int   frame_samples;  // average frame samples
-
-  unsigned frames_overhead;
-  unsigned errors_overhead;
-
-  PSDemux   demux;
-  Parser   *parser;
 
   uint8_t *buf;
   int buf_size;
   int buf_data;
   int buf_pos;
 
-  void detect_pes(size_t scan_size = 512 * 1024, int packets = 10);
-  bool fill_buf();
-  void file_stats();
+  int   stat_size;          // number of measurments done by stat() call
+  float avg_frame_interval; // average frame interval
+  float avg_bitrate;        // average bitrate
 
 public:
-  int  max_scan;
-  bool is_pes;
-  enum units_t { bytes, frames, samples, ms, relative };
+  size_t max_scan;
+  enum units_t { bytes, relative, frames, time };
+  inline double units_factor(units_t units) const;
 
   FileParser();
+  FileParser(const char *filename, const HeaderParser *parser, size_t max_scan = 0);
   ~FileParser();
 
-  bool open(Parser *parser, const char *filename, unsigned max_scan = 32768);
+  /////////////////////////////////////////////////////////////////////////////
+  // File operations
+
+  bool open(const char *filename, const HeaderParser *parser, size_t max_scan = 0);
   void close();
 
-  bool probe(size_t scan_size = 512 * 1024, int packets = 5);
-  void stats(int nframes = 100);
+  bool probe();
+  bool stats(int max_measurments = 100, vtime_t precision = 0.5);
 
-  void set_mpeg_stream(int stream = 0, int substream = 0);
-
-  const char *get_filename() const { return filename; };
   bool is_open() const { return f != 0; }
-  bool eof() const { return feof(f) != 0 && !buf_data; }
+  bool eof() const { return feof(f) != 0 && buf_pos >= buf_data; }
 
-  // seeking
+  const char *get_filename() const { return filename; }
+  const HeaderParser *get_parser() const { return stream.get_parser(); }
+
+  size_t file_info(char *buf, size_t size) const;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Positioning
+
+  int    get_pos() const;
+  double get_pos(units_t units) const;
+
+  int    get_size() const;
+  double get_size(units_t units) const;
+  
   void   seek(int pos);
   void   seek(double pos, units_t units);
 
-  // file position & size
-  int    get_pos() const;
-  double get_pos(units_t units) const;
-  int    get_size() const;
-  double get_size(units_t units) const;
+  /////////////////////////////////////////////////////////////////////////////
+  // Frame-level interface (StreamBuffer interface wrapper)
 
-  double get_bitrate() const;
+  void reset();
+  bool load_frame();
 
-  /////////////////////////////////////////////////////////
-  // Parser-equivalent functions
+  bool is_in_sync()             const { return stream.is_in_sync();         }
+  bool is_new_stream()          const { return stream.is_new_stream();      }
+  bool is_frame_loaded()        const { return stream.is_frame_loaded();    }
 
-  virtual void reset();
+  Speakers get_spk()            const { return stream.get_spk();            }
+  uint8_t *get_frame()          const { return stream.get_frame();          }
+  size_t   get_frame_size()     const { return stream.get_frame_size();     }
+  size_t   get_frame_interval() const { return stream.get_frame_interval(); }
 
-  // load/decode frame
-  inline  bool     frame();
-  virtual unsigned load_frame();
-  virtual bool     decode_frame()   { return parser->decode_frame(); }
+  int        get_frames()       const { return stream.get_frames();         }
+  size_t     stream_info(char *buf, size_t size) const { return stream.stream_info(buf, size); }
+  HeaderInfo header_info()      const { return stream.header_info();        }
 
-  // Stream information
-  virtual Speakers get_spk()        const { return parser->get_spk();        }
-  virtual unsigned get_frame_size() const { return parser->get_frame_size(); }
-  virtual unsigned get_nsamples()   const { return parser->get_nsamples();   }
-
-  virtual void get_info(char *buf, size_t len) const;
-  virtual unsigned get_frames()     const { return parser->get_frames() - frames_overhead; }
-  virtual unsigned get_errors()     const { return parser->get_errors() + demux.parser.errors - errors_overhead; }
-
-  // Buffers
-  virtual uint8_t *get_frame()      const { return parser->get_frame();     }
-  virtual samples_t get_samples()   const { return parser->get_samples();   }
+  /////////////////////////////////////////////////////////////////////////////
+  // Source interface
+/*
+  virtual Speakers get_output() const;
+  virtual bool is_empty() const;
+  virtual bool get_chunk(Chunk *chunk);
+*/
 };
-
-
-inline bool 
-FileParser::frame()
-{
-  if (load_frame())
-    if (decode_frame())
-      return true;
-  return false;
-}
-
-
 
 #endif

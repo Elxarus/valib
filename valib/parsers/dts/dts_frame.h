@@ -10,8 +10,6 @@
 #include "bitstream.h"
 #include "parser.h"
 
-#include "dts_parser.h"
-/*
 class DTSInfo
 {
 public:
@@ -81,8 +79,6 @@ public:
   double subband_fir_hist[DTS_PRIM_CHANNELS_MAX][512];
   double subband_fir_noidea[DTS_PRIM_CHANNELS_MAX][64];
 };
-*/
-
 
 class DTSFrame : public FrameParser, public DTSInfo
 {

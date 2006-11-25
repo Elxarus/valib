@@ -2,14 +2,13 @@
 #define AC3_FRAME_H
 
 #include "parser.h"
-#include "ac3_parser.h"
 #include "bitstream.h"
 
 #include "ac3_defs.h"
 #include "ac3_imdct.h"
 
 // todo: decode_block() for per-block decode
-/*
+
 class AC3Info
 {
 public:
@@ -128,7 +127,7 @@ public:
   int8_t bap[5][256];
   int8_t lfebap[7];
 };
-*/
+
 class AC3Frame : public FrameParser, public AC3Info, public AC3FrameState
 {
 public:

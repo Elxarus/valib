@@ -982,7 +982,6 @@ AC3Frame::parse_coeff(samples_t samples)
   }
 }
 
-/*
 void 
 Quantizer::get_coeff(ReadBS &bs, sample_t *s, int8_t *bap, int8_t *exp, int n, bool dither)
 {
@@ -1065,4 +1064,3 @@ Quantizer::get_coeff(ReadBS &bs, sample_t *s, int8_t *bap, int8_t *exp, int n, b
     }
   }
 }
-*/

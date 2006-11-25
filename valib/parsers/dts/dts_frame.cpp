@@ -157,6 +157,7 @@ DTSFrame::parse_frame(uint8_t *frame, size_t size)
   spk = hinfo.spk;
   spk.format = FORMAT_LINEAR;
   frame_size = hinfo.frame_size;
+  nsamples = hinfo.nsamples;
   bs_type = hinfo.bs_type;
 
   bs.set_ptr(frame, bs_type);
