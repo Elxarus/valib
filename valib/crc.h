@@ -59,7 +59,7 @@ public:
 
   /////////////////////////////////////////////////////////////////////////////
   // CRC primitives
-  // __forceinline is required because VC6 sometimes does not inline theese 
+  // __forceinline is required because VC6 sometimes does not inline these 
   // functions what leads to dramatic performance decrease.
 
   __forceinline uint32_t add_bits (uint32_t crc, uint32_t data, size_t bits) const;
