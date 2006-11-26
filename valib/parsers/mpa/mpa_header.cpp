@@ -114,12 +114,21 @@ MPAHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 
   hinfo->spk = Speakers(FORMAT_MPA, (h.mode == 3)? MODE_MONO: MODE_STEREO, sample_rate);
 
-  hinfo->frame_size = bitrate * slots_tbl[layer] / sample_rate + h.padding;
+  if (bitrate)
+  {
+    hinfo->frame_size = bitrate * slots_tbl[layer] / sample_rate + h.padding;
+    hinfo->scan_size = 0; // do not scan
+  }
+  else
+  {
+    hinfo->frame_size = 0;
+    hinfo->scan_size = 1728; // scan up to max frame size
+  }
+
   if (layer == 0) // MPA_LAYER_I
     hinfo->frame_size *= 4;
 
   hinfo->nsamples = layer == 0? 384: 1152;
-  hinfo->scan_size = hinfo->nsamples * 4; // can work with SPDIF stream
   hinfo->bs_type = bs_type;
 
   if (ver)

@@ -120,8 +120,8 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
   }
 
   hinfo->spk = Speakers(FORMAT_AC3, acmod2mask_tbl[acmod], sample_rate, 1.0, dolby);
+  hinfo->scan_size = 0; // do not scan
   hinfo->nsamples = 1536;
-  hinfo->scan_size = hinfo->nsamples * 4; // can work with SPDIF stream
   hinfo->spdif_type = 1; // SPDIF Pc burst-info (data type = AC3) 
   return true;
 }

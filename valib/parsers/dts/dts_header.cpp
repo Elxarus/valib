@@ -88,10 +88,10 @@ DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
   if (lff) mask |= CH_MASK_LFE;
 
   hinfo->spk = Speakers(FORMAT_DTS, mask, sample_rate, 1.0, relation);
-  hinfo->frame_size = 0; // do not rely on the frame size specified at header!!!
-  hinfo->bs_type = bs_type;
-  hinfo->nsamples = nblks * 32;
+  hinfo->frame_size = 0; // do not rely on the frame size specified at the header!!!
   hinfo->scan_size = 16384; // always scan up to maximum DTS frame size
+  hinfo->nsamples = nblks * 32;
+  hinfo->bs_type = bs_type;
 
   switch (hinfo->nsamples)
   {

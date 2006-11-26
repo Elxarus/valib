@@ -10,8 +10,6 @@ public:
 
   /////////////////////////////////////////////////////////
   // HeaderParser overrides
-  // Max frame size for DTS is 16384, but max SPDIF frame
-  // size is 8192 (2048 smples).
 
   virtual size_t   header_size()    const  { return 16;    }
   virtual size_t   min_frame_size() const  { return 96;    }
