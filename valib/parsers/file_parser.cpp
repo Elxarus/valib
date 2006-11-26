@@ -92,7 +92,6 @@ FileParser::probe()
 
   size_t old_pos = get_pos();
   bool result = load_frame();
-  reset();
   seek(old_pos);
   return result;
 }
@@ -102,11 +101,19 @@ FileParser::stats(int max_measurments, vtime_t precision)
 {
   if (!f) return false;
 
+  int old_pos = get_pos();
+
+  // If we cannot load a frame we will not gather any stats.
+  // (If file format is unknown measurments may take much of time)
+  if (!load_frame())
+  {
+    seek(old_pos);
+    return false;
+  }
+
   stat_size = 0;
   avg_frame_interval = 0;
   avg_bitrate = 0;
-
-  int old_pos = get_pos();
 
   vtime_t old_length;
   vtime_t new_length;
@@ -147,7 +154,6 @@ FileParser::stats(int max_measurments, vtime_t precision)
     avg_bitrate        /= stat_size;
   }
 
-  reset();
   seek(old_pos);
   return stat_size > 0;
 }
