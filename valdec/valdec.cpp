@@ -11,6 +11,7 @@
 #include "parsers\ac3\ac3_header.h"
 #include "parsers\dts\dts_header.h"
 #include "parsers\mpa\mpa_header.h"
+#include "parsers\spdif_header.h"
 #include "parsers\multi_header.h"
 
 // sinks
@@ -107,73 +108,76 @@ int main(int argc, char *argv[])
 {
   if (argc < 2)
   {
-    printf("VALib DECoder (valdec)\n"
-           "Copyright (c) 2004 by Alexander Vigovsky\n"
-           "\n"
-           "Advanced audio decoder/processor/player utility\n"
-           "This utility is part of AC3Filter project (VALib subproject)\n"
-           "http://ac3filter.sourceforge.net\n"
-           "\n"
-           "Usage:\n"
-           "  valdec some_file [options]\n"
-           "\n"
-           "Options:\n"
-           "  (*)  - default value\n"
-           "  {ch} - channel name (l, c, r, sl, sr)\n"
-           "\n"
-           "  output mode:\n"
-           "    -d[ecode] - just decode (used for testing and performance measurements)\n"
-           "    -p[lay]   - play file (*)\n"
-           "    -r[aw]    - decode to RAW file\n"
-           "    -w[av]    - decode to WAV file\n"
-           "    -n[othing]- do nothing (to be used with -i option)\n"
-           "  \n"
-           "  output options:\n"
-           "    -spdif - spdif output (no other options will work in this mode)\n"
-           "    -spk:n - set number of output channels:\n"
-           "      (*) 0 - from file     4 - 2/2 (quadro)\n" 
-           "          1 - 1/0 (mono)    5 - 3/2 (5 ch)\n"
-           "          2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
-           "          3 - 3/0 (surround)\n"
-           "    -fmt:n - set sample format:\n"
-           "      (*) 0 - PCM 16        3 - PCM 16 (big endian)\n"
-           "          1 - PCM 24        4 - PCM 24 (big endian)\n" 
-           "          2 - PCM 32        5 - PCM 32 (big endian)\n"
-           "                 6 - PCM Float\n" 
-           "  \n"
-           "  format selection:\n"
-           "    -ac3 - force ac3 (do not autodetect format)\n"
-           "    -dts - force dts (do not autodetect format)\n"
-           "    -mpa - force mpa (do not autodetect format)\n"
-           "  \n"
-           "  info:\n"
-           "    -i    - print bitstream info\n"
-//             "  -opt  - print decoding options\n"
-           "    -hist - print levels histogram\n"
-           "  \n"
-           "  mixer options:\n"
-           "    -auto_matrix[+|-] - automatic matrix calculation on(*)/off\n"
-           "    -normalize_matrix[+|-] - normalize matrix on(*)/off\n"
-           "    -voice_control[+|-] - voice control on(*)/off\n"
-           "    -expand_stereo[+|-] - expand stereo on(*)/off\n"
-           "    -clev:N - center mix level (dB)\n"
-           "    -slev:N - surround mix level (dB)\n"
-           "    -lfelev:N - lfe mix level (dB)\n"
-           "    -gain:N - master gain (dB)\n"
-           "    -gain_{ch}:N - output channel gain (dB)\n"
-           "  \n"
-           "  automatic gain control options:\n"
-           "    -limiter[+|-] - limiter on(*)/off\n"
-           "    -normalize[+|-] - one-pass normalize on/off(*)\n"
-           "    -drc[+|-] - dynamic range compression on/off(*)\n"
-           "    -drc_power:N - dynamic range compression level (dB)\n"
-           "    -release:N - release speed (dB/s)\n"
-           "  \n"
-           "  delay options:\n"
-           "    -delay_units:n - units in wich delay values are given\n"
-           "          0 - samples (*) 2 - meters      4 - feet   \n"
-           "          1 - ms          3 - cm          5 - inches \n"
-           "    -delay_{ch}:N - delay for channel {ch} (in samples by default)\n" 
+    printf(
+      
+"Valib decoder\n"
+"=============\n"
+"Audio decoder/processor/player utility\n"
+"\n"
+"This utility is a part of AC3Filter project (http://ac3filter.net)\n"
+"Copyright (c) 2006 by Alexander Vigovsky\n"
+"\n"
+"Usage:\n"
+"  valdec some_file [options]\n"
+"\n"
+"Options:\n"
+"  (*)  - default value\n"
+"  {ch} - channel name (l, c, r, sl, sr)\n"
+"\n"
+"  output mode:\n"
+"    -d[ecode] - just decode (used for testing and performance measurements)\n"
+"    -p[lay]   - play file (*)\n"
+"    -r[aw]    - decode to RAW file\n"
+"    -w[av]    - decode to WAV file\n"
+"    -n[othing]- do nothing (to be used with -i option)\n"
+"  \n"
+"  output options:\n"
+//"    -spdif - spdif output (no other options will work in this mode)\n"
+"    -spk:n - set number of output channels:\n"
+"      (*) 0 - from file     4 - 2/2 (quadro)\n" 
+"          1 - 1/0 (mono)    5 - 3/2 (5 ch)\n"
+"          2 - 2/0 (stereo)  6 - 3/2+SW (5.1)\n"
+"          3 - 3/0 (surround)\n"
+"    -fmt:n - set sample format:\n"
+"      (*) 0 - PCM 16        3 - PCM 16 (big endian)\n"
+"          1 - PCM 24        4 - PCM 24 (big endian)\n" 
+"          2 - PCM 32        5 - PCM 32 (big endian)\n"
+"                 6 - PCM Float\n" 
+"  \n"
+"  format selection:\n"
+"    -ac3 - force ac3 (do not autodetect format)\n"
+"    -dts - force dts (do not autodetect format)\n"
+"    -mpa - force mpa (do not autodetect format)\n"
+"  \n"
+"  info:\n"
+"    -i    - print bitstream info\n"
+//"  -opt  - print decoding options\n"
+"    -hist - print levels histogram\n"
+"  \n"
+"  mixer options:\n"
+"    -auto_matrix[+|-] - automatic matrix calculation on(*)/off\n"
+"    -normalize_matrix[+|-] - normalize matrix on(*)/off\n"
+"    -voice_control[+|-] - voice control on(*)/off\n"
+"    -expand_stereo[+|-] - expand stereo on(*)/off\n"
+"    -clev:N - center mix level (dB)\n"
+"    -slev:N - surround mix level (dB)\n"
+"    -lfelev:N - lfe mix level (dB)\n"
+"    -gain:N - master gain (dB)\n"
+"    -gain_{ch}:N - output channel gain (dB)\n"
+"  \n"
+"  automatic gain control options:\n"
+"    -limiter[+|-] - limiter on(*)/off\n"
+"    -normalize[+|-] - one-pass normalize on/off(*)\n"
+"    -drc[+|-] - dynamic range compression on/off(*)\n"
+"    -drc_power:N - dynamic range compression level (dB)\n"
+"    -release:N - release speed (dB/s)\n"
+"  \n"
+"  delay options:\n"
+"    -delay_units:n - units in wich delay values are given\n"
+"          0 - samples (*) 2 - meters      4 - feet   \n"
+"          1 - ms          3 - cm          5 - inches \n"
+"    -delay_{ch}:N - delay for channel {ch} (in samples by default)\n" 
+
            );
     return 1;
   }
@@ -192,14 +196,10 @@ int main(int argc, char *argv[])
   /////////////////////////////////////////////////////////
   // Parsers
 
-  AC3Header ac3;
-  DTSHeader dts;
-  MPAHeader mpa;
-
-  const HeaderParser *parser_list[] = { &ac3, &dts, &mpa };
+  const HeaderParser *parser_list[] = { &spdif_header, &ac3_header, &dts_header, &mpa_header };
   MultiHeader multi_parser(parser_list, array_size(parser_list));
 
-  HeaderParser *parser = 0;
+  const HeaderParser *parser = 0;
 
   /////////////////////////////////////////////////////////
   // Arrays
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
         return 1;
       }
 
-      parser = &ac3;
+      parser = &ac3_header;
       continue;
     }
 
@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
         return 1;
       }
 
-      parser = &dts;
+      parser = &dts_header;
       continue;
     }
 
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
         return 1;
       }
 
-      parser = &mpa;
+      parser = &mpa_header;
       continue;
     }
 
@@ -649,7 +649,7 @@ int main(int argc, char *argv[])
   if (!parser)
     parser = &multi_parser;
 
-  if (!file.open(input_filename, parser))
+  if (!file.open(input_filename, parser, 1000000))
   {
     printf("Error: Cannot open file '%s'\n", input_filename);
     return 1;
@@ -933,7 +933,7 @@ int main(int argc, char *argv[])
 
   PRINT_STAT;
   printf("\n---------------------------------------\n");
-  if (streams)
+  if (streams > 1)
     printf("Streams found: %i\n", streams);
   printf("Frames/errors: %i/%i\n", file.get_frames(), dvd_graph.dec.get_errors());
   printf("System time: %ims\n", int(cpu_total.get_system_time() * 1000));
