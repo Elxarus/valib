@@ -38,6 +38,7 @@ class DVDGraph : public FilterGraph
 {
 public:
   Demux          demux;
+  Despdifer      despdifer;
   Spdifer        spdifer_pt;
   AudioDecoder   dec;
   AudioProcessor proc;
@@ -130,6 +131,7 @@ protected:
   enum state_t 
   { 
     state_demux = 0,
+    state_despdif,
     state_spdif_pt,
     state_decode,
     state_proc,
