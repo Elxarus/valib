@@ -53,14 +53,14 @@ public:
   virtual bool get_chunk(Chunk *chunk)     { return parser.get_chunk(chunk); }
 };
 
-class Unspdifer : public Filter
+class Despdifer : public Filter
 {
 protected:
   ParserFilter parser;
   SPDIFFrame   spdif_parser;
 
 public:
-  Unspdifer()
+  Despdifer()
   {
     parser.set_parser(&spdif_parser);
   }
