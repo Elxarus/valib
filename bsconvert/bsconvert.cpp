@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "parser.h"
+#include "bitstream.h"
 #include "parsers\mpa\mpa_header.h"
 #include "parsers\ac3\ac3_header.h"
 #include "parsers\dts\dts_header.h"
@@ -33,10 +34,10 @@ int main(int argc, char **argv)
 "\n"
 "Usage:\n"
 "  Detect file type and print file information:\n"
-"  > vsconvert input_file\n"
+"  > bsconvert input_file\n"
 "\n"
 "  Convert a file:\n"
-"  > vsconvert input_file output_file [format]\n"
+"  > bsconvert input_file output_file [format]\n"
 "\n"
 "Options:\n"
 "  input_file  - file to convert\n"
@@ -56,11 +57,11 @@ int main(int argc, char **argv)
 "  SPDIF stream is padded with zeros, therefore output file size may be MUCH\n"
 "  smaller than input. It is normal and this does not mean that some data was\n"
 "  lost. This conversion is loseless! You can recreate SPDIF stream back with\n"
-"  'Spdifer' utility. (Currently, compacting works only for AC3/MPA)\n"
+"  'spdifer' utility. (Currently, compacting works only for AC3/MPA)\n"
 "\n"
 "  14bit streams are supported only for DTS format. Note, that conversion\n"
 "  between 14bit and non-14bit changes actual frame size (frame interval),\n"
-"  but does not change frame header.\n"
+"  but does not change the frame header.\n"
     );
     return -1;
   }
@@ -111,6 +112,7 @@ int main(int argc, char **argv)
 
   const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
   MultiHeader multi_header(headers, array_size(headers));
+
   SPDIFFrame spdif_parser;
   StreamBuffer stream(&multi_header);
 
