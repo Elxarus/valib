@@ -141,7 +141,7 @@ FileParser::stats(int max_measurments, vtime_t precision)
 
     if (precision > FLOAT_THRESHOLD)
     {
-      new_length = filesize * 8 * stat_size / avg_bitrate;
+      new_length = double(filesize) * 8 * stat_size / avg_bitrate;
       if (stat_size > 10 && fabs(old_length - new_length) < precision)
         break;
       old_length = new_length;
