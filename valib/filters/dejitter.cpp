@@ -298,11 +298,11 @@ Syncer::get_chunk(Chunk *_chunk)
   {
     sync = continuous_sync;
     time = continuous_time * time_factor + time_shift;
-    continuous_time += size * size2time;
   }
   else if (sync)
     time = time * time_factor + time_shift;
 
+  continuous_time += size * size2time;
   send_chunk_inplace(_chunk, size);
   sync = false;
   return true;
