@@ -8,9 +8,9 @@
   PlaybackContol interface must be thread-safe. Therefore we need to serialize
   function calls. To serialize DirectSound usage 'dsound_lock' is used.
 
-  Blocking functions (process() and flush()) cannot take output lock for a long
-  time because it may block control thread and lead to deadlock. Therefore to
-  serialize playback functions 'playback_lock' is used.
+  Blocking functions (process() and flush()) cannot take DirectSound lock for a
+  long time because it may block the control thread and lead to a deadlock.
+  Therefore to serialize playback functions 'playback_lock' is used.
 
   stop() must force blocking functions to finish. To signal these functions to
   unblock 'ev_stop' is used. Blocking functions must wait on this event and

@@ -119,6 +119,8 @@ DSoundSink::open(WAVEFORMATEX *wf)
   // Try to create buffer with volume and pan controls
   if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf, 0)) 
   {
+    SAFE_RELEASE(ds_buf);
+
     // Try to create buffer without volume and pan controls
     dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
     if FAILED(ds->CreateSoundBuffer(&dsbdesc, &ds_buf, 0))
@@ -200,6 +202,8 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
   // Try to create buffer with volume and pan controls
   if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0)) 
   {
+    SAFE_RELEASE(test_ds_buf);
+
     // Try to create buffer without volume and pan controls
     dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
     if FAILED(ds->CreateSoundBuffer(&dsbdesc, &test_ds_buf, 0))
