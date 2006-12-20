@@ -90,13 +90,11 @@ public:
     passthrough("a.mp2.002.mp2",   &mpa_header, 1, 500);
     passthrough("a.mp2.005.mp2",   &mpa_header, 1, 500);
     passthrough("a.mp2.mix.mp2",   &mpa_header, 3, 1500);
-    passthrough("a.mp2.005.spdif", &mpa_header, 1, 500, true);
                                    
     log->msg("AC3Header");
     passthrough("a.ac3.005.ac3",   &ac3_header, 1, 375);
     passthrough("a.ac3.03f.ac3",   &ac3_header, 1, 375);
     passthrough("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
-    passthrough("a.ac3.03f.spdif", &ac3_header, 1, 375, true);
                                    
     // We cannot load the last frame of SPDIF/DTS stream.
     // See note at StreamBuffer class comments.
