@@ -1,11 +1,11 @@
 -------------------------------------------------------------------------------
-Date:	2006/02/22 21:57
-Host:	VAL
-OS:	Microsoft Windows XP Professional
-CPU:	2 Processor(s) Installed.
-CPU:	[01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-CPU:	[02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-Mem:	2ÿ047 MB
+Date:   2006/02/22 21:57
+Host:   VAL
+OS:     Microsoft Windows XP Professional
+CPU:    2 Processor(s) Installed.
+CPU:    [01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+CPU:    [02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+Mem:    2ÿ047 MB
 * CRC byte stream speed: 304MB/s
 * CRC 16bit LE speed: 297MB/s
 * CRC 32bit LE speed: 297MB/s
@@ -19,12 +19,12 @@ Mem:	2ÿ047 MB
 * Total time: 0:29
 
 -------------------------------------------------------------------------------
-Date:	2006/02/22 22:18
-Host:	SRV-VALEX
-OS:	Microsoft(R) Windows(R) Server 2003, Enterprise Edition
-CPU:	1 Processor(s) Installed.
-CPU:	[01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
-Mem:	512 MB
+Date:   2006/02/22 22:18
+Host:   SRV-VALEX
+OS:     Microsoft(R) Windows(R) Server 2003, Enterprise Edition
+CPU:    1 Processor(s) Installed.
+CPU:    [01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
+Mem:    512 MB
 * CRC byte stream speed: 60MB/s
 * CRC 16bit LE speed: 55MB/s
 * CRC 32bit LE speed: 61MB/s
@@ -46,13 +46,13 @@ Mem:	512 MB
 
 
 -------------------------------------------------------------------------------
-Date:	2006/02/24 11:09
-Host:	VAL
-OS:	Microsoft Windows XP Professional
-CPU:	2 Processor(s) Installed.
-CPU:	[01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-CPU:	[02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-Mem:	2ÿ047 MB
+Date:   2006/02/24 11:09
+Host:   VAL
+OS:     Microsoft Windows XP Professional
+CPU:    2 Processor(s) Installed.
+CPU:    [01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+CPU:    [02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+Mem:    2ÿ047 MB
 * CRC speed (table method): 246MB/s
 * CRC byte stream speed: 300MB/s
 * CRC 14bit BE speed: 275MB/s
@@ -77,12 +77,12 @@ Mem:	2ÿ047 MB
 * Total time: 0:52
 
 -------------------------------------------------------------------------------
-Date:	2006/02/24 11:14
-Host:	SRV-VALEX
-OS:	Microsoft(R) Windows(R) Server 2003, Enterprise Edition
-CPU:	1 Processor(s) Installed.
-CPU:	[01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
-Mem:	512 MB
+Date:   2006/02/24 11:14
+Host:   SRV-VALEX
+OS:     Microsoft(R) Windows(R) Server 2003, Enterprise Edition
+CPU:    1 Processor(s) Installed.
+CPU:    [01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
+Mem:    512 MB
 * CRC speed (table method): 33MB/s
 * CRC byte stream speed: 60MB/s
 * CRC 14bit BE speed: 55MB/s
@@ -107,13 +107,13 @@ Mem:	512 MB
 * Total time: 1:45
 
 -------------------------------------------------------------------------------
-Date:	2006/02/26 05:30
-Host:	VAL
-OS:	Microsoft Windows XP Professional
-CPU:	2 Processor(s) Installed.
-CPU:	[01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-CPU:	[02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-Mem:	2ÿ047 MB
+Date:   2006/02/26 05:30
+Host:   VAL
+OS:     Microsoft Windows XP Professional
+CPU:    2 Processor(s) Installed.
+CPU:    [01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+CPU:    [02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+Mem:    2ÿ047 MB
 
 * CRC speed (table method): 68MB/s
 * CRC byte stream speed: 300MB/s
@@ -147,13 +147,13 @@ Mem:	2ÿ047 MB
 
 
 -------------------------------------------------------------------------------
-Date:	2006/06/02 06:06
-Host:	VAL
-OS:	Microsoft Windows XP Professional
-CPU:	2 Processor(s) Installed.
-CPU:	[01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-CPU:	[02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-Mem:	2ÿ047 MB
+Date:   2006/06/02 06:06
+Host:   VAL
+OS:     Microsoft Windows XP Professional
+CPU:    2 Processor(s) Installed.
+CPU:    [01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+CPU:    [02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+Mem:    2ÿ047 MB
 
 Compiler: MSVC 1200
 Debug/Release: Release
@@ -186,13 +186,13 @@ Sample size: 8
 * Total time: 1:52
 
 -------------------------------------------------------------------------------
-Date:	2006/06/02 06:37
-Host:	VAL
-OS:	Microsoft Windows XP Professional
-CPU:	2 Processor(s) Installed.
-CPU:	[01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-CPU:	[02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-Mem:	2ÿ047 MB
+Date:   2006/06/02 06:37
+Host:   VAL
+OS:     Microsoft Windows XP Professional
+CPU:    2 Processor(s) Installed.
+CPU:    [01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+CPU:    [02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+Mem:    2ÿ047 MB
 
 Compiler: GCC 3.4.2 (mingw-special)
 Debug/Release: Release
@@ -225,13 +225,13 @@ Sample size: 8
 * Total time: 1:31
 
 -------------------------------------------------------------------------------
-Date:	2006/06/02 07:04
-Host:	VAL
-OS:	Microsoft Windows XP Professional
-CPU:	2 Processor(s) Installed.
-CPU:	[01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-CPU:	[02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
-Mem:	2ÿ047 MB
+Date:   2006/06/02 07:04
+Host:   VAL
+OS:     Microsoft Windows XP Professional
+CPU:    2 Processor(s) Installed.
+CPU:    [01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+CPU:    [02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+Mem:    2ÿ047 MB
 
 Compiler: MSVC 1400
 Debug/Release: Release
@@ -264,12 +264,12 @@ Sample size: 8
 * Total time: 1:22
 
 -------------------------------------------------------------------------------
-Date:	2006/06/02 08:16
-Host:	SRV-VALEX
-OS:	Microsoft(R) Windows(R) Server 2003, Enterprise Edition
-CPU:	1 Processor(s) Installed.
-CPU:	[01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
-Mem:	512 MB
+Date:   2006/06/02 08:16
+Host:   SRV-VALEX
+OS:     Microsoft(R) Windows(R) Server 2003, Enterprise Edition
+CPU:    1 Processor(s) Installed.
+CPU:    [01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
+Mem:    512 MB
 
 Compiler: MSVC 1200
 Debug/Release: Release
@@ -302,12 +302,12 @@ Sample size: 8
 * Total time: 6:12
 
 -------------------------------------------------------------------------------
-Date:	2006/06/02 08:16
-Host:	SRV-VALEX
-OS:	Microsoft(R) Windows(R) Server 2003, Enterprise Edition
-CPU:	1 Processor(s) Installed.
-CPU:	[01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
-Mem:	512 MB
+Date:   2006/06/02 08:16
+Host:   SRV-VALEX
+OS:     Microsoft(R) Windows(R) Server 2003, Enterprise Edition
+CPU:    1 Processor(s) Installed.
+CPU:    [01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
+Mem:    512 MB
 
 Compiler: GCC 3.4.2 (mingw-special)
 Debug/Release: Release
@@ -338,4 +338,121 @@ Sample size: 8
 * Spdifer speed on file a.mad.mix.mad: 206MB/s, Data: 0, Empty: 0
 * Spdifer speed on file a.mad.mix.spdif: 185MB/s, Data: 0, Empty: 0
 * Total time: 5:23
+
+-------------------------------------------------------------------------------
+Date:   2006/11/20 23:42
+Host:   VAL
+OS:     Microsoft Windows XP Professional
+CPU:    2 Processor(s) Installed.
+CPU:    [01]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+CPU:    [02]: x86 Family 15 Model 2 Stepping 9 GenuineIntel ~2798 Mhz
+Mem:    2ÿ047 MB
+
+Compiler: MSVC 1200
+Debug/Release: Release
+Build date: Dec 20 2006 20:41:48
+Number of channels: 6
+Sample format: double
+Sample size: 8
+
+* CRC speed (table method): 240MB/s
+* CRC byte stream speed: 300MB/s
+* CRC 14bit BE speed: 270MB/s
+* CRC 14bit LE speed: 270MB/s
+* CRC 16bit BE speed: 295MB/s
+* CRC 16bit LE speed: 300MB/s
+* CRC 32bit BE speed: 295MB/s
+* CRC 32bit LE speed: 315MB/s
+* Sync scan speed: 460MB/s, Syncpoints found: 1683
+* Sync scan speed: 470MB/s, Syncpoints found: 1683
+* StreamBuffer speed on noise: 87MB/s
+* StreamBuffer speed on a.mp2.002.mp2: 1003MB/s
+* StreamBuffer speed on a.mp2.005.mp2: 1249MB/s
+* StreamBuffer speed on a.mp2.mix.mp2: 1154MB/s
+* StreamBuffer speed on a.mp2.005.spdif: 94MB/s
+* StreamBuffer speed on a.ac3.005.ac3: 1937MB/s
+* StreamBuffer speed on a.ac3.03f.ac3: 1701MB/s
+* StreamBuffer speed on a.ac3.mix.ac3: 1657MB/s
+* StreamBuffer speed on a.ac3.03f.spdif: 86MB/s
+* StreamBuffer speed on a.dts.03f.dts: 1139MB/s
+* StreamBuffer speed on a.dts.03f.spdif: 1522MB/s
+* StreamBuffer speed on a.mp2.005.spdif: 1628MB/s
+* StreamBuffer speed on a.ac3.03f.spdif: 1792MB/s
+* StreamBuffer speed on a.dts.03f.spdif: 1338MB/s
+* StreamBuffer speed on a.mad.mix.spdif: 1628MB/s
+* StreamBuffer speed on a.mad.mix.mad: 1201MB/s
+* StreamBuffer speed on a.mad.mix.spdif: 1290MB/s
+
+* Conversion (none)  speed: 1544MB/s
+* Conversion swab16  speed: 577MB/s
+* Conversion 8->14be speed: 424MB/s
+* Conversion 8->14le speed: 332MB/s
+* Conversion 14be->8 speed: 490MB/s
+* Conversion 14le->8 speed: 380MB/s
+* Conversion 14be->16le speed: 288MB/s
+* Conversion 14le->16le speed: 240MB/s
+* Demux speed on noise: 480MB/s, Data: 0, Empty: 0
+* Demux speed on file a.madp.mix.pes: 863MB/s, Data: 240, Empty: 0
+* Spdifer speed on noise: 13MB/s, Data: 0, Empty: 0
+* Spdifer speed on file a.mad.mix.mad: 2353MB/s, Data: 0, Empty: 0
+* Spdifer speed on file a.mad.mix.spdif: 1677MB/s, Data: 0, Empty: 0
+* Total time: 1:45
+
+-------------------------------------------------------------------------------
+Date:   2006/11/20 23:49
+Host:   SRV-VALEX
+OS:     Microsoft(R) Windows(R) Server 2003, Enterprise Edition
+CPU:    1 Processor(s) Installed.
+CPU:    [01]: x86 Family 6 Model 7 Stepping 3 GenuineIntel ~551 Mhz
+Mem:    512 MB
+
+Compiler: MSVC 1200
+Debug/Release: Release
+Build date: Dec 20 2006 20:41:48
+Number of channels: 6
+Sample format: double
+Sample size: 8
+
+* CRC speed (table method): 26MB/s
+* CRC byte stream speed: 47MB/s
+* CRC 14bit BE speed: 41MB/s
+* CRC 14bit LE speed: 46MB/s
+* CRC 16bit BE speed: 47MB/s
+* CRC 16bit LE speed: 44MB/s
+* CRC 32bit BE speed: 46MB/s
+* CRC 32bit LE speed: 47MB/s
+* Sync scan speed: 48MB/s, Syncpoints found: 1683
+* Sync scan speed: 48MB/s, Syncpoints found: 1683
+* StreamBuffer speed on noise: 12MB/s
+* StreamBuffer speed on a.mp2.002.mp2: 153MB/s
+* StreamBuffer speed on a.mp2.005.mp2: 124MB/s
+* StreamBuffer speed on a.mp2.mix.mp2: 106MB/s
+* StreamBuffer speed on a.mp2.005.spdif: 13MB/s
+* StreamBuffer speed on a.ac3.005.ac3: 274MB/s
+* StreamBuffer speed on a.ac3.03f.ac3: 218MB/s
+* StreamBuffer speed on a.ac3.mix.ac3: 219MB/s
+* StreamBuffer speed on a.ac3.03f.spdif: 14MB/s
+* StreamBuffer speed on a.dts.03f.dts: 135MB/s
+* StreamBuffer speed on a.dts.03f.spdif: 193MB/s
+* StreamBuffer speed on a.mp2.005.spdif: 209MB/s
+* StreamBuffer speed on a.ac3.03f.spdif: 191MB/s
+* StreamBuffer speed on a.dts.03f.spdif: 174MB/s
+* StreamBuffer speed on a.mad.mix.spdif: 191MB/s
+* StreamBuffer speed on a.mad.mix.mad: 133MB/s
+* StreamBuffer speed on a.mad.mix.spdif: 157MB/s
+
+* Conversion (none)  speed: 157MB/s
+* Conversion swab16  speed: 41MB/s
+* Conversion 8->14be speed: 56MB/s
+* Conversion 8->14le speed: 51MB/s
+* Conversion 14be->8 speed: 61MB/s
+* Conversion 14le->8 speed: 57MB/s
+* Conversion 14be->16le speed: 34MB/s
+* Conversion 14le->16le speed: 32MB/s
+* Demux speed on noise: 47MB/s, Data: 0, Empty: 0
+* Demux speed on file a.madp.mix.pes: 84MB/s, Data: 240, Empty: 0
+* Spdifer speed on noise: 2MB/s, Data: 0, Empty: 0
+* Spdifer speed on file a.mad.mix.mad: 166MB/s, Data: 0, Empty: 0
+* Spdifer speed on file a.mad.mix.spdif: 85MB/s, Data: 0, Empty: 0
+* Total time: 7:04
 
