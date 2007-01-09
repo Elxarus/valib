@@ -108,9 +108,9 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     }
     else
     {
-      // compare raw data
-      if (memcmp(so_chunk.rawdata, ro_chunk.rawdata, len))
-        return log->err("Data differs");
+      for (size_t i = 0; i < len; i++)
+        if (so_chunk.rawdata[i] != ro_chunk.rawdata[i])
+          return log->err("Data differs at pos %i (0x%x), chunk pos %i (0x%x)", osize + i, osize + i, i, i);
     }
     osize += len;
     rsize += len;
