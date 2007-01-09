@@ -338,6 +338,44 @@ public:
 // If header of the same stream is not found exactly after the end of loaded
 // frame we do resync.
 //
+// Debris is all data that do not belong to frames. This includes all data that
+// does not belong to a compressed stream at all and all inter-frame data.
+// Debris is a mechanism to maintain bit-to-bit correctness (so we may
+// construct the original stream back from parsed one). Also it allows us to
+// create stream detector, so we can process uncompressed data in one way and
+// compessed in another. For instance, it is required for PCM/SPDIF detection
+// and helps to handle SPDIF <-> PCM transitions in a correct way.
+//
+// After load_frame() call StreamBuffer may be in 3 states:
+//
+// 1) No sync (load_frame() returns false)
+//
+//    is_in_sync() == false      - no sync detected
+//    is_new_stream() == false   - no stream transitions while out of sync
+//    is_frame_loaded() == false - no frame while out of sync
+//
+//    debris_size() >= 0         - we may have some debris to report
+//    frame_size == 0            - no frame while out of sync
+//   
+// 2) Frame loaded (load_frame() returns true)
+//
+//    is_in_sync() == true       - we're in sync
+//    is_new_stream()            - does not matter
+//    is_frame_loaded() == true  - frame is loaded
+//
+//    debris_size() >= 0         - we may have some debris to report about
+//    frame_size > 0             - we have a frame data
+//   
+// 3) No frame loaded (load_frame() returns false)
+//
+//    is_in_sync() == true       - we're in sync
+//    is_new_stream() == false   - no stream transitions while no frame loaded
+//    is_frame_loaded() == false - no frame loaded
+//
+//    debris_size() >= 0         - we may have some debris to report
+//    frame_size = 0             - no frame loaded
+//   
+//
 // Internal buffer structure
 // =========================
 //
@@ -402,39 +440,43 @@ public:
 class StreamBuffer
 {
 protected:
-  DataBuf       buf;
-
-  // Header-related info
+  // Parser info (constant)
 
   const HeaderParser *parser;    // header parser
-  HeaderInfo    hdr;             // header info
+  size_t header_size;            // cached header size
+  size_t min_frame_size;         // cached min frame size
+  size_t max_frame_size;         // cached max frame size
 
-  size_t        header_size;     // cached header size
-  size_t        min_frame_size;  // cached min frame size
-  size_t        max_frame_size;  // cached max frame size
+  // Buffers
+  // We need a header of a previous frame to load next one, but frame data of
+  // the frame loaded may be changed by in-place frame processing. Therefore
+  // we have to keep a copy of the header. So we need 2 buffers: header buffer
+  // and sync buffer. Header buffer size is always header_size.
+
+  DataBuf  buf;
+
+  uint8_t *header_buf;           // header buffer pointer
+  HeaderInfo hinfo;              // header info (parsed header buffer)
+
+  uint8_t *sync_buf;             // sync buffer pointer
+  size_t   sync_size;            // size of sync buffer
+  size_t   sync_data;            // data loaded to the sync buffer
+
+  // Data (frame data and debris)
+
+  uint8_t   *debris;             // pointer to the start of debris
+  size_t     debris_size;        // size of debris
+
+  uint8_t   *frame;              // pointer to the start of the frame
+  size_t     frame_size;         // size of the frame loaded
+  size_t     frame_interval;     // frame interval
 
   // Flags
 
   bool in_sync;                  // we're in sync with the stream
   bool new_stream;               // frame loaded belongs to a new stream
   bool frame_loaded;             // frame is loaded
-
   int  frames;                   // number of frames loaded
-
-  // Pointer to the copy of the header of the last frame loaded.
-  // We need this header to load next frame, but frame data of the current
-  // frame loaded may be changed by in-place frame processing. Threrfore we
-  // have to keep a copy of the header...
-
-  uint8_t *header;               
-                                 
-  // Frame-related info
-
-  uint8_t *frame;                // pointer to the start of the frame buffer
-  size_t   frame_data;           // data loaded to the frame buffer
-  size_t   frame_size;           // size of the frame loaded
-  size_t   frame_interval;       // frame interval
-
 
   bool sync(uint8_t **data, uint8_t *data_end);
 
@@ -443,25 +485,40 @@ public:
   StreamBuffer(const HeaderParser *hparser);
   virtual ~StreamBuffer();
 
+  /////////////////////////////////////////////////////////
+  // Init
+
   bool set_parser(const HeaderParser *parser);
   const HeaderParser *get_parser() const { return parser; }
   void release_parser();
 
+  /////////////////////////////////////////////////////////
+  // Processing
+
   void reset();
   bool load_frame(uint8_t **data, uint8_t *end);
+
+  /////////////////////////////////////////////////////////
+  // State flags
 
   bool is_in_sync()             const { return in_sync;       }
   bool is_new_stream()          const { return new_stream;    }
   bool is_frame_loaded()        const { return frame_loaded;  }
 
-  Speakers get_spk()            const { return hdr.spk;        }
+  /////////////////////////////////////////////////////////
+  // Data access
+
+  uint8_t *get_debris()         const { return debris;         }
+  size_t   get_debris_size()    const { return debris_size;    }
+
+  Speakers get_spk()            const { return hinfo.spk;      }
   uint8_t *get_frame()          const { return frame;          }
   size_t   get_frame_size()     const { return frame_size;     }
   size_t   get_frame_interval() const { return frame_interval; }
 
   int  get_frames() const { return frames; }
   size_t stream_info(char *buf, size_t size) const;
-  HeaderInfo header_info() const { return hdr; }
+  HeaderInfo header_info() const { return hinfo; }
 };
 
 #endif

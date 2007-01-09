@@ -423,10 +423,16 @@ bool
 ParserFilter::load_frame()
 {
   uint8_t *end = rawdata + size;
-  bool result = stream.load_frame(&rawdata, end);
+  while (rawdata < end)
+    if (stream.load_frame(&rawdata, end))
+    {
+      new_stream |= stream.is_new_stream();
+      size = end - rawdata;
+      return true;  
+    }
+
   size = end - rawdata;
-  new_stream |= stream.is_new_stream();
-  return result;
+  return false;
 }
 
 bool
@@ -443,17 +449,18 @@ bool
 ParserFilter::load_parse_frame()
 {
   uint8_t *end = rawdata + size;
-  while (stream.load_frame(&rawdata, end))
-  {
-    new_stream |= stream.is_new_stream();
-    if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
+  while (rawdata < end)
+    if (stream.load_frame(&rawdata, end))
     {
-      size = end - rawdata;
-      return true;
+      new_stream |= stream.is_new_stream();
+      if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
+      {
+        size = end - rawdata;
+        return true;
+      }
+      else
+        errors++;
     }
-    else
-      errors++;
-  }
 
   size = 0;
   return false;

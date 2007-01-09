@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include "parser.h"
 
@@ -56,19 +57,58 @@ HeaderParser::header_info(const uint8_t *hdr, char *buf, size_t size) const
 // StreamBuffer
 ///////////////////////////////////////////////////////////////////////////////
 
+  const HeaderParser *parser;    // header parser
+  size_t header_size;            // cached header size
+  size_t min_frame_size;         // cached min frame size
+  size_t max_frame_size;         // cached max frame size
+
+  DataBuf  buf;
+  uint8_t *header_buf;           // header buffer pointer
+  uint8_t *sync_buf;             // sync buffer pointer
+  size_t   sync_size;            // size of sync buffer
+  size_t   sync_data;            // data loaded to the sync buffer
+
+  uint8_t   *debris;              // pointer to the start of debris data
+  size_t     debris_size;         // size of debris data
+
+  HeaderInfo hinfo;              // header info
+  uint8_t   *frame;              // pointer to the start of the frame
+  size_t     frame_size;         // size of the frame loaded
+  size_t     frame_interval;     // frame interval
+
+  bool in_sync;                  // we're in sync with the stream
+  bool new_stream;               // frame loaded belongs to a new stream
+  bool frame_loaded;             // frame is loaded
+
+  int  frames;                   // number of frames loaded
+
+
 StreamBuffer::StreamBuffer()
 {
-  frames = 0;
-
   parser = 0;
   header_size = 0;
   min_frame_size = 0;
   max_frame_size = 0;
 
-  header = 0;
-  frame = 0;
+  header_buf = 0;
+  hinfo.drop();
 
-  reset();
+  sync_buf = 0;
+  sync_size = 0;
+  sync_data = 0;
+
+  debris = 0;
+  debris_size = 0;
+
+  frame = 0;
+  frame_size = 0;
+  frame_interval = 0;
+
+  in_sync = false;
+  new_stream = false;
+  frame_loaded = false;
+
+  frames = 0;
 }
 
 StreamBuffer::StreamBuffer(const HeaderParser *_parser)
@@ -77,12 +117,27 @@ StreamBuffer::StreamBuffer(const HeaderParser *_parser)
   header_size = 0;
   min_frame_size = 0;
   max_frame_size = 0;
+
+  header_buf = 0;
+  hinfo.drop();
+
+  sync_buf = 0;
+  sync_size = 0;
+  sync_data = 0;
+
+  debris = 0;
+  debris_size = 0;
+
+  frame = 0;
+  frame_size = 0;
+  frame_interval = 0;
+
+  in_sync = false;
+  new_stream = false;
+  frame_loaded = false;
+
   frames = 0;
 
-  header = 0;
-  frame = 0;
-
-  reset();
   set_parser(_parser);
 }
 
@@ -104,18 +159,11 @@ StreamBuffer::set_parser(const HeaderParser *_parser)
   header_size    = parser->header_size();
   min_frame_size = parser->min_frame_size();
   max_frame_size = parser->max_frame_size();
-  hdr.drop();
 
-  header = buf.get_data();
-  frame = buf.get_data() + header_size;
+  header_buf = buf.get_data();
 
-  in_sync = false;
-  new_stream = false;
-  frame_loaded = false;
-
-  frame_data = 0;
-  frame_size = 0;
-  frame_interval = 0;
+  sync_buf = buf.get_data() + header_size;
+  sync_size = max_frame_size * 2 + header_size;
 
   return true;
 }
@@ -130,50 +178,55 @@ StreamBuffer::release_parser()
   min_frame_size = 0;
   max_frame_size = 0;
 
-  header = 0;
-  frame = 0;
+  header_buf = 0;
+  sync_buf = 0;
+  sync_size = 0;
 }
 
 
 void 
 StreamBuffer::reset()
 {
-  hdr.drop();
+  hinfo.drop();
+  sync_data = 0;
+
+  debris = 0;
+  debris_size = 0;
+
+  frame = 0;
+  frame_size = 0;
+  frame_interval = 0;
 
   in_sync = false;
   new_stream = false;
   frame_loaded = false;
-
-  frame_data = 0;
-  frame_size = 0;
-  frame_interval = 0;
-  frames = 0;
 }
 
 #define LOAD(required_size)                           \
-if (frame_data < required_size)                       \
+if (sync_data < (required_size))                      \
 {                                                     \
-  int load_size = required_size - frame_data;         \
+  int load_size = (required_size) - sync_data;        \
   if (*data + load_size > end)                        \
   {                                                   \
     load_size = end - *data;                          \
-    memcpy(frame + frame_data, *data, load_size);     \
-    frame_data += load_size;                          \
+    memcpy(sync_buf + sync_data, *data, load_size);   \
+    sync_data += load_size;                           \
     *data += load_size;                               \
     return false;                                     \
   }                                                   \
   else                                                \
   {                                                   \
-    memcpy(frame + frame_data, *data, load_size);     \
-    frame_data += load_size;                          \
+    memcpy(sync_buf + sync_data, *data, load_size);   \
+    sync_data += load_size;                           \
     *data += load_size;                               \
   }                                                   \
 }
 
 #define DROP(drop_size)                               \
 {                                                     \
-  frame_data -= drop_size;                            \
-  memmove(frame, frame + drop_size, frame_data);      \
+  assert(sync_data >= (drop_size));                   \
+  sync_data -= (drop_size);                           \
+  memmove(sync_buf, sync_buf + (drop_size), sync_data); \
 }
 
 
@@ -181,109 +234,99 @@ if (frame_data < required_size)                       \
 bool
 StreamBuffer::sync(uint8_t **data, uint8_t *end)
 {
-  while (1)
+  assert(*data <= end);
+  assert(!in_sync && !new_stream && !frame_loaded);
+  assert(frame == 0 && frame_size == 0 && frame_interval == 0);
+
+  uint8_t *frame3;
+  uint8_t *frame3_max;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Drop debris
+
+  DROP(debris_size);
+  debris = 0;
+  debris_size = 0;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Fill the buffer
+
+  if (sync_data + (end - *data) < header_size)
+  {
+    size_t load_size = end - *data;
+    memcpy(sync_buf + sync_data, *data, load_size);
+    sync_data += load_size;
+    *data += load_size;
+    return false;
+  }
+  else if (sync_data < sync_size)
+  {
+    size_t load_size = MIN(sync_size - sync_data, size_t(end - *data));
+    memcpy(sync_buf + sync_data, *data, load_size);
+    sync_data += load_size;
+    *data += load_size;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Ensure that sync buffer starts with a syncpoint
+
+  HeaderInfo hinfo1;
+  if (parser->parse_header(sync_buf, &hinfo1))
   {
     ///////////////////////////////////////////////////////////////////////////
-    // Search 1st syncpoint
-
-    if (frame_data + (end - *data) < header_size)
-    {
-      size_t load_size = end - *data;
-      memcpy(frame + frame_data, *data, load_size);
-      frame_data += load_size;
-      *data += load_size;
-      return false;
-    }
-    else if (frame_data < max_frame_size * 2)
-    {
-      size_t load_size = MIN(max_frame_size * 2 - frame_data, size_t(end - *data));
-      memcpy(frame + frame_data, *data, load_size);
-      frame_data += load_size;
-      *data += load_size;
-    }
-
-    for (size_t i = 0; i <= frame_data - header_size; i++)
-      if (parser->parse_header(frame + i, &hdr))
-        break;
-
-    DROP(i);
-    if (frame_data < header_size)
-      continue;
- 
-    ///////////////////////////////////////////////////////////////////////////
     // Search 2nd syncpoint
-    // * If frame size can be determined from the header we must search next
-    //   syncpoint after the end of the frame but not further than scan size
-    //   (only if scan size if specified, do not scan at all otherwise).
-    // * If frame size is unknown from the header we must search next syncpoint
-    //   after the minimum frame size and the scan size (or maximum frame size
-    //   if scan interval is not specified).
+    // * Known frame size: search next syncpoint after the end of the frame but
+    //   not further than scan size (if defined)
+    // * Unknown frame size: search next syncpoint after the minimum frame size
+    //   up to scan size or maximum frame size if scan size is unspecified.
 
     uint8_t *frame2;
     uint8_t *frame2_max;
 
-    if (hdr.frame_size)
+    if (hinfo1.frame_size)
     {
-      frame2 = frame + hdr.frame_size;
-      frame2_max = frame + MAX(hdr.scan_size, hdr.frame_size);
+      frame2 = sync_buf + hinfo1.frame_size;
+      frame2_max = sync_buf + MAX(hinfo1.scan_size, hinfo1.frame_size);
     }
     else
     {
-      frame2 = frame + min_frame_size;
-      frame2_max = frame + (hdr.scan_size? hdr.scan_size: max_frame_size);
+      frame2 = sync_buf + min_frame_size;
+      frame2_max = sync_buf + (hinfo1.scan_size? hinfo1.scan_size: max_frame_size);
     }
-
-    // Search second synpoint. If we have found correct header then try to
-    // locate 3rd syncpoint. If we cannot find 3rd syncpoint we must continue
-    // 2nd syncpoint scanning because frame data may contain something that
-    // looks like correct frame header but it is not.
 
     while (frame2 <= frame2_max)
     {
-      LOAD(frame2 - frame + header_size);
-      if (!parser->compare_headers(frame, frame2) || !parser->parse_header(frame2, &hdr))
+      LOAD(frame2 - sync_buf + header_size);
+
+      HeaderInfo hinfo2;
+      if (!parser->compare_headers(sync_buf, frame2) || !parser->parse_header(frame2, &hinfo2))
       {
         frame2++;
         continue;
       }
 
-      // Now we can set frame interval. It is constant for entire stream for
-      // unknown frame size and will be used for for frame loading. For known
-      // frame size it will change with each frame load.
-
-      frame_interval = frame2 - frame;
-
       /////////////////////////////////////////////////////////////////////////
-      // Find 3rd syncpoint
-      // * For unknown frame size we must locate next syncpoint exactly at next
-      //   frame interval.
-      // * For known frame size we must search next syncpoint in between of
-      //   minimum and maximum frame sizes.
+      // Search 3rd syncpoint
+      // * Known frame size: search next syncpoint after the end of the frame
+      //   but not further than scan size (if defined)
+      // * Unknown frame size: expect next syncpoint exactly after frame
+      //   interval.
 
-      uint8_t *frame3;
-      uint8_t *frame3_max;
-
-      // Skip 2nd frame data and set maximum scan range
-
-      if (hdr.frame_size)
+      if (hinfo2.frame_size)
       {
-        frame3     = frame2 + hdr.frame_size;
-        frame3_max = frame2 + MAX(hdr.scan_size, hdr.frame_size);
+        frame3     = frame2 + hinfo2.frame_size;
+        frame3_max = frame2 + MAX(hinfo2.scan_size, hinfo2.frame_size);
       }
       else
       {
-        frame3     = frame2 + frame_interval;
-        frame3_max = frame2 + frame_interval;
+        frame3     = frame2 + (frame2 - sync_buf);
+        frame3_max = frame2 + (frame2 - sync_buf);
       }
-
-      // Scan third synpoint position. If we have found correct header then
-      // task is done. If we cannot find 3rd syncpoint we must continue 2nd
-      // syncpoint scanning.
 
       while (frame3 <= frame3_max)
       {
-        LOAD(frame3 - frame + header_size);
-        if (!parser->compare_headers(frame2, frame3) || !parser->parse_header(frame3, &hdr))
+        LOAD(frame3 - sync_buf + header_size);
+        if (!parser->compare_headers(frame2, frame3) || !parser->parse_header(frame3))
         {
           frame3++;
           continue;
@@ -292,30 +335,50 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
         ///////////////////////////////////////////////////////////////////////
         // DONE! Prepare first frame output.
 
+        memcpy(header_buf, sync_buf, header_size);
+        parser->parse_header(header_buf, &hinfo);
+
+        frame = sync_buf;
+        frame_interval = frame2 - frame;
+        frame_size = hinfo.frame_size? hinfo.frame_size: frame_interval;
+
         in_sync = true;
         new_stream = true;
         frame_loaded = true;
-
-        memcpy(header, frame, header_size);
-        parser->parse_header(header, &hdr);
-        frame_interval = frame2 - frame;
-        frame_size = hdr.frame_size? hdr.frame_size: frame_interval;
 
         frames++;
         return true;
       }
 
+      /////////////////////////////////////////////////////////////////////////
       // No correct 3rd syncpoint found.
       // Continue 2nd syncpoint scanning.
 
       frame2++;
-    }
 
-    // No correct 2nd syncpoint found.
-    // Resync first frame.
+    } // while (frame2 <= frame2_max)
 
-    DROP(1);
-  }
+    /////////////////////////////////////////////////////////////////////////
+    // No correct sync sequence found.
+    /////////////////////////////////////////////////////////////////////////
+
+  } // if (parser->parse_header(sync_buf, &hdr))
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Return debris
+  // * Sync buffer does not start with a syncpoint
+  // * No correct sync sequence found (false sync)
+  //
+  // Try to locate next syncpoint and return data up to the poistion found
+  // as debris.
+
+  for (size_t i = 1; i <= sync_data - header_size; i++)
+    if (parser->parse_header(sync_buf + i))
+      break;
+
+  debris = sync_buf;
+  debris_size = i;
+  return false;
 }
 
 
@@ -332,54 +395,61 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
     return sync(data, end);
 
   /////////////////////////////////////////////////////////////////////////////
-  // Drop current frame and load next one
-  //
-  // When we're in sync we always have one frame loaded at frame buffer. To
-  // load next frame we load next frame after current one, compare headers and
-  // drop first frame. (We need to compare headers to detect stream changes).
+  // Drop old debris and frame data
+
+  if (frame_loaded)
+  {
+    DROP(debris_size + frame_size);
+    debris_size = 0;
+    frame_size = 0;
+  }
 
   new_stream = false;
   frame_loaded = false;
 
-  uint8_t *frame2;
-  uint8_t *frame2_max;
+  /////////////////////////////////////////////////////////////////////////////
+  // Load next frame
 
-  // Skip first frame data and set maximum scan range
+  frame = sync_buf;
+  uint8_t *frame_max = sync_buf;
 
-  if (hdr.frame_size)
+  if (hinfo.frame_size)
+    if (hinfo.frame_size < hinfo.scan_size)
+      frame_max += hinfo.scan_size - hinfo.frame_size;
+
+  while (frame <= frame_max)
   {
-    frame2 = frame + hdr.frame_size;
-    frame2_max = frame + MAX(hdr.scan_size, hdr.frame_size);
-  }
-  else
-  {
-    frame2     = frame + frame_interval;
-    frame2_max = frame + frame_interval;
-  }
+    LOAD(frame - sync_buf + header_size);
 
-  // Scan
-
-  while (frame2 <= frame2_max)
-  {
-    LOAD(frame2 - frame + header_size);
-    if (!parser->compare_headers(header, frame2) || !parser->parse_header(frame2, &hdr))
+    HeaderInfo new_hinfo;
+    if (!parser->compare_headers(header_buf, frame) || !parser->parse_header(frame, &new_hinfo))
     {
-      frame2++;
+      frame++;
       continue;
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Load the rest of the frame
 
-    frame_interval = frame2 - frame;
-    frame_size = hdr.frame_size? hdr.frame_size: frame_interval;
-    LOAD(frame2 - frame + frame_size);
-
+    LOAD(frame - sync_buf + (new_hinfo.frame_size? new_hinfo.frame_size: frame_interval));
+      
     ///////////////////////////////////////////////////////////////////////////
-    // DONE! Drop old frame and prepare new frame output.
+    // DONE! Prepare new frame output.
 
-    DROP(frame_interval);
-    memcpy(header, frame, header_size);
+    if (hinfo.frame_size)
+      frame_interval = hinfo.frame_size + frame - sync_buf;
+
+    memcpy(header_buf, frame, header_size);
+    parser->parse_header(header_buf, &hinfo);
+
+    debris = sync_buf;
+    debris_size = frame - sync_buf;
+
+    if (hinfo.frame_size)
+      frame_size = hinfo.frame_size;
+    else
+      frame_size = frame_interval;
+
     frame_loaded = true;
 
     frames++;
@@ -389,8 +459,10 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
   /////////////////////////////////////////////////////////////////////////////
   // No correct syncpoint found. Resync.
 
-  DROP(frame_size);
   in_sync = false;
+  frame = 0;
+  frame_size = 0;
+  frame_interval = 0;
   return sync(data, end);
 }
 
@@ -402,8 +474,8 @@ StreamBuffer::stream_info(char *buf, size_t size) const
 
   info_size += parser->header_info(frame, info, sizeof(info));
   info_size += sprintf(info + info_size, "Frame interval: %i\n", frame_interval);
-  if (frame_interval > 0 && hdr.nsamples > 0)
-    info_size += sprintf(info + info_size, "Actual bitrate: %ikbps\n", frame_interval * hdr.spk.sample_rate * 8 / hdr.nsamples / 1000);
+  if (frame_interval > 0 && hinfo.nsamples > 0)
+    info_size += sprintf(info + info_size, "Actual bitrate: %ikbps\n", frame_interval * hinfo.spk.sample_rate * 8 / hinfo.nsamples / 1000);
 
   if (info_size > size) info_size = size;
   memcpy(buf, info, info_size);
