@@ -187,7 +187,7 @@ flushing        transition      get_chunk(eos)  output format changes to unknown
 */
 
 
-
+/*
 ParserFilter::ParserFilter()
 :NullFilter(-1)
 {
@@ -443,6 +443,261 @@ ParserFilter::parse_frame()
 
   errors++;
   return false;
+}
+
+bool
+ParserFilter::load_parse_frame()
+{
+  uint8_t *end = rawdata + size;
+  while (rawdata < end)
+    if (stream.load_frame(&rawdata, end))
+    {
+      new_stream |= stream.is_new_stream();
+      if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
+      {
+        size = end - rawdata;
+        return true;
+      }
+      else
+        errors++;
+    }
+
+  size = 0;
+  return false;
+}
+*/
+
+ParserFilter::ParserFilter()
+:NullFilter(-1)
+{
+  parser = 0;
+  errors = 0;
+
+  out_spk = spk_unknown;
+  state = state_empty;
+  new_stream = false;
+}
+
+ParserFilter::ParserFilter(FrameParser *_parser)
+:NullFilter(-1)
+{
+  parser = 0;
+  errors = 0;
+
+  out_spk = spk_unknown;
+  state = state_empty;
+  new_stream = false;
+
+  set_parser(_parser);
+}
+
+ParserFilter::~ParserFilter()
+{
+}
+
+bool
+ParserFilter::set_parser(FrameParser *_parser)
+{
+  reset();
+  parser = 0;
+
+  if (!_parser)
+    return true;
+
+  const HeaderParser *header_parser = _parser->header_parser();
+  if (!stream.set_parser(header_parser))
+    return false;
+
+  parser = _parser;
+  return true;
+}
+
+const FrameParser *
+ParserFilter::get_parser() const
+{
+  return parser;
+}
+
+
+
+void
+ParserFilter::reset()
+{
+  NullFilter::reset();
+
+  out_spk = spk_unknown;
+  state = state_empty;
+
+  if (parser)
+    parser->reset();
+  stream.reset();
+  sync_helper.reset();
+  new_stream = false;
+}
+
+bool
+ParserFilter::is_ofdd() const
+{
+  return true;
+}
+
+bool
+ParserFilter::query_input(Speakers spk) const
+{
+  if (!parser) 
+    return false;
+  else if (spk.format == FORMAT_RAWDATA) 
+    return true;
+  else
+    return parser->header_parser()->can_parse(spk.format);
+}
+
+bool
+ParserFilter::process(const Chunk *_chunk)
+{
+  assert(state == state_empty);
+
+  if (!parser)
+    return false;
+
+  // we must ignore dummy chunks
+  if (_chunk->is_dummy())
+    return true;
+
+  // receive the chunk
+  FILTER_SAFE(receive_chunk(_chunk));
+  sync_helper.receive_sync(sync, time);
+  sync = false;
+
+  if (load_parse_frame())
+  {
+    if (out_spk.is_unknown())
+    {
+      out_spk = parser->get_spk();
+      state = state_full;
+      new_stream = false;
+    }
+    else if (new_stream)
+    {
+      state = state_format_change;
+      new_stream = false;
+    }
+    else
+      state = state_full;
+  }
+  else // if (load_parse_frame())
+  {
+    if (flushing)
+    {
+      if (out_spk.is_unknown())
+        // if we did not start a stream we must forget about current stream on 
+        // flushing and drop data currently buffered (flushing state is also
+        // dropped so we do not pass eos event in this case)
+        reset();
+      else
+        // send flushing on get_chunk()
+        state = state_no_frame;
+    }
+  }
+
+  return true;
+}
+
+Speakers
+ParserFilter::get_output() const
+{
+  return out_spk;
+}
+
+bool
+ParserFilter::is_empty() const
+{
+  return state == state_empty;
+}
+
+bool
+ParserFilter::get_chunk(Chunk *_chunk)
+{
+  assert(state != state_empty);
+
+  if (!parser) 
+    return false;
+
+  switch (state)
+  {
+    case state_full:
+      // send the parserd frame
+      if (out_spk.is_linear())
+        _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
+      else
+        _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
+
+      sync_helper.send_sync(_chunk);
+      state = state_no_frame;
+      return true;
+
+    case state_no_frame:
+
+      // load next frame, parse and send it
+      // * send inter-stream flusing if new frame belongs to a new stream
+      // * send dummy chunk if we have no enough data to load a frame
+      // * send flushing and reset if we have no enough data to load a frame
+      //   and have received flushing from upstream before
+
+      if (load_parse_frame())
+      {
+        if (new_stream)
+        {
+          // send inter-stream flushing
+          _chunk->set_empty(out_spk);
+          _chunk->set_eos();
+
+          out_spk = stream.get_spk();
+          state = state_full;
+          new_stream = false;
+        }
+        else
+        {
+          // send the parsed frame
+          if (out_spk.is_linear())
+            _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
+          else
+            _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
+
+          sync_helper.send_sync(_chunk);
+          state = state_no_frame;
+        }
+      }
+      else // if (load_parse_frame())
+      {
+        if (flushing)
+        {
+          // send flushing
+          _chunk->set_empty(out_spk);
+          _chunk->set_eos();
+          reset();
+        }
+        else
+          // send dummy
+          _chunk->set_dummy();
+
+        state = state_empty;
+      }
+
+      return true;
+
+    case state_format_change:
+      // send flushing
+      _chunk->set_empty(out_spk);
+      _chunk->set_eos();
+
+      out_spk = stream.get_spk();
+      state = state_full;
+      return true;
+
+    default:
+      return false;
+  }
 }
 
 bool
