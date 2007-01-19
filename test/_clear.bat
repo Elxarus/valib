@@ -31,6 +31,7 @@ rem -------------------------------------------------------
 del /a:h *.suo 2> nul
 del *.user 2> nul
 
+rmdir /s /q debug_msvc8 2> nul
 del release_msvc8\*.obj 2> nul
 del release_msvc8\*.res 2> nul
 del release_msvc8\*.sbr 2> nul

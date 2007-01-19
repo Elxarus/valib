@@ -3,7 +3,9 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="test"
-	ProjectGUID="{1D5C51F5-4EC6-4CC8-A5BB-4270025BF381}"
+	ProjectGUID="{DEEFC4A3-9C96-4015-A74F-9C62DFE75F9D}"
+	RootNamespace="test"
+	Keyword="Win32Proj"
 	>
 	<Platforms>
 		<Platform
@@ -14,14 +16,11 @@
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Release|Win32"
-			OutputDirectory=".\Release_MSVC8"
-			IntermediateDirectory=".\Release_MSVC8"
+			Name="Debug|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)_msvc8"
+			IntermediateDirectory="$(ConfigurationName)_msvc8"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
-			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -37,48 +36,31 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\Release/test.tlb"
-				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
-				InlineFunctionExpansion="2"
-				EnableIntrinsicFunctions="true"
-				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="..\valib,..\liba52"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;LIBA52_DOUBLE;AC3_DEBUG;AC3_DEBUG_NODITHER;AC3_DEBUG_NOIMDCT;TIME_WIN32"
-				StringPooling="true"
-				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release_MSVC8/test.pch"
-				AssemblerOutput="4"
-				AssemblerListingLocation=".\Release_MSVC8/"
-				ObjectFile=".\Release_MSVC8/"
-				ProgramDataBaseFileName=".\Release_MSVC8/"
-				BrowseInformation="2"
-				BrowseInformationFile=".\Release_MSVC8/"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				DebugInformationFormat="3"
+				Optimization="0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;TIME_WIN32"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="2"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="1049"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile=".\Release_MSVC8/test.exe"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				GenerateManifest="true"
+				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -94,8 +76,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile=".\Release/test.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -111,14 +91,12 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|Win32"
-			OutputDirectory=".\Debug_MSVC8"
-			IntermediateDirectory=".\Debug_MSVC8"
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)_msvc8"
+			IntermediateDirectory="$(ConfigurationName)_msvc8"
 			ConfigurationType="1"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
-			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -134,45 +112,32 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\Debug/test.tlb"
-				HeaderFileName=""
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="..\valib,..\liba52"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;LIBA52_DOUBLE;AC3_DEBUG;AC3_DEBUG_NODITHER;AC3_DEBUG_NOIMDCT;TIME_WIN32"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				PrecompiledHeaderFile=".\Debug/test.pch"
-				AssemblerOutput="4"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
-				BrowseInformation="1"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;TIME_WIN32"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="1049"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile=".\Debug/test.exe"
-				LinkIncremental="2"
-				SuppressStartupBanner="true"
+				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/test.pdb"
 				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -186,8 +151,6 @@
 			/>
 			<Tool
 				Name="VCBscMakeTool"
-				SuppressStartupBanner="true"
-				OutputFile=".\Debug/test.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -207,571 +170,121 @@
 	</References>
 	<Files>
 		<Filter
-			Name="tests"
-			>
-			<File
-				RelativePath="test_crash.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_crc.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_demux.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_dvdgraph.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_filter.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_filtergraph.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_general.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_null.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_proc.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_spdifer.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="test_syncer.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-		</Filter>
-		<Filter
 			Name="valib"
 			>
 			<Filter
-				Name="filters"
+				Name="common"
 				>
 				<File
-					RelativePath="..\valib\filters\agc.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\agc.h"
+					RelativePath="..\valib\auto_file.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\bass_redir.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\bass_redir.h"
+					RelativePath="..\valib\bitstream.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\convert.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\convert.h"
+					RelativePath="..\valib\bitstream.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\counter.h"
+					RelativePath="..\valib\crc.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\decoder.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\decoder.h"
+					RelativePath="..\valib\crc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\dejitter.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\dejitter.h"
+					RelativePath="..\valib\data.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\delay.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\delay.h"
+					RelativePath="..\valib\defs.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\demux.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\demux.h"
+					RelativePath="..\valib\defs.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\dvd_graph.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\dvd_graph.h"
+					RelativePath="..\valib\filter.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\levels.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\levels.h"
+					RelativePath="..\valib\filter_graph.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\mixer.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\mixer.h"
+					RelativePath="..\valib\filter_graph.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\proc.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filters\proc.h"
+					RelativePath="..\valib\filter_tester.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\filters\spdifer.cpp"
+					RelativePath="..\valib\log.cpp"
 					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\valib\filters\spdifer.h"
+					RelativePath="..\valib\log.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\mpeg_demux.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\mpeg_demux.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\renderer.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\rng.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\rng.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\spk.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\spk.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\sync.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\syncscan.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\syncscan.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\vtime.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\vtime.h"
 					>
 				</File>
 			</Filter>
@@ -779,29 +292,43 @@
 				Name="parsers"
 				>
 				<File
-					RelativePath="..\valib\parsers\file_parser.cpp"
+					RelativePath="..\valib\parsers\multi_frame.cpp"
 					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\file_parser.h"
+					RelativePath="..\valib\parsers\multi_frame.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\multi_header.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\multi_header.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\spdif_frame.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\spdif_frame.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\spdif_header.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\spdif_header.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\spdif_wrapper.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\spdif_wrapper.h"
 					>
 				</File>
 				<Filter
@@ -810,24 +337,6 @@
 					<File
 						RelativePath="..\valib\parsers\ac3\ac3_bitalloc.cpp"
 						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath="..\valib\parsers\ac3\ac3_bitalloc.h"
@@ -844,50 +353,30 @@
 					<File
 						RelativePath="..\valib\parsers\ac3\ac3_enc.cpp"
 						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath="..\valib\parsers\ac3\ac3_enc.h"
 						>
 					</File>
 					<File
+						RelativePath="..\valib\parsers\ac3\ac3_frame.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\ac3\ac3_frame.h"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\ac3\ac3_header.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\ac3\ac3_header.h"
+						>
+					</File>
+					<File
 						RelativePath="..\valib\parsers\ac3\ac3_imdct.cpp"
 						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath="..\valib\parsers\ac3\ac3_imdct.h"
@@ -896,125 +385,13 @@
 					<File
 						RelativePath="..\valib\parsers\ac3\ac3_mdct.cpp"
 						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
 					</File>
 					<File
 						RelativePath="..\valib\parsers\ac3\ac3_mdct.h"
 						>
 					</File>
 					<File
-						RelativePath="..\valib\parsers\ac3\ac3_parser.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\valib\parsers\ac3\ac3_parser.h"
-						>
-					</File>
-					<File
 						RelativePath="..\valib\parsers\ac3\ac3_tables.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="mpa"
-					>
-					<File
-						RelativePath="..\valib\parsers\mpa\mpa_defs.h"
-						>
-					</File>
-					<File
-						RelativePath="..\valib\parsers\mpa\mpa_parser.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\valib\parsers\mpa\mpa_parser.h"
-						>
-					</File>
-					<File
-						RelativePath="..\valib\parsers\mpa\mpa_synth.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\valib\parsers\mpa\mpa_synth.h"
-						>
-					</File>
-					<File
-						RelativePath="..\valib\parsers\mpa\mpa_synth_filter.h"
-						>
-					</File>
-					<File
-						RelativePath="..\valib\parsers\mpa\mpa_tables.h"
 						>
 					</File>
 				</Filter>
@@ -1026,29 +403,19 @@
 						>
 					</File>
 					<File
-						RelativePath="..\valib\parsers\dts\dts_parser.cpp"
+						RelativePath="..\valib\parsers\dts\dts_frame.cpp"
 						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\valib\parsers\dts\dts_parser.h"
+						RelativePath="..\valib\parsers\dts\dts_frame.h"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\dts\dts_header.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\dts\dts_header.h"
 						>
 					</File>
 					<File
@@ -1076,12 +443,156 @@
 						>
 					</File>
 				</Filter>
+				<Filter
+					Name="mpa"
+					>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_defs.h"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_frame.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_frame.h"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_header.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_header.h"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_synth.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_synth.h"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_synth_filter.h"
+						>
+					</File>
+					<File
+						RelativePath="..\valib\parsers\mpa\mpa_tables.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
-				Name="sink"
+				Name="filters"
 				>
 				<File
-					RelativePath="..\valib\sink\sink_raw.h"
+					RelativePath="..\valib\filters\agc.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\agc.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\bass_redir.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\bass_redir.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\convert.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\convert.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\counter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\decoder.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\decoder.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\dejitter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\dejitter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\delay.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\delay.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\demux.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\demux.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\dvd_graph.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\dvd_graph.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\levels.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\levels.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\mixer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\mixer.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\parser_filter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\parser_filter.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\proc.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\proc.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\spdifer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\spdifer.h"
 					>
 				</File>
 			</Filter>
@@ -1091,24 +602,6 @@
 				<File
 					RelativePath="..\valib\win32\cpu.cpp"
 					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\valib\win32\cpu.h"
@@ -1117,341 +610,17 @@
 				<File
 					RelativePath="..\valib\win32\thread.cpp"
 					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\valib\win32\thread.h"
 					>
 				</File>
-			</Filter>
-			<Filter
-				Name="common"
-				>
 				<File
-					RelativePath="..\valib\auto_file.h"
+					RelativePath="..\valib\win32\winspk.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\bitstream.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\bitstream.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\crc.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\crc.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\data.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\defs.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\defs.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\filter.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\filter_graph.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\filter_graph.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\filter_tester.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\log.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\log.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\mpeg_demux.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\mpeg_demux.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\parser.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\parser.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\rng.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\rng.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\sink.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\spk.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\spk.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\sync.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\syncscan.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\syncscan.h"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\vtime.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\valib\vtime.h"
+					RelativePath="..\valib\win32\winspk.h"
 					>
 				</File>
 			</Filter>
@@ -1461,24 +630,6 @@
 				<File
 					RelativePath="..\valib\source\noise.cpp"
 					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\valib\source\noise.h"
@@ -1487,30 +638,96 @@
 				<File
 					RelativePath="..\valib\source\raw_source.cpp"
 					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\valib\source\raw_source.h"
 					>
 				</File>
+				<File
+					RelativePath="..\valib\source\wav_source.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\source\wav_source.h"
+					>
+				</File>
 			</Filter>
+			<Filter
+				Name="sink"
+				>
+				<File
+					RelativePath="..\valib\sink\sink_raw.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\sink\sink_wav.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\sink\sink_wav.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="tests"
+			>
+			<File
+				RelativePath="test_bs_convert.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_crash.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_crc.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_demux.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_dvdgraph.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_filter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_filtergraph.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_general.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_null.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_proc.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_source.h"
+				>
+			</File>
+			<File
+				RelativePath="test_spdifer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_streambuf.cpp"
+				>
+			</File>
+			<File
+				RelativePath="test_syncer.cpp"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath="all_filters.h"
@@ -1519,24 +736,6 @@
 		<File
 			RelativePath="common.cpp"
 			>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="common.h"
@@ -1544,28 +743,6 @@
 		</File>
 		<File
 			RelativePath="test.cpp"
-			>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					AdditionalIncludeDirectories=""
-					PreprocessorDefinitions=""
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="test_source.h"
 			>
 		</File>
 	</Files>
