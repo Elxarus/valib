@@ -25,7 +25,7 @@ const CRC crc16(POLY_CRC16, 16);
 const CRC crc32(POLY_CRC32, 32);
 
 void
-CRC::init(uint32_t _poly, size_t _power)
+CRC::init(uint32_t _poly, uint8_t _power)
 {
   int byte;
   assert(_power <= 32);

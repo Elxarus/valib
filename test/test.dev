@@ -1,7 +1,7 @@
 [Project]
 FileName=test.dev
 Name=test
-UnitCount=106
+UnitCount=126
 Type=1
 Ver=1
 ObjFiles=
@@ -27,7 +27,7 @@ CustomMakefile=
 IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
-CompilerSettings=0000000001001000000000
+CompilerSettings=00000000010010000000ia
 
 [Unit1]
 FileName=..\valib\vtime.h
@@ -640,26 +640,6 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit65]
-FileName=..\valib\parsers\ac3\ac3_parser.cpp
-CompileCpp=1
-Folder=valib/parsers/ac3
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit66]
-FileName=..\valib\parsers\ac3\ac3_parser.h
-CompileCpp=1
-Folder=valib/parsers/ac3
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit67]
 FileName=..\valib\parsers\dts\dts_tables_vq.h
 CompileCpp=1
 Folder=valib/parsers/dts
@@ -669,7 +649,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit68]
+[Unit66]
 FileName=..\valib\parsers\dts\dts_defs.h
 CompileCpp=1
 Folder=valib/parsers/dts
@@ -679,27 +659,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit69]
-FileName=..\valib\parsers\dts\dts_parser.cpp
-CompileCpp=1
-Folder=valib/parsers/dts
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit70]
-FileName=..\valib\parsers\dts\dts_parser.h
-CompileCpp=1
-Folder=valib/parsers/dts
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit71]
+[Unit67]
 FileName=..\valib\parsers\dts\dts_tables.h
 CompileCpp=1
 Folder=valib/parsers/dts
@@ -709,7 +669,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit72]
+[Unit68]
 FileName=..\valib\parsers\dts\dts_tables_adpcm.h
 CompileCpp=1
 Folder=valib/parsers/dts
@@ -719,7 +679,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit73]
+[Unit69]
 FileName=..\valib\parsers\dts\dts_tables_fir.h
 CompileCpp=1
 Folder=valib/parsers/dts
@@ -729,7 +689,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit74]
+[Unit70]
 FileName=..\valib\parsers\dts\dts_tables_huffman.h
 CompileCpp=1
 Folder=valib/parsers/dts
@@ -739,7 +699,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit75]
+[Unit71]
 FileName=..\valib\parsers\dts\dts_tables_quantization.h
 CompileCpp=1
 Folder=valib/parsers/dts
@@ -749,7 +709,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit76]
+[Unit72]
 FileName=..\valib\parsers\mpa\mpa_tables.h
 CompileCpp=1
 Folder=valib/parsers/mpa
@@ -759,7 +719,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit77]
+[Unit73]
 FileName=..\valib\parsers\mpa\mpa_defs.h
 CompileCpp=1
 Folder=valib/parsers/mpa
@@ -769,27 +729,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit78]
-FileName=..\valib\parsers\mpa\mpa_parser.cpp
-CompileCpp=1
-Folder=valib/parsers/mpa
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit79]
-FileName=..\valib\parsers\mpa\mpa_parser.h
-CompileCpp=1
-Folder=valib/parsers/mpa
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit80]
+[Unit74]
 FileName=..\valib\parsers\mpa\mpa_synth.cpp
 CompileCpp=1
 Folder=valib/parsers/mpa
@@ -799,7 +739,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit81]
+[Unit75]
 FileName=..\valib\parsers\mpa\mpa_synth.h
 CompileCpp=1
 Folder=valib/parsers/mpa
@@ -809,7 +749,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit82]
+[Unit76]
 FileName=..\valib\parsers\mpa\mpa_synth_filter.h
 CompileCpp=1
 Folder=valib/parsers/mpa
@@ -819,7 +759,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit83]
+[Unit77]
 FileName=..\valib\win32\cpu.cpp
 CompileCpp=1
 Folder=valib/win32
@@ -829,7 +769,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit84]
+[Unit78]
 FileName=..\valib\win32\cpu.h
 CompileCpp=1
 Folder=valib/win32
@@ -839,7 +779,17 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit86]
+[Unit79]
+FileName=..\valib\win32\thread.cpp
+CompileCpp=1
+Folder=valib/win32
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit80]
 FileName=..\valib\win32\thread.h
 CompileCpp=1
 Folder=valib/win32
@@ -849,7 +799,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit87]
+[Unit81]
 FileName=test_syncer.cpp
 CompileCpp=1
 Folder=tests
@@ -859,7 +809,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit88]
+[Unit82]
 FileName=all_filters.h
 CompileCpp=1
 Folder=
@@ -869,7 +819,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit89]
+[Unit83]
 FileName=common.cpp
 CompileCpp=1
 Folder=
@@ -879,8 +829,8 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit91]
-FileName=test.cpp
+[Unit84]
+FileName=common.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -889,7 +839,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit92]
+[Unit86]
 FileName=test_crash.cpp
 CompileCpp=1
 Folder=tests
@@ -899,7 +849,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit93]
+[Unit87]
 FileName=test_crc.cpp
 CompileCpp=1
 Folder=tests
@@ -909,7 +859,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit94]
+[Unit88]
 FileName=test_demux.cpp
 CompileCpp=1
 Folder=tests
@@ -919,7 +869,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit95]
+[Unit89]
 FileName=test_filter.cpp
 CompileCpp=1
 Folder=tests
@@ -929,17 +879,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit96]
-FileName=test_general.cpp
-CompileCpp=1
-Folder=tests
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit97]
+[Unit91]
 FileName=test_null.cpp
 CompileCpp=1
 Folder=tests
@@ -949,7 +889,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit98]
+[Unit92]
 FileName=test_proc.cpp
 CompileCpp=1
 Folder=tests
@@ -959,7 +899,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit99]
+[Unit93]
 FileName=test_source.h
 CompileCpp=1
 Folder=
@@ -969,7 +909,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit100]
+[Unit94]
 FileName=test_spdifer.cpp
 CompileCpp=1
 Folder=tests
@@ -979,7 +919,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit101]
+[Unit95]
 FileName=..\valib\defs.cpp
 CompileCpp=1
 Folder=valib/common
@@ -989,7 +929,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit102]
+[Unit96]
 FileName=..\valib\filter_graph.cpp
 CompileCpp=1
 Folder=valib/common
@@ -999,7 +939,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit103]
+[Unit97]
 FileName=..\valib\filters\dvd_graph.h
 CompileCpp=1
 Folder=valib/filters
@@ -1009,7 +949,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit104]
+[Unit98]
 FileName=..\valib\filters\dvd_graph.cpp
 CompileCpp=1
 Folder=valib/filters
@@ -1019,7 +959,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit105]
+[Unit99]
 FileName=test_filtergraph.cpp
 CompileCpp=1
 Folder=tests
@@ -1029,7 +969,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit106]
+[Unit100]
 FileName=test_dvdgraph.cpp
 CompileCpp=1
 Folder=tests
@@ -1039,10 +979,50 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit107]
-FileName=..\valib\filters\dvd_graph.h
+[Unit101]
+FileName=..\valib\parsers\spdif_wrapper.h
 CompileCpp=1
-Folder=valib/filters
+Folder=valib/parsers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit104]
+FileName=..\valib\parsers\multi_header.cpp
+CompileCpp=1
+Folder=valib/parsers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit105]
+FileName=..\valib\parsers\multi_header.h
+CompileCpp=1
+Folder=valib/parsers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit106]
+FileName=..\valib\parsers\spdif_frame.cpp
+CompileCpp=1
+Folder=valib/parsers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit107]
+FileName=..\valib\parsers\spdif_frame.h
+CompileCpp=1
+Folder=valib/parsers
 Compile=1
 Link=1
 Priority=1000
@@ -1050,9 +1030,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit110]
-FileName=test_source.h
+FileName=..\valib\parsers\spdif_wrapper.cpp
 CompileCpp=1
-Folder=test
+Folder=valib/parsers
 Compile=1
 Link=1
 Priority=1000
@@ -1060,9 +1040,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit111]
-FileName=test_spdifer.cpp
+FileName=test_streambuf.cpp
 CompileCpp=1
-Folder=test
+Folder=tests
 Compile=1
 Link=1
 Priority=1000
@@ -1098,9 +1078,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit108]
-FileName=..\valib\filters\dvd_graph.cpp
+FileName=..\valib\parsers\spdif_header.cpp
 CompileCpp=1
-Folder=valib/filters
+Folder=valib/parsers
 Compile=1
 Link=1
 Priority=1000
@@ -1108,9 +1088,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit85]
-FileName=..\valib\win32\thread.cpp
+FileName=test.cpp
 CompileCpp=1
-Folder=valib/win32
+Folder=
 Compile=1
 Link=1
 Priority=1000
@@ -1118,9 +1098,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit90]
-FileName=common.h
+FileName=test_general.cpp
 CompileCpp=1
-Folder=
+Folder=tests
 Compile=1
 Link=1
 Priority=1000
@@ -1141,6 +1121,186 @@ BuildCmd=
 FileName=..\valib\parsers\ac3\ac3_bitalloc.cpp
 CompileCpp=1
 Folder=valib/parsers/ac3
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit109]
+FileName=..\valib\parsers\spdif_header.h
+CompileCpp=1
+Folder=valib/parsers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit112]
+FileName=test_bs_convert.cpp
+CompileCpp=1
+Folder=tests
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit113]
+FileName=..\valib\filters\parser_filter.cpp
+CompileCpp=1
+Folder=valib/filters
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit114]
+FileName=..\valib\filters\parser_filter.h
+CompileCpp=1
+Folder=valib/filters
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit102]
+FileName=..\valib\parsers\multi_frame.cpp
+CompileCpp=1
+Folder=valib/parsers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit103]
+FileName=..\valib\parsers\multi_frame.h
+CompileCpp=1
+Folder=valib/parsers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit115]
+FileName=..\valib\parsers\ac3\ac3_header.h
+CompileCpp=1
+Folder=valib/parsers/ac3
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit116]
+FileName=..\valib\parsers\ac3\ac3_frame.cpp
+CompileCpp=1
+Folder=valib/parsers/ac3
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit117]
+FileName=..\valib\parsers\ac3\ac3_frame.h
+CompileCpp=1
+Folder=valib/parsers/ac3
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit118]
+FileName=..\valib\parsers\ac3\ac3_header.cpp
+CompileCpp=1
+Folder=valib/parsers/ac3
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit119]
+FileName=..\valib\parsers\dts\dts_header.h
+CompileCpp=1
+Folder=valib/parsers/dts
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit120]
+FileName=..\valib\parsers\dts\dts_frame.cpp
+CompileCpp=1
+Folder=valib/parsers/dts
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit121]
+FileName=..\valib\parsers\dts\dts_frame.h
+CompileCpp=1
+Folder=valib/parsers/dts
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit122]
+FileName=..\valib\parsers\dts\dts_header.cpp
+CompileCpp=1
+Folder=valib/parsers/dts
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit123]
+FileName=..\valib\parsers\mpa\mpa_frame.cpp
+CompileCpp=1
+Folder=valib/parsers/mpa
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit124]
+FileName=..\valib\parsers\mpa\mpa_frame.h
+CompileCpp=1
+Folder=valib/parsers/mpa
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit125]
+FileName=..\valib\parsers\mpa\mpa_header.cpp
+CompileCpp=1
+Folder=valib/parsers/mpa
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit126]
+FileName=..\valib\parsers\mpa\mpa_header.h
+CompileCpp=1
+Folder=valib/parsers/mpa
 Compile=1
 Link=1
 Priority=1000

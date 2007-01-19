@@ -113,7 +113,7 @@ public:
 
   void cycle()
   {
-    static const bs_types[] = 
+    static const int bs_types[] =
     {
       BITSTREAM_8,
       BITSTREAM_16BE, BITSTREAM_16LE,
@@ -298,7 +298,7 @@ public:
     }
   }
 
-  inline is_14bit(int bs_type)
+  inline bool is_14bit(int bs_type)
   {
     return bs_type == BITSTREAM_14BE || bs_type == BITSTREAM_14LE;
   }

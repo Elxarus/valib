@@ -372,7 +372,8 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
   // Try to locate next syncpoint and return data up to the poistion found
   // as debris.
 
-  for (size_t i = 1; i <= sync_data - header_size; i++)
+  size_t i;
+  for (i = 1; i <= sync_data - header_size; i++)
     if (parser->parse_header(sync_buf + i))
       break;
 

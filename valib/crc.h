@@ -44,7 +44,7 @@ public:
   CRC(uint32_t _poly, size_t _power)
   { init(_poly, _power); };
 
-  void init(uint32_t poly, size_t power);
+  void init(uint32_t poly, uint8_t power);
 
   /////////////////////////////////////////////////////////////////////////////
   // Pre- and post- CRC processing

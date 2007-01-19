@@ -237,7 +237,7 @@ int
 DVDGraph::get_info(char *_buf, size_t _len) const
 {
   Speakers spk;
-  static const buf_size = 2048;
+  static const size_t buf_size = 2048;
   char buf[buf_size];
   size_t pos = 0;
 

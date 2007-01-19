@@ -193,7 +193,7 @@ size_t bs_conv_8_14be(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
   // size is always even. But in this case exact backward conversion is not
   // possible!
 
-  static const inc[7] = { 0, 2, 4, 4, 6, 6, 8 };
+  static const int inc[7] = { 0, 2, 4, 4, 6, 6, 8 };
 
   size_t n = size / 7;
   size_t r = size % 7;
@@ -302,7 +302,7 @@ size_t bs_conv_8_14le(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
   // size is always even. But in this case exact backward conversion is not
   // possible!
 
-  static const inc[7] = { 0, 2, 4, 4, 6, 6, 8 };
+  static const int inc[7] = { 0, 2, 4, 4, 6, 6, 8 };
 
   size_t n = size / 7;
   size_t r = size % 7;
