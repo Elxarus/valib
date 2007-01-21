@@ -52,5 +52,3 @@ del Makefile.win 2> nul
 del test.layout 2> nul
 
 rmdir /s /q gcc 2> nul
-
-

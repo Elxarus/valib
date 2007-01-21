@@ -8,8 +8,16 @@
 *.opt
 *.dep
 
+*.suo
+*.user
+
 Debug
 Debug_Libc
 Release
 Release_Libc
 Perf
+
+Debug_msvc8
+Release_msvc8
+
+gcc

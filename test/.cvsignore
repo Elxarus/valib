@@ -8,7 +8,11 @@
 *.opt
 *.dep
 
+*.suo
+*.user
+
 Debug
 Release
 Perf
+
 gcc

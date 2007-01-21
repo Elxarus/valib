@@ -291,14 +291,14 @@ int main(int argc, char *argv[])
     ///////////////////////////////////////////////////////
     // Output format
     ///////////////////////////////////////////////////////
-/*
+
     // -spdif - enable SPDIF output
-    if (is_arg(argv[iarg], "spdif", argt_exist))
-    {
-      spdif = true;
-      continue;
-    }
-*/
+//    if (is_arg(argv[iarg], "spdif", argt_exist))
+//    {
+//      spdif = true;
+//      continue;
+//    }
+
     // -spk - number of speakers
     if (is_arg(argv[iarg], "spk", argt_num))
     {
