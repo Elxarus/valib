@@ -16,3 +16,5 @@ Release
 Perf
 
 gcc
+makefile.win
+*.layout

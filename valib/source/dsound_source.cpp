@@ -1,4 +1,5 @@
 #include <dsound.h>
+#include <mmreg.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include "dsound_source.h"

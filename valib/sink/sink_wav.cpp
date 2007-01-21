@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <mmreg.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include "sink_wav.h"

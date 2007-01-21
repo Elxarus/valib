@@ -21,3 +21,5 @@ Debug_msvc8
 Release_msvc8
 
 gcc
+makefile.win
+*.layout

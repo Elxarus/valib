@@ -21,6 +21,7 @@
 #define SINK_DSOUND_H
 
 #include <dsound.h>
+#include <mmreg.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include "filter.h"
