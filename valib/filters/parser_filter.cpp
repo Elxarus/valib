@@ -652,7 +652,7 @@ ParserFilter::get_chunk(Chunk *_chunk)
           _chunk->set_empty(out_spk);
           _chunk->set_eos();
 
-          out_spk = stream.get_spk();
+          out_spk = parser->get_spk();
           state = state_full;
           new_stream = false;
         }
@@ -691,7 +691,7 @@ ParserFilter::get_chunk(Chunk *_chunk)
       _chunk->set_empty(out_spk);
       _chunk->set_eos();
 
-      out_spk = stream.get_spk();
+      out_spk = parser->get_spk();
       state = state_full;
       return true;
 
