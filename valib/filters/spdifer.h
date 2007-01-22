@@ -1,5 +1,5 @@
 /*
-  Encapsulates encoded stream into SPDIF according to IEC 61937
+  Wrap/unwrap encoded stream to/from SPDIF according to IEC 61937
 
   Input:     SPDIF, AC3, MPA, DTS, Unknown
   Output:    SPDIF, DTS
@@ -64,6 +64,9 @@ public:
   {
     parser.set_parser(&spdif_parser);
   }
+
+  bool get_big_endian() const           { return spdif_parser.get_big_endian();     }
+  void set_big_endian(bool _big_endian) { spdif_parser.set_big_endian(_big_endian); }
 
   int        get_frames()                    const { return parser.get_frames();       }
   int        get_errors()                    const { return parser.get_errors();       }

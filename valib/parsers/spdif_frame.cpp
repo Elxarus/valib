@@ -5,6 +5,8 @@
 #include "ac3\ac3_header.h"
 #include "dts\dts_header.h"
 
+#include "bitstream.h"
+
 inline static const HeaderParser *find_parser(int spdif_type)
 {
   switch (spdif_type)
@@ -25,8 +27,21 @@ inline static const HeaderParser *find_parser(int spdif_type)
   }
 }
 
+inline static const int to_big_endian(int bs_type)
+{
+  switch (bs_type)
+  {
+    case BITSTREAM_16LE: return BITSTREAM_16BE;
+    case BITSTREAM_32LE: return BITSTREAM_32BE;
+    case BITSTREAM_14LE: return BITSTREAM_14BE;
+    default: return bs_type;
+  }
+}
+
+
 SPDIFFrame::SPDIFFrame()
 {
+  big_endian = true;
   reset();
 }
 
@@ -66,6 +81,11 @@ SPDIFFrame::parse_frame(uint8_t *frame, size_t size)
     {
       data = subheader;
       data_size = header->len / 8;
+      if (big_endian)
+      {
+        hdr.bs_type = to_big_endian(hdr.bs_type);
+        bs_conv_swab16(data, data_size, data);
+      }
       return true;
     }
 

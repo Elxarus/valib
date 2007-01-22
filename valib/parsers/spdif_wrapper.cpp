@@ -21,6 +21,7 @@ SPDIFWrapper::SPDIFWrapper(dts_mode_enum _dts_mode, bool _use_dts14)
 {
   const HeaderParser *parsers[] = { &spdif_header, &mpa_header, &ac3_header, &dts_header };
   spdifable.set_parsers(parsers, array_size(parsers));
+  spdif_parser.set_big_endian(false); // do not convert to big endian because we need low endian to wrap the stream back to spdif (faster)
 
   buf = new uint8_t[MAX_SPDIF_FRAME_SIZE];
 }

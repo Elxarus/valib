@@ -6,10 +6,18 @@
 class SPDIFFrame : public FrameParser
 {
 public:
+  bool big_endian;
+
   SPDIFFrame();
   ~SPDIFFrame();
 
-  HeaderInfo header_info() const { return hdr; }
+  /////////////////////////////////////////////////////////
+  // Own interface
+
+  bool get_big_endian() const           { return big_endian;        }
+  void set_big_endian(bool _big_endian) { big_endian = _big_endian; }
+
+  HeaderInfo header_info() const        { return hdr; }
 
   /////////////////////////////////////////////////////////
   // FrameParser overrides
