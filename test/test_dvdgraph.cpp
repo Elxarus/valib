@@ -128,6 +128,11 @@ public:
     compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", f, "a.madp.mix.spdif");
     log->close_group();
 
+    log->open_group("Test SPDIF->SPDIF transform");
+    dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
+    log->close_group();
+
     log->close_group();
   }
 
