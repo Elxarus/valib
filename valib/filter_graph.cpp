@@ -164,7 +164,7 @@ FilterGraph::add_node(int node, Speakers spk)
   // in all other cases wrong get_next() result forces
   // chain to rebuild and we'll get here anyway
 
-  if (is_invalid(node))
+  if (is_invalid(next_node))
     return false;
 
   ///////////////////////////////////////////////////////
