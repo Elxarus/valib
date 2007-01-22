@@ -132,6 +132,13 @@ Converter::initialize()
   /////////////////////////////////////////////////////////
   // check if no conversion required
 
+  if (spk.is_unknown())
+  {
+    // input format is not set
+    convert = &Converter::passthrough;
+    return true; 
+  }
+
   if (spk.format == format)
   {
     // no conversion required
