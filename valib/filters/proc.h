@@ -96,7 +96,7 @@ protected:
   Converter  conv2;
 
   FilterChain chain;
-  void rebuild_chain();
+  bool rebuild_chain();
 
 public:
   AudioProcessor(size_t nsamples);

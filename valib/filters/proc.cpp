@@ -23,7 +23,7 @@ AudioProcessor::get_info(char *_buf, size_t _len) const
 bool 
 AudioProcessor::query_user(Speakers _user_spk) const
 {
-  return (FORMAT_MASK(_user_spk.format) & format_mask) != 0;
+  return user_spk.is_unknown() || (FORMAT_MASK(_user_spk.format) & format_mask) != 0;
 }
 
 bool 
@@ -35,12 +35,16 @@ AudioProcessor::set_user(Speakers _user_spk)
 
   if (user_spk != _user_spk)
   {
-    if ((FORMAT_MASK(_user_spk.format) & format_mask) == 0)
+    if (!query_user(_user_spk))
       return false;
 
     user_spk = _user_spk;
-    out_spk = user2output(in_spk, user_spk);
-    rebuild_chain();
+    if (!rebuild_chain())
+    {
+      in_spk = spk_unknown;
+      out_spk = spk_unknown;
+      return false;
+    }
   }
   return true;
 }
@@ -75,45 +79,46 @@ AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
 }
 
 
-void 
+bool 
 AudioProcessor::rebuild_chain()
 {
+  chain.drop();
+  if (in_spk.is_unknown())
+    return true;
+
   // Output configuration
-  Speakers spk = out_spk;
-
-  spk.format = FORMAT_LINEAR;
-
-  if (!spk.mask) 
-    spk.mask = in_spk.mask;
-
-  if (!spk.sample_rate)
-    spk.sample_rate = in_spk.sample_rate;
+  out_spk = user2output(in_spk, user_spk);
+  if (out_spk.is_unknown())
+    return false;
 
   // processing chain
-  chain.drop();
-  chain.add_back(&in_levels, "Input levels");
-  chain.add_back(&mixer,     "Mixer");
-  chain.add_back(&bass_redir,"Bass redirection");
-  chain.add_back(&agc,       "AGC");
-  chain.add_back(&delay,     "Delay");
-  chain.add_back(&out_levels,"Output levels");
+  FILTER_SAFE(chain.add_back(&in_levels, "Input levels"));
+  FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
+  FILTER_SAFE(chain.add_back(&bass_redir,"Bass redirection"));
+  FILTER_SAFE(chain.add_back(&agc,       "AGC"));
+  FILTER_SAFE(chain.add_back(&delay,     "Delay"));
+  FILTER_SAFE(chain.add_back(&out_levels,"Output levels"));
 
   // setup mixer
-  mixer.set_output(spk);
+  Speakers mixer_spk = out_spk;
+  mixer_spk.format = FORMAT_LINEAR;
+  FILTER_SAFE(mixer.set_output(mixer_spk));
 
   // format conversion
   if (in_spk.format != FORMAT_LINEAR)
   {
-    chain.add_front(&conv1, "PCM->Linear converter");
-    conv1.set_format(FORMAT_LINEAR);
-  }
-  if (out_spk.format != FORMAT_LINEAR)
-  {
-    chain.add_back(&conv2, "Linear->PCM converter");
-    conv2.set_format(out_spk.format);
+    FILTER_SAFE(chain.add_front(&conv1, "PCM->Linear converter"));
+    FILTER_SAFE(conv1.set_format(FORMAT_LINEAR));
   }
 
-  chain.set_input(in_spk);
+  if (out_spk.format != FORMAT_LINEAR)
+  {
+    FILTER_SAFE(chain.add_back(&conv2, "Linear->PCM converter"));
+    FILTER_SAFE(conv2.set_format(out_spk.format));
+  }
+
+  FILTER_SAFE(chain.set_input(in_spk));
+  return true;
 }
 
 // Filter interface
@@ -154,9 +159,12 @@ AudioProcessor::set_input(Speakers _spk)
     return false;
 
   in_spk = _spk;
-  out_spk = user2output(in_spk, user_spk);
-
-  rebuild_chain();
+  if (!rebuild_chain())
+  {
+    in_spk = spk_unknown;
+    out_spk = spk_unknown;
+    return false;
+  }
   return true;
 }
 
