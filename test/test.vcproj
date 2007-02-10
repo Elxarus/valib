@@ -40,6 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\valib"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;TIME_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -115,6 +116,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\valib"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;TIME_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -686,6 +688,10 @@
 			</File>
 			<File
 				RelativePath="test_demux.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\test_despdifer.cpp"
 				>
 			</File>
 			<File

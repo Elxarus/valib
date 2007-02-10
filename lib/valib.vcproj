@@ -40,6 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\valib"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;TIME_WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -103,6 +104,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\valib"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;TIME_WIN32"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"

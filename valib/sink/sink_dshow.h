@@ -5,6 +5,7 @@
 #ifndef DSHOW_SINK_H
 #define DSHOW_SINK_H
 
+#include <windows.h>
 #include <streams.h>
 #include "filter.h"
 
