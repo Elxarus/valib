@@ -336,8 +336,9 @@ public:
 // known to be of constant bitrate.
 //
 // If header of the same stream is not found exactly after the end of loaded
-// frame we do resync.
-//
+// frame we do resync. Therefore this type of the stream cannot contain
+// inter-frame debris (see below).
+// 
 // Debris is all data that do not belong to frames. This includes all data that
 // does not belong to a compressed stream at all and all inter-frame data.
 // Debris is a mechanism to maintain bit-to-bit correctness (so we may
@@ -353,35 +354,32 @@ public:
 //    is_in_sync() == false      - no sync detected
 //    is_new_stream() == false   - no stream transitions while out of sync
 //    is_frame_loaded() == false - no frame while out of sync
+//    is_debris_exitst() == any  - we may have some debris
+//    get_spk == spk_unknown     - unknkown stream format
 //
-//    debris_size() >= 0         - we may have some debris to report
-//    frame_size == 0            - no frame while out of sync
-//   
 // 2) Frame loaded (load_frame() returns true)
 //
 //    is_in_sync() == true       - we're in sync
-//    is_new_stream()            - does not matter
+//    is_new_stream() == any     - does not matter
 //    is_frame_loaded() == true  - frame is loaded
-//
-//    debris_size() >= 0         - we may have some debris to report about
-//    frame_size > 0             - we have a frame data
+//    is_debris_exitst() == any  - we may have some debris
+//    get_spk == correct format  - stream format is known
 //   
 // 3) No frame loaded (load_frame() returns false)
 //
 //    is_in_sync() == true       - we're in sync
 //    is_new_stream() == false   - no stream transitions while no frame loaded
 //    is_frame_loaded() == false - no frame loaded
-//
-//    debris_size() >= 0         - we may have some debris to report
-//    frame_size = 0             - no frame loaded
+//    is_debris_exitst() == any  - we may have some debris
+//    get_spk == correct format  - stream format is known
 //   
 //
 // Internal buffer structure
 // =========================
 //
 // StreamBuffer uses 3-point syncronization. This means that we need buffer
-// space for 2 full frames and 1 header more. Alse we need space for a copy
-// of a header to load each frame.
+// space for 2 full frames and 1 header more. Also, we need some space for a
+// copy of a header to load each frame.
 //
 // +-- header pointer
 // V
@@ -433,7 +431,7 @@ public:
 //                                      +---- lost frames -----+--- stream switch
 //
 // Therefore in spite of the fact that we CAN work with SPDIF stream it is
-// recommended to demux SPDIF stream before working with contained stream.
+// recommended to demux SPDIF stream before working with the contained stream.
 // We can demux SPDIF stream correctly because SPDIF header contains real
 // frame size of the contained stream.
 
@@ -475,7 +473,6 @@ protected:
 
   bool in_sync;                  // we're in sync with the stream
   bool new_stream;               // frame loaded belongs to a new stream
-  bool frame_loaded;             // frame is loaded
   int  frames;                   // number of frames loaded
 
   bool sync(uint8_t **data, uint8_t *data_end);
@@ -501,9 +498,10 @@ public:
   /////////////////////////////////////////////////////////
   // State flags
 
-  bool is_in_sync()             const { return in_sync;       }
-  bool is_new_stream()          const { return new_stream;    }
-  bool is_frame_loaded()        const { return frame_loaded;  }
+  bool is_in_sync()             const { return in_sync;         }
+  bool is_new_stream()          const { return new_stream;      }
+  bool is_frame_loaded()        const { return frame_size  > 0; }
+  bool is_debris_exists()       const { return debris_size > 0; }
 
   /////////////////////////////////////////////////////////
   // Data access
@@ -516,7 +514,7 @@ public:
   size_t   get_frame_size()     const { return frame_size;     }
   size_t   get_frame_interval() const { return frame_interval; }
 
-  int  get_frames() const { return frames; }
+  int get_frames() const { return frames; }
   size_t stream_info(char *buf, size_t size) const;
   HeaderInfo header_info() const { return hinfo; }
 };

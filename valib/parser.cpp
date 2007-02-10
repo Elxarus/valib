@@ -57,32 +57,6 @@ HeaderParser::header_info(const uint8_t *hdr, char *buf, size_t size) const
 // StreamBuffer
 ///////////////////////////////////////////////////////////////////////////////
 
-  const HeaderParser *parser;    // header parser
-  size_t header_size;            // cached header size
-  size_t min_frame_size;         // cached min frame size
-  size_t max_frame_size;         // cached max frame size
-
-  DataBuf  buf;
-  uint8_t *header_buf;           // header buffer pointer
-  uint8_t *sync_buf;             // sync buffer pointer
-  size_t   sync_size;            // size of sync buffer
-  size_t   sync_data;            // data loaded to the sync buffer
-
-  uint8_t   *debris;              // pointer to the start of debris data
-  size_t     debris_size;         // size of debris data
-
-  HeaderInfo hinfo;              // header info
-  uint8_t   *frame;              // pointer to the start of the frame
-  size_t     frame_size;         // size of the frame loaded
-  size_t     frame_interval;     // frame interval
-
-  bool in_sync;                  // we're in sync with the stream
-  bool new_stream;               // frame loaded belongs to a new stream
-  bool frame_loaded;             // frame is loaded
-
-  int  frames;                   // number of frames loaded
-
-
 StreamBuffer::StreamBuffer()
 {
   parser = 0;
@@ -106,7 +80,6 @@ StreamBuffer::StreamBuffer()
 
   in_sync = false;
   new_stream = false;
-  frame_loaded = false;
 
   frames = 0;
 }
@@ -134,7 +107,6 @@ StreamBuffer::StreamBuffer(const HeaderParser *_parser)
 
   in_sync = false;
   new_stream = false;
-  frame_loaded = false;
 
   frames = 0;
 
@@ -199,7 +171,6 @@ StreamBuffer::reset()
 
   in_sync = false;
   new_stream = false;
-  frame_loaded = false;
 }
 
 #define LOAD(required_size)                           \
@@ -235,7 +206,7 @@ bool
 StreamBuffer::sync(uint8_t **data, uint8_t *end)
 {
   assert(*data <= end);
-  assert(!in_sync && !new_stream && !frame_loaded);
+  assert(!in_sync && !new_stream);
   assert(frame == 0 && frame_size == 0 && frame_interval == 0);
 
   uint8_t *frame3;
@@ -344,7 +315,6 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
 
         in_sync = true;
         new_stream = true;
-        frame_loaded = true;
 
         frames++;
         return true;
@@ -398,7 +368,7 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
   /////////////////////////////////////////////////////////////////////////////
   // Drop old debris and frame data
 
-  if (frame_loaded)
+  if (is_frame_loaded())
   {
     DROP(debris_size + frame_size);
     debris_size = 0;
@@ -406,7 +376,6 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
   }
 
   new_stream = false;
-  frame_loaded = false;
 
   /////////////////////////////////////////////////////////////////////////////
   // Load next frame
@@ -450,8 +419,6 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
       frame_size = hinfo.frame_size;
     else
       frame_size = frame_interval;
-
-    frame_loaded = true;
 
     frames++;
     return true;
