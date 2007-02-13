@@ -704,19 +704,20 @@ bool
 ParserFilter::load_parse_frame()
 {
   uint8_t *end = rawdata + size;
-  while (rawdata < end)
-    if (stream.load_frame(&rawdata, end))
+  while (stream.load_frame(&rawdata, end))
+  {
+    new_stream |= stream.is_new_stream();
+    if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
     {
-      new_stream |= stream.is_new_stream();
-      if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
-      {
-        size = end - rawdata;
-        return true;
-      }
-      else
-        errors++;
+      size = end - rawdata;
+      return true;
     }
+    else
+      errors++;
+  }
 
   size = 0;
   return false;
 }
+
+

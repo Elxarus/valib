@@ -347,32 +347,40 @@ public:
 // compessed in another. For instance, it is required for PCM/SPDIF detection
 // and helps to handle SPDIF <-> PCM transitions in a correct way.
 //
-// After load_frame() call StreamBuffer may be in 3 states:
+// After load() call StreamBuffer may be in following states:
 //
-// 1) No sync (load_frame() returns false)
+// syn new deb frm
+//  -   -   -   -   no sync (not enough data) (1)
+//  -   -   +   -   no sync with debris output
+//  +   -   -   -   no frame loaded (not enough data) (1)
+//  +   -   -   +   frame without debris
+//  +   -   +   -   inter-frame debris (2)
+//  +   -   +   +   frame with debris
+//  +   +   -   +   sync on a new stream
+//  +   +   +   +   sync on a new stream with debris (2)
+// (1) - all input buffer is known to be processed after load() call
+// (2) - state is possible but not used in curent implementation.
 //
-//    is_in_sync() == false      - no sync detected
-//    is_new_stream() == false   - no stream transitions while out of sync
-//    is_frame_loaded() == false - no frame while out of sync
-//    is_debris_exitst() == any  - we may have some debris
-//    get_spk == spk_unknown     - unknkown stream format
+// Prohibited states:
 //
-// 2) Frame loaded (load_frame() returns true)
+// syn new deb frm
+//  -   -   *   +   frame loaded without sync
+//  -   +   *   *   new steam without sync
+//  +   +   *   -   new stream detection without a frame loaded
 //
-//    is_in_sync() == true       - we're in sync
-//    is_new_stream() == any     - does not matter
-//    is_frame_loaded() == true  - frame is loaded
-//    is_debris_exitst() == any  - we may have some debris
-//    get_spk == correct format  - stream format is known
-//   
-// 3) No frame loaded (load_frame() returns false)
+// load() call returns false in case when stream buffer was not loaded with
+// debris or frame data. I.e. in states marked with (1).
 //
-//    is_in_sync() == true       - we're in sync
-//    is_new_stream() == false   - no stream transitions while no frame loaded
-//    is_frame_loaded() == false - no frame loaded
-//    is_debris_exitst() == any  - we may have some debris
-//    get_spk == correct format  - stream format is known
-//   
+// load_frame() skips all debris data and loads only frames. It returns false
+// in all states without a frame loaded. So only following states are possible
+// after load_frame():
+//
+// syn new frm
+//  -   -   -   no sync (not enough data) (1)
+//  +   -   -   frame was not loaded (not enough data) (1)
+//  +   -   +   frame loaded
+//  +   +   +   sync on a new stream
+// (1) - all input buffer is known to be processed after load_frame() call
 //
 // Internal buffer structure
 // =========================
@@ -493,6 +501,7 @@ public:
   // Processing
 
   void reset();
+  bool load(uint8_t **data, uint8_t *end);
   bool load_frame(uint8_t **data, uint8_t *end);
 
   /////////////////////////////////////////////////////////

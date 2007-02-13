@@ -349,15 +349,18 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
 
   debris = sync_buf;
   debris_size = i;
-  return false;
+  return true;
 }
 
 
 bool 
-StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
+StreamBuffer::load(uint8_t **data, uint8_t *end)
 {
   if (!parser)
+  {
+    *data = end; // avoid endless loop
     return false;
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   // Syncronize with a new stream if we're not in sync
@@ -433,6 +436,19 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
   frame_interval = 0;
   return sync(data, end);
 }
+
+bool 
+StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
+{
+  while (*data < end)
+  {
+    load(data, end);
+    if (is_frame_loaded())
+      return true;
+  }
+  return false;
+}
+
 
 size_t
 StreamBuffer::stream_info(char *buf, size_t size) const
