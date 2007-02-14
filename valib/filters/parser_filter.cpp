@@ -252,7 +252,7 @@ ParserFilter::process(const Chunk *_chunk)
     else if (flushing)
     {
       // if we have started a stream we must finish it correctly by sending
-      // end-of-stream chunk (flushing is send on get_chunk() call).
+      // end-of-stream chunk (flushing is sent on get_chunk() call).
       state = state_no_frame;
     }
     return true;
@@ -286,13 +286,7 @@ ParserFilter::get_chunk(Chunk *_chunk)
   switch (state)
   {
     case state_full:
-      // send the parserd frame
-      if (out_spk.is_linear())
-        _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
-      else
-        _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
-
-      sync_helper.send_sync(_chunk);
+      send_frame(_chunk);
       state = state_no_frame;
       return true;
 
@@ -308,9 +302,7 @@ ParserFilter::get_chunk(Chunk *_chunk)
         if (new_stream)
         {
           // send inter-stream flushing
-          _chunk->set_empty(out_spk);
-          _chunk->set_eos();
-
+          send_eos(_chunk);
           out_spk = parser->get_spk();
           state = state_full;
           new_stream = false;
@@ -318,12 +310,7 @@ ParserFilter::get_chunk(Chunk *_chunk)
         else
         {
           // send the parsed frame
-          if (out_spk.is_linear())
-            _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
-          else
-            _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
-
-          sync_helper.send_sync(_chunk);
+          send_frame(_chunk);
           state = state_no_frame;
         }
       }
@@ -332,8 +319,7 @@ ParserFilter::get_chunk(Chunk *_chunk)
         if (flushing)
         {
           // send end-of-stream flushing
-          _chunk->set_empty(out_spk);
-          _chunk->set_eos();
+          send_eos(_chunk);
 
           // it is implied that reset() does following:
           // * spk = spk_unknown;
@@ -383,4 +369,25 @@ ParserFilter::load_parse_frame()
 
   size = 0;
   return false;
+}
+
+void
+ParserFilter::send_frame(Chunk *_chunk)
+{
+  if (out_spk.is_linear())
+    _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
+  else
+    _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
+
+  sync_helper.send_sync(_chunk);
+}
+
+void
+ParserFilter::send_eos(Chunk *_chunk)
+{
+  _chunk->set_empty(out_spk);
+  _chunk->set_eos(true);
+
+  // reset syncronization after the end of the stream
+  sync_helper.reset(); 
 }

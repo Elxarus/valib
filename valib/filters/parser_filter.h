@@ -31,6 +31,8 @@ protected:
   int      errors;        // number of parsing errors
 
   bool load_parse_frame();
+  void send_frame(Chunk *chunk);
+  void send_eos(Chunk *chunk);
 
 public:
   ParserFilter();
