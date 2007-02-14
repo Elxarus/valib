@@ -37,7 +37,8 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
       // try to fill the filter
       if (src_filter->is_empty())
       {
-        if (src->is_empty()) break;
+        if (src->is_empty()) 
+          break;
         SAFE_CALL(src->get_chunk(&si_chunk));
         SAFE_CALL(src_filter->process(&si_chunk));
         isize += si_chunk.size;
@@ -60,7 +61,8 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
         // try to fill the filter
         if (ref_filter->is_empty())
         {
-          if (ref->is_empty()) break;
+          if (ref->is_empty()) 
+            break;
           SAFE_CALL(ref->get_chunk(&ri_chunk));
           SAFE_CALL(ref_filter->process(&ri_chunk));
         }
@@ -77,7 +79,8 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
       else
       {
         // try to get data
-        if (ref->is_empty()) break;
+        if (ref->is_empty()) 
+          break;
         SAFE_CALL(ref->get_chunk(&ro_chunk));
 
         if (ro_chunk.is_dummy())
@@ -116,7 +119,6 @@ int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_
     rsize += len;
     so_chunk.drop(len);
     ro_chunk.drop(len);
-
 
     ///////////////////////////////////////////////////////
     // Statistics
