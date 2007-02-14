@@ -73,6 +73,7 @@ class ParserFilter : public NullFilter
 protected:
   enum state_t 
   {
+    state_trans,
     state_empty, 
     state_full, 
     state_no_frame, 
