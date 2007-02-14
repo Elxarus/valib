@@ -449,6 +449,22 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
   return false;
 }
 
+bool
+StreamBuffer::flush()
+{
+  DROP(debris_size + frame_size);
+  debris_size = 0;
+  frame_size = 0;
+
+  in_sync = false;
+  new_stream = false;
+
+  debris = sync_buf;
+  debris_size = sync_data;
+
+  return debris_size > 0;
+}
+
 
 size_t
 StreamBuffer::stream_info(char *buf, size_t size) const

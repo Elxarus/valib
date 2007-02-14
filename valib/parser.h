@@ -382,6 +382,9 @@ public:
 //  +   +   +   sync on a new stream
 // (1) - all input buffer is known to be processed after load_frame() call
 //
+// flush() releases all buffered data as debris. Returns true if it is some
+// data to flush.
+//
 // Internal buffer structure
 // =========================
 //
@@ -503,6 +506,7 @@ public:
   void reset();
   bool load(uint8_t **data, uint8_t *end);
   bool load_frame(uint8_t **data, uint8_t *end);
+  bool flush();
 
   /////////////////////////////////////////////////////////
   // State flags
