@@ -340,6 +340,14 @@ SOURCE=..\valib\filters\demux.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\detector.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\detector.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\dvd_graph.cpp
 # End Source File
 # Begin Source File
