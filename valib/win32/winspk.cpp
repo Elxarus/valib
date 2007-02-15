@@ -1,9 +1,8 @@
-#include <windows.h>
+#include "winspk.h"
 #include <mmreg.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include <initguid.h>
-#include "winspk.h"
 
 DEFINE_GUID(KSADATAFORMAT_DOLBY_AC3_SPDIF, 
 0x00000092, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
