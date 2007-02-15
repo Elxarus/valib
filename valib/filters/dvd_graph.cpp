@@ -7,6 +7,7 @@ DVDGraph::DVDGraph(const Sink *_sink)
   user_spk = Speakers(FORMAT_PCM16, 0, 0, 32767);
 
   use_spdif = false;
+  use_detector = false;
   spdif_pt = FORMAT_MASK_AC3;
   spdif_as_pcm = false;
   spdif_encode = true;
@@ -86,6 +87,22 @@ DVDGraph::set_query_sink(bool _query_sink)
   invalidate_chain();
 }
 
+
+///////////////////////////////////////////////////////////
+// SPDIF options
+
+bool
+DVDGraph::get_use_detector() const
+{
+  return use_detector;
+}
+
+void
+DVDGraph::set_use_detector(bool _use_detector)
+{
+  use_detector = _use_detector;
+  invalidate_chain();
+}
 
 ///////////////////////////////////////////////////////////
 // SPDIF options
@@ -376,6 +393,7 @@ DVDGraph::reset()
   spdif_status = use_spdif? SPDIF_MODE_NONE: SPDIF_MODE_DISABLED;
 
   demux.reset();
+  detector.reset();
   despdifer.reset();
   spdifer_pt.reset();
   dec.reset();
@@ -396,6 +414,7 @@ DVDGraph::get_name(int node) const
   switch (node)
   {
     case state_demux:       return "Demux";
+    case state_detector:    return "Detector";
     case state_despdif:     return "Despdif";
     case state_spdif_pt:    return "Spdifer";
     case state_decode:      return "Decoder";
@@ -417,6 +436,9 @@ DVDGraph::init_filter(int node, Speakers spk)
   {
     case state_demux:
       return &demux;
+
+    case state_detector:
+      return &detector;
 
     case state_despdif:
       return &despdifer;
@@ -487,6 +509,7 @@ DVDGraph::get_next(int node, Speakers spk) const
   {
     /////////////////////////////////////////////////////
     // input -> state_demux
+    // input -> state_detector
     // input -> state_despdif
     // input -> state_spdif_pt
     // input -> state_decode
@@ -497,6 +520,34 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (demux.query_input(spk)) 
         return state_demux;
 
+      if (use_detector && spk.format == FORMAT_PCM16 && spk.mask == MODE_STEREO)
+        return state_detector;
+
+      if (despdifer.query_input(spk))
+        return state_despdif;
+
+      if (check_spdif_passthrough(spk) == SPDIF_MODE_PASSTHROUGH)
+        return state_spdif_pt;
+
+      if (dec.query_input(spk))
+        return state_decode;
+
+      if (proc.query_input(spk))
+        if (check_spdif_encode(spk) == SPDIF_MODE_ENCODE)
+          return state_proc_enc;
+        else
+          return state_proc;
+
+      return node_err;
+
+    /////////////////////////////////////////////////////
+    // state_detector -> state_despdif
+    // state_detector -> state_spdif_pt
+    // state_detector -> state_decode
+    // state_detector -> state_proc
+    // state_detector -> state_proc_enc
+
+    case state_detector:
       if (despdifer.query_input(spk))
         return state_despdif;
 

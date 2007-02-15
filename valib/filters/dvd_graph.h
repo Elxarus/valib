@@ -3,6 +3,7 @@
 
 #include "filter_graph.h"
 #include "filters\demux.h"
+#include "filters\detector.h"
 #include "filters\decoder.h"
 #include "filters\proc.h"
 #include "filters\spdifer.h"
@@ -38,6 +39,7 @@ class DVDGraph : public FilterGraph
 {
 public:
   Demux          demux;
+  Detector       detector;
   Despdifer      despdifer;
   Spdifer        spdifer_pt;
   AudioDecoder   dec;
@@ -64,6 +66,11 @@ public:
 
   bool get_query_sink() const;
   void set_query_sink(bool query_sink);
+
+  // Detector usage
+
+  bool get_use_detector() const;
+  void set_use_detector(bool use_detector);
 
   // SPDIF options
   void set_spdif(bool use_spdif, int spdif_pt, bool spdif_as_pcm, bool spdif_encode, bool spdif_stereo_pt);
@@ -112,6 +119,8 @@ public:
 protected:
   Speakers user_spk;
 
+  bool     use_detector;
+
   bool     use_spdif;
   int      spdif_pt;
   bool     spdif_as_pcm;
@@ -131,6 +140,7 @@ protected:
   enum state_t 
   { 
     state_demux = 0,
+    state_detector,
     state_despdif,
     state_spdif_pt,
     state_decode,
