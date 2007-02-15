@@ -114,7 +114,7 @@ public:
 
     // PES to SPDIF transform with format changes
     dvd.set_sink(0);
-    dvd.set_user(Speakers(FORMAT_PCM16_BE, 0, 0, 32767));
+    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
 
     log->open_group("Test PES->SPDIF transform");
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
@@ -131,6 +131,12 @@ public:
     log->open_group("Test SPDIF->SPDIF transform");
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
     compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
+    log->close_group();
+
+    log->open_group("Test PCM->SPDIF transform (using detector)");
+    dvd.set_use_detector(true);
+    dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
+    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767), "a.madp.mix.spdif",  f, "a.madp.mix.spdif");
     log->close_group();
 
     log->close_group();
@@ -527,6 +533,7 @@ public:
         sink_allow[isink_format].mode_text(),
         sink_allow[isink_format].sample_rate);
 
+      dvd.set_use_detector(false);
       dvd.set_spdif(false, 0, false, false, false);
       dvd.set_query_sink(true);
       dvd.set_sink(&sink);
