@@ -184,6 +184,7 @@ int test_rules(Log *log)
   Demux          demux;
   Spdifer        spdifer;
   Despdifer      despdifer;
+  Detector       detector;
 
   // Processing filters
   AGC            agc;
@@ -292,6 +293,11 @@ int test_rules(Log *log)
   test_rules_filter(log, &despdifer, "Despdifer",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.spdif",
     Speakers(FORMAT_SPDIF, 0, 0), "a.ac3.03f.spdif",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &detector, "Detector",
+    Speakers(FORMAT_RAWDATA, 0, 0), "a.madp.mix.madp",
+    Speakers(FORMAT_SPDIF, 0, 0), "a.madp.mix.spdif",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
   // Linear format processing filters

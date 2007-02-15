@@ -30,6 +30,7 @@
 #include "filters\decoder.h"
 #include "filters\demux.h"
 #include "filters\spdifer.h"
+#include "filters\detector.h"
 #include "parsers\ac3\ac3_enc.h"
 
 // Processing

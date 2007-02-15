@@ -108,6 +108,10 @@ SOURCE=.\test_despdifer.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_detector.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_dvdgraph.cpp
 # End Source File
 # Begin Source File
@@ -208,6 +212,14 @@ SOURCE=..\valib\filters\demux.cpp
 # Begin Source File
 
 SOURCE=..\valib\filters\demux.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\detector.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\detector.h
 # End Source File
 # Begin Source File
 

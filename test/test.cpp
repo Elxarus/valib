@@ -16,6 +16,7 @@ int test_crash(Log *log);
 int test_demux(Log *log);
 int test_spdifer(Log *log);
 int test_despdifer(Log *log);
+int test_detector(Log *log);
 
 int test_filtergraph(Log *log);
 int test_dvdgraph(Log *log);
@@ -44,6 +45,7 @@ int main(int argc, char **argv)
   test_demux(&log);
   test_spdifer(&log);
   test_despdifer(&log);
+  test_detector(&log);
 
   test_proc(&log);
 
