@@ -69,7 +69,9 @@ SPDIFFrame::reset()
 bool
 SPDIFFrame::parse_frame(uint8_t *frame, size_t size)
 {
-  if ((frame[0] != 0x72) || (frame[1] != 0xf8) || (frame[2] != 0x1f) || (frame[3] != 0x4e))
+  if ((frame[0] != 0x00) || (frame[1] != 0x00) || (frame[2]  != 0x00) || (frame[3]  != 0x00) ||
+      (frame[4] != 0x00) || (frame[5] != 0x00) || (frame[6]  != 0x00) || (frame[7]  != 0x00) ||
+      (frame[8] != 0x72) || (frame[9] != 0xf8) || (frame[10] != 0x1f) || (frame[11] != 0x4e))
     return false;
 
   const spdif_header_s *header = (spdif_header_s *)frame;

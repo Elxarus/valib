@@ -43,6 +43,11 @@ protected:
 
   struct spdif_header_s
   {
+    uint16_t zero1;
+    uint16_t zero2;
+    uint16_t zero3;
+    uint16_t zero4;
+
     uint16_t sync1;   // Pa sync word 1
     uint16_t sync2;   // Pb sync word 2
     uint16_t type;    // Pc data type

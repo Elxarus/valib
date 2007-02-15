@@ -20,11 +20,11 @@ public:
   // AC3:       8  1536    1536
   // DTS:      16   192    4096 (only 2048 is supported by SPDIF)
   //
-  // Header size = SPDIF header size + max header size = 24
+  // Header size = SPDIF header size + max header size = 32
   // Minimum SPDIF frame size = 192 * 4 = 768
   // Maximum SPDIF frame size = 2048 * 4 = 8192
 
-  virtual size_t   header_size()    const  { return 24;   }
+  virtual size_t   header_size()    const  { return 32;   }
   virtual size_t   min_frame_size() const  { return 768;  }
   virtual size_t   max_frame_size() const  { return 8192; }
   virtual bool     can_parse(int format) const { return format == FORMAT_SPDIF; };
@@ -37,6 +37,11 @@ public:
 protected:
   struct spdif_header_s
   {
+    uint16_t zero1;
+    uint16_t zero2;
+    uint16_t zero3;
+    uint16_t zero4;
+
     uint16_t sync1;   // Pa sync word 1
     uint16_t sync2;   // Pb sync word 2
     uint16_t type;    // Pc data type
