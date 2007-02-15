@@ -179,7 +179,7 @@ public:
     while (ptr < end)
     {
       // process data
-      streambuf.load_frame(&ptr, end);
+      streambuf.load(&ptr, end);
 
       // count frames and streams
       if (streambuf.is_new_stream())   streams++;
@@ -258,8 +258,11 @@ public:
       uint8_t *ptr = chunk.rawdata;
       uint8_t *end = ptr + chunk.size;
       while (ptr < end)
-        if (streambuf.load_frame(&ptr, end))
+      {
+        streambuf.load(&ptr, end);
+        if (streambuf.is_in_sync())
           return log->err("Syncronized on noise!");
+      }
     }
     cpu.stop();
 
@@ -295,7 +298,7 @@ public:
       uint8_t *end = ptr + buf_size;
       streambuf.reset();
       while (ptr < end)
-        streambuf.load_frame(&ptr, end);
+        streambuf.load(&ptr, end);
     }
     cpu.stop();
 
