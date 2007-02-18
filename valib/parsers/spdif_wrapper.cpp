@@ -16,7 +16,7 @@ inline bool is_14bit(int bs_type)
 }
 
 
-SPDIFWrapper::SPDIFWrapper(dts_mode_enum _dts_mode, bool _use_dts14)
+SPDIFWrapper::SPDIFWrapper(int _dts_mode, bool _use_dts14)
 : dts_mode(_dts_mode), use_dts14(_use_dts14)
 {
   const HeaderParser *parsers[] = { &spdif_header, &mpa_header, &ac3_header, &dts_header };
@@ -122,11 +122,11 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
 
     switch (dts_mode)
     {
-    case dts_wrapped:
+    case SPDIF_DTS_WRAPPED:
       use_header = true;
       if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size - sizeof(spdif_header_s)))
         spdif_bs = BITSTREAM_14LE;
-      if (raw_size <= spdif_frame_size - sizeof(spdif_header_s))
+      else if (raw_size <= spdif_frame_size - sizeof(spdif_header_s))
         spdif_bs = is_14bit(hdr.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
       {
@@ -139,7 +139,7 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
       }
       break;
 
-    case dts_headerless:
+    case SPDIF_DTS_RAW:
       use_header = false;
       if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size))
         spdif_bs = BITSTREAM_14LE;
@@ -156,7 +156,8 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
       }
       break;
 
-    case dts_auto:
+    case SPDIF_DTS_AUTO:
+    default:
       if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size - sizeof(spdif_header_s)))
       {
         use_header = true;
@@ -230,7 +231,7 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
     assert(payload_size < MAX_SPDIF_FRAME_SIZE);
     memset(buf + payload_size, 0, spdif_frame_size - payload_size);
 
-    // We must correct DTS synword when conversing to 14bit
+    // We must correct DTS synword when converting to 14bit
     if (spdif_bs == BITSTREAM_14LE)
       buf[3] = 0xe8;
   }

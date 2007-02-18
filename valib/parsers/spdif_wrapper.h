@@ -5,15 +5,17 @@
 #include "multi_header.h"
 #include "spdif_frame.h"
 
+#define SPDIF_DTS_AUTO    0
+#define SPDIF_DTS_WRAPPED 1
+#define SPDIF_DTS_RAW     2
+
 class SPDIFWrapper : public FrameParser
 {
 public:
-  enum dts_mode_enum { dts_wrapped, dts_headerless, dts_auto };
-
-  dts_mode_enum dts_mode;
+  int  dts_mode;
   bool use_dts14;
 
-  SPDIFWrapper(dts_mode_enum dts_mode = dts_auto, bool use_dts14 = false);
+  SPDIFWrapper(int dts_mode = SPDIF_DTS_AUTO, bool use_dts14 = false);
   ~SPDIFWrapper();
 
   HeaderInfo header_info() const { return hdr; }
@@ -46,18 +48,6 @@ protected:
   uint8_t    *spdif_frame;  // spdif frame pointer
   size_t      spdif_size;   // spdif frame size
   
-  // Note, that this structure differs from the similar structure at SPDIFFrame
-  // and SPDIFHeader (it includes zero fields). It is because SPDIFHeader and
-  // SPDIFFrame are required to work with incorrectly wrapped streams, but
-  // SPDIFWrapper must generate correct one.
-  //
-  // Because of this we alse have to always reparse spdif input: frame size
-  // reported by SPDIFHeader (and received with parse_frame) is less than 
-  // required for correct passthrough and initial zeros are skipped.
-  //
-  // SPDIF reparsing also allows to convert between different DTS output modes
-  // even when we have SPDIF input.
-
   struct spdif_header_s
   {
     uint16_t zero1;

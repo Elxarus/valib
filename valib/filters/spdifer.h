@@ -31,6 +31,15 @@ public:
     parser.set_parser(&spdif_wrapper);
   }
 
+  /////////////////////////////////////////////////////////
+  // Spdifer interface
+
+  bool       get_use_dts14()                 const { return spdif_wrapper.use_dts14;      }
+  void       set_use_dts14(bool use_dts14)         { spdif_wrapper.use_dts14 = use_dts14; }
+
+  int        get_dts_mode()                  const { return spdif_wrapper.dts_mode;       }
+  void       set_dts_mode(int dts_mode)            { spdif_wrapper.dts_mode = dts_mode;   }
+
   int        get_frames()                    const { return parser.get_frames();       }
   int        get_errors()                    const { return parser.get_errors();       }
 

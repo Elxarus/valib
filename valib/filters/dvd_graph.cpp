@@ -244,6 +244,36 @@ DVDGraph::set_spdif_allow_32(bool _spdif_allow_32)
   invalidate_chain();
 }
 
+///////////////////////////////////////////////////////////
+// SPDIF/DTS mode
+
+bool
+DVDGraph::get_use_dts14() const
+{
+  return spdifer_pt.get_use_dts14();
+}
+void
+DVDGraph::set_use_dts14(bool _use_dts14)
+{
+  spdifer_pt.set_use_dts14(_use_dts14);
+  spdifer_enc.set_use_dts14(_use_dts14);
+}
+
+int
+DVDGraph::get_dts_mode() const
+{
+  return spdifer_pt.get_dts_mode();
+}
+void
+DVDGraph::set_dts_mode(int _dts_mode)
+{
+  spdifer_pt.set_dts_mode(_dts_mode);
+  spdifer_enc.set_dts_mode(_dts_mode);
+}
+
+///////////////////////////////////////////////////////////
+// SPDIF status
+
 int 
 DVDGraph::get_spdif_status() const
 {
@@ -349,8 +379,6 @@ DVDGraph::get_info(char *_buf, size_t _len) const
       switch (node)
       {
       case state_spdif_pt:
-        pos += sprintf(buf + pos, "%s", filter_name);
-
         pos += spdifer_pt.get_info(buf + pos, buf_size - pos);
         break;
 
@@ -819,7 +847,7 @@ Speakers
 Spdif2PCM::get_output() const
 {
   if (spk.format == FORMAT_SPDIF)
-    return Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
+    return Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate, 32767);
   else
     return spk;
 }
@@ -828,6 +856,6 @@ Spdif2PCM::get_chunk(Chunk *_chunk)
 { 
   send_chunk_inplace(_chunk, size);
   if (_chunk->spk.format == FORMAT_SPDIF)
-    _chunk->spk = Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
+    _chunk->spk = Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate, 32767);
   return true;
 }

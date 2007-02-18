@@ -105,6 +105,14 @@ public:
   bool get_spdif_allow_32() const;
   void set_spdif_allow_32(bool spdif_allow_32);
 
+  // SPDIF/DTS mode
+
+  bool get_use_dts14() const;
+  void set_use_dts14(bool use_dts14);
+
+  int  get_dts_mode() const;
+  void set_dts_mode(int dts_mode);
+
   // SPDIF status
   int get_spdif_status() const;
 
