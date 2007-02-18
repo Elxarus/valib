@@ -550,6 +550,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\valib\filters\detector.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\filters\detector.h"
+					>
+				</File>
+				<File
 					RelativePath="..\valib\filters\dvd_graph.cpp"
 					>
 				</File>
@@ -692,6 +700,10 @@
 			</File>
 			<File
 				RelativePath=".\test_despdifer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\test_detector.cpp"
 				>
 			</File>
 			<File

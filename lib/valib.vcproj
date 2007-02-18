@@ -324,6 +324,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\detector.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\detector.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\dvd_graph.cpp"
 				>
 			</File>
