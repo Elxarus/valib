@@ -53,15 +53,27 @@ MultiHeader::set_parsers(const HeaderParser *const *_parsers, size_t _nparsers)
   {
     parsers[i] = _parsers[i];
 
-    if (f_header_size < parsers[i]->header_size())
-      f_header_size = parsers[i]->header_size();
+    if (i == 0)
+    {
+      f_header_size = parsers[0]->header_size();
+      f_min_frame_size = parsers[0]->min_frame_size();
+      f_max_frame_size = parsers[0]->max_frame_size();
+    }
+    else
+    {
+      if (f_header_size < parsers[i]->header_size())
+        f_header_size = parsers[i]->header_size();
 
-    if (f_min_frame_size < parsers[i]->min_frame_size())
-      f_min_frame_size = parsers[i]->min_frame_size();
+      if (f_min_frame_size > parsers[i]->min_frame_size())
+        f_min_frame_size = parsers[i]->min_frame_size();
 
-    if (f_max_frame_size < parsers[i]->max_frame_size())
-      f_max_frame_size = parsers[i]->max_frame_size();
+      if (f_max_frame_size < parsers[i]->max_frame_size())
+        f_max_frame_size = parsers[i]->max_frame_size();
+    }
   }
+
+  if (f_min_frame_size < f_header_size)
+    f_min_frame_size = f_header_size;
 
   return true;
 }
@@ -79,16 +91,28 @@ MultiHeader::set_parsers(const FrameParser *const *_parsers, size_t _nparsers)
   for (size_t i = 0; i < _nparsers; i++)
   {
     parsers[i] = _parsers[i]->header_parser();
+    
+    if (i == 0)
+    {
+      f_header_size = parsers[0]->header_size();
+      f_min_frame_size = parsers[0]->min_frame_size();
+      f_max_frame_size = parsers[0]->max_frame_size();
+    }
+    else
+    {
+      if (f_header_size < parsers[i]->header_size())
+        f_header_size = parsers[i]->header_size();
 
-    if (f_header_size < parsers[i]->header_size())
-      f_header_size = parsers[i]->header_size();
+      if (f_min_frame_size > parsers[i]->min_frame_size())
+        f_min_frame_size = parsers[i]->min_frame_size();
 
-    if (f_min_frame_size < parsers[i]->min_frame_size())
-      f_min_frame_size = parsers[i]->min_frame_size();
-
-    if (f_max_frame_size < parsers[i]->max_frame_size())
-      f_max_frame_size = parsers[i]->max_frame_size();
+      if (f_max_frame_size < parsers[i]->max_frame_size())
+        f_max_frame_size = parsers[i]->max_frame_size();
+    }
   }
+
+  if (f_min_frame_size < f_header_size)
+    f_min_frame_size = f_header_size;
 
   return true;
 }
