@@ -358,8 +358,12 @@ ParserFilter::load_parse_frame()
   while (stream.load_frame(&rawdata, end))
   {
     new_stream |= stream.is_new_stream();
+    
+    Speakers old_parser_spk = parser->get_spk();
     if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
     {
+      if (old_parser_spk != parser->get_spk())
+        new_stream = true;
       size = end - rawdata;
       return true;
     }
