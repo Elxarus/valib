@@ -472,10 +472,20 @@ StreamBuffer::stream_info(char *buf, size_t size) const
   char info[1024];
   size_t info_size = 0;
 
-  info_size += parser->header_info(frame, info, sizeof(info));
-  info_size += sprintf(info + info_size, "Frame interval: %i\n", frame_interval);
-  if (frame_interval > 0 && hinfo.nsamples > 0)
-    info_size += sprintf(info + info_size, "Actual bitrate: %ikbps\n", frame_interval * hinfo.spk.sample_rate * 8 / hinfo.nsamples / 1000);
+  if (parser)
+  {
+    if (in_sync)
+    {
+      info_size += parser->header_info(frame, info, sizeof(info));
+      info_size += sprintf(info + info_size, "Frame interval: %i\n", frame_interval);
+      if (frame_interval > 0 && hinfo.nsamples > 0)
+        info_size += sprintf(info + info_size, "Actual bitrate: %ikbps\n", frame_interval * hinfo.spk.sample_rate * 8 / hinfo.nsamples / 1000);
+    }
+    else
+      info_size += sprintf(info + info_size, "Out of sync");
+  }
+  else
+    info_size += sprintf(info + info_size, "No parser set");
 
   if (info_size > size) info_size = size;
   memcpy(buf, info, info_size);
