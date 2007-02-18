@@ -13,7 +13,11 @@ ReadBS::set_ptr(const uint8_t *_buf, int _type)
   align = (long)_buf & 3;
   pos = (uint32_t *) (_buf - align);
   bits_left = 0;
-  get(align * 8);
+
+  if (type == BITSTREAM_14BE || type == BITSTREAM_14LE)
+    get(align * 7);
+  else
+    get(align * 8);
 }
 
 uint32_t

@@ -152,6 +152,9 @@ ReadBS::fill_current()
       current_word = (tmp & 0x3fff) | ((tmp & 0x3fff0000) >> 2);
       bits_left = 28;
       break;
+
+    default:
+      current_word = 0;
   }
 }
 
