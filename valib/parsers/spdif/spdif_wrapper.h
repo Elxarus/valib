@@ -2,8 +2,8 @@
 #define SPDIF_WRAPPER_H
 
 #include "parser.h"
-#include "multi_header.h"
-#include "spdif_frame.h"
+#include "parsers\multi_header.h"
+#include "spdif_parser.h"
 
 #define SPDIF_DTS_AUTO    0
 #define SPDIF_DTS_WRAPPED 1
@@ -41,7 +41,7 @@ protected:
   uint8_t    *buf;          // output frame buffer
 
   MultiHeader spdifable;    // spdifable formats header parser
-  SPDIFFrame  spdif_parser; // required to rewrap spdif input
+  SPDIFParser spdif_parser; // required to rewrap spdif input
   HeaderInfo  hdr;          // input raw frame info
 
   Speakers    spk;          // output format

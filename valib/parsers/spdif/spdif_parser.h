@@ -1,15 +1,15 @@
-#ifndef SPDIF_FRAME_H
-#define SPDIF_FRAME_H
+#ifndef SPDIF_PARSER_H
+#define SPDIF_PARSER_H
 
 #include "parser.h"
 
-class SPDIFFrame : public FrameParser
+class SPDIFParser : public FrameParser
 {
 public:
   bool big_endian;
 
-  SPDIFFrame();
-  ~SPDIFFrame();
+  SPDIFParser();
+  ~SPDIFParser();
 
   /////////////////////////////////////////////////////////
   // Own interface

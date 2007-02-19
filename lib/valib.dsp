@@ -550,6 +550,34 @@ SOURCE=..\valib\parsers\dts\dts_tables_quantization.h
 SOURCE=..\valib\parsers\dts\dts_tables_vq.h
 # End Source File
 # End Group
+# Begin Group "spdif"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif\spdif_header.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif\spdif_header.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif\spdif_parser.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif\spdif_parser.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif\spdif_wrapper.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\spdif\spdif_wrapper.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\valib\parsers\file_parser.cpp
@@ -573,30 +601,6 @@ SOURCE=..\valib\parsers\multi_header.cpp
 # Begin Source File
 
 SOURCE=..\valib\parsers\multi_header.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\spdif_frame.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\spdif_frame.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\spdif_header.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\spdif_header.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\spdif_wrapper.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\spdif_wrapper.h
 # End Source File
 # End Group
 # Begin Group "sink"

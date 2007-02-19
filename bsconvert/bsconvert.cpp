@@ -5,8 +5,8 @@
 #include "parsers\mpa\mpa_header.h"
 #include "parsers\ac3\ac3_header.h"
 #include "parsers\dts\dts_header.h"
-#include "parsers\spdif_header.h"
-#include "parsers\spdif_frame.h"
+#include "parsers\spdif\spdif_header.h"
+#include "parsers\spdif\spdif_parser.h"
 #include "parsers\multi_header.h"
 #include "auto_file.h"
 
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
   const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
   MultiHeader multi_header(headers, array_size(headers));
 
-  SPDIFFrame spdif_parser;
+  SPDIFParser spdif_parser;
   StreamBuffer stream(&multi_header);
 
   const size_t buf_size = 512*1024;
@@ -278,7 +278,7 @@ void print_info(StreamBuffer &stream, int bs_type)
   printf(info);
   printf("\n");
 
-  SPDIFFrame spdif_parser;
+  SPDIFParser spdif_parser;
   HeaderInfo hdr = stream.header_info();
   bool is_spdif = hdr.spk.format == FORMAT_SPDIF;
   if (is_spdif)

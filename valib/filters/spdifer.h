@@ -14,8 +14,8 @@
 #define SPDIFER_H
 
 #include "filters\parser_filter.h"
-#include "parsers\spdif_wrapper.h"
-#include "parsers\spdif_frame.h"
+#include "parsers\spdif\spdif_wrapper.h"
+#include "parsers\spdif\spdif_parser.h"
 
 
 
@@ -66,7 +66,7 @@ class Despdifer : public Filter
 {
 protected:
   ParserFilter parser;
-  SPDIFFrame   spdif_parser;
+  SPDIFParser  spdif_parser;
 
 public:
   Despdifer()

@@ -5,11 +5,11 @@
 #include "parsers\ac3\ac3_header.h"
 #include "parsers\dts\dts_header.h"
 #include "parsers\mpa\mpa_header.h"
-#include "parsers\spdif_header.h"
+#include "parsers\spdif\spdif_header.h"
+#include "parsers\spdif\spdif_wrapper.h"
 #include "parsers\multi_header.h"
 #include "parsers\file_parser.h"
 
-#include "parsers\spdif_wrapper.h"
 #include "sink\sink_raw.h"
 #include "sink\sink_wav.h"
 #include "vtime.h"

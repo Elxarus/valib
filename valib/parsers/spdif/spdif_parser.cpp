@@ -1,9 +1,9 @@
 #include "spdif_header.h"
-#include "spdif_frame.h"
+#include "spdif_parser.h"
 
-#include "mpa\mpa_header.h"
-#include "ac3\ac3_header.h"
-#include "dts\dts_header.h"
+#include "parsers\mpa\mpa_header.h"
+#include "parsers\ac3\ac3_header.h"
+#include "parsers\dts\dts_header.h"
 
 #include "bitstream.h"
 
@@ -39,26 +39,26 @@ inline static const int to_big_endian(int bs_type)
 }
 
 
-SPDIFFrame::SPDIFFrame()
+SPDIFParser::SPDIFParser()
 {
   big_endian = true;
   reset();
 }
 
-SPDIFFrame::~SPDIFFrame()
+SPDIFParser::~SPDIFParser()
 {}
 
 ///////////////////////////////////////////////////////////////////////////////
 // FrameParser overrides
 
 const HeaderParser *
-SPDIFFrame::header_parser() const
+SPDIFParser::header_parser() const
 {
   return &spdif_header;
 }
 
 void 
-SPDIFFrame::reset()
+SPDIFParser::reset()
 {
   data = 0;
   data_size = 0;
@@ -67,7 +67,7 @@ SPDIFFrame::reset()
 }
 
 bool
-SPDIFFrame::parse_frame(uint8_t *frame, size_t size)
+SPDIFParser::parse_frame(uint8_t *frame, size_t size)
 {
   if ((frame[0] != 0x00) || (frame[1] != 0x00) || (frame[2]  != 0x00) || (frame[3]  != 0x00) ||
       (frame[4] != 0x00) || (frame[5] != 0x00) || (frame[6]  != 0x00) || (frame[7]  != 0x00) ||
@@ -96,7 +96,7 @@ SPDIFFrame::parse_frame(uint8_t *frame, size_t size)
 }
 
 size_t
-SPDIFFrame::stream_info(char *buf, size_t size) const 
+SPDIFParser::stream_info(char *buf, size_t size) const 
 {
   char info[1024];
   size_t len = 0;
@@ -108,7 +108,7 @@ SPDIFFrame::stream_info(char *buf, size_t size) const
 }
 
 size_t
-SPDIFFrame::frame_info(char *buf, size_t size) const 
+SPDIFParser::frame_info(char *buf, size_t size) const 
 {
   if (buf && size) buf[0] = 0;
   return 0;
