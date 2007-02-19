@@ -2,7 +2,7 @@
 #include <string.h>
 #include "crc.h"
 #include "ac3_header.h"
-#include "ac3_frame.h"
+#include "ac3_parser.h"
 #include "ac3_bitalloc.h"
 #include "ac3_dither.h"
 #include "ac3_tables.h"
@@ -45,10 +45,10 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-// AC3Frame
+// AC3Parser
 ///////////////////////////////////////////////////////////////////////////////
 
-AC3Frame::AC3Frame()
+AC3Parser::AC3Parser()
 {
   frames = 0;
   errors = 0;
@@ -63,12 +63,12 @@ AC3Frame::AC3Frame()
   reset();
 }
 
-AC3Frame::~AC3Frame()
+AC3Parser::~AC3Parser()
 {}
 
 /*
 bool
-AC3Frame::crc_check()
+AC3Parser::crc_check()
 {
   // Note: AC3 uses standard CRC16 polinomial
 
@@ -103,13 +103,13 @@ AC3Frame::crc_check()
 // FrameParser overrides
 
 const HeaderParser *
-AC3Frame::header_parser() const
+AC3Parser::header_parser() const
 {
   return &ac3_header;
 }
 
 void 
-AC3Frame::reset()
+AC3Parser::reset()
 {
   memset((AC3Info*)this, 0, sizeof(AC3Info));
   memset((AC3FrameState*)this, 0, sizeof(AC3FrameState));
@@ -124,7 +124,7 @@ AC3Frame::reset()
 }
 
 bool
-AC3Frame::parse_frame(uint8_t *frame, size_t size)
+AC3Parser::parse_frame(uint8_t *frame, size_t size)
 {
   HeaderInfo hinfo;
 
@@ -152,7 +152,7 @@ AC3Frame::parse_frame(uint8_t *frame, size_t size)
 }
 
 bool 
-AC3Frame::decode_block()
+AC3Parser::decode_block()
 {
   samples_t d = delay;
   samples_t s = samples;
@@ -184,7 +184,7 @@ AC3Frame::decode_block()
 }
 
 size_t
-AC3Frame::stream_info(char *buf, size_t size) const 
+AC3Parser::stream_info(char *buf, size_t size) const 
 {
   char info[1024];
   int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * spk.sample_rate / 512000;
@@ -222,7 +222,7 @@ AC3Frame::stream_info(char *buf, size_t size) const
 }
 
 size_t
-AC3Frame::frame_info(char *buf, size_t size) const 
+AC3Parser::frame_info(char *buf, size_t size) const 
 {
   if (buf && size) buf[0] = 0;
   return 0;
@@ -232,7 +232,7 @@ AC3Frame::frame_info(char *buf, size_t size) const
 // AC3 parse
 
 bool 
-AC3Frame::parse_header()
+AC3Parser::parse_header()
 // Fill AC3Info structure
 {
   /////////////////////////////////////////////////////////////
@@ -378,7 +378,7 @@ AC3Frame::parse_header()
 
 
 bool
-AC3Frame::parse_block()
+AC3Parser::parse_block()
 {
   int nfchans = nfchans_tbl[acmod];
   int ch, bnd;
@@ -776,7 +776,7 @@ AC3Frame::parse_block()
 }
 
 bool
-AC3Frame::parse_exponents(int8_t *exps, int8_t absexp, int expstr, int nexpgrps)
+AC3Parser::parse_exponents(int8_t *exps, int8_t absexp, int expstr, int nexpgrps)
 {
   int expgrp;
 
@@ -858,7 +858,7 @@ AC3Frame::parse_exponents(int8_t *exps, int8_t absexp, int expstr, int nexpgrps)
 }
 
 bool
-AC3Frame::parse_deltba(int8_t *deltba)
+AC3Parser::parse_deltba(int8_t *deltba)
 {
   int deltnseg, deltlen, delta, band;
 
@@ -888,7 +888,7 @@ AC3Frame::parse_deltba(int8_t *deltba)
 }
 
 void 
-AC3Frame::parse_coeff(samples_t samples)
+AC3Parser::parse_coeff(samples_t samples)
 {
   int ch, bnd, s;
   Quantizer q;

@@ -302,14 +302,6 @@ SOURCE=..\valib\parsers\ac3\ac3_enc.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\ac3\ac3_frame.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\ac3\ac3_frame.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\parsers\ac3\ac3_header.cpp
 # End Source File
 # Begin Source File
@@ -334,6 +326,14 @@ SOURCE=..\valib\parsers\ac3\ac3_mdct.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\parsers\ac3\ac3_parser.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\ac3\ac3_parser.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\parsers\ac3\ac3_tables.h
 # End Source File
 # End Group
@@ -346,19 +346,19 @@ SOURCE=..\valib\parsers\mpa\mpa_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\mpa\mpa_frame.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\mpa\mpa_frame.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\parsers\mpa\mpa_header.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\parsers\mpa\mpa_header.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\mpa\mpa_parser.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\mpa\mpa_parser.h
 # End Source File
 # Begin Source File
 
@@ -386,19 +386,19 @@ SOURCE=..\valib\parsers\dts\dts_defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\parsers\dts\dts_frame.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\parsers\dts\dts_frame.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\parsers\dts\dts_header.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\parsers\dts\dts_header.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\dts\dts_parser.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\parsers\dts\dts_parser.h
 # End Source File
 # Begin Source File
 

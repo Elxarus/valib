@@ -1,6 +1,6 @@
 #include <math.h>
 #include <stdio.h>
-#include "dts_frame.h"
+#include "dts_parser.h"
 #include "dts_header.h"
 
 #include "dts_tables.h"
@@ -79,13 +79,13 @@ decode_blockcode(int code, int levels, int *values)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// DTSFrame
+// DTSParser
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 // Init
 
-DTSFrame::DTSFrame()
+DTSParser::DTSParser()
 {
   init_cosmod();
   samples.allocate(DTS_NCHANNELS, DTS_MAX_SAMPLES);
@@ -93,7 +93,7 @@ DTSFrame::DTSFrame()
 }
 
 void 
-DTSFrame::init_cosmod()
+DTSParser::init_cosmod()
 {
   int i, j, k;
   
@@ -116,14 +116,14 @@ DTSFrame::init_cosmod()
 // FrameParser overrides
 
 const HeaderParser *
-DTSFrame::header_parser() const
+DTSParser::header_parser() const
 {
   return &dts_header;
 }
 
 
 void 
-DTSFrame::reset()
+DTSParser::reset()
 {
   spk = spk_unknown;
   frame_size = 0;
@@ -144,7 +144,7 @@ DTSFrame::reset()
 }
 
 bool
-DTSFrame::parse_frame(uint8_t *frame, size_t size)
+DTSParser::parse_frame(uint8_t *frame, size_t size)
 {
   HeaderInfo hinfo;
 
@@ -198,7 +198,7 @@ DTSFrame::parse_frame(uint8_t *frame, size_t size)
 }
 
 size_t
-DTSFrame::stream_info(char *buf, size_t size) const
+DTSParser::stream_info(char *buf, size_t size) const
 {
   char info[1024];
 
@@ -239,7 +239,7 @@ DTSFrame::stream_info(char *buf, size_t size) const
 }
 
 size_t
-DTSFrame::frame_info(char *buf, size_t size) const 
+DTSParser::frame_info(char *buf, size_t size) const 
 {
   if (buf && size) buf[0] = 0;
   return 0;
@@ -252,7 +252,7 @@ DTSFrame::frame_info(char *buf, size_t size) const
 
 
 bool 
-DTSFrame::parse_frame_header()
+DTSParser::parse_frame_header()
 {
   int i, j;
   static const float adj_table[] = { 1.0, 1.1250, 1.2500, 1.4375 };
@@ -411,7 +411,7 @@ DTSFrame::parse_frame_header()
 
 
 bool 
-DTSFrame::parse_subframe_header()
+DTSParser::parse_subframe_header()
 {
   // Primary audio coding side information
   int ch, k;
@@ -621,7 +621,7 @@ DTSFrame::parse_subframe_header()
 
 
 bool
-DTSFrame::parse_subsubframe()
+DTSParser::parse_subsubframe()
 {
   int ch, l;
   int subsubframe = current_subsubframe;
@@ -895,7 +895,7 @@ DTSFrame::parse_subsubframe()
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
-DTSFrame::parse_subframe_footer()
+DTSParser::parse_subframe_footer()
 {
   int aux_data_count = 0, i;
   int lfe_samples;
@@ -929,7 +929,7 @@ DTSFrame::parse_subframe_footer()
 
 
 int 
-DTSFrame::InverseQ(const huff_entry_t *huff)
+DTSParser::InverseQ(const huff_entry_t *huff)
 {
   int value = 0;
   int length = 0, j;
@@ -955,7 +955,7 @@ DTSFrame::InverseQ(const huff_entry_t *huff)
 
 
 void 
-DTSFrame::qmf_32_subbands (int ch, double samples_in[32][8], sample_t *samples_out,
+DTSParser::qmf_32_subbands (int ch, double samples_in[32][8], sample_t *samples_out,
                             double scale)
 {           
   const double *prCoeff;
@@ -1090,7 +1090,7 @@ DTSFrame::qmf_32_subbands (int ch, double samples_in[32][8], sample_t *samples_o
 }
 
 void 
-DTSFrame::lfe_interpolation_fir(int nDecimationSelect, int nNumDeciSample,
+DTSParser::lfe_interpolation_fir(int nDecimationSelect, int nNumDeciSample,
                                  double *samples_in, sample_t *samples_out,
                                  double scale)
 {

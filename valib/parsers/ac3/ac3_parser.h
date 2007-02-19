@@ -1,5 +1,5 @@
-#ifndef AC3_FRAME_H
-#define AC3_FRAME_H
+#ifndef AC3_PARSER_H
+#define AC3_PARSER_H
 
 #include "parser.h"
 #include "bitstream.h"
@@ -128,7 +128,7 @@ public:
   int8_t lfebap[7];
 };
 
-class AC3Frame : public FrameParser, public AC3Info, public AC3FrameState
+class AC3Parser : public FrameParser, public AC3Info, public AC3FrameState
 {
 public:
   bool do_dither;     // do dithering
@@ -138,8 +138,8 @@ public:
   int errors;
 
 public:
-  AC3Frame();
-  ~AC3Frame();
+  AC3Parser();
+  ~AC3Parser();
 
   /////////////////////////////////////////////////////////
   // FrameParser overrides

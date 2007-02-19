@@ -7,9 +7,9 @@
 #define DECODER_H
 
 #include "parser_filter.h"
-#include "parsers\mpa\mpa_frame.h"
-#include "parsers\ac3\ac3_frame.h"
-#include "parsers\dts\dts_frame.h"
+#include "parsers\mpa\mpa_parser.h"
+#include "parsers\ac3\ac3_parser.h"
+#include "parsers\dts\dts_parser.h"
 #include "parsers\multi_frame.h"
 
 
@@ -18,9 +18,9 @@ class AudioDecoder : public Filter
 protected:
   ParserFilter parser;
 
-  MPAFrame mpa;
-  AC3Frame ac3;
-  DTSFrame dts;
+  MPAParser mpa;
+  AC3Parser ac3;
+  DTSParser dts;
   MultiFrame multi_parser;
 
 public:

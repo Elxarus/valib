@@ -2,8 +2,8 @@
   DTS parser class
 */
 
-#ifndef DTS_FRAME_H
-#define DTS_FRAME_H
+#ifndef DTS_PARSER_H
+#define DTS_PARSER_H
 
 #include "spk.h"
 #include "dts_defs.h"
@@ -80,10 +80,10 @@ public:
   double subband_fir_noidea[DTS_PRIM_CHANNELS_MAX][64];
 };
 
-class DTSFrame : public FrameParser, public DTSInfo
+class DTSParser : public FrameParser, public DTSInfo
 {
 public:
-  DTSFrame();
+  DTSParser();
 
   /////////////////////////////////////////////////////////
   // FrameParser overrides

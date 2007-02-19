@@ -4,8 +4,8 @@
   MPEG1/2 LayerI and LayerII audio parser class
 */
 
-#ifndef MPA_FRAME_H
-#define MPA_FRAME_H
+#ifndef MPA_PARSER_H
+#define MPA_PARSER_H
 
 #include "data.h"
 #include "parser.h"
@@ -14,7 +14,7 @@
 #include "mpa_synth.h"
 
 
-class MPAFrame : public FrameParser
+class MPAParser : public FrameParser
 {
 public:
   // raw frame header struct
@@ -62,8 +62,8 @@ public:
   Header   hdr; // raw header
   BSI      bsi; // bitstream information
 
-  MPAFrame();
-  ~MPAFrame();
+  MPAParser();
+  ~MPAParser();
 
   /////////////////////////////////////////////////////////
   // FrameParser overrides

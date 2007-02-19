@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "mpa_frame.h"
+#include "mpa_parser.h"
 #include "mpa_header.h"
 #include "mpa_tables.h"
 #include "crc.h"
@@ -11,7 +11,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-MPAFrame::MPAFrame()
+MPAParser::MPAParser()
 {
   samples.allocate(2, MPA_NSAMPLES);
   synth[0] = new SynthBufferFPU();
@@ -22,7 +22,7 @@ MPAFrame::MPAFrame()
 }
 
 
-MPAFrame::~MPAFrame()
+MPAParser::~MPAParser()
 {
   if (synth[0]) delete synth[0];
   if (synth[1]) delete synth[1];
@@ -32,13 +32,13 @@ MPAFrame::~MPAFrame()
 // FrameParser overrides
 
 const HeaderParser *
-MPAFrame::header_parser() const
+MPAParser::header_parser() const
 {
   return &mpa_header;
 }
 
 void 
-MPAFrame::reset()
+MPAParser::reset()
 {
   spk = spk_unknown;
   samples.zero();
@@ -47,7 +47,7 @@ MPAFrame::reset()
 }
 
 bool
-MPAFrame::parse_frame(uint8_t *frame, size_t size)
+MPAParser::parse_frame(uint8_t *frame, size_t size)
 {
   if (!parse_header(frame, size))
     return false;
@@ -72,7 +72,7 @@ MPAFrame::parse_frame(uint8_t *frame, size_t size)
 }
 
 size_t
-MPAFrame::stream_info(char *buf, size_t size) const 
+MPAParser::stream_info(char *buf, size_t size) const 
 {
   char info[1024];
 
@@ -101,7 +101,7 @@ MPAFrame::stream_info(char *buf, size_t size) const
 }
 
 size_t
-MPAFrame::frame_info(char *buf, size_t size) const 
+MPAParser::frame_info(char *buf, size_t size) const 
 {
   if (buf && size) buf[0] = 0;
   return 0;
@@ -111,7 +111,7 @@ MPAFrame::frame_info(char *buf, size_t size) const
 // BaseParser overrides
 /*
 bool
-MPAFrame::crc_check()
+MPAParser::crc_check()
 {
   // Note: MPA uses standard CRC16 polinomial and 0xffff start value
   // MPA LayerII has variable number of protected bits.
@@ -126,7 +126,7 @@ MPAFrame::crc_check()
 //////////////////////////////////////////////////////////////////////
 
 bool 
-MPAFrame::parse_header(const uint8_t *frame, size_t size)
+MPAParser::parse_header(const uint8_t *frame, size_t size)
 {
   // 8 bit or 16 bit big endian steram sync
   if ((frame[0] == 0xff)         && // sync
@@ -217,7 +217,7 @@ MPAFrame::parse_header(const uint8_t *frame, size_t size)
 
 
 bool 
-MPAFrame::II_decode_frame()
+MPAParser::II_decode_frame()
 {
   int sb, ch;
   int nch     = bsi.nch;
@@ -391,7 +391,7 @@ MPAFrame::II_decode_frame()
 
 
 void 
-MPAFrame::II_decode_fraction(
+MPAParser::II_decode_fraction(
   sample_t *fraction[MPA_NCH],
   int16_t  bit_alloc[MPA_NCH][SBLIMIT],
   sample_t scale[MPA_NCH][3][SBLIMIT],
@@ -517,7 +517,7 @@ MPAFrame::II_decode_fraction(
 
 
 bool 
-MPAFrame::I_decode_frame()
+MPAParser::I_decode_frame()
 {
   int ch, sb;
   int nch     = bsi.nch;
@@ -582,7 +582,7 @@ MPAFrame::I_decode_frame()
 
 
 void 
-MPAFrame::I_decode_fraction(
+MPAParser::I_decode_fraction(
   sample_t *fraction[MPA_NCH],
   int16_t  bit_alloc[MPA_NCH][SBLIMIT],
   sample_t scale[MPA_NCH][SBLIMIT])
