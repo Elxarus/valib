@@ -1,5 +1,4 @@
 #include <memory.h>
-#include <assert.h>
 #include "bitstream.h"
 
 void 

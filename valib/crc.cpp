@@ -18,7 +18,6 @@
 */
 
 
-#include <assert.h>
 #include "crc.h"
 
 const CRC crc16(POLY_CRC16, 16);

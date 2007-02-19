@@ -190,7 +190,6 @@
 #ifndef VALIB_FILTER_H
 #define VALIB_FILTER_H
 
-#include <assert.h>
 #include "spk.h"
 
 class Chunk;

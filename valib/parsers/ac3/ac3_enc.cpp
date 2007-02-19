@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 #include "ac3_bitalloc.h"
 #include "ac3_enc.h"

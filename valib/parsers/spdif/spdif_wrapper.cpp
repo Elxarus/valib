@@ -1,4 +1,3 @@
-#include <assert.h>
 #include "bitstream.h"
 #include "spdif_header.h"
 #include "spdif_wrapper.h"
