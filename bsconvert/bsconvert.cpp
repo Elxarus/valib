@@ -113,7 +113,7 @@ int main(int argc, char **argv)
   const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
   MultiHeader multi_header(headers, array_size(headers));
 
-  SPDIFParser spdif_parser;
+  SPDIFParser spdif_parser(false);
   StreamBuffer stream(&multi_header);
 
   const size_t buf_size = 512*1024;
@@ -278,8 +278,9 @@ void print_info(StreamBuffer &stream, int bs_type)
   printf(info);
   printf("\n");
 
-  SPDIFParser spdif_parser;
+  SPDIFParser spdif_parser(false);
   HeaderInfo hdr = stream.header_info();
+
   bool is_spdif = hdr.spk.format == FORMAT_SPDIF;
   if (is_spdif)
   {
