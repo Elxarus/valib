@@ -8,7 +8,7 @@ class SPDIFParser : public FrameParser
 public:
   bool big_endian;
 
-  SPDIFParser();
+  SPDIFParser(bool big_endian);
   ~SPDIFParser();
 
   /////////////////////////////////////////////////////////

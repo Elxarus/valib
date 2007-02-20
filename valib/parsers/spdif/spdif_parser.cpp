@@ -39,9 +39,9 @@ inline static const int to_big_endian(int bs_type)
 }
 
 
-SPDIFParser::SPDIFParser()
+SPDIFParser::SPDIFParser(bool _big_endian)
 {
-  big_endian = true;
+  big_endian = _big_endian;
   reset();
 }
 

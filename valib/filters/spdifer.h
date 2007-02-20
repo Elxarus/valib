@@ -69,7 +69,7 @@ protected:
   SPDIFParser  spdif_parser;
 
 public:
-  Despdifer()
+  Despdifer(): spdif_parser(true)
   {
     parser.set_parser(&spdif_parser);
   }

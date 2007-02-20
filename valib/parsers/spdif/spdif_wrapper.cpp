@@ -16,12 +16,10 @@ inline bool is_14bit(int bs_type)
 
 
 SPDIFWrapper::SPDIFWrapper(int _dts_mode, bool _use_dts14)
-: dts_mode(_dts_mode), use_dts14(_use_dts14)
+: dts_mode(_dts_mode), use_dts14(_use_dts14), spdif_parser(false)
 {
   const HeaderParser *parsers[] = { &spdif_header, &mpa_header, &ac3_header, &dts_header };
   spdifable.set_parsers(parsers, array_size(parsers));
-  spdif_parser.set_big_endian(false); // do not convert to big endian because we need low endian to wrap the stream back to spdif (faster)
-
   buf = new uint8_t[MAX_SPDIF_FRAME_SIZE];
 }
 
