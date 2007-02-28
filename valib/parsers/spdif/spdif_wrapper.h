@@ -7,7 +7,11 @@
 
 #define SPDIF_DTS_AUTO    0
 #define SPDIF_DTS_WRAPPED 1
-#define SPDIF_DTS_RAW     2
+#define SPDIF_DTS_PADDED  2
+
+#define SPDIF_DTS_ASIS    0
+#define SPDIF_DTS_16BIT   1
+#define SPDIF_DTS_14BIT   2
 
 class SPDIFWrapper : public FrameParser
 {

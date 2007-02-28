@@ -136,7 +136,7 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
       }
       break;
 
-    case SPDIF_DTS_RAW:
+    case SPDIF_DTS_PADDED:
       use_header = false;
       if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size))
         spdif_bs = BITSTREAM_14LE;
