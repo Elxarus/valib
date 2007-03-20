@@ -439,7 +439,7 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
 bool 
 StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
 {
-  while (*data < end)
+  while (*data < end || is_frame_loaded() || is_debris_exists())
   {
     load(data, end);
     if (is_frame_loaded())

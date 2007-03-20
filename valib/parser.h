@@ -365,7 +365,7 @@ public:
 //
 // syn new deb frm
 //  -   -   *   +   frame loaded without sync
-//  -   +   *   *   new steam without sync
+//  -   +   *   *   new stream without sync
 //  +   +   *   -   new stream detection without a frame loaded
 //
 // load() call returns false in case when stream buffer was not loaded with
@@ -518,6 +518,9 @@ public:
 
   /////////////////////////////////////////////////////////
   // Data access
+
+  const uint8_t *get_buffer()   const { return sync_buf;       }
+  size_t   get_buffer_size()    const { return sync_data;      }
 
   uint8_t *get_debris()         const { return debris;         }
   size_t   get_debris_size()    const { return debris_size;    }
