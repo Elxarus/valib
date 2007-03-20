@@ -40,6 +40,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 extern const Speakers spk_unknown = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
+extern const Speakers spk_rawdata = Speakers(FORMAT_RAWDATA, 0, 0, 0, 0);
 /*
 extern const Speakers def_spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0, NO_RELATION);
 extern const Speakers err_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);

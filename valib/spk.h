@@ -293,6 +293,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 extern const Speakers spk_unknown;
+extern const Speakers spk_rawdata;
 /*
 extern const Speakers def_spk;
 extern const Speakers err_spk;
