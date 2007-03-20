@@ -67,7 +67,7 @@ returned from this call.
 
 from state      to state        output format   chunk data      transition description
 --------------------------------------------------------------------------------------
-full            no_frmae                        chunk/frame     data output
+full            no_frame                        chunk/frame     data output
 
 --------
 no_frame
@@ -112,6 +112,7 @@ no_frame        full            parser_spk      chunk/eos       frame loaded bel
 format_change   full            parser_spk      chunk/eos       inter-stream flushing
 
 */
+
 
 ParserFilter::ParserFilter()
 :NullFilter(-1)
@@ -212,7 +213,7 @@ ParserFilter::process(const Chunk *_chunk)
 
   // receive the chunk
   FILTER_SAFE(receive_chunk(_chunk));
-  sync_helper.receive_sync(sync, time);
+  sync_helper.receive_sync(sync, time, stream.get_buffer_size());
   sync = false;
 
   switch (state)
@@ -355,22 +356,25 @@ bool
 ParserFilter::load_parse_frame()
 {
   uint8_t *end = rawdata + size;
+  size_t old_data_size = size + stream.get_buffer_size();
+
   while (stream.load_frame(&rawdata, end))
   {
     new_stream |= stream.is_new_stream();
-    
     Speakers old_parser_spk = parser->get_spk();
     if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
     {
       if (old_parser_spk != parser->get_spk())
         new_stream = true;
-      size = end - rawdata;
+      size = end - rawdata; 
+      sync_helper.drop(old_data_size - size - stream.get_buffer_size());
       return true;
     }
     else
       errors++;
   }
 
+  sync_helper.drop(old_data_size - stream.get_buffer_size());
   size = 0;
   return false;
 }
@@ -394,4 +398,85 @@ ParserFilter::send_eos(Chunk *_chunk)
 
   // reset syncronization after the end of the stream
   sync_helper.reset(); 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SyncHelper
+///////////////////////////////////////////////////////////////////////////////
+
+ParserFilter::SyncHelper::SyncHelper()
+{
+  reset();
+}
+
+inline void
+ParserFilter::SyncHelper::receive_sync(bool _sync, vtime_t _time, int _pos)
+{
+  if (_sync)
+  {
+    if (sync[0] && pos[0] != _pos)
+    {
+      assert(pos[0] < _pos);
+      sync[1] = true;
+      time[1] = _time;
+      pos[1]  = _pos;
+    }
+    else
+    {
+      sync[0] = true;
+      time[0] = _time;
+      pos[0]  = _pos;
+    }
+  }
+}
+inline void
+ParserFilter::SyncHelper::receive_sync(const Chunk *chunk, int _pos)
+{
+  receive_sync(chunk->sync, chunk->time, _pos);
+}
+
+inline void
+ParserFilter::SyncHelper::send_sync(Chunk *_chunk)
+{
+  if (pos[0] <= 0)
+  {
+    _chunk->sync = sync[0];
+    _chunk->time = time[0];
+    sync[0] = sync[1];
+    time[0] = time[1];
+    sync[1] = false;
+    time[1] = 0;
+  }
+}
+
+inline void
+ParserFilter::SyncHelper::drop(int _size)
+{
+  if (sync[0])
+    pos[0] -= _size;
+
+  if (sync[1])
+  {
+    pos[1] -= _size;
+    if (pos[1] <= 0)
+    {
+      sync[0] = sync[1];
+      time[0] = time[1];
+      pos[0]  = pos[1];
+      sync[1] = false;
+      time[1] = 0;
+      pos[1]  = 0;
+    }
+  }
+}
+
+inline void
+ParserFilter::SyncHelper::reset()
+{
+  sync[0] = false;
+  time[0] = 0;
+  pos[0]  = 0;
+  sync[1] = false;
+  time[1] = 0;
+  pos[1]  = 0;
 }
