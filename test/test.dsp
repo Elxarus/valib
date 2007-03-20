@@ -132,6 +132,10 @@ SOURCE=.\test_null.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_parser_filter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_proc.cpp
 # End Source File
 # Begin Source File
