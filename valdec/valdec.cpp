@@ -166,10 +166,11 @@ int main(int argc, char *argv[])
 "    -gain_{ch}:N - output channel gain (dB)\n"
 "  \n"
 "  automatic gain control options:\n"
-"    -limiter[+|-] - limiter on(*)/off\n"
+"    -agc[+|-] - auto gain control on(*)/off\n"
 "    -normalize[+|-] - one-pass normalize on/off(*)\n"
 "    -drc[+|-] - dynamic range compression on/off(*)\n"
 "    -drc_power:N - dynamic range compression level (dB)\n"
+"    -attack:N - attack speed (dB/s)\n"
 "    -release:N - release speed (dB/s)\n"
 "  \n"
 "  delay options:\n"
@@ -546,6 +547,13 @@ int main(int argc, char *argv[])
     // Auto gain control options
     ///////////////////////////////////////////////////////
 
+    // -agc
+    if (is_arg(argv[iarg], "agc", argt_bool))
+    {
+      dvd_graph.proc.set_auto_gain(arg_bool(argv[iarg]));
+      continue;
+    }
+
     // -normalize
     if (is_arg(argv[iarg], "normalize", argt_bool))
     {
@@ -565,6 +573,13 @@ int main(int argc, char *argv[])
     {
       dvd_graph.proc.set_drc(true);
       dvd_graph.proc.set_drc_power(arg_num(argv[iarg]));
+      continue;
+    }
+
+    // -attack
+    if (is_arg(argv[iarg], "attack", argt_num))
+    {
+      dvd_graph.proc.set_attack(db2value(arg_num(argv[iarg])));
       continue;
     }
 
