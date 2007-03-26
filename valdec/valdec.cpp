@@ -814,7 +814,7 @@ int main(int argc, char *argv[])
   }
 
   #define DROP_STAT \
-    printf("                                                                             \r");
+    fprintf(stderr, "                                                                             \r");
 
   /////////////////////////////////////////////////////
   // Now we already have a frame loaded
@@ -946,11 +946,13 @@ int main(int argc, char *argv[])
 
   if (print_hist)
   {
-    double hist[MAX_HISTOGRAM];
+    sample_t hist[MAX_HISTOGRAM];
+    sample_t max_level;
     int dbpb;
     int i, j;
 
     dvd_graph.proc.get_output_histogram(hist, MAX_HISTOGRAM);
+    max_level = dvd_graph.proc.get_max_level();
     dbpb = dvd_graph.proc.get_dbpb();
 
     printf("\nHistogram:\n");
@@ -963,7 +965,7 @@ int main(int argc, char *argv[])
       printf("\n");
     }
     printf("------------------------------------------------------------------------------\n");
-    printf("dbpb;%i\nhistogram;", dbpb);
+    printf("max_level;%f\ndbpb;%i\nhistogram;", max_level, dbpb);
     for (i = 0; i < MAX_HISTOGRAM; i++)
       printf("%.4f;", hist[i]);
     printf("\n");
