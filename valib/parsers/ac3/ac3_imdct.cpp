@@ -82,10 +82,12 @@ IMDCT::IMDCT()
     pre1[i].imag = -sin ((M_PI / 256) * (k - 0.25));
   }
 
+  // Post-IFFT coefs are pre-scaled by 2
+  // (moved here from overlap/add step)
   for (i = 0; i < 64; i++) 
   {
-    post1[i].real = cos ((M_PI / 256) * (i + 0.5));
-    post1[i].imag = sin ((M_PI / 256) * (i + 0.5));
+    post1[i].real = 2 * cos ((M_PI / 256) * (i + 0.5));
+    post1[i].imag = 2 * sin ((M_PI / 256) * (i + 0.5));
   }
 
   for (i = 0; i < 64; i++) 
@@ -95,10 +97,12 @@ IMDCT::IMDCT()
     pre2[i].imag = sin ((M_PI / 128) * (k - 0.25));
   }
 
+  // Post-IFFT coefs are pre-scaled by 2
+  // (moved here from overlap/add step)
   for (i = 0; i < 32; i++) 
   {
-    post2[i].real = cos ((M_PI / 128) * (i + 0.5));
-    post2[i].imag = sin ((M_PI / 128) * (i + 0.5));
+    post2[i].real = 2 * cos ((M_PI / 128) * (i + 0.5));
+    post2[i].imag = 2 * sin ((M_PI / 128) * (i + 0.5));
   }
 
 }
@@ -143,14 +147,13 @@ IMDCT::ifft128(complex_t *buf)
   ifft_pass (buf, roots128 - 32, 32);
 }
 
-
 void 
 IMDCT::imdct_512(sample_t *data, sample_t *delay)
 {
   int i, k;
   sample_t t_r, t_i, a_r, a_i, b_r, b_i, w_1, w_2;
   const sample_t *window = imdct_window;
-  
+
   for (i = 0; i < 128; i++) 
   {
     k = fftorder[i];
@@ -160,7 +163,7 @@ IMDCT::imdct_512(sample_t *data, sample_t *delay)
     buf128[i].real = t_i * data[255-k] + t_r * data[k];
     buf128[i].imag = t_r * data[255-k] - t_i * data[k];
   }
-  
+
   ifft128 (buf128);
   
   // Post IFFT complex multiply plus IFFT complex conjugate
