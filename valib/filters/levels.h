@@ -45,11 +45,9 @@ protected:
   inline int prev_pos(int p);
 
 public:
-  LevelsCache()
-  { reset(); }
+  LevelsCache();
 
-  inline void reset();
-
+  void reset();
   void add_levels(vtime_t time, sample_t levels[NCHANNELS]);
   void get_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
 };
@@ -61,25 +59,25 @@ public:
 class LevelsHistogram
 {
 protected:
+  sample_t max_level[NCHANNELS];
   int histogram[NCHANNELS][MAX_HISTOGRAM];
   int n;
   int dbpb; // dB per bin
 
 public:
-  LevelsHistogram(int _dbpb = 5)
-  {
-    set_dbpb(_dbpb);
-    reset();
-  };
+  LevelsHistogram(int _dbpb = 5);
 
-  inline void reset();
+  void reset();
 
-  inline int  get_dbpb() const;
-  inline void set_dbpb(int dbpb);
+  int  get_dbpb() const;
+  void set_dbpb(int dbpb);
 
   void add_levels(sample_t levels[NCHANNELS]);
   void get_histogram(double *histogram, size_t count) const;
   void get_histogram(int ch, double *histogram, size_t count) const;
+
+  sample_t get_max_level() const;
+  sample_t get_max_level(int ch) const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -119,6 +117,8 @@ public:
   inline void get_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
   inline void get_histogram(double *histogram, size_t count) const;
   inline void get_histogram(int ch, double *histogram, size_t count) const;
+  inline sample_t get_max_level() const;
+  inline sample_t get_max_level(int ch) const;
 
   /////////////////////////////////////////////////////////
   // Filter interface
@@ -126,51 +126,6 @@ public:
   virtual void reset();
   virtual bool get_chunk(Chunk *chunk);
 };
-
-///////////////////////////////////////////////////////////
-// LevelsCache inlines
-
-int 
-LevelsCache::next_pos(int p)
-{
-  p++;
-  if (p >= MAX_LEVELS_CACHE)
-    p = 0;
-  return p;
-}
-
-void
-LevelsCache::reset()
-{
-  pos = 0;
-  end = 0;
-
-  memset(levels_cache[0], 0, sizeof(sample_t) * NCHANNELS);
-  levels_time[0] = -1;
-}
-
-///////////////////////////////////////////////////////////
-// LevelsHistogram inlines
-
-void 
-LevelsHistogram::reset()
-{
-  n = 0;
-  memset(histogram, 0, sizeof(histogram));
-}
-
-int 
-LevelsHistogram::get_dbpb() const
-{
-  return dbpb;
-}
-
-void 
-LevelsHistogram::set_dbpb(int _dbpb)
-{
-  dbpb = _dbpb;
-  reset();
-}
 
 ///////////////////////////////////////////////////////////
 // Levels inlines
@@ -224,5 +179,16 @@ Levels::get_histogram(int _ch, double *_histogram, size_t _count) const
   hist.get_histogram(_ch, _histogram, _count);
 }
 
+sample_t
+Levels::get_max_level() const
+{
+  return hist.get_max_level();
+}
+
+sample_t
+Levels::get_max_level(int ch) const
+{
+  return hist.get_max_level(ch);
+}
 
 #endif

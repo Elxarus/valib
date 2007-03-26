@@ -62,6 +62,7 @@
   // levels histogram
   dbpb                - dB per bin in histogram
   histogram           - levels histogram (read-only)
+  max_level           - maximum level (read-only)
 
   todo: use state machine instead of filter chain?
 */
@@ -175,6 +176,8 @@ public:
   inline void     get_input_histogram(int ch, double *input_histogram, size_t count); // r/o
   inline void     get_output_histogram(double *output_histogram, size_t count); // r/o
   inline void     get_output_histogram(int ch, double *output_histogram, size_t count); // r/o
+  inline sample_t get_max_level();
+  inline sample_t get_max_level(int ch);
 
 
   // Channel order
@@ -348,6 +351,14 @@ AudioProcessor::get_output_histogram(double *_output_histogram, size_t _count)
 inline void
 AudioProcessor::get_output_histogram(int _ch, double *_output_histogram, size_t _count)
 { out_levels.get_histogram(_ch, _output_histogram, _count); }
+
+inline sample_t
+AudioProcessor::get_max_level()
+{ return in_levels.get_max_level(); }
+
+inline sample_t
+AudioProcessor::get_max_level(int ch)
+{ return in_levels.get_max_level(ch); }
 
 inline void     
 AudioProcessor::set_input_order (const int _order[NCHANNELS])
