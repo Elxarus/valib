@@ -88,6 +88,10 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\test_ac3.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_bs_convert.cpp
 # End Source File
 # Begin Source File

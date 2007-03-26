@@ -10,6 +10,8 @@ int test_syncer(Log *log);
 int test_streambuffer(Log *log);
 int test_parser_filter(Log *log);
 
+int test_ac3(Log *log);
+
 int test_null(Log *log);
 int test_rules(Log *log);
 
@@ -41,6 +43,7 @@ int main(int argc, char **argv)
   test_streambuffer(&log);
   test_bs_convert(&log);
   test_parser_filter(&log);
+  test_ac3(&log);
 
   test_crash(&log);
 
