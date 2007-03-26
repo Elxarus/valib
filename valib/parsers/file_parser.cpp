@@ -277,6 +277,18 @@ FileParser::load_frame()
     }
 
     ///////////////////////////////////////////////////////
+    // Stop file scanning if scanned too much
+
+    sync_size += (pos - buf) - buf_pos;
+    buf_pos = pos - buf;
+    if (max_scan > 0) // do limiting
+    {
+      if ((sync_size > stream.get_parser()->max_frame_size() * 3) && // minimum required to sync and load a frame
+          (sync_size > max_scan))                                    // limit scanning
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////
     // Fill the buffer
 
     if (!buf_data || buf_pos >= buf_data)
@@ -293,17 +305,6 @@ FileParser::load_frame()
       if (!buf_data) return false;
     }
 
-    ///////////////////////////////////////////////////////
-    // Stop file scanning if scanned too much
-
-    sync_size += (pos - buf) - buf_pos;
-    buf_pos = pos - buf;
-    if (max_scan > 0) // do limiting
-    {
-      if ((sync_size > stream.get_parser()->max_frame_size() * 3) && // minimum required to sync and load a frame
-          (sync_size > max_scan))                                    // limit scanning
-        return false;
-    }
   }
   // never be here
   return false;
