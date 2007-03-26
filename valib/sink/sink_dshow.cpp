@@ -2,7 +2,7 @@
 #include "win32\winspk.h"
 
 // uncomment this to log timing information into DirectShow log
-#define DSHOWSINK_LOG_TIMING
+//#define DSHOWSINK_LOG_TIMING
 
 DEFINE_GUID(MEDIASUBTYPE_AVI_AC3, 
 0x00002000, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
