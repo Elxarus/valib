@@ -53,6 +53,7 @@ AC3Parser::AC3Parser()
   frames = 0;
   errors = 0;
 
+  do_crc = true;
   do_dither = true;
   do_imdct = true;
 
@@ -65,39 +66,6 @@ AC3Parser::AC3Parser()
 
 AC3Parser::~AC3Parser()
 {}
-
-/*
-bool
-AC3Parser::crc_check()
-{
-  // Note: AC3 uses standard CRC16 polinomial
-
-  uint32_t crc;
-
-  /////////////////////////////////////////////////////////
-  // Check first 5/8 of frame
-  // CRC is initialized by 0 and test result must be also 0.
-  // Syncword (first 2 bytes) is not imcluded to crc calc
-  // but it is included to 5/8 of frame size. So we must 
-  // check 5/8*frame_size - 2 bytes.
-
-  size_t frame_size1 = ((frame_size >> 2) + (frame_size >> 4)) << 1;
-  crc = crc16.calc(0, frame + 2, frame_size1 - 2, bs_type);
-  if (crc) 
-    return false;
-
-  /////////////////////////////////////////////////////////
-  // Check the rest of frame
-  // CRC is initialized by 0 (from previous point) and test
-  // result must be also 0.
-
-  crc = crc16.calc(0, frame + frame_size1, frame_size - frame_size1, bs_type);
-  if (crc) 
-    return false;
-
-  return true;
-}
-*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // FrameParser overrides
@@ -115,6 +83,7 @@ AC3Parser::reset()
   memset((AC3FrameState*)this, 0, sizeof(AC3FrameState));
 
   spk = spk_unknown;
+  frame = 0;
   frame_size = 0;
   bs_type = 0;
 
@@ -188,22 +157,58 @@ AC3Parser::frame_info(char *buf, size_t size) const
 // AC3 parse
 
 bool
-AC3Parser::start_parse(uint8_t *frame, size_t size)
+AC3Parser::start_parse(uint8_t *_frame, size_t _size)
 {
   HeaderInfo hinfo;
 
-  if (!ac3_header.parse_header(frame, &hinfo))
+  if (!ac3_header.parse_header(_frame, &hinfo))
     return false;
 
-  if (hinfo.frame_size > size)
+  if (hinfo.frame_size > _size)
     return false;
 
   spk = hinfo.spk;
   spk.format = FORMAT_LINEAR;
+  frame = _frame;
   frame_size = hinfo.frame_size;
   bs_type = hinfo.bs_type;
 
+  if (do_crc)
+    if (!crc_check())
+      return false;
+
   bs.set_ptr(frame, bs_type);
+  return true;
+}
+
+bool
+AC3Parser::crc_check()
+{
+  // Note: AC3 uses standard CRC16 polinomial
+
+  uint32_t crc;
+
+  /////////////////////////////////////////////////////////
+  // Check first 5/8 of frame
+  // CRC is initialized by 0 and test result must be also 0.
+  // Syncword (first 2 bytes) is not imcluded to crc calc
+  // but it is included to 5/8 of frame size. So we must 
+  // check 5/8*frame_size - 2 bytes.
+
+  size_t frame_size1 = ((frame_size >> 2) + (frame_size >> 4)) << 1;
+  crc = crc16.calc(0, frame + 2, frame_size1 - 2, bs_type);
+  if (crc) 
+    return false;
+
+  /////////////////////////////////////////////////////////
+  // Check the rest of frame
+  // CRC is initialized by 0 (from previous point) and test
+  // result must be also 0.
+
+  crc = crc16.calc(0, frame + frame_size1, frame_size - frame_size1, bs_type);
+  if (crc) 
+    return false;
+
   return true;
 }
 

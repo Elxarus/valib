@@ -131,6 +131,7 @@ public:
 class AC3Parser : public FrameParser, public AC3Info, public AC3FrameState
 {
 public:
+  bool do_crc;        // do crc check
   bool do_dither;     // do dithering
   bool do_imdct;      // do IMDCT
 
@@ -168,6 +169,7 @@ public:
   // AC3 parse
 
   Speakers  spk;        // output format
+  uint8_t  *frame;      // frame data
   size_t    frame_size; // frame size
   int       bs_type;    // bitstream type
 
@@ -179,6 +181,7 @@ public:
   int block;
 
   bool start_parse(uint8_t *frame, size_t size);
+  bool crc_check();
   bool decode_block();
   bool parse_header();
   bool parse_block();
