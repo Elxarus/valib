@@ -266,6 +266,17 @@ FileParser::load_frame()
   while (1)
   {
     ///////////////////////////////////////////////////////
+    // Load a frame
+
+    uint8_t *pos = buf + buf_pos;
+    uint8_t *end = buf + buf_data;
+    if (stream.load_frame(&pos, end))
+    {
+      buf_pos = pos - buf;
+      return true;
+    }
+
+    ///////////////////////////////////////////////////////
     // Fill the buffer
 
     if (!buf_data || buf_pos >= buf_data)
@@ -280,17 +291,6 @@ FileParser::load_frame()
       buf_pos = 0;
       buf_data = fread(buf, 1, max_buf_size, f);
       if (!buf_data) return false;
-    }
-
-    ///////////////////////////////////////////////////////
-    // Load a frame
-
-    uint8_t *pos = buf + buf_pos;
-    uint8_t *end = buf + buf_data;
-    if (stream.load_frame(&pos, end))
-    {
-      buf_pos = pos - buf;
-      return true;
     }
 
     ///////////////////////////////////////////////////////
