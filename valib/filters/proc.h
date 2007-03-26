@@ -354,11 +354,11 @@ AudioProcessor::get_output_histogram(int _ch, double *_output_histogram, size_t 
 
 inline sample_t
 AudioProcessor::get_max_level()
-{ return in_levels.get_max_level(); }
+{ return out_levels.get_max_level(); }
 
 inline sample_t
 AudioProcessor::get_max_level(int ch)
-{ return in_levels.get_max_level(ch); }
+{ return out_levels.get_max_level(ch); }
 
 inline void     
 AudioProcessor::set_input_order (const int _order[NCHANNELS])
