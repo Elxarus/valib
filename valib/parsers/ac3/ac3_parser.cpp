@@ -126,20 +126,8 @@ AC3Parser::reset()
 bool
 AC3Parser::parse_frame(uint8_t *frame, size_t size)
 {
-  HeaderInfo hinfo;
-
-  if (!ac3_header.parse_header(frame, &hinfo))
+  if (!start_parse(frame, size))
     return false;
-
-  if (hinfo.frame_size > size)
-    return false;
-
-  spk = hinfo.spk;
-  spk.format = FORMAT_LINEAR;
-  frame_size = hinfo.frame_size;
-  bs_type = hinfo.bs_type;
-
-  bs.set_ptr(frame, bs_type);
 
   if (!parse_header())
     return false;
@@ -148,38 +136,6 @@ AC3Parser::parse_frame(uint8_t *frame, size_t size)
     if (!decode_block())
       return false;
 
-  return true;
-}
-
-bool 
-AC3Parser::decode_block()
-{
-  samples_t d = delay;
-  samples_t s = samples;
-  s += (block * AC3_BLOCK_SAMPLES);
-
-  if (block >= AC3_NBLOCKS || !parse_block())
-  {
-    block = AC3_NBLOCKS; // prevent further decoding
-    errors++;
-    return false;
-  }
-  parse_coeff(s);
-
-  if (do_imdct)
-  {
-    int nfchans = spk.lfe()? spk.nch() - 1: spk.nch();
-    for (int ch = 0; ch < nfchans; ch++)
-      if (blksw[ch])
-        imdct.imdct_256(s[ch], delay[ch]);
-      else
-        imdct.imdct_512(s[ch], delay[ch]);
-
-    if (spk.lfe())
-      imdct.imdct_512(s[nfchans], d[nfchans]);
-  }
-
-  block++;
   return true;
 }
 
@@ -230,6 +186,26 @@ AC3Parser::frame_info(char *buf, size_t size) const
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC3 parse
+
+bool
+AC3Parser::start_parse(uint8_t *frame, size_t size)
+{
+  HeaderInfo hinfo;
+
+  if (!ac3_header.parse_header(frame, &hinfo))
+    return false;
+
+  if (hinfo.frame_size > size)
+    return false;
+
+  spk = hinfo.spk;
+  spk.format = FORMAT_LINEAR;
+  frame_size = hinfo.frame_size;
+  bs_type = hinfo.bs_type;
+
+  bs.set_ptr(frame, bs_type);
+  return true;
+}
 
 bool 
 AC3Parser::parse_header()
@@ -376,6 +352,37 @@ AC3Parser::parse_header()
   return true;
 }
 
+bool 
+AC3Parser::decode_block()
+{
+  samples_t d = delay;
+  samples_t s = samples;
+  s += (block * AC3_BLOCK_SAMPLES);
+
+  if (block >= AC3_NBLOCKS || !parse_block())
+  {
+    block = AC3_NBLOCKS; // prevent further decoding
+    errors++;
+    return false;
+  }
+  parse_coeff(s);
+
+  if (do_imdct)
+  {
+    int nfchans = spk.lfe()? spk.nch() - 1: spk.nch();
+    for (int ch = 0; ch < nfchans; ch++)
+      if (blksw[ch])
+        imdct.imdct_256(s[ch], delay[ch]);
+      else
+        imdct.imdct_512(s[ch], delay[ch]);
+
+    if (spk.lfe())
+      imdct.imdct_512(s[nfchans], d[nfchans]);
+  }
+
+  block++;
+  return true;
+}
 
 bool
 AC3Parser::parse_block()

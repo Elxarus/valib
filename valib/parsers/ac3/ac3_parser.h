@@ -178,6 +178,7 @@ public:
 
   int block;
 
+  bool start_parse(uint8_t *frame, size_t size);
   bool decode_block();
   bool parse_header();
   bool parse_block();
