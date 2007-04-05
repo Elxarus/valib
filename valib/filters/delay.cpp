@@ -23,14 +23,15 @@ Delay::Delay()
 double     
 Delay::units2samples(int _units)
 {
+  double sample_rate = spk.is_unknown()? 48000: spk.sample_rate;
   switch (_units)
   {
     case DELAY_SP: return 1.0;
-    case DELAY_MS: return double(spk.sample_rate) /*[Hz]*/ / 1000.0; /*[ms/sec]*/
-    case DELAY_M:  return -1.0 * double(spk.sample_rate) /*[Hz]*/ / sonic_speed; /*[m/s]*/
-    case DELAY_CM: return -1.0 * double(spk.sample_rate) /*[Hz]*/ / sonic_speed  /*[m/s]*/ / 100.0; /*[cm/m]*/
-    case DELAY_FT: return -1.0 * double(spk.sample_rate) /*[Hz]*/ / sonic_speed  /*[m/s]*/ / 3.28;  /*[ft/m]*/
-    case DELAY_IN: return -1.0 * double(spk.sample_rate) /*[Hz]*/ / sonic_speed  /*[m/s]*/ / 39.37; /*[in/m]*/
+    case DELAY_MS: return sample_rate /*[Hz]*/ / 1000.0; /*[ms/sec]*/
+    case DELAY_M:  return -1.0 * sample_rate /*[Hz]*/ / sonic_speed; /*[m/s]*/
+    case DELAY_CM: return -1.0 * sample_rate /*[Hz]*/ / sonic_speed  /*[m/s]*/ / 100.0; /*[cm/m]*/
+    case DELAY_FT: return -1.0 * sample_rate /*[Hz]*/ / sonic_speed  /*[m/s]*/ / 3.28;  /*[ft/m]*/
+    case DELAY_IN: return -1.0 * sample_rate /*[Hz]*/ / sonic_speed  /*[m/s]*/ / 39.37; /*[in/m]*/
   }
   return 1.0;
 }
