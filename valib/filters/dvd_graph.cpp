@@ -247,18 +247,6 @@ DVDGraph::set_spdif_allow_32(bool _spdif_allow_32)
 ///////////////////////////////////////////////////////////
 // SPDIF/DTS mode
 
-bool
-DVDGraph::get_use_dts14() const
-{
-  return spdifer_pt.get_use_dts14();
-}
-void
-DVDGraph::set_use_dts14(bool _use_dts14)
-{
-  spdifer_pt.set_use_dts14(_use_dts14);
-  spdifer_enc.set_use_dts14(_use_dts14);
-}
-
 int
 DVDGraph::get_dts_mode() const
 {
@@ -269,6 +257,18 @@ DVDGraph::set_dts_mode(int _dts_mode)
 {
   spdifer_pt.set_dts_mode(_dts_mode);
   spdifer_enc.set_dts_mode(_dts_mode);
+}
+
+int
+DVDGraph::get_dts_conv() const
+{
+  return spdifer_pt.get_dts_conv();
+}
+void
+DVDGraph::set_dts_conv(int _dts_conv)
+{
+  spdifer_pt.set_dts_conv(_dts_conv);
+  spdifer_enc.set_dts_conv(_dts_conv);
 }
 
 ///////////////////////////////////////////////////////////

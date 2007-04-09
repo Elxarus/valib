@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "bitstream.h"
 #include "spdif_header.h"
 #include "spdif_wrapper.h"
@@ -15,8 +16,8 @@ inline bool is_14bit(int bs_type)
 }
 
 
-SPDIFWrapper::SPDIFWrapper(int _dts_mode, bool _use_dts14)
-: dts_mode(_dts_mode), use_dts14(_use_dts14), spdif_parser(false)
+SPDIFWrapper::SPDIFWrapper(int _dts_mode, int _dts_conv)
+:dts_mode(_dts_mode), dts_conv(_dts_conv), spdif_parser(false)
 {
   const HeaderParser *parsers[] = { &spdif_header, &mpa_header, &ac3_header, &dts_header };
   spdifable.set_parsers(parsers, array_size(parsers));
@@ -109,20 +110,21 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
   /////////////////////////////////////////////////////////
   // Determine output bitstream type and header usage
 
-  bool use_header;
-  int spdif_bs;
-
   if (hdr.spk.format == FORMAT_DTS)
   {
     // DTS frame may grow if conversion to 14bit stream format is used
-    bool frame_grows = use_dts14 && !is_14bit(hdr.bs_type);
+    bool frame_grows = (dts_conv == DTS_CONV_14BIT) && !is_14bit(hdr.bs_type);
+    // DTS frame may shrink if conversion to 16bit stream format is used
+    bool frame_shrinks = (dts_conv == DTS_CONV_16BIT) && is_14bit(hdr.bs_type);
 
     switch (dts_mode)
     {
-    case SPDIF_DTS_WRAPPED:
+    case DTS_MODE_WRAPPED:
       use_header = true;
       if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size - sizeof(spdif_header_s)))
         spdif_bs = BITSTREAM_14LE;
+      else if (frame_shrinks && (raw_size * 7 / 8 <= spdif_frame_size - sizeof(spdif_header_s)))
+        spdif_bs = BITSTREAM_16LE;
       else if (raw_size <= spdif_frame_size - sizeof(spdif_header_s))
         spdif_bs = is_14bit(hdr.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
@@ -136,10 +138,12 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
       }
       break;
 
-    case SPDIF_DTS_PADDED:
+    case DTS_MODE_PADDED:
       use_header = false;
       if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size))
         spdif_bs = BITSTREAM_14LE;
+      else if (frame_shrinks && (raw_size * 7 / 8 <= spdif_frame_size))
+        spdif_bs = BITSTREAM_16LE;
       else if (raw_size <= spdif_frame_size)
         spdif_bs = is_14bit(hdr.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
@@ -153,7 +157,7 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
       }
       break;
 
-    case SPDIF_DTS_AUTO:
+    case DTS_MODE_AUTO:
     default:
       if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size - sizeof(spdif_header_s)))
       {
@@ -161,6 +165,16 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
         spdif_bs = BITSTREAM_14LE;
       }
       else if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size))
+      {
+        use_header = false;
+        spdif_bs = BITSTREAM_14LE;
+      }
+      if (frame_shrinks && (raw_size * 7 / 8 <= spdif_frame_size - sizeof(spdif_header_s)))
+      {
+        use_header = true;
+        spdif_bs = BITSTREAM_14LE;
+      }
+      else if (frame_shrinks && (raw_size * 7 / 8 <= spdif_frame_size))
       {
         use_header = false;
         spdif_bs = BITSTREAM_14LE;
@@ -253,6 +267,28 @@ SPDIFWrapper::stream_info(char *buf, size_t size) const
 {
   char info[1024];
   size_t len = 0;
+
+  char *bitstream = "???";
+  switch (spdif_bs)
+  {
+    case BITSTREAM_16BE: bitstream = "16bit BE"; break;
+    case BITSTREAM_16LE: bitstream = "16bit LE"; break;
+    case BITSTREAM_14BE: bitstream = "14bit BE"; break;
+    case BITSTREAM_14LE: bitstream = "14bit LE"; break;
+  }
+
+  if (!spk.is_unknown())
+  {
+    len += sprintf(info,
+      "Output format: %s %s %iHz\n"
+      "SPDIF format: %s\n"
+      "Bitstream: %s\n"
+      "Frame size: %i\n",
+      spk.format_text(), spk.mode_text(), spk.sample_rate,
+      use_header? "wrapped": "padded",
+      bitstream,
+      spdif_size);
+  }
 
   if (len + 1 > size) len = size - 1;
   memcpy(buf, info, len + 1);

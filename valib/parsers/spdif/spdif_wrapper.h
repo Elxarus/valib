@@ -5,21 +5,21 @@
 #include "parsers\multi_header.h"
 #include "spdif_parser.h"
 
-#define SPDIF_DTS_AUTO    0
-#define SPDIF_DTS_WRAPPED 1
-#define SPDIF_DTS_PADDED  2
+#define DTS_MODE_AUTO    0
+#define DTS_MODE_WRAPPED 1
+#define DTS_MODE_PADDED  2
 
-#define SPDIF_DTS_ASIS    0
-#define SPDIF_DTS_16BIT   1
-#define SPDIF_DTS_14BIT   2
+#define DTS_CONV_NONE    0
+#define DTS_CONV_16BIT   1
+#define DTS_CONV_14BIT   2
 
 class SPDIFWrapper : public FrameParser
 {
 public:
   int  dts_mode;
-  bool use_dts14;
+  int  dts_conv;
 
-  SPDIFWrapper(int dts_mode = SPDIF_DTS_AUTO, bool use_dts14 = false);
+  SPDIFWrapper(int dts_mode = DTS_MODE_AUTO, int dts_conv = DTS_CONV_NONE);
   ~SPDIFWrapper();
 
   HeaderInfo header_info() const { return hdr; }
@@ -51,6 +51,9 @@ protected:
   Speakers    spk;          // output format
   uint8_t    *spdif_frame;  // spdif frame pointer
   size_t      spdif_size;   // spdif frame size
+
+  bool use_header;          // use SPDIF header
+  int spdif_bs;             // SPDIF bitstream type
   
   struct spdif_header_s
   {
