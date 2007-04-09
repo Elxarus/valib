@@ -165,6 +165,22 @@ ParserFilter::get_parser() const
   return parser;
 }
 
+size_t
+ParserFilter::get_info(char *buf, size_t size) const
+{
+  char info[2048];
+  size_t len = 0;
+  
+  len += stream.stream_info(info + len, sizeof(info) - len); 
+  if (parser)
+    len += parser->stream_info(info + len, sizeof(info) - len); 
+
+  if (len + 1 > size) len = size - 1;
+  memcpy(buf, info, len + 1);
+  buf[len] = 0;
+  return len;
+}
+
 
 
 void
