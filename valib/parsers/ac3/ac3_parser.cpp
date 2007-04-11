@@ -96,14 +96,25 @@ bool
 AC3Parser::parse_frame(uint8_t *frame, size_t size)
 {
   if (!start_parse(frame, size))
+  {
+    errors++;
     return false;
+  }
 
   if (!parse_header())
+  {
+    errors++;
     return false;
+  }
 
   while (block < AC3_NBLOCKS)
     if (!decode_block())
+    {
+      errors++;
       return false;
+    }
+
+  frames++;
 
   return true;
 }
@@ -367,7 +378,6 @@ AC3Parser::decode_block()
   if (block >= AC3_NBLOCKS || !parse_block())
   {
     block = AC3_NBLOCKS; // prevent further decoding
-    errors++;
     return false;
   }
   parse_coeff(s);
@@ -613,7 +623,7 @@ AC3Parser::parse_block()
 
   if (lfeon && lfeexpstr != EXP_REUSE)
   {
-    bitalloc |= 5 << ch; // do bit allocation for lfe channel
+    bitalloc |= 1 << 5; // do bit allocation for lfe channel
     lfeexps[0] = bs.get(4);
     if (!parse_exponents(lfeexps + 1, lfeexps[0], lfeexpstr, 2))
       return false;
