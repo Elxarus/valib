@@ -747,7 +747,7 @@ DVDGraph::check_spdif_encode(Speakers _spk) const
   enc_spk.level = 1.0;
 
   // do not encode stereo PCM
-  if (spdif_stereo_pt && enc_spk.mask == MODE_STEREO)
+  if (spdif_stereo_pt && (enc_spk.mask == MODE_STEREO || enc_spk.mask == MODE_MONO)
     return SPDIF_ERR_STEREO_PCM;
 
   // check sample rate
