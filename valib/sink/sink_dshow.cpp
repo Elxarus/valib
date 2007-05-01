@@ -406,7 +406,7 @@ DShowSink::process(const Chunk *chunk)
         sample->SetTime(&begin, 0);
 
 #ifdef DSHOWSINK_LOG_TIMING
-      DbgLog((LOG_TRACE, 3, "<- timestamp: %ims\t%.0fsm", int(begin/10000), chunk->time * 1000));
+      DbgLog((LOG_TRACE, 3, "<- timestamp: %.0fms", chunk->time * 1000));
 #endif
     }
     else
