@@ -129,6 +129,8 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 bool
 AC3Header::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 {
+  static const acmod2mask[] = { 0x80, 0x80, 0xe0, 0xe0, 0xe0, 0xf1, 0xe0, 0xf1 };
+
   /////////////////////////////////////////////////////////
   // 8 bit or 16 bit big endian
   if ((hdr1[0] == 0x0b) && (hdr1[1] == 0x77))
@@ -140,11 +142,15 @@ AC3Header::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 
     // compare headers; we must exclude:
     // * crc (bytes 2 and 3)
-    // * 'compr' field (may occupy last 2 bits of byte 7)
+    // * 'compre' and 'compre' fields
+    // Positions of 'compre' and 'compr' fields are determined by 'acmod'
+    // field. To exclude them we use masking.
+    
+    int mask = acmod2mask[hdr1[6] >> 5];
     return
       hdr1[0] == hdr2[0] && hdr1[1] == hdr2[1] &&
       hdr1[4] == hdr2[4] && hdr1[5] == hdr2[5] && 
-      hdr1[6] == hdr2[6] && (hdr1[7] & 0xfc) == (hdr2[7] & 0xfc);
+      hdr1[6] == hdr2[6] && (hdr1[7] & mask) == (hdr2[7] & mask);
   }
   /////////////////////////////////////////////////////////
   // 16 bit low endian
@@ -157,11 +163,15 @@ AC3Header::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 
     // compare headers; we must exclude:
     // * crc (bytes 2 and 3)
-    // * 'compr' field (may occupy last 2 bits of byte 6)
+    // * 'compre' and 'compre' fields
+    // Positions of 'compre' and 'compr' fields are determined by 'acmod'
+    // field. To exclude them we use masking.
+
+    int mask = acmod2mask[hdr1[7] >> 5];
     return
       hdr1[1] == hdr2[1] && hdr1[0] == hdr2[0] &&
       hdr1[5] == hdr2[5] && hdr1[4] == hdr2[4] && 
-      hdr1[7] == hdr2[7] && (hdr1[6] & 0xfc) == (hdr2[6] & 0xfc);
+      hdr1[7] == hdr2[7] && (hdr1[6] & mask) == (hdr2[6] & mask);
   }
 
   return false;
