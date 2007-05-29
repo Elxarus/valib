@@ -375,17 +375,32 @@ Mixer::calc_matrix()
     }
   }
 
-  // Mix LFE
+  // Mix LFE channel
 
   if (in_mask & out_mask & CH_MASK_LFE) 
      matrix[CH_LFE][CH_LFE] = lfelev;
 
   if (in_mask & ~out_mask & CH_MASK_LFE)
   {
-    if (out_spk.mask & CH_MASK_L)  matrix[CH_LFE][CH_L]  = lfelev;
-    if (out_spk.mask & CH_MASK_R)  matrix[CH_LFE][CH_R]  = lfelev;
-    if (out_spk.mask & CH_MASK_SL) matrix[CH_LFE][CH_SL] = lfelev;
-    if (out_spk.mask & CH_MASK_SR) matrix[CH_LFE][CH_SR] = lfelev;
+    // To preserve the resulting loudness, we should apply sqrt(N) gain when 
+    // mixing LFE channel (N is number of output channels we mix LFE to).
+
+    double lfenorm = 0;
+    if (out_spk.mask & CH_MASK_L)  lfenorm += 1;
+    if (out_spk.mask & CH_MASK_R)  lfenorm += 1;
+    if (out_spk.mask & CH_MASK_SL) lfenorm += 1;
+    if (out_spk.mask & CH_MASK_SR) lfenorm += 1;
+
+    if (lfenorm > 0)
+    {
+      lfenorm = 1.0 / sqrt(lfenorm);
+      if (out_spk.mask & CH_MASK_L)  matrix[CH_LFE][CH_L]  = lfenorm * lfelev;
+      if (out_spk.mask & CH_MASK_R)  matrix[CH_LFE][CH_R]  = lfenorm * lfelev;
+      if (out_spk.mask & CH_MASK_SL) matrix[CH_LFE][CH_SL] = lfenorm * lfelev;
+      if (out_spk.mask & CH_MASK_SR) matrix[CH_LFE][CH_SR] = lfenorm * lfelev;
+    }
+
+    // Mix LFE to the center channel only when it is the only output channel
 
     if (in_mask & CH_MASK_C && out_nfront == 1)  
       matrix[CH_LFE][CH_C]  = lfelev;
