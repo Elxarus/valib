@@ -43,7 +43,7 @@ const char *valib_build_info()
 const char *valib_credits()
 {
   return
-    "libca (former libdts) - DTS decoder linrary\n"
+    "libca (former libdts) - DTS decoder library\n"
     "http://developers.videolan.org/libdca.html\n"
     "\n"
     "ffmpeg - AC3 encoder\n"
@@ -52,6 +52,6 @@ const char *valib_credits()
     "muxman - DVD authoring\n"
     "http://www.mpucoder.com/Muxman\n"
     "\n"
-    "Media Player Classics - best media player\n"
+    "Media Player Classic - best media player\n"
     "http://sourceforge.net/projects/guliverkli\n";
 }
