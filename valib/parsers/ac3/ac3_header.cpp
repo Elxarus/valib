@@ -129,7 +129,7 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 bool
 AC3Header::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 {
-  static const acmod2mask[] = { 0x80, 0x80, 0xe0, 0xe0, 0xe0, 0xf1, 0xe0, 0xf1 };
+  static const int acmod2mask[] = { 0x80, 0x80, 0xe0, 0xe0, 0xe0, 0xf1, 0xe0, 0xf1 };
 
   /////////////////////////////////////////////////////////
   // 8 bit or 16 bit big endian
