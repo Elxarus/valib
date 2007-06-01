@@ -18,10 +18,10 @@ class StreamBuffer;
 // HeaderParser
 // HeaderInfo
 //
-// Abstract interface for scanning and detecting compressed stream and header
-// information structure.
+// Abstract interface for scanning and detecting compressed stream.
+// Header information structure.
 //
-// Sometimes we need to scan the stream without actually decoding. Of course, 
+// Sometimes we need to scan the stream without actual decoding. Of course, 
 // parser can do this, but we don't need most of its features, buffers, tables,
 // etc in this case. For example, application that just detects format of a
 // compressed stream will contain all the code required to decode it and create
@@ -56,8 +56,8 @@ class StreamBuffer;
 // * Stream with unknown frame size (free-format). For this type of stream
 //   frame size is unknown from the header. So we must determine inter-frame
 //   distance. After that we suppose that frame size is constant and expect
-//   next header right after the end of the frame. (Threfore free-format stream
-//   is always constant-bitrate.)
+//   next header right after the end of the frame. Threfore, free-format stream
+//   is always constant-bitrate.
 //
 // Sparse stream is the stream where some gap (or padding) is present in 
 // between of two frames. To locate next syncpoint we should scan input data
@@ -77,7 +77,7 @@ class StreamBuffer;
 // frame_size
 //   Frame size (including the header):
 //   0  - frame size is unknown (free-format stream)
-//   >0 - correct header, frame size is returned
+//   >0 - known frame size
 //
 // scan_size
 //   Use scanning to locate next syncpoint
@@ -87,8 +87,7 @@ class StreamBuffer;
 // nsamples
 //   Number of samples at the given frame.
 //
-//   We can derive current bitrate for known frame size stream from frame size,
-//   stream format and number of samples: 
+//   We can derive current bitrate for known frame size stream as follows:
 //   (*) bitrate = spk.sample_rate * frame_size * 8 / nsamples;
 //   But note actual bitrate may be larger for sparce stream.
 //
@@ -114,7 +113,7 @@ class StreamBuffer;
 //   frame size to be able to parse spdif-padded format.
 //
 // can_parse()
-//   Deternine that we can parse the format given. (Or, that parser can detect
+//   Determine that we can parse the format given. (Or, that parser can detect
 //   this format). For example if some_parser.can_parse(FORMAT_AC3) == true
 //   this parser can parse ac3 format, or can detect in in raw data.
 //   
@@ -125,21 +124,21 @@ class StreamBuffer;
 //   and may lead to memory fault).
 //
 // compare_headers()
-//   Veryfy that both headers belong to the same stream. Some compressed formats
+//   Check that both headers belong to the same stream. Some compressed formats
 //   may determine stream changes with some additional header info (not only
-//   frame size and stream format). Given headers must be correct headers
-//   (checked with frame_size() call). This call may not do all headers checks.
+//   frame size and stream format). Headers given must be correct headers
+//   checked with parse() call, so this call may not do all headers checks.
 //   Note that when headers are equal, format of both headers must be same:
 //
 //   parse_header(phdr1, hdr1);
 //   parse_header(phdr2, hdr2);
-//   if (compare_headers(phdr1, phdr2)
+//   if (compare_headers(phdr1, phdr2))
 //   {
 //     assert(hdr1.spk == hdr2.spk);
 //     assert(hdr1.bs_type == hdr2.bs_type);
 //     assert(hdr1.spdif_type == hdr2.spdif_type);
 //     // frame size may differ for variable bitrate
-//     // nsamples - ?
+//     // nsamples may differ
 //   }
 //
 //   Size of header buffers given must be >= header_size() (it is not verified
@@ -213,8 +212,8 @@ public:
 // * Stream validations
 // * etc... 
 //
-// Unlike HeaderParser interface FrameParser has an internal state and must
-// receive frames in correct order because frames in a stream are almost always
+// Unlike HeaderParser interface, FrameParser has an internal state and must
+// receive frames in correct order, because frames in a stream are almost always
 // related with each other. To prepare parser to receive a new stream and set
 // it into initial state we must call reset().
 //
@@ -222,7 +221,7 @@ public:
 // parser.
 //
 // All other things are very strightforward: we load a frame with help of
-// HeaderParser and give the frame loaded to FrameTransform. FrameTransforn
+// HeaderParser and give the frame loaded to FrameParser. FrameParser
 // does its job and provies access to the transformed data through its
 // interface.
 //
@@ -314,8 +313,8 @@ public:
 // * reliable stream syncronization
 // * frame-based stream walk
 //
-// It is a difference between the size of a frame and frame interval. Frame
-// interval is a distance between consecutive syncpoints. Frame size is size of
+// It is a difference between frame size and frame interval. Frame interval
+// is a distance between consecutive syncpoints. Frame size is size of
 // frame data. Frame interval may be larger than frame size because of SPDIF
 // padding for example.
 //
@@ -340,9 +339,9 @@ public:
 // inter-frame debris (see below).
 // 
 // Debris is all data that do not belong to frames. This includes all data that
-// does not belong to a compressed stream at all and all inter-frame data.
-// Debris is a mechanism to maintain bit-to-bit correctness (so we may
-// construct the original stream back from parsed one). Also it allows us to
+// is not a compressed stream at all and all inter-frame data.
+// Debris is the mechanism to maintain bit-to-bit correctness, so we may
+// construct the original stream back from parsed one. Also it allows us to
 // create stream detector, so we can process uncompressed data in one way and
 // compessed in another. For instance, it is required for PCM/SPDIF detection
 // and helps to handle SPDIF <-> PCM transitions in a correct way.
@@ -358,7 +357,7 @@ public:
 //  +   -   +   +   frame with debris
 //  +   +   -   +   sync on a new stream
 //  +   +   +   +   sync on a new stream with debris (2)
-// (1) - all input buffer is known to be processed after load() call
+// (1) - all input buffer data is known to be processed after load() call
 // (2) - state is possible but not used in curent implementation.
 //
 // Prohibited states:
@@ -407,7 +406,7 @@ public:
 // =================
 //
 // For unknown frame size and SPDIF stream we cannot load the last frame of
-// the stream correctly!
+// the stream correctly! (14bit DTS falls into this condition)
 //
 // If stream ends after the last frame the last frame is not loaded at all.
 // It is because we must load full inter-stream interval but we cannot do this
@@ -423,7 +422,7 @@ public:
 //
 // We can correctly handle switch between different types of SPDIF stream, but
 // we cannot correctly handle switch between SPDIF with unknown frame size to
-// non-SPDIF stream (we loose at least one frame of a new stream):
+// non-SPDIF stream, and we loose at least one frame of a new stream:
 //
 //                +------------ frame interval --------+
 //                V                                    V

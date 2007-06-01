@@ -12,7 +12,7 @@ public:
   // HeaderParser overrides
   // Max frame size for SPDIF 8192
   // Header size, min and max frame sizes are determined
-  // by the content:
+  // by the number of samples the frame contains:
   //
   //       header   min    max
   // ------------------------

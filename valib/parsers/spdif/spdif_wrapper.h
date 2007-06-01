@@ -1,3 +1,14 @@
+/*
+  SPDIF wrapper class
+  Converts raw AC3/MPA/DTS stream to SPDIF stream.
+
+  Does raw stream output if the stream given cannot be spdifed (high-bitrate
+  DTS for example). Can convert DTS stream type to 14/16 bits. Supports padded
+  and wrapped SPDIF stream types. Can re-wrap SPDIF stream with conversion
+  between SPDIF stream types.
+*/
+
+
 #ifndef SPDIF_WRAPPER_H
 #define SPDIF_WRAPPER_H
 
