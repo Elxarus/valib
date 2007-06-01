@@ -1,0 +1,65 @@
+/*
+   DecoderGraph
+   Simple decoding graph that accepts PCM/SPDIF/encoded formats at input and
+   allows audio processing. May be used instead of DVDGraph when we don't need
+   SPDIF output and output format agreement.
+*/
+
+#ifndef DECODER_GRAPH_H
+#define DECODER_GRAPH_H
+
+#include "filter_graph.h"
+#include "filters\decoder.h"
+#include "filters\spdifer.h"
+#include "filters\proc.h"
+
+class DecoderGraph : public FilterGraph
+{
+public:
+  Despdifer      despdifer;
+  AudioDecoder   dec;
+  AudioProcessor proc;
+
+public:
+  DecoderGraph();
+
+  /////////////////////////////////////////////////////////////////////////////
+  // DecoderGraph interface
+
+  // User format
+  bool query_user(Speakers user_spk) const;
+  bool set_user(Speakers user_spk);
+  Speakers get_user() const;
+
+  // Summary information
+  int get_info(char *_buf, size_t _len) const;
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Filter overrides
+
+  virtual void reset();
+
+protected:
+  Speakers user_spk;
+
+  enum state_t 
+  { 
+    state_despdif,
+    state_decode,
+    state_proc,
+  };            
+
+  /////////////////////////////////////////////////////////////////////////////
+  // FilterGraph overrides
+
+  virtual const char *get_name(int node) const;
+  virtual Filter *init_filter(int node, Speakers spk);
+  virtual int get_next(int node, Speakers spk) const;
+
+  // helper functions
+  int check_spdif_passthrough(Speakers spk) const;
+  int check_spdif_encode(Speakers spk) const;
+  Speakers agree_output_pcm(Speakers spk, Speakers user_spk) const;
+};
+
+#endif

@@ -316,6 +316,14 @@ SOURCE=..\valib\filters\decoder.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\decoder_graph.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\decoder_graph.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\dejitter.cpp
 # End Source File
 # Begin Source File

@@ -22,6 +22,7 @@ int test_despdifer(Log *log);
 int test_detector(Log *log);
 
 int test_filtergraph(Log *log);
+int test_decodergraph(Log *log);
 int test_dvdgraph(Log *log);
 
 int test_proc(Log *log);
@@ -55,6 +56,7 @@ int main(int argc, char **argv)
   test_proc(&log);
 
   test_filtergraph(&log);
+  test_decodergraph(&log);
   test_dvdgraph(&log);
 
   log.msg("-----------------------------------------------------------");

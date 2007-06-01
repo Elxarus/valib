@@ -104,6 +104,10 @@ SOURCE=.\test_crc.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_decodergraph.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_demux.cpp
 # End Source File
 # Begin Source File
@@ -196,6 +200,14 @@ SOURCE=..\valib\filters\decoder.cpp
 # Begin Source File
 
 SOURCE=..\valib\filters\decoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\decoder_graph.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\decoder_graph.h
 # End Source File
 # Begin Source File
 
