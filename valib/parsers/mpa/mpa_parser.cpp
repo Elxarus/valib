@@ -128,7 +128,7 @@ MPAParser::crc_check()
 bool 
 MPAParser::parse_header(const uint8_t *frame, size_t size)
 {
-  // 8 bit or 16 bit big endian steram sync
+  // 8 bit or 16 bit big endian stream sync
   if ((frame[0] == 0xff)         && // sync
      ((frame[1] & 0xf0) == 0xf0) && // sync
      ((frame[1] & 0x06) != 0x00) && // layer
@@ -140,7 +140,7 @@ MPAParser::parse_header(const uint8_t *frame, size_t size)
     bsi.bs_type = BITSTREAM_8;
   }
   else
-  // 16 bit low endian steram sync
+  // 16 bit low endian stream sync
   if ((frame[1] == 0xff)         && // sync
      ((frame[0] & 0xf0) == 0xf0) && // sync
      ((frame[0] & 0x06) != 0x00) && // layer

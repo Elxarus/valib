@@ -269,7 +269,7 @@ PESDemux_ref::streaming(uint8_t *_buf, int len)
             subheader[1] = header[pos-2];
             subheader[2] = header[pos-1];
           }
-          // LPCM substeam
+          // LPCM substream
           if ((current_substream & 0xf0) == 0xa0)
           {
             pos += 6;
@@ -587,7 +587,7 @@ PESDemux_ref::packet(uint8_t *buf, int len, int *gone)
             subheader[1] = header[pos-2];
             subheader[2] = header[pos-1];
           }
-          // LPCM substeam
+          // LPCM substream
           if ((substream & 0xf0) == 0xa0)
           {
             pos += 6;

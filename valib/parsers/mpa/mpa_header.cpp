@@ -77,7 +77,7 @@ MPAHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
   // so first we check big endian as most used and only
   // then try low endian
 
-  // 8 bit or 16 bit big endian steram sync
+  // 8 bit or 16 bit big endian stream sync
   if ((hdr[0] == 0xff)         && // sync
      ((hdr[1] & 0xf0) == 0xf0) && // sync
      ((hdr[1] & 0x06) != 0x00) && // layer
@@ -89,7 +89,7 @@ MPAHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     bs_type = BITSTREAM_8;
   }
   else
-  // 16 bit low endian steram sync
+  // 16 bit low endian stream sync
   if ((hdr[1] == 0xff)         && // sync
      ((hdr[0] & 0xf0) == 0xf0) && // sync
      ((hdr[0] & 0x06) != 0x00) && // layer
@@ -159,7 +159,7 @@ MPAHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
   // * padding_bit
   // * private_bit
 
-  // 8 bit or 16 bit big endian steram sync
+  // 8 bit or 16 bit big endian stream sync
   if ((hdr1[0] == 0xff)         && // sync
      ((hdr1[1] & 0xf0) == 0xf0) && // sync
      ((hdr1[1] & 0x06) != 0x00) && // layer
@@ -173,7 +173,7 @@ MPAHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       hdr1[3] == hdr2[3];
   }
   else
-  // 16 bit low endian steram sync
+  // 16 bit low endian stream sync
   if ((hdr1[1] == 0xff)         && // sync
      ((hdr1[0] & 0xf0) == 0xf0) && // sync
      ((hdr1[0] & 0x06) != 0x00) && // layer

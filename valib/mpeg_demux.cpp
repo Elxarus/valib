@@ -376,7 +376,7 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
           // AC3/DTS substream (3 bytes subheader)
           if ((substream & 0xf0) == 0x80)
             REQUIRE(pos + 3);
-          // LPCM substeam (6 bytes subheader)
+          // LPCM substream (6 bytes subheader)
           if ((substream & 0xf0) == 0xa0)
             REQUIRE(pos + 6);
         }

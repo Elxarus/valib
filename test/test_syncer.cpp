@@ -92,10 +92,10 @@ static bool mpa_sync(const uint8_t *_buf)
 
 static bool ac3_sync(const uint8_t *_buf)
 {
-  // 8 bit or 16 bit big endian steram sync
+  // 8 bit or 16 bit big endian stream sync
   if ((_buf[0] == 0x0b) && (_buf[1] == 0x77))
     return true;
-  // 16 bit low endian steram sync
+  // 16 bit low endian stream sync
   else if ((_buf[1] == 0x0b) && (_buf[0] == 0x77))
     return true;
   else 

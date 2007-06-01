@@ -1,3 +1,14 @@
+/*
+  DVDGraph
+  Audio decoder and processor with SPDIF support.
+
+  Suports following input formats: PCM/SPDIF/PES/compressed. Supports SPDIF
+  passthrough output and AC3 encoding on the fly. Can query a sink about
+  format support and find closest match to the user wish. Can detect SPDIF
+  stream in PCM data (WAV/DTS format).  
+*/
+
+
 #ifndef DVD_GRAPH_H
 #define DVD_GRAPH_H
 
@@ -172,7 +183,5 @@ protected:
   int check_spdif_encode(Speakers spk) const;
   Speakers agree_output_pcm(Speakers spk, Speakers user_spk) const;
 };
-
-
 
 #endif

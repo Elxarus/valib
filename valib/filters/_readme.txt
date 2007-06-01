@@ -1,7 +1,8 @@
 This directory contains audio processing filters (Filter class descendants)
 
 Top-level filters are:
-  DVDDecoder: complete audio decoder and processor
+  DecoderGraph: simple audio decoder and processor
+  DVDDecoder: audio decoder and processor with SPDIF support
   AudioDecoder: universal audio decoder
   AudioProcessor: all-in-one audio processor
 

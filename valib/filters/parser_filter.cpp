@@ -243,9 +243,8 @@ ParserFilter::process(const Chunk *_chunk)
     }
     else if (flushing)
     {
-      // if we did not start a stream we must forget about current stream on 
-      // flushing and drop data currently buffered (flushing state is also
-      // dropped so we do not pass eos event in this case)
+      // if we did not start a stream we must drop data currently buffered
+      // (flushing state is also dropped so we do not pass eos event in this case)
 
       // it is implied that reset() does following:
       // * spk = spk_unknown;

@@ -1,6 +1,6 @@
 /*
   ParserFilter
-  Uses parser to trabsform the stream
+  Uses parser to transform the stream.
 */
 
 #ifndef PARSER_FILTER_H
