@@ -87,14 +87,14 @@ protected:
   Speakers out_spk;  // actual output format
 
   // filters
-  Converter  conv1;
+  Converter  in_conv;
   Levels     in_levels;
   Mixer      mixer;
   BassRedir  bass_redir;
   AGC        agc;
   Delay      delay;
   Levels     out_levels;
-  Converter  conv2;
+  Converter  out_conv;
 
   FilterChain chain;
   bool rebuild_chain();
@@ -222,11 +222,11 @@ public:
 
 inline void     
 AudioProcessor::get_input_order(int _order[NCHANNELS])
-{ conv1.get_order(_order); }
+{ in_conv.get_order(_order); }
 
 inline void     
 AudioProcessor::get_output_order(int _order[NCHANNELS])
-{ conv2.get_order(_order); }
+{ out_conv.get_order(_order); }
 
 inline bool     
 AudioProcessor::get_auto_gain()
@@ -362,11 +362,11 @@ AudioProcessor::get_max_level(int ch)
 
 inline void     
 AudioProcessor::set_input_order (const int _order[NCHANNELS])
-{ conv1.set_order(_order); }
+{ in_conv.set_order(_order); }
 
 inline void     
 AudioProcessor::set_output_order(const int _order[NCHANNELS])
-{ conv2.set_order(_order); }
+{ out_conv.set_order(_order); }
 
 inline void     
 AudioProcessor::set_auto_gain(bool _auto_gain)

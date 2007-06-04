@@ -7,7 +7,7 @@ static const int format_mask =
   FORMAT_MASK_PCMFLOAT;
 
 AudioProcessor::AudioProcessor(size_t _nsamples)
-:conv1(_nsamples), mixer(_nsamples), conv2(_nsamples)
+:in_conv(_nsamples), mixer(_nsamples), out_conv(_nsamples)
 {
   user_spk = spk_unknown;
   rebuild_chain();
@@ -107,14 +107,14 @@ AudioProcessor::rebuild_chain()
   // format conversion
   if (in_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_front(&conv1, "PCM->Linear converter"));
-    FILTER_SAFE(conv1.set_format(FORMAT_LINEAR));
+    FILTER_SAFE(chain.add_front(&in_conv, "PCM->Linear converter"));
+    FILTER_SAFE(in_conv.set_format(FORMAT_LINEAR));
   }
 
   if (out_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_back(&conv2, "Linear->PCM converter"));
-    FILTER_SAFE(conv2.set_format(out_spk.format));
+    FILTER_SAFE(chain.add_back(&out_conv, "Linear->PCM converter"));
+    FILTER_SAFE(out_conv.set_format(out_spk.format));
   }
 
   FILTER_SAFE(chain.set_input(in_spk));
