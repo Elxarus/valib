@@ -48,6 +48,7 @@ DVDGraph::set_user(Speakers _user_spk)
     user_spk = _user_spk;
     rebuild_node(state_proc);
     rebuild_node(state_proc_enc);
+    rebuild_node(state_detector);
   }
 
   return true;
@@ -85,6 +86,7 @@ DVDGraph::set_query_sink(bool _query_sink)
 {
   query_sink = _query_sink;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 
@@ -116,6 +118,7 @@ DVDGraph::set_spdif(bool _use_spdif, int _spdif_pt, bool _spdif_as_pcm, bool _sp
   spdif_encode = _spdif_encode;
   spdif_stereo_pt = _spdif_stereo_pt;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 bool
@@ -129,6 +132,7 @@ DVDGraph::set_use_spdif(bool _use_spdif)
 {
   use_spdif = _use_spdif;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 int
@@ -142,6 +146,7 @@ DVDGraph::set_spdif_pt(int _spdif_pt)
 {
   spdif_pt = _spdif_pt;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 bool
@@ -155,6 +160,7 @@ DVDGraph::set_spdif_as_pcm(bool _spdif_as_pcm)
 {
   spdif_as_pcm = _spdif_as_pcm;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 bool
@@ -168,6 +174,7 @@ DVDGraph::set_spdif_encode(bool _spdif_encode)
 {
   spdif_encode = _spdif_encode;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 bool
@@ -181,6 +188,7 @@ DVDGraph::set_spdif_stereo_pt(bool _spdif_stereo_pt)
 {
   spdif_stereo_pt = _spdif_stereo_pt;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 ///////////////////////////////////////////////////////////
@@ -194,6 +202,7 @@ DVDGraph::set_spdif_sr(bool _spdif_check_sr, bool _spdif_allow_48, bool _spdif_a
   spdif_allow_44 = _spdif_allow_44;
   spdif_allow_32 = _spdif_allow_32;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 bool
@@ -206,6 +215,7 @@ DVDGraph::set_spdif_check_sr(bool _spdif_check_sr)
 {
   spdif_check_sr = _spdif_check_sr;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 bool
@@ -218,6 +228,7 @@ DVDGraph::set_spdif_allow_48(bool _spdif_allow_48)
 {
   spdif_allow_48 = _spdif_allow_48;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 bool
@@ -230,6 +241,7 @@ DVDGraph::set_spdif_allow_44(bool _spdif_allow_44)
 {
   spdif_allow_44 = _spdif_allow_44;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 bool
@@ -242,6 +254,7 @@ DVDGraph::set_spdif_allow_32(bool _spdif_allow_32)
 {
   spdif_allow_32 = _spdif_allow_32;
   invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 ///////////////////////////////////////////////////////////
@@ -257,6 +270,8 @@ DVDGraph::set_dts_mode(int _dts_mode)
 {
   spdifer_pt.set_dts_mode(_dts_mode);
   spdifer_enc.set_dts_mode(_dts_mode);
+  invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 int
@@ -269,6 +284,8 @@ DVDGraph::set_dts_conv(int _dts_conv)
 {
   spdifer_pt.set_dts_conv(_dts_conv);
   spdifer_enc.set_dts_conv(_dts_conv);
+  invalidate_chain();
+  rebuild_node(state_detector);
 }
 
 ///////////////////////////////////////////////////////////
