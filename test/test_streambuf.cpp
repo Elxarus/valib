@@ -146,8 +146,11 @@ public:
     return log->close_group();
   }
 
+
   int passthrough(const char *filename, const HeaderParser *hparser, int file_streams, int file_frames)
   {
+    const int chunk_size[] = { 0, 1, 2, hparser->max_frame_size(), hparser->max_frame_size() + 1, hparser->max_frame_size() - 1 };
+
     AutoFile f(filename);
     if (!f.is_open())
       return log->err("Cannot open file %s", filename);
@@ -159,9 +162,19 @@ public:
     uint8_t *buf = new uint8_t[buf_size];
     f.read(buf, buf_size);
 
+    streambuf.set_parser(hparser);
+    for (int i = 0; i < array_size(chunk_size); i++)
+      passthrough_int(buf, buf_size, file_streams, file_frames, chunk_size[i]);
+
+    delete buf;
+    return 0;
+  }
+
+  int passthrough_int(uint8_t *buf, int buf_size, int file_streams, int file_frames, int chunk_size)
+  {
     // setup pointers
     uint8_t *ptr = buf;
-    uint8_t *end = ptr + buf_size;
+    uint8_t *end = buf + buf_size;
     uint8_t *ref_ptr = buf;
 
     uint8_t *frame;
@@ -175,57 +188,67 @@ public:
     int streams = 0;
     bool data_differ = false;
 
-    streambuf.set_parser(hparser);
-    while (ptr < end)
+    streambuf.reset();
+    while (ptr < buf + buf_size)
     {
-      // process data
-      streambuf.load(&ptr, end);
-
-      // count frames and streams
-      if (streambuf.is_new_stream())   streams++;
-      if (streambuf.is_frame_loaded()) frames++;
-
-      // get data
-      debris      = streambuf.get_debris();
-      debris_size = streambuf.get_debris_size();
-      frame       = streambuf.get_frame();
-      frame_size  = streambuf.get_frame_size();
-
-      // check bounds
-      if (ref_ptr + debris_size + frame_size > end)
+      if (chunk_size)
       {
-        log->err("Frame ends after the end of the reference file");
-        break; // while (streambuf.load_frame(&ptr, end))
+        end = ptr + chunk_size;
+        if (end > buf + buf_size)
+          end = buf + buf_size;
       }
 
-      // compare debris
-      for (i = 0; i < debris_size; i++)
-        if (ref_ptr[i] != debris[i])
+      while (ptr < end)
+      {
+        // process data
+        streambuf.load(&ptr, end);
+
+        // count frames and streams
+        if (streambuf.is_new_stream())   streams++;
+        if (streambuf.is_frame_loaded()) frames++;
+
+        // get data
+        debris      = streambuf.get_debris();
+        debris_size = streambuf.get_debris_size();
+        frame       = streambuf.get_frame();
+        frame_size  = streambuf.get_frame_size();
+
+        // check bounds
+        if (ref_ptr + debris_size + frame_size > end)
         {
-          data_differ = true;
-          log->err("Debris differ at stream/frame %i/%i, pos %i", streams, frames, ref_ptr - buf + i);
-          break;
+          log->err("Frame ends after the end of the reference file");
+          break; // while (streambuf.load_frame(&ptr, end))
         }
 
-      ref_ptr += debris_size;
-      if (data_differ)
-        break;
+        // compare debris
+        for (i = 0; i < debris_size; i++)
+          if (ref_ptr[i] != debris[i])
+          {
+            data_differ = true;
+            log->err("Debris differ at stream/frame %i/%i, pos %i", streams, frames, ref_ptr - buf + i);
+            break;
+          }
 
-      // compare frame data
-      for (i = 0; i < frame_size; i++)
-        if (ref_ptr[i] != frame[i])
-        {
-          data_differ = true;
-          log->err("Frame data differ at stream/frame %i/%i, pos %i", streams, frames, ref_ptr - buf + i);
+        ref_ptr += debris_size;
+        if (data_differ)
           break;
-        }
 
-      ref_ptr += frame_size;
-      if (data_differ)
-        break;
+        // compare frame data
+        for (i = 0; i < frame_size; i++)
+          if (ref_ptr[i] != frame[i])
+          {
+            data_differ = true;
+            log->err("Frame data differ at stream/frame %i/%i, pos %i", streams, frames, ref_ptr - buf + i);
+            break;
+          }
 
-      // zap the frame buffer to simulate in-place processing
-      memset(frame, 0, frame_size);
+        ref_ptr += frame_size;
+        if (data_differ)
+          break;
+
+        // zap the frame buffer to simulate in-place processing
+        memset(frame, 0, frame_size);
+      }
     }
 
     if (!data_differ && file_streams > 0 && streams != file_streams)
@@ -234,7 +257,6 @@ public:
     if (!data_differ && file_frames > 0 && frames != file_frames)
       log->err("Wrong number of frames; found: %i, but must be %i", frames, file_frames);
 
-    delete buf;
     return log->get_errors();
   }
 
