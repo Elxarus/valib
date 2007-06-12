@@ -58,11 +58,10 @@ AudioProcessor::get_user() const
 Speakers 
 AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
 {
-  Speakers result = _in_spk;
-
   if (!query_input(_in_spk) || !query_user(_user_spk))
     return spk_unknown;
 
+  Speakers result = _in_spk;
   if (_user_spk.format != FORMAT_UNKNOWN)
   {
     result.format = _user_spk.format;
@@ -72,8 +71,10 @@ AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
   if (_user_spk.mask)
     result.mask = _user_spk.mask;
 
-  if (_user_spk.relation)
-    result.relation = _user_spk.relation;
+  if (_user_spk.sample_rate)
+    result.sample_rate = _user_spk.sample_rate;
+
+  result.relation = _user_spk.relation;
 
   return result;
 }

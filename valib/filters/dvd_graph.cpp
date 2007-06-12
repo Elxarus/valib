@@ -799,11 +799,14 @@ DVDGraph::agree_output_pcm(Speakers _spk, Speakers _user_spk) const
     _spk.format = _user_spk.format;
     _spk.level = _user_spk.level;
   }
+
   if (_user_spk.mask)
     _spk.mask = _user_spk.mask;
 
-  if (_user_spk.relation)
-    _spk.relation = _user_spk.relation;
+  if (_user_spk.sample_rate)
+    _spk.mask = _user_spk.sample_rate;
+
+  _spk.relation = _user_spk.relation;
 
   // Query direct user format
 
