@@ -16,15 +16,21 @@
     stereo 16bit PCM .WAV and .RAW files will be characterized with the same 
     format.
 
-    There are two special audio formats: FORMAT_UNKNOWN and FORMAT_LINEAR.
+    There are three special audio formats: 
+    * FORMAT_UNKNOWN
+    * FORMAT_LINEAR
+    * FORMAT_RAWDATA
 
     FORMAT_UNKNOWN may have two purposes: 
-    1) to indicate an error happen on previous processing stage, so output 
-       data is erroneous. No other format parameters have meaning in this case.
-    2) to indicate general binary data block with unknown data format. It
-       may be used for automatic format detection. Some other format parameters
-       may have meaning in this case (sample_rate for example, because it may 
-       not be determined in some cases).
+    1) indicate an error happen on previous processing stage, so output data
+       is erroneous.
+    2) indicate uninitialized state of the filter.
+    No format parameters have meaning for unknown format.
+
+    FORMAT_RAWDATA: indicates general binary data block with unknown data
+    format. It may be used for automatic format detection. Some other format
+    parameters may have meaning in this case (sample_rate for example, because
+    it may not be determined in some cases).
 
     FORMAT_LINEAR: most of internal processing is done with this format.
 
@@ -259,12 +265,12 @@ public:
     set_unknown();
   };
 
-  Speakers(int _format, int _mask, int _sample_rate, sample_t _level = 1.0, int _relation = NO_RELATION)
+  Speakers(int _format, int _mask, int _sample_rate, sample_t _level = -1, int _relation = NO_RELATION)
   {
     set(_format, _mask, _sample_rate, _level, _relation);
   }
 
-  inline void set(int format, int mask, int sample_rate, sample_t level = 1.0, int relation = NO_RELATION);
+  inline void set(int format, int mask, int sample_rate, sample_t level = -1, int relation = NO_RELATION);
   inline void set_unknown();
 
   inline bool is_unknown() const;
@@ -361,6 +367,13 @@ Speakers::set(int _format, int _mask, int _sample_rate, sample_t _level, int _re
   mask = _mask;
   sample_rate = _sample_rate;
   level = _level;
+  if (level < 0) switch (format)
+  {
+    case FORMAT_PCM16: case FORMAT_PCM16_BE: level = 32787; break;
+    case FORMAT_PCM24: case FORMAT_PCM24_BE: level = 8388607; break;
+    case FORMAT_PCM32: case FORMAT_PCM32_BE: level = 2147483647; break;
+    default: level = 1.0;
+  }
   relation = _relation;
 }
 
