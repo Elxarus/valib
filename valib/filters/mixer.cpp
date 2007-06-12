@@ -213,7 +213,7 @@ Mixer::calc_matrix()
       matrix[i][j] = 0;
 
   // Dolby modes are backwards-compatible
-  if (in_dolby & out_dolby)
+  if (in_dolby && out_dolby)
   {
     matrix[CH_L][CH_L] = 1;
     matrix[CH_R][CH_R] = 1;
@@ -324,8 +324,8 @@ Mixer::calc_matrix()
     if (voice_control_allowed && out_nfront != 2)
     {
       // C' = clev * (L + R) * LEVEL_3DB
-      matrix[CH_L][CH_M] = clev * LEVEL_3DB;
-      matrix[CH_R][CH_M] = clev * LEVEL_3DB;
+      matrix[CH_L][CH_C] = clev * LEVEL_3DB;
+      matrix[CH_R][CH_C] = clev * LEVEL_3DB;
     }
 
     if (expand_stereo_allowed && in_nfront == 2 && out_nrear)
