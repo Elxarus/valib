@@ -158,6 +158,7 @@ MPAHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
   // * bitrate_index (may change for VBR stream)
   // * padding_bit
   // * private_bit
+  // * mode & mode_extension (stereo <-> joint-stereo switch is possible)
 
   // 8 bit or 16 bit big endian stream sync
   if ((hdr1[0] == 0xff)         && // sync
@@ -170,7 +171,7 @@ MPAHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       hdr1[0] == hdr2[0] && 
       hdr1[1] == hdr2[1] &&
       (hdr1[2] & 0x0c) == (hdr2[2] & 0x0c) && 
-      hdr1[3] == hdr2[3];
+      (hdr1[3] & 0x0f) == (hdr2[3] & 0x0f);
   }
   else
   // 16 bit low endian stream sync
@@ -184,7 +185,7 @@ MPAHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       hdr1[1] == hdr2[1] && 
       hdr1[0] == hdr2[0] &&
       (hdr1[3] & 0x0c) == (hdr2[3] & 0x0c) && 
-      hdr1[2] == hdr2[2];
+      (hdr1[2] & 0x0f) == (hdr2[2] & 0x0f);
   }
   else
     return false;
