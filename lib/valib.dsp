@@ -244,10 +244,6 @@ SOURCE=..\valib\rng.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\sink.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\spk.cpp
 # End Source File
 # Begin Source File
@@ -697,6 +693,14 @@ SOURCE=..\valib\source\raw_source.cpp
 # Begin Source File
 
 SOURCE=..\valib\source\raw_source.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\wav_source.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\wav_source.h
 # End Source File
 # End Group
 # End Target
