@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "parser.h"
 #include "file_parser.h"
 
 #define swab16(x) (((x) >> 8) & 0xff | (((x) & 0xff) << 8))
@@ -37,7 +38,7 @@ FileParser::FileParser(Parser *_parser, const char *_filename, int _max_scan)
     open(_filename);
 }
 
-void 
+void
 FileParser::reset()
 {
   parser->reset();
@@ -52,7 +53,7 @@ FileParser::~FileParser()
 }
 
 
-bool 
+bool
 FileParser::open(const char *_filename)
 {
   if (!buf) return false;
@@ -70,10 +71,10 @@ FileParser::open(const char *_filename)
   return true;
 }
 
-void 
+void
 FileParser::close()
 {
-  if (f) 
+  if (f)
   {
     fclose(f);
     f = 0;
@@ -97,7 +98,7 @@ FileParser::close()
   inverse = false;
 }
 
-bool 
+bool
 FileParser::probe()
 {
   if (!f) return false;
@@ -216,7 +217,7 @@ FileParser::stats(int nframes)
   errors_overhead += demux.errors - old_demux_errors;
 }
 
-void 
+void
 FileParser::set_mpeg_stream(int stream, int substream)
 {
   demux.stream = stream;
@@ -227,7 +228,7 @@ FileParser::set_mpeg_stream(int stream, int substream)
 
 void
 FileParser::seek(int pos)
-{ 
+{
   if (inverse) pos &= ~1;
   fseek(f, pos, SEEK_SET);
   reset();
@@ -235,7 +236,7 @@ FileParser::seek(int pos)
 
 void
 FileParser::seek(double pos, units_t units)
-{ 
+{
   int abs_pos = 0;
 
   switch (units)
@@ -243,7 +244,7 @@ FileParser::seek(double pos, units_t units)
     case bytes:    seek(int(pos)); return;
     case relative: seek(int(pos * filesize)); return;
   }
-  
+
   if (frame_size && frame_samples)
     switch (units)
     {
@@ -259,7 +260,7 @@ FileParser::get_pos()
   return f? ftell(f) - buf_data + buf_pos: 0;
 }
 
-double 
+double
 FileParser::get_pos(units_t units)
 {
   double pos = get_pos();
@@ -282,7 +283,7 @@ FileParser::get_pos(units_t units)
 }
 
 
-int  
+int
 FileParser::load_frame()
 {
   int scan = 0;
@@ -307,7 +308,7 @@ FileParser::load_frame()
   return false;
 }
 
-bool 
+bool
 FileParser::fill_buf()
 {
   if (!f) return false;

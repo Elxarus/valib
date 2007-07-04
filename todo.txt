@@ -1,26 +1,15 @@
 First order
 ===========
 
-* Write Parser-to-Filter wrapper class, use it instead of AudioDecoder in 
-  DVDDecoder. Remove AudioDecoder class.
 * Inherit FileParser class from Source class.
 * Check Sync class timing
 * CPUMeter may not work in some cases??? See message from SBN 02.04.2004
-* New: Despdifer to demux input SPDIFed stream.
-?* Rewrite AudioDecoder & DVDDecoder classes to reorganide decoding process.
-  AudioDecoder should understand PCM/PES/SPDIF/MPA/AC3/DTS/[other formats].
-  It also should show internal format for containter streams. It should have
-  an option to scan PCM input for SPDIF stream that it can possibly contain
-  (required to directly play WAV/DTS and WAV/AC3 files prepared for DTS(AC3)/CD.
-  DVDDecoder should support SPDIF output, SPDIF passthrough, and decode modes.
 * clev, slev, lfelev mixing coefs locking
-* expand parsers format report
 * ac3 encoder test: what is 'strange sample'?
 * ac3dec: add SPDIF output
 * AudioDecoder SPDIF test: add MPA, DTS, PES/AC3, PES/MPA, PES/DTS
 * New: out-of-bounds test for filters (update PCM passthrough test)
 * New: Test: correct filter timstamp passthrough
-* Find classes to make tests for
 
 Tests
 =====
@@ -32,11 +21,6 @@ Think about
 * think about: cross-platform time measurement (look for liba52 for reference)
 * think about: plugin interface
   (main problem is how to set external filter's parameters and UI)
-* think about: universal parameter interface
-* think about: how to make customizable user interface
-* think about: how to use the library in other projects 
-  (include directories, required files)
-* think about: what to do with A52Parser class
 * think about: optimal dynamic range compressor based on gathered statistics
   (after Loudness histogram filter)
 
@@ -91,3 +75,13 @@ Done
 +* Tests with negative results as normal result (crash tests for example)
 +* MPEGDemux test: add MPEG1 stream test
 +* MPEGDemux test: add DTS-PES test
++* Write Parser-to-Filter wrapper class, use it instead of AudioDecoder in 
+  DVDDecoder. Remove AudioDecoder class.
++* New: Despdifer to demux input SPDIFed stream.
++* Rewrite AudioDecoder & DVDDecoder classes to reorganide decoding process.
+  AudioDecoder should understand PCM/PES/SPDIF/MPA/AC3/DTS/[other formats].
+  It also should show internal format for containter streams. It should have
+  an option to scan PCM input for SPDIF stream that it can possibly contain
+  (required to directly play WAV/DTS and WAV/AC3 files prepared for DTS(AC3)/CD.
+  DVDDecoder should support SPDIF output, SPDIF passthrough, and decode modes.
++* expand parsers format report

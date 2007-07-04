@@ -1,6 +1,0 @@
-* Bit counting using BA_BitCount is something bad
-* Multichannel test
-
-+* Samples test (old one is commented now)
-+* Convert AC3Enc to Filter
--* Add SPDIF output support
