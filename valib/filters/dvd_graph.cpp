@@ -12,6 +12,7 @@ DVDGraph::DVDGraph(const Sink *_sink)
   spdif_as_pcm = false;
   spdif_encode = true;
   spdif_stereo_pt = true;
+  spdif_bitrate = 448000;
 
   spdif_check_sr = false;
   spdif_allow_48 = true;
@@ -189,6 +190,20 @@ DVDGraph::set_spdif_stereo_pt(bool _spdif_stereo_pt)
   spdif_stereo_pt = _spdif_stereo_pt;
   invalidate_chain();
   rebuild_node(state_detector);
+}
+
+int
+DVDGraph::get_spdif_bitrate() const
+{
+  return spdif_bitrate;
+}
+
+void
+DVDGraph::set_spdif_bitrate(int _spdif_bitrate)
+{
+  spdif_bitrate = _spdif_bitrate;
+  invalidate_chain();
+  rebuild_node(state_encode);
 }
 
 ///////////////////////////////////////////////////////////
@@ -525,7 +540,10 @@ DVDGraph::init_filter(int node, Speakers spk)
     }
 
     case state_encode:
-      return &enc;
+      if (enc.set_bitrate(spdif_bitrate))
+        return &enc;
+      else
+        return 0;
 
     case state_spdif_enc:
       return &spdifer_enc;

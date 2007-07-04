@@ -101,6 +101,9 @@ public:
   bool get_spdif_stereo_pt() const;
   void set_spdif_stereo_pt(bool spdif_stereo_pt);
 
+  int  get_spdif_bitrate() const;
+  void set_spdif_bitrate(int bitrate);
+
   // SPDIF sample rate check
   void set_spdif_sr(bool spdif_check_sr, bool spdif_allow_48, bool spdif_allow_44, bool spdif_allow_32);
 
@@ -117,7 +120,6 @@ public:
   void set_spdif_allow_32(bool spdif_allow_32);
 
   // SPDIF/DTS mode/conversion
-
   int  get_dts_mode() const;
   void set_dts_mode(int dts_mode);
   int  get_dts_conv() const;
@@ -144,6 +146,7 @@ protected:
   bool     spdif_as_pcm;
   bool     spdif_encode;
   bool     spdif_stereo_pt;
+  int      spdif_bitrate;
 
   bool     spdif_check_sr;
   bool     spdif_allow_48;
