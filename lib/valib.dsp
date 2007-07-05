@@ -264,6 +264,14 @@ SOURCE=..\valib\syncscan.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\vargs.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\vargs.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\vtime.cpp
 # End Source File
 # Begin Source File
