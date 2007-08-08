@@ -55,11 +55,6 @@ protected:
   virtual const char *get_name(int node) const;
   virtual Filter *init_filter(int node, Speakers spk);
   virtual int get_next(int node, Speakers spk) const;
-
-  // helper functions
-  int check_spdif_passthrough(Speakers spk) const;
-  int check_spdif_encode(Speakers spk) const;
-  Speakers agree_output_pcm(Speakers spk, Speakers user_spk) const;
 };
 
 #endif
