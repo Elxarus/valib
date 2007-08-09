@@ -12,7 +12,7 @@ DVDGraph::DVDGraph(const Sink *_sink)
   spdif_as_pcm = false;
   spdif_encode = true;
   spdif_stereo_pt = true;
-  spdif_bitrate = 448000;
+  spdif_bitrate = 640000;
 
   spdif_check_sr = false;
   spdif_allow_48 = true;
