@@ -17,7 +17,6 @@ del release\*.pdb 2> nul
 del release\*.bsc 2> nul
 del release\*.exp 2> nul
 del release\*.idb 2> nul
-del release\*.lib 2> nul
 del release\*.obj 2> nul
 del release\*.pch 2> nul
 del release\*.res 2> nul
@@ -29,7 +28,6 @@ del release_libc\*.pdb 2> nul
 del release_libc\*.bsc 2> nul
 del release_libc\*.exp 2> nul
 del release_libc\*.idb 2> nul
-del release_libc\*.lib 2> nul
 del release_libc\*.obj 2> nul
 del release_libc\*.pch 2> nul
 del release_libc\*.res 2> nul
@@ -52,7 +50,6 @@ del release_msvc8\*.sbr 2> nul
 del release_msvc8\*.asm 2> nul
 del release_msvc8\*.map 2> nul
 del release_msvc8\*.pdb 2> nul
-del release_msvc8\*.lib 2> nul
 del release_msvc8\*.idb 2> nul
 del release_msvc8\*.dep 2> nul
 del release_msvc8\*.htm 2> nul
