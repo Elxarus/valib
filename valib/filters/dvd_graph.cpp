@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include "dvd_graph.h"
 
-DVDGraph::DVDGraph(const Sink *_sink)
-:FilterGraph(-1), proc(4096)
+DVDGraph::DVDGraph(int _nsamples, const Sink *_sink)
+:FilterGraph(-1), proc(_nsamples)
 {
   user_spk = Speakers(FORMAT_PCM16, 0, 0, 32767);
 

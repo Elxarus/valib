@@ -61,7 +61,7 @@ public:
   Syncer         syncer;
 
 public:
-  DVDGraph(const Sink *sink = 0);
+  DVDGraph(int nsamples = 4096, const Sink *sink = 0);
 
   /////////////////////////////////////////////////////////////////////////////
   // DVDGraph interface

@@ -70,7 +70,7 @@ public:
   sample_t drc_power;             // [rw] DRC power (dB)
   sample_t drc_level;             // [r]  current DRC gain level (read-only)
 
-  AGC(size_t nsamples = 1024);
+  AGC(size_t nsamples);
 
   /////////////////////////////////////////////////////////
   // AGC interface
