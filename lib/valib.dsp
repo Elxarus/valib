@@ -192,6 +192,14 @@ SOURCE=..\valib\defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\divisors.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\divisors.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filter.h
 # End Source File
 # Begin Source File
@@ -397,6 +405,14 @@ SOURCE=..\valib\filters\proc.cpp
 # Begin Source File
 
 SOURCE=..\valib\filters\proc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\resample.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\resample.h
 # End Source File
 # Begin Source File
 
@@ -709,6 +725,30 @@ SOURCE=..\valib\source\wav_source.cpp
 # Begin Source File
 
 SOURCE=..\valib\source\wav_source.h
+# End Source File
+# End Group
+# Begin Group "dsp"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\valib\dsp\dbesi0.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\dsp\dbesi0.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\dsp\fftsg_ld.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\dsp\fftsg_ld.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\dsp\kaiser.h
 # End Source File
 # End Group
 # End Target
