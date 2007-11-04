@@ -315,16 +315,16 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   const size_t buf1_size = n2*m1/l1+n1x;
   buf1[0] = new sample_t[buf1_size * nch];
   for (i = 1; i < nch; i++)
-    buf1[i] = buf1[0] + i * nch;
+    buf1[i] = buf1[0] + i * buf1_size;
 
   buf2[0] = new sample_t[n2b * nch];
   for (i = 1; i < nch; i++)
-    buf2[i] = buf2[0] + i * nch;
+    buf2[i] = buf2[0] + i * n2b;
 
   const size_t delay2_size = n2/m2;
   delay2[0] = new sample_t[delay2_size * nch];
   for (i = 1; i < nch; i++)
-    delay2[i] = delay2[0] + i * nch;
+    delay2[i] = delay2[0] + i * delay2_size;
 
   out_samples.zero();
   for (i = 0; i < nch; i++)
@@ -333,7 +333,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   out_size = 0;
   reset();
 
-#if DEBUG
+#if RESAMPLE_PERF
   stage1.reset();
   stage2.reset();
 #endif
@@ -447,16 +447,16 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   const size_t buf1_size = n2*m1/l1+n1x;
   buf1[0] = new sample_t[buf1_size * nch];
   for (i = 1; i < nch; i++)
-    buf1[i] = buf1[0] + i * nch;
+    buf1[i] = buf1[0] + i * buf1_size;
 
   buf2[0] = new sample_t[n2b * nch];
   for (i = 1; i < nch; i++)
-    buf2[i] = buf2[0] + i * nch;
+    buf2[i] = buf2[0] + i * n2b;
 
   const size_t delay2_size = n2/m2;
   delay2[0] = new sample_t[delay2_size * nch];
   for (i = 1; i < nch; i++)
-    delay2[i] = delay2[0] + i * nch;
+    delay2[i] = delay2[0] + i * delay2_size;
 
   out_samples.zero();
   for (i = 0; i < nch; i++)
@@ -465,7 +465,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   out_size = 0;
   reset();
 
-#if DEBUG
+#if RESAMPLE_PERF
   stage1.reset();
   stage2.reset();
 #endif
@@ -515,7 +515,7 @@ Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
 {
   assert(n_in == stage1_in(n_out) && n_out == stage1_out(n_in));
 
-#if DEBUG
+#if RESAMPLE_PERF
   stage1.start();
 #endif
 
@@ -545,7 +545,7 @@ Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
   pos_m = (pos_m + n_in) % m1;
   pos_l = (pos_l + n_out) % l1;
 
-#if DEBUG
+#if RESAMPLE_PERF
   stage1.stop();
 #endif
 }
@@ -553,7 +553,7 @@ Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
 inline void
 Resample::do_stage2()
 {
-#if DEBUG
+#if RESAMPLE_PERF
   stage2.start();
 #endif
 
@@ -579,7 +579,7 @@ Resample::do_stage2()
     rdft(n2b, -1, buf2[ch], fft_ip, fft_w);
   }
 
-#if DEBUG
+#if RESAMPLE_PERF
   stage2.stop();
 #endif
 }
@@ -631,7 +631,7 @@ Resample::process_upsample(sample_t *in_buf[], int nsamples)
   out_size = j;
 
   for (ch = 0; ch < nch; ch++)
-    for (j = 0; i < n2b; i += m2, j++)
+    for (i = n2 + shift, j = 0; i < n2b; i += m2, j++)
       delay2[ch][j] = buf2[ch][i];
 
   ///////////////////////////////////////////////////////

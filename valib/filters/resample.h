@@ -2,7 +2,7 @@
 #define RESAMPLE_H
 
 #include "filter.h"
-#if DEBUG
+#if RESAMPLE_PERF
 #include <win32\cpu.h>
 #endif
 
@@ -45,7 +45,7 @@ protected:
   sample_t *buf2[NCHANNELS];   // stage2 buffer [n2b]
   sample_t *delay2[NCHANNELS]; // fft stage delay buffer [n2/m2]
   int shift;                   // fft stage decimation shift
-  int pre_samples;             // pre-buffereing samples
+  int pre_samples;             // pre-buffering samples
   int post_samples;            // post-processing samples
 
   int init_upsample(int _nch, int _fs, int _fd);
@@ -74,7 +74,7 @@ protected:
   samples_t out_samples; // output buffer
   int       out_size;    // output number of samples
 
-#if DEBUG
+#if RESAMPLE_PERF
 public:
   CPUMeter stage1;
   CPUMeter stage2;
