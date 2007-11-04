@@ -30,6 +30,10 @@
   drc_power           - DRC power (gain in dB at -50dB level)
   drc_level           - current DRC gain (read-only)
 
+  // SRC
+  src_quality         - Resampling passband width (0..1)
+  src_att             - Resampling stopband attenuation (dB)
+
   // Bass redirection
   bass_redir          - apply bass redirection
   bass_freq           - bass redirection frequency
@@ -148,6 +152,9 @@ public:
   inline bool     get_drc();
   inline sample_t get_drc_power();
   inline sample_t get_drc_level(); // r/o
+  // SRC
+  inline double   get_src_quality();
+  inline double   get_src_att();
   // Bass redirection
   inline bool     get_bass_redir();
   inline int      get_bass_freq();
@@ -193,6 +200,9 @@ public:
   // DRC
   inline void     set_drc(bool drc);
   inline void     set_drc_power(sample_t drc_power);
+  // SRC
+  inline void     set_src_quality(double q);
+  inline void     set_src_att(double a);
   // Bass redirection
   inline void     set_bass_redir(bool bass_redir);
   inline void     set_bass_freq(int freq);
@@ -257,6 +267,14 @@ AudioProcessor::get_drc_power()
 inline sample_t 
 AudioProcessor::get_drc_level()
 { return agc.drc_level; }
+
+inline double
+AudioProcessor::get_src_quality()
+{ return resample.get_quality(); }
+
+inline double
+AudioProcessor::get_src_att()
+{ return resample.get_attenuation(); }
 
 inline bool     
 AudioProcessor::get_bass_redir()
@@ -393,6 +411,14 @@ AudioProcessor::set_drc(bool _drc)
 inline void     
 AudioProcessor::set_drc_power(sample_t _drc_power)
 { agc.drc_power = _drc_power; }
+
+inline void     
+AudioProcessor::set_src_quality(double q)
+{ resample.set_quality(q); }
+
+inline void     
+AudioProcessor::set_src_att(double a)
+{ resample.set_attenuation(a); }
 
 inline void     
 AudioProcessor::set_bass_redir(bool _bass_redir)
