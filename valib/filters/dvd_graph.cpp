@@ -43,7 +43,6 @@ DVDGraph::set_user(Speakers _user_spk)
   if (!query_user(_user_spk))
     return false;
 
-  _user_spk.sample_rate = 0;
   if (user_spk != _user_spk)
   {
     user_spk = _user_spk;
@@ -822,7 +821,7 @@ DVDGraph::agree_output_pcm(Speakers _spk, Speakers _user_spk) const
     _spk.mask = _user_spk.mask;
 
   if (_user_spk.sample_rate)
-    _spk.mask = _user_spk.sample_rate;
+    _spk.sample_rate = _user_spk.sample_rate;
 
   _spk.relation = _user_spk.relation;
 
