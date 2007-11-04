@@ -72,6 +72,7 @@
 
 #include "filters\levels.h"
 #include "filters\mixer.h"
+#include "filters\resample.h"
 #include "filters\bass_redir.h"
 #include "filters\agc.h"
 #include "filters\delay.h"
@@ -90,6 +91,7 @@ protected:
   Converter  in_conv;
   Levels     in_levels;
   Mixer      mixer;
+  Resample   resample;
   BassRedir  bass_redir;
   AGC        agc;
   Delay      delay;

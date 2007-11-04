@@ -29,10 +29,6 @@ AudioProcessor::query_user(Speakers _user_spk) const
 bool 
 AudioProcessor::set_user(Speakers _user_spk)
 {
-  // now we do not do sample rate conversion
-  // so user format sample rate must be undefined
-  _user_spk.sample_rate = 0;
-
   if (user_spk != _user_spk)
   {
     if (!query_user(_user_spk))
@@ -94,7 +90,16 @@ AudioProcessor::rebuild_chain()
 
   // processing chain
   FILTER_SAFE(chain.add_back(&in_levels, "Input levels"));
-  FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
+  if (out_spk.nch() < in_spk.nch())
+  {
+    FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
+    FILTER_SAFE(chain.add_back(&resample,  "SRC"));
+  }
+  else
+  {
+    FILTER_SAFE(chain.add_back(&resample,  "SRC"));
+    FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
+  }
   FILTER_SAFE(chain.add_back(&bass_redir,"Bass redirection"));
   FILTER_SAFE(chain.add_back(&agc,       "AGC"));
   FILTER_SAFE(chain.add_back(&delay,     "Delay"));
@@ -104,6 +109,9 @@ AudioProcessor::rebuild_chain()
   Speakers mixer_spk = out_spk;
   mixer_spk.format = FORMAT_LINEAR;
   FILTER_SAFE(mixer.set_output(mixer_spk));
+
+  // setup src
+  resample.set_sample_rate(user_spk.sample_rate);
 
   // format conversion
   if (in_spk.format != FORMAT_LINEAR)
@@ -129,6 +137,7 @@ AudioProcessor::reset()
 {
   in_levels.reset();
   mixer.reset();
+  resample.reset();
   bass_redir.reset();
   agc.reset();
   delay.reset();
