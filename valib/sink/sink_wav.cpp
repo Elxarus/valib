@@ -1,9 +1,6 @@
-#include <windows.h>
-#include <mmreg.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include "sink_wav.h"
+#include <memory.h>
 #include "../win32/winspk.h"
+#include "sink_wav.h"
 
 WAVSink::WAVSink()
 {
