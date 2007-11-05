@@ -6,7 +6,7 @@
 #ifndef SPDIF_PARSER_H
 #define SPDIF_PARSER_H
 
-#include "parser.h"
+#include "../../parser.h"
 
 class SPDIFParser : public FrameParser
 {

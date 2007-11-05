@@ -1,8 +1,8 @@
 #ifndef SINK_WAV
 #define SINK_WAV
 
-#include "filter.h"
-#include "auto_file.h"
+#include "../filter.h"
+#include "../auto_file.h"
 
 class WAVSink : public Sink
 {

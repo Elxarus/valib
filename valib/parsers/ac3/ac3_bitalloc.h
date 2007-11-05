@@ -5,7 +5,7 @@
 #ifndef AC3_BITALLOC_H
 #define AC3_BITALLOC_H
 
-#include "defs.h"
+#include "../../defs.h"
 
 void bit_alloc(
   int8_t *bap,    // [256]

@@ -1,11 +1,11 @@
 #ifndef VAC3ENC_H
 #define VAC3ENC_H
 
-#include "filter.h"
+#include "../../filter.h"
+#include "../../bitstream.h"
+#include "../../data.h"
 #include "ac3_defs.h"
 #include "ac3_mdct.h"
-#include "bitstream.h"
-#include "data.h"
 
 inline int sym_quant(int m, int levels);
 inline int asym_quant(int m, int bits);

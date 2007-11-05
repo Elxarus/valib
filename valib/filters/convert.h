@@ -15,8 +15,8 @@
 #ifndef CONVERT_H
 #define CONVERT_H
 
-#include "filter.h"
-#include "data.h"
+#include "../filter.h"
+#include "../data.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Converter class

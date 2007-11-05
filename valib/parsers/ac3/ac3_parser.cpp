@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "crc.h"
+#include "../../crc.h"
 #include "ac3_header.h"
 #include "ac3_parser.h"
 #include "ac3_bitalloc.h"

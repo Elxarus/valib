@@ -1,5 +1,5 @@
 #include "dts_header.h"
-#include "bitstream.h"
+#include "../../bitstream.h"
 
 const DTSHeader dts_header;
 

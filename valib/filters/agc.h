@@ -25,8 +25,8 @@
 #ifndef AGC_H
 #define AGC_H
 
-#include "filter.h"
-#include "data.h"
+#include "../filter.h"
+#include "../data.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // AGC class

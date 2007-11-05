@@ -7,7 +7,7 @@
 
 #include <windows.h>
 #include <streams.h>
-#include "filter.h"
+#include "../filter.h"
 
 bool mt2spk(CMediaType mt, Speakers &spk);
 bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx);

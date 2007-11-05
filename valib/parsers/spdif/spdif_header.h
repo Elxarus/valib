@@ -1,7 +1,7 @@
 #ifndef SPDIF_HEADER_H
 #define SPDIF_HEADER_H
 
-#include "parser.h"
+#include "../../parser.h"
 
 class SPDIFHeader : public HeaderParser
 {

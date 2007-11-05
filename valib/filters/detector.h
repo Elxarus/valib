@@ -8,9 +8,9 @@
 #ifndef DETECTOR_H
 #define DETECTOR_H
 
-#include "parser.h"
-#include "sync.h"
-#include "parsers\multi_header.h"
+#include "../parser.h"
+#include "../sync.h"
+#include "../parsers/multi_header.h"
 
 
 

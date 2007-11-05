@@ -1,7 +1,7 @@
 #ifndef DTS_HEADER_H
 #define DTS_HEADER_H
 
-#include "parser.h"
+#include "../../parser.h"
 
 class DTSHeader : public HeaderParser
 {

@@ -13,9 +13,9 @@
 #ifndef SPDIFER_H
 #define SPDIFER_H
 
-#include "filters\parser_filter.h"
-#include "parsers\spdif\spdif_wrapper.h"
-#include "parsers\spdif\spdif_parser.h"
+#include "parser_filter.h"
+#include "../parsers/spdif/spdif_wrapper.h"
+#include "../parsers/spdif/spdif_parser.h"
 
 
 

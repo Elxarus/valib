@@ -1,9 +1,9 @@
 #ifndef VALIB_RAW_SOURCE
 #define VALIB_RAW_SOURCE
 
-#include "data.h"
-#include "filter.h"
-#include "auto_file.h"
+#include "../data.h"
+#include "../filter.h"
+#include "../auto_file.h"
 
 class RAWSource: public Source
 {

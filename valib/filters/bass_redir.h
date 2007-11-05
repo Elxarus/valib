@@ -7,7 +7,7 @@
 #ifndef BASS_REDIR_H
 #define BASS_REDIR_H
 
-#include "filter.h"
+#include "../filter.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // IIR - 2nd order IIR filter abstract base class

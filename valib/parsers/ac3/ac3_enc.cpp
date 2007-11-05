@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include "../../crc.h"
 #include "ac3_bitalloc.h"
 #include "ac3_enc.h"
-#include "crc.h"
 
 
 

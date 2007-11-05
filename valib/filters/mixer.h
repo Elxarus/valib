@@ -30,8 +30,8 @@
 #ifndef MIXER_H
 #define MIXER_H
 
-#include "filter.h"
-#include "data.h"
+#include "../filter.h"
+#include "../data.h"
 
 
 typedef sample_t matrix_t[NCHANNELS][NCHANNELS];

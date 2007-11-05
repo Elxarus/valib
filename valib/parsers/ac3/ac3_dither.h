@@ -1,7 +1,7 @@
 #ifndef DITHER_H
 #define DITHER_H
 
-#include "defs.h"
+#include "../../defs.h"
 
 inline int16_t dither_gen()
 {

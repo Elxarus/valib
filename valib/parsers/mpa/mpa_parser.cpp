@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include "../../crc.h"
 #include "mpa_parser.h"
 #include "mpa_header.h"
 #include "mpa_tables.h"
-#include "crc.h"
 
 
 //////////////////////////////////////////////////////////////////////

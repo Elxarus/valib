@@ -1,9 +1,9 @@
 #ifndef RESAMPLE_H
 #define RESAMPLE_H
 
-#include "filter.h"
+#include "../filter.h"
 #if RESAMPLE_PERF
-#include <win32\cpu.h>
+#include "../win32\cpu.h"
 #endif
 
 class Resample : public NullFilter

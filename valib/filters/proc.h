@@ -31,8 +31,8 @@
   drc_level           - current DRC gain (read-only)
 
   // SRC
-  src_quality         - Resampling passband width (0..1)
-  src_att             - Resampling stopband attenuation (dB)
+  src_quality         - Passband width (0..1)
+  src_att             - Stopband attenuation (dB)
 
   // Bass redirection
   bass_redir          - apply bass redirection
@@ -74,14 +74,14 @@
 #ifndef PROC_H
 #define PROC_H
 
-#include "filters\levels.h"
-#include "filters\mixer.h"
-#include "filters\resample.h"
-#include "filters\bass_redir.h"
-#include "filters\agc.h"
-#include "filters\delay.h"
-#include "filters\convert.h"
-#include "filter_graph.h"
+#include "../filter_graph.h"
+#include "levels.h"
+#include "mixer.h"
+#include "resample.h"
+#include "bass_redir.h"
+#include "agc.h"
+#include "delay.h"
+#include "convert.h"
 
 
 class AudioProcessor : public Filter

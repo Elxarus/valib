@@ -1,11 +1,11 @@
 #include "spdif_header.h"
 #include "spdif_parser.h"
 
-#include "parsers\mpa\mpa_header.h"
-#include "parsers\ac3\ac3_header.h"
-#include "parsers\dts\dts_header.h"
+#include "../../bitstream.h"
+#include "../mpa/mpa_header.h"
+#include "../ac3/ac3_header.h"
+#include "../dts/dts_header.h"
 
-#include "bitstream.h"
 
 inline static const HeaderParser *find_parser(int spdif_type)
 {

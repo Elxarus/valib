@@ -1,6 +1,6 @@
 #include <memory.h>
 #include "wav_source.h"
-#include "win32\winspk.h"
+#include "../win32/winspk.h"
 
 const uint32_t fcc_riff = be2int32('RIFF');
 const uint32_t fcc_wave = be2int32('WAVE');

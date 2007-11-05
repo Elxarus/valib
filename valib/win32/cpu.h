@@ -6,7 +6,7 @@
 #define CPU_H
 
 #include <windows.h>
-#include "vtime.h"
+#include "../vtime.h"
 
 class CPUMeter
 {

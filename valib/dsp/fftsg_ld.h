@@ -1,7 +1,7 @@
 #ifndef FFTSG_LD_H
 #define FFTSG_LD_H
 
-#include "defs.h"
+#include "../defs.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -3,7 +3,7 @@
 #include <ks.h>
 #include <ksmedia.h>
 #include "sink_wav.h"
-#include "win32\winspk.h"
+#include "../win32/winspk.h"
 
 WAVSink::WAVSink()
 {

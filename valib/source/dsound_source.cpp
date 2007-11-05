@@ -3,7 +3,7 @@
 #include <ks.h>
 #include <ksmedia.h>
 #include "dsound_source.h"
-#include "win32\winspk.h"
+#include "../win32/winspk.h"
 
 DSoundSource::DSoundSource()
 {

@@ -5,7 +5,7 @@
 #ifndef MULTI_HEADER_H
 #define MULTI_HEADER_H
 
-#include "parser.h"
+#include "../parser.h"
 
 class MultiHeader : public HeaderParser
 {

@@ -9,7 +9,7 @@
 #ifndef SYNTH_H
 #define SYNTH_H
 
-#include "defs.h"
+#include "../../defs.h"
 
 class SynthBuffer;
 class SynthBufferFPU;     

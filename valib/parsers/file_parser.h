@@ -6,9 +6,9 @@
 #define FILE_PARSER_H
 
 #include <stdio.h>
-#include "filter.h"
-#include "parser.h"
-#include "mpeg_demux.h"
+#include "../filter.h"
+#include "../parser.h"
+#include "../mpeg_demux.h"
 
 
 class FileParser // : public Source

@@ -5,7 +5,7 @@
 #ifndef DEJITTER_H
 #define DEJITTER_H
 
-#include "filter.h"
+#include "../filter.h"
 
 #define STAT_SIZE 64
 

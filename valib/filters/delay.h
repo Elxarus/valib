@@ -18,8 +18,8 @@
 #ifndef DELAY_H
 #define DELAY_H
 
-#include "filter.h"
-#include "data.h"
+#include "../filter.h"
+#include "../data.h"
 
 
 #define DELAY_SP 0 // samples

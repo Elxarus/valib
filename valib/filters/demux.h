@@ -16,8 +16,8 @@
 #ifndef DEMUX_H
 #define DEMUX_H
 
-#include "mpeg_demux.h"
-#include "filter.h"
+#include "../filter.h"
+#include "../mpeg_demux.h"
 
 class Demux : public NullFilter
 {

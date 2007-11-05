@@ -18,7 +18,7 @@
 #define LEVELS_H
 
 #include <string.h>
-#include "filter.h"
+#include "../filter.h"
 
 class LevelsCache;
 class LevelsHistogram;

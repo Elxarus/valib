@@ -1,7 +1,7 @@
 #ifndef AC3_MDCT_H
 #define AC3_MDCT_H
 
-#include "defs.h"
+#include "../../defs.h"
 
 class MDCT
 {

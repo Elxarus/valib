@@ -12,8 +12,8 @@
 #ifndef SPDIF_WRAPPER_H
 #define SPDIF_WRAPPER_H
 
-#include "parser.h"
-#include "parsers\multi_header.h"
+#include "../../parser.h"
+#include "../multi_header.h"
 #include "spdif_parser.h"
 
 #define DTS_MODE_AUTO    0

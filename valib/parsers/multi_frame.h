@@ -5,7 +5,7 @@
 #ifndef MULTI_FRAME_H
 #define MULTI_FRAME_H
 
-#include "parser.h"
+#include "../parser.h"
 #include "multi_header.h"
 
 class MultiFrame : public FrameParser

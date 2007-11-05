@@ -187,7 +187,7 @@ int test_rules(Log *log)
   Detector       detector;
 
   // Processing filters
-  AGC            agc;
+  AGC            agc(2048);
   Mixer          mixer_ip(2048); // inplace
   Mixer          mixer_ib(2048); // immediate
   Delay          delay;

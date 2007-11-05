@@ -1,7 +1,7 @@
 #ifndef VALIB_COUNTER_H
 #define VALIB_COUNTER_H
 
-#include "filter.h"
+#include "../filter.h"
 
 
 class Counter : public NullFilter

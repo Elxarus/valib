@@ -12,14 +12,14 @@
 #ifndef DVD_GRAPH_H
 #define DVD_GRAPH_H
 
-#include "filter_graph.h"
-#include "filters\demux.h"
-#include "filters\detector.h"
-#include "filters\decoder.h"
-#include "filters\proc.h"
-#include "filters\spdifer.h"
-#include "filters\dejitter.h"
-#include "parsers\ac3\ac3_enc.h"
+#include "../filter_graph.h"
+#include "../parsers/ac3/ac3_enc.h"
+#include "demux.h"
+#include "detector.h"
+#include "decoder.h"
+#include "proc.h"
+#include "spdifer.h"
+#include "dejitter.h"
 
 ///////////////////////////////////////////////////////////
 // SPDIF status constants

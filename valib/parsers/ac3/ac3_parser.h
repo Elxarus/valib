@@ -1,9 +1,8 @@
 #ifndef AC3_PARSER_H
 #define AC3_PARSER_H
 
-#include "parser.h"
-#include "bitstream.h"
-
+#include "../../parser.h"
+#include "../../bitstream.h"
 #include "ac3_defs.h"
 #include "ac3_imdct.h"
 

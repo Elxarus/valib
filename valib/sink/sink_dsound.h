@@ -24,9 +24,9 @@
 #include <mmreg.h>
 #include <ks.h>
 #include <ksmedia.h>
-#include "filter.h"
-#include "renderer.h"
-#include "win32\thread.h"
+#include "../filter.h"
+#include "../renderer.h"
+#include "../win32/thread.h"
 
 class DSoundSink : public Sink, public PlaybackControl
 {

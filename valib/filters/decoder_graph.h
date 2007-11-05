@@ -8,10 +8,10 @@
 #ifndef DECODER_GRAPH_H
 #define DECODER_GRAPH_H
 
-#include "filter_graph.h"
-#include "filters\decoder.h"
-#include "filters\spdifer.h"
-#include "filters\proc.h"
+#include "../filter_graph.h"
+#include "decoder.h"
+#include "spdifer.h"
+#include "proc.h"
 
 class DecoderGraph : public FilterGraph
 {

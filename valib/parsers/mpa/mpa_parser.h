@@ -7,9 +7,9 @@
 #ifndef MPA_PARSER_H
 #define MPA_PARSER_H
 
-#include "data.h"
-#include "parser.h"
-#include "bitstream.h"
+#include "../../parser.h"
+#include "../../bitstream.h"
+#include "../../data.h"
 #include "mpa_defs.h"
 #include "mpa_synth.h"
 

@@ -6,7 +6,7 @@
 #define WINSPK_H
         
 #include <windows.h>
-#include "spk.h"
+#include "../spk.h"
 
 #ifndef WAVE_FORMAT_DOLBY_AC3_SPDIF 
 #define WAVE_FORMAT_DOLBY_AC3_SPDIF 0x0092

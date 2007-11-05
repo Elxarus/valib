@@ -5,10 +5,9 @@
 #ifndef DTS_PARSER_H
 #define DTS_PARSER_H
 
-#include "spk.h"
+#include "../../parser.h"
+#include "../../bitstream.h"
 #include "dts_defs.h"
-#include "bitstream.h"
-#include "parser.h"
 
 class DTSInfo
 {

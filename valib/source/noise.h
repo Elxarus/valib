@@ -3,9 +3,9 @@
 #ifndef VALIB_NOISE_H
 #define VALIB_NOISE_H
 
-#include "filter.h"
-#include "rng.h"
-#include "data.h"
+#include "../filter.h"
+#include "../rng.h"
+#include "../data.h"
 
 /*
   Noise class is source that generates blocks of noise data.

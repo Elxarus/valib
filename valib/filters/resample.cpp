@@ -1,11 +1,8 @@
 #include <string.h>
 #include "resample.h"
-#include "divisors.h"
-#include "dsp\kaiser.h"
-#include "dsp\fftsg_ld.h"
-
-///////////////////////////////////////////////////////////////////////////////
-// * flushing
+#include "../divisors.h"
+#include "../dsp/kaiser.h"
+#include "../dsp/fftsg_ld.h"
 
 #define SAFE_DELETE(x) { if (x) delete(x); x = 0; }
 static const double k_conv = 2;
@@ -89,7 +86,7 @@ Resample::set(int _sample_rate, double _a, double _q)
   if (_sample_rate < 0) return false;
   if (_a < 6) return false;
   if (_q < 0.1) return false;
-  if (_q >= 0.999999999) return false;
+  if (_q >= 0.9999999999) return false;
   
   sample_rate = _sample_rate;
   a = _a;

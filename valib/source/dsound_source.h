@@ -2,9 +2,9 @@
 #define DSOUND_SOURCE_H
 
 #include <dsound.h>
-#include "filter.h"
-#include "data.h"
-#include "vtime.h"
+#include "../filter.h"
+#include "../data.h"
+#include "../vtime.h"
 
 class DSoundSource : public Source
 {

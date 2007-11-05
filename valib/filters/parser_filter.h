@@ -6,8 +6,8 @@
 #ifndef PARSER_FILTER_H
 #define PARSER_FILTER_H
 
-#include "filter.h"
-#include "parser.h"
+#include "../filter.h"
+#include "../parser.h"
 
 class ParserFilter : public NullFilter
 {

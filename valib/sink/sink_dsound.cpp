@@ -1,6 +1,6 @@
 #include <math.h>
 #include "sink_dsound.h"
-#include "win32\winspk.h"
+#include "../win32/winspk.h"
 
 #define SAFE_DELETE(p)  { if (p) delete p; p = 0; }
 #define SAFE_RELEASE(p) { if (p) p->Release(); p = 0; }

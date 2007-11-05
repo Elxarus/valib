@@ -1,7 +1,7 @@
 #ifndef AC3_HEADER_H
 #define AC3_HEADER_H
 
-#include "parser.h"
+#include "../../parser.h"
 
 class AC3Header : public HeaderParser
 {
