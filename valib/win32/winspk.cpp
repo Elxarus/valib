@@ -1,11 +1,28 @@
 #include "winspk.h"
-#include <mmreg.h>
-#include <ks.h>
-#include <ksmedia.h>
-#include <initguid.h>
 
-DEFINE_GUID(KSADATAFORMAT_DOLBY_AC3_SPDIF, 
-0x00000092, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+static const GUID GUID_DOLBY_AC3_SPDIF    = { 0x00000092, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
+static const GUID GUID_SUBTYPE_PCM        = { 0x00000001, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
+static const GUID GUID_SUBTYPE_IEEE_FLOAT = { 0x00000003, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
+
+#define SPEAKER_FRONT_LEFT              0x1
+#define SPEAKER_FRONT_RIGHT             0x2
+#define SPEAKER_FRONT_CENTER            0x4
+#define SPEAKER_LOW_FREQUENCY           0x8
+#define SPEAKER_BACK_LEFT               0x10
+#define SPEAKER_BACK_RIGHT              0x20
+#define SPEAKER_FRONT_LEFT_OF_CENTER    0x40
+#define SPEAKER_FRONT_RIGHT_OF_CENTER   0x80
+#define SPEAKER_BACK_CENTER             0x100
+#define SPEAKER_SIDE_LEFT               0x200
+#define SPEAKER_SIDE_RIGHT              0x400
+#define SPEAKER_TOP_CENTER              0x800
+#define SPEAKER_TOP_FRONT_LEFT          0x1000
+#define SPEAKER_TOP_FRONT_CENTER        0x2000
+#define SPEAKER_TOP_FRONT_RIGHT         0x4000
+#define SPEAKER_TOP_BACK_LEFT           0x8000
+#define SPEAKER_TOP_BACK_CENTER         0x10000
+#define SPEAKER_TOP_BACK_RIGHT          0x20000
+
 
 const unsigned int ds_channels_tbl[64] = 
 {
@@ -95,7 +112,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
       wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
       wfx->cbSize = 22;
 
-      ext->SubFormat = KSADATAFORMAT_DOLBY_AC3_SPDIF;
+      ext->SubFormat = GUID_DOLBY_AC3_SPDIF;
       ext->Samples.wValidBitsPerSample = 16;
       ext->dwChannelMask = ds_channels_tbl[MODE_STEREO];
     }
@@ -149,7 +166,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
         wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
         wfx->cbSize = 22;
 
-        ext->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+        ext->SubFormat = GUID_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 16;
         ext->dwChannelMask = ds_channels_tbl[spk.mask];
       }
@@ -169,7 +186,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
         wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
         wfx->cbSize = 22;
 
-        ext->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+        ext->SubFormat = GUID_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 24;
         ext->dwChannelMask = ds_channels_tbl[spk.mask];
       }
@@ -189,7 +206,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
         wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
         wfx->cbSize = 22;
 
-        ext->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+        ext->SubFormat = GUID_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 32;
         ext->dwChannelMask = ds_channels_tbl[spk.mask];
       }
@@ -209,7 +226,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
         wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
         wfx->cbSize = 22;
 
-        ext->SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
+        ext->SubFormat = GUID_SUBTYPE_IEEE_FLOAT;
         ext->Samples.wValidBitsPerSample = 32;
         ext->dwChannelMask = ds_channels_tbl[spk.mask];
       }
@@ -245,9 +262,9 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
     wfex = (WAVEFORMATEXTENSIBLE *)wfx;
 
     // determine sample format
-    if (wfex->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT)
+    if (wfex->SubFormat == GUID_SUBTYPE_IEEE_FLOAT)
       format = FORMAT_PCMFLOAT;
-    else if (wfex->SubFormat == KSDATAFORMAT_SUBTYPE_PCM)
+    else if (wfex->SubFormat == GUID_SUBTYPE_PCM)
       switch (wfx->wBitsPerSample)
       {
         case 16: format = FORMAT_PCM16; level = 32767;      break;
@@ -255,7 +272,7 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         case 32: format = FORMAT_PCM32; level = 2147483647; break;
         default: return false;
       }
-    else if (wfex->SubFormat == KSADATAFORMAT_DOLBY_AC3_SPDIF)
+    else if (wfex->SubFormat == GUID_DOLBY_AC3_SPDIF)
       format = FORMAT_SPDIF;
     else
       return false;
