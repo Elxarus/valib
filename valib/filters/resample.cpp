@@ -92,9 +92,11 @@ Resample::set(int _sample_rate, double _a, double _q)
   a = _a;
   q = _q;
 
-  if (!spk.is_unknown())
+  uninit();
+  out_spk = spk;
+  if (!spk.is_unknown() && sample_rate != 0)
   {
-    out_spk.sample_rate = sample_rate? sample_rate: spk.sample_rate;
+    out_spk.sample_rate = sample_rate;
     if (sample_rate > spk.sample_rate)
       init_upsample(spk.nch(), spk.sample_rate, sample_rate);
     if (sample_rate < spk.sample_rate)
@@ -111,33 +113,13 @@ Resample::set(int _sample_rate, double _a, double _q)
 void
 Resample::reset()
 {
-  int ch;
   NullFilter::reset();
-
-  if (fs && fd)
+  if (sample_rate)
   {
-    pos_l = 0;
-    pos_m = 0;
-
-    if (fs < fd)
-    {
-      pre_samples = n2/2;
-      post_samples = n1x/2;
-    }
-    else
-    {
-      pre_samples = (n2/2 - n1x/2)*l/m;
-      post_samples = 0;
-    }
-    pos1 = n1x/2;
-    pos2 = 0;
-    shift = 0;
-
-    for (ch = 0; ch < nch; ch++)
-      memset(buf1[ch], 0, pos1 * sizeof(sample_t));
-
-    for (ch = 0; ch < nch; ch++)
-      memset(delay2[ch], 0, n2/m2 * sizeof(sample_t));
+    if (sample_rate > spk.sample_rate)
+      reset_upsample();
+    if (sample_rate < spk.sample_rate)
+      reset_downsample();
   }
 }
 
@@ -145,6 +127,8 @@ bool
 Resample::set_input(Speakers _spk)
 {
   FILTER_SAFE(NullFilter::set_input(_spk));
+
+  uninit();
   out_spk = _spk;
 
   if (sample_rate)
@@ -167,37 +151,54 @@ Resample::get_output() const
 bool
 Resample::get_chunk(Chunk *_chunk)
 {
-  if (sample_rate == 0)
+  if (sample_rate)
   {
-    send_chunk_inplace(_chunk, size);
-    return true;
-  }
-
-  if (fs < fd)
-  {
-    // Upsample
-    if (size)
+    if (sample_rate > spk.sample_rate)
     {
-      size_t processed = process_upsample(samples.samples, size);
-      drop_samples(processed);
+      // Upsample
+      if (size)
+      {
+        size_t processed = process_upsample(samples.samples, size);
+        drop_samples(processed);
+        _chunk->set_linear(out_spk, out_samples, out_size);
+      }
+      else if (flushing)
+      {
+        bool send_eos = flush_upsample();
+        _chunk->set_linear(out_spk, out_samples, out_size);
+        if (send_eos)
+        {
+          _chunk->set_eos();
+          reset();
+        }
+      }
+      return true;
     }
-    else if (flushing)
-      flush_upsample();
-  }
 
-  if (fs > fd)
-  {
-    // Downsample
-    if (size)
+    if (sample_rate < spk.sample_rate)
     {
-      size_t processed = process_downsample(samples.samples, size);
-      drop_samples(processed);
+      // Downsample
+      if (size)
+      {
+        size_t processed = process_downsample(samples.samples, size);
+        drop_samples(processed);
+        _chunk->set_linear(out_spk, out_samples, out_size);
+      }
+      else if (flushing)
+      {
+        bool send_eos = flush_downsample();
+        _chunk->set_linear(out_spk, out_samples, out_size);
+        if (send_eos)
+        {
+          _chunk->set_eos();
+          reset();
+        }
+      }
+      return true;
     }
-    else if (flushing)
-      flush_downsample();
   }
 
-  _chunk->set_linear(out_spk, out_samples, out_size);
+  send_chunk_inplace(_chunk, size);
   return true;
 }
 
@@ -471,6 +472,54 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
 }
 
 void
+Resample::reset_upsample()
+{
+  int ch;
+  if (fs && fd)
+  {
+    pos_l = 0;
+    pos_m = 0;
+
+    pre_samples = n2/2-1;
+    post_samples = n1x/2;
+
+    pos1 = n1x/2;
+    pos2 = 0;
+    shift = 0;
+
+    for (ch = 0; ch < nch; ch++)
+      memset(buf1[ch], 0, pos1 * sizeof(sample_t));
+
+    for (ch = 0; ch < nch; ch++)
+      memset(delay2[ch], 0, n2/m2 * sizeof(sample_t));
+  }
+}
+
+void
+Resample::reset_downsample()
+{
+  int ch;
+  if (fs && fd)
+  {
+    pos_l = 0;
+    pos_m = 0;
+
+    pre_samples = stage1_out(n2/2-1 - n1x/2);
+    post_samples = 0;
+
+    pos1 = 0;
+    pos2 = 0;
+    shift = 0;
+
+    for (ch = 0; ch < nch; ch++)
+      memset(buf1[ch], 0, pos1 * sizeof(sample_t));
+
+    for (ch = 0; ch < nch; ch++)
+      memset(delay2[ch], 0, n2/m2 * sizeof(sample_t));
+  }
+}
+
+void
 Resample::uninit()
 {
   if (f1) SAFE_DELETE(f1[0]);
@@ -554,7 +603,6 @@ Resample::do_stage2()
   stage2.start();
 #endif
 
-  pos2 = 0;
   for (int ch = 0; ch < nch; ch++)
   {
     memset(buf2[ch] + n2, 0, n2 * sizeof(sample_t));
@@ -651,12 +699,17 @@ Resample::process_upsample(sample_t *in_buf[], int nsamples)
   return processed;
 }
 
-void
+bool
 Resample::flush_upsample()
 {
   int ch;
+
+  out_size = 0;
   int n = n2*m1/l1 + n1x - pos1;
-  int actual_out_size = stage1_out(pos1 - n1x/2) + n2/2;
+  int actual_out_size = stage1_out(pos1 - n1x/2) + n2/2-1 - pre_samples;
+  if (!actual_out_size)
+    return true;
+
   for (ch = 0; ch < nch; ch++)
     memset(buf1[ch] + pos1, 0, n * sizeof(sample_t));
   post_samples -= n;
@@ -667,8 +720,9 @@ Resample::flush_upsample()
   if (post_samples <= 0)
   {
     out_size = actual_out_size;
-    reset();
+    return true;
   }
+  return false;
 }
 
 int
@@ -694,6 +748,7 @@ Resample::process_downsample(sample_t *in_buf[], int nsamples)
   for (ch = 0; ch < nch; ch++)
     memcpy(buf2[ch] + pos2, in_buf[ch], (n2 - pos2) * sizeof(sample_t));
   processed = n2 - pos2;
+  pos2 = 0;
 
   // convolution
 
@@ -738,10 +793,14 @@ Resample::process_downsample(sample_t *in_buf[], int nsamples)
   return processed;
 }
 
-void
+bool
 Resample::flush_downsample()
 {
-  int actual_out_size = stage1_out(pos2 - n1x/2 + n2/2);
+  out_size = 0;
+  int actual_out_size = stage1_out(pos2 - n1x/2 + n2/2-1) - pre_samples;
+  if (!actual_out_size)
+    return true;
+
   if (pos2)
   {
     for (int ch = 0; ch < nch; ch++)
@@ -755,7 +814,7 @@ Resample::flush_downsample()
       memmove(out_samples[ch], out_samples[ch] + n2, n2/2 * sizeof(sample_t));
   }
   out_size = actual_out_size;
-  reset();
+  return true;
 }
 
 

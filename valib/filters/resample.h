@@ -50,6 +50,8 @@ protected:
 
   int init_upsample(int _nch, int _fs, int _fd);
   int init_downsample(int _nch, int _fs, int _fd);
+  void reset_upsample();
+  void reset_downsample();
   void uninit();
 
   inline int stage1_in(int n)  const { return (n + pos_l) * m1 / l1 - pos_m; };
@@ -60,8 +62,8 @@ protected:
 
   int process_upsample(sample_t *in_buf[], int nsamples);
   int process_downsample(sample_t *in_buf[], int nsamples);
-  void flush_upsample();
-  void flush_downsample();
+  bool flush_upsample();
+  bool flush_downsample();
 
   double t_upsample(int m2) const;
   int optimize_upsample() const;
