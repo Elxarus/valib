@@ -30,11 +30,10 @@ const char *valib_credits();
   #define __forceinline inline
 #endif
 
-// these headers are required with GCC
-// in MSVC both types are built-in
+// this header is required only with GCC
+// in MSVC size_t type is built-in
 
 #include <stddef.h>     // size_t
-#include <basetyps.h>   // __int64
 
 // MSVC8: disable depreciation warning
 
@@ -90,11 +89,17 @@ const char *valib_credits();
 typedef signed char      int8_t;
 typedef signed short     int16_t;
 typedef signed int       int32_t;
-typedef signed __int64   int64_t;
 typedef unsigned char    uint8_t;
 typedef unsigned short   uint16_t;
 typedef unsigned int     uint32_t;
-typedef unsigned __int64 uint64_t;
+
+#ifdef __GNUC__
+typedef signed long long   int64_t;
+typedef unsigned long long uint64_t;
+#else
+typedef signed __int64     int64_t;
+typedef unsigned __int64   uint64_t;
+#endif
 
 #pragma pack(push, 1)   // do not justify following structure
 struct int24_t // int24_t is a low-endian structure

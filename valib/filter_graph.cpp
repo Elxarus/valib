@@ -2,6 +2,9 @@
 #include "stdio.h"  // snprint
 #include "string.h" // strdup
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
 
 inline static bool is_invalid(int node)
 {
@@ -328,9 +331,9 @@ FilterGraph::chain_text(char *buf, size_t buf_size) const
   spk = filter[node]->get_input();
 
   if (spk.mask || spk.sample_rate)
-    i = _snprintf(buf_ptr, buf_size, "(%s %s %i)", spk.format_text(), spk.mode_text(), spk.sample_rate);
+    i = snprintf(buf_ptr, buf_size, "(%s %s %i)", spk.format_text(), spk.mode_text(), spk.sample_rate);
   else
-    i = _snprintf(buf_ptr, buf_size, "(%s)", spk.format_text());
+    i = snprintf(buf_ptr, buf_size, "(%s)", spk.format_text());
 
   buf_ptr += i;
   buf_size = (buf_size > i)? buf_size - i: 0;
@@ -340,9 +343,9 @@ FilterGraph::chain_text(char *buf, size_t buf_size) const
     spk = filter[node]->get_output();
 
     if (spk.mask || spk.sample_rate)
-      i = _snprintf(buf_ptr, buf_size, " -> %s -> (%s %s %i)", get_name(node), spk.format_text(), spk.mode_text(), spk.sample_rate);
+      i = snprintf(buf_ptr, buf_size, " -> %s -> (%s %s %i)", get_name(node), spk.format_text(), spk.mode_text(), spk.sample_rate);
     else
-      i = _snprintf(buf_ptr, buf_size, " -> %s -> (%s)", get_name(node), spk.format_text());
+      i = snprintf(buf_ptr, buf_size, " -> %s -> (%s)", get_name(node), spk.format_text());
     buf_ptr += i;
     buf_size = (buf_size > i)? buf_size - i: 0;
 
