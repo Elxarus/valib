@@ -190,6 +190,8 @@ int test_rules(Log *log)
   AGC            agc(2048);
   Mixer          mixer_ip(2048); // inplace
   Mixer          mixer_ib(2048); // immediate
+  Resample       resample_up;    // upsample
+  Resample       resample_down;  // downsample
   Delay          delay;
   BassRedir      bass_redir_ip; // inplace
   BassRedir      bass_redir_ib; // immediate
@@ -210,6 +212,8 @@ int test_rules(Log *log)
   conv_rl.set_format(FORMAT_LINEAR);
   mixer_ip.set_output(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
   mixer_ib.set_output(Speakers(FORMAT_LINEAR, MODE_5_1, 48000));
+  resample_up.set_sample_rate(48000);
+  resample_down.set_sample_rate(44100);
   bass_redir_ip.set_freq(120);
   bass_redir_ip.set_enabled(true);
   bass_redir_ib.set_freq(120);
@@ -315,6 +319,16 @@ int test_rules(Log *log)
   test_rules_filter(log, &mixer_ib, "Mixer (immediate)",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &resample_up, "Resample (upsample)",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 44100), 0,
+    Speakers(FORMAT_LINEAR, MODE_5_1, 44100), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
+  test_rules_filter(log, &resample_down, "Resample (downsmple)",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_LINEAR, MODE_5_1, 48000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
   test_rules_filter(log, &delay, "Delay",

@@ -54,9 +54,22 @@ public:
       Speakers(FORMAT_PCM16, 0, 0, 32767),                 // pcm16 as-is
       Speakers(FORMAT_PCM16, MODE_STEREO, 0, 32767),       // pcm16 stereo (possible downmix)
       Speakers(FORMAT_PCM16, MODE_5_1, 0, 32767),          // pcm16 5.1 (possible upmix)
-      Speakers(FORMAT_PCM32, 0, 0, 2147483647),            // pcm32 as-is
-      Speakers(FORMAT_PCM32, MODE_STEREO, 0, 2147483647),  // pcm32 stereo (possible downmix)
-      Speakers(FORMAT_PCM32, MODE_5_1, 0, 2147483647),     // pcm32 5.1 (possible upmix)
+      Speakers(FORMAT_PCM16, 0, 44100, 32767),             // pcm16 as-is (possible downsample)
+      Speakers(FORMAT_PCM16, MODE_STEREO, 44100, 32767),   // pcm16 stereo (possible downmix+downsample)
+      Speakers(FORMAT_PCM16, MODE_5_1, 44100, 32767),      // pcm16 5.1 (possible upmix+downsample)
+      Speakers(FORMAT_PCM16, 0, 48000, 32767),             // pcm16 as-is (possible upsample)
+      Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767),   // pcm16 stereo (possible downmix+upsample)
+      Speakers(FORMAT_PCM16, MODE_5_1, 48000, 32767),      // pcm16 5.1 (possible upmix+upsample)
+
+      Speakers(FORMAT_PCM32, 0, 0, 32767),                 // pcm32 as-is
+      Speakers(FORMAT_PCM32, MODE_STEREO, 0, 32767),       // pcm32 stereo (possible downmix)
+      Speakers(FORMAT_PCM32, MODE_5_1, 0, 32767),          // pcm32 5.1 (possible upmix)
+      Speakers(FORMAT_PCM32, 0, 44100, 32767),             // pcm32 as-is (possible downsample)
+      Speakers(FORMAT_PCM32, MODE_STEREO, 44100, 32767),   // pcm32 stereo (possible downmix+downsample)
+      Speakers(FORMAT_PCM32, MODE_5_1, 44100, 32767),      // pcm32 5.1 (possible upmix+downsample)
+      Speakers(FORMAT_PCM32, 0, 48000, 32767),             // pcm32 as-is (possible upsample)
+      Speakers(FORMAT_PCM32, MODE_STEREO, 48000, 32767),   // pcm32 stereo (possible downmix+upsample)
+      Speakers(FORMAT_PCM32, MODE_5_1, 48000, 32767),      // pcm32 5.1 (possible upmix+upsample)
     };
 
     log->open_group("Testing %s (%s %s %i)", file_name, 
