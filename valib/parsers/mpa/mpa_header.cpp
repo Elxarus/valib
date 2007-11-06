@@ -154,11 +154,12 @@ MPAHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 bool
 MPAHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 {
-  // Do not compare following fields:
-  // * bitrate_index (may change for VBR stream)
-  // * padding_bit
-  // * private_bit
-  // * mode & mode_extension (stereo <-> joint-stereo switch is possible)
+  // Compare following fields:
+  // * layer
+  // * protection bit
+  // * sample rate
+  // * mode must indicate the same number of channles (mono or stereo)
+  static const int nch[4] = { 2, 2, 2, 1 };
 
   // 8 bit or 16 bit big endian stream sync
   if ((hdr1[0] == 0xff)         && // sync
@@ -170,8 +171,8 @@ MPAHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
     return 
       hdr1[0] == hdr2[0] && 
       hdr1[1] == hdr2[1] &&
-      (hdr1[2] & 0x0c) == (hdr2[2] & 0x0c) && 
-      (hdr1[3] & 0x0f) == (hdr2[3] & 0x0f);
+      (hdr1[2] & 0x0c) == (hdr2[2] & 0x0c) && // sample rate
+      nch[hdr1[3] >> 6] == nch[hdr2[3] >> 6]; // number of channels
   }
   else
   // 16 bit low endian stream sync
@@ -184,8 +185,8 @@ MPAHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
     return
       hdr1[1] == hdr2[1] && 
       hdr1[0] == hdr2[0] &&
-      (hdr1[3] & 0x0c) == (hdr2[3] & 0x0c) && 
-      (hdr1[2] & 0x0f) == (hdr2[2] & 0x0f);
+      (hdr1[3] & 0x0c) == (hdr2[3] & 0x0c) && // sample rate
+      nch[hdr1[2] >> 6] == nch[hdr2[2] >> 6]; // number of channels
   }
   else
     return false;
