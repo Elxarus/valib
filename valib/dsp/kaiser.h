@@ -21,7 +21,7 @@ Kaiser window functions
 
 * kaiser_window(i, n, alpha)
   i - bin number
-  n - window langth
+  n - window length
   alpha - window parameter
 
   returns i-th bin of a window
