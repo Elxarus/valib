@@ -47,8 +47,8 @@ protected:
   sample_t *buf2[NCHANNELS];   // stage2 buffer [n2b]
   sample_t *delay2[NCHANNELS]; // fft stage delay buffer [n2/m2]
   int shift;                   // fft stage decimation shift
-  int pre_samples;             // pre-buffering samples
-  int post_samples;            // post-processing samples
+  int pre_samples;             // number of samples to drop from the beginning of output data
+  int post_samples;            // number of samples to add to the end of input data
 
   int init_upsample(int _nch, int _fs, int _fd);
   int init_downsample(int _nch, int _fs, int _fd);

@@ -307,7 +307,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   // make the filter
   // filter length is n2-1
   for (i = 0; i < n2-1; i++)
-    f2[i] = (sample_t)(kaiser_window(i - c2, n2, alpha) * lpf(i - c2, lpf2) / n2);
+    f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) / n2);
 
   // convert the filter to frequency domain and init fft for future use
   fft_ip    = new int[(int)(2 + sqrt(n2b))];
@@ -500,6 +500,10 @@ Resample::reset_upsample()
     pre_samples = c2;
     post_samples = c1x;
 
+    // To avoid signal shift we add c1x samples to the beginning,
+    // so the first sample processed is guaranteed to match the center
+    // of the filter
+
     pos1 = c1x;
     pos2 = 0;
     shift = 0;
@@ -518,18 +522,27 @@ Resample::reset_downsample()
   int ch;
   if (fs && fd)
   {
-    pos_l = 0;
+    pos_l = c1y;
     pos_m = pos_l * m1 / l1;
 
-    pre_samples = stage1_out(c2 - c1x);
+    // To avoid signal shift we add number of samples to the beginning,
+    // so after processing of pre-buffering samples we fall into the state
+    // when pos_l = c1y. In this case the first input sample matches
+    // the center of the filter.
+
+    int n = m1 - (c2 - c1x) % m1;
+    assert((pos_l + stage1_out(c2 - c1x + n)) % l1 == c1y);
+    assert(n < n2);
+
+    pre_samples = stage1_out(c2 - c1x + n);
     post_samples = 0;
 
     pos1 = 0;
-    pos2 = 0;
+    pos2 = n;
     shift = 0;
 
     for (ch = 0; ch < nch; ch++)
-      memset(buf1[ch], 0, pos1 * sizeof(sample_t));
+      memset(buf2[ch], 0, pos2 * sizeof(sample_t));
 
     for (ch = 0; ch < nch; ch++)
       memset(delay2[ch], 0, n2/m2 * sizeof(sample_t));
