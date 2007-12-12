@@ -60,7 +60,7 @@ protected:
   inline int stage1_out(int n) const { return ((n + pos_m) * l1 + m1 - 1) / m1 - pos_l; };
   inline void do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out);
   inline void do_stage2();
-  inline void do_drop_null();
+  inline void drop_pre_samples();
 
   int process_upsample(sample_t *in_buf[], int nsamples);
   int process_downsample(sample_t *in_buf[], int nsamples);

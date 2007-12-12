@@ -28,8 +28,9 @@ Resample::Resample():
   a(100.0), q(0.99), fs(0), fd(0), nch(0), 
   g(0), l(0), m(0), l1(0), l2(0), m1(0), m2(0),
   n1(0), n1x(0), n1y(0),
+  c1(0), c1x(0), c1y(0),
   f1_raw(0), f1(0), order(0),
-  n2(0), n2b(0), f2(0),
+  n2(0), n2b(0), c2(0), f2(0),
   fft_ip(0), fft_w(0)
 {
   for (int i = 0; i < NCHANNELS; i++)
@@ -660,6 +661,23 @@ Resample::do_stage2()
 #endif
 }
 
+void
+Resample::drop_pre_samples()
+{
+  if (pre_samples > out_size)
+  {
+    pre_samples -= out_size;
+    out_size = 0;
+  }
+  else
+  {
+    out_size -= pre_samples;
+    for (int ch = 0; ch < nch; ch++)
+      memmove(out_samples[ch], out_samples[ch] + pre_samples, out_size * sizeof(sample_t));
+    pre_samples = 0;
+  }
+}
+
 int
 Resample::process_upsample(sample_t *in_buf[], int nsamples)
 {
@@ -714,18 +732,7 @@ Resample::process_upsample(sample_t *in_buf[], int nsamples)
   // Drop null samples from the beginning
 
   if (pre_samples > 0)
-    if (pre_samples > out_size)
-    {
-      pre_samples -= out_size;
-      out_size = 0;
-    }
-    else
-    {
-      out_size -= pre_samples;
-      for (int ch = 0; ch < nch; ch++)
-        memmove(out_samples[ch], out_samples[ch] + pre_samples, out_size * sizeof(sample_t));
-      pre_samples = 0;
-    }
+    drop_pre_samples();
 
   return processed;
 }
@@ -808,18 +815,7 @@ Resample::process_downsample(sample_t *in_buf[], int nsamples)
   // Drop null samples from the beginning
 
   if (pre_samples > 0)
-    if (pre_samples > out_size)
-    {
-      pre_samples -= out_size;
-      out_size = 0;
-    }
-    else
-    {
-      out_size -= pre_samples;
-      for (int ch = 0; ch < nch; ch++)
-        memmove(out_samples[ch], out_samples[ch] + pre_samples, out_size * sizeof(sample_t));
-      pre_samples = 0;
-    }
+    drop_pre_samples();
 
   return processed;
 }
@@ -842,7 +838,7 @@ Resample::flush_downsample()
   else
   {
     for (int ch = 0; ch < nch; ch++)
-      memmove(out_samples[ch], out_samples[ch] + n2, n2/2 * sizeof(sample_t));
+      memmove(out_samples[ch], out_samples[ch] + n2, c2 * sizeof(sample_t));
   }
   out_size = actual_out_size;
   return true;
