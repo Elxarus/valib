@@ -50,8 +50,9 @@ Resample::Resample(int _sample_rate, double _a, double _q):
   a(100.0), q(0.99), fs(0), fd(0), nch(0), 
   g(0), l(0), m(0), l1(0), l2(0), m1(0), m2(0),
   n1(0), n1x(0), n1y(0),
+  c1(0), c1x(0), c1y(0),
   f1_raw(0), f1(0), order(0),
-  n2(0), n2b(0), f2(0),
+  n2(0), n2b(0), c2(0), f2(0),
   fft_ip(0), fft_w(0)
 {
   for (int i = 0; i < NCHANNELS; i++)
@@ -248,11 +249,12 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
 
   // filter length must be odd (type 1 filter)
   n1 = kaiser_n(a + log10(m1)*10, df1);
-  if ((n1&1) == 0) n1++;
-  n1x = n1 / l1 + 1;
+  n1x = n1 / l1;
+  n1x = n1x | 1; // make odd (larger)
   n1y = l1;
   n1 = n1x * n1y;
-  if ((n1&1) == 0) n1--;
+  n1 = n1 - 1 | 1; // make odd (smaller)
+  c1 = (n1 - 1) / 2; // center of the filter
 
   // allocate the filter
   // f1[n1y][n1x]
@@ -266,12 +268,18 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
 
   // build the filter
   for (i = 0; i < n1; i++)
-    f1_raw[i] = (sample_t) (kaiser_window(i - n1/2, n1, alpha) * lpf(i - n1/2, lpf1) * l);
+    f1_raw[i] = (sample_t) (kaiser_window(i - c1, n1, alpha) * lpf(i - c1, lpf1) * l);
 
   // reorder the filter
+  // find coordinates of the filter's center
   for (int y = 0; y < n1y; y++)
     for (int x = 0; x < n1x; x++)
-      f1[y][x] = f1_raw[l1-1 - (y*m1)%l1 + x*l1];
+    {
+      int p = l1-1 - (y*m1)%l1 + x*l1;
+      f1[y][x] = f1_raw[p];
+      if (p == c1)
+        c1x = x, c1y = y;
+    }
 
   // data ordering
   order = new int[l1];
@@ -289,6 +297,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   n2 = kaiser_n(a + log10(m2)*10, df/fs2);
   n2 = clp2(n2);
   n2b = n2*2;
+  c2 = n2 / 2 - 1;
 
   // allocate the filter
   // f2[n2b]
@@ -298,7 +307,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   // make the filter
   // filter length is n2-1
   for (i = 0; i < n2-1; i++)
-    f2[i] = (sample_t)(kaiser_window(i - (n2-1)/2, n2, alpha) * lpf(i - (n2-1)/2, lpf2) / n2);
+    f2[i] = (sample_t)(kaiser_window(i - c2, n2, alpha) * lpf(i - c2, lpf2) / n2);
 
   // convert the filter to frequency domain and init fft for future use
   fft_ip    = new int[(int)(2 + sqrt(n2b))];
@@ -379,6 +388,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   n2 = kaiser_n(a + log10(m2)*10, df/fs2);
   n2 = clp2(n2);
   n2b = n2*2;
+  c2 = n2 / 2 - 1;
 
   // allocate the filter
   // f2[n2b]
@@ -388,7 +398,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   // make the filter
   // filter length is n2-1
   for (i = 0; i < n2-1; i++)
-    f2[i] = (sample_t)(kaiser_window(i - (n2-1)/2, n2-1, alpha) * lpf(i - (n2-1)/2, lpf2) / n2);
+    f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) / n2);
 
   // convert the filter to frequency domain and init fft for future use
   fft_ip    = new int[(int)(2 + sqrt(n2b))];
@@ -409,11 +419,12 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
 
   // filter length must be odd (type 1 filter)
   n1 = kaiser_n(a + log10(m1)*10, df1);
-  if ((n1&1) == 0) n1++;
-  n1x = n1 / l1 + 1;
+  n1x = n1 / l1;
+  n1x = n1x | 1; // make odd (larger)
   n1y = l1;
   n1 = n1x * n1y;
-  if ((n1&1) == 0) n1--;
+  n1 = n1 - 1 | 1; // make odd (smaller)
+  c1 = (n1 - 1) / 2; // center of the filter
 
   // allocate the filter
   // f1[n1y][n1x]
@@ -427,12 +438,18 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
 
   // build the filter
   for (i = 0; i < n1; i++)
-    f1_raw[i] = (sample_t) (kaiser_window(i - n1/2, n1, alpha) * lpf(i - n1/2, lpf1) * l);
+    f1_raw[i] = (sample_t) (kaiser_window(i - c1, n1, alpha) * lpf(i - c1, lpf1) * l);
 
   // reorder the filter
+  // find coordinates of the filter's center
   for (int y = 0; y < n1y; y++)
     for (int x = 0; x < n1x; x++)
-      f1[y][x] = f1_raw[l1-1 - (y*m1)%l1 + x*l1];
+    {
+      int p = l1-1 - (y*m1)%l1 + x*l1;
+      f1[y][x] = f1_raw[p];
+      if (p == c1)
+        c1x = x, c1y = y;
+    }
 
   // data ordering
   order = new int[l1];
@@ -477,13 +494,13 @@ Resample::reset_upsample()
   int ch;
   if (fs && fd)
   {
-    pos_l = 0;
-    pos_m = 0;
+    pos_l = c1y;
+    pos_m = pos_l * m1 / l1;
 
-    pre_samples = n2/2-1;
-    post_samples = n1x/2;
+    pre_samples = c2;
+    post_samples = c1x;
 
-    pos1 = n1x/2;
+    pos1 = c1x;
     pos2 = 0;
     shift = 0;
 
@@ -502,9 +519,9 @@ Resample::reset_downsample()
   if (fs && fd)
   {
     pos_l = 0;
-    pos_m = 0;
+    pos_m = pos_l * m1 / l1;
 
-    pre_samples = stage1_out(n2/2-1 - n1x/2);
+    pre_samples = stage1_out(c2 - c1x);
     post_samples = 0;
 
     pos1 = 0;
@@ -537,8 +554,9 @@ Resample::uninit()
   fs = 0; fd = 0;
   g = 0; l = 0; m = 0; l1 = 0; l2 = 0; m1 = 0; m2 = 0;
   n1 = 0; n1x = 0; n1y = 0;
+  c1 = 0; c1x = 0; c1y = 0;
   f1_raw = 0; f1 = 0; order = 0;
-  n2 = 0; n2b = 0; f2 = 0;
+  n2 = 0; n2b = 0; c2 = 0; f2 = 0;
   fft_ip = 0; fft_w = 0;
 
   out_samples.zero();
@@ -706,7 +724,7 @@ Resample::flush_upsample()
 
   out_size = 0;
   int n = n2*m1/l1 + n1x - pos1;
-  int actual_out_size = stage1_out(pos1 - n1x/2) + n2/2-1 - pre_samples;
+  int actual_out_size = stage1_out(pos1 - c1x) + c2 - pre_samples;
   if (!actual_out_size)
     return true;
 
@@ -797,7 +815,7 @@ bool
 Resample::flush_downsample()
 {
   out_size = 0;
-  int actual_out_size = stage1_out(pos2 - n1x/2 + n2/2-1) - pre_samples;
+  int actual_out_size = stage1_out(pos2 - c1x + c2) - pre_samples;
   if (!actual_out_size)
     return true;
 

@@ -25,12 +25,14 @@ protected:
 
   // convolution stage filter
   int n1, n1x, n1y; // filter length, x and y lengths
+  int c1, c1x, c1y; // center of the filter, x and y coordinates
   sample_t **f1;    // reordered filter [n1y][n1x]
   sample_t *f1_raw; // raw filter [n1y * n1x]
   int *order;       // input positions [l]
 
   // fft stage filter
   int n2, n2b;      // filter size and fft size
+  int c2;           // center of the filter
   sample_t *f2;     // filter [n2b]
 
   // fft
