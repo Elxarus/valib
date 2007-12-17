@@ -248,13 +248,14 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   double lpf1 = fs/2 - df + df1/2; // center of the transition band [Hz]
   df1 /= fs1; lpf1 /= fs1;         // normalize
 
-  // filter length must be odd (type 1 filter)
+  // find the fiter length
   n1 = kaiser_n(a + log10(m1)*10, df1);
-  n1x = n1 / l1;
-  n1x = n1x | 1; // make odd (larger)
+  n1x = n1 / l1;     // make n1x odd; larger, because we
+  n1x = n1x | 1;     // should not make the filter weaker
   n1y = l1;
-  n1 = n1x * n1y;
-  n1 = n1 - 1 | 1; // make odd (smaller)
+  n1 = n1x * n1y;    // use all available space for the filter
+  n1 = n1 - 1 | 1;   // make n1 odd (type1 filter); smaller, because we
+                     // must fit the filter into the given space
   c1 = (n1 - 1) / 2; // center of the filter
 
   // allocate the filter
@@ -418,13 +419,14 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   double lpf1 = fd/2 - df + df1/2; // center of the transition band [Hz]
   df1 /= fs1; lpf1 /= fs1;         // normalize
 
-  // filter length must be odd (type 1 filter)
+  // find the fiter length
   n1 = kaiser_n(a + log10(m1)*10, df1);
-  n1x = n1 / l1;
-  n1x = n1x | 1; // make odd (larger)
+  n1x = n1 / l1;     // make n1x odd; larger, because we
+  n1x = n1x | 1;     // should not make the filter weaker
   n1y = l1;
-  n1 = n1x * n1y;
-  n1 = n1 - 1 | 1; // make odd (smaller)
+  n1 = n1x * n1y;    // use all available space for the filter
+  n1 = n1 - 1 | 1;   // make n1 odd (type1 filter); smaller, because we
+                     // must fit the filter into the given space
   c1 = (n1 - 1) / 2; // center of the filter
 
   // allocate the filter
@@ -523,27 +525,21 @@ Resample::reset_downsample()
   int ch;
   if (fs && fd)
   {
-    pos_l = c1y;
-    pos_m = pos_l * m1 / l1;
-
     // To avoid signal shift we add number of samples to the beginning,
     // so after processing of pre-buffering samples we fall into the state
     // when pos_l = c1y. In this case the first input sample matches
     // the center of the filter.
 
-    int n = m1 - (c2 - c1x) % m1;
-    assert((pos_l + stage1_out(c2 - c1x + n)) % l1 == c1y);
-    assert(n < n2);
+    pos_m = c1y * m1 / l1 - (c2 - c1x) % m1;
+    if (pos_m < 0) pos_m += m1;
+    pos_l = (pos_m * l1 + m1 - 1) / m1;
 
-    pre_samples = stage1_out(c2 - c1x + n);
+    pre_samples = stage1_out(c2 - c1x);
     post_samples = 0;
 
     pos1 = 0;
-    pos2 = n;
+    pos2 = 0;
     shift = 0;
-
-    for (ch = 0; ch < nch; ch++)
-      memset(buf2[ch], 0, pos2 * sizeof(sample_t));
 
     for (ch = 0; ch < nch; ch++)
       memset(delay2[ch], 0, n2/m2 * sizeof(sample_t));
@@ -591,7 +587,7 @@ Resample::uninit()
 inline void
 Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
 {
-  assert(n_in == stage1_in(n_out) && n_out == stage1_out(n_in));
+  assert(n_in == stage1_in(n_out) || n_out == stage1_out(n_in));
 
 #if RESAMPLE_PERF
   stage1.start();
@@ -606,6 +602,9 @@ Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
 
     while (n--)
     {
+      if (i == 27)
+        i = i;
+
       double sum = 0;
       for (int j = 0; j < n1x; j++)
         sum += iptr[order[i] + j] * f1[i][j];
@@ -835,11 +834,16 @@ Resample::flush_downsample()
     pos2 = n2;
     process_downsample(samples.samples, 0);
   }
-  else
+
+  if (out_size < actual_out_size)
   {
+    sample_t *p1[NCHANNELS];
+    sample_t *p2[NCHANNELS];
     for (int ch = 0; ch < nch; ch++)
-      memmove(out_samples[ch], out_samples[ch] + n2, c2 * sizeof(sample_t));
+      p1[ch] = buf2[ch] + out_size, p2[ch] = buf2[ch] + n2;
+    do_stage1(p2, p1, stage1_in(actual_out_size - out_size), actual_out_size - out_size);
   }
+
   out_size = actual_out_size;
   return true;
 }
