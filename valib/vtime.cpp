@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////
 // Win32 implementation
 
-#ifdef TIME_WIN32
+#ifdef _WIN32
 
 #include <windows.h>
 
@@ -57,6 +57,12 @@ vtime_t to_utc(vtime_t _time)
 ///////////////////////////////////////////////////////////
 // Time.h implementation
 
-#elif TIME_TIME_H
+#elif __GNUC__
+
+#error "No implementation"
+
+#else
+
+#error "No implementations for time functions"
 
 #endif
