@@ -152,6 +152,10 @@ SOURCE=.\test_proc.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_rng.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_spdifer.cpp
 # End Source File
 # Begin Source File

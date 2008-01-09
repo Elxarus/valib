@@ -30,8 +30,11 @@ int test_dvdgraph(Log *log);
 int test_proc(Log *log);
 
 EXTERN_SUITE(fir);
+EXTERN_TEST(rng);
+
 FLAT_SUITE(all, "Test session")
   SUITE_FACTORY(fir),
+  TEST_FACTORY(rng),
 SUITE_END;
 
 int main(int argc, char **argv)
