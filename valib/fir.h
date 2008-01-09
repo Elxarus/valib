@@ -43,6 +43,28 @@ public:
   virtual int     get_filter(int sample_rate, int n, sample_t *filter) const = 0;
 };
 
+class ZeroIR : public ImpulseResponse
+{
+public:
+  ZeroIR() {};
+
+  virtual int     version() const { return 0; }
+  virtual ir_type get_type(int sample_rate) const { return ir_zero; }
+  virtual int     min_length(int sample_rate) const { assert(false); return 0; } // should not be called
+  virtual int     get_filter(int sample_rate, int n, sample_t *filter) const { assert(false); return 0; } // should not be called
+};
+
+class IdentityIR : public ImpulseResponse
+{
+public:
+  IdentityIR() {};
+
+  virtual int     version() const { return 0; }
+  virtual ir_type get_type(int sample_rate) const { return ir_identity; }
+  virtual int     min_length(int sample_rate) const { assert(false); return 0; } // should not be called
+  virtual int     get_filter(int sample_rate, int n, sample_t *filter) const { assert(false); return 0; } // should not be called
+};
+
 class ImpulseResponseRef : public ImpulseResponse
 {
 protected:
@@ -101,7 +123,7 @@ public:
   /////////////////////////////////////////////////////////
   // ImpulseResponse interface
 
-  virtual int     version() const { if (ir_ver != ir->version()) ver++, ir_ver = ir->version(); return ver; }
+  virtual int     version() const { if (ir) if (ir_ver != ir->version()) ver++, ir_ver = ir->version(); return ver; }
   virtual ir_type get_type(int sample_rate) const { return ir? ir->get_type(sample_rate): ir_err; }
   virtual int     min_length(int sample_rate) const { return ir? ir->min_length(sample_rate): 0; }
   virtual int     get_filter(int sample_rate, int n, sample_t *filter) const { return ir? ir->get_filter(sample_rate, n, filter): 0; }

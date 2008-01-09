@@ -54,24 +54,20 @@ ParamIR::get_type(int sample_rate) const
   {
     case IR_LOW_PASS:
       if (norm  && (f1 >= 0.5)) return ir_identity;
-      if (!norm && (f1 >= sample_rate)) return ir_identity;
+      if (!norm && (f1 >= sample_rate / 2)) return ir_identity;
       return ir_custom;
 
     case IR_HIGH_PASS:
-//      if (norm  && (f1 >= 1.0)) return ir_gain;
-//      if (!norm && (f1 >= sample_rate)) return ir_gain;
       return ir_custom;
 
     case IR_BAND_PASS:
       if (f1 > f2) return ir_err;
-//      if (norm  && (f1 >= 1.0) && (f2 >= 1.0)) return ir_gain;
-//      if (norm  && (f1 >= sample_rate) && (f2 >= sample_rate)) return ir_gain;
       return ir_custom;
 
     case IR_BAND_STOP:
       if (f1 > f2) return ir_err;
       if (norm  && (f1 >= 0.5)) return ir_identity;
-      if (norm  && (f1 >= sample_rate) && (f2 >= sample_rate)) return ir_identity;
+      if (!norm && (f1 >= sample_rate / 2)) return ir_identity;
       return ir_custom;
 
     default: return ir_err;
