@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "suite.h"
 #include "common.h"
+
 
 
 int test_general(Log *log);
@@ -27,12 +29,31 @@ int test_dvdgraph(Log *log);
 
 int test_proc(Log *log);
 
+EXTERN_SUITE(fir);
+FLAT_SUITE(all, "Test session")
+  SUITE_FACTORY(fir),
+SUITE_END;
+
 int main(int argc, char **argv)
 {
   Log log(LOG_SCREEN | LOG_HEADER | LOG_STATUS, "test.log");
   log.msg("Valib build info:\n%s", valib_build_info());
 
-  log.msg("Start test session");
+  Test *all = CREATE_SUITE(all);
+
+  if (argc == 1)
+    all->run(&log);
+
+  if (argc > 1) for (int i = 1; i < argc; i++)
+  {
+    Test *t = all->find(argv[i]);
+    if (t == 0)
+      log.err("Unknown test: %s", argv[i]);
+    else
+      t->run(&log);
+  }
+
+  delete all;
 
   test_general(&log);
 

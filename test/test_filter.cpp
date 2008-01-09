@@ -117,6 +117,7 @@ Format change
 #include "all_filters.h"
 
 #include "filter_graph.h"
+#include "fir/param_ir.h"
 
 static const int formats[] = 
 { 
@@ -192,6 +193,8 @@ int test_rules(Log *log)
   Mixer          mixer_ib(2048); // immediate
   Resample       resample_up;    // upsample
   Resample       resample_down;  // downsample
+  ParamIR        low_pass_ir(IR_LOW_PASS, 0.5, 0.0, 0.1, 100, true);
+  Convolver      convolver(&low_pass_ir);
   Delay          delay;
   BassRedir      bass_redir_ip; // inplace
   BassRedir      bass_redir_ib; // immediate
@@ -331,6 +334,11 @@ int test_rules(Log *log)
     Speakers(FORMAT_LINEAR, MODE_5_1, 48000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
+  test_rules_filter(log, &convolver, "Convolver",
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
+    Speakers(FORMAT_LINEAR, MODE_5_1, 48000), 0,
+    Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
   test_rules_filter(log, &delay, "Delay",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
@@ -362,6 +370,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
+
 /*
   test_rules_filter(log, &dvd, "DVDGraph",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",

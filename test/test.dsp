@@ -132,6 +132,10 @@ SOURCE=.\test_filtergraph.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_fir.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_general.cpp
 # End Source File
 # Begin Source File
@@ -188,6 +192,14 @@ SOURCE=..\valib\filters\convert.cpp
 # Begin Source File
 
 SOURCE=..\valib\filters\convert.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\convolver.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\convolver.h
 # End Source File
 # Begin Source File
 
@@ -595,6 +607,10 @@ SOURCE=..\valib\filter_tester.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\fir.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\log.cpp
 # End Source File
 # Begin Source File
@@ -702,6 +718,18 @@ SOURCE=..\valib\dsp\fftsg_ld.h
 SOURCE=..\valib\dsp\kaiser.h
 # End Source File
 # End Group
+# Begin Group "fir"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\valib\fir\param_ir.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\fir\param_ir.h
+# End Source File
+# End Group
 # End Group
 # Begin Source File
 
@@ -714,6 +742,10 @@ SOURCE=.\common.cpp
 # Begin Source File
 
 SOURCE=.\common.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\suite.h
 # End Source File
 # Begin Source File
 

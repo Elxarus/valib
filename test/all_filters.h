@@ -37,11 +37,12 @@
 // Processing
 #include "filters\agc.h"
 #include "filters\mixer.h"
-#include "filters\resample.h"
 #include "filters\delay.h"
 #include "filters\bass_redir.h"
 #include "filters\levels.h"
 #include "filters\dejitter.h"
+#include "filters\resample.h"
+#include "filters\convolver.h"
 
 // Aggregates
 #include "filter_graph.h"
