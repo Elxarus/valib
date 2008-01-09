@@ -105,26 +105,26 @@ ParamIR::get_filter(int sample_rate, int n, sample_t *filter) const
   {
     case IR_LOW_PASS:
       for (i = 0; i < n_; i++)
-        filter[i] = (sample_t) (2 * f1_ * sinc((i - c_) * 2 * M_PI * f1_) * kaiser_window(i - c_, n_, alpha) / n);
+        filter[i] = (sample_t) (2 * f1_ * sinc((i - c_) * 2 * M_PI * f1_) * kaiser_window(i - c_, n_, alpha));
       return c_;
 
     case IR_HIGH_PASS:
       for (i = 0; i < n_; i++)
-        filter[i] = (sample_t) (-2 * f1_ * sinc((i - c_) * 2 * M_PI * f1_) * kaiser_window(i - c_, n_, alpha) / n);
+        filter[i] = (sample_t) (-2 * f1_ * sinc((i - c_) * 2 * M_PI * f1_) * kaiser_window(i - c_, n_, alpha));
       filter[c_] = 1 - filter[c_];
       return c_;
 
     case IR_BAND_PASS:
       for (i = 0; i < n_; i++)
         filter[i] = (sample_t) 
-          filter[i] = (sample_t) ((2 * f2_ * sinc((i - c_) * 2 * M_PI * f2_) - 2 * f1_ * sinc((i - c_) * 2 * M_PI * f1_)) * kaiser_window(i - c_, n_, alpha) / n);
+          filter[i] = (sample_t) ((2 * f2_ * sinc((i - c_) * 2 * M_PI * f2_) - 2 * f1_ * sinc((i - c_) * 2 * M_PI * f1_)) * kaiser_window(i - c_, n_, alpha));
       return c_;
 
     case IR_BAND_STOP:
       for (i = 0; i < n_; i++)
         filter[i] = (sample_t) 
-          filter[i] = (sample_t) ((2 * f1_ * sinc((i - c_) * 2 * M_PI * f1_) - 2 * f2_ * sinc((i - c_) * 2 * M_PI * f2_)) * kaiser_window(i - c_, n_, alpha) / n);
-      filter[c_] = (sample_t) ((2 * f1_ + 1 - 2 * f2_) * kaiser_window(i - c_, n_, alpha) / n);
+          filter[i] = (sample_t) ((2 * f1_ * sinc((i - c_) * 2 * M_PI * f1_) - 2 * f2_ * sinc((i - c_) * 2 * M_PI * f2_)) * kaiser_window(i - c_, n_, alpha));
+      filter[c_] = (sample_t) ((2 * f1_ + 1 - 2 * f2_) * kaiser_window(i - c_, n_, alpha));
       return c_;  
   };
   return 0;

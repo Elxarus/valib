@@ -41,7 +41,7 @@ Convolver::~Convolver()
 void
 Convolver::init()
 {
-  int ch;
+  int i, ch;
 
   uninit();
   ver = ir.version();
@@ -95,6 +95,9 @@ Convolver::init()
 
   memset(filter, 0, n * 2 * sizeof(sample_t));
   c = ir.get_filter(sample_rate, n, filter);
+
+  for (i = 0; i < n; i++)
+    filter[i] /= n;
 
   fft_ip[0] = 0;
   rdft(n * 2, 1, filter, fft_ip, fft_w);
