@@ -4,76 +4,106 @@
 #include "defs.h"
 
 /*
-  Random number generator is based on rg_rand.c by Ray Gardner:
+  Random number generator is based on:
 
-  longrand() -- generate 2**31-2 random numbers
-  based on "Random Number Generators: Good Ones Are Hard to Find",
+  "Random Number Generators: Good Ones Are Hard to Find",
   S.K. Park and K.W. Miller, Communications of the ACM 31:10 (Oct 1988),
-  and "Two Fast Implementations of the 'Minimal Standard' Random
-  Number Generator", David G. Carta, Comm. ACM 33, 1 (Jan 1990), p. 87-88
-  linear congruential generator f(z) = 16807 z mod (2 ** 31 - 1)
-  uses L. Schrage's method to avoid overflow problems
 
-  -----------------------------------------------------------------------
-  RNG class is random numbers generator.
+  "Two Fast Implementations of the 'Minimal Standard' Random Number Generator",
+  David G. Carta, Comm. ACM 33, 1 (Jan 1990), p. 87-88 linear congruential
+  generator f(z) = 16807 z mod (2 ** 31 - 1)
 
-  xxxx_int()   functions return number in range [-2^31-1...+2^31-1] or [-range...+range]
-  xxxx_uint()  functions return number in range [0...2^32] or [0...range]
-  xxxx_float() functions return number in range [-1...+1] or [-range...+range]
+  Implementation
+  ==============
+  RNG implements Park&Miller's 'Minimal standard' generator:
 
-  void set(long seed) initialize generator
+  f(z) = (a * z) mod m
+  where 
+    a = 16807 (most suggested by Park&Miller)
+    m = 2^31 - 1
 
-  following functions return next number in sequence but do not change
-  generator's state. So successive calls will return the same number.
+  It is a full-period generating function with sequence length of 2^31-2.
+  Note, that values 0 and 2^31-1 are not included and cannot be used to seed
+  the generator.
 
-  int32_t  next_int() const;
-  uint32_t next_uint() const;
-  float    next_float() const;
+  Method
+  ======
+  Carta proposes following method to calculate the next value of the sequence:
 
-  int32_t  next_int(int32_t range) const;
-  uint32_t next_uint(uint32_t range) const;
-  float    next_float(float range) const;
+  z := a * z
+  p := hi_31_bit(z) // only 16bits used, because 'a' is just 16bit wide
+  q := low_31_bit(z)
+  z := p + q
+  if (z >= 2^31)
+    z := z - 2^31 + 1
 
-  following functions return next number in sequence and update
-  generator's state. So successive calls will return successive
-  numbers in sequence.
+  To avoid 'if' statement we can just add the most significant bit to the
+  resulting value, so last 'if' statement turns into:
 
-  int32_t  get_int()                number in range 
-  uint32_t get_uint()               number in range [0...+2^32-2]
-  float    get_float()              number in range [-1...1]
+  z = clear_MSB(z + MSB(z));
 
-  int32_t  get_int(int32_t range)   number in range [-range...+range]
-  uint32_t get_uint(uint32_t range) number in range [-range...+range]
-  float    get_float(float range)   number in range [-range...+range]
+  Most common tasks
+  =================
+  * Fill an array with raw/sample noise
+  * Dithering noise
+  * Random integers in a given range
+
+  Plans
+  =====
+  Switch to Mersenne twister?
 */
-
 
 class RNG
 {
 protected:
-  int32_t seed;
-  int32_t next();
+  uint32_t z;
 
 public:
-  RNG(int32_t seed = 562343462);
+  RNG();
+  RNG(int seed);
+  RNG(const RNG &rng);
+  RNG &operator =(const RNG &rng);
+  
+  RNG &seed(int seed);
+  RNG &randomize();
 
-  void set(int32_t seed);
+  inline uint32_t next();
+  inline uint32_t get_range(uint32_t range);
+  inline sample_t get_sample();
 
-  int32_t  next_int()   const { return seed; }
-  uint32_t next_uint()  const { return uint32_t(seed); }
-  float    next_float() const { return float(seed/2147483647.0); }
-
-  int32_t  next_int(int32_t range) const;
-  uint32_t next_uint(uint32_t range) const;
-  float    next_float(float range) const;
-
-  int32_t  get_int()   { int32_t  r = next_int();   seed = next(); return r; }
-  uint32_t get_uint()  { uint32_t r = next_uint();  seed = next(); return r; }
-  float    get_float() { float    r = next_float(); seed = next(); return r; }
-
-  int32_t  get_int(int32_t range)   { int32_t  r = next_int(range);   seed = next(); return r; }
-  uint32_t get_uint(uint32_t range) { uint32_t r = next_uint(range);  seed = next(); return r; }
-  float    get_float(float range)   { float    r = next_float(range); seed = next(); return r; }
+  void fill_raw(void *data, size_t size);
+  void fill_samples(sample_t *sample, size_t size);
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+inline uint32_t
+RNG::next()
+{
+  static const uint32_t a = 16807;
+  uint32_t hi = a * (z >> 15);
+  uint32_t lo = a * (z & 0x7fff);
+  z = (hi >> 16) + ((hi << 15) & 0x7fffffff) + lo;
+  z = (z & 0x7fffffff) + (z >> 31);
+  return z;
+}
+
+inline uint32_t
+RNG::get_range(uint32_t range)
+{
+  uint32_t t = next();
+  uint32_t hi1 = t >> 16;
+  uint32_t lo1 = t & 0xffff;
+  uint32_t hi2 = range >> 16;
+  uint32_t lo2 = range & 0xffff;
+  return hi1*hi2 + ((hi1*lo2) >> 16) + ((hi2*lo1) >> 16);
+}
+
+inline sample_t
+RNG::get_sample()
+{
+  static const sample_t inv = 2.0 / 2147483646.0; // 2^31 - 2 = 2147483646
+  return (next() - 1) * inv - 1.0;
+}
 
 #endif

@@ -1,74 +1,109 @@
+#include "vtime.h"
 #include "rng.h"
 
-#define a 16807         /* multiplier */
-#define m 2147483647L   /* 2**31 - 1 */
-#define q 127773L       /* m div a */
-#define r 2836          /* m mod a */
+///////////////////////////////////////////////////////////////////////////////
+// Constructors and asignment
 
-
-RNG::RNG(int32_t _seed)
+RNG::RNG()
 {
-  set(_seed); 
-};
-
-void 
-RNG::set(int32_t _seed)
-{
-  seed = _seed;
+  z = 1;
 }
 
-int32_t 
-RNG::next()
+RNG::RNG(int _seed)
 {
-  uint32_t lo, hi;
+  seed(_seed);
+}
 
-  lo = a * (int32_t)(seed & 0xFFFF);
-  hi = a * (int32_t)((uint32_t)seed >> 16);
-  lo += (hi & 0x7FFF) << 16;
-  if (lo > m)
+RNG::RNG(const RNG &rng)
+{
+  z = rng.z;
+}
+
+RNG &
+RNG::operator =(const RNG &rng)
+{
+  z = rng.z;
+  return *this;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Seeding
+
+RNG &
+RNG::seed(int seed)
+{
+  z = seed;
+  if (z >= (1U << 31) - 1) z = 1; // 2^31-1 and higher seeds are disallowed
+  if (z == 0) z = 1; // zero seed is disallowed
+  return *this;
+}
+
+RNG &
+RNG::randomize()
+{
+  // todo: use more than just a time to randomize?
+  z = (uint32_t)(local_time() * 1000) & 0x7fffffff;
+  next();
+  return *this;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Filling
+
+void
+RNG::fill_raw(void *data, size_t size)
+{
+  size_t i;
+  uint8_t  *ptr8;
+  uint32_t *ptr32;
+  size_t head_len, block_len, tail_len;
+
+  // process small block
+  if (size < 32)
   {
-    lo &= m;
-    ++lo;
+    ptr8 = (uint8_t *)data;
+    for (i = 0; i < size; i++)
+      ptr8[i] = next() >> 23; // use high 8 bits of 31-bit word
+    return;
   }
-  lo += hi >> 15;
-  if (lo > m)
+
+  // arrange to 32-bit boundary
+  ptr8 = (uint8_t *)data;
+  head_len = (unsigned int)data & 3;
+  size -= head_len;
+  for (i = 0; i < head_len; i++)
+    ptr8[i] = next() >> 23; // use high 8 bits of 31-bit word
+
+  // We must take in account that generator makes 31bit values. Therefore we
+  // have to add one bit to each word. Generation of 2 values for each 32bit
+  // word doubles the work. To avoid this we'll generate only 1 extra word for
+  // each 8 words and unroll the main cycle.
+  ptr32 = (uint32_t *)(ptr8 + head_len);
+  block_len = (size >> 5) << 3; // in 32bit words, multiply of 8 words
+  size -= block_len << 2;
+  for (i = 0; i < block_len; i += 8)
   {
-    lo &= m;
-    ++lo;
+    uint32_t extra = next();
+    ptr32[i+0] = next() | ((extra >> 30) << 31);
+    ptr32[i+1] = next() | ((extra >> 29) << 31);
+    ptr32[i+2] = next() | ((extra >> 28) << 31);
+    ptr32[i+3] = next() | ((extra >> 27) << 31);
+    ptr32[i+4] = next() | ((extra >> 26) << 31);
+    ptr32[i+5] = next() | ((extra >> 25) << 31);
+    ptr32[i+6] = next() | ((extra >> 24) << 31);
+    ptr32[i+7] = next() | ((extra >> 23) << 31);
   }
-  return (int32_t)lo;
+
+  // Fill the tail
+  ptr8 = (uint8_t *)(ptr32 + block_len);
+  tail_len = size;
+  for (i = 0; i < tail_len; i++)
+    ptr8[i] = next() >> 23; // use high 8 bits of 31-bit word
 }
 
-int32_t
-RNG::next_int(int32_t range) const
+void
+RNG::fill_samples(sample_t *sample, size_t size)
 {
-  int32_t  hi1 = seed;
-  uint32_t lo1 = uint32_t(hi1) & 0xffff;
-  hi1 >>= 16;
-
-  int32_t  hi2 = range;
-  uint32_t lo2 = uint32_t(hi2) & 0xffff;
-  hi2 >>= 16;
-
-  return hi1*hi2 + ((hi1*lo2) >> 16) + ((hi2*lo1) >> 16);
-}
-
-uint32_t
-RNG::next_uint(uint32_t range) const
-{
-  uint32_t hi1 = seed;
-  uint32_t lo1 = hi1 & 0xffff;
-  hi1 >>= 16;
-
-  uint32_t hi2 = range;
-  uint32_t lo2 =hi2 & 0xffff;
-  hi2 >>= 16;
-
-  return hi1*hi2 + ((hi1*lo2) >> 16) + ((hi2*lo1) >> 16);
-}
-
-float
-RNG::next_float(float range) const
-{
-  return float(seed) * range / m;
+  for (size_t i = 0; i < size; i++)
+    sample[i] = get_sample();
 }
