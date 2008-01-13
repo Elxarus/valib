@@ -316,7 +316,7 @@ test_syncer(Log *log)
   s.set_standard(SYNCMASK_MAD);
 
   const int size = 10000000;
-  const int syncpoints = 1683;
+  const int syncpoints = 2742;
   const vtime_t time_per_test = 1.0;
   int sync_count;
   int runs;

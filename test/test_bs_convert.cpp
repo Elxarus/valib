@@ -68,16 +68,7 @@ protected:
     }
 
     RNG rng(seed);
-
-    uint32_t *ptr32 = (uint32_t *)ref_buf;
-    uint32_t *end32 = (uint32_t *)(ref_buf + size - 3);
-    while (ptr32 < end32)
-      *ptr32++ = rng.get_uint();
-
-    uint8_t *ptr8 = (uint8_t *)ptr32;
-    uint8_t *end8 = ref_buf + size;
-    while (ptr8 < end8)
-      *ptr8++ = rng.get_uint();
+    rng.fill_raw(ref_buf, size);
 
     ref_size = size;
     size1 = 0;

@@ -341,7 +341,7 @@ public:
     RNG rng(234256);
     for (i = 0; i < AC3_BLOCK_SAMPLES * blocks; i++)
     {
-      data[i] = rng.get_float();
+      data[i] = rng.get_sample();
       data_ref[i] = data[i];
     }
 
@@ -386,7 +386,7 @@ public:
     RNG rng(234256);
     for (i = 0; i < AC3_BLOCK_SAMPLES * blocks; i++)
     {
-      data[i] = rng.get_float(2.0)-1.0;
+      data[i] = rng.get_sample();
       data_ref[i] = data[i];
     }
 
@@ -417,7 +417,6 @@ public:
 
   void speed_imdct()
   {
-    int s;
     IMDCT imdct;
     SampleBuf samples;
     SampleBuf delay;
@@ -425,12 +424,8 @@ public:
 
     samples.allocate(1, AC3_BLOCK_SAMPLES);
     delay.allocate(1, AC3_BLOCK_SAMPLES);
-
-    for (s = 0; s < AC3_BLOCK_SAMPLES; s++)
-      samples[0][s] = rng.next_float(1.0);
-
-    for (s = 0; s < AC3_BLOCK_SAMPLES; s++)
-      delay[0][s] = rng.next_float(1.0);
+    rng.fill_samples(samples[0], AC3_BLOCK_SAMPLES);
+    rng.fill_samples(delay[0], AC3_BLOCK_SAMPLES);
 
     CPUMeter cpu;
     cpu.reset();
@@ -475,8 +470,8 @@ public:
     {
       for (i = 0; i < 256; i++)
       {
-        data_ref[512 * block + i] = (rng.get_float(2.0) - 1.0) * w[i];
-        data_ref[512 * block + i + 256] = (rng.get_float(2.0) - 1.0) * w[255 - i];
+        data_ref[512 * block + i] = rng.get_sample() * w[i];
+        data_ref[512 * block + i + 256] = rng.get_sample() * w[255 - i];
         data[512 * block + i] = int16_t(data_ref[512 * block + i] * 32767);
         data[512 * block + i + 256] = int16_t(data_ref[512 * block + i + 256] * 32767);
       }
@@ -512,11 +507,9 @@ public:
     RNG rng;
 
     input.allocate(1, AC3_BLOCK_SAMPLES);
-    for (s = 0; s < AC3_BLOCK_SAMPLES; s++)
-      input[0][s] = rng.get_float(1.0);
 
-    for (s = 0; s < AC3_BLOCK_SAMPLES; s++)
-      delay[s] = rng.get_int(32768);
+    rng.fill_samples(input[0], AC3_BLOCK_SAMPLES);
+    rng.fill_raw(delay, AC3_BLOCK_SAMPLES * 2);
 
     CPUMeter cpu;
     cpu.reset();

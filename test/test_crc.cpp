@@ -91,23 +91,24 @@ public:
 
   void speed_test()
   {
-    Chunk chunk;
-    Noise noise(spk_unknown, size, size);
-    noise.set_seed(47564321);
-    noise.get_chunk(&chunk);
+    RNG rng(47564321);
+    uint8_t *data = new uint8_t[size];
+    rng.fill_raw(data, size);
 
     crc.init(POLY_CRC16, 16);
 
     log->open_group("CRC speed test");
-    speed_test_table(chunk.rawdata, chunk.size, 0x7589);
-    speed_test(BITSTREAM_8,    "byte stream", chunk.rawdata, chunk.size, 0x75890000);
-    speed_test(BITSTREAM_14BE, "14bit BE",    chunk.rawdata, chunk.size, 0xaf9b0000);
-    speed_test(BITSTREAM_14LE, "14bit LE",    chunk.rawdata, chunk.size, 0xba690000);
-    speed_test(BITSTREAM_16BE, "16bit BE",    chunk.rawdata, chunk.size, 0x75890000);
-    speed_test(BITSTREAM_16LE, "16bit LE",    chunk.rawdata, chunk.size, 0x826f0000);
-    speed_test(BITSTREAM_32BE, "32bit BE",    chunk.rawdata, chunk.size, 0x75890000);
-    speed_test(BITSTREAM_32LE, "32bit LE",    chunk.rawdata, chunk.size, 0x00470000);
+    speed_test_table(data, size, 0xc30d);
+    speed_test(BITSTREAM_8,    "byte stream", data, size, 0xc30d0000);
+    speed_test(BITSTREAM_14BE, "14bit BE",    data, size, 0xe7c70000);
+    speed_test(BITSTREAM_14LE, "14bit LE",    data, size, 0x91e80000);
+    speed_test(BITSTREAM_16BE, "16bit BE",    data, size, 0xc30d0000);
+    speed_test(BITSTREAM_16LE, "16bit LE",    data, size, 0x56860000);
+    speed_test(BITSTREAM_32BE, "32bit BE",    data, size, 0xc30d0000);
+    speed_test(BITSTREAM_32LE, "32bit LE",    data, size, 0xabff0000);
     log->close_group();
+
+    delete data;
   }
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -134,9 +135,7 @@ public:
       for (int size = 0; size < max_size; size += word_size[bs_index])
         for (int shift = 0; shift < max_shift; shift++)
         {
-          // fill buffer with noise data
-          for (i = 0; i < array_size(buf); i++)
-            buf[i] = (uint8_t)rng.get_uint(256);
+          rng.fill_raw(buf, sizeof(buf));
 
           // calc message reference crc
           crc_msg = 0;
@@ -199,9 +198,7 @@ public:
           int start_bit  = shift % bpw;
           int end_bit    = (shift + size) % bpw;
 
-          // fill buffer with noise data
-          for (i = 0; i < array_size(buf); i++)
-            buf[i] = (uint8_t)rng.get_uint(256);
+          rng.fill_raw(buf, sizeof(buf));
 
           // calc message reference crc
           crc_msg = 0;

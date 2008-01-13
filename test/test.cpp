@@ -32,9 +32,23 @@ int test_proc(Log *log);
 EXTERN_SUITE(fir);
 EXTERN_TEST(rng);
 
-FLAT_SUITE(all, "Test session")
+FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(fir),
   TEST_FACTORY(rng),
+SUITE_END;
+
+EXTERN_TEST(rng_proof);
+FLAT_SUITE(heavy, "Long tests")
+  TEST_FACTORY(rng_proof),
+SUITE_END;
+
+FLAT_SUITE(speed, "Speed tests")
+SUITE_END;
+
+FLAT_SUITE(all, "All tests")
+  SUITE_FACTORY(tests),
+  SUITE_FACTORY(heavy),
+  SUITE_FACTORY(speed),
 SUITE_END;
 
 int main(int argc, char **argv)
@@ -45,7 +59,11 @@ int main(int argc, char **argv)
   Test *all = CREATE_SUITE(all);
 
   if (argc == 1)
-    all->run(&log);
+  {
+    // Run common tests only
+    Test *t = all->find("tests");
+    t->run(&log);
+  }
 
   if (argc > 1) for (int i = 1; i < argc; i++)
   {
