@@ -20,11 +20,12 @@ protected:
   std::string label;
   bool flat;
   vtime_t runtime;
+  Log *log;
 
-  virtual bool do_test(Log *log) { return true; }
+  virtual bool do_test() = 0;
 
 public:
-  Test(const char *_name, const char *_label, bool _flat = true): name(_name), label(_label), flat(_flat), runtime(0) {}
+  Test(const char *_name, const char *_label, bool _flat = true): name(_name), label(_label), flat(_flat), runtime(0), log(0) {}
   virtual ~Test() {}
 
   virtual Test *find(const char *_name)
@@ -32,9 +33,10 @@ public:
     return name == _name? this: 0;
   }
 
-  virtual bool run(Log *log)
+  virtual bool run(Log *_log)
   {
-    assert(log);
+    assert(_log);
+    log = _log;
 
     if (flat)
       log->msg(label.c_str());
@@ -42,12 +44,13 @@ public:
       log->open_group(label.c_str());
 
     runtime = local_time();
-    bool result = do_test(log);
+    bool result = do_test();
     runtime = local_time() - runtime;
 
     if (!flat)
       log->close_group();
 
+    log = 0;
     return result;
   }
 
@@ -66,7 +69,7 @@ class TestSuite : public Test
 protected:
   std::vector<Test *> tests;
 
-  virtual bool do_test(Log *log)
+  virtual bool do_test()
   {
     bool result = true;
     for (int i = 0; i < tests.size(); i++)
@@ -161,7 +164,7 @@ class Test_##name : public Test {                     \
 public:                                               \
   Test_##name(): Test(#name, label) {}                \
 protected:                                            \
-  virtual bool do_test(Log *log) {
+  virtual bool do_test() {
 
 #define TEST_END(name)                                \
     return true; }                                    \
