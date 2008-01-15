@@ -29,28 +29,27 @@ class WasRun : public Test
 protected:
   bool was_run_flag;
 
-  bool do_test()
+  TestResult do_test()
   {
-    bool result = true;
-    CHECK(sub_test1());
+    CHECK(sub_test1().passed());
     for (int i = 0; i < 3; i++)
-      CHECK(sub_test2(i));
+      CHECK(sub_test2(i).failed());
     was_run_flag = true;
-    return true;
+    return test_passed;
   }
 
-  bool sub_test1()
+  TestResult sub_test1()
   {
     log->msg("Sub test 1");
     CHECK(true);
-    return true;
+    return test_passed;
   }
 
-  bool sub_test2(int param)
+  TestResult sub_test2(int param)
   {
     log->msg("Sub test 2 with parameter %i", param);
     CHECK(true);
-    return true;
+    return test_passed;
   }
 
 public:
@@ -76,17 +75,17 @@ TEST(suite_test, "Test suite self-test")
 
   WasRun was_run;
   CHECK(was_run.was_run() == false);
-  CHECK(was_run.run(&dummy_log));
+  CHECK(was_run.run(&dummy_log).passed());
   CHECK(was_run.was_run() == true);
 
   // Run plain tests
 
   t = CREATE_TEST(plain_success);
-  CHECK(t->run(&dummy_log) == true);
+  CHECK(t->run(&dummy_log).passed());
   delete t;
 
   t = CREATE_TEST(plain_fail);
-  CHECK(t->run(&dummy_log) == false);
+  CHECK(t->run(&dummy_log).failed());
   delete t;
 
 TEST_END(suite_test);

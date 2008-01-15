@@ -11,7 +11,25 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 class Test;
+class TestResult;
 typedef Test *test_factory();
+
+class TestResult
+{
+protected:
+  bool result;
+
+public:
+  TestResult(bool r): result(r) {};
+  TestResult(const TestResult &r) { result = r.result; }
+  TestResult &operator =(const TestResult &r) { result = r.result; return *this; }
+
+  bool passed() { return result; }
+  bool failed() { return !result; }
+};
+
+extern const TestResult test_passed;
+extern const TestResult test_failed;
 
 class Test
 {
@@ -22,7 +40,7 @@ protected:
   vtime_t runtime;
   Log *log;
 
-  virtual bool do_test() = 0;
+  virtual TestResult do_test() = 0;
 
 public:
   Test(const char *_name, const char *_label, bool _flat = true): name(_name), label(_label), flat(_flat), runtime(0), log(0) {}
@@ -33,7 +51,7 @@ public:
     return name == _name? this: 0;
   }
 
-  virtual bool run(Log *_log)
+  virtual TestResult run(Log *_log)
   {
     assert(_log);
     log = _log;
@@ -44,7 +62,7 @@ public:
       log->open_group(label.c_str());
 
     runtime = local_time();
-    bool result = do_test();
+    TestResult result = do_test();
     runtime = local_time() - runtime;
 
     if (!flat)
@@ -69,16 +87,16 @@ class TestSuite : public Test
 protected:
   std::vector<Test *> tests;
 
-  virtual bool do_test()
+  virtual TestResult do_test()
   {
-    bool result = true;
+    bool passed = true;
     for (int i = 0; i < tests.size(); i++)
       // Here we assume that tests are indepenent, so we can continure testing
       // even after fail. In this way we can see a full list of failed
       // modules. It is important because a module that causes the trouble may
       // be tested AFTER modules that depend on it.
-      result &= tests[i]->run(log);
-    return result;
+      passed = passed && tests[i]->run(log).passed();
+    return TestResult(passed);
   }
 
 public:
@@ -164,10 +182,10 @@ class Test_##name : public Test {                     \
 public:                                               \
   Test_##name(): Test(#name, label) {}                \
 protected:                                            \
-  virtual bool do_test() {
+  virtual TestResult do_test() {
 
 #define TEST_END(name)                                \
-    return true; }                                    \
+    return test_passed; }                             \
 };                                                    \
 extern "C" Test *test_factory_##name()                \
 { return new Test_##name(); };                        \
@@ -225,10 +243,10 @@ test_factory *Suite_##name::suite[] = {
 
 
 
-#define CHECK(c) if (!(c)) { log->err("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); return false; }
-#define CHECKT(c, desc) if (!(c)) { log->msg("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); log->err desc; return false; }
+#define CHECK(c) if (!(c)) { log->err("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); return test_failed; }
+#define CHECKT(c, desc) if (!(c)) { log->msg("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); log->err desc; return test_failed; }
 
-#define CHECK_DELTA(a, b, delta) if ((a) > (b)? ((a)-(b)) > (delta): ((b)-(a)) > (delta)) { log->err("Check failed: |%s-%s| > %s (%s:%i)", #a, #b, #delta, __FILE__, __LINE__); return false; }
-#define CHECKT_DELTA(a, b, delta, desc) if ((a) > (b)? ((a)-(b)) > (delta): ((b)-(a)) > (delta)) { log->msg("Check failed: |%s-%s| > %s (%s:%i)", #a, #b, #delta, __FILE__, __LINE__); log->err desc; return false; }
+#define CHECK_DELTA(a, b, delta) if ((a) > (b)? ((a)-(b)) > (delta): ((b)-(a)) > (delta)) { log->err("Check failed: |%s-%s| > %s (%s:%i)", #a, #b, #delta, __FILE__, __LINE__); return test_failed; }
+#define CHECKT_DELTA(a, b, delta, desc) if ((a) > (b)? ((a)-(b)) > (delta): ((b)-(a)) > (delta)) { log->msg("Check failed: |%s-%s| > %s (%s:%i)", #a, #b, #delta, __FILE__, __LINE__); log->err desc; return test_failed; }
 
 #endif

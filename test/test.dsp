@@ -164,6 +164,10 @@ SOURCE=.\test_streambuf.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_suite.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_syncer.cpp
 # End Source File
 # End Group
@@ -746,6 +750,10 @@ SOURCE=.\common.cpp
 # Begin Source File
 
 SOURCE=.\common.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\suite.cpp
 # End Source File
 # Begin Source File
 
