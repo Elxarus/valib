@@ -5,27 +5,15 @@
   1. Transform test
   1.1. pes to raw stream tests
   1.2. all possible pes format transitions test
-
   2. Speed test on noise
-
   3. Speed test on file
-
-  Required files:
-  test.mpa
-  test.ac3
-  test.dts
-  test.mpa.pes
-  test.ac3.pes
-  test.dts.pes
-  test.all2
-  test.all2.pes
 */
 
 #include "log.h"
 #include "filter_tester.h"
 #include "filters\spdifer.h"
 #include "filters\demux.h"
-#include <source\noise.h>
+#include <source\generator.h>
 #include <source\raw_source.h>
 #include <win32\cpu.h>
 #include "common.h"
@@ -33,8 +21,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Test constants
 
-static const vtime_t time_per_test = 1.0; // 1s per speed test
+static const int seed = 98754;
 static const int noise_size = 10000000;   // use 10MB noise buffer
+static const vtime_t time_per_test = 1.0; // 1s per speed test
 static const char *file_pes = "a.madp.mix.pes";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,7 +80,7 @@ public:
 
     Chunk ichunk;
     Chunk ochunk;
-    Noise noise(Speakers(FORMAT_PES, 0, 0), noise_size, noise_size);
+    NoiseGen noise(Speakers(FORMAT_PES, 0, 0), seed, noise_size, noise_size);
     noise.get_chunk(&ichunk);
 
     CPUMeter cpu;

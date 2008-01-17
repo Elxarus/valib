@@ -1,8 +1,10 @@
 #include <memory.h>
 #include "common.h"
-#include "source/noise.h"
+#include "source/generator.h"
 #include "source/raw_source.h"
 
+static const int seed = 34539487;
+static const int noise_size = 1024*1024*1024; // 1Mb
 
 int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter)
 {
@@ -204,11 +206,11 @@ int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter,
 
 int crash_test(Log *log, Speakers spk, Filter *filter)
 {
-  Noise noise;
+  NoiseGen noise;
   NullSink null;
   
-  noise.set_seed(2356437);
-  if (!noise.set_output(spk, 1024*1024*1024))
+  noise.setup(spk, seed, noise_size);
+  if (noise.get_output().is_unknown())
     return log->err("cannot open noise source with format %s %s %ikHz", spk.format_text(), spk.mode_text(), spk.sample_rate);
 
   if (!filter->set_input(spk))

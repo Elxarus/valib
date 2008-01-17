@@ -6,11 +6,13 @@
 #include "log.h"
 #include "filter_tester.h"
 #include "filter_graph.h"
-#include <source\noise.h>
+#include <source\generator.h>
 #include <source\raw_source.h>
 #include <win32\cpu.h>
 #include "common.h"
 
+static const int seed = 309485;
+static const int noise_size = 65536;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class
@@ -44,34 +46,27 @@ public:
     log->open_group("Null transform test");
 
     Speakers spk;
-    int seed = 9754397;
-    Noise src;
-    Noise ref;
+    NoiseGen src;
+    NoiseGen ref;
 
     // Rawdata test
     log->msg("Rawdata null transform test");
-    spk.set(FORMAT_PCM16, MODE_STEREO, 48000, 65536);
+    spk.set(FORMAT_PCM16, MODE_STEREO, 48000);
+    src.setup(spk, seed, noise_size);
+    ref.setup(spk, seed, noise_size);
 
-    src.set_seed(seed);
-    ref.set_seed(seed);
-
-    if (src.set_output(spk) &&
-        ref.set_output(spk) &&
-        t.set_input(spk))
+    if (t.set_input(spk))
       compare(log, &src, &t, &ref);
     else
       log->err("Init failed");
 
     // Linear test
     log->msg("Linear null transform test");
-    spk.set(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0);
+    spk.set(FORMAT_LINEAR, MODE_STEREO, 48000);
+    src.setup(spk, seed, noise_size);
+    ref.setup(spk, seed, noise_size);
 
-    src.set_seed(seed);
-    ref.set_seed(seed);
-
-    if (src.set_output(spk) &&
-        ref.set_output(spk) &&
-        t.set_input(spk))
+    if (t.set_input(spk))
       compare(log, &src, &t, &ref);
     else
       log->err("Init failed");

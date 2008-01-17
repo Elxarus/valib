@@ -8,9 +8,12 @@
 */
 
 #include "source/raw_source.h"
-#include "source/noise.h"
+#include "source/generator.h"
 #include "filters/proc.h"
 #include "common.h"
+
+static const int seed = 445676;
+static const int noise_samples = 128*1024;
 
 // PCM passthrough test
 // (we cannot test FORMAT_PCMFLOAT because noise generates
@@ -41,38 +44,34 @@ int test_proc(Log *log)
 
   int iformat = 0;
   int imode = 0;
-  const int seed = 345346;
-  const int nsamples = 128*1024;
 
   Speakers spk;
-  Noise src;
-  Noise ref;
+  NoiseGen src;
+  NoiseGen ref;
   AudioProcessor proc(2048);
 
   for (iformat = 0; iformat < array_size(formats); iformat++)
     for (imode = 0; imode < array_size(modes); imode++)
     {
       spk.set(formats[iformat], modes[imode], 48000, levels[iformat]);
-      log->msg("Testing %s %s %iHz with %iK samples", spk.format_text(), spk.mode_text(), spk.sample_rate, nsamples / 1024);
+      log->msg("Testing %s %s %iHz with %iK samples", spk.format_text(), spk.mode_text(), spk.sample_rate, noise_samples / 1024);
 
-      if (!src.set_output(spk) || 
-          !ref.set_output(spk) )
+      if (spk.format == FORMAT_LINEAR)
+      {
+        src.setup(spk, seed, noise_samples);
+        ref.setup(spk, seed, noise_samples);
+      }
+      else
+      {
+        src.setup(spk, seed, noise_samples * spk.nch() * spk.sample_size());
+        ref.setup(spk, seed, noise_samples * spk.nch() * spk.sample_size());
+      }
+
+      if (src.get_output().is_unknown() || ref.get_output().is_unknown())
       {
         log->err("Cannot init noise source");
         continue;
       }
-      if (spk.format == FORMAT_LINEAR)
-      {
-        src.set_data_size(nsamples);
-        ref.set_data_size(nsamples);
-      }
-      else
-      {
-        src.set_data_size(nsamples * spk.nch() * spk.sample_size());
-        ref.set_data_size(nsamples * spk.nch() * spk.sample_size());
-      }
-      src.set_seed(seed);
-      ref.set_seed(seed);
 
       if (!proc.set_input(spk) || !proc.set_user(spk))
       {

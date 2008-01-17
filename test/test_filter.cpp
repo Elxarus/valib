@@ -792,7 +792,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // (use noise source for unknown format)
   INIT_CYCLED(spk_supported, filename);
   {
-    Noise noise(spk_unknown, data_size, data_size);
+    NoiseGen noise(spk_unknown, 1, data_size, data_size);
     noise.get_chunk(&chunk);
     PROCESS_OK(chunk,               "process(dummy) failed");
   }

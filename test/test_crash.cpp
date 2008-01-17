@@ -11,9 +11,9 @@
 #include "filters\spdifer.h"
 #include "filters\decoder.h"
 #include "filters\dvd_graph.h"
+#include "source\generator.h"
 
-#include "source\noise.h"
-
+static const int seed = 9374;
 static const int noise_size = 1024 * 1024;
 
 int test_crash(Log *log);
@@ -59,7 +59,7 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
 {
   log->msg("Testing filter %s with format %s %s", filter_name, spk.format_text(), spk.mode_text());
 
-  Noise noise;
+  NoiseGen noise;
   Chunk ichunk;
   Chunk ochunk;
   size_t isize = 0;
@@ -69,7 +69,7 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
   if (!f.set_input(spk))
     return log->err("filter->set_input() failed!");
 
-  if (!noise.set_output(spk, noise_size))
+  if (!noise.setup(spk, seed, noise_size))
     return log->err("noise.set_output() failed!");
 
   while (!noise.is_empty())

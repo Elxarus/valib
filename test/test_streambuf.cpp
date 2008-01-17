@@ -45,7 +45,7 @@
 #include "auto_file.h"
 #include "filter_tester.h"
 
-#include "source\noise.h"
+#include "source\generator.h"
 #include "source\raw_source.h"
 #include "win32\cpu.h"
 
@@ -59,6 +59,7 @@
 // Test constants
 
 static const vtime_t time_per_test = 1.0; // 1 sec for each speed test
+static const int seed = 75985;
 static const int noise_size = 10000000;   // noise speed test buffer size
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -266,7 +267,7 @@ public:
 
     CPUMeter cpu;
     Chunk chunk;
-    Noise noise(spk_unknown, noise_size, noise_size);
+    NoiseGen noise(spk_unknown, seed, noise_size, noise_size);
     noise.get_chunk(&chunk);
 
     cpu.reset();

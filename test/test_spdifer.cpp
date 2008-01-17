@@ -28,7 +28,7 @@
 #include "log.h"
 #include "filter_tester.h"
 #include "filters\spdifer.h"
-#include <source\noise.h>
+#include <source\generator.h>
 #include <source\raw_source.h>
 #include <win32\cpu.h>
 #include "common.h"
@@ -39,6 +39,7 @@
 static const vtime_t time_per_test = 1.0; // 1 sec for each speed test
 
 // noise speed test
+static const int seed = 84735;
 static const int noise_size = 10000000;
 
 // file speed test
@@ -102,7 +103,7 @@ public:
 
     Chunk ichunk;
     Chunk ochunk;
-    Noise noise(Speakers(FORMAT_AC3, 0, 0), noise_size, noise_size);
+    NoiseGen noise(Speakers(FORMAT_AC3, 0, 0), seed, noise_size, noise_size);
     noise.get_chunk(&ichunk);
 
     CPUMeter cpu;

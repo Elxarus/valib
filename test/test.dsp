@@ -148,6 +148,10 @@ SOURCE=.\test_null.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_old_style.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_parser_filter.cpp
 # End Source File
 # Begin Source File
@@ -699,27 +703,11 @@ SOURCE=..\valib\source\generator.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\source\noise.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\source\noise.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\source\raw_source.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\source\raw_source.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\source\zero_source.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\source\zero_source.h
 # End Source File
 # End Group
 # Begin Group "dsp"

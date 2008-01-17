@@ -8,12 +8,14 @@
 */
 
 #include "log.h"
-#include "source\noise.h"
+#include "source\generator.h"
 #include "filters\parser_filter.h"
 #include "parsers\ac3\ac3_parser.h"
 #include "parsers\dts\dts_parser.h"
 #include "parsers\mpa\mpa_parser.h"
 #include "parsers\spdif\spdif_parser.h"
+
+static const int seed = 4346;
 
 class ParserFilter_test
 {
@@ -91,8 +93,7 @@ public:
     const int max_frame_size = frame_parser->header_parser()->max_frame_size();
 
     // Prepare noise buffer
-
-    Noise noise(spk_rawdata, int(max_frame_size * 2.5), int(max_frame_size * 2.5));
+    NoiseGen noise(spk_rawdata, seed, int(max_frame_size * 2.5), int(max_frame_size * 2.5));
     Chunk noise_chunk;
     noise.get_chunk(&noise_chunk);
 

@@ -8,7 +8,7 @@
 #define TEST_SOURCE_H
 
 #include "source\raw_source.h"
-#include "source\noise.h"
+#include "source\generator.h"
 
 class TestSource: public Source
 {
@@ -16,7 +16,7 @@ protected:
   const char *filename;
 
   RAWSource   file;   // file source
-  Noise       noise;  // noise source
+  NoiseGen    noise;  // noise source
   Source     *source; // current source
 
 public:
@@ -37,8 +37,7 @@ public:
     else
     {
       source = &noise;
-      noise.set_output(_spk, MAX(10*_block_size, 65536), _block_size);
-      noise.set_seed(23545);
+      noise.setup(_spk, 8575, MAX(10*_block_size, 65536), _block_size);
       return true;
     }
   }

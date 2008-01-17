@@ -216,6 +216,10 @@ SOURCE=..\valib\filter_tester.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\fir.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\log.cpp
 # End Source File
 # Begin Source File
@@ -712,11 +716,11 @@ SOURCE=..\valib\source\dsound_source.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\source\noise.cpp
+SOURCE=..\valib\source\generator.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\source\noise.h
+SOURCE=..\valib\source\generator.h
 # End Source File
 # Begin Source File
 

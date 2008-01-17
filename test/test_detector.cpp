@@ -10,7 +10,7 @@
 #include "log.h"
 #include "filter_tester.h"
 #include "filters\detector.h"
-#include <source\noise.h>
+#include <source\generator.h>
 #include <source\raw_source.h>
 #include <win32\cpu.h>
 #include "common.h"
@@ -18,8 +18,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Test constants
 
-static const vtime_t time_per_test = 1.0;  // 1 sec for each speed test
+static const int seed = 2347;
 static const int noise_size = 1000000;     // noise buffer size
+static const vtime_t time_per_test = 1.0;  // 1 sec for each speed test
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -80,8 +81,8 @@ public:
     log->msg("Noise passthrogh test");
 
     Speakers spk = Speakers(FORMAT_RAWDATA, 0, 0);
-    Noise noise_src(spk, noise_size);
-    Noise noise_ref(spk, noise_size);
+    NoiseGen noise_src(spk, seed, noise_size);
+    NoiseGen noise_ref(spk, seed, noise_size);
 
     f->set_input(spk);
     compare(log, &noise_src, f, &noise_ref);
@@ -95,7 +96,7 @@ public:
     Speakers spk = Speakers(FORMAT_PCM16, 0, 0);
     Chunk ichunk;
     Chunk ochunk;
-    Noise noise(spk, noise_size, noise_size);
+    NoiseGen noise(spk, seed, noise_size, noise_size);
     noise.get_chunk(&ichunk);
 
     f->set_input(spk);

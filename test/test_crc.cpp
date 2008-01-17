@@ -11,7 +11,7 @@
 
 #include "log.h"
 #include "crc.h"
-#include "source\noise.h"
+#include "rng.h"
 #include "source\raw_source.h"
 #include "win32\cpu.h"
 

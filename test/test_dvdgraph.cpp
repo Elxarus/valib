@@ -9,7 +9,6 @@
 #include "log.h"
 #include "filter_tester.h"
 #include "filters\dvd_graph.h"
-#include <source\noise.h>
 #include <source\raw_source.h>
 #include <win32\cpu.h>
 #include "common.h"
@@ -20,9 +19,6 @@
 static const vtime_t time_per_test = 1.0;    // 1 sec for each speed test
 static const size_t min_data_size = 2048*12; // minimum data size to generate after state change:
                                              // size of 6-channel pcm16 data with more than maximum number of samples per frame
-
-// noise speed test
-static const int noise_size = 10000000;
 
 class SinkAcceptSpdif : public NullSink
 {

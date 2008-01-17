@@ -4,47 +4,40 @@
 #include "common.h"
 
 
-
-int test_general(Log *log);
-int test_bs_convert(Log *log);
-int test_crc(Log *log);
-int test_syncer(Log *log);
-int test_streambuffer(Log *log);
-int test_parser_filter(Log *log);
-
-int test_ac3(Log *log);
-
-int test_null(Log *log);
-int test_rules(Log *log);
-
-int test_crash(Log *log);
-int test_demux(Log *log);
-int test_spdifer(Log *log);
-int test_despdifer(Log *log);
-int test_detector(Log *log);
-
-int test_filtergraph(Log *log);
-int test_decodergraph(Log *log);
-int test_dvdgraph(Log *log);
-
-int test_proc(Log *log);
+// Common tests
 
 EXTERN_TEST(suite_test);
 EXTERN_SUITE(fir);
 EXTERN_TEST(rng);
 EXTERN_SUITE(convolver);
+EXTERN_TEST(old_style);
+
+// Heavy tests
+
+EXTERN_TEST(rng_proof);
+
+// Speed tests
+
+///////////////////////////////////////////////////////////
+// Common tests
 
 FLAT_SUITE(tests, "Common tests")
   TEST_FACTORY(suite_test),
   SUITE_FACTORY(fir),
   TEST_FACTORY(rng),
   SUITE_FACTORY(convolver),
+  TEST_FACTORY(old_style),
 SUITE_END;
 
-EXTERN_TEST(rng_proof);
-FLAT_SUITE(heavy, "Long tests")
+///////////////////////////////////////////////////////////
+// Heavy tests
+
+FLAT_SUITE(heavy, "Heavy tests")
   TEST_FACTORY(rng_proof),
 SUITE_END;
+
+///////////////////////////////////////////////////////////
+// Speed tests
 
 FLAT_SUITE(speed, "Speed tests")
 SUITE_END;
@@ -54,6 +47,10 @@ FLAT_SUITE(all, "All tests")
   SUITE_FACTORY(heavy),
   SUITE_FACTORY(speed),
 SUITE_END;
+
+///////////////////////////////////////////////////////////////////////////////
+// Main
+///////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char **argv)
 {
@@ -79,31 +76,6 @@ int main(int argc, char **argv)
   }
 
   delete all;
-
-  test_general(&log);
-
-  test_null(&log);
-  test_rules(&log);
-
-  test_crc(&log);
-  test_syncer(&log);
-  test_streambuffer(&log);
-  test_bs_convert(&log);
-  test_parser_filter(&log);
-  test_ac3(&log);
-
-  test_crash(&log);
-
-  test_demux(&log);
-  test_spdifer(&log);
-  test_despdifer(&log);
-  test_detector(&log);
-
-  test_proc(&log);
-
-  test_filtergraph(&log);
-  test_decodergraph(&log);
-  test_dvdgraph(&log);
 
   log.msg("-----------------------------------------------------------");
 

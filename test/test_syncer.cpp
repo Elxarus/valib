@@ -42,8 +42,16 @@
 #include <log.h>
 
 #include <syncscan.h>
-#include <source\noise.h>
+#include <source\generator.h>
 #include <win32\cpu.h>
+
+
+static const int seed = 8475987;
+static const int noise_size = 10000000;
+static const int noise_syncpoints = 2754;
+
+static const vtime_t time_per_test = 1.0;
+
 
 SyncScan s;
 
@@ -315,14 +323,11 @@ test_syncer(Log *log)
   s.clear_all();
   s.set_standard(SYNCMASK_MAD);
 
-  const int size = 10000000;
-  const int syncpoints = 2742;
-  const vtime_t time_per_test = 1.0;
   int sync_count;
   int runs;
 
   Chunk chunk;
-  Noise noise(spk_unknown, size, size);
+  NoiseGen noise(spk_unknown, seed, noise_size, noise_size);
   noise.get_chunk(&chunk);
 
   CPUMeter cpu;
@@ -351,8 +356,8 @@ test_syncer(Log *log)
   }
   cpu.stop();
 
-  if (sync_count != syncpoints * runs)
-    log->err("Syncpoints found: %i (must be %i)", sync_count / runs, syncpoints);
+  if (sync_count != noise_syncpoints * runs)
+    log->err("Syncpoints found: %i (must be %i)", sync_count / runs, noise_syncpoints);
 
   log->msg("Sync scan speed: %iMB/s, Syncpoints found: %i", 
     int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 
@@ -386,8 +391,8 @@ test_syncer(Log *log)
   }
   cpu.stop();
 
-  if (sync_count != syncpoints * runs)
-    log->err("Syncpoints found: %i (must be %i)", sync_count / runs, syncpoints);
+  if (sync_count != noise_syncpoints * runs)
+    log->err("Syncpoints found: %i (must be %i)", sync_count / runs, noise_syncpoints);
 
   log->msg("Sync scan speed: %iMB/s, Syncpoints found: %i", 
     int(double(chunk.size) * runs / cpu.get_thread_time() / 1000000), 
