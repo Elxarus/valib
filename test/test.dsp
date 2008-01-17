@@ -691,6 +691,14 @@ SOURCE=..\valib\vtime.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\valib\source\generator.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\generator.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\source\noise.cpp
 # End Source File
 # Begin Source File
