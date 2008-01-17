@@ -96,6 +96,10 @@ SOURCE=.\test_bs_convert.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_convolver.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_crash.cpp
 # End Source File
 # Begin Source File
@@ -700,6 +704,14 @@ SOURCE=..\valib\source\raw_source.cpp
 # Begin Source File
 
 SOURCE=..\valib\source\raw_source.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\zero_source.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\zero_source.h
 # End Source File
 # End Group
 # Begin Group "dsp"

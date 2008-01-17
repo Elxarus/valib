@@ -32,11 +32,13 @@ int test_proc(Log *log);
 EXTERN_TEST(suite_test);
 EXTERN_SUITE(fir);
 EXTERN_TEST(rng);
+EXTERN_SUITE(convolver);
 
 FLAT_SUITE(tests, "Common tests")
   TEST_FACTORY(suite_test),
   SUITE_FACTORY(fir),
   TEST_FACTORY(rng),
+  SUITE_FACTORY(convolver),
 SUITE_END;
 
 EXTERN_TEST(rng_proof);

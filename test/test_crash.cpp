@@ -14,6 +14,7 @@
 
 #include "source\noise.h"
 
+static const int noise_size = 1024 * 1024;
 
 int test_crash(Log *log);
 int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter_name);
@@ -68,11 +69,8 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
   if (!f.set_input(spk))
     return log->err("filter->set_input() failed!");
 
-  if (!noise.set_output(spk))
-    return log->err("noise.set_input() failed!");
-
-  if (!noise.set_output(spk, 1024*1024))
-    return log->err("noise.set_input() failed!");
+  if (!noise.set_output(spk, noise_size))
+    return log->err("noise.set_output() failed!");
 
   while (!noise.is_empty())
   {
