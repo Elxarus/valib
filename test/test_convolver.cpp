@@ -1,6 +1,5 @@
 #include <math.h>
 #include "suite.h"
-#include "common.h"
 #include "source/generator.h"
 #include "fir/param_ir.h"
 #include "filters/convolver.h"

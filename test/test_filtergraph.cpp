@@ -3,13 +3,12 @@
   * FilterGraph must behave like NullFilter
 */
 
-#include "log.h"
+#include "suite.h"
 #include "filter_tester.h"
 #include "filter_graph.h"
 #include <source\generator.h>
 #include <source\raw_source.h>
 #include <win32\cpu.h>
-#include "common.h"
 
 static const int seed = 309485;
 static const int noise_size = 65536;

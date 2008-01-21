@@ -7,7 +7,6 @@
 #include "filter_tester.h"
 #include "filters\decoder_graph.h"
 #include <source\raw_source.h>
-#include "common.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class

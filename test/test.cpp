@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "suite.h"
-#include "common.h"
 
 
 // Common tests

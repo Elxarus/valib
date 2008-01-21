@@ -2,10 +2,9 @@
   NullFilter noise passthrough test
 */
 
-#include "log.h"
+#include "suite.h"
 #include "filter.h"
 #include "source\generator.h"
-#include "common.h"
 
 static const int seed = 234987;
 static const int noise_size = 65536;

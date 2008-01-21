@@ -753,14 +753,6 @@ SOURCE=.\all_filters.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\common.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\common.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\suite.cpp
 # End Source File
 # Begin Source File

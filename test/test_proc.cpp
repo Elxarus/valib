@@ -7,10 +7,10 @@
   Use 48000 sample rate
 */
 
+#include "suite.h"
 #include "source/raw_source.h"
 #include "source/generator.h"
 #include "filters/proc.h"
-#include "common.h"
 
 static const int seed = 445676;
 static const int noise_samples = 128*1024;

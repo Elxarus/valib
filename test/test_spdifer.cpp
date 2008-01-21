@@ -25,13 +25,12 @@
 
 */
 
-#include "log.h"
+#include "suite.h"
 #include "filter_tester.h"
 #include "filters\spdifer.h"
 #include <source\generator.h>
 #include <source\raw_source.h>
 #include <win32\cpu.h>
-#include "common.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test constants

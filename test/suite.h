@@ -4,7 +4,22 @@
 #include <string>
 #include <vector>
 #include "log.h"
+#include "filter.h"
 #include "vtime.h"
+
+///////////////////////////////////////////////////////////////////////////////
+// Compare funcitons
+///////////////////////////////////////////////////////////////////////////////
+
+// Compare two streams from two sources. Stream formats are not compared when
+// reference stream has FORMAT_RAWDATA format. In this case data is compared
+// bonary, so formats of both streams must be raw, not FORMAT_LINEAR.
+// Second form of compare() uses filters to process streams.
+// Third form of compare() uses files instead of sources.
+
+int compare(Log *log, Source *src, Source *ref);
+int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter = 0);
+int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *src_filter, const char *fn_ref);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test class is the base for all tests and suites
