@@ -8,8 +8,10 @@
   * Filter - audio filter; source and receiver at the same time
 
   Base classes:
+  * NullFilter - filter that does nothing (passthrough filter)
+                 base class for most of filters
+                 contains infrastructure for descendant filters
   * NullSink - sink that drops all input
-  * NullFilter - simple passthrough filter
   * SourceFilter - combine source and filter as source
   * SinkFilter - combine sink and filter as sink
 */
@@ -791,6 +793,7 @@ public:
     if (_sink == 0) return false;
     sink = _sink;
     filter = _filter;
+    return true;
   }
 
   void release()
