@@ -9,7 +9,6 @@ int test_parser_filter(Log *log);
 
 int test_ac3(Log *log);
 
-int test_null(Log *log);
 int test_rules(Log *log);
 
 int test_crash(Log *log);
@@ -27,7 +26,6 @@ int test_proc(Log *log);
 TEST(old_style, "Old-stlye tests")
   test_general(log);
 
-  test_null(log);
   test_rules(log);
 
   test_crc(log);

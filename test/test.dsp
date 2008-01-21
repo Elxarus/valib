@@ -92,6 +92,10 @@ SOURCE=.\test_ac3.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_base.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_bs_convert.cpp
 # End Source File
 # Begin Source File
@@ -141,10 +145,6 @@ SOURCE=.\test_fir.cpp
 # Begin Source File
 
 SOURCE=.\test_general.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\test_null.cpp
 # End Source File
 # Begin Source File
 
