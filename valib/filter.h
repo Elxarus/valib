@@ -1,191 +1,19 @@
 /*
-  Abstract filter interface
-  NullFilter implementation
+  Abstract filter interface & base infrastructure
 
-  Terms
-  =====
-  * Aduio stream - continious block of audio data. 
-    (same format, may have associated timeline, 
-     stream sources: audio file, multimedia file, live source as sound card, 
-     internet, etc)
-  * Chunk - a structure used to carry audio data and stream events.
-  * Stream events
-    (format change, end-of-stream, syncronization)
+  Interfaces:
+  * Chunk - data carrier
+  * Sink - audio receiver
+  * Source - audio source
+  * Filter - audio filter; source and receiver at the same time
 
-  * Source
-  * Sink
-  * Filter
-
-  * Timestamps
-  * Syncpoints
-
-
-  Data flow
-  =========
-  ......
-
-  Filter data processing
-  ======================
-
-  * 2 sided data processing model (with block diagram)
-  * in-place processing
-  * buffered processing
-  * external references
-  * Buffering and flushing
-
-  Flow control
-  ============
-  ........
-
-
-  Format change rules
-  ===================
-
-  Source
-  ------
-
-  [s1] When source is full it must report output format exactly as it will 
-    appear at next output chunk.
-
-  [s2] Output format may change only in following cases:
-    1) after get_chunk() call
-    2) when is_empty() == true (should be avioded)
-    3) by call to descendants' class functions (only at working thread).
-
-  Sink
-  ----
-
-  [k1] Input format must be equal to spk_unknown when sink requires 
-    initialization (after creation, errors, etc). Others must not call
-    processing functions on uninitialized sink.
-
-  [k2] Input format may change only in following cases:
-    1) set_input() call.
-    2) process() call if chunk format differs from current input format.
-    3) by call to descendants' class functions (only at working thread).
-
-  [k3] Format switch call should succeed after successful query_input() call.
-
-  [k4] get_output() must report new format immediately after format switch.
-
-  Filter
-  ------
-
-  [f1] If output format depends on input data (parser, demuxer, etc) 
-    get_output() must report spk_unknown after following:
-    1) reset() call
-    2) input format switch (see [k2] rule)
-    3) call to descendants' class functions (only at working thread) that
-       may affect output format.
-
-    Filter must change its output format according to [s2] rule.
-
-  [f2] If output format doesn't depend on input data output format may change
-    only in following cases:
-    1) input format switch (see [k2] rule)
-    2) by call to descendants' class functions (only at working thread)
-
-    Filter cannot change output format during processing in this case.
-
-  [f3] It is possible that for some input formats output format may depend on
-    input data and for some it doesn't. In this case for dependent formats
-    filter must follow [f1] rule and [f2] rule for independent.
-
-  [f4] If output format changes according to [f2.2] to format that is
-    incompatible with current input format input format must change to 
-    spk_unknown indicating that input should be reinitialized according to
-    [k1] rule.
-
-  [f5] Filter must be empty and have drop internal buffers after following:
-    1) reset() call
-    2) input format change
-    3) call to descendants' class function that affects input/output format or
-       buffered data.
-
-  Summary of filter format changes:
-  -----------------------------+--------------+---------------+
-                               | Input format | Output format |
-  -----------------------------+--------------+---------------+
-  reset()                      |      -       |     ofdd      |
-  set_input()                  |      +       |      +        |
-  process() (no format change) |      -       |     ofdd      |
-  process() (format change)    |      +       |      +        |
-  get_chunk()                  |      -       |     ofdd      |
-  -----------------------------+--------------+---------------+
-                      ofdd - when output format depends on data
-
-  Examples of format change
-  -------------------------
-
-  Rules [s1] and [s2]:
-    if (!source.is_empty())
-    {
-      spk1 = source.get_output();
-      source.get_chunk(chunk1);
-      assert(chunk1.spk == spk1);
-      ...
-      if (!source.is_empty())
-      {
-        spk2 = source.get_output();
-        source.get_chunk(chunk2);
-        assert(chunk2.spk == spk2);
-        // note that spk2 may differ from spk1
-      }
-    }
-
-  Rule [k3]:
-    if (sink.query_input(spk))
-      assert(sink.set_input(spk));
-
-    if (sink.query_input(chunk.spk))
-      assert(sink.process(chunk));
-
-  Rule [k4]:
-    if (sink.query_input(spk))
-    {
-      assert(sink.set_input(spk));
-      assert(spk == sink.get_input());
-    }
-
-    if (sink.query_input(chunk.spk))
-    {
-      assert(sink.process(chunk));
-      assert(chunk.spk == sink.get_input());
-    }
-
-  Rule [f1]:
-    filter.reset()
-    assert(filter.get_output() == spk_unknown); // output format depends on data
-    ...
-    if (!filter.is_empty())
-    {
-      spk = source.get_output();
-      source.get_chunk(chunk);
-      assert(chunk.spk == spk);
-    }
-
-  Rules [f4] and [f5]:
-    some_filter.set_output(spk_output);
-    if (filter.get_input() == spk_unknown)
-    {
-      // input format is incompatible with output format set
-      // we have to reinitialize filter
-      ...
-      if (!some_filter.set_input(spk_input))
-        * cannot setup filter
-      assert(some_filter.is_empty());
-      ...
-    }
-    else
-    {
-      // input format is ok and we may not reinitialize filter
-      ...
-    }
-    // filter must be empty because output format was changed
-    assert(some_filter.is_empty());
-
-
+  Base classes:
+  * NullSink - sink that drops all input
+  * NullFilter - simple passthrough filter
+  * SourceFilter - combine source and filter as source
+  * SinkFilter - combine sink and filter as sink
 */
+
 
 #ifndef VALIB_FILTER_H
 #define VALIB_FILTER_H
@@ -199,6 +27,8 @@ class Filter;
 
 class NullSink;
 class NullFilter;
+class SourceFilter;
+class SinkFilter;
 
 // safe call to filtering functions
 #define FILTER_SAFE(call) if (!call) return false;
@@ -610,99 +440,6 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // Filter class
 //
-// Abstract data processing class. It is sink and source at the same time so 
-// it should follow all rules for Sink and Source classes.
-//
-// Data processing model (working thread):
-//
-// . . . . . . . . . | . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-// .                 |                                           Initialize  .
-// .                 |                                                       .
-// .   +------------>|<--------------------------------------------------+   .
-// .   |             v                  ^              ^                 |   .
-// .   |      +-------------+           |              |                 |   .
-// .   |      |   reset()   |           |              |                 |   .
-// .   |      | set_input() |           |        ...any state            |   .
-// .   |      +-------------+           |                                |   .
-// .   |             |                  |                                |   .
-// . . | . . . . . . | . . . . . . . . .|. . . . . . . . . . . . . . . . |   .
-// .   |             |                  |    .                           |   .
-// .   |             |<-------------+   |    .                           |   .
-// .   |     ----------------       |   |    .                           |   .
-// .   |   <  have more data? >---- | - | --------------------+          |   .
-// .   |     ----------------   no  |   |    .                |          |   .
-// .   |         yes |              |   |    .                v          |   .
-// .   |             v              |   |    .           +---------+     |   .
-// .   |        ----------          |   |    .           | flush() |     |   .
-// .   |      (  get data  )        |   |    .           +---------+     |   .
-// .   |      ( to process )        |   |    .                |          |   .
-// .   |        ----------          |   |    .  +------------>|          |   .
-// .   |             |              |   |    .  |             v          |   .
-// .   |             v              |   |    .  |        -----------     |   .
-// .   | error +-----------+        |   |    .  |      < is_empty()? >---+   .
-// .   +-------| process() |        |   |    .  |        -----------  true   .
-// .           +-----------+        |   |    .  |       false |              .
-// .                 |              |   |    .  |             |              .
-// .   +------------>|              |   |    .  |             v              .
-// .   |             v              |   |    .  |  err +-------------+       .
-// .   |        -----------   true  |   |<----- | -----| get_chunk() |       .
-// .   |      < is_empty()? >-------+   |    .  |      +-------------+       .
-// .   |        -----------             |    .  |             |              .            
-// .   |       false |                  |    .  |             v              .
-// .   |             |                  |    .  |      ---------------       .
-// .   |             v                  |    .  |    (  do something   )     .
-// .   |      +-------------+  error    |    .  |    ( with chunk data )     .
-// .   |      | get_chunk() |-----------+    .  |      ---------------       .
-// .   |      +-------------+                .  |             |              .
-// .   |             |                       .  +-------------+              .
-// .   |             v                       .                               .
-// .   |      ---------------                .                Flushing loop  .
-// .   |    (  do something   )              . . . . . . . . . . . . . . . . .                              
-// .   |    ( with chunk data )              .
-// .   |      ---------------                .
-// .   |             |                       .
-// .   +-------------+                       .
-// .                        Processing loop  .
-// . . . . . . . . . . . . . . . . . . . . . .
-//
-// Filter may process data in-place at buffers received with process() call.
-// This allows to avoid data copy from buffer to buffer so speed up processing
-// but we should always remember about data references. After process() call
-// filter may hold references to upstream data buffers so we must not alter it
-// until the end of processing.
-//
-// Filter has 3 states:
-//
-// * empty
-//   Filter has no data to output and waits for more data to input. In this 
-//   state filter may have some data cached at internal buffes. But it is 
-//   guaranteed that filter has no references to any external data buffers
-//   received with process() call.
-//
-//   * is_empty() returns true.
-//   * process() with non-eof chunk may switch filter to full state.
-//   * process() with eof-chunk must switch filter to flushing state.
-//   * get_chunk() returns empty chunk with no state change.
-//
-// * full
-//   Filter has some data to output. In this state it cannot receive data
-//   and may have references to the data received with process() call, so 
-//   external procedures should not alter this data.
-//
-//   * is_empty() returns false.
-//   * get_chunk() may return empty and non-empty chunks.
-//   * get_chunk() may switch filter to empty state.
-//   * process() call result is undefined (maybe it should fail?)
-//
-// * flushing
-//   In this state filter releases data cached at its internal buffers.
-//   After this call all external references of the filter are dropped.
-//
-//   is_empty() returns false.
-//   get_chunk() may return empty and non-empty chunks without state change.
-//   get_chunk() may return eof-chunk and switch to empty state.
-//   process() call result is undefined.
-//           
 // reset() [working thread]
 //   Reset filter state to empty, drop all internal buffers and all external 
 //   references.
@@ -718,7 +455,6 @@ public:
 // get_chunk() [working thread, critical path]
 //   May be used for data processing. Do main processing here if filter 
 //   may produce many output chunks for one input chunk.
-//
 //
 //
 // Other threads may call:
@@ -743,9 +479,53 @@ public:
   virtual bool is_empty() const = 0;
   virtual bool get_chunk(Chunk *chunk) = 0;
 
-  inline bool process_to(const Chunk *chunk, Sink *sink);
-  inline bool get_from(Chunk *chunk, Source *source);
-  inline bool transform(Source *source, Sink *sink);
+  inline bool process_to(const Chunk *_chunk, Sink *_sink)
+  {
+    Chunk chunk;
+
+    while (!is_empty())
+    {
+      FILTER_SAFE(get_chunk(&chunk));
+      FILTER_SAFE(_sink->process(&chunk));
+    }
+
+    FILTER_SAFE(process(_chunk));
+
+    while (!is_empty())
+    {
+      FILTER_SAFE(get_chunk(&chunk));
+      FILTER_SAFE(_sink->process(&chunk));
+    }
+
+    return true;
+  }
+
+  inline bool get_from(Chunk *_chunk, Source *_source)
+  {
+    Chunk chunk;
+
+    while (is_empty())
+    {
+      FILTER_SAFE(_source->get_chunk(&chunk));
+      FILTER_SAFE(process(&chunk));
+    }
+
+    return get_chunk(_chunk);
+  }
+
+  inline bool transform(Source *_source, Sink *_sink)
+  {
+    Chunk chunk;
+
+    while (is_empty())
+    {
+      FILTER_SAFE(_source->get_chunk(&chunk));
+      FILTER_SAFE(process(&chunk));
+    }
+
+    FILTER_SAFE(get_chunk(&chunk));
+    return _sink->process(&chunk);
+  }
 };
 
 
@@ -926,60 +706,133 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Filter inlines
+// SourceFilter class
+// Combines a source and a filter into one source.
+
+class SourceFilter: public Source
+{
+protected:
+  Source *source;
+  Filter *filter;
+
+public:
+  SourceFilter(): source(0), filter(0)
+  {}
+
+  SourceFilter(Source *_source, Filter *_filter): source(0), filter(0)
+  {
+    set(source, filter);
+  }
+
+  bool set(Source *_source, Filter *_filter)
+  {
+    if (_source == 0) return false;
+    source = _source;
+    filter = _filter;
+    return true;
+  }
+
+  void release()
+  {
+    source = 0;
+    filter = 0;
+  }
+
+  Source *get_source() const { return source; }
+  Filter *get_filter() const { return filter; }
+
+  /////////////////////////////////////////////////////////
+  // Source interface
+
+  Speakers get_output() const
+  {
+    if (filter) return filter->get_output();
+    if (source) return source->get_output();
+    return spk_unknown;
+  }
+
+  bool is_empty() const
+  {
+    if (filter) return filter->is_empty() && source->is_empty();
+    if (source) return source->is_empty();
+    return true;
+  }
+
+  bool get_chunk(Chunk *chunk)
+  {
+    if (filter) return filter->get_from(chunk, source);
+    if (source) return source->get_chunk(chunk);
+    return false;
+  }
+};
+
+
 ///////////////////////////////////////////////////////////////////////////////
+// SinkFilter class
+// Combines a sink and a filter into one sink.
 
-inline bool 
-Filter::process_to(const Chunk *_chunk, Sink *_sink)
+class SinkFilter : public Sink
 {
-  Chunk chunk;
+protected:
+  Sink   *sink;
+  Filter *filter;
 
-  while (!is_empty())
+public:
+  SinkFilter(): sink(0), filter(0)
+  {}
+
+  SinkFilter(Sink *_sink, Filter *_filter): sink(0), filter(0)
   {
-    FILTER_SAFE(get_chunk(&chunk));
-    FILTER_SAFE(_sink->process(&chunk));
+    set(sink, filter);
   }
 
-  FILTER_SAFE(process(_chunk));
-
-  while (!is_empty())
+  bool set(Sink *_sink, Filter *_filter)
   {
-    FILTER_SAFE(get_chunk(&chunk));
-    FILTER_SAFE(_sink->process(&chunk));
+    if (_sink == 0) return false;
+    sink = _sink;
+    filter = _filter;
   }
 
-  return true;
-}
-
-inline bool 
-Filter::get_from(Chunk *_chunk, Source *_source)
-{
-  Chunk chunk;
-
-  while (is_empty())
+  void release()
   {
-    FILTER_SAFE(_source->get_chunk(&chunk));
-    FILTER_SAFE(process(&chunk));
+    sink = 0;
+    filter = 0;
   }
 
-  return get_chunk(_chunk);
-}
+  Sink *get_sink() const { return sink; }
+  Filter *get_filter() const { return filter; }
 
-inline bool 
-Filter::transform(Source *_source, Sink *_sink)
-{
-  Chunk chunk;
+  /////////////////////////////////////////////////////////
+  // Sink interface
 
-  while (is_empty())
+  bool query_input(Speakers spk) const
   {
-    FILTER_SAFE(_source->get_chunk(&chunk));
-    FILTER_SAFE(process(&chunk));
+    if (filter) return filter->query_input(spk);
+    if (sink) return sink->query_input(spk);
+    return false;
   }
 
-  FILTER_SAFE(get_chunk(&chunk));
-  return _sink->process(&chunk);
-}
+  bool set_input(Speakers spk)
+  {
+    if (filter) return filter->set_input(spk);
+    if (sink) return sink->set_input(spk);
+    return false;
+  }
 
+  Speakers get_input() const
+  {
+    if (filter) return filter->get_input();
+    if (sink) return sink->get_input();
+    return spk_unknown;
+  }
 
+  bool process(const Chunk *chunk)
+  {
+    if (filter) return filter->process_to(chunk, sink);
+    if (sink) return sink->process(chunk);
+    return false;
+  }
+
+};
 
 #endif
