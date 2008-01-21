@@ -1,8 +1,12 @@
 /*
-  Test for the test suite
+  Test suite self-test
 */
 
+#include "source/generator.h"
 #include "suite.h"
+
+static const int seed = 34570978;
+static const int noise_size = 64 * 1024;
 
 ///////////////////////////////////////////////////////////////////////////////
 // I want to be able to write tests without any additional writing
@@ -150,5 +154,34 @@ TEST(suite_test, "Test suite self-test")
   test = suite->find("fake");
   CHECK(test == 0);
   delete suite;
+
+  /////////////////////////////////////////////////////////
+
+  Speakers linear_spk(FORMAT_LINEAR, MODE_STEREO, 48000);
+  Speakers rawdata_spk(FORMAT_PCM16, MODE_STEREO, 48000);
+  NoiseGen src_noise;
+  NoiseGen ref_noise;
+
+  /////////////////////////////////////////////////////////
+  // compare(): Linear format test
+
+  src_noise.setup(linear_spk, seed, noise_size);
+  ref_noise.setup(linear_spk, seed, noise_size);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) == 0);
+
+  src_noise.setup(linear_spk, seed, noise_size);
+  ref_noise.setup(linear_spk, seed + 1, noise_size);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
+
+  /////////////////////////////////////////////////////////
+  // compare(): Rawdata format test
+
+  src_noise.setup(rawdata_spk, seed, noise_size);
+  ref_noise.setup(rawdata_spk, seed, noise_size);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) == 0);
+
+  src_noise.setup(rawdata_spk, seed, noise_size);
+  ref_noise.setup(rawdata_spk, seed + 1, noise_size);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
 TEST_END(suite_test);
