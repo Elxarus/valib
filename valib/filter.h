@@ -723,7 +723,7 @@ public:
 
   SourceFilter(Source *_source, Filter *_filter): source(0), filter(0)
   {
-    set(source, filter);
+    set(_source, _filter);
   }
 
   bool set(Source *_source, Filter *_filter)
@@ -785,7 +785,7 @@ public:
 
   SinkFilter(Sink *_sink, Filter *_filter): sink(0), filter(0)
   {
-    set(sink, filter);
+    set(_sink, _filter);
   }
 
   bool set(Sink *_sink, Filter *_filter)

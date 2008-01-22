@@ -115,7 +115,17 @@ TEST(base_source_filter, "SourceFilter")
   NoiseGen ref_noise;
   ZeroGen  ref_zero;
 
-  SourceFilter src_filter;
+  // Init constructor test
+
+  SourceFilter src_filter(&src_noise, &null_filter);
+  CHECK(src_filter.get_source() == &src_noise);
+  CHECK(src_filter.get_filter() == &null_filter);
+
+  // Init test
+
+  src_filter.set(&ref_zero, &zero_filter);
+  CHECK(src_filter.get_source() == &ref_zero);
+  CHECK(src_filter.get_filter() == &zero_filter);
 
   // Fail without a source
 
@@ -159,6 +169,7 @@ TEST(base_sink_filter, "SinkFilter")
   
   NullFilter null_filter(-1);
   ZeroFilter zero_filter;
+  NullSink   null_sink;
   ZeroSink   zero_sink;
 
   NoiseGen src_noise(spk, seed, noise_size);
@@ -167,9 +178,19 @@ TEST(base_sink_filter, "SinkFilter")
   Chunk zero_chunk;
   Chunk noise_chunk;
 
-  SinkFilter sink_filter;
+  // Init constructor test
 
-  // Fail without a source
+  SinkFilter sink_filter(&null_sink, &null_filter);
+  CHECK(sink_filter.get_sink() == &null_sink);
+  CHECK(sink_filter.get_filter() == &null_filter);
+
+  // Init test
+
+  sink_filter.set(&zero_sink, &zero_filter);
+  CHECK(sink_filter.get_sink() == &zero_sink);
+  CHECK(sink_filter.get_filter() == &zero_filter);
+
+  // Fail without a sink
 
   CHECK(sink_filter.set(0, 0) == false);
 
