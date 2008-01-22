@@ -121,8 +121,9 @@ NoiseGen::setup(Speakers _spk, int _seed, size_t _stream_len, size_t _chunk_size
 void
 NoiseGen::gen_samples(samples_t samples, size_t n)
 {
-  for (int ch = 0; ch < spk.nch(); ch++)
-    rng.fill_samples(samples[ch], n);
+  for (size_t i = 0; i < n; i++)
+    for (int ch = 0; ch < spk.nch(); ch++)
+      samples[ch][i] = rng.get_sample();
 }
 
 void
