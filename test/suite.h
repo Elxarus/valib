@@ -21,6 +21,18 @@ int compare(Log *log, Source *src, Source *ref);
 int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter = 0);
 int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *src_filter, const char *fn_ref);
 
+sample_t calc_peak(Source *s);
+sample_t calc_peak(Source *s, Filter * f);
+
+double calc_rms(Source *s);
+double calc_rms(Source *s, Filter * f);
+
+sample_t calc_diff(Source *s1, Source *s2);
+sample_t calc_diff(Source *s1, Filter *f1, Source *s2, Filter *f2);
+
+double calc_rms_diff(Source *s1, Source *s2);
+double calc_rms_diff(Source *s1, Filter *f1, Source *s2, Filter *f2);
+
 ///////////////////////////////////////////////////////////////////////////////
 // Test class is the base for all tests and suites
 ///////////////////////////////////////////////////////////////////////////////
