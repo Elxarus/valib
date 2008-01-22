@@ -172,6 +172,10 @@ Convolver::reset()
   NullFilter::reset();
   if (state == state_filter)
   {
+    // Regenerate the response if nessesary
+    if (ver != ir.version())
+      init();
+
     pos = 0;
     pre_samples = c;
     memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
