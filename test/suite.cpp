@@ -82,12 +82,6 @@ int compare(Log *log, Source *src, Source *ref)
     ref_chunk.drop(len);
 
     ///////////////////////////////////////////////////////
-    // Do not compare stream lengths after the end
-
-    if (end > 0 && pos >= end)
-      return 0;
-
-    ///////////////////////////////////////////////////////
     // Statistics
 
     log->status("Pos: %u%s      ", compact_size(pos), compact_suffix(pos));
