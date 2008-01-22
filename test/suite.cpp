@@ -40,7 +40,7 @@ int compare(Log *log, Source *src, Source *ref)
     {
       if (src->is_empty()) break;
       if (!src->get_chunk(&src_chunk)) return log->err("src->get_chunk() fails");
-      if (ref_chunk.is_dummy()) continue;
+      if (src_chunk.is_dummy()) continue;
     }
 
     if (!ref_chunk.size)
