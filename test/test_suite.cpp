@@ -82,9 +82,9 @@ SUITE(suite_fail, "Suite with fail test")
 SUITE_END;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Actual test
+// Test suite self-test
 
-TEST(suite_test, "Test suite self-test")
+TEST(suite_test, "Self-test")
   Test *test;
   Test *suite;
   test_factory *f;
@@ -94,6 +94,7 @@ TEST(suite_test, "Test suite self-test")
 
   Log dummy_log(0);
 
+  /////////////////////////////////////////////////////////
   // Ensure that a test actualy runs
 
   WasRun was_run;
@@ -101,6 +102,7 @@ TEST(suite_test, "Test suite self-test")
   CHECK(was_run.run(&dummy_log).passed());
   CHECK(was_run.was_run() == true);
 
+  /////////////////////////////////////////////////////////
   // Run plain tests (pass and fail)
   // Create tests using CREATE_TEST (only for plain tests)
 
@@ -112,15 +114,17 @@ TEST(suite_test, "Test suite self-test")
   CHECK(test->run(&dummy_log).failed());
   delete test;
 
-  // Create a test using test factory
+  /////////////////////////////////////////////////////////
+  // Create a test using a test factory
 
   f = TEST_FACTORY(plain_pass);
   test = f();
   CHECK(test->run(&dummy_log).passed());
   delete test;
 
+  /////////////////////////////////////////////////////////
   // Call tests from a suite
-  // Create suites using CREATE_SUITE
+  // Create a suite using CREATE_SUITE
 
   suite = CREATE_SUITE(suite_pass);
   CHECK(suite->run(&dummy_log).passed());
@@ -130,13 +134,15 @@ TEST(suite_test, "Test suite self-test")
   CHECK(suite->run(&dummy_log).failed());
   delete suite;
 
-  // Create a suite using test factory
+  /////////////////////////////////////////////////////////
+  // Create a suite using a suite factory
 
   f = SUITE_FACTORY(suite_pass);
   suite = f();
   CHECK(suite->run(&dummy_log).passed());
   delete suite;
 
+  /////////////////////////////////////////////////////////
   // Search a test in a suite
 
   suite = CREATE_SUITE(suite_fail);
@@ -155,15 +161,21 @@ TEST(suite_test, "Test suite self-test")
   CHECK(test == 0);
   delete suite;
 
-  /////////////////////////////////////////////////////////
+TEST_END(suite_test);
+
+///////////////////////////////////////////////////////////////////////////////
+// compare() funciton test
+
+TEST(suite_compare, "compare() test")
 
   Speakers linear_spk(FORMAT_LINEAR, MODE_STEREO, 48000);
   Speakers rawdata_spk(FORMAT_PCM16, MODE_STEREO, 48000);
   NoiseGen src_noise;
   NoiseGen ref_noise;
+  Log dummy_log(0);
 
   /////////////////////////////////////////////////////////
-  // compare(): Linear format test
+  // Linear format test
 
   src_noise.setup(linear_spk, seed, noise_size);
   ref_noise.setup(linear_spk, seed, noise_size);
@@ -174,7 +186,7 @@ TEST(suite_test, "Test suite self-test")
   CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
   /////////////////////////////////////////////////////////
-  // compare(): Rawdata format test
+  // Rawdata format test
 
   src_noise.setup(rawdata_spk, seed, noise_size);
   ref_noise.setup(rawdata_spk, seed, noise_size);
@@ -184,4 +196,112 @@ TEST(suite_test, "Test suite self-test")
   ref_noise.setup(rawdata_spk, seed + 1, noise_size);
   CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
-TEST_END(suite_test);
+  /////////////////////////////////////////////////////////
+  // Length test
+
+  src_noise.setup(rawdata_spk, seed, noise_size * 2);
+  ref_noise.setup(rawdata_spk, seed, noise_size);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
+
+  src_noise.setup(rawdata_spk, seed, noise_size);
+  ref_noise.setup(rawdata_spk, seed, noise_size * 2);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
+
+TEST_END(suite_compare);
+
+///////////////////////////////////////////////////////////////////////////////
+// Peak and RMS functions test
+
+TEST(suite_level, "Peak and RMS functions test")
+
+  Speakers spk(FORMAT_LINEAR, MODE_STEREO, 48000);
+  NoiseGen noise;
+  ZeroGen  zero;
+  double level;
+
+  // Noise level
+  noise.setup(spk, seed, noise_size);
+  level = calc_peak(&noise);
+  CHECK(level > 0.9);
+
+  // Zero level
+  zero.setup(spk, noise_size);
+  level = calc_peak(&zero);
+  CHECK(level == 0.0);
+
+  // Noise RMS ~= -4.77dB +- 1dB
+  noise.setup(spk, seed, noise_size);
+  level = calc_rms(&noise);
+  CHECK(level > 0.5146 && level < 0.6479);
+
+  // Zero RMS
+  zero.setup(spk, noise_size);
+  level = calc_rms(&zero);
+  CHECK(level == 0.0);
+
+TEST_END(suite_level);
+
+///////////////////////////////////////////////////////////////////////////////
+// Difference functions test
+
+TEST(suite_diff, "Difference functions test")
+
+  Speakers spk(FORMAT_LINEAR, MODE_STEREO, 48000);
+  NoiseGen noise1;
+  NoiseGen noise2;
+  ZeroGen  zero;
+
+  double diff;
+  double level;
+
+  // diff(noise, noise) == 0
+  noise1.setup(spk, seed, noise_size);
+  noise2.setup(spk, seed, noise_size);
+  diff = calc_diff(&noise1, &noise2);
+  CHECK(diff == 0.0);
+
+  // diff(noise1, noise2) != 0
+  noise1.setup(spk, seed, noise_size);
+  noise2.setup(spk, seed + 100, noise_size);
+  diff = calc_diff(&noise1, &noise2);
+  CHECK(diff > 1.8);
+
+  // diff(noise, zero) == level(noise)
+  noise1.setup(spk, seed, noise_size);
+  noise2.setup(spk, seed, noise_size);
+  zero.setup(spk, noise_size);
+  diff = calc_diff(&noise1, &zero);
+  level = calc_peak(&noise2);
+  CHECK(diff == level);
+
+  // rms_diff(noise, noise) == 0
+  noise1.setup(spk, seed, noise_size);
+  noise2.setup(spk, seed, noise_size);
+  diff = calc_rms_diff(&noise1, &noise2);
+  CHECK(diff == 0.0);
+
+  // rms_diff(noise1, noise2) == -1.77dB +- 1dB
+  noise1.setup(spk, seed, noise_size);
+  noise2.setup(spk, seed + 100, noise_size);
+  diff = calc_rms_diff(&noise1, &noise2);
+  CHECK(diff > 0.7269 && diff < 0.9151);
+
+  // rms_diff(noise, zero) = rms(noise)
+  noise1.setup(spk, seed, noise_size);
+  noise2.setup(spk, seed, noise_size);
+  zero.setup(spk, noise_size);
+  diff = calc_rms_diff(&noise1, &zero);
+  level = calc_rms(&noise2);
+  CHECK(diff == level);
+
+TEST_END(suite_diff);
+
+///////////////////////////////////////////////////////////////////////////////
+// Test suite
+
+SUITE(suite_test, "Test suite self-test")
+  TEST_FACTORY(suite_test),
+  TEST_FACTORY(suite_compare),
+  TEST_FACTORY(suite_level),
+  TEST_FACTORY(suite_diff),
+SUITE_END;
