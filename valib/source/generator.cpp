@@ -13,11 +13,11 @@ Generator::Generator()
 Generator::Generator(Speakers _spk, size_t _stream_len, size_t _chunk_size)
 :spk(spk_unknown), stream_len(0), chunk_size(0)
 {
-  setup(_spk, _stream_len, _chunk_size);
+  init(_spk, _stream_len, _chunk_size);
 }
 
 bool 
-Generator::setup(Speakers _spk, size_t _stream_len, size_t _chunk_size)
+Generator::init(Speakers _spk, size_t _stream_len, size_t _chunk_size)
 {
   spk = spk_unknown;
   stream_len = 0;
@@ -113,10 +113,10 @@ ZeroGen::gen_rawdata(uint8_t *rawdata, size_t n)
 // Noise generator
 
 bool
-NoiseGen::setup(Speakers _spk, int _seed, size_t _stream_len, size_t _chunk_size)
+NoiseGen::init(Speakers _spk, int _seed, size_t _stream_len, size_t _chunk_size)
 {
   rng.seed(_seed);
-  return Generator::setup(_spk, _stream_len, _chunk_size);
+  return Generator::init(_spk, _stream_len, _chunk_size);
 }
 void
 NoiseGen::gen_samples(samples_t samples, size_t n)
@@ -143,11 +143,11 @@ ToneGen::query_spk(Speakers _spk) const
 }
 
 bool
-ToneGen::setup(Speakers _spk, int _freq, size_t _stream_len, size_t _chunk_size)
+ToneGen::init(Speakers _spk, int _freq, size_t _stream_len, size_t _chunk_size)
 {
   phase = 0;
   freq = _freq;
-  return Generator::setup(_spk, _stream_len, _chunk_size);
+  return Generator::init(_spk, _stream_len, _chunk_size);
 }
 void
 ToneGen::gen_samples(samples_t samples, size_t n)

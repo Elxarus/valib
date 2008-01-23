@@ -58,13 +58,13 @@ int test_proc(Log *log)
 
       if (spk.format == FORMAT_LINEAR)
       {
-        src.setup(spk, seed, noise_samples);
-        ref.setup(spk, seed, noise_samples);
+        src.init(spk, seed, noise_samples);
+        ref.init(spk, seed, noise_samples);
       }
       else
       {
-        src.setup(spk, seed, noise_samples * spk.nch() * spk.sample_size());
-        ref.setup(spk, seed, noise_samples * spk.nch() * spk.sample_size());
+        src.init(spk, seed, noise_samples * spk.nch() * spk.sample_size());
+        ref.init(spk, seed, noise_samples * spk.nch() * spk.sample_size());
       }
 
       if (src.get_output().is_unknown() || ref.get_output().is_unknown())

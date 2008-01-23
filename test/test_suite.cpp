@@ -177,34 +177,34 @@ TEST(suite_compare, "compare() test")
   /////////////////////////////////////////////////////////
   // Linear format test
 
-  src_noise.setup(linear_spk, seed, noise_size);
-  ref_noise.setup(linear_spk, seed, noise_size);
+  src_noise.init(linear_spk, seed, noise_size);
+  ref_noise.init(linear_spk, seed, noise_size);
   CHECK(compare(&dummy_log, &src_noise, &ref_noise) == 0);
 
-  src_noise.setup(linear_spk, seed, noise_size);
-  ref_noise.setup(linear_spk, seed + 1, noise_size);
+  src_noise.init(linear_spk, seed, noise_size);
+  ref_noise.init(linear_spk, seed + 1, noise_size);
   CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
   /////////////////////////////////////////////////////////
   // Rawdata format test
 
-  src_noise.setup(rawdata_spk, seed, noise_size);
-  ref_noise.setup(rawdata_spk, seed, noise_size);
+  src_noise.init(rawdata_spk, seed, noise_size);
+  ref_noise.init(rawdata_spk, seed, noise_size);
   CHECK(compare(&dummy_log, &src_noise, &ref_noise) == 0);
 
-  src_noise.setup(rawdata_spk, seed, noise_size);
-  ref_noise.setup(rawdata_spk, seed + 1, noise_size);
+  src_noise.init(rawdata_spk, seed, noise_size);
+  ref_noise.init(rawdata_spk, seed + 1, noise_size);
   CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
   /////////////////////////////////////////////////////////
   // Length test
 
-  src_noise.setup(rawdata_spk, seed, noise_size * 2);
-  ref_noise.setup(rawdata_spk, seed, noise_size);
+  src_noise.init(rawdata_spk, seed, noise_size * 2);
+  ref_noise.init(rawdata_spk, seed, noise_size);
   CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
-  src_noise.setup(rawdata_spk, seed, noise_size);
-  ref_noise.setup(rawdata_spk, seed, noise_size * 2);
+  src_noise.init(rawdata_spk, seed, noise_size);
+  ref_noise.init(rawdata_spk, seed, noise_size * 2);
   CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
 TEST_END(suite_compare);
@@ -220,22 +220,22 @@ TEST(suite_level, "Peak and RMS functions test")
   double level;
 
   // Noise level
-  noise.setup(spk, seed, noise_size);
+  noise.init(spk, seed, noise_size);
   level = calc_peak(&noise);
   CHECK(level > 0.9);
 
   // Zero level
-  zero.setup(spk, noise_size);
+  zero.init(spk, noise_size);
   level = calc_peak(&zero);
   CHECK(level == 0.0);
 
   // Noise RMS ~= -4.77dB +- 1dB
-  noise.setup(spk, seed, noise_size);
+  noise.init(spk, seed, noise_size);
   level = calc_rms(&noise);
   CHECK(level > 0.5146 && level < 0.6479);
 
   // Zero RMS
-  zero.setup(spk, noise_size);
+  zero.init(spk, noise_size);
   level = calc_rms(&zero);
   CHECK(level == 0.0);
 
@@ -255,41 +255,41 @@ TEST(suite_diff, "Difference functions test")
   double level;
 
   // diff(noise, noise) == 0
-  noise1.setup(spk, seed, noise_size);
-  noise2.setup(spk, seed, noise_size);
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed, noise_size);
   diff = calc_diff(&noise1, &noise2);
   CHECK(diff == 0.0);
 
   // diff(noise1, noise2) != 0
-  noise1.setup(spk, seed, noise_size);
-  noise2.setup(spk, seed + 100, noise_size);
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed + 100, noise_size);
   diff = calc_diff(&noise1, &noise2);
   CHECK(diff > 1.8);
 
   // diff(noise, zero) == level(noise)
-  noise1.setup(spk, seed, noise_size);
-  noise2.setup(spk, seed, noise_size);
-  zero.setup(spk, noise_size);
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed, noise_size);
+  zero.init(spk, noise_size);
   diff = calc_diff(&noise1, &zero);
   level = calc_peak(&noise2);
   CHECK(diff == level);
 
   // rms_diff(noise, noise) == 0
-  noise1.setup(spk, seed, noise_size);
-  noise2.setup(spk, seed, noise_size);
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed, noise_size);
   diff = calc_rms_diff(&noise1, &noise2);
   CHECK(diff == 0.0);
 
   // rms_diff(noise1, noise2) == -1.77dB +- 1dB
-  noise1.setup(spk, seed, noise_size);
-  noise2.setup(spk, seed + 100, noise_size);
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed + 100, noise_size);
   diff = calc_rms_diff(&noise1, &noise2);
   CHECK(diff > 0.7269 && diff < 0.9151);
 
   // rms_diff(noise, zero) = rms(noise)
-  noise1.setup(spk, seed, noise_size);
-  noise2.setup(spk, seed, noise_size);
-  zero.setup(spk, noise_size);
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed, noise_size);
+  zero.init(spk, noise_size);
   diff = calc_rms_diff(&noise1, &zero);
   level = calc_rms(&noise2);
   CHECK(diff == level);

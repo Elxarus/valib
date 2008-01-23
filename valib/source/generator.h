@@ -25,12 +25,13 @@ protected:
   virtual void gen_samples(samples_t samples, size_t n) { assert(false); }
   virtual void gen_rawdata(uint8_t *rawdata, size_t n) { assert(false); }
 
+  bool init(Speakers spk, size_t stream_len, size_t chunk_size = 4096);
+
 public:
   Generator();
   Generator(Speakers spk, size_t stream_len, size_t chunk_size = 4096);
 
-  bool setup(Speakers spk, size_t stream_len, size_t chunk_size = 4096);
-  size_t get_chunk_size() const  { return chunk_size;  }
+  size_t get_chunk_size() const { return chunk_size; }
   size_t get_stream_len() const { return stream_len; }
 
   // Source interface
@@ -49,6 +50,9 @@ public:
   ZeroGen() {};
   ZeroGen(Speakers _spk, size_t _stream_len, size_t _chunk_size = 4096)
   :Generator(_spk, _stream_len, _chunk_size) {}
+
+  bool init(Speakers _spk, size_t _stream_len, size_t _chunk_size = 4096)
+  { return Generator::init(_spk, _stream_len, _chunk_size); }
 };
 
 class NoiseGen : public Generator
@@ -63,7 +67,7 @@ public:
   NoiseGen(Speakers _spk, int _seed, size_t _stream_len, size_t _chunk_size = 4096)
   :Generator(_spk, _stream_len, _chunk_size), rng(_seed) {}
 
-  bool setup(Speakers spk, int seed, size_t stream_len, size_t chunk_size = 4096);
+  bool init(Speakers spk, int seed, size_t stream_len, size_t chunk_size = 4096);
 };
 
 class ToneGen : public Generator
@@ -80,9 +84,9 @@ public:
   ToneGen(): phase(0), freq(0) {};
   ToneGen(Speakers _spk, int _freq, size_t _stream_len, size_t _chunk_size = 4096):
   Generator(_spk, _stream_len, _chunk_size), phase(0), freq(0)
-  { setup(_spk, _freq, _stream_len, _chunk_size); }
+  { init(_spk, _freq, _stream_len, _chunk_size); }
 
-  bool setup(Speakers spk, int freq, size_t stream_len, size_t chunk_size = 4096);
+  bool init(Speakers spk, int freq, size_t stream_len, size_t chunk_size = 4096);
 };
 
 #endif

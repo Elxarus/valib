@@ -82,8 +82,8 @@ TEST(base_null_filter, "NullFilter")
   // Linear format test
 
   spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000);
-  src_noise.setup(spk, seed, noise_size);
-  ref_noise.setup(spk, seed, noise_size);
+  src_noise.init(spk, seed, noise_size);
+  ref_noise.init(spk, seed, noise_size);
   null_filter.reset();
 
   CHECK(compare(log, &src_noise, &null_filter, &ref_noise, 0) == 0);
@@ -91,8 +91,8 @@ TEST(base_null_filter, "NullFilter")
   // Rawdata format test
 
   spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000);
-  src_noise.setup(spk, seed, noise_size);
-  ref_noise.setup(spk, seed, noise_size);
+  src_noise.init(spk, seed, noise_size);
+  ref_noise.init(spk, seed, noise_size);
   null_filter.reset();
 
   CHECK(compare(log, &src_noise, &null_filter, &ref_noise, 0) == 0);
@@ -133,16 +133,16 @@ TEST(base_source_filter, "SourceFilter")
 
   // Noise source == Noise source (no filter)
 
-  src_noise.setup(spk, seed, noise_size);
-  ref_noise.setup(spk, seed, noise_size);
+  src_noise.init(spk, seed, noise_size);
+  ref_noise.init(spk, seed, noise_size);
 
   CHECK(src_filter.set(&src_noise, 0) == true);
   CHECK(compare(log, &src_filter, &ref_noise) == 0);
 
   // Noise source + NullFilter == Noise source
 
-  src_noise.setup(spk, seed, noise_size);
-  ref_noise.setup(spk, seed, noise_size);
+  src_noise.init(spk, seed, noise_size);
+  ref_noise.init(spk, seed, noise_size);
   null_filter.reset();
 
   CHECK(src_filter.set(&src_noise, &null_filter) == true);
@@ -150,8 +150,8 @@ TEST(base_source_filter, "SourceFilter")
 
   // Noise source + ZeroFilter == Zero source
 
-  src_noise.setup(spk, seed, noise_size);
-  ref_zero.setup(spk, noise_size);
+  src_noise.init(spk, seed, noise_size);
+  ref_zero.init(spk, noise_size);
   zero_filter.reset();
 
   CHECK(src_filter.set(&src_noise, &zero_filter) == true);

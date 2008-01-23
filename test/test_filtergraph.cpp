@@ -51,8 +51,8 @@ public:
     // Rawdata test
     log->msg("Rawdata null transform test");
     spk.set(FORMAT_PCM16, MODE_STEREO, 48000);
-    src.setup(spk, seed, noise_size);
-    ref.setup(spk, seed, noise_size);
+    src.init(spk, seed, noise_size);
+    ref.init(spk, seed, noise_size);
 
     if (t.set_input(spk))
       compare(log, &src, &t, &ref);
@@ -62,8 +62,8 @@ public:
     // Linear test
     log->msg("Linear null transform test");
     spk.set(FORMAT_LINEAR, MODE_STEREO, 48000);
-    src.setup(spk, seed, noise_size);
-    ref.setup(spk, seed, noise_size);
+    src.init(spk, seed, noise_size);
+    ref.init(spk, seed, noise_size);
 
     if (t.set_input(spk))
       compare(log, &src, &t, &ref);

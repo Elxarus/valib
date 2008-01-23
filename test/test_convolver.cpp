@@ -83,6 +83,8 @@ TEST(conv_param, "Convolve with parametric filter")
   int freq = spk.sample_rate / 4;
   ParamIR low_pass(IR_LOW_PASS, freq, 0, trans, att);
   ParamIR high_pass(IR_HIGH_PASS, freq, 0, trans, att);
+  ParamIR band_pass(IR_BAND_PASS, freq, freq + 3 * trans, trans, att);
+  ParamIR band_stop(IR_BAND_PASS, freq, freq + 3 * trans, trans, att);
 
   // Test source test_src (tone -> convolver -> slice)
 
@@ -108,9 +110,9 @@ TEST(conv_param, "Convolve with parametric filter")
   /////////////////////////////////////////////////////////
   // Tone in the pass band must remain unchanged
 
-  tone.setup(spk, freq - trans, noise_size + 2 * len);
+  tone.init(spk, freq - trans, noise_size + 2 * len);
   slice.set(len, noise_size + len);
-  ref_tone.setup(spk, freq - trans, noise_size + 2 * len);
+  ref_tone.init(spk, freq - trans, noise_size + 2 * len);
   ref_slice.set(len, len + noise_size);
   conv.reset();
 
@@ -121,7 +123,7 @@ TEST(conv_param, "Convolve with parametric filter")
   /////////////////////////////////////////////////////////
   // Tone in the stop band must be filtered out
 
-  tone.setup(spk, freq + trans, noise_size + 2 * len);
+  tone.init(spk, freq + trans, noise_size + 2 * len);
   slice.set(len, noise_size + len);
   conv.reset();
 
@@ -139,9 +141,9 @@ TEST(conv_param, "Convolve with parametric filter")
   /////////////////////////////////////////////////////////
   // Tone in the pass band must remain unchanged
 
-  tone.setup(spk, freq + trans, noise_size + 2 * len);
+  tone.init(spk, freq + trans, noise_size + 2 * len);
   slice.set(len, noise_size + len);
-  ref_tone.setup(spk, freq + trans, noise_size + 2 * len);
+  ref_tone.init(spk, freq + trans, noise_size + 2 * len);
   ref_slice.set(len, len + noise_size);
   conv.reset();
 
@@ -152,7 +154,7 @@ TEST(conv_param, "Convolve with parametric filter")
   /////////////////////////////////////////////////////////
   // Tone in the stop band must be filtered out
 
-  tone.setup(spk, freq - trans, noise_size + 2 * len);
+  tone.init(spk, freq - trans, noise_size + 2 * len);
   slice.set(len, noise_size + len);
   conv.reset();
 

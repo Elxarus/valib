@@ -69,7 +69,7 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
   if (!f.set_input(spk))
     return log->err("filter->set_input() failed!");
 
-  if (!noise.setup(spk, seed, noise_size))
+  if (!noise.init(spk, seed, noise_size))
     return log->err("noise.set_output() failed!");
 
   while (!noise.is_empty())
