@@ -11,7 +11,7 @@ static const int seed = 123123;
 ///////////////////////////////////////////////////////////////////////////////
 // SliceFilter
 // This filter cuts a middle of the input stream. It is required for convolver
-// test because transient processes at the start and the end of the stream.
+// test because of transient processes at the start and the end of the stream.
 
 class SliceFilter : public NullFilter
 {
@@ -29,27 +29,122 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-TEST(conv_zero, "Convolve with zero response")
+TEST(conv_test, "Convolver test")
   ZeroIR zero_ir;
-  Convolver conv(&zero_ir);
-
-  NoiseGen noise_src(spk, seed, noise_size);
-  ZeroGen zero_src(spk, noise_size);
-
-  CHECK(compare(log, &noise_src, &conv, &zero_src, 0) == 0);
-TEST_END(conv_zero);
-
-///////////////////////////////////////////////////////////////////////////////
-
-TEST(conv_identity, "Convolve with identity response")
   IdentityIR identity_ir;
-  Convolver conv(&identity_ir);
+  NoiseGen noise1;
+  NoiseGen noise2;
+  ZeroGen zero;
 
-  NoiseGen noise1(spk, seed, noise_size);
-  NoiseGen noise2(spk, seed, noise_size);
+  Chunk chunk;
+
+  // Default constructor
+
+  Convolver conv;
+  CHECK(conv.get_ir() == 0);
+
+  // Init constructor
+
+  Convolver conv1(&zero_ir);
+  CHECK(conv1.get_ir() == &zero_ir);
+
+  /////////////////////////////////////////////////////////
+  // Change IR
+
+  conv.set_ir(&zero_ir);
+  CHECK(conv.get_ir() == &zero_ir);
+
+  conv.set_ir(&identity_ir);
+  CHECK(conv.get_ir() == &identity_ir);
+
+  /////////////////////////////////////////////////////////
+  // Convolve with zero response
+
+  noise1.init(spk, seed, noise_size);
+  zero.init(spk, noise_size);
+
+  conv.set_ir(&zero_ir);
+  conv.reset();
+
+  CHECK(compare(log, &noise1, &conv, &zero, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Convolve with identity response
+
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed, noise_size);
+
+  conv.set_ir(&identity_ir);
+  conv.reset();
 
   CHECK(compare(log, &noise1, &conv, &noise2, 0) == 0);
-TEST_END(conv_identity);
+
+  /////////////////////////////////////////////////////////
+  // Change IR on the fly
+
+  noise1.init(spk, seed, noise_size);
+  conv.set_ir(&identity_ir);
+  conv.reset();
+
+  while (conv.is_empty())
+  {
+    CHECK(!noise1.is_empty())
+    noise1.get_chunk(&chunk);
+    CHECK(conv.process(&chunk) == true);
+  }
+
+  // Now convolver is full and must generate noise chunks
+  // even if we change the response right now. After this
+  // convolver must end the stream and switch to the new
+  // response.
+
+  conv.set_ir(&zero_ir);
+  do {
+    conv.get_chunk(&chunk);
+    if (chunk.size)
+      CHECK(chunk.samples[0][0] != 0);
+  } while (!chunk.eos);
+
+  // Now stream was ended and zero response will be in
+  // action.
+
+  while (conv.is_empty())
+  {
+    CHECK(!noise1.is_empty())
+    noise1.get_chunk(&chunk);
+    CHECK(conv.process(&chunk) == true);
+  }
+
+  // Now convolver is full and must generate zero chunks
+  // even if we change the response right now. After this
+  // convolver must end the stream and switch to the new
+  // response.
+
+  conv.set_ir(&identity_ir);
+  do {
+    conv.get_chunk(&chunk);
+    if (chunk.size)
+      CHECK(chunk.samples[0][0] == 0);
+  } while (!chunk.eos);
+
+  // Now stream was ended and identity response will be
+  // back again.
+
+  while (conv.is_empty())
+  {
+    CHECK(!noise1.is_empty())
+    noise1.get_chunk(&chunk);
+    CHECK(conv.process(&chunk) == true);
+  }
+
+  conv.set_ir(&zero_ir);
+  do {
+    conv.get_chunk(&chunk);
+    if (chunk.size)
+      CHECK(chunk.samples[0][0] != 0);
+  } while (!chunk.eos);
+
+TEST_END(conv_test);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -408,8 +503,7 @@ SliceFilter::process(const Chunk *_chunk)
 ///////////////////////////////////////////////////////////////////////////////
 
 SUITE(convolver, "Convolver filter test")
-  TEST_FACTORY(conv_zero),
-  TEST_FACTORY(conv_identity),
+  TEST_FACTORY(conv_test),
   TEST_FACTORY(conv_slice),
   TEST_FACTORY(conv_param),
 SUITE_END;
