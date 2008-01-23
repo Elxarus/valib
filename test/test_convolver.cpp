@@ -71,7 +71,7 @@ TEST(conv_slice, "SliceFilter test")
   CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
 
   /////////////////////////////////////////////////////////
-  // Slice shorter than the stream
+  // Slice is shorter than the stream
 
   noise1.init(spk, seed, noise_size, chunk_size);
   noise2.init(spk, seed, noise_size / 2, chunk_size);
@@ -80,7 +80,7 @@ TEST(conv_slice, "SliceFilter test")
   CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
 
   /////////////////////////////////////////////////////////
-  // Slice longer than the stream
+  // Slice is longer than the stream
 
   noise1.init(spk, seed, noise_size, chunk_size);
   noise2.init(spk, seed, noise_size, chunk_size);
@@ -178,8 +178,8 @@ TEST(conv_param, "Convolve with parametric filter")
   int freq = spk.sample_rate / 4;
   ParamIR low_pass(IR_LOW_PASS, freq, 0, trans, att);
   ParamIR high_pass(IR_HIGH_PASS, freq, 0, trans, att);
-  ParamIR band_pass(IR_BAND_PASS, freq, freq + 3 * trans, trans, att);
-  ParamIR band_stop(IR_BAND_PASS, freq, freq + 3 * trans, trans, att);
+  ParamIR band_pass(IR_BAND_PASS, freq - trans, freq + trans, trans, att);
+  ParamIR band_stop(IR_BAND_STOP, freq - trans, freq + trans, trans, att);
 
   // Test source test_src (tone -> convolver -> slice)
 
@@ -250,6 +250,86 @@ TEST(conv_param, "Convolve with parametric filter")
   // Tone in the stop band must be filtered out
 
   tone.init(spk, freq - trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(log10(level) * 20 < -att);
+
+  /////////////////////////////////////////////////////////
+  // BandPass
+  /////////////////////////////////////////////////////////
+
+  conv.set_ir(&band_pass);
+  len = 2 * band_pass.min_length(spk.sample_rate);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the pass band must remain unchanged
+
+  tone.init(spk, freq, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(log10(diff) * 20 < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tones at stop bands must be filtered out
+
+  tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(log10(level) * 20 < -att);
+
+  tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(log10(level) * 20 < -att);
+
+  /////////////////////////////////////////////////////////
+  // BandStop
+  /////////////////////////////////////////////////////////
+
+  conv.set_ir(&band_stop);
+  len = 2 * band_stop.min_length(spk.sample_rate);
+
+  /////////////////////////////////////////////////////////
+  // Tones at pass bands must remain unchanged
+
+  tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(log10(diff) * 20 < -att);
+
+  tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(log10(diff) * 20 < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the stop band must be filtered out
+
+  tone.init(spk, freq, noise_size + 2 * len);
   slice.init(len, noise_size + len);
   conv.reset();
 
