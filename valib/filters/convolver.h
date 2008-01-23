@@ -30,7 +30,7 @@ protected:
 
   void init();
   void uninit();
-  void process();
+  void process_block();
 
   enum { state_filter, state_zero, state_pass } state;
 

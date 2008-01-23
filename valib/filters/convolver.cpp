@@ -125,7 +125,7 @@ Convolver::uninit()
 }
 
 void
-Convolver::process()
+Convolver::process_block()
 {
   int ch, i;
 
@@ -170,12 +170,13 @@ void
 Convolver::reset()
 {
   NullFilter::reset();
+
+  if (ver != ir.version())
+    init();
+
   if (state == state_filter)
   {
     // Regenerate the response if nessesary
-    if (ver != ir.version())
-      init();
-
     pos = 0;
     pre_samples = c;
     memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
@@ -188,17 +189,22 @@ Convolver::get_chunk(Chunk *chunk)
   int ch;
 
   /////////////////////////////////////////////////////////
-  // Do non-filtering stuff
+  // Do trivial filtering
 
   switch (state)
   {
-    case state_pass:
-      return NullFilter::get_chunk(chunk);
-
     case state_zero:
       for (ch = 0; ch < spk.nch(); ch++)
         memset(samples[ch], 0, size * sizeof(sample_t));
-      return NullFilter::get_chunk(chunk);
+
+    case state_pass:
+      send_chunk_inplace(chunk, size);
+      if (ver != ir.version())
+      {
+        chunk->set_eos();
+        init();
+      }
+      return true;
 
     case state_filter:
       break;
@@ -219,7 +225,7 @@ Convolver::get_chunk(Chunk *chunk)
     for (ch = 0; ch < spk.nch(); ch++)
       memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
 
-    process();
+    process_block();
     chunk->set_linear(spk, out, pos + c);
     chunk->set_eos();
 
@@ -254,7 +260,7 @@ Convolver::get_chunk(Chunk *chunk)
     }
     pos = 0;
 
-    process();
+    process_block();
     chunk->set_linear(spk, out, n);
 
     if (pre_samples)
@@ -273,7 +279,7 @@ Convolver::get_chunk(Chunk *chunk)
     for (ch = 0; ch < spk.nch(); ch++)
       memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
 
-    process();
+    process_block();
     chunk->set_linear(spk, out, pos + c);
     chunk->set_eos();
 
