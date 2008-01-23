@@ -1,4 +1,5 @@
 * Equalizer FIR
 * File FIR
+* Pink FIR
 * FIR multiplication
 * FIR resampling
