@@ -9,6 +9,7 @@ EXTERN_SUITE(suite_test);
 EXTERN_SUITE(fir);
 EXTERN_TEST(rng);
 EXTERN_SUITE(base);
+EXTERN_TEST(slice);
 EXTERN_SUITE(convolver);
 EXTERN_TEST(old_style);
 
@@ -26,6 +27,7 @@ FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(fir),
   TEST_FACTORY(rng),
   SUITE_FACTORY(base),
+  TEST_FACTORY(slice),
   SUITE_FACTORY(convolver),
   TEST_FACTORY(old_style),
 SUITE_END;

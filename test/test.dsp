@@ -164,6 +164,10 @@ SOURCE=.\test_rng.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_slice.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_spdifer.cpp
 # End Source File
 # Begin Source File
@@ -316,6 +320,14 @@ SOURCE=..\valib\filters\resample.cpp
 # Begin Source File
 
 SOURCE=..\valib\filters\resample.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\slice.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\slice.h
 # End Source File
 # Begin Source File
 
