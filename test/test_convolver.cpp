@@ -22,7 +22,7 @@ protected:
 
 public:
   SliceFilter(size_t _start = 0, size_t _end = 0);
-  void set(size_t _start, size_t _end);
+  void init(size_t _start, size_t _end);
   void reset();
   bool process(const Chunk *_chunk);
 };
@@ -56,17 +56,112 @@ TEST_END(conv_identity);
 TEST(conv_slice, "SliceFilter test")
 
   int chunk_size = noise_size / 11;
-  NoiseGen noise(spk, seed, noise_size, chunk_size);
-  NoiseGen noise_slice(spk, seed, noise_size - chunk_size, chunk_size);
-
   Chunk chunk;
-  noise_slice.get_chunk(&chunk);
+  NoiseGen noise1;
+  NoiseGen noise2;
+  SliceFilter slice;
 
-  // now noise_slice has one chunk cut from
-  // the beginning and one chunk from the end
+  /////////////////////////////////////////////////////////
+  // Slice is equal to the stream
 
-  SliceFilter slice(chunk_size, noise_size - chunk_size);
-  CHECK(compare(log, &noise, &slice, &noise_slice, 0) == 0);
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, noise_size, chunk_size);
+  slice.init(0, noise_size);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Slice shorter than the stream
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, noise_size / 2, chunk_size);
+  slice.init(0, noise_size / 2);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Slice longer than the stream
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, noise_size, chunk_size);
+  slice.init(0, 2 * noise_size);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Cut the end of the stream
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, noise_size, chunk_size);
+  noise2.get_chunk(&chunk);
+  slice.init(chunk_size, noise_size);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Cut the middle of the stream
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, noise_size / 2, chunk_size);
+  noise2.get_chunk(&chunk);
+  slice.init(chunk_size, noise_size / 2);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Cut after the end of the stream 1
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, noise_size, chunk_size);
+  noise2.get_chunk(&chunk);
+  slice.init(chunk_size, 2 * noise_size);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Cut after the end of the stream 2
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, 0, chunk_size);
+  slice.init(2 * noise_size, 4 * noise_size);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Cut nothing at the beginning
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, 0, chunk_size);
+  slice.init(0, 0);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Cut nothing in the middle
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, 0, chunk_size);
+  slice.init(noise_size / 2, noise_size / 2);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Cut nothing at the end
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, 0, chunk_size);
+  slice.init(noise_size, noise_size);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Cut nothing after the end
+
+  noise1.init(spk, seed, noise_size, chunk_size);
+  noise2.init(spk, seed, 0, chunk_size);
+  slice.init(2 * noise_size, 2 * noise_size);
+
+  CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
 
 TEST_END(conv_slice);
 
@@ -111,9 +206,9 @@ TEST(conv_param, "Convolve with parametric filter")
   // Tone in the pass band must remain unchanged
 
   tone.init(spk, freq - trans, noise_size + 2 * len);
-  slice.set(len, noise_size + len);
+  slice.init(len, noise_size + len);
   ref_tone.init(spk, freq - trans, noise_size + 2 * len);
-  ref_slice.set(len, len + noise_size);
+  ref_slice.init(len, len + noise_size);
   conv.reset();
 
   diff = calc_diff(&test_src, &ref_src);
@@ -124,7 +219,7 @@ TEST(conv_param, "Convolve with parametric filter")
   // Tone in the stop band must be filtered out
 
   tone.init(spk, freq + trans, noise_size + 2 * len);
-  slice.set(len, noise_size + len);
+  slice.init(len, noise_size + len);
   conv.reset();
 
   level = calc_peak(&test_src);
@@ -142,9 +237,9 @@ TEST(conv_param, "Convolve with parametric filter")
   // Tone in the pass band must remain unchanged
 
   tone.init(spk, freq + trans, noise_size + 2 * len);
-  slice.set(len, noise_size + len);
+  slice.init(len, noise_size + len);
   ref_tone.init(spk, freq + trans, noise_size + 2 * len);
-  ref_slice.set(len, len + noise_size);
+  ref_slice.init(len, len + noise_size);
   conv.reset();
 
   diff = calc_diff(&test_src, &ref_src);
@@ -155,7 +250,7 @@ TEST(conv_param, "Convolve with parametric filter")
   // Tone in the stop band must be filtered out
 
   tone.init(spk, freq - trans, noise_size + 2 * len);
-  slice.set(len, noise_size + len);
+  slice.init(len, noise_size + len);
   conv.reset();
 
   level = calc_peak(&test_src);
@@ -172,7 +267,7 @@ SliceFilter::SliceFilter(size_t _start, size_t _end): NullFilter(-1), pos(0), st
 }
 
 void
-SliceFilter::set(size_t _start, size_t _end)
+SliceFilter::init(size_t _start, size_t _end)
 {
   reset();
   start = _start;
