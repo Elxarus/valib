@@ -10,7 +10,10 @@ inline void log_print(int flags, AutoFile &f, const char *format, va_list list)
   if (flags & LOG_SCREEN)
     vprintf(format, list);
   if (f.is_open())
+  {
     vfprintf(f, format, list);
+    fflush(f);
+  }
 }
 
 inline void log_print(int flags, AutoFile &f, const char *format, ...)
