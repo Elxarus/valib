@@ -525,14 +525,16 @@ Resample::reset_downsample()
   int ch;
   if (fs && fd)
   {
-    // To avoid signal shift we add number of samples to the beginning,
-    // so after processing of pre-buffering samples we fall into the state
-    // when pos_l = c1y. In this case the first input sample matches
-    // the center of the filter.
+    // To avoid signal shift we must ensure that after processing of
+    // pre-buffering samples we fall into the state when pos_l = c1y, 
+    // so the first input sample matches the center of the filter, and
+    // pos_m = order[pos_l].
 
     pos_m = c1y * m1 / l1 - (c2 - c1x) % m1;
     if (pos_m < 0) pos_m += m1;
-    pos_l = (pos_m * l1 + m1 - 1) / m1;
+    pos_l = (pos_m * l1 + l1 - 1) / m1;
+
+    assert((pos_l + stage1_out(c2 - c1x)) % l1 == c1y);
 
     pre_samples = stage1_out(c2 - c1x);
     post_samples = 0;
@@ -600,11 +602,20 @@ Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
     sample_t *iptr = in[ch] - pos_m;
     sample_t *optr = out[ch] - pos_l;
 
+    // Now iptr points to the 'imaginary' beginning of the block of M input
+    // samples and optr points to the beginning of the block of L output
+    // samples, so pos_m and pos_l are indexes at these blocks.
+    //
+    // But here an important case is possible. Consider L=3, M=5 and pos_m=4
+    // (4 input samples processed and 3 output samples generated). In this
+    // case pos_l=0 and order[pos_l]=0. So in[ch]-pos_m+order[pos_l] < in[ch].
+    // Thus we must skip last (unused) samples of the input block.
+
+    if (order[pos_l] < pos_m)
+       iptr += m1;
+
     while (n--)
     {
-      if (i == 27)
-        i = i;
-
       double sum = 0;
       for (int j = 0; j < n1x; j++)
         sum += iptr[order[i] + j] * f1[i][j];
