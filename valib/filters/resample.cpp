@@ -532,7 +532,8 @@ Resample::reset_downsample()
 
     pos_m = c1y * m1 / l1 - (c2 - c1x) % m1;
     if (pos_m < 0) pos_m += m1;
-    pos_l = (pos_m * l1 + l1 - 1) / m1;
+    pos_l = c1y - stage1_out(c2 - c1x) % l1;
+    if (pos_l < 0) pos_l += l1;
 
     assert((pos_l + stage1_out(c2 - c1x)) % l1 == c1y);
 

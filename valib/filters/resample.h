@@ -56,16 +56,8 @@ protected:
   void reset_downsample();
   void uninit();
 
-  inline int stage1_in(int n)  const
-  {
-    return (n + pos_l) * m1 / l1 - pos_m;
-  }
-
-  inline int stage1_out(int n) const
-  {
-    return ((pos_m + n - 1) * l1 + l1 + m1 - 1) / m1 -
-           ((pos_m     - 1) * l1 + l1 + m1 - 1) / m1;
-  }
+  inline int stage1_in(int n)  const { return (n + pos_l) * m1 / l1 - pos_m; }
+  inline int stage1_out(int n) const { return ((pos_m + n) * l1 + m1 - 1) / m1 - (pos_m * l1 + m1 - 1) / m1; }
 
   inline void do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out);
   inline void do_stage2();
