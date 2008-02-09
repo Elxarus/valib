@@ -11,8 +11,6 @@ static const double k_fft = 20.1977305724455;
 ///////////////////////////////////////////////////////////////////////////////
 // Math
 
-inline int div_floor(int a, int b) { return a/b; }
-inline int div_ceil(int a, int b)  { return (a+b-1)/b; }
 inline double sinc(double x) { return x == 0 ? 1 : sin(x)/x; }
 inline double lpf(int i, double freq) { return 2 * freq * sinc(i * 2 * M_PI * freq); }
 inline int gcd(int x, int y);
@@ -321,7 +319,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   ///////////////////////////////////////////////////////
   // Allocate buffers
 
-  const size_t buf1_size = n2*m1/l1+n1x;
+  const size_t buf1_size = n2*m1/l1+n1x+1;
   buf1[0] = new sample_t[buf1_size * nch];
   for (i = 1; i < nch; i++)
     buf1[i] = buf1[0] + i * buf1_size;
@@ -462,7 +460,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   ///////////////////////////////////////////////////////
   // init processing
 
-  const size_t buf1_size = n2*m1/l1+n1x;
+  const size_t buf1_size = n2*m1/l1+n1x+1;
   buf1[0] = new sample_t[buf1_size * nch];
   for (i = 1; i < nch; i++)
     buf1[i] = buf1[0] + i * buf1_size;
@@ -607,7 +605,7 @@ Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
     // samples and optr points to the beginning of the block of L output
     // samples, so pos_m and pos_l are indexes at these blocks.
     //
-    // But here an important case is possible. Consider L=3, M=5 and pos_m=4
+    // But here a special case is possible. Consider L=3, M=5 and pos_m=4
     // (4 input samples processed and 3 output samples generated). In this
     // case pos_l=0 and order[pos_l]=0. So in[ch]-pos_m+order[pos_l] < in[ch].
     // Thus we must skip last (unused) samples of the input block.
@@ -699,7 +697,7 @@ Resample::process_upsample(sample_t *in_buf[], int nsamples)
   ///////////////////////////////////////////////////////
   // Stage 1 processing
 
-  int n = n2*m1/l1 + n1x;
+  int n = n2*m1/l1 + n1x + 1;
   if (nsamples < n - pos1)
   {
     for (ch = 0; ch < nch; ch++)
@@ -754,7 +752,7 @@ Resample::flush_upsample()
   int ch;
 
   out_size = 0;
-  int n = n2*m1/l1 + n1x - pos1;
+  int n = n2*m1/l1 + n1x + 1 - pos1;
   int actual_out_size = stage1_out(pos1 - c1x) + c2 - pre_samples;
   if (!actual_out_size)
     return true;
