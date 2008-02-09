@@ -241,14 +241,14 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   // in df1 we take in account transition band df,
   // otherwise filter length could be too large for
   // close frequencies like (44100->44101)
-  double df = fs * (1-q);
+  double df = fs/2 * (1-q);
   double df1  = (fs2 - fs)/2 + df; // transition band width [Hz]
   double lpf1 = fs/2 - df + df1/2; // center of the transition band [Hz]
   df1 /= fs1; lpf1 /= fs1;         // normalize
 
   // find the fiter length
   n1 = kaiser_n(a + log10(m1)*10, df1);
-  n1x = n1 / l1;     // make n1x odd; larger, because we
+  n1x = (n1 + l1 - 1) / l1;     // make n1x odd; larger, because we
   n1x = n1x | 1;     // should not make the filter weaker
   n1y = l1;
   n1 = n1x * n1y;    // use all available space for the filter
@@ -379,7 +379,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   ///////////////////////////////////////////////////////////////////////////
   // Build fft stage filter
 
-  double df = fd * (1-q);
+  double df = fd/2 * (1-q);
   double lpf2 = (fd - df)/2;
   lpf2 /= fs2;
 
@@ -419,7 +419,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
 
   // find the fiter length
   n1 = kaiser_n(a + log10(m1)*10, df1);
-  n1x = n1 / l1;     // make n1x odd; larger, because we
+  n1x = (n1 + l1 - 1) / l1;     // make n1x odd; larger, because we
   n1x = n1x | 1;     // should not make the filter weaker
   n1y = l1;
   n1 = n1x * n1y;    // use all available space for the filter
