@@ -11,6 +11,7 @@ EXTERN_TEST(rng);
 EXTERN_SUITE(base);
 EXTERN_TEST(slice);
 EXTERN_SUITE(convolver);
+EXTERN_SUITE(resample);
 EXTERN_TEST(old_style);
 
 // Heavy tests
@@ -29,6 +30,8 @@ FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(base),
   TEST_FACTORY(slice),
   SUITE_FACTORY(convolver),
+  SUITE_FACTORY(resample),
+
   TEST_FACTORY(old_style),
 SUITE_END;
 

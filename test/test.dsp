@@ -160,6 +160,10 @@ SOURCE=.\test_proc.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\test_resample.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\test_rng.cpp
 # End Source File
 # Begin Source File
@@ -553,6 +557,14 @@ SOURCE=..\valib\parsers\multi_header.h
 
 SOURCE=..\valib\sink\sink_raw.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink\sink_wav.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink\sink_wav.h
+# End Source File
 # End Group
 # Begin Group "win32"
 
@@ -572,6 +584,14 @@ SOURCE=..\valib\win32\thread.cpp
 # Begin Source File
 
 SOURCE=..\valib\win32\thread.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\win32\winspk.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\win32\winspk.h
 # End Source File
 # End Group
 # Begin Group "common"
