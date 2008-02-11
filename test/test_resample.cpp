@@ -1,8 +1,8 @@
 /*
   Resample filter test
   * Test that backward transform is equal to the bandlimited original signal
-  * Test that there'no frequencies added to the signal
-  * Test thet original frequencies are preserved in the signal
+  * Test that there're no frequencies added to the signal
+  * That thet original frequencies are preserved in the signal
   * Test short-length input (shorter than filter length)
 */
 
