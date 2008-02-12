@@ -362,22 +362,19 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   m1 = m;                     // convolution stage decimation factor (always M)
   assert((l % l2) == 0);      // just in case...
 
-  // fs1 is double because fs and fd may be coprime (gcd = 1)
-  // so fs*fd may be > 2^32
-  double fs2 = double(fs) * double(l2);               // sample rate after convolution stage [Hz]
-  double fs1 = double(fs) * double(fd) / double(g);   // sample rate after interpolation [Hz]
-  double alpha = kaiser_alpha(a);                     // alpha parameter for kaiser window
+  double alpha = kaiser_alpha(a); // alpha parameter for the kaiser window
+  double phi = double(l2) / double(m2);
+  double big_phi = double(l) / double(m);
 
   ///////////////////////////////////////////////////////////////////////////
   // Build fft stage filter
 
-  double df = fd/2 * (1-q);
-  double lpf2 = (fd - df)/2;
-  lpf2 /= fs2;
+  double df2  = big_phi * (1 - q) / (2 * l2);
+  double lpf2 = big_phi * (1 + q) / (4 * l2);
 
   // filter length must be odd (type 1 filter), but fft length must be even;
   // therefore n2 is even, but only n2-1 bins will be used for the filter
-  n2 = kaiser_n(a + log10(m2)*10, df/fs2);
+  n2 = kaiser_n(a + log10(m2)*10, df2);
   n2 = clp2(n2);
   n2b = n2*2;
   c2 = n2 / 2 - 1;
@@ -402,12 +399,8 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   ///////////////////////////////////////////////////////////////////////////
   // Build convolution stage filter
 
-  // in df1 we take in account transition band df,
-  // otherwise filter length could be too large for
-  // close frequencies like (44100->44101)
-  double df1  = (fs2 - fd)/2 + df; // transition band width [Hz]
-  double lpf1 = fd/2 - df + df1/2; // center of the transition band [Hz]
-  df1 /= fs1; lpf1 /= fs1;         // normalize
+  double df1  = (1 - q * big_phi) / (2 * l1 * phi);
+  double lpf1 = (1 + q * big_phi) / (4 * l1 * phi);
 
   // find the fiter length
   n1 = kaiser_n(a + log10(m1)*10, df1);
