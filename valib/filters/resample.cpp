@@ -483,16 +483,18 @@ Resample::reset_upsample()
     pos_l = c1y;
     pos_m = pos_l * m1 / l1;
 
-    pre_samples = c2;
+    pre_samples = c2 / m2;
     post_samples = c1x;
 
-    // To avoid signal shift we add c1x samples to the beginning,
+    // To avoid signal shift we add c1x zero samples to the beginning,
     // so the first sample processed is guaranteed to match the center
-    // of the filter
+    // of the filter.
+    // Also, we should choose 'shift' value in such way, so
+    // shift + pre_samples*m2 = c2
 
     pos1 = c1x;
     pos2 = 0;
-    shift = 0;
+    shift = c2 - pre_samples*m2;
 
     for (ch = 0; ch < nch; ch++)
       memset(buf1[ch], 0, pos1 * sizeof(sample_t));
