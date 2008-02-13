@@ -258,7 +258,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   // Build convolution stage filter
 
   // find the fiter length
-  n1 = kaiser_n(a1, df1);
+  n1 = kaiser_n(a1, df1) | 1;
   n1x = (n1 + l1 - 1) / l1;     // make n1x odd; larger, because we
   n1x = n1x | 1;     // should not make the filter weaker
   n1y = l1;
@@ -303,7 +303,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
 
   // filter length must be odd (type 1 filter), but fft length must be even;
   // therefore n2 is even, but only n2-1 bins will be used for the filter
-  n2 = kaiser_n(a2, df2);
+  n2 = kaiser_n(a2, df2) | 1;
   n2 = clp2(n2);
   n2b = n2*2;
   c2 = n2 / 2 - 1;
@@ -411,7 +411,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
 
   // filter length must be odd (type 1 filter), but fft length must be even;
   // therefore n2 is even, but only n2-1 bins will be used for the filter
-  n2 = kaiser_n(a2, df2);
+  n2 = kaiser_n(a2, df2) | 1;
   n2 = clp2(n2);
   n2b = n2*2;
   c2 = n2 / 2 - 1;
@@ -438,7 +438,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   // Build convolution stage filter
 
   // find the fiter length
-  n1 = kaiser_n(a1, df1);
+  n1 = kaiser_n(a1, df1) | 1;
   n1x = (n1 + l1 - 1) / l1;     // make n1x odd; larger, because we
   n1x = n1x | 1;     // should not make the filter weaker
   n1y = l1;
