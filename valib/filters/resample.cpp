@@ -229,17 +229,36 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   m1 = m / m2;              // convolution stage decimation factor
   assert((m % m2) == 0);    // just in case...
 
-  double alpha = kaiser_alpha(a); // alpha parameter for the kaiser window
+  ///////////////////////////////////////////////////////////////////////////
+  // We can consider the attenuation as amount of noise introduced by a filter.
+  // Two stages introduces twice more noise, so to keep the output noise below
+  // the user-specified, we should add 6dB attenuation to both stages.
+  // Also, the noise in the stopband, produced at each stage is folded into
+  // the passband during decimation. Decimation factor is the noise gain level,
+  // so we should add it to the attenuation.
+
+  double alpha;                     // alpha parameter for the kaiser window
+  double a1 = a + log10(m1)*20 + 6; // convolution stage attenuation
+  double a2 = a + log10(m2)*20 + 6; // fft stage attenuation
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Find filters' parameters: transition band width and cennter frequency
+
   double phi = double(l1) / double(m1);
+
+  // convolution stage
+  double df1  = (phi - q) / (2 * l1);
+  double lpf1 = (phi + q) / (4 * l1);
+
+  // fft stage
+  double df2  = (1 - q) / (2 * phi * l2);
+  double lpf2 = (1 + q) / (4 * phi * l2);
 
   ///////////////////////////////////////////////////////////////////////////
   // Build convolution stage filter
 
-  double df1  = (phi - q) / (2 * l1);
-  double lpf1 = (phi + q) / (4 * l1);
-
   // find the fiter length
-  n1 = kaiser_n(a + log10(m1)*10, df1);
+  n1 = kaiser_n(a1, df1);
   n1x = (n1 + l1 - 1) / l1;     // make n1x odd; larger, because we
   n1x = n1x | 1;     // should not make the filter weaker
   n1y = l1;
@@ -259,6 +278,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   for (i = 0; i < n1x * n1y; i++) f1_raw[i] = 0;
 
   // build the filter
+  alpha = kaiser_alpha(a1);
   for (i = 0; i < n1; i++)
     f1_raw[i] = (sample_t) (kaiser_window(i - c1, n1, alpha) * lpf(i - c1, lpf1) * l);
 
@@ -281,12 +301,9 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   ///////////////////////////////////////////////////////////////////////////
   // Build fft stage filter
 
-  double df2  = (1 - q) / (2 * phi * l2);
-  double lpf2 = (1 + q) / (4 * phi * l2);
-
   // filter length must be odd (type 1 filter), but fft length must be even;
   // therefore n2 is even, but only n2-1 bins will be used for the filter
-  n2 = kaiser_n(a + log10(m2)*10, df2);
+  n2 = kaiser_n(a2, df2);
   n2 = clp2(n2);
   n2b = n2*2;
   c2 = n2 / 2 - 1;
@@ -298,6 +315,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
 
   // make the filter
   // filter length is n2-1
+  alpha = kaiser_alpha(a2);
   for (i = 0; i < n2-1; i++)
     f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) / n2);
 
@@ -362,19 +380,38 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   m1 = m;                     // convolution stage decimation factor (always M)
   assert((l % l2) == 0);      // just in case...
 
-  double alpha = kaiser_alpha(a); // alpha parameter for the kaiser window
+  ///////////////////////////////////////////////////////////////////////////
+  // We can consider the attenuation as amount of noise introduced by a filter.
+  // Two stages introduces twice more noise, so to keep the output noise below
+  // the user-specified, we should add 6dB attenuation to both stages.
+  // Also, the noise in the stopband, produced at each stage is folded into
+  // the passband during decimation. Decimation factor is the noise gain level,
+  // so we should add it to the attenuation.
+
+  double alpha;                     // alpha parameter for the kaiser window
+  double a1 = a + log10(m1)*20 + 6; // convolution stage attenuation
+  double a2 = a + log10(m2)*20 + 6; // fft stage attenuation
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Find filters' parameters: transition band width and cennter frequency
+
   double phi = double(l2) / double(m2);
   double big_phi = double(l) / double(m);
+
+  // fft stage
+  double df2  = big_phi * (1 - q) / (2 * l2);
+  double lpf2 = big_phi * (1 + q) / (4 * l2);
+
+  // convolutiuon stage
+  double df1  = (1 - q * big_phi) / (2 * l1 * phi);
+  double lpf1 = (1 + q * big_phi) / (4 * l1 * phi);
 
   ///////////////////////////////////////////////////////////////////////////
   // Build fft stage filter
 
-  double df2  = big_phi * (1 - q) / (2 * l2);
-  double lpf2 = big_phi * (1 + q) / (4 * l2);
-
   // filter length must be odd (type 1 filter), but fft length must be even;
   // therefore n2 is even, but only n2-1 bins will be used for the filter
-  n2 = kaiser_n(a + log10(m2)*10, df2);
+  n2 = kaiser_n(a2, df2);
   n2 = clp2(n2);
   n2b = n2*2;
   c2 = n2 / 2 - 1;
@@ -386,6 +423,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
 
   // make the filter
   // filter length is n2-1
+  alpha = kaiser_alpha(a2);
   for (i = 0; i < n2-1; i++)
     f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) / n2);
 
@@ -399,11 +437,8 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   ///////////////////////////////////////////////////////////////////////////
   // Build convolution stage filter
 
-  double df1  = (1 - q * big_phi) / (2 * l1 * phi);
-  double lpf1 = (1 + q * big_phi) / (4 * l1 * phi);
-
   // find the fiter length
-  n1 = kaiser_n(a + log10(m1)*10, df1);
+  n1 = kaiser_n(a1, df1);
   n1x = (n1 + l1 - 1) / l1;     // make n1x odd; larger, because we
   n1x = n1x | 1;     // should not make the filter weaker
   n1y = l1;
@@ -423,6 +458,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   for (i = 0; i < n1x * n1y; i++) f1_raw[i] = 0;
 
   // build the filter
+  alpha = kaiser_alpha(a1);
   for (i = 0; i < n1; i++)
     f1_raw[i] = (sample_t) (kaiser_window(i - c1, n1, alpha) * lpf(i - c1, lpf1) * l);
 
@@ -500,7 +536,7 @@ Resample::reset_upsample()
       memset(buf1[ch], 0, pos1 * sizeof(sample_t));
 
     for (ch = 0; ch < nch; ch++)
-      memset(delay2[ch], 0, n2/m2 * sizeof(sample_t));
+      memset(delay2[ch], 0, (n2/m2+1) * sizeof(sample_t));
   }
 }
 
@@ -530,7 +566,7 @@ Resample::reset_downsample()
     shift = 0;
 
     for (ch = 0; ch < nch; ch++)
-      memset(delay2[ch], 0, n2/m2 * sizeof(sample_t));
+      memset(delay2[ch], 0, (n2/m2+1) * sizeof(sample_t));
   }
 }
 
