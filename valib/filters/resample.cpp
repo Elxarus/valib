@@ -320,7 +320,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   for (i = 1; i < nch; i++)
     buf2[i] = buf2[0] + i * n2b;
 
-  const size_t delay2_size = n2/m2;
+  const size_t delay2_size = n2/m2+1;
   delay2[0] = new sample_t[delay2_size * nch];
   for (i = 1; i < nch; i++)
     delay2[i] = delay2[0] + i * delay2_size;
@@ -454,7 +454,7 @@ Resample::init_downsample(int _nch, int _fs, int _fd)
   for (i = 1; i < nch; i++)
     buf2[i] = buf2[0] + i * n2b;
 
-  const size_t delay2_size = n2/m2;
+  const size_t delay2_size = n2/m2+1;
   delay2[0] = new sample_t[delay2_size * nch];
   for (i = 1; i < nch; i++)
     delay2[i] = delay2[0] + i * delay2_size;
