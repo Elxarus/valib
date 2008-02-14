@@ -776,7 +776,7 @@ Resample::flush_upsample()
 
   out_size = 0;
   int n = n2*m1/l1 + n1x + 1 - pos1;
-  int actual_out_size = stage1_out(pos1 - c1x) + c2 - pre_samples;
+  int actual_out_size = (stage1_out(pos1 - c1x) + c2) / m2 - pre_samples;
   if (!actual_out_size)
     return true;
 
@@ -789,6 +789,13 @@ Resample::flush_upsample()
 
   if (post_samples <= 0)
   {
+    if (actual_out_size > out_size)
+    {
+      // If we have no enough data, then
+      // copy the rest from the delay buffer
+      for (ch = 0; ch < nch; ch++)
+        memcpy(buf2[ch] + out_size, delay2[ch], (actual_out_size - out_size) * sizeof(sample_t));
+    }
     out_size = actual_out_size;
     return true;
   }
