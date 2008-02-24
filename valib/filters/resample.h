@@ -42,7 +42,6 @@ protected:
   // processing
   int pos_l, pos_m;            // stage1 convolution positions [0..l1), [0..m1)
   int pos1;                    // stage1 buffer position
-  int pos2;                    // stage2 buffer position [0..n2)
   sample_t *buf1[NCHANNELS];   // stage1 buffer
   sample_t *buf2[NCHANNELS];   // stage2 buffer [n2b]
   sample_t *delay2[NCHANNELS]; // fft stage delay buffer [n2/m2]
@@ -50,11 +49,8 @@ protected:
   int pre_samples;             // number of samples to drop from the beginning of output data
   int post_samples;            // number of samples to add to the end of input data
 
-  int init_upsample(int _nch, int _fs, int _fd);
-  int init_downsample(int _nch, int _fs, int _fd);
-  void reset_upsample();
-  void reset_downsample();
-  void uninit();
+  int init_resample(int _nch, int _fs, int _fd);
+  void uninit_resample();
 
   inline int stage1_in(int n)  const { return (n + pos_l) * m1 / l1 - pos_m; }
   inline int stage1_out(int n) const { return ((pos_m + n) * l1 + m1 - 1) / m1 - (pos_m * l1 + m1 - 1) / m1; }
@@ -63,14 +59,9 @@ protected:
   inline void do_stage2();
   inline void drop_pre_samples();
 
-  int process_upsample(sample_t *in_buf[], int nsamples);
-  int process_downsample(sample_t *in_buf[], int nsamples);
-  bool flush_upsample();
-  bool flush_downsample();
-
-  double t_upsample(int m2) const;
-  int optimize_upsample() const;
-  int optimize_downsample() const;
+  void reset_resample();
+  int process_resample(sample_t *in_buf[], int nsamples);
+  bool flush_resample();
 
 protected:
   int sample_rate;       // destination sample rate
@@ -94,6 +85,7 @@ public:
   // Own interface
 
   bool set(int sample_rate, double a = 100, double q = 0.99);
+  void get(int *sample_rate, double *a = 0, double *q = 0);
 
   bool set_sample_rate(int _sample_rate) { return set(_sample_rate, a, q); }
   int get_sample_rate() const { return sample_rate; };

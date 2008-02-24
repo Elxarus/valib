@@ -17,6 +17,11 @@ inline int gcd(int x, int y);
 inline unsigned int flp2(unsigned int x);
 inline unsigned int clp2(unsigned int x);
 
+double t_upsample(int l1, int m1, int l2, int m2, double a, double q);
+double t_downsample(int l1, int m1, int l2, int m2, double a, double q);
+double optimize_upsample(int l, int m, double a, double q, int &l1, int &m1, int &l2, int &m2);
+double optimize_downsample(int l, int m, double a, double q, int &l1, int &m1, int &l2, int &m2);
+
 ///////////////////////////////////////////////////////////////////////////////
 // Resample class definition
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,7 +76,7 @@ Resample::Resample(int _sample_rate, double _a, double _q):
 
 Resample::~Resample()
 {
-  uninit();
+  uninit_resample();
 }
 
 
@@ -92,18 +97,23 @@ Resample::set(int _sample_rate, double _a, double _q)
   a = _a;
   q = _q;
 
-  uninit();
+  uninit_resample();
   out_spk = spk;
   if (!spk.is_unknown() && sample_rate != 0)
   {
     out_spk.sample_rate = sample_rate;
-    if (sample_rate > spk.sample_rate)
-      init_upsample(spk.nch(), spk.sample_rate, sample_rate);
-    if (sample_rate < spk.sample_rate)
-      init_downsample(spk.nch(), spk.sample_rate, sample_rate);
+    init_resample(spk.nch(), spk.sample_rate, sample_rate);
   }
 
   return true;
+}
+
+void
+Resample::get(int *_sample_rate, double *_a, double *_q)
+{
+  if (_sample_rate) *_sample_rate = sample_rate;
+  if (_a) *_a = a;
+  if (_q) *_q = q;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -115,12 +125,7 @@ Resample::reset()
 {
   NullFilter::reset();
   if (sample_rate)
-  {
-    if (sample_rate > spk.sample_rate)
-      reset_upsample();
-    if (sample_rate < spk.sample_rate)
-      reset_downsample();
-  }
+    reset_resample();
 }
 
 bool
@@ -128,16 +133,13 @@ Resample::set_input(Speakers _spk)
 {
   FILTER_SAFE(NullFilter::set_input(_spk));
 
-  uninit();
+  uninit_resample();
   out_spk = _spk;
 
   if (sample_rate)
   {
     out_spk.sample_rate = sample_rate;
-    if (sample_rate > spk.sample_rate)
-      init_upsample(spk.nch(), spk.sample_rate, sample_rate);
-    if (sample_rate < spk.sample_rate)
-      init_downsample(spk.nch(), spk.sample_rate, sample_rate);
+    init_resample(spk.nch(), spk.sample_rate, sample_rate);
   }
   return true;
 }
@@ -153,49 +155,24 @@ Resample::get_chunk(Chunk *_chunk)
 {
   if (sample_rate)
   {
-    if (sample_rate > spk.sample_rate)
+    // Upsample
+    if (size)
     {
-      // Upsample
-      if (size)
-      {
-        size_t processed = process_upsample(samples.samples, size);
-        drop_samples(processed);
-        _chunk->set_linear(out_spk, out_samples, out_size);
-      }
-      else if (flushing)
-      {
-        bool send_eos = flush_upsample();
-        _chunk->set_linear(out_spk, out_samples, out_size);
-        if (send_eos)
-        {
-          _chunk->set_eos();
-          reset();
-        }
-      }
-      return true;
+      size_t processed = process_resample(samples.samples, size);
+      drop_samples(processed);
+      _chunk->set_linear(out_spk, out_samples, out_size);
     }
-
-    if (sample_rate < spk.sample_rate)
+    else if (flushing)
     {
-      // Downsample
-      if (size)
+      bool send_eos = flush_resample();
+      _chunk->set_linear(out_spk, out_samples, out_size);
+      if (send_eos)
       {
-        size_t processed = process_downsample(samples.samples, size);
-        drop_samples(processed);
-        _chunk->set_linear(out_spk, out_samples, out_size);
+        _chunk->set_eos();
+        reset();
       }
-      else if (flushing)
-      {
-        bool send_eos = flush_downsample();
-        _chunk->set_linear(out_spk, out_samples, out_size);
-        if (send_eos)
-        {
-          _chunk->set_eos();
-          reset();
-        }
-      }
-      return true;
     }
+    return true;
   }
 
   send_chunk_inplace(_chunk, size);
@@ -204,16 +181,14 @@ Resample::get_chunk(Chunk *_chunk)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Init functions
+// Init
 ///////////////////////////////////////////////////////////////////////////////
 
 int
-Resample::init_upsample(int _nch, int _fs, int _fd)
+Resample::init_resample(int _nch, int _fs, int _fd)
 {
   int i;
-  uninit();
-
-  assert(_fs < _fd);
+  uninit_resample();
 
   fs = _fs; // source sample rate
   fd = _fd; // destinationsample rate
@@ -223,11 +198,10 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   l = fd / g; // interpolation factor
   m = fs / g; // decimation factor
 
-  l1 = l;                   // convolution stage interpolation factor (always L)
-  l2 = 1;                   // fft stage interpolation factor (always 1)
-  m2 = optimize_upsample(); // fft stage decimation factor
-  m1 = m / m2;              // convolution stage decimation factor
-  assert((m % m2) == 0);    // just in case...
+  if (fs < fd)
+    optimize_upsample(l, m, a, q, l1, m1, l2, m2);
+  else
+    optimize_downsample(l, m, a, q, l1, m1, l2, m2);
 
   ///////////////////////////////////////////////////////////////////////////
   // We can consider the attenuation as amount of noise introduced by a filter.
@@ -245,14 +219,27 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   // Find filters' parameters: transition band width and cennter frequency
 
   double phi = double(l1) / double(m1);
+  double big_phi = double(l) / double(m);
+  double df1, lpf1, df2, lpf2;
 
-  // convolution stage
-  double df1  = (phi - q) / (2 * l1);
-  double lpf1 = (phi + q) / (4 * l1);
-
-  // fft stage
-  double df2  = (1 - q) / (2 * phi * l2);
-  double lpf2 = (1 + q) / (4 * phi * l2);
+  if (fs < fd) // upsample
+  {
+    // convolution stage
+    df1  = (phi - q) / (2 * l1);
+    lpf1 = (phi + q) / (4 * l1);
+    // fft stage
+    df2  = (1 - q) / (2 * phi * l2);
+    lpf2 = (1 + q) / (4 * phi * l2);
+  }
+  else // downsample
+  {
+    // convolution stage
+    df1  = (phi - q * big_phi) / (2 * l1);
+    lpf1 = (phi + q * big_phi) / (4 * l1);
+    // fft stage
+    df2  = big_phi * (1 - q) / (2 * phi * l2);
+    lpf2 = big_phi * (1 + q) / (4 * phi * l2);
+  }
 
   ///////////////////////////////////////////////////////////////////////////
   // Build convolution stage filter
@@ -280,7 +267,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   // build the filter
   alpha = kaiser_alpha(a1);
   for (i = 0; i < n1; i++)
-    f1_raw[i] = (sample_t) (kaiser_window(i - c1, n1, alpha) * lpf(i - c1, lpf1) * l);
+    f1_raw[i] = (sample_t) (kaiser_window(i - c1, n1, alpha) * lpf(i - c1, lpf1) * l1);
 
   // reorder the filter
   // find coordinates of the filter's center
@@ -317,7 +304,7 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   // filter length is n2-1
   alpha = kaiser_alpha(a2);
   for (i = 0; i < n2-1; i++)
-    f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) / n2);
+    f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) * l2 / n2);
 
   // convert the filter to frequency domain and init fft for future use
   fft_ip    = new int[(int)(2 + sqrt(n2b))];
@@ -358,220 +345,8 @@ Resample::init_upsample(int _nch, int _fs, int _fd)
   return true;
 }
 
-int
-Resample::init_downsample(int _nch, int _fs, int _fd)
-{
-  int i;
-  uninit();
-
-  assert(_fd < _fs);
-
-  fs = _fs; // source sample rate
-  fd = _fd; // destinationsample rate
-  nch = _nch; // number fo channels
-
-  g = gcd(fs, fd);
-  l = fd / g; // interpolation factor
-  m = fs / g; // decimation factor
-
-  l2 = optimize_downsample(); // fft stage interpolation factor
-  l1 = l / l2;                // convolution stage interpolation factor
-  m2 = 1;                     // fft stage decimation factor (always 1)
-  m1 = m;                     // convolution stage decimation factor (always M)
-  assert((l % l2) == 0);      // just in case...
-
-  ///////////////////////////////////////////////////////////////////////////
-  // We can consider the attenuation as amount of noise introduced by a filter.
-  // Two stages introduces twice more noise, so to keep the output noise below
-  // the user-specified, we should add 6dB attenuation to both stages.
-  // Also, the noise in the stopband, produced at each stage is folded into
-  // the passband during decimation. Decimation factor is the noise gain level,
-  // so we should add it to the attenuation.
-
-  double alpha;                     // alpha parameter for the kaiser window
-  double a1 = a + log10(m1)*20 + 6; // convolution stage attenuation
-  double a2 = a + log10(m2)*20 + 6; // fft stage attenuation
-
-  ///////////////////////////////////////////////////////////////////////////
-  // Find filters' parameters: transition band width and cennter frequency
-
-  double phi = double(l2) / double(m2);
-  double big_phi = double(l) / double(m);
-
-  // fft stage
-  double df2  = big_phi * (1 - q) / (2 * l2);
-  double lpf2 = big_phi * (1 + q) / (4 * l2);
-
-  // convolutiuon stage
-  double df1  = (1 - q * big_phi) / (2 * l1 * phi);
-  double lpf1 = (1 + q * big_phi) / (4 * l1 * phi);
-
-  ///////////////////////////////////////////////////////////////////////////
-  // Build fft stage filter
-
-  // filter length must be odd (type 1 filter), but fft length must be even;
-  // therefore n2 is even, but only n2-1 bins will be used for the filter
-  n2 = kaiser_n(a2, df2) | 1;
-  n2 = clp2(n2);
-  n2b = n2*2;
-  c2 = n2 / 2 - 1;
-
-  // allocate the filter
-  // f2[n2b]
-  f2 = new sample_t[n2b];
-  for (i = 0; i < n2b; i++) f2[i] = 0;
-
-  // make the filter
-  // filter length is n2-1
-  alpha = kaiser_alpha(a2);
-  for (i = 0; i < n2-1; i++)
-    f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) / n2);
-
-  // convert the filter to frequency domain and init fft for future use
-  fft_ip    = new int[(int)(2 + sqrt(n2b))];
-  fft_w     = new sample_t[n2b/2];
-  fft_ip[0] = 0;
-
-  rdft(n2b, 1, f2, fft_ip, fft_w);
-
-  ///////////////////////////////////////////////////////////////////////////
-  // Build convolution stage filter
-
-  // find the fiter length
-  n1 = kaiser_n(a1, df1) | 1;
-  n1x = (n1 + l1 - 1) / l1;     // make n1x odd; larger, because we
-  n1x = n1x | 1;     // should not make the filter weaker
-  n1y = l1;
-  n1 = n1x * n1y;    // use all available space for the filter
-  n1 = n1 - 1 | 1;   // make n1 odd (type1 filter); smaller, because we
-                     // must fit the filter into the given space
-  c1 = (n1 - 1) / 2; // center of the filter
-
-  // allocate the filter
-  // f1[n1y][n1x]
-  f1 = new sample_t *[n1y];
-  f1[0] = new sample_t[n1x * n1y];
-  for (i = 0; i < n1x * n1y; i++) f1[0][i] = 0;
-  for (i = 1; i < n1y; i++) f1[i] = f1[0] + i * n1x;
-
-  f1_raw = new sample_t[n1y * n1x];
-  for (i = 0; i < n1x * n1y; i++) f1_raw[i] = 0;
-
-  // build the filter
-  alpha = kaiser_alpha(a1);
-  for (i = 0; i < n1; i++)
-    f1_raw[i] = (sample_t) (kaiser_window(i - c1, n1, alpha) * lpf(i - c1, lpf1) * l);
-
-  // reorder the filter
-  // find coordinates of the filter's center
-  for (int y = 0; y < n1y; y++)
-    for (int x = 0; x < n1x; x++)
-    {
-      int p = l1-1 - (y*m1)%l1 + x*l1;
-      f1[y][x] = f1_raw[p];
-      if (p == c1)
-        c1x = x, c1y = y;
-    }
-
-  // data ordering
-  order = new int[l1];
-  for (i = 0; i < l1; i++) 
-    order[i] = i * m1 / l1;
-
-  ///////////////////////////////////////////////////////
-  // init processing
-
-  const size_t buf1_size = n2*m1/l1+n1x+1;
-  buf1[0] = new sample_t[buf1_size * nch];
-  for (i = 1; i < nch; i++)
-    buf1[i] = buf1[0] + i * buf1_size;
-
-  buf2[0] = new sample_t[n2b * nch];
-  for (i = 1; i < nch; i++)
-    buf2[i] = buf2[0] + i * n2b;
-
-  const size_t delay2_size = n2/m2+1;
-  delay2[0] = new sample_t[delay2_size * nch];
-  for (i = 1; i < nch; i++)
-    delay2[i] = delay2[0] + i * delay2_size;
-
-  out_samples.zero();
-  for (i = 0; i < nch; i++)
-    out_samples[i] = buf2[i];
-
-  out_size = 0;
-  reset();
-
-#if RESAMPLE_PERF
-  stage1.reset();
-  stage2.reset();
-#endif
-
-  return true;
-}
-
 void
-Resample::reset_upsample()
-{
-  int ch;
-  if (fs && fd)
-  {
-    pos_l = c1y;
-    pos_m = pos_l * m1 / l1;
-
-    pre_samples = c2 / m2;
-    post_samples = c1x;
-
-    // To avoid signal shift we add c1x zero samples to the beginning,
-    // so the first sample processed is guaranteed to match the center
-    // of the filter.
-    // Also, we should choose 'shift' value in such way, so
-    // shift + pre_samples*m2 = c2
-
-    pos1 = c1x;
-    pos2 = 0;
-    shift = c2 - pre_samples*m2;
-
-    for (ch = 0; ch < nch; ch++)
-      memset(buf1[ch], 0, pos1 * sizeof(sample_t));
-
-    for (ch = 0; ch < nch; ch++)
-      memset(delay2[ch], 0, (n2/m2+1) * sizeof(sample_t));
-  }
-}
-
-void
-Resample::reset_downsample()
-{
-  int ch;
-  if (fs && fd)
-  {
-    // To avoid signal shift we must ensure that after processing of
-    // pre-buffering samples we fall into the state when pos_l = c1y, 
-    // so the first input sample matches the center of the filter, and
-    // pos_m = order[pos_l].
-
-    pos_m = c1y * m1 / l1 - (c2 - c1x) % m1;
-    if (pos_m < 0) pos_m += m1;
-    pos_l = c1y - stage1_out(c2 - c1x) % l1;
-    if (pos_l < 0) pos_l += l1;
-
-    assert((pos_l + stage1_out(c2 - c1x)) % l1 == c1y);
-
-    pre_samples = stage1_out(c2 - c1x);
-    post_samples = 0;
-
-    pos1 = 0;
-    pos2 = 0;
-    shift = 0;
-
-    for (ch = 0; ch < nch; ch++)
-      memset(delay2[ch], 0, (n2/m2+1) * sizeof(sample_t));
-  }
-}
-
-void
-Resample::uninit()
+Resample::uninit_resample()
 {
   if (f1) SAFE_DELETE(f1[0]);
   SAFE_DELETE(f1);
@@ -710,8 +485,37 @@ Resample::drop_pre_samples()
   }
 }
 
+void
+Resample::reset_resample()
+{
+  int ch;
+  if (fs && fd)
+  {
+    pos_l = c1y;
+    pos_m = pos_l * m1 / l1;
+
+    pre_samples = c2 / m2;
+    post_samples = c1x;
+
+    // To avoid signal shift we add c1x zero samples to the beginning,
+    // so the first sample processed is guaranteed to match the center
+    // of the filter.
+    // Also, we should choose 'shift' value in such way, so
+    // shift + pre_samples*m2 = c2
+
+    pos1 = c1x;
+    shift = c2 - pre_samples*m2;
+
+    for (ch = 0; ch < nch; ch++)
+      memset(buf1[ch], 0, pos1 * sizeof(sample_t));
+
+    for (ch = 0; ch < nch; ch++)
+      memset(delay2[ch], 0, (n2/m2+1) * sizeof(sample_t));
+  }
+}
+
 int
-Resample::process_upsample(sample_t *in_buf[], int nsamples)
+Resample::process_resample(sample_t *in_buf[], int nsamples)
 {
   int ch, i, j;
   int processed = 0;
@@ -732,8 +536,8 @@ Resample::process_upsample(sample_t *in_buf[], int nsamples)
     memcpy(buf1[ch] + pos1, in_buf[ch], (n - pos1) * sizeof(sample_t));
   processed = n - pos1;
 
-  int n_out = n2 - pos2;
-  int n_in = stage1_in(n2 - pos2);
+  int n_out = n2;
+  int n_in = stage1_in(n2);
   do_stage1(buf1, buf2, n_in, n_out);
 
   pos1 = n - n_in;
@@ -770,7 +574,7 @@ Resample::process_upsample(sample_t *in_buf[], int nsamples)
 }
 
 bool
-Resample::flush_upsample()
+Resample::flush_resample()
 {
   int ch;
 
@@ -785,7 +589,7 @@ Resample::flush_upsample()
   post_samples -= n;
   pos1 += n;
 
-  process_upsample(samples.samples, 0);
+  process_resample(samples.samples, 0);
 
   if (post_samples <= 0)
   {
@@ -802,142 +606,80 @@ Resample::flush_upsample()
   return false;
 }
 
-int
-Resample::process_downsample(sample_t *in_buf[], int nsamples)
-{
-  int ch, i;
-  int processed = 0;
-  out_size = 0;
-
-  ///////////////////////////////////////////////////////
-  // Stage 2 processing
-
-  // fill the buffer
-
-  if (nsamples < n2 - pos2)
-  {
-    for (ch = 0; ch < nch; ch++)
-      memcpy(buf2[ch] + pos2, in_buf[ch], nsamples * sizeof(sample_t));
-    pos2 += nsamples;
-    return nsamples;
-  }
-  
-  for (ch = 0; ch < nch; ch++)
-    memcpy(buf2[ch] + pos2, in_buf[ch], (n2 - pos2) * sizeof(sample_t));
-  processed = n2 - pos2;
-  pos2 = 0;
-
-  // convolution
-
-  do_stage2();
-
-  // overlap
-
-  for (ch = 0; ch < nch; ch++)
-    for (i = 0; i < n2; i++)
-      buf2[ch][i] += delay2[ch][i];
-
-  for (ch = 0; ch < nch; ch++)
-    memcpy(delay2[ch], buf2[ch] + n2, n2 * sizeof(sample_t));
-
-  ///////////////////////////////////////////////////////
-  // Stage 1 processing
-  // The size of output data is always less or equal to
-  // the size of input data. Therefore we can process it
-  // in-place.
-
-  assert(n2 > n1x);
-  out_size = stage1_out(n2);
-  do_stage1(buf2, buf2, n2, out_size);
-
-  ///////////////////////////////////////////////////////
-  // Drop null samples from the beginning
-
-  if (pre_samples > 0)
-    drop_pre_samples();
-
-  return processed;
-}
-
-bool
-Resample::flush_downsample()
-{
-  out_size = 0;
-  int actual_out_size = stage1_out(pos2 - c1x + c2) - pre_samples;
-  if (!actual_out_size)
-    return true;
-
-  if (pos2)
-  {
-    for (int ch = 0; ch < nch; ch++)
-      memset(buf2[ch] + pos2, 0, (n2 - pos2) * sizeof(sample_t));
-    pos2 = n2;
-    process_downsample(samples.samples, 0);
-  }
-
-  if (out_size < actual_out_size)
-  {
-    sample_t *p1[NCHANNELS];
-    sample_t *p2[NCHANNELS];
-    for (int ch = 0; ch < nch; ch++)
-      p1[ch] = buf2[ch] + out_size, p2[ch] = buf2[ch] + n2;
-    do_stage1(p2, p1, stage1_in(actual_out_size - out_size), actual_out_size - out_size);
-  }
-
-  out_size = actual_out_size;
-  return true;
-}
-
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // Optimization functions
 ///////////////////////////////////////////////////////////////////////////////
 
-double
-Resample::t_upsample(int m2) const
+double t_upsample(int l1, int m1, int l2, int m2, double a, double q)
 {
-  // upmix time approximation depending on stage2 decimation factor
-  double alpha = (a - 7.95) / 14.36;
-  double df = fs * (1-q);
-  double t_conv = k_conv * 2 * alpha * double(fs) / double(m2 * fd - fs + 2 * df);
-  double t_fft = k_fft * fd * m2 / double(fs) * log(2 * clp2(int(alpha * fd * m2 / double(df))));
-  return t_conv + t_fft;
+  double phi = double(l1) / double(m1);
+  double big_phi = double(l1 * l2) / double(m1 * m2);
+  double alpha_conv = (a + log10(m1)*20 + 6 - 7.95) / 14.36;
+  double alpha_fft  = (a + log10(m2)*20 + 6 - 7.95) / 14.36;
+
+  double t_conv = 2 * alpha_conv * k_conv / (phi - q);
+  double t_fft = k_fft * phi * l2 * log(2 * clp2(int(2 * alpha_fft * phi * l2 / (1 - q))));
+  return t_fft + t_conv;
 }
 
-int
-Resample::optimize_upsample() const
+double t_downsample(int l1, int m1, int l2, int m2, double a, double q)
 {
-  int m2, m2_opt;
-  double t, t_opt;
+  double phi = double(l1) / double(m1);
+  double big_phi = double(l1 * l2) / double(m1 * m2);
+  double alpha_conv = (a + log10(m1)*20 + 6 - 7.95) / 14.36;
+  double alpha_fft  = (a + log10(m2)*20 + 6 - 7.95) / 14.36;
 
-  /////////////////////////////////////////////////////////
-  // Enum divisors of M
+  double t_conv = 2 * alpha_conv * k_conv / (phi - q * big_phi);
+  double t_fft = k_fft * phi * l2 * log(2 * clp2(int(2 * alpha_fft * phi * l2 / big_phi / (1 - q))));
+  return t_fft + t_conv;
+}
 
-  m2_opt = 1; 
-  t_opt = t_upsample(m2_opt);
+double optimize_upsample(int l, int m, double a, double q, int &l1, int &m1, int &l2, int &m2)
+{
+  l1 = l; m1 = m;
+  l2 = 1; m2 = 1;
+  double t_opt = t_upsample(l, m, 1, 1, a, q);
 
-  DivEnum d(m);
-  d.next();                                    // exclude 1
-  for (int i = 0; i < d.divisors() - 1 ; i++)  // include M
+  for (int m2i = 2; m2i < m; m2i++)
   {
-    m2 = d.next();
-    t = t_upsample(m2);
+    int g = gcd(l * m2i, m);
+    double t = t_upsample(l * m2i / g, m / g, 1, m2i, a, q);
     if (t < t_opt)
     {
       t_opt = t;
-      m2_opt = m2;
+      l1 = l * m2i / g;
+      m1 = m / g;
+      l2 = 1;
+      m2 = m2i;
     }
+    else if (t > 10 * t_opt)
+      return t_opt;
   }
-
-  return m2_opt;
+  return t_opt;
 }
 
-int
-Resample::optimize_downsample() const
+double optimize_downsample(int l, int m, double a, double q, int &l1, int &m1, int &l2, int &m2)
 {
-  return 1;
+  l1 = l; m1 = m;
+  l2 = 1; m2 = 1;
+  double t_opt = t_downsample(l, m, 1, 1, a, q);
+
+  for (int m2i = 2; m2i < m; m2i++)
+  {
+    int g = gcd(l * m2i, m);
+    double t = t_downsample(l * m2i / g, m / g, 1, m2i, a, q);
+    if (t < t_opt)
+    {
+      t_opt = t;
+      l1 = l * m2i / g;
+      m1 = m / g;
+      l2 = 1;
+      m2 = m2i;
+    }
+    else if (t > 10 * t_opt)
+      return t_opt;
+  }
+  return t_opt;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -978,4 +720,3 @@ inline int gcd(int x, int y)
   }
   return x;
 }
-
