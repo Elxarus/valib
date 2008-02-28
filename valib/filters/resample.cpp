@@ -1,6 +1,5 @@
 #include <string.h>
 #include "resample.h"
-#include "../divisors.h"
 #include "../dsp/kaiser.h"
 #include "../dsp/fftsg_ld.h"
 
@@ -102,7 +101,8 @@ Resample::set(int _sample_rate, double _a, double _q)
   if (!spk.is_unknown() && sample_rate != 0)
   {
     out_spk.sample_rate = sample_rate;
-    init_resample(spk.nch(), spk.sample_rate, sample_rate);
+    if (spk.sample_rate != sample_rate)
+      init_resample(spk.nch(), spk.sample_rate, sample_rate);
   }
 
   return true;
@@ -139,7 +139,8 @@ Resample::set_input(Speakers _spk)
   if (sample_rate)
   {
     out_spk.sample_rate = sample_rate;
-    init_resample(spk.nch(), spk.sample_rate, sample_rate);
+    if (spk.sample_rate != sample_rate)
+      init_resample(spk.nch(), spk.sample_rate, sample_rate);
   }
   return true;
 }
@@ -153,7 +154,7 @@ Resample::get_output() const
 bool
 Resample::get_chunk(Chunk *_chunk)
 {
-  if (sample_rate)
+  if (sample_rate && spk.sample_rate != sample_rate)
   {
     // Upsample
     if (size)

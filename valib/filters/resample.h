@@ -52,6 +52,9 @@ protected:
   int init_resample(int _nch, int _fs, int _fd);
   void uninit_resample();
 
+  // stage1_in(): how much input samples required to generate N output samples
+  // stage1_out(): how much output samples can be made out of N input samples
+  // Note that stage1_out(stage1_in(N)) >= N
   inline int stage1_in(int n)  const { return (n + pos_l) * m1 / l1 - pos_m; }
   inline int stage1_out(int n) const { return ((pos_m + n) * l1 + m1 - 1) / m1 - (pos_m * l1 + m1 - 1) / m1; }
 
