@@ -28,7 +28,7 @@ protected:
 
   int pre_samples;
 
-  void init();
+  bool init();
   void uninit();
   void process_block();
 

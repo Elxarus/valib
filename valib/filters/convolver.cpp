@@ -38,7 +38,7 @@ Convolver::~Convolver()
   uninit();
 }
 
-void
+bool
 Convolver::init()
 {
   int i, ch;
@@ -46,7 +46,7 @@ Convolver::init()
   uninit();
   ver = ir.version();
 
-  if (spk.is_unknown()) return; // passthrough
+  if (spk.is_unknown()) return true; // filter is uninitialized
 
   int sample_rate = spk.sample_rate;
   int nch = spk.nch();
@@ -54,15 +54,15 @@ Convolver::init()
   switch (ir.get_type(sample_rate))
   {
     case ir_custom: break; // do filtering, init below
-    case ir_zero: state = state_zero; return; // zero output
-    default: return; // passthrough
+    case ir_zero: state = state_zero; return true; // zero output
+    default: return true; // passthrough
   }
 
   /////////////////////////////////////////////////////////
   // Decide filter length
 
   int new_n = ir.min_length(sample_rate);
-  if (new_n <= 0) return; // passthrough
+  if (new_n <= 0) return false; // passthrough
   n = clp2(new_n);
 
   /////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ Convolver::init()
   if (filter == 0 || buf[0] == 0 || fft_ip == 0 || fft_w == 0)
   {
     uninit();
-    return; // passthrough
+    return false;
   }
 
   for (ch = 1; ch < nch; ch++)
@@ -104,7 +104,8 @@ Convolver::init()
 
   state = state_filter;
   reset();
-  return;
+
+  return true;
 }
 
 void
@@ -162,8 +163,7 @@ bool
 Convolver::set_input(Speakers _spk)
 {
   FILTER_SAFE(NullFilter::set_input(_spk));
-  init();
-  return true;
+  return init();
 }
 
 void
