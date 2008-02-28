@@ -581,7 +581,7 @@ Resample::flush_resample()
 
   out_size = 0;
   int n = n2*m1/l1 + n1x + 1 - pos1;
-  int actual_out_size = (stage1_out(pos1 - c1x) + c2) / m2 - pre_samples;
+  int actual_out_size = ((stage1_out(pos1 - c1x) + c2) - shift) / m2 - pre_samples;
   if (!actual_out_size)
     return true;
 
