@@ -14,9 +14,6 @@
 #include "fir/param_ir.h"
 #include "suite.h"
 
-#include "sink/sink_wav.h"
-#include "filters/convert.h"
-
 
 static const int seed = 485706;
 static const int noise_size = 64 * 1024;
@@ -44,7 +41,6 @@ static const int transform_rates[][2] =
   { 128000,  4000 }, // 32/1
 
   {  96000, 11025 }, // 1280/147
-  {  96000,  6000 }, // 16/1
   {  96000,  4000 }, // 24/1
 
   {  88200,  6000 }, // 147/10
@@ -81,7 +77,7 @@ static const int transform_rates[][2] =
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-// Resample reverse test
+// Resample reverse transform test
 // Resample is reversible when:
 // * we have no frequencies above the pass band
 // * we throw out transient processes at stream ends
@@ -90,7 +86,7 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q);
 
 TEST(resample_reverse, "Resample reverse transform test")
   const double q = 0.99; // quality
-  const double a = 100;  // attenuation (dB)
+  const double a = 106;  // attenuation
 
   // upsample -> downsample
   for (int i = 0; i < array_size(transform_rates); i++)
@@ -108,11 +104,11 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
     rate2 = temp;
   }
 
-  // After resample only q*nyquist of the bandwidth is preserved and the last
-  // (1-q)*nyquist is the transition band. Therefore to compare output of the
-  // resampler with the original signal we must feed the resampler with the
-  // bandlimited signal. Bandlimiting filter also has its own transition band
-  // and we must guarantee:
+  /////////////////////////////////////////////////////////////////////////////
+  // After resample only q*nyquist of the bandwidth is preserved. Therefore,
+  // to compare output of the resampler with the original signal we must feed
+  // the resampler with the bandlimited signal. Bandlimiting filter has a
+  // transition band and we must guarantee:
   // passband + transition_band <= q*nyquist.
   //
   // It looks reasonable to make the transition band of the bandlimiting filter
@@ -122,9 +118,9 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
   //
   // In normalized form nyquist = 0.5, so we have following parameters of the
   // bandlimiting filter: passband = q-0.5, transition band = 0.5*(1-q)
- 
-  ParamIR low_pass(IR_LOW_PASS, q-0.5, 0, 0.5*(1-q), a, true);
-  int trans_len = low_pass.min_length(rate1);
+
+  ParamIR low_pass(IR_LOW_PASS, q-0.5, 0, 0.5*(1-q), a + 10, true);
+  int trans_len = low_pass.min_length(rate1) * 2;
 
   Speakers spk(FORMAT_LINEAR, MODE_STEREO, rate1);
   NoiseGen tst_noise(spk, seed, noise_size + trans_len * 2);
@@ -146,11 +142,12 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
   ref_chain.add_back(&ref_conv, "Bandlimit");
   ref_chain.add_back(&ref_slice, "Slice");
 
+  // Resample introduces not more than -A dB of noise.
+  // 2 resamples introduces twice more noise, -A + 6dB
   double diff = calc_diff(&tst_noise, &tst_chain, &ref_noise, &ref_chain);
-  log->msg("Transform: %iHz -> %iHz -> %iHz Diff: %.0fdB", rate1, rate2, rate1, log10(diff) * 20);
-
+  log->msg("Transform: %5iHz -> %6iHz -> %5iHz Diff: %.0fdB", rate1, rate2, rate1, log10(diff) * 20);
   CHECK(diff > 0);
-  CHECK(log10(diff) * 20 < -90); // todo: use actual attenuation
+  CHECK(log10(diff) * 20 <= -a + 7);
 
   return test_passed;
 }
