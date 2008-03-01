@@ -631,14 +631,6 @@ SOURCE=..\valib\defs.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\divisors.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\divisors.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\filter.h
 # End Source File
 # Begin Source File
