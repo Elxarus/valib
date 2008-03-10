@@ -16,6 +16,7 @@ protected:
   int fs;     // source sample rate [Hz]
   int fd;     // destination sample rate [Hz]
   int nch;    // number fo channels
+  double rate;// conversion rate
 
   // useful in calculations
   int g;      // gcd(fs, fd)

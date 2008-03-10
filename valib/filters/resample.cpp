@@ -27,7 +27,7 @@ double optimize_downsample(int l, int m, double a, double q, int &l1, int &m1, i
 
 Resample::Resample(): 
   NullFilter(FORMAT_MASK_LINEAR),
-  a(100.0), q(0.99), fs(0), fd(0), nch(0), 
+  a(100.0), q(0.99), fs(0), fd(0), nch(0), rate(1.0),
   g(0), l(0), m(0), l1(0), l2(0), m1(0), m2(0),
   n1(0), n1x(0), n1y(0),
   c1(0), c1x(0), c1y(0),
@@ -50,7 +50,7 @@ Resample::Resample():
 
 Resample::Resample(int _sample_rate, double _a, double _q): 
   NullFilter(FORMAT_MASK_LINEAR),
-  a(100.0), q(0.99), fs(0), fd(0), nch(0), 
+  a(100.0), q(0.99), fs(0), fd(0), nch(0), rate(1.0),
   g(0), l(0), m(0), l1(0), l2(0), m1(0), m2(0),
   n1(0), n1x(0), n1y(0),
   c1(0), c1x(0), c1y(0),
@@ -156,7 +156,6 @@ Resample::get_chunk(Chunk *_chunk)
 {
   if (sample_rate && spk.sample_rate != sample_rate)
   {
-    // Upsample
     if (size)
     {
       size_t processed = process_resample(samples.samples, size);
@@ -173,6 +172,13 @@ Resample::get_chunk(Chunk *_chunk)
         reset();
       }
     }
+
+    if (sync)
+    {
+      _chunk->set_sync(true, time);
+      sync = false;
+    }
+
     return true;
   }
 
@@ -194,6 +200,7 @@ Resample::init_resample(int _nch, int _fs, int _fd)
   fs = _fs; // source sample rate
   fd = _fd; // destinationsample rate
   nch = _nch; // number fo channels
+  rate = double(fd) / double(fs);
 
   g = gcd(fs, fd);
   l = fd / g; // interpolation factor
@@ -235,11 +242,11 @@ Resample::init_resample(int _nch, int _fs, int _fd)
   else // downsample
   {
     // convolution stage
-    df1  = (phi - q * big_phi) / (2 * l1);
-    lpf1 = (phi + q * big_phi) / (4 * l1);
+    df1  = (phi - q * rate) / (2 * l1);
+    lpf1 = (phi + q * rate) / (4 * l1);
     // fft stage
-    df2  = big_phi * (1 - q) / (2 * phi * l2);
-    lpf2 = big_phi * (1 + q) / (4 * phi * l2);
+    df2  = rate * (1 - q) / (2 * phi * l2);
+    lpf2 = rate * (1 + q) / (4 * phi * l2);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -361,7 +368,7 @@ Resample::uninit_resample()
   SAFE_DELETE(buf2[0]);
   SAFE_DELETE(delay2[0]);
 
-  fs = 0; fd = 0;
+  fs = 0; fd = 0; nch = 0; rate = 1.0;
   g = 0; l = 0; m = 0; l1 = 0; l2 = 0; m1 = 0; m2 = 0;
   n1 = 0; n1x = 0; n1y = 0;
   c1 = 0; c1x = 0; c1y = 0;
@@ -523,6 +530,16 @@ Resample::process_resample(sample_t *in_buf[], int nsamples)
   out_size = 0;
 
   ///////////////////////////////////////////////////////
+  // Sync
+
+  if (sync)
+  {
+    time -= double(pos1 - c1x) / double(fs);
+    time -= double(c2) / double(fd * m2);
+    time += double(pre_samples) / double(fd);
+  }
+
+  ///////////////////////////////////////////////////////
   // Stage 1 processing
 
   int n = n2*m1/l1 + n1x + 1;
@@ -581,7 +598,7 @@ Resample::flush_resample()
 
   out_size = 0;
   int n = n2*m1/l1 + n1x + 1 - pos1;
-  int actual_out_size = ((stage1_out(pos1 - c1x) + c2) - shift) / m2 - pre_samples;
+  int actual_out_size = (stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples;
   if (!actual_out_size)
     return true;
 
@@ -614,7 +631,7 @@ Resample::flush_resample()
 double t_upsample(int l1, int m1, int l2, int m2, double a, double q)
 {
   double phi = double(l1) / double(m1);
-  double big_phi = double(l1 * l2) / double(m1 * m2);
+  double rate = double(l1 * l2) / double(m1 * m2);
   double alpha_conv = (a + log10(m1)*20 + 6 - 7.95) / 14.36;
   double alpha_fft  = (a + log10(m2)*20 + 6 - 7.95) / 14.36;
 
@@ -626,12 +643,12 @@ double t_upsample(int l1, int m1, int l2, int m2, double a, double q)
 double t_downsample(int l1, int m1, int l2, int m2, double a, double q)
 {
   double phi = double(l1) / double(m1);
-  double big_phi = double(l1 * l2) / double(m1 * m2);
+  double rate = double(l1 * l2) / double(m1 * m2);
   double alpha_conv = (a + log10(m1)*20 + 6 - 7.95) / 14.36;
   double alpha_fft  = (a + log10(m2)*20 + 6 - 7.95) / 14.36;
 
-  double t_conv = 2 * alpha_conv * k_conv / (phi - q * big_phi);
-  double t_fft = k_fft * phi * l2 * log(2 * clp2(int(2 * alpha_fft * phi * l2 / big_phi / (1 - q))));
+  double t_conv = 2 * alpha_conv * k_conv / (phi - q * rate);
+  double t_fft = k_fft * phi * l2 * log(2 * clp2(int(2 * alpha_fft * phi * l2 / rate / (1 - q))));
   return t_fft + t_conv;
 }
 
