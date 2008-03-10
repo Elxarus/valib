@@ -27,7 +27,7 @@ const char *valib_credits();
 // (define it to always-inline attribute for GCC?)
 
 #if !defined(_MSC_VER) && !defined(__forceinline)
-  #define __forceinline inline
+#  define __forceinline inline
 #endif
 
 // this header is required only with GCC
@@ -36,9 +36,11 @@ const char *valib_credits();
 #include <stddef.h>     // size_t
 
 // MSVC8: disable depreciation warning
+// MSVC6: disable very long identifier warning
 
 #ifdef _MSC_VER
-  #pragma warning(disable: 4996)
+#  pragma warning(disable: 4996)
+#  pragma warning(disable: 4786)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -55,7 +57,7 @@ const char *valib_credits();
 // pi constant
 
 #ifndef M_PI
-  #define M_PI 3.1415926535897932384626433832795029
+#define M_PI 3.1415926535897932384626433832795029
 #endif
 
 // level multipliers
@@ -149,13 +151,13 @@ struct int24_t // int24_t is a low-endian structure
 
   typedef float    sample_t;
 
-  #if _MSC_VER >= 1200
+# if _MSC_VER >= 1200
     // most of tables use double-precision constants
     // with float type sample it leads to tons of non-informative warnings
     // warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
     // warning C4305: 'initializing' : truncation from 'const double' to 'const float'
-    #pragma warning (disable: 4244 4305)
-  #endif
+#   pragma warning (disable: 4244 4305)
+# endif
 
 #endif
 
@@ -176,11 +178,11 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef MIN
-  #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#  define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #endif
 
 #ifndef MAX
-  #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#  define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #endif
 
 #define value2db(value) ((value > 0)? log10(value)*20.0: 0)
@@ -211,10 +213,10 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 
   // do not use inline functions for debug version
   // it is MUCH faster because in debug version functions are not inlined
-  #define swab_u32(i) uint32_t((uint32_t(i) >> 24) | (uint32_t(i) >> 8) & 0xff00 | (uint32_t(i) << 8) & 0xff0000 | (uint32_t(i) << 24))
-  #define swab_s32(i) int32_t(swab_u32(i))
-  #define swab_u16(i) uint16_t((uint16_t(i) << 8) | (uint16_t(i) >> 8))
-  #define swab_s16(i) int16_t(swab_u16(i))
+# define swab_u32(i) uint32_t((uint32_t(i) >> 24) | (uint32_t(i) >> 8) & 0xff00 | (uint32_t(i) << 8) & 0xff0000 | (uint32_t(i) << 24))
+# define swab_s32(i) int32_t(swab_u32(i))
+# define swab_u16(i) uint16_t((uint16_t(i) << 8) | (uint16_t(i) >> 8))
+# define swab_s16(i) int16_t(swab_u16(i))
   inline int32_t  swab_s24(int24_t i)  { return swab_s32(i) >> 8; }
 
 #elif defined(_M_IX86) && defined(__GNUC__)
@@ -249,8 +251,8 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 #elif defined(_M_IX86)
 
   // use asm inline functions
-  #pragma warning(push)
-  #pragma warning(disable: 4035) 
+# pragma warning(push)
+# pragma warning(disable: 4035) 
   inline uint32_t swab_u32(uint32_t x) 
   {
     __asm mov eax, x
@@ -279,7 +281,7 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
     __asm bswap eax
     __asm sar eax, 8
   }
-  #pragma warning(pop)
+# pragma warning(pop)
 
 #else
 
