@@ -27,10 +27,10 @@ protected:
 
   bool init(Speakers spk, size_t stream_len, size_t chunk_size = 4096);
 
-public:
   Generator();
   Generator(Speakers spk, size_t stream_len, size_t chunk_size = 4096);
 
+public:
   size_t get_chunk_size() const { return chunk_size; }
   size_t get_stream_len() const { return stream_len; }
 
