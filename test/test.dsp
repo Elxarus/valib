@@ -86,21 +86,53 @@ LINK32=link.exe
 # Begin Group "tests"
 
 # PROP Default_Filter ""
+# Begin Group "common_tests"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\tests\test_base.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\tests\test_fir.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\tests\test_general.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\tests\test_rng.cpp
+# End Source File
+# End Group
+# Begin Group "filter_tests"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\tests\filters\test_convolver.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\tests\filters\test_proc.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\tests\filters\test_resample.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\tests\filters\test_slice.cpp
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\test_ac3.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\test_base.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\test_bs_convert.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\test_convolver.cpp
 # End Source File
 # Begin Source File
 
@@ -140,35 +172,11 @@ SOURCE=.\test_filtergraph.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\test_fir.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\test_general.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\test_old_style.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\test_parser_filter.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\test_proc.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\test_resample.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\test_rng.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\test_slice.cpp
 # End Source File
 # Begin Source File
 

@@ -6,12 +6,16 @@
 // Common tests
 
 EXTERN_SUITE(suite_test);
-EXTERN_SUITE(fir);
+
+EXTERN_SUITE(general);
 EXTERN_TEST(rng);
 EXTERN_SUITE(base);
+EXTERN_SUITE(fir);
+
 EXTERN_TEST(slice);
 EXTERN_SUITE(convolver);
 EXTERN_SUITE(resample);
+EXTERN_SUITE(proc);
 EXTERN_TEST(old_style);
 
 // Heavy tests
@@ -25,14 +29,16 @@ EXTERN_TEST(rng_proof);
 
 FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(suite_test),
-  SUITE_FACTORY(fir),
-  TEST_FACTORY(rng),
+  SUITE_FACTORY(general),
+   TEST_FACTORY(rng),
   SUITE_FACTORY(base),
-  TEST_FACTORY(slice),
+  SUITE_FACTORY(fir),
+   TEST_FACTORY(slice),
   SUITE_FACTORY(convolver),
   SUITE_FACTORY(resample),
+  SUITE_FACTORY(proc),
 
-  TEST_FACTORY(old_style),
+   TEST_FACTORY(old_style),
 SUITE_END;
 
 ///////////////////////////////////////////////////////////

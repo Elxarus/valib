@@ -8,9 +8,9 @@
   * ParamIR
 */
 
-#include "suite.h"
 #include "fir.h"
 #include "fir/param_ir.h"
+#include "../suite.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // ImpulseResponse base test
@@ -62,6 +62,7 @@ TEST(fir_base, "ImpulseResponse base test")
   CHECK(ver != ref_ir.version());
   CHECK(ver != ref_ir2.version());
   CHECK(ref_ir.get_type(sample_rate) == ir_zero);
+
 TEST_END(fir_base);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -97,6 +98,19 @@ TEST(param_ir, "ParamIR test")
   CHECK_DELTA(a,    100, 1e-10);
   CHECK(norm == false);
 
+  // Test bounds swapping
+  ir.set(IR_BAND_PASS, 12000, 10000, 500, 100);
+  ir.get(0, &f1, &f2, 0, 0);
+
+  CHECK(f1 == 10000);
+  CHECK(f2 == 12000);
+
+  ir.set(IR_BAND_STOP, 12000, 10000, 500, 100);
+  ir.get(0, &f1, &f2, 0, 0);
+
+  CHECK(f1 == 10000);
+  CHECK(f2 == 12000);
+  
   // Error conditions test
   ir.set(IR_BAND_PASS, 10000, 12000, 500, 100);
   CHECK(ir.get_type(48000) == ir_custom);
@@ -111,12 +125,6 @@ TEST(param_ir, "ParamIR test")
   CHECK(ir.get_type(48000) == ir_err);
 
   ir.set(IR_BAND_PASS, 10000, 12000, 500, -100);
-  CHECK(ir.get_type(48000) == ir_err);
-
-  ir.set(IR_BAND_PASS, 12000, 10000, 500, 100);
-  CHECK(ir.get_type(48000) == ir_err);
-
-  ir.set(IR_BAND_STOP, 12000, 10000, 500, 100);
   CHECK(ir.get_type(48000) == ir_err);
 
   // Passthrough conditions test

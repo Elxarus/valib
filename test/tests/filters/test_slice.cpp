@@ -1,6 +1,6 @@
 #include "source/generator.h"
 #include "filters/slice.h"
-#include "suite.h"
+#include "../../suite.h"
 
 static const Speakers spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000);
 static const size_t noise_size = 64 * 1024;

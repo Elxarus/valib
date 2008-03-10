@@ -1,6 +1,5 @@
 #include "suite.h"
 
-int test_general(Log *log);
 int test_bs_convert(Log *log);
 int test_crc(Log *log);
 int test_syncer(Log *log);
@@ -21,11 +20,7 @@ int test_filtergraph(Log *log);
 int test_decodergraph(Log *log);
 int test_dvdgraph(Log *log);
 
-int test_proc(Log *log);
-
 TEST(old_style, "Old-stlye tests")
-  test_general(log);
-
   test_rules(log);
 
   test_crc(log);
@@ -41,8 +36,6 @@ TEST(old_style, "Old-stlye tests")
   test_spdifer(log);
   test_despdifer(log);
   test_detector(log);
-
-  test_proc(log);
 
   test_filtergraph(log);
   test_decodergraph(log);

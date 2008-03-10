@@ -9,7 +9,7 @@
 
 #include <math.h>
 #include "source/generator.h"
-#include "suite.h"
+#include "../suite.h"
 
 static const int seed = 4796;
 static const int noise_size = 64 * 1024;

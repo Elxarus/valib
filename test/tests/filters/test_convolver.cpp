@@ -1,9 +1,9 @@
 #include <math.h>
-#include "suite.h"
 #include "source/generator.h"
 #include "filters/convolver.h"
 #include "filters/slice.h"
 #include "fir/param_ir.h"
+#include "../../suite.h"
 
 static const Speakers spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000);
 static const size_t noise_size = 64 * 1024;

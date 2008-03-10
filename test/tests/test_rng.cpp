@@ -4,9 +4,9 @@
     sequence with reference Park-Miller implementation
 */
 
-#include "suite.h"
 #include "rng.h"
 #include "vtime.h"
+#include "../suite.h"
 
 TEST(rng, "Random numbers generator test")
   int i;

@@ -1,9 +1,6 @@
 /*
   Resample filter test
   * Test that backward transform is equal to the bandlimited original signal
-  * Test that there're no frequencies added to the signal
-  * That thet original frequencies are preserved in the signal
-  * Test short-length input (shorter than filter length)
 */
 
 #include "source/generator.h"
@@ -12,21 +9,11 @@
 #include "filters/slice.h"
 #include "filter_graph.h"
 #include "fir/param_ir.h"
-#include "suite.h"
+#include "../../suite.h"
 
 
 static const int seed = 485706;
-static const int noise_size = 64 * 1024;
-
-static const int rates[] =
-{
-//  48000, 44100, 32000,  24000,  22050, 11025,   6000, 
-  192000, 176400, 128000,  96000, 
-   88200,  64000,  48000,  44100, 
-   32000,  24000,  22050,  16000, 
-   12000,  11025,   8000,   6000, 
-    4000
-};
+static const int block_size = 64 * 1024;
 
 static const int transform_rates[][2] =
 {
@@ -123,14 +110,14 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
   int trans_len = low_pass.min_length(rate1) * 2;
 
   Speakers spk(FORMAT_LINEAR, MODE_STEREO, rate1);
-  NoiseGen tst_noise(spk, seed, noise_size + trans_len * 2);
-  NoiseGen ref_noise(spk, seed, noise_size + trans_len * 2);
+  NoiseGen tst_noise(spk, seed, block_size + trans_len * 2);
+  NoiseGen ref_noise(spk, seed, block_size + trans_len * 2);
   Convolver tst_conv(&low_pass);
   Convolver ref_conv(&low_pass);
   Resample res1(rate2, a, q);
   Resample res2(rate1, a, q);
-  SliceFilter tst_slice(trans_len, noise_size - trans_len);
-  SliceFilter ref_slice(trans_len, noise_size - trans_len);
+  SliceFilter tst_slice(trans_len, block_size - trans_len);
+  SliceFilter ref_slice(trans_len, block_size - trans_len);
 
   FilterChain tst_chain;
   tst_chain.add_back(&tst_conv, "Bandlimit");
