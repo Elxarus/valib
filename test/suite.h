@@ -118,11 +118,14 @@ protected:
   {
     bool passed = true;
     for (int i = 0; i < tests.size(); i++)
+    {
       // Here we assume that tests are indepenent, so we can continure testing
       // even after fail. In this way we can see a full list of failed
       // modules. It is important because a module that causes the trouble may
       // be tested AFTER modules that depend on it.
-      passed = passed && tests[i]->run(log).passed();
+      TestResult result = tests[i]->run(log).passed();
+      passed = passed && result.passed();
+    }
     return TestResult(passed);
   }
 
@@ -175,11 +178,11 @@ public:
 // TEST_END;
 //
 //
-// void big_test(Log *log)
+// TestResult big_test(Log *log)
 // {
 //   ...
 //   Test *t = CREATE_TEST(some_test);
-//   CHECKT(t->run(log), ("Cannot continue: %s failed!", t->name()));
+//   CHECKT(t->run(log).passed(), ("Cannot continue: %s failed!", t->name()));
 //   ...
 //   // here we can do something that depends on some_test's success
 // }
@@ -267,8 +270,7 @@ test_factory *Suite_##name::suite[] = {
 #define SUITE_FACTORY(name) suite_factory_##name
 #define EXTERN_SUITE(name) extern "C" Test *suite_factory_##name()
 
-
-
+///////////////////////////////////////////////////////////////////////////////
 
 #define CHECK(c) if (!(c)) { log->err("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); return test_failed; }
 #define CHECKT(c, desc) if (!(c)) { log->msg("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); log->err desc; return test_failed; }
