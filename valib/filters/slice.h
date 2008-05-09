@@ -15,12 +15,15 @@ protected:
   size_t start;
   size_t end;
 
+  /////////////////////////////////////////////////////////
+  // NullFilter overrides
+
+  void on_reset();
+  bool on_process();
+
 public:
   SliceFilter(size_t _start = 0, size_t _end = 0);
   void init(size_t _start, size_t _end);
-
-  void reset();
-  bool process(const Chunk *_chunk);
 };
 
 #endif

@@ -172,10 +172,8 @@ LevelsHistogram::get_max_level(int _ch) const
 // Levels
 
 void
-Levels::reset()
+Levels::on_reset()
 {
-  NullFilter::reset();
-
   sample = 0;
   memset(levels, 0, sizeof(sample_t) * NCHANNELS);
   time = 0;
@@ -185,16 +183,9 @@ Levels::reset()
 }
 
 bool
-Levels::get_chunk(Chunk *_chunk)
+Levels::on_process()
 {
   size_t n = size;
-
-  /////////////////////////////////////////////////////////
-  // Fill output chunk
-
-  _chunk->set_linear(spk, samples, size, sync, time, flushing);
-  sync = false;
-  flushing = false;
 
   /////////////////////////////////////////////////////////
   // Find peak-levels
@@ -204,7 +195,7 @@ Levels::get_chunk(Chunk *_chunk)
   sample_t *send;
 
   int nch = spk.nch();
-  sample_t spk_level = 1 / spk.level;
+  sample_t spk_level = 1.0 / spk.level;
   const int *spk_order = spk.order();
 
   while (n)
@@ -251,6 +242,5 @@ Levels::get_chunk(Chunk *_chunk)
     }
   }
 
-  size = 0;
   return true;
 }

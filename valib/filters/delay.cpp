@@ -67,10 +67,8 @@ Delay::set_delays(float _delays[NCHANNELS])
 }
 
 void 
-Delay::reset()
+Delay::on_reset()
 {
-  NullFilter::reset();
-
   int ch;
   int nch = spk.nch();
   const int *order = spk.order();
@@ -99,14 +97,8 @@ Delay::reset()
 }
 
 bool 
-Delay::process(const Chunk *_chunk)
+Delay::on_process()
 {
-  // we must ignore dummy chunks
-  if (_chunk->is_dummy())
-    return true;
-
-  FILTER_SAFE(receive_chunk(_chunk));
-
   if (!enabled)
     return true; 
 

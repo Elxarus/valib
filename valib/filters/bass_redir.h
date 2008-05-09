@@ -86,6 +86,13 @@ protected:
   bool enabled;
   LPF  lpf;
 
+  /////////////////////////////////////////////////////////
+  // NullFilter overrides
+
+  virtual void on_reset();
+  virtual bool on_set_input(Speakers spk);
+  virtual bool on_process(const Chunk *chunk);
+
 public:
   BassRedir();
 
@@ -100,12 +107,6 @@ public:
   inline double get_freq() const;
   inline void   set_freq(double _freq);
 
-  /////////////////////////////////////////////////////////
-  // Filter interface
-
-  virtual void reset();
-  virtual bool set_input(Speakers spk);
-  virtual bool process(const Chunk *chunk);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

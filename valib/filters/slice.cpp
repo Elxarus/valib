@@ -16,21 +16,14 @@ SliceFilter::init(size_t _start, size_t _end)
 }
 
 void
-SliceFilter::reset()
+SliceFilter::on_reset()
 {
-  NullFilter::reset();
   pos = 0;
 }
 
 bool
-SliceFilter::process(const Chunk *_chunk)
+SliceFilter::on_process()
 {
-  // ignore dummy chunks
-  if (_chunk->is_dummy())
-    return true;
-
-  receive_chunk(_chunk);
-
   // ignore everything after the end (except eos)
 
   if (pos >= end)
@@ -40,7 +33,7 @@ SliceFilter::process(const Chunk *_chunk)
   }
 
   // ignore everything before the beginning (except eos)
-  if (pos + _chunk->size <= start)
+  if (pos + size <= start)
   {
     pos += size;
     size = 0;

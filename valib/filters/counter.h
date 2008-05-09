@@ -9,6 +9,19 @@ class Counter : public NullFilter
 protected:
   int counter;
 
+  /////////////////////////////////////////////////////////
+  // NullFilter overrides
+
+  virtual void on_reset()
+  {
+    counter = 0;
+  }
+  virtual bool on_process(const Chunk *_chunk)
+  {
+    counter += _chunk->size;
+    return true;
+  };
+
 public:
   Counter()
   :NullFilter(-1)
@@ -20,25 +33,6 @@ public:
   {
     return counter; 
   }
-
-  /////////////////////////////////////////////////////////
-  // Filter interface
-
-  void reset()
-  {
-    NullFilter::reset();
-    counter = 0;
-  }
-  virtual bool process(const Chunk *_chunk)
-  {
-    // we must ignore dummy chunks
-    if (_chunk->is_dummy())
-      return true;
-
-    FILTER_SAFE(receive_chunk(_chunk));
-    counter += _chunk->size;
-    return true;
-  };
 };
 
 #endif

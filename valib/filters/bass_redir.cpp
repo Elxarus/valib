@@ -102,19 +102,15 @@ BassRedir::BassRedir()
 
 
 void
-BassRedir::reset()
+BassRedir::on_reset()
 {
-  NullFilter::reset();
   lpf.reset();
 }
 
 bool
-BassRedir::set_input(Speakers _spk)
+BassRedir::on_set_input(Speakers _spk)
 {
-  if (!NullFilter::set_input(_spk))
-    return false;
-
-  lpf.sample_rate = spk.sample_rate;
+  lpf.sample_rate = _spk.sample_rate;
   lpf.update();
   lpf.reset();
 
@@ -122,14 +118,8 @@ BassRedir::set_input(Speakers _spk)
 }
 
 bool 
-BassRedir::process(const Chunk *_chunk)
+BassRedir::on_process(const Chunk *_chunk)
 {
-  // we must ignore dummy chunks
-  if (_chunk->is_dummy())
-    return true;
-
-  FILTER_SAFE(receive_chunk(_chunk));
-
   if (!enabled || !spk.lfe())
     return true;
 
@@ -163,4 +153,3 @@ BassRedir::process(const Chunk *_chunk)
 
   return true;
 }
-

@@ -566,22 +566,29 @@ protected:
 
   int       format_mask;
 
+  virtual void on_reset() {};
+  virtual bool on_process() { return true; };
+  virtual bool on_set_input(Speakers _spk) { return true; };
+
   inline bool receive_chunk(const Chunk *_chunk)
   {
-    // format change
-    if (spk != _chunk->spk)
-      FILTER_SAFE(set_input(_chunk->spk));
-
-    // remember input chunk info
-    if (_chunk->sync) // ignore non-sync chunks
+    if (!_chunk->is_dummy())
     {
-      sync     = true;
-      time     = _chunk->time;
+      // format change
+      if (spk != _chunk->spk)
+        FILTER_SAFE(set_input(_chunk->spk));
+
+      // remember input chunk info
+      if (_chunk->sync) // ignore non-sync chunks
+      {
+        sync     = true;
+        time     = _chunk->time;
+      }
+      flushing = _chunk->eos;
+      rawdata  = _chunk->rawdata;
+      samples  = _chunk->samples;
+      size     = _chunk->size;
     }
-    flushing = _chunk->eos;
-    rawdata  = _chunk->rawdata;
-    samples  = _chunk->samples;
-    size     = _chunk->size;
 
     return true;
   }
@@ -646,6 +653,7 @@ public:
     time = 0;
     sync = false;
     flushing = false;
+    on_reset();
   }
   
   virtual bool is_ofdd() const
@@ -668,6 +676,8 @@ public:
     if (!query_input(_spk)) // required because it may be overwritten
       return false;
 
+    FILTER_SAFE(on_set_input(_spk));
+
     spk = _spk;
     return true;
   }
@@ -680,11 +690,12 @@ public:
   virtual bool process(const Chunk *_chunk)
   {
     // we must ignore dummy chunks
-    if (_chunk->is_dummy())
-      return true;
-
-    // load chunk data
-    return receive_chunk(_chunk);
+    if (!_chunk->is_dummy())
+    {
+      FILTER_SAFE(receive_chunk(_chunk));
+      FILTER_SAFE(on_process());
+    }
+    return true;
   }
 
   virtual Speakers get_output() const

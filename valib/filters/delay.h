@@ -43,6 +43,12 @@ protected:
 
   double    units2samples(int _units);
 
+  /////////////////////////////////////////////////////////
+  // NullFilter overrides
+
+  virtual void on_reset();
+  virtual bool on_process();
+
 public:
   Delay();
 
@@ -54,11 +60,6 @@ public:
 
   void get_delays(float delays[NCHANNELS]) const;
   void set_delays(float delays[NCHANNELS]);
-
-  // Filter interface
-  virtual void reset();
-  virtual bool process(const Chunk *chunk);
-
 };
 
 

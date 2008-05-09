@@ -95,6 +95,12 @@ protected:
   size_t nsamples; // number of samples per measure block
   size_t sample;   // current sample
  
+  /////////////////////////////////////////////////////////
+  // NullFilter overrides
+
+  virtual void on_reset();
+  virtual bool on_process();
+
 public:
   Levels(int _nsamples = 1024, int _dbpb = 5)
   :NullFilter(FORMAT_MASK_LINEAR)
@@ -119,12 +125,6 @@ public:
   inline void get_histogram(int ch, double *histogram, size_t count) const;
   inline sample_t get_max_level() const;
   inline sample_t get_max_level(int ch) const;
-
-  /////////////////////////////////////////////////////////
-  // Filter interface
-
-  virtual void reset();
-  virtual bool get_chunk(Chunk *chunk);
 };
 
 ///////////////////////////////////////////////////////////
