@@ -118,7 +118,7 @@ BassRedir::on_set_input(Speakers _spk)
 }
 
 bool 
-BassRedir::on_process(const Chunk *_chunk)
+BassRedir::on_process()
 {
   if (!enabled || !spk.lfe())
     return true;

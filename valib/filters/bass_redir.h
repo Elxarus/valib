@@ -91,7 +91,7 @@ protected:
 
   virtual void on_reset();
   virtual bool on_set_input(Speakers spk);
-  virtual bool on_process(const Chunk *chunk);
+  virtual bool on_process();
 
 public:
   BassRedir();

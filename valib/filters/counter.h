@@ -16,7 +16,7 @@ protected:
   {
     counter = 0;
   }
-  virtual bool on_process(const Chunk *_chunk)
+  virtual bool on_process()
   {
     counter += _chunk->size;
     return true;
