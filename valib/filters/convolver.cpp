@@ -8,7 +8,6 @@
 #include "../dsp/fftsg_ld.h"
 #include "convolver.h"
 
-#define SAFE_DELETE(x) { if (x) delete(x); x = 0; }
 inline unsigned int clp2(unsigned int x)
 {
   // smallest power-of-2 >= x
@@ -117,11 +116,11 @@ Convolver::uninit()
   pre_samples = 0;
   state = state_pass;
 
-  SAFE_DELETE(filter);
-  SAFE_DELETE(fft_ip);
-  SAFE_DELETE(fft_w);
-  SAFE_DELETE(buf[0]);
-  SAFE_DELETE(delay[0]);
+  safe_delete(filter);
+  safe_delete(fft_ip);
+  safe_delete(fft_w);
+  safe_delete(buf[0]);
+  safe_delete(delay[0]);
   out.zero();
 }
 

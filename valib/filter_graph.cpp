@@ -527,7 +527,7 @@ FilterChain::drop()
 {
   drop_chain();
   for (int i = 0; i < chain_size; i++)
-    if (desc[i]) delete desc[i];
+    safe_delete(desc[i]);
   chain_size = 0;
 }
 

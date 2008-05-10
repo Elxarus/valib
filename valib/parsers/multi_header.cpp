@@ -120,9 +120,7 @@ MultiHeader::set_parsers(const FrameParser *const *_parsers, size_t _nparsers)
 void
 MultiHeader::release_parsers()
 {
-  if (parsers)
-    delete parsers;
-  parsers = 0;
+  safe_delete(parsers)
   nparsers = 0;
 
   f_header_size = 0;

@@ -24,8 +24,7 @@ SyncScan::SyncScan(uint32_t _syncword, uint32_t _syncmask)
 
 SyncScan::~SyncScan()
 {
-  if (synctable) 
-    delete synctable;
+  safe_delete(synctable);
 }
 
 bool

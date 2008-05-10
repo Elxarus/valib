@@ -189,6 +189,8 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 #define db2value(db)    pow(10.0, db/20.0)
 
 #define array_size(array) (sizeof(array) / sizeof(array[0]))
+#define safe_delete(x) { if (x) delete(x); x = 0; }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Byte-swap functions

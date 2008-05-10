@@ -3,7 +3,6 @@
 #include "../dsp/kaiser.h"
 #include "../dsp/fftsg_ld.h"
 
-#define SAFE_DELETE(x) { if (x) delete(x); x = 0; }
 static const double k_conv = 2;
 static const double k_fft = 20.1977305724455;
 
@@ -356,17 +355,17 @@ Resample::init_resample(int _nch, int _fs, int _fd)
 void
 Resample::uninit_resample()
 {
-  if (f1) SAFE_DELETE(f1[0]);
-  SAFE_DELETE(f1);
-  SAFE_DELETE(f1_raw);
-  SAFE_DELETE(order);
-  SAFE_DELETE(f2);
-  SAFE_DELETE(fft_ip);
-  SAFE_DELETE(fft_w);
+  if (f1) safe_delete(f1[0]);
+  safe_delete(f1);
+  safe_delete(f1_raw);
+  safe_delete(order);
+  safe_delete(f2);
+  safe_delete(fft_ip);
+  safe_delete(fft_w);
 
-  SAFE_DELETE(buf1[0]);
-  SAFE_DELETE(buf2[0]);
-  SAFE_DELETE(delay2[0]);
+  safe_delete(buf1[0]);
+  safe_delete(buf2[0]);
+  safe_delete(delay2[0]);
 
   fs = 0; fd = 0; nch = 0; rate = 1.0;
   g = 0; l = 0; m = 0; l1 = 0; l2 = 0; m1 = 0; m2 = 0;

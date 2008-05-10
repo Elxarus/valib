@@ -81,9 +81,7 @@ public:
 
   inline void drop()
   {
-    if (buf) delete buf;
-
-    buf = 0;
+    safe_delete(buf);
     buf_aligned = 0;
 
     allocated = 0;

@@ -25,8 +25,7 @@ WAVSink::WAVSink(const char *_file_name)
 WAVSink::~WAVSink()
 {
   close();
-  if (file_format)
-    delete file_format;
+  safe_delete(file_format);
 }
 
 bool

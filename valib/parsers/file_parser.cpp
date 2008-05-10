@@ -28,7 +28,7 @@ FileParser::FileParser()
 FileParser::~FileParser()
 {
   close();
-  if (buf) delete buf;
+  safe_delete(buf);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,12 +70,7 @@ FileParser::close()
     f = 0;
   }
 
-  if (filename)
-  {
-    delete filename;
-    filename = 0;
-  }
-
+  safe_delete(filename);
   filesize = 0;
 
   stat_size = 0;

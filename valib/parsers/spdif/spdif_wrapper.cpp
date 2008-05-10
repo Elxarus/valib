@@ -26,7 +26,7 @@ SPDIFWrapper::SPDIFWrapper(int _dts_mode, int _dts_conv)
 
 SPDIFWrapper::~SPDIFWrapper()
 {
-  if (buf) delete buf;
+  safe_delete(buf);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

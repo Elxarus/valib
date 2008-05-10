@@ -27,12 +27,6 @@ MultiFrame::set_parsers(FrameParser **_parsers, size_t _nparsers)
 {
   release_parsers();
 
-  FrameParser *fp = 0;
-  const FrameParser *cfp = fp;
-
-  FrameParser **pfp = 0;
-  const FrameParser *const *cpfp = pfp;
-
   if (!multi_header.set_parsers(_parsers, _nparsers))
     return false;
 
@@ -56,10 +50,8 @@ MultiFrame::release_parsers()
 {
   multi_header.release_parsers();
 
-  parsers = 0;
+  safe_delete(parsers);
   nparsers = 0;
-  if (parsers) delete parsers;
-  parsers = 0;
 
   reset();
 }

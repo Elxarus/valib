@@ -24,8 +24,8 @@ MPAParser::MPAParser()
 
 MPAParser::~MPAParser()
 {
-  if (synth[0]) delete synth[0];
-  if (synth[1]) delete synth[1];
+  safe_delete(synth[0]);
+  safe_delete(synth[1]);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
