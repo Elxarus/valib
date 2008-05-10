@@ -18,7 +18,7 @@ protected:
   }
   virtual bool on_process()
   {
-    counter += _chunk->size;
+    counter += size;
     return true;
   };
 
