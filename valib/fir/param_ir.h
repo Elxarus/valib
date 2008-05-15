@@ -40,4 +40,27 @@ public:
   virtual int     get_filter(int sample_rate, int n, sample_t *filter) const;
 };
 
+class ParamFIR : public FIRGen
+{
+protected:
+  int ver;   // response version
+  int type;  // filter type
+  double f1; // first bound frequency
+  double f2; // second bound frequency (not used in low/high pass filters)
+  double df; // transition band width
+  double a;  // stopband attenuation (dB)
+  bool norm; // normalized frequencies
+
+public:
+  ParamFIR();
+  ParamFIR(int _type, double _f1, double _f2, double _df, double _a, bool _norm = false);
+
+  void set(int  _type, double  _f1, double  _f2, double  _df, double  _a, bool  _norm = false);;
+  void get(int *_type, double *_f1, double *_f2, double *_df, double *_a, bool *_norm = 0);;
+
+  virtual int version() const;
+  virtual const FIRInstance *make(int sample_rate) const;
+};
+
+
 #endif
