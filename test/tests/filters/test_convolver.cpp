@@ -12,6 +12,261 @@ static const int seed = 123123;
 ///////////////////////////////////////////////////////////////////////////////
 
 TEST(conv_test, "Convolver test")
+
+  const double gain = 0.5;
+
+  FIRZero zero_gen;
+  FIRIdentity identity_gen;
+  FIRGain gain_gen(gain);
+
+  NoiseGen noise1;
+  NoiseGen noise2;
+  ZeroGen zero;
+
+  Chunk chunk;
+
+  // Default constructor
+
+  Convolver2 conv;
+  CHECK(conv.get_gen() == 0);
+
+  // Init constructor
+
+  Convolver2 conv1(&zero_gen);
+  CHECK(conv1.get_gen() == &zero_gen);
+
+  /////////////////////////////////////////////////////////
+  // Change FIR
+
+  conv.set_gen(&zero_gen);
+  CHECK(conv.get_gen() == &zero_gen);
+
+  conv.set_gen(&identity_gen);
+  CHECK(conv.get_gen() == &identity_gen);
+
+  /////////////////////////////////////////////////////////
+  // Convolve with zero response
+
+  noise1.init(spk, seed, noise_size);
+  zero.init(spk, noise_size);
+
+  conv.set_gen(&zero_gen);
+  conv.reset();
+
+  CHECK(compare(log, &noise1, &conv, &zero, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Convolve with identity response
+
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed, noise_size);
+
+  conv.set_gen(&identity_gen);
+  conv.reset();
+
+  CHECK(compare(log, &noise1, &conv, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Change FIR on the fly
+  // TODO
+
+TEST_END(conv_test);
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST(conv_param, "Convolve with parametric filter")
+  const double att = 100; // 100dB attenuation
+  const int trans = 100; // 100Hz transition bandwidth
+  double diff, level;
+  int len;
+
+  const FIRInstance *fir;
+
+  // FIRs
+
+  int freq = spk.sample_rate / 4;
+  ParamFIR low_pass(IR_LOW_PASS, freq, 0, trans, att);
+  ParamFIR high_pass(IR_HIGH_PASS, freq, 0, trans, att);
+  ParamFIR band_pass(IR_BAND_PASS, freq - trans, freq + trans, trans, att);
+  ParamFIR band_stop(IR_BAND_STOP, freq - trans, freq + trans, trans, att);
+
+  // Test source test_src (tone -> convolver -> slice)
+
+  ToneGen tone;
+  SliceFilter slice;
+  Convolver2 conv;
+  SourceFilter conv_src(&tone, &conv);
+  SourceFilter test_src(&conv_src, &slice);
+
+  // Reference source ref_src (tone -> slice)
+
+  ToneGen ref_tone;
+  SliceFilter ref_slice;
+  SourceFilter ref_src(&ref_tone, &ref_slice);
+
+  /////////////////////////////////////////////////////////
+  // Low pass
+  /////////////////////////////////////////////////////////
+
+  fir = low_pass.make(spk.sample_rate);
+  CHECK(fir != 0);
+  len = 2 * fir->length;
+  delete fir;
+
+  conv.set_gen(&low_pass);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the pass band must remain unchanged
+
+  tone.init(spk, freq - trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq - trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the stop band must be filtered out
+
+  tone.init(spk, freq + trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+  /////////////////////////////////////////////////////////
+  // High pass
+  /////////////////////////////////////////////////////////
+
+  fir = high_pass.make(spk.sample_rate);
+  CHECK(fir != 0);
+  len = 2 * fir->length;
+  delete fir;
+
+  conv.set_gen(&high_pass);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the pass band must remain unchanged
+
+  tone.init(spk, freq + trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq + trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the stop band must be filtered out
+
+  tone.init(spk, freq - trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+  /////////////////////////////////////////////////////////
+  // BandPass
+  /////////////////////////////////////////////////////////
+
+  fir = band_pass.make(spk.sample_rate);
+  CHECK(fir != 0);
+  len = 2 * fir->length;
+  delete fir;
+
+  conv.set_gen(&band_pass);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the pass band must remain unchanged
+
+  tone.init(spk, freq, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tones at stop bands must be filtered out
+
+  tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+  tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+  /////////////////////////////////////////////////////////
+  // BandStop
+  /////////////////////////////////////////////////////////
+
+  fir = band_stop.make(spk.sample_rate);
+  CHECK(fir != 0);
+  len = 2 * fir->length;
+  delete fir;
+
+  conv.set_gen(&band_stop);
+
+  /////////////////////////////////////////////////////////
+  // Tones at pass bands must remain unchanged
+
+  tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the stop band must be filtered out
+
+  tone.init(spk, freq, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+TEST_END(conv_param);
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST(conv_test_old, "Convolver test (to remove)")
   ZeroIR zero_ir;
   IdentityIR identity_ir;
   NoiseGen noise1;
@@ -126,11 +381,11 @@ TEST(conv_test, "Convolver test")
       CHECK(chunk.samples[0][0] != 0);
   } while (!chunk.eos);
 
-TEST_END(conv_test);
+TEST_END(conv_test_old);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-TEST(conv_param, "Convolve with parametric filter")
+TEST(conv_param_old, "Convolve with parametric filter (to remove)")
   const double att = 100; // 100dB attenuation
   const int trans = 100; // 100Hz transition bandwidth
   double diff, level;
@@ -300,11 +555,13 @@ TEST(conv_param, "Convolve with parametric filter")
   CHECK(level > 0);
   CHECK(log10(level) * 20 < -att);
 
-TEST_END(conv_param);
+TEST_END(conv_param_old);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 SUITE(convolver, "Convolver filter test")
   TEST_FACTORY(conv_test),
   TEST_FACTORY(conv_param),
+  TEST_FACTORY(conv_test_old),
+  TEST_FACTORY(conv_param_old),
 SUITE_END;

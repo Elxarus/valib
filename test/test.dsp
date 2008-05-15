@@ -655,6 +655,10 @@ SOURCE=..\valib\filter_tester.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\fir.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\fir.h
 # End Source File
 # Begin Source File
