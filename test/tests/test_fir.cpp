@@ -1,20 +1,28 @@
 /*
-  ImpulseResponse test
-  Tests implementations of ImpulseResponse interface:
-  * Base tests
-    * ZeroIR
-    * IdentityIR
-    * ImpulseResponseRef
-  * ParamIR
+  * Base FIR classes test:
+    * Base FIR instances
+    * Base FIR generators
+  * FIRRef class test
+  * ParamFIR test using Convolver filter
 */
 
+#include "source/generator.h"
+#include "filters/convolver.h"
+#include "filters/gain.h"
+#include "filters/slice.h"
+
 #include "fir.h"
-#include "fir/param_ir.h"
+#include "fir/param_fir.h"
 #include "../suite.h"
+
 #include <memory>
 
+static const Speakers spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000);
+static const size_t noise_size = 64 * 1024;
+static const int seed = 94586;
+
 ///////////////////////////////////////////////////////////////////////////////
-// ImpulseResponse base test
+// Base FIR classes test
 ///////////////////////////////////////////////////////////////////////////////
 
 TEST(fir_base, "Base FIR classes test")
@@ -115,6 +123,9 @@ TEST(fir_base, "Base FIR classes test")
 
 TEST_END(fir_base);
 
+///////////////////////////////////////////////////////////////////////////////
+// FIRRef class test
+///////////////////////////////////////////////////////////////////////////////
 
 TEST(fir_ref, "FIRRef class test")
 
@@ -184,141 +195,202 @@ TEST(fir_ref, "FIRRef class test")
 
 TEST_END(fir_ref)
 
-
-
-TEST(fir_base_old, "ImpulseResponse base test")
-
-  const int sample_rate = 48000;
-
-  // Base impulse responses creation test
-  ZeroIR zero_ir;
-  CHECK(zero_ir.get_type(sample_rate) == ir_zero);
-
-  IdentityIR identity_ir;
-  CHECK(identity_ir.get_type(sample_rate) == ir_identity);
-
-  // ImpulseResponseRef default constructor test
-  ImpulseResponseRef ref_ir;
-  CHECK(ref_ir.get_type(sample_rate) == ir_err);
-
-  // ImpulseResponseRef constructor test (ImpulseResponse pointer)
-  ImpulseResponseRef ref_ir2(&zero_ir);
-  CHECK(ref_ir2.get() == &zero_ir);
-  CHECK(ref_ir2.get_type(sample_rate) == ir_zero);
-
-  // ImpulseResponseRef copy constructor test
-  ImpulseResponseRef ref_ir3(ref_ir2);
-  CHECK(ref_ir3.get() == &zero_ir);
-  CHECK(ref_ir3.get_type(sample_rate) == ir_zero);
-
-  // ImpulseResponseRef response change test 1
-  int ver = ref_ir.version();
-  ref_ir.set(&zero_ir);
-  CHECK(ref_ir.get() == &zero_ir);
-  CHECK(ver != ref_ir.version());
-  CHECK(ref_ir.get_type(sample_rate) == ir_zero);
-
-  // ImpulseResponseRef response change test 2
-  ver = ref_ir.version();
-  ref_ir.set(&identity_ir);
-  CHECK(ref_ir.get() == &identity_ir);
-  CHECK(ver != ref_ir.version());
-  CHECK(ref_ir.get_type(sample_rate) == ir_identity);
-
-  // ImpulseResponseRef assignment operator test
-  ver = ref_ir.version();
-  ref_ir = ref_ir2;
-  CHECK(ref_ir.get() == &zero_ir);
-  CHECK(ver != ref_ir.version());
-  CHECK(ver != ref_ir2.version());
-  CHECK(ref_ir.get_type(sample_rate) == ir_zero);
-
-TEST_END(fir_base_old);
-
 ///////////////////////////////////////////////////////////////////////////////
-// ParamIR test
+// ParamFIR class test
+//
+// Convolve sine wave with parametric filter and watch that it is remain
+// unchanged or filtered out depending on its frequency and filter parameters.
 ///////////////////////////////////////////////////////////////////////////////
 
-TEST(param_ir, "ParamIR test")
-  int type = 0;
-  double f1 = 0.0, f2 = 0.0, df = 0.0, a = 0.0;
-  bool norm = true;
+TEST(param_fir, "ParamFIR")
+  const double att = 100; // 100dB attenuation
+  const int trans = 100; // 100Hz transition bandwidth
+  double diff, level;
+  int len;
 
-  // Default constructor test
-  ParamIR ir;
-  CHECK(ir.get_type(48000) == ir_err);
+  const FIRInstance *fir;
 
-  // Setup test
-  ir.set(IR_BAND_PASS, 10000, 12000, 500, 100);
-  ir.get(&type, &f1, &f2, &df, &a, &norm);
-  CHECK(type == IR_BAND_PASS);
-  CHECK_DELTA(f1, 10000, 1e-10);
-  CHECK_DELTA(f2, 12000, 1e-10);
-  CHECK_DELTA(df,   500, 1e-10);
-  CHECK_DELTA(a,    100, 1e-10);
-  CHECK(norm == false);
+  // FIRs
 
-  // Full constructor test
-  ParamIR ir2(IR_BAND_PASS, 10000, 12000, 500, 100);
-  ir2.get(&type, &f1, &f2, &df, &a, &norm);
-  CHECK(type == IR_BAND_PASS);
-  CHECK_DELTA(f1, 10000, 1e-10);
-  CHECK_DELTA(f2, 12000, 1e-10);
-  CHECK_DELTA(df,   500, 1e-10);
-  CHECK_DELTA(a,    100, 1e-10);
-  CHECK(norm == false);
+  int freq = spk.sample_rate / 4;
+  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
+  ParamFIR high_pass(FIR_HIGH_PASS, freq, 0, trans, att);
+  ParamFIR band_pass(FIR_BAND_PASS, freq - trans, freq + trans, trans, att);
+  ParamFIR band_stop(FIR_BAND_STOP, freq - trans, freq + trans, trans, att);
 
-  // Test bounds swapping
-  ir.set(IR_BAND_PASS, 12000, 10000, 500, 100);
-  ir.get(0, &f1, &f2, 0, 0);
+  // Test source test_src (tone -> convolver -> slice)
 
-  CHECK(f1 == 10000);
-  CHECK(f2 == 12000);
+  ToneGen tone;
+  SliceFilter slice;
+  Convolver conv;
+  SourceFilter conv_src(&tone, &conv);
+  SourceFilter test_src(&conv_src, &slice);
 
-  ir.set(IR_BAND_STOP, 12000, 10000, 500, 100);
-  ir.get(0, &f1, &f2, 0, 0);
+  // Reference source ref_src (tone -> slice)
 
-  CHECK(f1 == 10000);
-  CHECK(f2 == 12000);
-  
-  // Error conditions test
-  ir.set(IR_BAND_PASS, 10000, 12000, 500, 100);
-  CHECK(ir.get_type(48000) == ir_custom);
+  ToneGen ref_tone;
+  SliceFilter ref_slice;
+  SourceFilter ref_src(&ref_tone, &ref_slice);
 
-  ir.set(IR_BAND_PASS, -10000, 12000, 500, 100);
-  CHECK(ir.get_type(48000) == ir_err);
+  /////////////////////////////////////////////////////////
+  // Low pass
+  /////////////////////////////////////////////////////////
 
-  ir.set(IR_BAND_PASS, 10000, -12000, 500, 100);
-  CHECK(ir.get_type(48000) == ir_err);
+  fir = low_pass.make(spk.sample_rate);
+  CHECK(fir != 0);
+  len = 2 * fir->length;
+  delete fir;
 
-  ir.set(IR_BAND_PASS, 10000, 12000, -500, 100);
-  CHECK(ir.get_type(48000) == ir_err);
+  conv.set_fir(&low_pass);
 
-  ir.set(IR_BAND_PASS, 10000, 12000, 500, -100);
-  CHECK(ir.get_type(48000) == ir_err);
+  /////////////////////////////////////////////////////////
+  // Tone in the pass band must remain unchanged
 
-  // Passthrough conditions test
-  ir.set(IR_LOW_PASS, 10000, 0, 500, 100);
-  CHECK(ir.get_type(21000) == ir_custom);
-  CHECK(ir.get_type(19000) == ir_identity);
+  tone.init(spk, freq - trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq - trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
 
-  ir.set(IR_BAND_STOP, 10000, 12000, 500, 100);
-  CHECK(ir.get_type(21000) == ir_custom);
-  CHECK(ir.get_type(19000) == ir_identity);
-  //
-  ir.set(IR_LOW_PASS, 0.49, 0, 0.001, 100, true);
-  CHECK(ir.get_type(48000) == ir_custom);
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
 
-  ir.set(IR_LOW_PASS, 0.51, 0, 0.001, 100, true);
-  CHECK(ir.get_type(48000) == ir_identity);
-  //
-  ir.set(IR_LOW_PASS, 0.49, 0.51, 0.001, 100, true);
-  CHECK(ir.get_type(48000) == ir_custom);
+  /////////////////////////////////////////////////////////
+  // Tone in the stop band must be filtered out
 
-  ir.set(IR_LOW_PASS, 0.51, 0.53, 0.001, 100, true);
-  CHECK(ir.get_type(48000) == ir_identity);
+  tone.init(spk, freq + trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
 
-TEST_END(param_ir);
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+  /////////////////////////////////////////////////////////
+  // High pass
+  /////////////////////////////////////////////////////////
+
+  fir = high_pass.make(spk.sample_rate);
+  CHECK(fir != 0);
+  len = 2 * fir->length;
+  delete fir;
+
+  conv.set_fir(&high_pass);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the pass band must remain unchanged
+
+  tone.init(spk, freq + trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq + trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the stop band must be filtered out
+
+  tone.init(spk, freq - trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+  /////////////////////////////////////////////////////////
+  // BandPass
+  /////////////////////////////////////////////////////////
+
+  fir = band_pass.make(spk.sample_rate);
+  CHECK(fir != 0);
+  len = 2 * fir->length;
+  delete fir;
+
+  conv.set_fir(&band_pass);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the pass band must remain unchanged
+
+  tone.init(spk, freq, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tones at stop bands must be filtered out
+
+  tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+  tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+  /////////////////////////////////////////////////////////
+  // BandStop
+  /////////////////////////////////////////////////////////
+
+  fir = band_stop.make(spk.sample_rate);
+  CHECK(fir != 0);
+  len = 2 * fir->length;
+  delete fir;
+
+  conv.set_fir(&band_stop);
+
+  /////////////////////////////////////////////////////////
+  // Tones at pass bands must remain unchanged
+
+  tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  ref_tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  ref_slice.init(len, len + noise_size);
+  conv.reset();
+
+  diff = calc_diff(&test_src, &ref_src);
+  CHECK(diff > 0);
+  CHECK(value2db(diff) < -att);
+
+  /////////////////////////////////////////////////////////
+  // Tone in the stop band must be filtered out
+
+  tone.init(spk, freq, noise_size + 2 * len);
+  slice.init(len, noise_size + len);
+  conv.reset();
+
+  level = calc_peak(&test_src);
+  CHECK(level > 0);
+  CHECK(value2db(level) < -att);
+
+TEST_END(param_fir);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test suite
@@ -327,6 +399,5 @@ TEST_END(param_ir);
 SUITE(fir, "FIR tests")
   TEST_FACTORY(fir_base),
   TEST_FACTORY(fir_ref),
-  TEST_FACTORY(fir_base_old),
-  TEST_FACTORY(param_ir),
+  TEST_FACTORY(param_fir),
 SUITE_END;

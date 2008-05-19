@@ -8,7 +8,7 @@
 #include "filters/convolver.h"
 #include "filters/slice.h"
 #include "filter_graph.h"
-#include "fir/param_ir.h"
+#include "fir/param_fir.h"
 #include "../../suite.h"
 
 
@@ -106,8 +106,12 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
   // In normalized form nyquist = 0.5, so we have following parameters of the
   // bandlimiting filter: passband = q-0.5, transition band = 0.5*(1-q)
 
-  ParamIR low_pass(IR_LOW_PASS, q-0.5, 0, 0.5*(1-q), a + 10, true);
-  int trans_len = low_pass.min_length(rate1) * 2;
+  ParamFIR low_pass(FIR_LOW_PASS, q-0.5, 0, 0.5*(1-q), a + 10, true);
+
+  const FIRInstance *fir = low_pass.make(rate1);
+  CHECK(fir != 0);
+  int trans_len = fir->length * 2;
+  delete fir;
 
   Speakers spk(FORMAT_LINEAR, MODE_STEREO, rate1);
   NoiseGen tst_noise(spk, seed, block_size + trans_len * 2);

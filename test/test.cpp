@@ -13,7 +13,7 @@ EXTERN_SUITE(base);
 EXTERN_SUITE(fir);
 
 EXTERN_TEST(slice);
-EXTERN_SUITE(convolver);
+EXTERN_TEST(convolver);
 EXTERN_SUITE(resample);
 EXTERN_SUITE(proc);
 EXTERN_TEST(old_style);
@@ -34,7 +34,7 @@ FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(base),
   SUITE_FACTORY(fir),
    TEST_FACTORY(slice),
-  SUITE_FACTORY(convolver),
+   TEST_FACTORY(convolver),
   SUITE_FACTORY(resample),
   SUITE_FACTORY(proc),
 

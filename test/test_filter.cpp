@@ -117,7 +117,7 @@ Format change
 #include "all_filters.h"
 
 #include "filter_graph.h"
-#include "fir/param_ir.h"
+#include "fir/param_fir.h"
 
 static const int formats[] = 
 { 
@@ -193,7 +193,7 @@ int test_rules(Log *log)
   Mixer          mixer_ib(2048); // immediate
   Resample       resample_up;    // upsample
   Resample       resample_down;  // downsample
-  ParamIR        low_pass_ir(IR_LOW_PASS, 0.5, 0.0, 0.1, 100, true);
+  ParamFIR       low_pass_ir(FIR_LOW_PASS, 0.5, 0.0, 0.1, 100, true);
   Convolver      convolver(&low_pass_ir);
   Delay          delay;
   BassRedir      bass_redir_ip; // inplace

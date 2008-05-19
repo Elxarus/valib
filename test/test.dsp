@@ -775,11 +775,11 @@ SOURCE=..\valib\dsp\kaiser.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\valib\fir\param_ir.cpp
+SOURCE=..\valib\fir\param_fir.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\fir\param_ir.h
+SOURCE=..\valib\fir\param_fir.h
 # End Source File
 # End Group
 # End Group
