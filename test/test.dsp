@@ -775,6 +775,22 @@ SOURCE=..\valib\dsp\kaiser.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\valib\fir\delay_fir.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\fir\delay_fir.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\fir\multi_fir.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\fir\multi_fir.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\fir\param_fir.cpp
 # End Source File
 # Begin Source File

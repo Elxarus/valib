@@ -12,7 +12,9 @@
 #include "filters/slice.h"
 
 #include "fir.h"
+#include "fir/delay_fir.h"
 #include "fir/param_fir.h"
+#include "fir/multi_fir.h"
 #include "../suite.h"
 
 #include <memory>
@@ -393,6 +395,88 @@ TEST(param_fir, "ParamFIR")
 TEST_END(param_fir);
 
 ///////////////////////////////////////////////////////////////////////////////
+// MultiFIR class test
+//
+// Combine ParamFIR with GainFIR and ShiftFIR and get original ParamFIR, but
+// gained and shifted.
+///////////////////////////////////////////////////////////////////////////////
+
+TEST(multi_fir, "MultiFIR test")
+  int sample_rate = 48000;
+  const int freq = 8000;   // 8kHz frequency for low-pass filter
+  const double att = 50;   // 50dB atteniutaion
+  const int trans = 500;   // 500Hz transition bandwidth
+  const double gain = 0.5; // 1/2 gain
+  const int delay = 10; // delay in samples;
+
+  const FIRInstance *fir;
+  const FIRInstance *fir_ref;
+  int i, ver;
+
+  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
+  DelayFIR delay_fir(vtime_t(delay) / sample_rate);
+  FIRGain gain_fir(gain);
+
+  const FIRGen *list_zero[] = { &fir_zero };
+  const FIRGen *list_identity[] = { &fir_identity };
+  const FIRGen *list[] = { &low_pass, 0, &gain_fir, &delay_fir };
+
+  /////////////////////////////////////////////////////////
+  // Default constructor
+
+  MultiFIR f;
+  fir = f.make(sample_rate);
+  CHECK(fir == 0);
+
+  /////////////////////////////////////////////////////////
+  // Init constructor test
+
+  MultiFIR f2(list_zero, array_size(list_zero));
+  fir = f2.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_zero);
+  safe_delete(fir);
+
+  /////////////////////////////////////////////////////////
+  // set() function test
+
+  ver = f.version();
+  f.set(list_zero, array_size(list_zero));
+  CHECK(ver != f.version());
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_zero);
+  safe_delete(fir);
+
+  ver = f.version();
+  f.set(list_identity, array_size(list_identity));
+  CHECK(ver != f.version());
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_identity);
+  safe_delete(fir);
+
+  /////////////////////////////////////////////////////////
+  // Multi filters test
+
+  f.set(list, array_size(list));
+  fir = f.make(sample_rate);
+  fir_ref = low_pass.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir_ref != 0);
+  CHECK(fir->length == fir_ref->length + delay);
+
+  for (i = 0; i < delay; i++)
+    CHECK(fir->data[i] == 0.0);
+
+  for (i = 0; i < fir_ref->length; i++)
+    CHECK(EQUAL_SAMPLES(fir_ref->data[i] * gain, fir->data[i+delay]));
+
+TEST_END(multi_fir);
+
+///////////////////////////////////////////////////////////////////////////////
 // Test suite
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -400,4 +484,5 @@ SUITE(fir, "FIR tests")
   TEST_FACTORY(fir_base),
   TEST_FACTORY(fir_ref),
   TEST_FACTORY(param_fir),
+  TEST_FACTORY(multi_fir),  
 SUITE_END;
