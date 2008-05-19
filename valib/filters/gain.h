@@ -21,7 +21,7 @@ protected:
   {
     if (gain != 1.0)
       for (int ch = 0; ch < spk.nch(); ch++)
-        for (int s = 0; s < size; s++)
+        for (size_t s = 0; s < size; s++)
           samples[ch][s] *= gain;
     return true;
   }
