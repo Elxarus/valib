@@ -1,4 +1,4 @@
-#include "fir/delay_fir.h"
+#include "delay_fir.h"
 
 DelayFIR::DelayFIR()
 :ver(0), delay(0)

@@ -1,5 +1,5 @@
 #include <string.h>
-#include "fir/multi_fir.h"
+#include "multi_fir.h"
 
 MultiFIR::MultiFIR()
 :list(0), count(0), ver(0), list_ver(0)

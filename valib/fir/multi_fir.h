@@ -5,7 +5,7 @@
 #ifndef VALIB_MULTI_FIR_H
 #define VALIB_MULTI_FIR_H
 
-#include "fir.h"
+#include "../fir.h"
 
 class MultiFIR : public FIRGen
 {

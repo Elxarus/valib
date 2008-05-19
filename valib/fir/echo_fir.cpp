@@ -1,4 +1,4 @@
-#include "fir/echo_fir.h"
+#include "echo_fir.h"
 
 EchoFIR::EchoFIR()
 :ver(0), delay(0), gain(0)
