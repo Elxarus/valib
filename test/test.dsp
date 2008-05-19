@@ -783,6 +783,14 @@ SOURCE=..\valib\fir\delay_fir.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\fir\echo_fir.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\fir\echo_fir.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\fir\multi_fir.cpp
 # End Source File
 # Begin Source File
