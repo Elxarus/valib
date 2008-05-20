@@ -162,7 +162,7 @@ struct int24_t // int24_t is a low-endian structure
 #endif
 
 #define SAMPLE_THRESHOLD (1e-10)
-#define EQUAL_SAMPLES(s1, s2) (fabs(s1 - s2) < SAMPLE_THRESHOLD)
+#define EQUAL_SAMPLES(s1, s2) (fabs((s1) - (s2)) < SAMPLE_THRESHOLD)
 
 typedef double vtime_t;
 typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
