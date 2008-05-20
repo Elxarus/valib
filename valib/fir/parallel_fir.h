@@ -1,14 +1,14 @@
 /*
-  Combines several FIRs into one sequentially.
-  I.e. applies all filters one by one.
+  Combines several FIRs into one in parallel.
+  I.e. applies all filters at once and sums the result.
 */
 
-#ifndef VALIB_MULTI_FIR_H
-#define VALIB_MULTI_FIR_H
+#ifndef VALIB_PARALLEL_FIR_H
+#define VALIB_PARALLEL_FIR_H
 
 #include "../fir.h"
 
-class MultiFIR : public FIRGen
+class ParallelFIR : public FIRGen
 {
 protected:
   size_t count;
@@ -19,9 +19,9 @@ protected:
   mutable int list_ver;
 
 public:
-  MultiFIR();
-  MultiFIR(const FIRGen *const *list, size_t count);
-  ~MultiFIR();
+  ParallelFIR();
+  ParallelFIR(const FIRGen *const *list, size_t count);
+  ~ParallelFIR();
 
   /////////////////////////////////////////////////////////
   // Own interface

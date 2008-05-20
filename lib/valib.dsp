@@ -788,6 +788,14 @@ SOURCE=..\valib\fir\multi_fir.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\fir\parallel_fir.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\fir\parallel_fir.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\fir\param_fir.cpp
 # End Source File
 # Begin Source File

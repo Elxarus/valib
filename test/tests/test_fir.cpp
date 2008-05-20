@@ -15,6 +15,7 @@
 #include "fir/delay_fir.h"
 #include "fir/param_fir.h"
 #include "fir/multi_fir.h"
+#include "fir/parallel_fir.h"
 #include "../suite.h"
 
 #include <memory>
@@ -407,7 +408,7 @@ TEST(multi_fir, "MultiFIR test")
   const double att = 50;   // 50dB atteniutaion
   const int trans = 500;   // 500Hz transition bandwidth
   const double gain = 0.5; // 1/2 gain
-  const int delay = 10; // delay in samples;
+  const int delay = 10;    // delay in samples;
 
   const FIRInstance *fir;
   const FIRInstance *fir_ref;
@@ -477,6 +478,84 @@ TEST(multi_fir, "MultiFIR test")
 TEST_END(multi_fir);
 
 ///////////////////////////////////////////////////////////////////////////////
+// ParallelFIR class test
+// Sum HPF, LPF, Delay, Zero and Gain filters get Echo result
+///////////////////////////////////////////////////////////////////////////////
+
+TEST(parallel_fir, "ParallelFIR test")
+  int sample_rate = 48000;
+  const int freq = 8000;   // 8kHz frequency for low/high-pass filter
+  const double att = 50;   // 50dB atteniutaion
+  const int trans = 500;   // 500Hz transition bandwidth
+  const int delay = 10;    // delay in samples;
+  const double gain = 0.5; // 1/2 gain
+
+  const FIRInstance *fir;
+  int i, ver;
+
+  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
+  ParamFIR high_pass(FIR_HIGH_PASS, freq, 0, trans, att);
+  DelayFIR delay_fir(vtime_t(delay) / sample_rate);
+  FIRGain gain_fir(gain);
+
+  const FIRGen *list_zero[] = { &fir_zero };
+  const FIRGen *list_identity[] = { &fir_identity };
+  const FIRGen *list[] = { &low_pass, 0, &high_pass, &fir_zero, &gain_fir, &delay_fir };
+
+  /////////////////////////////////////////////////////////
+  // Default constructor
+
+  ParallelFIR f;
+  fir = f.make(sample_rate);
+  CHECK(fir == 0);
+
+  /////////////////////////////////////////////////////////
+  // Init constructor test
+
+  ParallelFIR f2(list_zero, array_size(list_zero));
+  fir = f2.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_zero);
+  safe_delete(fir);
+
+  /////////////////////////////////////////////////////////
+  // set() function test
+
+  ver = f.version();
+  f.set(list_zero, array_size(list_zero));
+  CHECK(ver != f.version());
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_zero);
+  safe_delete(fir);
+
+  ver = f.version();
+  f.set(list_identity, array_size(list_identity));
+  CHECK(ver != f.version());
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_identity);
+  safe_delete(fir);
+
+  /////////////////////////////////////////////////////////
+  // Multi filters test
+
+  f.set(list, array_size(list));
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+
+  for (i = 0; i < fir->length; i++)
+    if (i != fir->center && i != fir->center + delay)
+      CHECK(fir->data[i] <= SAMPLE_THRESHOLD / fir->length);
+
+  CHECK(EQUAL_SAMPLES(fir->data[fir->center], gain + 1.0));
+  CHECK(EQUAL_SAMPLES(fir->data[fir->center + delay], 1.0));
+
+TEST_END(parallel_fir);
+
+///////////////////////////////////////////////////////////////////////////////
 // Test suite
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -485,4 +564,5 @@ SUITE(fir, "FIR tests")
   TEST_FACTORY(fir_ref),
   TEST_FACTORY(param_fir),
   TEST_FACTORY(multi_fir),  
+  TEST_FACTORY(parallel_fir),  
 SUITE_END;
