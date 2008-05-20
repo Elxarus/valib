@@ -272,10 +272,10 @@ test_factory *Suite_##name::suite[] = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define CHECK(c) if (!(c)) { log->err("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); return test_failed; }
-#define CHECKT(c, desc) if (!(c)) { log->msg("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); log->err desc; return test_failed; }
+#define CHECK(c) { if (!(c)) { log->err("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); return test_failed; } }
+#define CHECKT(c, desc) { if (!(c)) { log->msg("Check failed: %s (%s:%i)", #c, __FILE__, __LINE__); log->err desc; return test_failed; } }
 
-#define CHECK_DELTA(a, b, delta) if ((a) > (b)? ((a)-(b)) > (delta): ((b)-(a)) > (delta)) { log->err("Check failed: |%s-%s| > %s (%s:%i)", #a, #b, #delta, __FILE__, __LINE__); return test_failed; }
-#define CHECKT_DELTA(a, b, delta, desc) if ((a) > (b)? ((a)-(b)) > (delta): ((b)-(a)) > (delta)) { log->msg("Check failed: |%s-%s| > %s (%s:%i)", #a, #b, #delta, __FILE__, __LINE__); log->err desc; return test_failed; }
+#define CHECK_DELTA(a, b, delta) { if ((a) > (b)? ((a)-(b)) > (delta): ((b)-(a)) > (delta)) { log->err("Check failed: |%s-%s| > %s (%s:%i)", #a, #b, #delta, __FILE__, __LINE__); return test_failed; } }
+#define CHECKT_DELTA(a, b, delta, desc) { if ((a) > (b)? ((a)-(b)) > (delta): ((b)-(a)) > (delta)) { log->msg("Check failed: |%s-%s| > %s (%s:%i)", #a, #b, #delta, __FILE__, __LINE__); log->err desc; return test_failed; } }
 
 #endif
