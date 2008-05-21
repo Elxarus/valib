@@ -69,7 +69,7 @@ Convolver::init()
   /////////////////////////////////////////////////////////
   // Decide filter length
 
-  if (fir->length <= 0 || fir->center <= 0)
+  if (fir->length <= 0 || fir->center < 0)
     return false;
 
   n = clp2(fir->length);
