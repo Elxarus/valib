@@ -295,6 +295,14 @@ SOURCE=..\valib\filters\dvd_graph.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\equalizer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\equalizer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\levels.cpp
 # End Source File
 # Begin Source File
@@ -788,6 +796,14 @@ SOURCE=..\valib\fir\echo_fir.cpp
 # Begin Source File
 
 SOURCE=..\valib\fir\echo_fir.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\fir\eq_fir.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\fir\eq_fir.h
 # End Source File
 # Begin Source File
 
