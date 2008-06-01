@@ -1,4 +1,4 @@
- /*
+/*
   Finite impulse response generator and instance classes
 */
 

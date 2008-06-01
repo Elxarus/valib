@@ -5,9 +5,8 @@
   MPEG1 Audio LayerI and LayerII
 */
 
-
-#ifndef SYNTH_H
-#define SYNTH_H
+#ifndef VALIB_MPA_SYNTH_H
+#define VALIB_MPA_SYNTH_H
 
 #include "../../defs.h"
 
@@ -46,6 +45,5 @@ public:
   virtual void synth(sample_t samples[32]);
   virtual void reset();
 };
-
 
 #endif

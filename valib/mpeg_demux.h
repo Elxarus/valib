@@ -28,8 +28,8 @@
   todo: Transport Stream parser
 */
 
-#ifndef VALIB_MPEGDEMUX_H
-#define VALIB_MPEGDEMUX_H
+#ifndef VALIB_MPEG_DEMUX_H
+#define VALIB_MPEG_DEMUX_H
 
 #include "defs.h"
 #include "spk.h"

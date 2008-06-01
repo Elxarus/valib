@@ -1,5 +1,5 @@
-#ifndef MPA_HEADER_H
-#define MPA_HEADER_H
+#ifndef VALIB_MPA_HEADER_H
+#define VALIB_MPA_HEADER_H
 
 #include "../../parser.h"
 

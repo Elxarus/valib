@@ -1,3 +1,7 @@
+/*
+  Raw file source
+*/
+
 #ifndef VALIB_RAW_SOURCE
 #define VALIB_RAW_SOURCE
 

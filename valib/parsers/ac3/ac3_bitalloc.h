@@ -2,8 +2,8 @@
   AC3 bit allocation
 */
 
-#ifndef AC3_BITALLOC_H
-#define AC3_BITALLOC_H
+#ifndef VALIB_AC3_BITALLOC_H
+#define VALIB_AC3_BITALLOC_H
 
 #include "../../defs.h"
 

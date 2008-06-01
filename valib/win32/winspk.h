@@ -2,8 +2,8 @@
   Windows-related speakers utilities
 */
 
-#ifndef WINSPK_H
-#define WINSPK_H
+#ifndef VALIB_WINSPK_H
+#define VALIB_WINSPK_H
 
 #include "../spk.h"
 

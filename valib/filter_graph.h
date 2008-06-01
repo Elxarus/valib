@@ -31,8 +31,8 @@
     chain.transform(src, sink);
 */
 
-#ifndef FILTER_GRAPH_H
-#define FILTER_GRAPH_H
+#ifndef VALIB_FILTER_GRAPH_H
+#define VALIB_FILTER_GRAPH_H
 
 #include "filter.h"
 
@@ -219,6 +219,5 @@ public:
 
   void drop();
 };
-
 
 #endif

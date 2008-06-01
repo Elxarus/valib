@@ -1,5 +1,5 @@
-#ifndef KAISER_H
-#define KAISER_H
+#ifndef VALIB_KAISER_H
+#define VALIB_KAISER_H
 
 #include <math.h>
 #include "dbesi0.h"

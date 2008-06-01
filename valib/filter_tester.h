@@ -12,8 +12,8 @@
   Filter is not destroyed with the tester.
 */
 
-#ifndef FILTER_TESTER_H
-#define FILTER_TESTER_H
+#ifndef VALIB_FILTER_TESTER_H
+#define VALIB_FILTER_TESTER_H
 
 #include "filter.h"
 #include "log.h"
@@ -353,6 +353,5 @@ public:
     return true;
   }
 };
-
 
 #endif

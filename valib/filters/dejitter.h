@@ -1,9 +1,10 @@
 /*
+  Jitter correction
+  See valib/doc/jitter.xls for explanations
 */
 
-
-#ifndef DEJITTER_H
-#define DEJITTER_H
+#ifndef VALIB_DEJITTER_H
+#define VALIB_DEJITTER_H
 
 #include "../filter.h"
 
@@ -95,6 +96,5 @@ public:
 
   bool get_chunk(Chunk *_chunk);
 };
-
 
 #endif

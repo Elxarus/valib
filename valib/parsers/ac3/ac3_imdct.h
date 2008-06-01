@@ -1,5 +1,5 @@
-#ifndef AC3_IMDCT_H
-#define AC3_IMDCT_H
+#ifndef VALIB_AC3_IMDCT_H
+#define VALIB_AC3_IMDCT_H
 
 #include "../../defs.h"
 #include <math.h>
@@ -180,8 +180,5 @@ IMDCT::ifft_pass(complex_t *buf, sample_t *weight, int n)
     weight++;
   } while (--i);
 }
-
-
-
 
 #endif

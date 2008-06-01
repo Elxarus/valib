@@ -50,5 +50,4 @@ public:
   int  err_close(const char *msg, ...);
 };
 
-
 #endif

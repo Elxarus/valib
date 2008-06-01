@@ -3,8 +3,8 @@
   Uses parser to transform the stream.
 */
 
-#ifndef PARSER_FILTER_H
-#define PARSER_FILTER_H
+#ifndef VALIB_PARSER_FILTER_H
+#define VALIB_PARSER_FILTER_H
 
 #include "../filter.h"
 #include "../parser.h"

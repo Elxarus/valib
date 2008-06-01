@@ -2,9 +2,8 @@
   Simple gain filter
 */
 
-
-#ifndef GAIN_H
-#define GAIN_H
+#ifndef VALIB_GAIN_H
+#define VALIB_GAIN_H
 
 #include "../filter.h"
 

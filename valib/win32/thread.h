@@ -6,8 +6,8 @@
   AutoLock - automatic lock
 */
 
-#ifndef CTHREAD_H
-#define CTHREAD_H
+#ifndef VALIB_THREAD_H
+#define VALIB_THREAD_H
 
 #include <windows.h>
 
@@ -81,6 +81,5 @@ public:
     lock->unlock();
   };
 };
-
 
 #endif

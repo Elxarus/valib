@@ -15,10 +15,8 @@
   (16 bit for 14 and 16 bit stream and 32 bit for 32 bit stream)
 */
 
-
-
-#ifndef CRC_H
-#define CRC_H
+#ifndef VALIB_CRC_H
+#define VALIB_CRC_H
 
 #include "defs.h"
 

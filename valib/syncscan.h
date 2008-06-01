@@ -401,8 +401,8 @@
   define own syncpoints.
 */
 
-#ifndef SYNCSCAN_H
-#define SYNCSCAN_H
+#ifndef VALIB_SYNCSCAN_H
+#define VALIB_SYNCSCAN_H
 
 #include "defs.h"
 

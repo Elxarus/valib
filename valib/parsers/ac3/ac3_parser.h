@@ -1,5 +1,5 @@
-#ifndef AC3_PARSER_H
-#define AC3_PARSER_H
+#ifndef VALIB_AC3_PARSER_H
+#define VALIB_AC3_PARSER_H
 
 #include "../../parser.h"
 #include "../../bitstream.h"

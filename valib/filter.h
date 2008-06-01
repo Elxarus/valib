@@ -16,7 +16,6 @@
   * SinkFilter - combine sink and filter as sink
 */
 
-
 #ifndef VALIB_FILTER_H
 #define VALIB_FILTER_H
 

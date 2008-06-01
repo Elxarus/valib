@@ -12,8 +12,8 @@
   Buffering: yes/no
 */
 
-#ifndef CONVERT_H
-#define CONVERT_H
+#ifndef VALIB_CONVERT_H
+#define VALIB_CONVERT_H
 
 #include "../filter.h"
 #include "../data.h"

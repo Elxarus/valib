@@ -83,8 +83,8 @@
     parameter. Now it is used to pre-scale data.
 */
 
-#ifndef SPK_H
-#define SPK_H
+#ifndef VALIB_SPK_H
+#define VALIB_SPK_H
 
 #include "defs.h"
 
@@ -526,6 +526,5 @@ samples_t::zero()
   samples[5] = 0;
   return *this;
 }
-
 
 #endif

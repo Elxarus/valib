@@ -2,8 +2,8 @@
   Simple file helper class
 */
 
-#ifndef AUTO_FILE_H
-#define AUTO_FILE_H
+#ifndef VALIB_AUTO_FILE_H
+#define VALIB_AUTO_FILE_H
 
 #include "defs.h"  // rquired to disable depreciation warning in msvc8 (use compiler-dependent options)
 #include <stdio.h>

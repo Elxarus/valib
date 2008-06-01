@@ -1,5 +1,5 @@
-#ifndef RESAMPLE_H
-#define RESAMPLE_H
+#ifndef VALIB_RESAMPLE_H
+#define VALIB_RESAMPLE_H
 
 #include "../filter.h"
 #if RESAMPLE_PERF

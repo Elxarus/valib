@@ -5,8 +5,8 @@
    SPDIF output and output format agreement.
 */
 
-#ifndef DECODER_GRAPH_H
-#define DECODER_GRAPH_H
+#ifndef VALIB_DECODER_GRAPH_H
+#define VALIB_DECODER_GRAPH_H
 
 #include "../filter_graph.h"
 #include "decoder.h"

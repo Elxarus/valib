@@ -2,8 +2,8 @@
   Use multiple frame parsers at one time
 */
 
-#ifndef MULTI_FRAME_H
-#define MULTI_FRAME_H
+#ifndef VALIB_MULTI_FRAME_H
+#define VALIB_MULTI_FRAME_H
 
 #include "../parser.h"
 #include "multi_header.h"

@@ -3,9 +3,8 @@
   todo: much of optimizations...
 */
 
-
-#ifndef BASS_REDIR_H
-#define BASS_REDIR_H
+#ifndef VALIB_BASS_REDIR_H
+#define VALIB_BASS_REDIR_H
 
 #include "../filter.h"
 

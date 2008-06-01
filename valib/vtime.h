@@ -1,5 +1,5 @@
-#ifndef VTIME_H
-#define VTIME_H
+#ifndef VALIB_VTIME_H
+#define VALIB_VTIME_H
 
 #include "defs.h"
 

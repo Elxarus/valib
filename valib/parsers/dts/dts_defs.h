@@ -2,9 +2,8 @@
   DTS parser definitions
 */
 
-
-#ifndef DTS_DEFS_H
-#define DTS_DEFS_H
+#ifndef VALIB_DTS_DEFS_H
+#define VALIB_DTS_DEFS_H
 
 struct huff_entry_t
 {

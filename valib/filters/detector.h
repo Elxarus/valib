@@ -5,8 +5,8 @@
   its format. Main purpose is to detect SPDIF stream at PCM16 data.
 */
 
-#ifndef DETECTOR_H
-#define DETECTOR_H
+#ifndef VALIB_DETECTOR_H
+#define VALIB_DETECTOR_H
 
 #include "../parser.h"
 #include "../sync.h"

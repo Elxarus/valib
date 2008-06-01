@@ -27,8 +27,8 @@
     output_gain      - output channel's gains (can change independently of matrix)
 */
 
-#ifndef MIXER_H
-#define MIXER_H
+#ifndef VALIB_MIXER_H
+#define VALIB_MIXER_H
 
 #include "../filter.h"
 #include "../data.h"

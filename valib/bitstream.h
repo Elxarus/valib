@@ -10,9 +10,8 @@
   We must not use ReadBS::get(0).
 */
 
-
-#ifndef BITSTREAM_H              
-#define BITSTREAM_H
+#ifndef VALIB_BITSTREAM_H              
+#define VALIB_BITSTREAM_H
 
 #include "defs.h"
 

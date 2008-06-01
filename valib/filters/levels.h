@@ -14,8 +14,8 @@
 */
 
 
-#ifndef LEVELS_H
-#define LEVELS_H
+#ifndef VALIB_LEVELS_H
+#define VALIB_LEVELS_H
 
 #include <string.h>
 #include "../filter.h"

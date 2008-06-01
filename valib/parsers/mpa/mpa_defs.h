@@ -2,8 +2,8 @@
   MPEG Audio parser definitions
 */
 
-#ifndef MPA_DEFS_H
-#define MPA_DEFS_H
+#ifndef VALIB_MPA_DEFS_H
+#define VALIB_MPA_DEFS_H
 
 #define MPA_MIN_FRAME_SIZE 4096   // max frame size = ?????
 #define MPA_MAX_FRAME_SIZE 4096   // max frame size = ?????
@@ -21,6 +21,5 @@
 #define MPA_LAYER_I   0
 #define MPA_LAYER_II  1
 #define MPA_LAYER_III 2
-
 
 #endif

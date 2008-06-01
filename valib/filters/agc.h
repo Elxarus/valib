@@ -21,9 +21,8 @@
     drc_level    // current DRC gain level (read-only) [read-only]
 */
 
-
-#ifndef AGC_H
-#define AGC_H
+#ifndef VALIB_AGC_H
+#define VALIB_AGC_H
 
 #include "../filter.h"
 #include "../data.h"

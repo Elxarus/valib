@@ -1,5 +1,9 @@
-#ifndef DSOUND_SOURCE_H
-#define DSOUND_SOURCE_H
+/*
+  DirectSound capture source
+*/
+
+#ifndef VALIB_DSOUND_SOURCE_H
+#define VALIB_DSOUND_SOURCE_H
 
 #include <dsound.h>
 #include "../filter.h"

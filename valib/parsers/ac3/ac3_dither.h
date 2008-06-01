@@ -1,5 +1,5 @@
-#ifndef DITHER_H
-#define DITHER_H
+#ifndef VALIB_AC3_DITHER_H
+#define VALIB_AC3_DITHER_H
 
 #include "../../defs.h"
 

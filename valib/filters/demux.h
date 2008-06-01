@@ -13,8 +13,8 @@
     [ro] substream - current substream number
 */
 
-#ifndef DEMUX_H
-#define DEMUX_H
+#ifndef VALIB_DEMUX_H
+#define VALIB_DEMUX_H
 
 #include "../filter.h"
 #include "../mpeg_demux.h"

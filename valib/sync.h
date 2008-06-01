@@ -3,8 +3,8 @@
   Received timestamp is for the first syncpoint in the chunk.
 */
 
-#ifndef SYNC_H
-#define SYNC_H
+#ifndef VALIB_SYNC_H
+#define VALIB_SYNC_H
 
 #include "filter.h"
 

@@ -2,8 +2,8 @@
   Basic data types, compiler-dependent options, constants and utility finctions
 */
 
-#ifndef DEFS_H
-#define DEFS_H
+#ifndef VALIB_DEFS_H
+#define VALIB_DEFS_H
 
 const char *valib_build_info();
 const char *valib_credits();

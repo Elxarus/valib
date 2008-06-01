@@ -2,8 +2,8 @@
   Abstract parser interface
 */
 
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef VALIB_PARSER_H
+#define VALIB_PARSER_H
 
 #include "spk.h"
 #include "data.h"

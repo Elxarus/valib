@@ -2,8 +2,8 @@
   DirectShow output sink
 */
 
-#ifndef DSHOW_SINK_H
-#define DSHOW_SINK_H
+#ifndef VALIB_SINK_DSHOW_H
+#define VALIB_SINK_DSHOW_H
 
 #include <windows.h>
 #include <streams.h>

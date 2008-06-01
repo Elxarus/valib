@@ -9,8 +9,8 @@
 */
 
 
-#ifndef DVD_GRAPH_H
-#define DVD_GRAPH_H
+#ifndef VALIB_DVD_GRAPH_H
+#define VALIB_DVD_GRAPH_H
 
 #include "../filter_graph.h"
 #include "../parsers/ac3/ac3_enc.h"

@@ -3,8 +3,8 @@
   Converts SPDIF stream to raw AC3/MPA/DTS stream.
 */
 
-#ifndef SPDIF_PARSER_H
-#define SPDIF_PARSER_H
+#ifndef VALIB_SPDIF_PARSER_H
+#define VALIB_SPDIF_PARSER_H
 
 #include "../../parser.h"
 

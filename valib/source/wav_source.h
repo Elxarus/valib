@@ -1,3 +1,7 @@
+/*
+  WAV file source
+*/
+
 #ifndef WAV_SOURCE_H
 #define WAV_SOURCE_H
 
@@ -39,6 +43,5 @@ public:
   bool is_empty() const;
   bool get_chunk(Chunk *chunk);
 };
-
 
 #endif

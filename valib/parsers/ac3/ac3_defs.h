@@ -2,8 +2,8 @@
   AC3 parser definitions
 */
 
-#ifndef AC3_DEFS_H
-#define AC3_DEFS_H
+#ifndef VALIB_AC3_DEFS_H
+#define VALIB_AC3_DEFS_H
 
 
 #define AC3_MAX_FRAME_SIZE 3840

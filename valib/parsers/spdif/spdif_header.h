@@ -1,5 +1,5 @@
-#ifndef SPDIF_HEADER_H
-#define SPDIF_HEADER_H
+#ifndef VALIB_SPDIF_HEADER_H
+#define VALIB_SPDIF_HEADER_H
 
 #include "../../parser.h"
 

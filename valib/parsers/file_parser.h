@@ -2,8 +2,8 @@
   File parser class
 */
 
-#ifndef FILE_PARSER_H
-#define FILE_PARSER_H
+#ifndef VALIB_FILE_PARSER_H
+#define VALIB_FILE_PARSER_H
 
 #include <stdio.h>
 #include "../filter.h"

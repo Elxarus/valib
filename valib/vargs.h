@@ -1,5 +1,9 @@
-#ifndef VARGS_H
-#define VARGS_H
+/*
+  Command-line arguments handling
+*/
+
+#ifndef VALIB_VARGS_H
+#define VALIB_VARGS_H
 
 enum arg_type { argt_exist, argt_bool, argt_num, argt_hex };
 bool is_arg(char *arg, const char *name, arg_type type);

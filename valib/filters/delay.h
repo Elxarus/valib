@@ -14,9 +14,8 @@
   todo: time_shift parameter
 */
 
-
-#ifndef DELAY_H
-#define DELAY_H
+#ifndef VALIB_DELAY_H
+#define VALIB_DELAY_H
 
 #include "../filter.h"
 #include "../data.h"

@@ -10,8 +10,8 @@
     -
 */
 
-#ifndef SPDIFER_H
-#define SPDIFER_H
+#ifndef VALIB_SPDIFER_H
+#define VALIB_SPDIFER_H
 
 #include "parser_filter.h"
 #include "../parsers/spdif/spdif_wrapper.h"

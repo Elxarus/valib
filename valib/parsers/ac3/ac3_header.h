@@ -1,5 +1,5 @@
-#ifndef AC3_HEADER_H
-#define AC3_HEADER_H
+#ifndef VALIB_AC3_HEADER_H
+#define VALIB_AC3_HEADER_H
 
 #include "../../parser.h"
 

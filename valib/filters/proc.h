@@ -71,8 +71,8 @@
   todo: use state machine instead of filter chain?
 */
 
-#ifndef PROC_H
-#define PROC_H
+#ifndef VALIB_PROC_H
+#define VALIB_PROC_H
 
 #include "../filter_graph.h"
 #include "levels.h"

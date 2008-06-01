@@ -2,8 +2,8 @@
   CPU usage measurement
 */
 
-#ifndef CPU_H
-#define CPU_H
+#ifndef VALIB_CPU_H
+#define VALIB_CPU_H
 
 #include <windows.h>
 #include "../vtime.h"

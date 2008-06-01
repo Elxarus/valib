@@ -17,8 +17,8 @@
   stop execution immediately when signaled.
 */
 
-#ifndef SINK_DSOUND_H
-#define SINK_DSOUND_H
+#ifndef VALIB_SINK_DSOUND_H
+#define VALIB_SINK_DSOUND_H
 
 #include <dsound.h>
 #include <mmreg.h>

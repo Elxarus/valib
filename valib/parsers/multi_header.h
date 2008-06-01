@@ -2,8 +2,8 @@
   Multiple header parser
 */
 
-#ifndef MULTI_HEADER_H
-#define MULTI_HEADER_H
+#ifndef VALIB_MULTI_HEADER_H
+#define VALIB_MULTI_HEADER_H
 
 #include "../parser.h"
 

@@ -1,5 +1,5 @@
-#ifndef RNG_H
-#define RNG_H
+#ifndef VALIB_RNG_H
+#define VALIB_RNG_H
 
 #include "defs.h"
 

@@ -8,9 +8,8 @@
   between SPDIF stream types.
 */
 
-
-#ifndef SPDIF_WRAPPER_H
-#define SPDIF_WRAPPER_H
+#ifndef VALIB_SPDIF_WRAPPER_H
+#define VALIB_SPDIF_WRAPPER_H
 
 #include "../../parser.h"
 #include "../multi_header.h"

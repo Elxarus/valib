@@ -1,5 +1,5 @@
-#ifndef AC3_MDCT_H
-#define AC3_MDCT_H
+#ifndef VALIB_AC3_MDCT_H
+#define VALIB_AC3_MDCT_H
 
 #include "../../defs.h"
 
@@ -24,6 +24,5 @@ public:
 
   void mdct512(int32_t *out, int16_t *in);
 };
-
 
 #endif

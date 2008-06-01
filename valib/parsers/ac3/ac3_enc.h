@@ -1,5 +1,5 @@
-#ifndef VAC3ENC_H
-#define VAC3ENC_H
+#ifndef VALIB_AC3_ENC_H
+#define VALIB_AC3_ENC_H
 
 #include "../../filter.h"
 #include "../../bitstream.h"
@@ -105,6 +105,5 @@ inline int asym_quant(int c, int bits)
   c &= (1 << bits) - 1; // truncate unused bits
   return c;
 }
-
 
 #endif

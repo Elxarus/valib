@@ -2,8 +2,8 @@
   DTS parser class
 */
 
-#ifndef DTS_PARSER_H
-#define DTS_PARSER_H
+#ifndef VALIB_DTS_PARSER_H
+#define VALIB_DTS_PARSER_H
 
 #include "../../parser.h"
 #include "../../bitstream.h"
@@ -138,6 +138,5 @@ protected:
          sample_t *samples_out,
          double scale);
 };
-
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef SINK_WAV
-#define SINK_WAV
+#ifndef VALIB_SINK_WAV
+#define VALIB_SINK_WAV
 
 #include "../filter.h"
 #include "../auto_file.h"

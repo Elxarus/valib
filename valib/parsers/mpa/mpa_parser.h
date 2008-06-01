@@ -1,11 +1,10 @@
 /*
-  Valex MPEG Audio parser
-
+  MPEG Audio parser
   MPEG1/2 LayerI and LayerII audio parser class
 */
 
-#ifndef MPA_PARSER_H
-#define MPA_PARSER_H
+#ifndef VALIB_MPA_PARSER_H
+#define VALIB_MPA_PARSER_H
 
 #include "../../parser.h"
 #include "../../bitstream.h"

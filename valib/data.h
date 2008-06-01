@@ -2,8 +2,8 @@
   Data allocation
 */
 
-#ifndef DATA_H
-#define DATA_H
+#ifndef VALIB_DATA_H
+#define VALIB_DATA_H
 
 #include <string.h>
 #include "spk.h"

@@ -38,5 +38,4 @@ public:
   virtual const FIRInstance *make(int sample_rate) const;
 };
 
-
 #endif

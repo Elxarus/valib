@@ -3,8 +3,8 @@
   Universal audio decoder
 */
 
-#ifndef DECODER_H
-#define DECODER_H
+#ifndef VALIB_DECODER_H
+#define VALIB_DECODER_H
 
 #include "parser_filter.h"
 #include "../parsers/mpa/mpa_parser.h"
