@@ -28,6 +28,7 @@ protected:
   samples_t out;
 
   int pre_samples;
+  int post_samples;
 
   bool init();
   void uninit();

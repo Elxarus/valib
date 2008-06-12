@@ -26,7 +26,7 @@ Convolver::Convolver(const FIRGen *gen_):
   gen(gen_), fir(0),
   n(0), c(0),
   filter(0), fft_ip(0), fft_w(0),
-  pos(0), pre_samples(0),
+  pos(0), pre_samples(0), post_samples(0),
   state(state_pass)
 {
   buf[0] = 0;
@@ -120,6 +120,7 @@ Convolver::init()
 
   pos = 0;
   pre_samples = c;
+  post_samples = n - c;
   memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
 
   return true;
@@ -132,6 +133,7 @@ Convolver::uninit()
   c = 0;
   pos = 0;
   pre_samples = 0;
+  post_samples = 0;
   state = state_pass;
 
   safe_delete(fir);
@@ -196,6 +198,7 @@ Convolver::reset()
   {
     pos = 0;
     pre_samples = c;
+    post_samples = n - c;
     memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
   }
 }
@@ -245,24 +248,30 @@ Convolver::get_chunk(Chunk *chunk)
     // Need to regenerate the impulse response
     // Flush buffered data and regenerate
 
-    for (ch = 0; ch < spk.nch(); ch++)
-      memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
-
-    process_block();
-    chunk->set_linear(spk, out, pos + c);
-    chunk->set_eos();
-
-    if (pre_samples)
+    if (post_samples > 0)
     {
-      chunk->samples += pre_samples;
-      chunk->size -= pre_samples;
-      pre_samples = 0;
+      for (ch = 0; ch < spk.nch(); ch++)
+        memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
+      post_samples -= (n - pos);
+
+      process_block();
+      chunk->set_linear(spk, out, pos + c);
+      chunk->set_eos();
+
+      if (pre_samples)
+      {
+        chunk->samples += pre_samples;
+        chunk->size -= pre_samples;
+        pre_samples = 0;
+      }
+
+      return true;
     }
 
     init();
-    return true;
   }
-  else if (size)
+
+  if (size)
   {
     ///////////////////////////////////////////////////////
     // Normal processing
@@ -299,20 +308,27 @@ Convolver::get_chunk(Chunk *chunk)
     ///////////////////////////////////////////////////////
     // Flushing
 
-    for (ch = 0; ch < spk.nch(); ch++)
-      memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
-
-    process_block();
-    chunk->set_linear(spk, out, pos + c);
-    chunk->set_eos();
-
-    if (pre_samples)
+    if (pre_samples > 0)
     {
-      chunk->samples += pre_samples;
-      chunk->size -= pre_samples;
-      pre_samples = 0;
+      for (ch = 0; ch < spk.nch(); ch++)
+        memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
+      post_samples -= (n - pos);
+
+      process_block();
+      chunk->set_linear(spk, out, pos + c);
+
+      if (pre_samples)
+      {
+        chunk->samples += pre_samples;
+        chunk->size -= pre_samples;
+        pre_samples = 0;
+      }
+
+      return true;
     }
 
+    chunk->set_dummy();
+    chunk->set_eos();
     reset();
     return true;
   }
