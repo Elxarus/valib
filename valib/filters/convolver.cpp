@@ -256,7 +256,7 @@ Convolver::get_chunk(Chunk *chunk)
 
       process_block();
       chunk->set_linear(spk, out, pos + c);
-      if (post_sample <= 0)
+      if (post_samples <= 0)
         chunk->set_eos();
 
       if (pre_samples)
