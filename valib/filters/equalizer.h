@@ -15,12 +15,13 @@ class Equalizer : public Filter
 protected:
   EqFIR eq;
   Convolver conv;
+  bool enabled;
 
 public:
-  Equalizer()
-  { conv.set_fir(&eq); }
+  Equalizer(): enabled(false)
+  {}
 
-  Equalizer(int nbands, int *freq, double *gain): eq(nbands, freq, gain)
+  Equalizer(int nbands, int *freq, double *gain): eq(nbands, freq, gain), enabled(true)
   { conv.set_fir(&eq); }
 
   ~Equalizer()
@@ -28,6 +29,19 @@ public:
 
   /////////////////////////////////////////////////////////
   // Equalizer interface
+
+  bool get_enabled() const { return enabled; }
+  void set_enabled(bool enabled_)
+  {
+    if (enabled_ != enabled)
+    {
+      enabled = enabled_;
+      if (enabled)
+        conv.set_fir(&eq);
+      else
+        conv.set_fir(&fir_identity);
+    }
+  }
 
   size_t get_nbands() const { return eq.get_nbands(); };
   bool set_bands(size_t nbands, const int *freq, const double *gain) { return eq.set_bands(nbands, freq, gain); }

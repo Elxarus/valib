@@ -175,8 +175,9 @@ public:
   inline void     get_input_gains(sample_t input_gains[NCHANNELS]);
   inline void     get_output_gains(sample_t output_gains[NCHANNELS]);
   // Eqalizer
-  inline size_t   get_eq_bands();
-  inline void     get_eq(int *freq, double *gain);
+  inline bool     get_eq();
+  inline size_t   get_eq_nbands();
+  inline void     get_eq_bands(int *freq, double *gain);
   // Delay
   inline bool     get_delay();
   inline int      get_delay_units();
@@ -225,7 +226,8 @@ public:
   inline void     set_input_gains(sample_t input_gains[NCHANNELS]);
   inline void     set_output_gains(sample_t output_gains[NCHANNELS]);
   // Equalizer
-  inline void     set_eq(size_t bands, const int *freq, const double *gain);
+  inline void     set_eq(bool eq);
+  inline void     set_eq_bands(size_t nbands, const int *freq, const double *gain);
   // Delays
   inline void     set_delay(bool delay);
   inline void     set_delay_units(int delay_units);
@@ -339,12 +341,16 @@ inline void
 AudioProcessor::get_output_gains(sample_t _output_gains[NCHANNELS])
 { mixer.get_output_gains(_output_gains); }
 
+inline bool
+AudioProcessor::get_eq()
+{ return equalizer.get_enabled(); }
+
 inline size_t
-AudioProcessor::get_eq_bands()
+AudioProcessor::get_eq_nbands()
 { return equalizer.get_nbands(); }
 
 inline void
-AudioProcessor::get_eq(int *freq, double *gain)
+AudioProcessor::get_eq_bands(int *freq, double *gain)
 { equalizer.get_bands(freq, gain); }
 
 inline bool     
@@ -488,8 +494,12 @@ AudioProcessor::set_output_gains(sample_t _output_gains[NCHANNELS])
 { mixer.set_output_gains(_output_gains); }
 
 inline void     
-AudioProcessor::set_eq(size_t bands, const int *freq, const double *gain)
-{ equalizer.set_bands(bands, freq, gain); }
+AudioProcessor::set_eq(bool eq)
+{ equalizer.set_enabled(eq); }
+
+inline void     
+AudioProcessor::set_eq_bands(size_t nbands, const int *freq, const double *gain)
+{ equalizer.set_bands(nbands, freq, gain); }
 
 inline void     
 AudioProcessor::set_delay(bool _delay)
