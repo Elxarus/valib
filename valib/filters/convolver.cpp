@@ -114,7 +114,13 @@ Convolver::init()
   rdft(n * 2, 1, filter, fft_ip, fft_w);
 
   state = state_filter;
-  reset();
+
+  /////////////////////////////////////////////////////////
+  // Initial state
+
+  pos = 0;
+  pre_samples = c;
+  memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
 
   return true;
 }
@@ -188,7 +194,6 @@ Convolver::reset()
 
   if (state == state_filter)
   {
-    // Regenerate the response if nessesary
     pos = 0;
     pre_samples = c;
     memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
