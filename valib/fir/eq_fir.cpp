@@ -24,42 +24,54 @@ EqFIR::get_nbands() const
 { return nbands; }
 
 bool
-EqFIR::set_bands(size_t nbands_, int *freq_, double *gain_)
+EqFIR::set_bands(size_t nbands_, const int *freq_, const double *gain_)
 {
   size_t i;
 
   reset();
-  if (!nbands_ || !freq_ || !gain_)
+
+  if (nbands_ == 0)
+    return true;
+
+  if (!freq_ || !gain_)
     return false;
 
-  nbands = nbands_;
-  freq = new int[nbands];
-  gain = new double[nbands];
+  freq = new int[nbands_];
+  gain = new double[nbands_];
   if (!freq && !gain)
   {
     reset();
     return false;
   }
 
-  for (i = 0; i < nbands; i++)
-    freq[i] = freq_[i], gain[i] = gain_[i];
+  nbands = 0;
+  for (i = 0; i < nbands_; i++)
+    if (freq_[i] > 0)
+    {
+      freq[nbands] = freq_[i];
+      gain[nbands] = gain_[i];
+      nbands++;
+    }
 
   // simple bubble sort
-  bool sorted = false;
-  while (!sorted)
+  if (nbands > 1)
   {
-    sorted = true;
-    for (i = 0; i < nbands-1; i++)
-      if (freq[i] > freq[i+1])
-      {
-        int f = freq[i];
-        freq[i] = freq[i+1];
-        freq[i+1] = f;
-        double g = gain[i];
-        gain[i] = gain[i+1];
-        gain[i+1] = f;
-        sorted = false;
-      }
+    bool sorted = false;
+    while (!sorted)
+    {
+      sorted = true;
+      for (i = 0; i < nbands-1; i++)
+        if (freq[i] > freq[i+1])
+        {
+          int f = freq[i];
+          freq[i] = freq[i+1];
+          freq[i+1] = f;
+          double g = gain[i];
+          gain[i] = gain[i+1];
+          gain[i+1] = f;
+          sorted = false;
+        }
+    }
   }
 
   ver++;
@@ -71,7 +83,7 @@ EqFIR::get_bands(int *freq_, double *gain_) const
 {
   size_t i;
   if (freq_) for (i = 0; i < nbands; i++) freq_[i] = freq[i];
-  if (gain_) for (i = 0; i < nbands; i++) freq_[i] = freq[i];
+  if (gain_) for (i = 0; i < nbands; i++) gain_[i] = gain[i];
 }
 
 void

@@ -93,10 +93,12 @@ AudioProcessor::rebuild_chain()
   if (out_spk.nch() < in_spk.nch())
   {
     FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
+    FILTER_SAFE(chain.add_back(&equalizer, "Equalizer"));
     FILTER_SAFE(chain.add_back(&resample,  "SRC"));
   }
   else
   {
+    FILTER_SAFE(chain.add_back(&equalizer, "Equalizer"));
     FILTER_SAFE(chain.add_back(&resample,  "SRC"));
     FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
   }

@@ -30,7 +30,7 @@ public:
   // Equalizer interface
 
   size_t get_nbands() const { return eq.get_nbands(); };
-  bool set_bands(size_t nbands, int *freq, double *gain) { return eq.set_bands(nbands, freq, gain); }
+  bool set_bands(size_t nbands, const int *freq, const double *gain) { return eq.set_bands(nbands, freq, gain); }
   void get_bands(int *freq, double *gain) const { eq.get_bands(freq, gain); }
   void reset_eq() { eq.reset(); }
 
