@@ -210,10 +210,37 @@ Convolver::get_chunk(Chunk *chunk)
   size_t s;
 
   /////////////////////////////////////////////////////////
-  // Reinit in case of trivial filtering
+  // Rebuild the filter if nessesary
+  // In case of trivial filtering only init() will be called
 
-  if (state != state_filter && ver != gen.version())
+  if (ver != gen.version())
+  {
+    if (post_samples > 0)
+    {
+      /////////////////////////////////////////////////////
+      // Flush buffered data
+
+      for (ch = 0; ch < spk.nch(); ch++)
+        memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
+      post_samples -= (n - pos);
+
+      process_block();
+      chunk->set_linear(spk, out, pos + c);
+      if (post_samples <= 0)
+        chunk->set_eos();
+
+      if (pre_samples)
+      {
+        chunk->samples += pre_samples;
+        chunk->size -= pre_samples;
+        pre_samples = 0;
+      }
+
+      return true;
+    }
+
     init();
+  }
 
   /////////////////////////////////////////////////////////
   // Do trivial filtering inplace
@@ -241,36 +268,6 @@ Convolver::get_chunk(Chunk *chunk)
 
   /////////////////////////////////////////////////////////
   // Filter
-
-  if (ver != gen.version())
-  {
-    ///////////////////////////////////////////////////////
-    // Need to regenerate the impulse response
-    // Flush buffered data and regenerate
-
-    if (post_samples > 0)
-    {
-      for (ch = 0; ch < spk.nch(); ch++)
-        memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
-      post_samples -= (n - pos);
-
-      process_block();
-      chunk->set_linear(spk, out, pos + c);
-      if (post_samples <= 0)
-        chunk->set_eos();
-
-      if (pre_samples)
-      {
-        chunk->samples += pre_samples;
-        chunk->size -= pre_samples;
-        pre_samples = 0;
-      }
-
-      return true;
-    }
-
-    init();
-  }
 
   if (size)
   {
