@@ -80,11 +80,11 @@ public:
 // Helper class that holds sync information and makes correct timestamps for
 // output chunks.
 //
-// receive_chunk(Chunk *chunk, int pos)
+// receive_sync(Chunk *chunk, int pos)
 //   Receive sync info from the input chunk.
 //   This syncpoint will be applied to the buffer position pos.
 //
-// send_chunk(Chunk *chunk)
+// send_frame_sync(Chunk *chunk)
 //   Timestamp the output chunk if nessesary.
 //   Chunk will be stamped with the first timestamp in the queue.
 //   This is applicable when chunks are frames of compressed data and we must
@@ -104,7 +104,7 @@ public:
 //   t1    no time     t2       t3
 //
 //
-// send_chunk(Chunk *chunk, double size_to_time)
+// send_sync(Chunk *chunk, double size_to_time)
 //   Timestamp the output chunk if nessesary.
 //   Chunk will be stamped with the first timestamp in the queue, shifted by
 //   the amount of data between the timestamp received and the chunk's start.
@@ -143,7 +143,7 @@ public:
   { reset(); }
 
   inline void receive_sync(const Chunk *chunk, int pos);
-  inline void send_sync(Chunk *chunk);
+  inline void send_frame_sync(Chunk *chunk);
   inline void send_sync(Chunk *chunk, double size_to_time);
   inline void drop(int size);
   inline void reset();
@@ -184,7 +184,7 @@ SyncHelper::receive_sync(const Chunk *chunk, int _pos)
 }
 
 inline void
-SyncHelper::send_sync(Chunk *chunk)
+SyncHelper::send_frame_sync(Chunk *chunk)
 {
   if (pos[0] <= 0)
   {

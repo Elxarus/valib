@@ -8,27 +8,11 @@
 
 #include "../filter.h"
 #include "../parser.h"
+#include "../sync.h"
 
 class ParserFilter : public NullFilter
 {
 protected:
-  class SyncHelper
-  {
-  protected:
-    bool    sync[2]; // timestamp exists
-    vtime_t time[2]; // timestamp
-    int     pos[2];  // buffer position for timestamp
-
-  public:
-    SyncHelper();
-
-    inline void receive_sync(bool _sync, vtime_t _time, int _pos);
-    inline void receive_sync(const Chunk *chunk, int _pos);
-    inline void send_sync(Chunk *_chunk);
-    inline void drop(int _size);
-    inline void reset();
-  };
-
   enum state_t 
   {
     state_trans,

@@ -229,7 +229,7 @@ ParserFilter::process(const Chunk *_chunk)
 
   // receive the chunk
   FILTER_SAFE(receive_chunk(_chunk));
-  sync_helper.receive_sync(sync, time, stream.get_buffer_size());
+  sync_helper.receive_sync(_chunk, stream.get_buffer_size());
   sync = false;
 
   switch (state)
@@ -402,7 +402,7 @@ ParserFilter::send_frame(Chunk *_chunk)
   else
     _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
 
-  sync_helper.send_sync(_chunk);
+  sync_helper.send_frame_sync(_chunk);
 }
 
 void
@@ -413,85 +413,4 @@ ParserFilter::send_eos(Chunk *_chunk)
 
   // reset syncronization after the end of the stream
   sync_helper.reset(); 
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// SyncHelper
-///////////////////////////////////////////////////////////////////////////////
-
-ParserFilter::SyncHelper::SyncHelper()
-{
-  reset();
-}
-
-inline void
-ParserFilter::SyncHelper::receive_sync(bool _sync, vtime_t _time, int _pos)
-{
-  if (_sync)
-  {
-    if (sync[0] && pos[0] != _pos)
-    {
-      assert(pos[0] < _pos);
-      sync[1] = true;
-      time[1] = _time;
-      pos[1]  = _pos;
-    }
-    else
-    {
-      sync[0] = true;
-      time[0] = _time;
-      pos[0]  = _pos;
-    }
-  }
-}
-inline void
-ParserFilter::SyncHelper::receive_sync(const Chunk *chunk, int _pos)
-{
-  receive_sync(chunk->sync, chunk->time, _pos);
-}
-
-inline void
-ParserFilter::SyncHelper::send_sync(Chunk *_chunk)
-{
-  if (pos[0] <= 0)
-  {
-    _chunk->sync = sync[0];
-    _chunk->time = time[0];
-    sync[0] = sync[1];
-    time[0] = time[1];
-    sync[1] = false;
-    time[1] = 0;
-  }
-}
-
-inline void
-ParserFilter::SyncHelper::drop(int _size)
-{
-  if (sync[0])
-    pos[0] -= _size;
-
-  if (sync[1])
-  {
-    pos[1] -= _size;
-    if (pos[1] <= 0)
-    {
-      sync[0] = sync[1];
-      time[0] = time[1];
-      pos[0]  = pos[1];
-      sync[1] = false;
-      time[1] = 0;
-      pos[1]  = 0;
-    }
-  }
-}
-
-inline void
-ParserFilter::SyncHelper::reset()
-{
-  sync[0] = false;
-  time[0] = 0;
-  pos[0]  = 0;
-  sync[1] = false;
-  time[1] = 0;
-  pos[1]  = 0;
 }
