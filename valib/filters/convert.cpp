@@ -16,6 +16,9 @@ static inline void restore_rounding(int) {}
 
 static inline int set_rounding()
 {
+  // Set FPU rounding mode to the round to the nearest integer mode
+  // Returns unchanged FPU control word to restore later
+
   uint16_t x87_ctrl;
   __asm fnstcw [x87_ctrl];
 
@@ -27,13 +30,14 @@ static inline int set_rounding()
 
 static inline void restore_rounding(int r)
 {
+  // Restores old FPU control word
+
   uint16_t x87_ctrl = r;
   __asm fldcw [x87_ctrl];
 }
 
 inline int32_t s2i32(sample_t s)
 {
-  // FPU rounding mode?
   register int32_t i;
   __asm fld [s]
   __asm fistp [i]
@@ -41,7 +45,6 @@ inline int32_t s2i32(sample_t s)
 }
 inline int24_t s2i24(sample_t s)
 {
-  // FPU rounding mode?
   register int32_t i;
   __asm fld [s]
   __asm fistp [i]
@@ -49,7 +52,6 @@ inline int24_t s2i24(sample_t s)
 }
 inline int16_t s2i16(sample_t s)
 {
-  // FPU rounding mode?
   register int16_t i;
   __asm fld [s]
   __asm fistp [i]
