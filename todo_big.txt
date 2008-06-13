@@ -4,48 +4,26 @@
 First order
 ===========
 
-* Write Parser-to-Filter wrapper class, use it instead of AudioDecoder in 
-  DVDDecoder. Remove AudioDecoder class.
 * Inherit FileParser class from Source class.
 * Check Sync class timing
-* Add def_spk and err_spk global constants
 * CPUMeter may not work in some cases??? See message from SBN 02.04.2004
-* New: Despdifer to demux input SPDIFed stream.
-?* Rewrite AudioDecoder & DVDDecoder classes to reorganide decoding process.
-  AudioDecoder should understand PCM/PES/SPDIF/MPA/AC3/DTS/[other formats].
-  It also should show internal format for containter streams. It should have
-  an option to scan PCM input for SPDIF stream that it can possibly contain
-  (required to directly play WAV/DTS and WAV/AC3 files prepared for DTS(AC3)/CD.
-  DVDDecoder should support SPDIF output, SPDIF passthrough, and decode modes.
-* Spdifer test: add more ac3, mpa and dts streams
 * clev, slev, lfelev mixing coefs locking
-* expand parsers format report
 * ac3 encoder test: what is 'strange sample'?
-* Tests with negative results as normal result (crash tests for example)
 * ac3dec: add SPDIF output
 * AudioDecoder SPDIF test: add MPA, DTS, PES/AC3, PES/MPA, PES/DTS
 * New: out-of-bounds test for filters (update PCM passthrough test)
-* Test suite: add logging to file
 * New: Test: correct filter timstamp passthrough
-* Find classes to make tests for
 
 Tests
 =====
 * New: MPAParser test
 * New: FileParser test
-* MPEGDemux test: add MPEG1 stream test
-* MPEGDemux test: add DTS-PES test
 
 Think about
 ===========
 * think about: cross-platform time measurement (look for liba52 for reference)
 * think about: plugin interface
   (main problem is how to set external filter's parameters and UI)
-* think about: universal parameter interface
-* think about: how to make customizable user interface
-* think about: how to use the library in other projects 
-  (include directories, required files)
-* think about: what to do with A52Parser class
 * think about: optimal dynamic range compressor based on gathered statistics
   (after Loudness histogram filter)
 
@@ -64,64 +42,6 @@ Other
 * Rename a52dec project and think about to make performance tests
 ?* Add filter counterpart for parser classes?
 
-Done
-====
--* Inherit Parser class from Filter class.
-  [Parser is not a filter, it requires an external control]
-+* New: valdec - Valex Audio Library based DECoder (AC3Player descendant)
-+* Create script to compile and perform testing
-+* timing: time type
-+* timing: what to do with AudioSink timing functions?
-  [changed to time_t]
-+* DTS support with use of dtslib
-+* AC3 encoder: remove old encoder from parsers\ac3 and replace with new one
-+* BUG: disabling auto matrix does not work
-+* BUG: reorder works incorrectly
-+* ac3enc: write encoder app
-+* ac3 encoder test: multichannel test
-+* add PCM Float little-endian format
-+* Rename little-endian formats to PCM16LE (for example)
-+* AC3 encoder: move tests from ac3enc project to test project
-?* Demux test: update
-+* New: PCM passthrough test (test for Convertor, Mixer, AGC)
-+* PESDemux test: add LPCM test
-+* New: Test: filter should process empty chunks without errors
-+* New: Test: filter should return empty chunk filter is empty
-+* Place main test scripts (which test several files) to main test file
-+* New: AudioDecoder SPDIF test
-+* BUG: incorrect LFE mixing
-+* LFE mixing???
-+* Remove SPDIF support from AudioDecoder, and use Spdifer in DVDDecoder
-+* PCM passthrough test: 32-bit noise passthrough failed
-+* Filters test: AudioDecoder test failed
-+* PCM passthrough test: Multichannel PCM passthrough test failed
-
-
--------------------------------
-./ac3enc
--------------------------------
-* Bit counting using BA_BitCount is something bad
-* Multichannel test
-
-+* Samples test (old one is commented now)
-+* Convert AC3Enc to Filter
--* Add SPDIF output support
-
-
--------------------------------
-./valdec
--------------------------------
-* BUG: RAW output loses end of audio stream
-* CPU display in playback mode sometimes works incorrectly (at my work computer)
-* Usage: describe spkeaker modes, format, etc
-* test every option
-* Decoder info
-* Option to get mixlevels from bitstream
-+* histogram reporting
-+* Add: delay filter
-+* bitstream info
-+* BUG: -spk option does not work with RAW output
-
 
 -------------------------------
 ./valib
@@ -129,11 +49,9 @@ Done
 First order
 ===========
 
-?* timing: time conversion functions (time2ms, ms2time, ...)
 * SampleBuf: make version without channels?
   (for more optimal buffer usage, see Delay and AGC filters for example)
 * MPEGDemux: check marker bits
-* MPEGDemux: avoid code doubling for packet and streaming operations
 * Speakers: level: is it a part of speakers configuration? 
            :level may be part of Chunk()
            :do we need compare levels at Speakers::operator == (and !=)?
@@ -144,64 +62,27 @@ First order
   [Source::get_output() may return error but filter can still proceed
    see AudioDecoder class as an example]
   current settings (required for FilterChain filter to validate its state)
-* Filter: add push() call: process entire chunk to given sink
-* Filter: add pull() call: receive data from given source
-* Filter: add process_all(): to process entire data from given input to given 
   sink
-* Spdifer: sync only on format specified at input. Autodetect format only
-           if FORMAT_UNKNOWN is specified.
 
 Other
 =====
-* Parser: scan data block for sync?
 * WriteBS: review class
 * DRC should work on source channels, but we cannot simply place 
   AGC before Mixer and it is a problem.
-* Overall DRC should look like 
+  Overall DRC should look like 
   out = gain + k * level (logarithmic scale)
   But now gain is done in Mixer (before DRC):
   out = k * (level + gain)
   So DRC level shows something dependent on gain 
 
 
-Done
-====
-+* optimize: AC3Enc: do not run bit allocation for reused exponents
-+* Main filter chain should not care about channel ordering and everything
-  should be done in 'standard' channel order. It is responsibility for
-  data source/data output filters to convert channel order to comply
-  external requirements. So Reorder class should not be a Filter class
-  but helper class to help data source/data output filters to reoder
-  channels at output/input.
-  [reorder is now samples_t member function]
-  
-+* Optimize: move master gain from AGC to Mixer class
-  (AGC will not require scaling when not active)
-+* ReadBS: support for different bitstream types (byte, 16bit LE, 16bit BE, etc)
-+* Chunk: drop() call to drop N samples from chunk buffer and update time stamp
-+* New:Put bitstream class
--* Speakers: add byteorder
-   [byteorder is now handled on spk.format and bitstream level]
-+* Add GAIN_THRESHOLD constant to compare gains
-+* GAIN_CMP macro to compare two gains
-+* AudioDecoder does not support bitstream formats for SPDIF formatting
-+* Filter: method to obtain output filter format for given input format and
-+* AudioRenderer: rewivew timing (for all sinks)
-+* AudioRenderer: make it Sink descendant?
-+* Filter: add method to flush internal buffers. flush() call to flush 
-  internal buffers + is_flushed() call to know if filter requires flushing.
-+* AudioRenderer: add flush() call - play till buffer ends
-
-
 -------------------------------
 ./valib/filters
 -------------------------------
-* Spdifer: timing!
+* ParserFilter: timing!
 
-* FilterChain: do not process empty intermediate chunks
 * FormatConverter: pcm to pcm
 * FormatConverter: review timing
-* FormatConverter: dithering option
 
 * Delay: use cyclic buffer? (less memmove() calls)
 * Delay: optimize buffer usage (channels have different delays!)
@@ -213,73 +94,26 @@ Done
 * AGC: limiter level
 * AGC: per-channel limiter (see ac3filter support page)
 * AGC: per-channel DRC 
-* AGC: remove 'master' gain (it is gain control filter, not an amplifier)
-       moreover 'master' gain consumes CPU power...
 
 * Mixer: throw out null columns
 * Mixer: zero null output channels instead of matrixing
 * Mixer: do not touch pass-through channels
 * Mixer: multiply by factor if it is one output channel for one input channel
          (instead of matrixing)
-?* Mixer: make it NullFilter descendant?
 ?* Mixer: do not use Speakers to specify input/output modes;
    use mask and level instead. (avoid ambiguity about format and sample rate)
 
-* New: Simple gain filter
-* New: Simple parametric filters (low-pass, high-pass, etc)
 * New: Matrix convolution filter
--* New: Universal parser filter (DVD parser filter)
 * New: Winamp DSP filters host (far future)
 * New: VST filters host (far future)
 
 
-Done
-====
-+* DVDDecoder: add AC3 encode for spdif output
-+* get_/set_buffer() calls for all filters that use buffering
-+* Check all filters process() to work with empty chunks (make test)
-+* Check all filters do not return error when filter is empty and 
-  get_chunk() called (make test)
-+* Remove AudioDecoder from AudioProcessor
-+* FormatConverter: support for byte-reversed formats
-+* FormatConverter: support for half-sample input
-+* FormatConverter: pcm to linear
-+* FormatConverter: rounding instead of ceiling on linear2pcm()
-+* FormatConverter: accelerate linear to pcm conversion
-+* Delay: make it Filter
-+* Delay: units conversions.
-+* Delay: get_/set_units() calls to convert currently using unints
-+* AudioDecoder: modify timing so timestamp is applied to beginning of first
-  new audio frame in chunk
-+* AudioDecoder: get_output() sould return correct format for LPCM stream
-+* AudioDecoder: SPDIF output support
-+* AudioDecoder: set_input() should set 'mode' state
-+* AGC: review timing!
-+* AGC: do not return null samples after reset()
-+* AGC: make it NullFilter descendant?
-+* AGC: BUG: DRC works incorrectly
-+* AGC: BUG: PCM passthrough test fails
-+* AGC: BUG: levels are not in standard order
-+* AGC: BUG: levels are always reset
-+* AGC: BUG: click on overflow!
-+* AGC: use block switching mechanism only when needed (on gain change)
-+* Mixer: in-place mixing if out_nch <= in_nch
-+* Mixer: allocate mixing buffer only if needed
-+* Mixer: add buffer control (set_buffer() call)
--* Transform AudioProcessor & DVDDecoder to FilterChain descendant?
-+* Spdifer: rewrite load_frame() 
-  do not use 2 frame buffers, accurate bitstream conversion for odd frame sizes
-+* New: Bass redirection filter
-+* New: AC3Encoder filter
-+* New: filter that joins AudioDecoder & AudioProcessor [DVDDecoder]
-+* New: Spdifer class: convert stream to spdif format
-+* New: Levels filter
-+* New: Levels cache filter (to syncronize audio playback and levels reporting)
-+* New: Reorder filter (change channel order)
-+* New: AudioProcessor filter (format conversions, mixer, agc, etc...)
-+* New: Universal decoder filter (universal parser + post-processing)
-+* New: Loundness histogram filter
-+* New: Dejitter filter (track time changes, correct and generate timestamps)
+-------------------------------
+./valib/fir
+-------------------------------
+* File FIR
+* Pink FIR
+* FIR resampling
 
 
 -------------------------------
@@ -292,7 +126,7 @@ Done
   drc - turn DRC on/off
   drc_heavy - turn heavy DRC compression on/off
   crc - use CRC flag
-* AC3Parser: CRC check for big endian
+* AC3Parser: CRC check for low endian
 * AC3Parser: get rid of warnings in floor_tbl table
 * AC3Parser: add comments to tables, review tables
 * AC3Parser: add block-level decoding support
@@ -309,12 +143,6 @@ Done
 * MPAParser: add free-format support
 * MPAParser: think about error-recovery strategy
 * MPAParser: think about performance
-* MPAParser: support for 8bit & 16bit stream types
-
-* DTSParser: it is 2 interpretaions about frame size for 14bit streams:
-  as frame size in bytes
-  as frame size * 14/16
-  And we should sync correctly in both cases...
 
 * FileParser: make it Source descendant?
 * FileParser: add timing (get_time() call?):
@@ -327,34 +155,23 @@ Done
 * New: AAC parser (far future)
 * New: OGG parser (far future)
 
-Done:
-=====
-+* AC3Parser: review frame loading 
-   (do not zero frame_size on reset and frame loading)
-+* AC3Parser: support for 8bit & 16bit stream types
-+* MPAParser: review frame loading
-+* FileParser: EOF is too early (before last read buffer decoded)
-
 
 -------------------------------
 ./valib/sink
 -------------------------------
 * AudioRenderer & flushing. Do we need to stop playback after receiving eos-chunk?
 * New: WaveOut sink
-* New: WAV file sink
 * New: DirectSound3D audio sink
-+* New: DirectShow sink
 
 
 -------------------------------
 ./valib/win32
 -------------------------------
-* New: Timer class (just measure system time)
 
 
 ----------------------------------------
-Total tasks: 214
-Done: 91
-Dubious: 6
-Declined: 5
-Comlete: 45%
+Total tasks: 79
+Done: 0
+Dubious: 2
+Declined: 0
+Comlete: 0%

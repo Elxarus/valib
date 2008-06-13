@@ -22,12 +22,6 @@
 * MPAParser: add free-format support
 * MPAParser: think about error-recovery strategy
 * MPAParser: think about performance
-* MPAParser: support for 8bit & 16bit stream types
-
-* DTSParser: it is 2 interpretaions about frame size for 14bit streams:
-  as frame size in bytes
-  as frame size * 14/16
-  And we should sync correctly in both cases...
 
 * FileParser: make it Source descendant?
 * FileParser: add timing (get_time() call?):
@@ -39,11 +33,3 @@
 * New: WAVFile class to work with WAV files
 * New: AAC parser (far future)
 * New: OGG parser (far future)
-
-Done:
-=====
-+* AC3Parser: review frame loading 
-   (do not zero frame_size on reset and frame loading)
-+* AC3Parser: support for 8bit & 16bit stream types
-+* MPAParser: review frame loading
-+* FileParser: EOF is too early (before last read buffer decoded)

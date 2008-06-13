@@ -1,8 +1,7 @@
-* Spdifer: timing!
+* ParserFilter: timing!
 
 * FormatConverter: pcm to pcm
 * FormatConverter: review timing
-* FormatConverter: dithering option
 
 * Delay: use cyclic buffer? (less memmove() calls)
 * Delay: optimize buffer usage (channels have different delays!)
@@ -23,62 +22,6 @@
 ?* Mixer: do not use Speakers to specify input/output modes;
    use mask and level instead. (avoid ambiguity about format and sample rate)
 
-* New: Simple gain filter
-* New: Simple parametric filters (low-pass, high-pass, etc)
 * New: Matrix convolution filter
--* New: Universal parser filter (DVD parser filter)
 * New: Winamp DSP filters host (far future)
 * New: VST filters host (far future)
-
-
-Done
-====
-+* DVDDecoder: add AC3 encode for spdif output
-+* get_/set_buffer() calls for all filters that use buffering
-+* Check all filters process() to work with empty chunks (make test)
-+* Check all filters do not return error when filter is empty and 
-  get_chunk() called (make test)
-+* Remove AudioDecoder from AudioProcessor
-+* FormatConverter: support for byte-reversed formats
-+* FormatConverter: support for half-sample input
-+* FormatConverter: pcm to linear
-+* FormatConverter: rounding instead of ceiling on linear2pcm()
-+* FormatConverter: accelerate linear to pcm conversion
-+* Delay: make it Filter
-+* Delay: units conversions.
-+* Delay: get_/set_units() calls to convert currently using unints
-+* AudioDecoder: modify timing so timestamp is applied to beginning of first
-  new audio frame in chunk
-+* AudioDecoder: get_output() sould return correct format for LPCM stream
-+* AudioDecoder: SPDIF output support
-+* AudioDecoder: set_input() should set 'mode' state
-+* AGC: review timing!
-+* AGC: do not return null samples after reset()
-+* AGC: make it NullFilter descendant?
-+* AGC: BUG: DRC works incorrectly
-+* AGC: BUG: PCM passthrough test fails
-+* AGC: BUG: levels are not in standard order
-+* AGC: BUG: levels are always reset
-+* AGC: BUG: click on overflow!
-+* AGC: use block switching mechanism only when needed (on gain change)
-+* Mixer: in-place mixing if out_nch <= in_nch
-+* Mixer: allocate mixing buffer only if needed
-+* Mixer: add buffer control (set_buffer() call)
--* Transform AudioProcessor & DVDDecoder to FilterChain descendant?
-+* Spdifer: rewrite load_frame() 
-  do not use 2 frame buffers, accurate bitstream conversion for odd frame sizes
-+* New: Bass redirection filter
-+* New: AC3Encoder filter
-+* New: filter that joins AudioDecoder & AudioProcessor [DVDDecoder]
-+* New: Spdifer class: convert stream to spdif format
-+* New: Levels filter
-+* New: Levels cache filter (to syncronize audio playback and levels reporting)
-+* New: Reorder filter (change channel order)
-+* New: AudioProcessor filter (format conversions, mixer, agc, etc...)
-+* New: Universal decoder filter (universal parser + post-processing)
-+* New: Loundness histogram filter
-+* New: Dejitter filter (track time changes, correct and generate timestamps)
--* FilterChain: do not process empty intermediate chunks
--* AGC: remove 'master' gain (it is gain control filter, not an amplifier)
-       moreover 'master' gain consumes CPU power...
-+* Mixer: make it NullFilter descendant?

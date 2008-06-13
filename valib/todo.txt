@@ -15,12 +15,9 @@ First order
    see AudioDecoder class as an example]
   current settings (required for FilterChain filter to validate its state)
   sink
-* Spdifer: sync only on format specified at input. Autodetect format only
-  if FORMAT_UNKNOWN is specified.
 
 Other
 =====
-* Parser: scan data block for sync?
 * WriteBS: review class
 * DRC should work on source channels, but we cannot simply place 
   AGC before Mixer and it is a problem.
@@ -29,37 +26,3 @@ Other
   But now gain is done in Mixer (before DRC):
   out = k * (level + gain)
   So DRC level shows something dependent on gain 
-
-
-Done
-====
-+* optimize: AC3Enc: do not run bit allocation for reused exponents
-+* Main filter chain should not care about channel ordering and everything
-  should be done in 'standard' channel order. It is responsibility for
-  data source/data output filters to convert channel order to comply
-  external requirements. So Reorder class should not be a Filter class
-  but helper class to help data source/data output filters to reoder
-  channels at output/input.
-  [reorder is now samples_t member function]
-  
-+* Optimize: move master gain from AGC to Mixer class
-  (AGC will not require scaling when not active)
-+* ReadBS: support for different bitstream types (byte, 16bit LE, 16bit BE, etc)
-+* Chunk: drop() call to drop N samples from chunk buffer and update time stamp
-+* New:Put bitstream class
--* Speakers: add byteorder
-   [byteorder is now handled on spk.format and bitstream level]
-+* Add GAIN_THRESHOLD constant to compare gains
-+* GAIN_CMP macro to compare two gains
-+* AudioDecoder does not support bitstream formats for SPDIF formatting
-+* Filter: method to obtain output filter format for given input format and
-+* AudioRenderer: rewivew timing (for all sinks)
-+* AudioRenderer: make it Sink descendant?
-+* Filter: add method to flush internal buffers. flush() call to flush 
-  internal buffers + is_flushed() call to know if filter requires flushing.
-+* AudioRenderer: add flush() call - play till buffer ends
-+* Filter: add push() call: process entire chunk to given sink
-+* Filter: add pull() call: receive data from given source
-+* Filter: add process_all(): to process entire data from given input to given 
-+* MPEGDemux: avoid code doubling for packet and streaming operations
--?* timing: time conversion functions (time2ms, ms2time, ...)
