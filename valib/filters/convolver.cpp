@@ -215,7 +215,7 @@ Convolver::get_chunk(Chunk *chunk)
 
   if (ver != gen.version())
   {
-    if (post_samples > 0)
+    if (state == state_filter && post_samples > 0)
     {
       /////////////////////////////////////////////////////
       // Flush buffered data
