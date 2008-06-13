@@ -176,7 +176,7 @@ Levels::on_reset()
 {
   sample = 0;
   memset(levels, 0, sizeof(sample_t) * NCHANNELS);
-  time = 0;
+  continuous_time = 0;
 
   cache.reset();
   hist.reset();
@@ -186,6 +186,9 @@ bool
 Levels::on_process()
 {
   size_t n = size;
+
+  if (sync)
+    continuous_time = time;
 
   /////////////////////////////////////////////////////////
   // Find peak-levels
@@ -203,7 +206,6 @@ Levels::on_process()
     size_t block_size = MIN(n, nsamples - sample);
     n -= block_size;
     sample += block_size;
-    time += vtime_t(block_size) / spk.sample_rate;
 
     for (int ch = 0; ch < nch; ch++)
     {
@@ -236,10 +238,12 @@ Levels::on_process()
 
     if (sample >= nsamples)
     {
-      add_levels(time, levels);
+      add_levels(continuous_time, levels);
       memset(levels, 0, sizeof(sample_t) * NCHANNELS);
       sample = 0;
     }
+
+    continuous_time += vtime_t(block_size) / spk.sample_rate;
   }
 
   return true;

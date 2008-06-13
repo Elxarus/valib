@@ -94,6 +94,7 @@ protected:
 
   size_t nsamples; // number of samples per measure block
   size_t sample;   // current sample
+  vtime_t continuous_time; // we need continuous time counter
  
   /////////////////////////////////////////////////////////
   // NullFilter overrides
