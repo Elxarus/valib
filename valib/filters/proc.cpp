@@ -80,7 +80,7 @@ AudioProcessor::dithering_level() const
 {
   if (equalizer.get_enabled() || in_spk.sample_rate != user_spk.sample_rate)
     if (out_spk.level > 128)
-      return 1.0 / out_spk.level;
+      return 0.5 / out_spk.level;
 
   return 0.0;
 }
