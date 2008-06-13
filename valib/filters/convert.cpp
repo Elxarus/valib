@@ -1,19 +1,35 @@
 #include <math.h>
 #include "convert.h"
 
-// Problems with different rounding modes are possible, 
-// so always check PCM passthrough test!
-
 // todo: PCM-to-PCM conversions
-
 
 #if defined(_DEBUG)
 
-#define s2i32(s) ((int32_t)s)
-#define s2i24(s) ((int24_t)(int32_t)s)
-#define s2i16(s) ((int16_t)s)
+static inline int set_rounding() { return 0; }
+static inline void restore_rounding(int) {}
+
+#define s2i32(s) ((int32_t)floor((s)+0.5))
+#define s2i24(s) ((int24_t)(int32_t)floor((s)+0.5))
+#define s2i16(s) ((int16_t)floor((s)+0.5))
 
 #elif defined(_M_IX86)
+
+static inline int set_rounding()
+{
+  uint16_t x87_ctrl;
+  __asm fnstcw [x87_ctrl];
+
+  uint16_t new_ctrl = x87_ctrl & 0xf3ff;
+  __asm fldcw [new_ctrl];
+
+  return x87_ctrl;
+}
+
+static inline void restore_rounding(int r)
+{
+  uint16_t x87_ctrl = r;
+  __asm fldcw [x87_ctrl];
+}
 
 inline int32_t s2i32(sample_t s)
 {
@@ -42,9 +58,12 @@ inline int16_t s2i16(sample_t s)
 
 #else
 
-inline int32_t s2i32(sample_t s) { return (int32_t)s; }
-inline int32_t s2i24(sample_t s) { return (int24_t)(int32_t)s; }
-inline int16_t s2i16(sample_t s) { return (int16_t)s; }
+static inline int set_rounding() { return 0; }
+static inline int restore_rounding(int) {}
+
+inline int32_t s2i32(sample_t s) { return (int32_t)floor(s+0.5); }
+inline int32_t s2i24(sample_t s) { return (int24_t)(int32_t)floor(s+0.5); }
+inline int16_t s2i16(sample_t s) { return (int16_t)floor(s+0.5); }
 
 #endif
 
@@ -301,7 +320,9 @@ Converter::get_chunk(Chunk *_chunk)
   if (convert == 0)
     return false;
 
+  int r = set_rounding();
   (this->*convert)();
+  restore_rounding(r);
 
   _chunk->set
   (
