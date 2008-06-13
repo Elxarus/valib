@@ -82,6 +82,7 @@
 #include "bass_redir.h"
 #include "agc.h"
 #include "delay.h"
+#include "dither.h"
 #include "convert.h"
 
 
@@ -98,6 +99,7 @@ protected:
   Mixer      mixer;
   Resample   resample;
   Equalizer  equalizer;
+  Dither     dither;
   BassRedir  bass_redir;
   AGC        agc;
   Delay      delay;
@@ -106,6 +108,7 @@ protected:
 
   FilterChain chain;
   bool rebuild_chain();
+  double dithering_level() const;
 
 public:
   AudioProcessor(size_t nsamples);
@@ -495,7 +498,10 @@ AudioProcessor::set_output_gains(sample_t _output_gains[NCHANNELS])
 
 inline void     
 AudioProcessor::set_eq(bool eq)
-{ equalizer.set_enabled(eq); }
+{
+  equalizer.set_enabled(eq);
+  dither.level = dithering_level();
+}
 
 inline void     
 AudioProcessor::set_eq_bands(size_t nbands, const int *freq, const double *gain)

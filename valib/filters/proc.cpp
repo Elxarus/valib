@@ -75,6 +75,16 @@ AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
   return result;
 }
 
+double
+AudioProcessor::dithering_level() const
+{
+  if (equalizer.get_enabled() || in_spk.sample_rate != user_spk.sample_rate)
+    if (out_spk.level > 128)
+      return 1.0 / out_spk.level;
+
+  return 0.0;
+}
+
 
 bool 
 AudioProcessor::rebuild_chain()
@@ -103,6 +113,7 @@ AudioProcessor::rebuild_chain()
     FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
   }
   FILTER_SAFE(chain.add_back(&bass_redir,"Bass redirection"));
+  FILTER_SAFE(chain.add_back(&dither,    "Dither"));
   FILTER_SAFE(chain.add_back(&agc,       "AGC"));
   FILTER_SAFE(chain.add_back(&delay,     "Delay"));
   FILTER_SAFE(chain.add_back(&out_levels,"Output levels"));
@@ -127,6 +138,8 @@ AudioProcessor::rebuild_chain()
     FILTER_SAFE(chain.add_back(&out_conv, "Linear->PCM converter"));
     FILTER_SAFE(out_conv.set_format(out_spk.format));
   }
+
+  dither.level = dithering_level();
 
   FILTER_SAFE(chain.set_input(in_spk));
   return true;

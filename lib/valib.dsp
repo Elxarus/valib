@@ -376,6 +376,14 @@ SOURCE=..\valib\filters\detector.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\dither.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\dither.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\dvd_graph.cpp
 # End Source File
 # Begin Source File
