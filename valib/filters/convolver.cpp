@@ -179,17 +179,12 @@ Convolver::process_block()
     memcpy(delay[ch], buf[ch] + n, n * sizeof(sample_t));
 }
 
-bool
-Convolver::set_input(Speakers spk_)
-{
-  FILTER_SAFE(NullFilter::set_input(spk_));
-  return init();
-}
-
 void
 Convolver::reset()
 {
   NullFilter::reset();
+
+  sync_helper.reset();
 
   if (ver != gen.version())
     init();
@@ -201,6 +196,21 @@ Convolver::reset()
     post_samples = n - c;
     memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
   }
+}
+
+bool
+Convolver::set_input(Speakers spk)
+{
+  FILTER_SAFE(NullFilter::set_input(spk));
+  return init();
+}
+
+bool
+Convolver::process(const Chunk *chunk)
+{
+  FILTER_SAFE(NullFilter::process(chunk));
+  sync_helper.receive_sync(chunk, pos);
+  return true;
 }
 
 bool
@@ -226,8 +236,6 @@ Convolver::get_chunk(Chunk *chunk)
 
       process_block();
       chunk->set_linear(spk, out, pos + c);
-      if (post_samples <= 0)
-        chunk->set_eos();
 
       if (pre_samples)
       {
@@ -235,6 +243,13 @@ Convolver::get_chunk(Chunk *chunk)
         chunk->size -= pre_samples;
         pre_samples = 0;
       }
+
+      sync_helper.send_sync(chunk, 1.0 / spk.sample_rate);
+      sync_helper.drop(chunk->size);
+      sync = false;
+
+      if (post_samples <= 0)
+        chunk->set_eos();
 
       return true;
     }
@@ -292,13 +307,16 @@ Convolver::get_chunk(Chunk *chunk)
 
     process_block();
     chunk->set_linear(spk, out, n);
-
     if (pre_samples)
     {
       chunk->samples += pre_samples;
       chunk->size -= pre_samples;
       pre_samples = 0;
     }
+    sync_helper.send_sync(chunk, 1.0 / spk.sample_rate);
+    sync_helper.drop(chunk->size);
+    sync = false;
+
     return true;
   }
   else if (flushing)
@@ -314,13 +332,15 @@ Convolver::get_chunk(Chunk *chunk)
 
       process_block();
       chunk->set_linear(spk, out, pos + c);
-
       if (pre_samples)
       {
         chunk->samples += pre_samples;
         chunk->size -= pre_samples;
         pre_samples = 0;
       }
+      sync_helper.send_sync(chunk, 1.0 / spk.sample_rate);
+      sync_helper.drop(chunk->size);
+      sync = false;
 
       return true;
     }

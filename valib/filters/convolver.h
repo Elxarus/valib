@@ -4,6 +4,7 @@
 #include <math.h>
 #include "../filter.h"
 #include "../fir.h"
+#include "../sync.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Convolver class
@@ -16,6 +17,7 @@ protected:
   int ver;
   FIRRef gen;
   const FIRInstance *fir;
+  SyncHelper sync_helper;
 
   int       n, c;
   sample_t *filter;
@@ -50,9 +52,10 @@ public:
   /////////////////////////////////////////////////////////
   // Filter interface
 
-  bool set_input(Speakers _spk);
-  void reset();
-  bool get_chunk(Chunk *chunk);
+  virtual void reset();
+  virtual bool set_input(Speakers spk);
+  virtual bool process(const Chunk *chunk);
+  virtual bool get_chunk(Chunk *chunk);
 };
 
 #endif
