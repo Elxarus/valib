@@ -44,12 +44,12 @@ bool Spectrum::set_length(size_t length_)
     return init();
 }
 
-void Spectrum::get_spectrum(sample_t *data_)
+void Spectrum::get_spectrum(sample_t *data_, double *bin2hz)
 {
   if (!buf)
     return;
 
-  if (!converted)
+  if (data_ && !converted)
   {
     size_t i;
     for (i = 0; i < 2 * length; i++)
@@ -64,7 +64,16 @@ void Spectrum::get_spectrum(sample_t *data_)
     converted = true;
   }
 
-  memcpy(data_, spectrum, length * sizeof(sample_t));
+  if (data_)
+    memcpy(data_, spectrum, length * sizeof(sample_t));
+
+  if (bin2hz)
+  {
+    if (length && spk.sample_rate)
+      *bin2hz = double(spk.sample_rate) / double(2 * length);
+    else
+      *bin2hz = 0.0;
+  }
 }
 
 bool

@@ -35,7 +35,7 @@ public:
 
   size_t get_length() const;
   bool   set_length(size_t length);
-  void   get_spectrum(sample_t *data);
+  void   get_spectrum(sample_t *data, double *bin2hz);
 };
 
 #endif
