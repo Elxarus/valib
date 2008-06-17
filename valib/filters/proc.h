@@ -77,6 +77,7 @@
 #include "../filter_graph.h"
 #include "equalizer.h"
 #include "levels.h"
+#include "spectrum.h"
 #include "mixer.h"
 #include "resample.h"
 #include "bass_redir.h"
@@ -103,6 +104,7 @@ protected:
   BassRedir  bass_redir;
   AGC        agc;
   Delay      delay;
+  Spectrum   spectrum;
   Levels     out_levels;
   Converter  out_conv;
 
@@ -181,6 +183,9 @@ public:
   inline bool     get_eq();
   inline size_t   get_eq_nbands();
   inline void     get_eq_bands(int *freq, double *gain);
+  // Spectrum
+  inline size_t   get_spectrum_length();
+  inline void     get_spectrum(sample_t *spectrum);
   // Delay
   inline bool     get_delay();
   inline int      get_delay_units();
@@ -231,6 +236,8 @@ public:
   // Equalizer
   inline void     set_eq(bool eq);
   inline void     set_eq_bands(size_t nbands, const int *freq, const double *gain);
+  // Spectrum
+  inline void     set_spectrum_length(size_t length);
   // Delays
   inline void     set_delay(bool delay);
   inline void     set_delay_units(int delay_units);
@@ -355,6 +362,14 @@ AudioProcessor::get_eq_nbands()
 inline void
 AudioProcessor::get_eq_bands(int *freq, double *gain)
 { equalizer.get_bands(freq, gain); }
+
+inline size_t
+AudioProcessor::get_spectrum_length()
+{ return spectrum.get_length(); }
+
+inline void
+AudioProcessor::get_spectrum(sample_t *data)
+{ spectrum.get_spectrum(data); }
 
 inline bool     
 AudioProcessor::get_delay()
@@ -506,6 +521,10 @@ AudioProcessor::set_eq(bool eq)
 inline void     
 AudioProcessor::set_eq_bands(size_t nbands, const int *freq, const double *gain)
 { equalizer.set_bands(nbands, freq, gain); }
+
+inline void     
+AudioProcessor::set_spectrum_length(size_t length)
+{ spectrum.set_length(length); }
 
 inline void     
 AudioProcessor::set_delay(bool _delay)

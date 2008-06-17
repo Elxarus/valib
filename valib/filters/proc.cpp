@@ -116,6 +116,7 @@ AudioProcessor::rebuild_chain()
   FILTER_SAFE(chain.add_back(&dither,    "Dither"));
   FILTER_SAFE(chain.add_back(&agc,       "AGC"));
   FILTER_SAFE(chain.add_back(&delay,     "Delay"));
+  FILTER_SAFE(chain.add_back(&spectrum,  "Spectrum"));
   FILTER_SAFE(chain.add_back(&out_levels,"Output levels"));
 
   // setup mixer
