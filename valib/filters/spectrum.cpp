@@ -1,5 +1,5 @@
 #include <memory.h>
-#include "../dsp/fftsg_ld.h"
+#include "../dsp/fftsg.h"
 #include "../dsp/kaiser.h"
 #include "spectrum.h"
 

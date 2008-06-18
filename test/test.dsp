@@ -357,6 +357,14 @@ SOURCE=..\valib\filters\spdifer.cpp
 
 SOURCE=..\valib\filters\spdifer.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\spectrum.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\spectrum.h
+# End Source File
 # End Group
 # Begin Group "parsers"
 
@@ -767,11 +775,11 @@ SOURCE=..\valib\dsp\dbesi0.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\dsp\fftsg_ld.c
+SOURCE=..\valib\dsp\fftsg.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\dsp\fftsg_ld.h
+SOURCE=..\valib\dsp\fftsg.h
 # End Source File
 # Begin Source File
 

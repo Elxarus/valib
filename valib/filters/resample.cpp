@@ -1,7 +1,7 @@
 #include <string.h>
 #include "resample.h"
 #include "../dsp/kaiser.h"
-#include "../dsp/fftsg_ld.h"
+#include "../dsp/fftsg.h"
 
 static const double k_conv = 2;
 static const double k_fft = 20.1977305724455;

@@ -1,3 +1,8 @@
+/*
+  Bessel function code by Takuya OOURA
+  http://www.kurims.kyoto-u.ac.jp/~ooura/bessel.html
+*/
+
 /* Bessel I_0(x) function in double precision */
 
 #include <math.h>
@@ -136,3 +141,4 @@ double dbesi0(double x)
     }
     return y;
 }
+

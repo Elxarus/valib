@@ -772,11 +772,11 @@ SOURCE=..\valib\dsp\dbesi0.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\dsp\fftsg_ld.c
+SOURCE=..\valib\dsp\fftsg.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\dsp\fftsg_ld.h
+SOURCE=..\valib\dsp\fftsg.h
 # End Source File
 # Begin Source File
 

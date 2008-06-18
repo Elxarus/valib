@@ -1,5 +1,5 @@
-#ifndef FFTSG_LD_H
-#define FFTSG_LD_H
+#ifndef FFTSG_H
+#define FFTSG_H
 
 #include "../defs.h"
 
