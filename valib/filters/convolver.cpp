@@ -5,7 +5,7 @@
 //   for short filter lengths (up to ~1000)
 
 #include <string.h>
-#include "../dsp/fftsg_ld.h"
+#include "../dsp/fftsg.h"
 #include "convolver.h"
 
 inline unsigned int clp2(unsigned int x)
@@ -346,7 +346,7 @@ Convolver::get_chunk(Chunk *chunk)
       return true;
     }
 
-    chunk->set_dummy();
+    chunk->set_empty(spk);
     chunk->set_eos();
     reset();
     return true;
