@@ -111,11 +111,18 @@ EqFIR::make(int sample_rate) const
   double q = db2value(0.5) - 1;
 
   /////////////////////////////////////////////////////////
+  // Find the last meaningful band
+
+  size_t max_band = 0;
+  while (max_band < nbands && freq[max_band] <= sample_rate / 2)
+    max_band++;
+
+  /////////////////////////////////////////////////////////
   // Trivial cases
 
-  if (nbands == 0)
+  if (max_band == 0)
     return new IdentityFIRInstance(sample_rate);
-  else if (nbands == 1)
+  else if (max_band == 1)
     return new GainFIRInstance(sample_rate, gain[0]);
 
   /////////////////////////////////////////////////////////
@@ -124,7 +131,7 @@ EqFIR::make(int sample_rate) const
   int max_n = 1;
   int max_c = 0;
   double max_a = 0;
-  for (i = 0; i < nbands - 1; i++)
+  for (i = 0; i < max_band - 1; i++)
   {
     double dg = gain[i+1] - gain[i];
     if (fabs(dg) > 0)
@@ -149,8 +156,8 @@ EqFIR::make(int sample_rate) const
 
   for (j = 0; j < max_n; j++) data[j] = 0;
 
-  data[max_c] += gain[nbands-1];
-  for (i = 0; i < nbands - 1; i++)
+  data[max_c] += gain[max_band-1];
+  for (i = 0; i < max_band - 1; i++)
     if (gain[i] != gain[i+1])
     {
       double df = double(freq[i+1] - freq[i]) / sample_rate;
@@ -172,8 +179,8 @@ EqFIR::make(int sample_rate) const
 
   for (j = 0; j < max_n; j++) data[j] = 0;
 
-  data[max_c] += gain[nbands-1];
-  for (i = 0; i < nbands - 1; i++)
+  data[max_c] += gain[max_band-1];
+  for (i = 0; i < max_band - 1; i++)
     if (gain[i] != gain[i+1])
       for (int j = -max_c; j < max_c; j++)
         data[max_c + j] += (gain[i] - gain[i+1]) * lpf(j, double(freq[i+1] - freq[i]) / sample_rate);
