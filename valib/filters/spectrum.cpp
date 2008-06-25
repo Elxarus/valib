@@ -1,4 +1,4 @@
-#include <memory.h>
+#include <string.h>
 #include "../dsp/fftsg.h"
 #include "../dsp/kaiser.h"
 #include "spectrum.h"
@@ -52,14 +52,14 @@ void Spectrum::get_spectrum(sample_t *data_, double *bin2hz)
   if (data_ && !converted)
   {
     size_t i;
+    double norm = 1.0 / (spk.level * length);
     for (i = 0; i < 2 * length; i++)
-      spectrum[i] = spectrum[i] * win[i];
+      spectrum[i] = data[i] * win[i] * norm;
 
     rdft(length * 2, 1, spectrum, fft_ip, fft_w);
 
-    double norm = 1.0 / (spk.level * length);
     for (i = 0; i < length; i++)
-      spectrum[i] = sqrt(spectrum[i*2]*spectrum[i*2] + spectrum[i*2+1]*spectrum[i*2+1]) * norm;
+      spectrum[i] = sqrt(spectrum[i*2]*spectrum[i*2] + spectrum[i*2+1]*spectrum[i*2+1]);
 
     converted = true;
   }
@@ -136,29 +136,27 @@ Spectrum::on_process()
   if (!buf)
     return true;
 
-  size_t input_pos = 0;
-  while (input_pos < int(size))
+  if (size == 0)
+    return true;
+
+  if (size >= 2*length)
   {
-    size_t copy_size = 2*length - pos;
-    if (copy_size > size - input_pos)
-      copy_size = size - input_pos;
-
-    for (int ch = 0; ch < spk.nch(); ch++)
-      for (size_t s = 0; s < copy_size; s++)
-        data[pos + s] += samples[ch][input_pos + s];
-
-    pos += copy_size;
-    input_pos += copy_size;
-
-    if (pos == 2*length)
-    {
-      memcpy(spectrum, data, 2 * length * sizeof(sample_t));
-      memcpy(data, data + length, length * sizeof(sample_t));
-      memset(data + length, 0, length * sizeof(sample_t));
-      pos -= length;
-      converted = false;
-    }
+    size_t pos = size - 2 * length;
+    memcpy(data, samples[0] + pos, 2*length*sizeof(sample_t));
+    for (int ch = 1; ch < spk.nch(); ch++)
+      for (size_t s = 0; s < 2*length; s++)
+        data[s] += samples[ch][s + pos];
   }
+  else
+  {
+    size_t pos = 2 * length - size;
+    memmove(data, data + size, pos * sizeof(sample_t));
+    memcpy(data + pos, samples[0], size * sizeof(sample_t));
+    for (int ch = 1; ch < spk.nch(); ch++)
+      for (size_t s = pos; s < 2*length; s++)
+        data[s] += samples[ch][s - pos];
+  }
+  converted = false;
   return true;
 }
 
