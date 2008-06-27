@@ -79,7 +79,7 @@ Convolver::init()
   // Allocate buffers
 
   filter   = new sample_t[n * 2];
-  fft_ip   = new int[(int)(2 + sqrt(n * 2))];
+  fft_ip   = new int[(int)(2 + sqrt(double(n * 2)))];
   fft_w    = new sample_t[n];
   buf[0]   = new sample_t[n * 2 * nch];
   delay[0] = new sample_t[n * nch];

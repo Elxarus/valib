@@ -84,7 +84,7 @@ Spectrum::init()
   length = clp2(length);
   
   buf      = new sample_t[length * 6];
-  fft_ip   = new int[(int)(2 + sqrt(length * 2))];
+  fft_ip   = new int[(int)(2 + sqrt(double(length * 2)))];
   fft_w    = new sample_t[length];
 
   if (buf == 0 || fft_ip == 0 || fft_w == 0)

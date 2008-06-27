@@ -219,8 +219,8 @@ Resample::init_resample(int _nch, int _fs, int _fd)
   // so we should add it to the attenuation.
 
   double alpha;                     // alpha parameter for the kaiser window
-  double a1 = a + log10(m1)*20 + 6; // convolution stage attenuation
-  double a2 = a + log10(m2)*20 + 6; // fft stage attenuation
+  double a1 = a + log10(double(m1))*20 + 6; // convolution stage attenuation
+  double a2 = a + log10(double(m2))*20 + 6; // fft stage attenuation
 
   ///////////////////////////////////////////////////////////////////////////
   // Find filters' parameters: transition band width and cennter frequency
@@ -314,7 +314,7 @@ Resample::init_resample(int _nch, int _fs, int _fd)
     f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) * l2 / n2);
 
   // convert the filter to frequency domain and init fft for future use
-  fft_ip    = new int[(int)(2 + sqrt(n2b))];
+  fft_ip    = new int[(int)(2 + sqrt(double(n2b)))];
   fft_w     = new sample_t[n2b/2];
   fft_ip[0] = 0;
 
@@ -631,11 +631,11 @@ double t_upsample(int l1, int m1, int l2, int m2, double a, double q)
 {
   double phi = double(l1) / double(m1);
   double rate = double(l1 * l2) / double(m1 * m2);
-  double alpha_conv = (a + log10(m1)*20 + 6 - 7.95) / 14.36;
-  double alpha_fft  = (a + log10(m2)*20 + 6 - 7.95) / 14.36;
+  double alpha_conv = (a + log10(double(m1))*20 + 6 - 7.95) / 14.36;
+  double alpha_fft  = (a + log10(double(m2))*20 + 6 - 7.95) / 14.36;
 
   double t_conv = 2 * alpha_conv * k_conv / (phi - q);
-  double t_fft = k_fft * phi * l2 * log(2 * clp2(int(2 * alpha_fft * phi * l2 / (1 - q))));
+  double t_fft = k_fft * phi * l2 * log(double(2 * clp2(int(2 * alpha_fft * phi * l2 / (1 - q)))));
   return t_fft + t_conv;
 }
 
@@ -643,11 +643,11 @@ double t_downsample(int l1, int m1, int l2, int m2, double a, double q)
 {
   double phi = double(l1) / double(m1);
   double rate = double(l1 * l2) / double(m1 * m2);
-  double alpha_conv = (a + log10(m1)*20 + 6 - 7.95) / 14.36;
-  double alpha_fft  = (a + log10(m2)*20 + 6 - 7.95) / 14.36;
+  double alpha_conv = (a + log10(double(m1))*20 + 6 - 7.95) / 14.36;
+  double alpha_fft  = (a + log10(double(m2))*20 + 6 - 7.95) / 14.36;
 
   double t_conv = 2 * alpha_conv * k_conv / (phi - q * rate);
-  double t_fft = k_fft * phi * l2 * log(2 * clp2(int(2 * alpha_fft * phi * l2 / rate / (1 - q))));
+  double t_fft = k_fft * phi * l2 * log(double(2 * clp2(int(2 * alpha_fft * phi * l2 / rate / (1 - q)))));
   return t_fft + t_conv;
 }
 
