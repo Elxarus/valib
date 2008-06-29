@@ -12,6 +12,7 @@
 #ifndef VALIB_DITHER_H
 #define VALIB_DITHER_H
 
+#include <math.h>
 #include "../filter.h"
 #include "../rng.h"
 
