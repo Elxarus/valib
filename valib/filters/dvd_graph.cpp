@@ -20,6 +20,7 @@ DVDGraph::DVDGraph(int _nsamples, const Sink *_sink)
   spdif_allow_32 = false;
 
   spdif_status = SPDIF_MODE_NONE;
+  spdif_err = SPDIF_MODE_NONE;
 
   sink = _sink;
   query_sink = true;
@@ -344,7 +345,7 @@ DVDGraph::get_info(char *_buf, size_t _len) const
 
     if (spdif_status == SPDIF_MODE_DISABLED)
     {
-      switch (check_spdif_encode(proc.get_input()))
+      switch (spdif_err)
       {
         case SPDIF_ERR_STEREO_PCM:       pos += sprintf(buf + pos, "(Do not encode stereo PCM)\n"); break;
         case SPDIF_ERR_FORMAT:           pos += sprintf(buf + pos, "(Format is not allowed for passthrough)\n"); break;
@@ -353,7 +354,7 @@ DVDGraph::get_info(char *_buf, size_t _len) const
         case SPDIF_ERR_ENCODER_DISABLED: pos += sprintf(buf + pos, "(AC3 encoder disabled)\n"); break;
         case SPDIF_ERR_PROC:             pos += sprintf(buf + pos, "(Cannot determine format to encode)\n"); break;
         case SPDIF_ERR_ENCODER:          pos += sprintf(buf + pos, "(Encoder does not support the format given)\n"); break;
-        default:                         pos += sprintf(buf + pos, "(Unknown reason)\n"); break;
+        default:                         pos += sprintf(buf + pos, "\n"); break;
       }
     }
 
@@ -450,6 +451,7 @@ void
 DVDGraph::reset()
 {
   spdif_status = use_spdif? SPDIF_MODE_NONE: SPDIF_MODE_DISABLED;
+  spdif_err = use_spdif? SPDIF_MODE_NONE: SPDIF_MODE_DISABLED;
 
   demux.reset();
   detector.reset();
@@ -588,17 +590,21 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (despdifer.query_input(spk))
         return state_despdif;
 
-      if (check_spdif_passthrough(spk) == SPDIF_MODE_PASSTHROUGH)
+      spdif_err = check_spdif_passthrough(spk);
+      if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
       if (dec.query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
-        if (check_spdif_encode(spk) == SPDIF_MODE_ENCODE)
+      {
+        spdif_err = check_spdif_encode(spk);
+        if (spdif_err == SPDIF_MODE_ENCODE)
           return state_proc_enc;
         else
           return state_proc;
+      }
 
       return node_err;
 
@@ -613,17 +619,21 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (despdifer.query_input(spk))
         return state_despdif;
 
-      if (check_spdif_passthrough(spk) == SPDIF_MODE_PASSTHROUGH)
+      spdif_err = check_spdif_passthrough(spk);
+      if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
       if (dec.query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
-        if (check_spdif_encode(spk) == SPDIF_MODE_ENCODE)
+      {
+        spdif_err = check_spdif_encode(spk);
+        if (spdif_err == SPDIF_MODE_ENCODE)
           return state_proc_enc;
         else
           return state_proc;
+      }
 
       return node_err;
 
@@ -632,7 +642,8 @@ DVDGraph::get_next(int node, Speakers spk) const
     // state_despdif -> state_decode
 
     case state_despdif:
-      if (check_spdif_passthrough(spk) == SPDIF_MODE_PASSTHROUGH)
+      spdif_err = check_spdif_passthrough(spk);
+      if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
       if (dec.query_input(spk))
@@ -647,17 +658,21 @@ DVDGraph::get_next(int node, Speakers spk) const
     // state_demux -> state_proc_enc
 
     case state_demux:
-      if (check_spdif_passthrough(spk) == SPDIF_MODE_PASSTHROUGH)
+      spdif_err = check_spdif_passthrough(spk);
+      if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
       if (dec.query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
-        if (check_spdif_encode(spk) == SPDIF_MODE_ENCODE)
+      {
+        spdif_err = check_spdif_encode(spk);
+        if (spdif_err == SPDIF_MODE_ENCODE)
           return state_proc_enc;
         else
           return state_proc;
+      }
 
       return node_err;
 
@@ -682,10 +697,13 @@ DVDGraph::get_next(int node, Speakers spk) const
 
     case state_decode:
       if (proc.query_input(spk))
-        if (check_spdif_encode(spk) == SPDIF_MODE_ENCODE)
+      {
+        spdif_err = check_spdif_encode(spk);
+        if (spdif_err == SPDIF_MODE_ENCODE)
           return state_proc_enc;
         else
           return state_proc;
+      }
 
       return node_err;
 

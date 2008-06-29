@@ -154,6 +154,7 @@ protected:
   bool     spdif_allow_32;
 
   int      spdif_status;
+  mutable int spdif_err;
 
   const Sink *sink;
   bool query_sink;
