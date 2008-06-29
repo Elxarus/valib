@@ -696,7 +696,7 @@ AC3Parser::parse_block()
 
     if (cplinu)
     {
-      int new_cpldeltbae = bs.get(2);         // 'cpldeltbae' - coupling delta bit allocation exists
+      cpldeltbae = bs.get(2);                 // 'cpldeltbae' - coupling delta bit allocation exists
       if (cpldeltbae == DELTA_BIT_REUSE && block == 0)
         return false;                         // cpldeltbae <> 0 in block 0 (constraint p45 s5.4.3.48)
     }
