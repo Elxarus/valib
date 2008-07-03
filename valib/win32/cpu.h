@@ -11,6 +11,7 @@
 class CPUMeter
 {
 private:
+  int      ncpus;             // number of processors
   HANDLE   thread;            // monitored thread handle copy (can be used by other threads)
   __int64  thread_time;       // thread time spent in between of usage() calls
   __int64  system_time_begin; // system time of previous usage() call
@@ -29,12 +30,14 @@ public:
 
   // methods to be called by monitor thread (may be other thread than thread measured)
   // can be called at any time, including the time in between start() and stop() calls
+
   void    reset();  // reset counters
   double  usage();  // mean CPU usage since last usage() call (only thread time spent in between start() and stop() 
                     // calls is counted; this call resets time counters)
 
-  vtime_t get_thread_time(); // time used by thread since last reset() or usage() call
-  vtime_t get_system_time(); // real time spent since last reset() or usage() call
+  vtime_t get_thread_time();    // time used by thread since last reset() or usage() call
+  vtime_t get_system_time();    // system time spent since last reset() or usage() call
+  int     get_number_of_cpus(); // number of processors
 
   // mean CPU usage since last reset() or usage() call (only thread time spent in between start() and stop()
   // calls is counted; this call does not reset time counters)

@@ -3,6 +3,12 @@
 
 CPUMeter::CPUMeter()
 {
+  SYSTEM_INFO sysinfo;
+  memset(&sysinfo, 0, sizeof(sysinfo));
+  GetSystemInfo(&sysinfo);
+  ncpus = sysinfo.dwNumberOfProcessors;
+  if (ncpus == 0) ncpus = 1;
+
   thread = 0;
   reset();
 }
@@ -123,7 +129,7 @@ CPUMeter::usage()
   }
 
   if (system_time_begin - system_time_end)
-    result = double(thread_time) / double(system_time_end - system_time_begin);
+    result = double(thread_time) / double(system_time_end - system_time_begin) / ncpus;
   else
     result = 0;
 
@@ -175,4 +181,10 @@ CPUMeter::get_system_time()
   }
   else
     return vtime_t(system_time_total) / 10000000;
+}
+
+int
+CPUMeter::get_number_of_cpus()
+{
+  return ncpus;
 }
