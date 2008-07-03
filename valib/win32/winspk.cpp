@@ -138,9 +138,9 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
     case FORMAT_MPA:
       switch (spk.format)
       {
-        case FORMAT_AC3: wfx->wFormatTag = WAVE_FORMAT_AC3;  break;
-        case FORMAT_DTS: wfx->wFormatTag = WAVE_FORMAT_DTS;  break;
-        case FORMAT_MPA: wfx->wFormatTag = WAVE_FORMAT_MPEG; break;
+        case FORMAT_AC3: wfx->wFormatTag = WAVE_FORMAT_AVI_AC3; break;
+        case FORMAT_DTS: wfx->wFormatTag = WAVE_FORMAT_AVI_DTS; break;
+        case FORMAT_MPA: wfx->wFormatTag = WAVE_FORMAT_MPEG;    break;
         default: return false;
       }
   
@@ -304,11 +304,11 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         }
         break;
 
-      case WAVE_FORMAT_AC3:
+      case WAVE_FORMAT_AVI_AC3:
         format = FORMAT_AC3;
         break;
 
-      case WAVE_FORMAT_DTS:
+      case WAVE_FORMAT_AVI_DTS:
         format = FORMAT_DTS;
         break;
 
