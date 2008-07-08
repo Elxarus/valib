@@ -120,7 +120,7 @@ Convolver::init()
 
   pos = 0;
   pre_samples = c;
-  post_samples = n - c;
+  post_samples = fir->length - c;
   memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
   sync_helper.reset();
 
@@ -217,6 +217,7 @@ Convolver::process(const Chunk *chunk)
 bool
 Convolver::get_chunk(Chunk *chunk)
 {
+
   int ch;
   size_t s;
 
@@ -233,10 +234,12 @@ Convolver::get_chunk(Chunk *chunk)
 
       for (ch = 0; ch < spk.nch(); ch++)
         memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
-      post_samples -= (n - pos);
 
       process_block();
       chunk->set_linear(spk, out, pos + c);
+
+      post_samples = 0;
+      pos = 0;
 
       if (pre_samples)
       {
@@ -325,14 +328,17 @@ Convolver::get_chunk(Chunk *chunk)
     ///////////////////////////////////////////////////////
     // Flushing
 
-    if (pre_samples > 0)
+    if (post_samples > 0)
     {
       for (ch = 0; ch < spk.nch(); ch++)
         memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
-      post_samples -= (n - pos);
 
       process_block();
       chunk->set_linear(spk, out, pos + c);
+
+      post_samples = 0;
+      pos = 0;
+
       if (pre_samples)
       {
         chunk->samples += pre_samples;
