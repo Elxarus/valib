@@ -815,7 +815,7 @@ DVDGraph::check_spdif_encode(Speakers _spk) const
 
   // check sink
   if (sink && query_sink && !spdif_as_pcm)
-    if (!sink->query_input(Speakers(FORMAT_SPDIF, _spk.mask, _spk.sample_rate)))
+    if (!sink->query_input(Speakers(FORMAT_SPDIF, enc_spk.mask, enc_spk.sample_rate)))
       return SPDIF_ERR_SINK;
 
   return SPDIF_MODE_ENCODE;
