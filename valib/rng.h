@@ -91,7 +91,7 @@ RNG::next()
 inline uint32_t
 RNG::get_range(uint32_t range)
 {
-  uint32_t t = next();
+  uint32_t t = next() << 1;
   uint32_t hi1 = t >> 16;
   uint32_t lo1 = t & 0xffff;
   uint32_t hi2 = range >> 16;
