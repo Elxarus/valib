@@ -339,10 +339,10 @@ DShowSink::process(const Chunk *chunk)
   IMediaSample *sample;
 
   uint8_t *sample_buf;
-  int sample_size;
+  size_t sample_size;
 
   uint8_t *chunk_buf = chunk->rawdata;
-  int chunk_size = chunk->size;
+  size_t chunk_size = chunk->size;
 
   while (chunk_size)
   {

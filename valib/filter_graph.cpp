@@ -319,7 +319,7 @@ FilterGraph::process_internal(bool rebuild)
 // buf_size - output buffer size
 // returns number of printed bytes
 
-int
+size_t
 FilterGraph::chain_text(char *buf, size_t buf_size) const
 {
   size_t i;

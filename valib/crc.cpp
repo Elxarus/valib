@@ -24,9 +24,9 @@ const CRC crc16(POLY_CRC16, 16);
 const CRC crc32(POLY_CRC32, 32);
 
 void
-CRC::init(uint32_t _poly, uint8_t _power)
+CRC::init(uint32_t _poly, unsigned _power)
 {
-  int byte;
+  unsigned byte;
   assert(_power <= 32);
 
   poly = _poly << (32 - _power);
@@ -280,8 +280,8 @@ CRC::calc_bits(uint32_t crc, uint8_t *data, size_t start_bit, size_t bits) const
   data += start_bit >> 3;
   start_bit &= 7;
 
-  int end_bit = start_bit + bits;
-  int size = end_bit >> 3;
+  size_t end_bit = start_bit + bits;
+  size_t size = end_bit >> 3;
   end_bit &= 7;
 
   if (size)
@@ -317,8 +317,8 @@ CRC::calc_bits_16le(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits)
   data += start_bit >> 4;
   start_bit &= 15;
 
-  int end_bit = start_bit + bits;
-  int size = end_bit >> 4;
+  size_t end_bit = start_bit + bits;
+  size_t size = end_bit >> 4;
   end_bit &= 15;
 
   if (size)
@@ -347,8 +347,8 @@ CRC::calc_bits_14be(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits)
   data += start_bit / 14;
   start_bit %= 14;
 
-  int end_bit = start_bit + bits;
-  int size = end_bit / 14;
+  size_t end_bit = start_bit + bits;
+  size_t size = end_bit / 14;
   end_bit %= 14;
 
   if (size)
@@ -376,8 +376,8 @@ CRC::calc_bits_14le(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits)
   data += start_bit / 14;
   start_bit %= 14;
 
-  int end_bit = start_bit + bits;
-  int size = end_bit / 14;
+  size_t end_bit = start_bit + bits;
+  size_t size = end_bit / 14;
   end_bit %= 14;
 
   if (size)
@@ -411,8 +411,8 @@ CRC::calc_bits_32le(uint32_t crc, uint32_t *data, size_t start_bit, size_t bits)
   data += start_bit >> 5;
   start_bit &= 31;
 
-  int end_bit = start_bit + bits;
-  int size = end_bit >> 5;
+  size_t end_bit = start_bit + bits;
+  size_t size = end_bit >> 5;
   end_bit &= 31;
 
   if (size)

@@ -16,6 +16,7 @@ Debug_Libc
 Release
 Release_Libc
 Perf
+x64
 
 Debug_msvc8
 Release_msvc8

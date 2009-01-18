@@ -323,11 +323,15 @@ struct samples_t
 {
   sample_t *samples[NCHANNELS];
 
-  inline sample_t *&operator [](int ch)       { return samples[ch]; }
-  inline sample_t  *operator [](int ch) const { return samples[ch]; }
+  inline sample_t *&operator [](int ch)          { return samples[ch]; }
+  inline sample_t  *operator [](int ch) const    { return samples[ch]; }
+  inline sample_t *&operator [](size_t ch)       { return samples[ch]; }
+  inline sample_t  *operator [](size_t ch) const { return samples[ch]; }
 
   inline samples_t &operator +=(int n);
   inline samples_t &operator -=(int n);
+  inline samples_t &operator +=(size_t n);
+  inline samples_t &operator -=(size_t n);
   inline samples_t &zero();
 
   void reorder_to_std(Speakers spk, const int order[NCHANNELS]);
@@ -505,6 +509,30 @@ samples_t::operator +=(int _n)
 
 inline samples_t &
 samples_t::operator -=(int _n)
+{
+  samples[0] -= _n;
+  samples[1] -= _n;
+  samples[2] -= _n;
+  samples[3] -= _n;
+  samples[4] -= _n;
+  samples[5] -= _n;
+  return *this;
+}
+
+inline samples_t &
+samples_t::operator +=(size_t _n)
+{
+  samples[0] += _n;
+  samples[1] += _n;
+  samples[2] += _n;
+  samples[3] += _n;
+  samples[4] += _n;
+  samples[5] += _n;
+  return *this;
+}
+
+inline samples_t &
+samples_t::operator -=(size_t _n)
 {
   samples[0] -= _n;
   samples[1] -= _n;

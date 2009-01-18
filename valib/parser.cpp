@@ -175,7 +175,7 @@ StreamBuffer::reset()
 #define LOAD(required_size)                           \
 if (sync_data < (required_size))                      \
 {                                                     \
-  int load_size = (required_size) - sync_data;        \
+  size_t load_size = (required_size) - sync_data;     \
   if (*data + load_size > end)                        \
   {                                                   \
     load_size = end - *data;                          \

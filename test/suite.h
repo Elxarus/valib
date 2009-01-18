@@ -117,7 +117,7 @@ protected:
   virtual TestResult do_test()
   {
     bool passed = true;
-    for (int i = 0; i < tests.size(); i++)
+    for (size_t i = 0; i < tests.size(); i++)
     {
       // Here we assume that tests are indepenent, so we can continure testing
       // even after fail. In this way we can see a full list of failed
@@ -141,7 +141,7 @@ public:
   }
   ~TestSuite()
   {
-    for (int i = 0; i < tests.size(); i++)
+    for (size_t i = 0; i < tests.size(); i++)
       delete tests[i];
   }
 
@@ -149,7 +149,7 @@ public:
   {
     if (name == _name) return this;
 
-    for (int i = 0; i < tests.size(); i++)
+    for (size_t i = 0; i < tests.size(); i++)
     {
       Test *t = tests[i]->find(_name);
       if (t) return t;

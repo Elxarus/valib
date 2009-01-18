@@ -14,6 +14,8 @@
 Debug
 Release
 Perf
+x64
+x64\Debug
 
 gcc
 gcc_debug

@@ -36,7 +36,7 @@ public:
   inline bool     get_bool();
 
   inline int get_type() const { return type; }
-  int get_pos() const;
+  size_t get_pos() const;
 };
 
 
@@ -62,7 +62,7 @@ public:
   inline uint8_t *get_buf() const { return buf;     }
   inline uint8_t *get_end() const { return buf_end; }
   inline uint8_t *get_ptr() const { return buf_ptr; }
-  int get_pos() const;
+  size_t get_pos() const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

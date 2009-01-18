@@ -152,7 +152,7 @@ sample_t calc_peak(Source *source)
     if (!chunk.spk.is_linear()) return -1.0;
 
     for (int ch = 0; ch < chunk.spk.nch(); ch++)
-      for (int i = 0; i < chunk.size; i++)
+      for (size_t i = 0; i < chunk.size; i++)
         if (peak < fabs(chunk.samples[ch][i]))
           peak = fabs(chunk.samples[ch][i]);
   }
@@ -183,7 +183,7 @@ double calc_rms(Source *source)
     if (!chunk.spk.is_linear()) return -1.0;
 
     for (int ch = 0; ch < chunk.spk.nch(); ch++)
-      for (int i = 0; i < chunk.size; i++)
+      for (size_t i = 0; i < chunk.size; i++)
         sum += chunk.samples[ch][i] * chunk.samples[ch][i];
 
     n += chunk.size * chunk.spk.nch();
@@ -231,7 +231,7 @@ sample_t calc_diff(Source *s1, Source *s2)
 
     len = MIN(chunk1.size, chunk2.size);
     for (int ch = 0; ch < chunk1.spk.nch(); ch++)
-      for (int i = 0; i < len; i++)
+      for (size_t i = 0; i < len; i++)
         if (diff < fabs(chunk1.samples[ch][i] - chunk2.samples[ch][i]))
           diff = fabs(chunk1.samples[ch][i] - chunk2.samples[ch][i]);
 
@@ -283,7 +283,7 @@ double calc_rms_diff(Source *s1, Source *s2)
 
     len = MIN(chunk1.size, chunk2.size);
     for (int ch = 0; ch < chunk1.spk.nch(); ch++)
-      for (int i = 0; i < len; i++)
+      for (size_t i = 0; i < len; i++)
         sum += (chunk1.samples[ch][i] - chunk2.samples[ch][i]) * (chunk1.samples[ch][i] - chunk2.samples[ch][i]);
 
     n += len * chunk1.spk.nch();

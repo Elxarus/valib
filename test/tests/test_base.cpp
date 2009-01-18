@@ -52,13 +52,13 @@ public:
     if (_chunk->spk.is_linear())
     {
       for (int ch = 0; ch < _chunk->spk.nch(); ch++)
-        for (int i = 0; i < _chunk->size; i++)
+        for (size_t i = 0; i < _chunk->size; i++)
           if (!EQUAL_SAMPLES(_chunk->samples[ch][i], 0.0))
             return false;
     }
     else
     {
-      for (int i = 0; i < _chunk->size; i++)
+      for (size_t i = 0; i < _chunk->size; i++)
         if (_chunk->rawdata[i] != 0)
           return false;
     }

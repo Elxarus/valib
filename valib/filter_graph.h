@@ -174,7 +174,7 @@ public:
   // buf_size - output buffer size
   // returns number of printed bytes
 
-  int chain_text(char *buf, size_t buf_size) const;
+  size_t chain_text(char *buf, size_t buf_size) const;
 
   /////////////////////////////////////////////////////////
   // Filter interface

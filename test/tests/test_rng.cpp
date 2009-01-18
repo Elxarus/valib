@@ -107,12 +107,13 @@ TEST(rng_proof, "Full proof of random numbers generator correctness")
 
   RNG rng;
   uint32_t seed;
+  int i;
 
   /////////////////////////////////////////////////////////
   // Test Park-Miller implementation
 
   seed = 1;
-  for (int i = 0; i < 10000; i++)
+  for (i = 0; i < 10000; i++)
     seed = park_miller(seed);
 
   CHECKT(seed == 1043618065, ("Park-Miller implementation is invalid"));

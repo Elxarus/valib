@@ -55,7 +55,7 @@ ReadBS::get_bh_signed(uint32_t num_bits)
   return result;
 }
 
-int
+size_t
 ReadBS::get_pos() const
 {
   return (pos - start) * 32 - bits_left;
@@ -89,7 +89,7 @@ WriteBS::flush()
   bit_buf  = 0;
 }
 
-int
+size_t
 WriteBS::get_pos() const
 {
   return (buf_ptr - buf) * 8 + 32 - bit_left;

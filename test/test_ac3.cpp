@@ -82,7 +82,7 @@ public:
   Ref_IMDCT()
   {
     int k;
-    const N = 512;
+    const int N = 512;
 
     ///////////////////////////////////////////////////////
     // xsin1, xcos1,  xsin2, xcos2
@@ -103,7 +103,7 @@ public:
 
   void imdct_512(sample_t *data, sample_t *delay)
   {
-    const N = 512;
+    const int N = 512;
     int k, n;
     const sample_t *w = ac3_window;
 
@@ -173,7 +173,7 @@ public:
 
   void imdct_256(sample_t *data, sample_t *delay)
   {
-    const N = 512;
+    const int N = 512;
     int k, n;
     const sample_t *w = ac3_window;
 
