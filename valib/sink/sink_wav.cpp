@@ -121,7 +121,7 @@ WAVSink::set_input(Speakers _spk)
     f.write(&format_size, 4);
     f.write(&wfx, format_size);
     f.write("data\0\0\0\0", 8);
-    header_size = f.pos();
+    header_size = (uint32_t)f.pos();
 
     // Initialize
 

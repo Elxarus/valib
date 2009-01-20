@@ -234,7 +234,7 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
       buf[sizeof(spdif_header_s) + 3] = 0xe8;
 
     spdif_header_s *header = (spdif_header_s *)buf;
-    header->set(hdr.spdif_type, payload_size * 8);
+    header->set(hdr.spdif_type, (uint16_t)payload_size * 8);
   }
   else
   {

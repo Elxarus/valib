@@ -80,7 +80,7 @@ public:
 // Helper class that holds sync information and makes correct timestamps for
 // output chunks.
 //
-// receive_sync(Chunk *chunk, int pos)
+// receive_sync(Chunk *chunk, size_t pos)
 //   Receive sync info from the input chunk.
 //   This syncpoint will be applied to the buffer position pos.
 //
@@ -134,7 +134,7 @@ class SyncHelper
 protected:
   bool    sync[2]; // timestamp exists
   vtime_t time[2]; // timestamp
-  int     pos[2];  // buffer position for timestamp
+  pos_t   pos[2];  // buffer position for timestamp
 
   inline void shift();
 
@@ -142,10 +142,10 @@ public:
   SyncHelper()
   { reset(); }
 
-  inline void receive_sync(const Chunk *chunk, int pos);
+  inline void receive_sync(const Chunk *chunk, pos_t pos);
   inline void send_frame_sync(Chunk *chunk);
   inline void send_sync(Chunk *chunk, double size_to_time);
-  inline void drop(int size);
+  inline void drop(size_t size);
   inline void reset();
 };
 
@@ -163,7 +163,7 @@ SyncHelper::shift()
 }
 
 inline void
-SyncHelper::receive_sync(const Chunk *chunk, int _pos)
+SyncHelper::receive_sync(const Chunk *chunk, pos_t _pos)
 {
   if (chunk->sync)
   {
@@ -206,7 +206,7 @@ SyncHelper::send_sync(Chunk *chunk, double size_to_time)
 }
 
 inline void
-SyncHelper::drop(int size)
+SyncHelper::drop(size_t size)
 {
   if (sync[0])
     pos[0] -= size;

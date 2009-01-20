@@ -107,7 +107,7 @@ protected:
 
   Speakers  spk;
   size_t    frame_size;
-  int       nsamples;
+  size_t    nsamples;
   int       bs_type;
 
   ReadBS    bs;

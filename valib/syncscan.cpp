@@ -173,12 +173,12 @@ SyncScan::deny(int _index, uint32_t _syncword, uint32_t _syncmask)
 }
 
 bool 
-SyncScan::set_list(const uint32_t *_list, size_t _size)
+SyncScan::set_list(const uint32_t *_list, unsigned _size)
 {
   if (_size & 1)
     return false;
 
-  for (size_t i = 0; i < _size; i+=2)
+  for (unsigned i = 0; i < _size; i+=2)
     if (!set(i / 2, _list[i], _list[i+1]))
       return false;
 

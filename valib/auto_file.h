@@ -13,7 +13,7 @@ class AutoFile
 protected:
   FILE *f;
   bool close_file;
-  int filesize;
+  size_t filesize;
 
 public:
   AutoFile()
@@ -73,15 +73,15 @@ public:
     f = 0;
   }
 
-  inline void   seek(int _pos)                { fseek(f, _pos, SEEK_SET);       }
+  inline void   seek(size_t _pos)             { fseek(f, (long)_pos, SEEK_SET); }
   inline size_t read(void *buf, size_t size)  { return fread(buf, 1, size, f);  }
   inline size_t write(const void *buf, size_t size) { return fwrite(buf, 1, size, f); }
 
-  inline bool is_open() const { return f != 0;                }
-  inline bool eof()     const { return f? feof(f) != 0: true; }
-  inline int  size()    const { return filesize;              }
-  inline int  pos()     const { return ftell(f);              }
-  inline FILE *fh()     const { return f;                     }
+  inline bool   is_open() const { return f != 0;                }
+  inline bool   eof()     const { return f? feof(f) != 0: true; }
+  inline size_t size()    const { return filesize;              }
+  inline size_t pos()     const { return ftell(f);              }
+  inline FILE   *fh()     const { return f;                     }
 
   inline operator FILE *() const { return f; }
 };

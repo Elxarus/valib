@@ -86,6 +86,11 @@ const char *valib_credits();
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// pos_t - to be used as buffer position and index
+// Buffer position should not be int because win64 has 32bit int type and
+// 64bit pointers.
+typedef ptrdiff_t pos_t;
+
 // integer types
 
 typedef signed char      int8_t;

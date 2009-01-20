@@ -63,11 +63,10 @@ ReadBS::get_pos() const
 
 
 void 
-WriteBS::set_ptr(uint8_t *buffer, int buffer_size)
+WriteBS::set_ptr(uint8_t *buffer, size_t buffer_size)
 {
   buf      = buffer;
   buf_end  = buf + buffer_size;
-  data_out_size = 0;
 
   buf_ptr  = buf;
   bit_left = 32;

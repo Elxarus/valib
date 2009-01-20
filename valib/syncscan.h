@@ -476,7 +476,7 @@ public:
   bool   clear(int index);
   void   clear_all();
 
-  bool   set_list(const uint32_t *_list, size_t _size);
+  bool   set_list(const uint32_t *_list, unsigned _size);
   void   set_standard(uint32_t syncmask);
 
   /////////////////////////////////////////////////////////

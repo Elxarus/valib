@@ -521,8 +521,8 @@ Resample::reset_resample()
   }
 }
 
-int
-Resample::process_resample(sample_t *in_buf[], int nsamples)
+size_t
+Resample::process_resample(sample_t *in_buf[], size_t nsamples)
 {
   int ch, i, j;
   int processed = 0;

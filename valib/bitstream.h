@@ -50,10 +50,8 @@ public:
   uint8_t *buf_end;       // output buffer end
   uint8_t *buf_ptr;       // current buffer pointer
 
-  int32_t  data_out_size; // in bytes
-
 public:
-  void set_ptr(uint8_t *data, int data_size);
+  void set_ptr(uint8_t *data, size_t data_size);
 
   void put_bits(int bits, int value);
   void put_bool(bool value);

@@ -52,7 +52,7 @@ public:
 
   virtual void update() = 0; // update a, a1, a2, b1, b2
 
-  void process(sample_t *samples, int nsamples);
+  void process(sample_t *samples, size_t nsamples);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -6,7 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-IIR::process(sample_t *_samples, int _nsamples)
+IIR::process(sample_t *_samples, size_t _nsamples)
 {
   double x, x1, x2, y, y1, y2;
 
@@ -132,7 +132,7 @@ BassRedir::on_process()
     sample_t *c   = samples[ch];
     sample_t *lfe = samples[nch-1];
     
-    int i = size >> 2;
+    size_t i = size >> 2;
     while (i--)
     {
       lfe[0] += c[0];

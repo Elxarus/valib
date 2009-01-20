@@ -103,7 +103,7 @@ protected:
   virtual bool on_process();
 
 public:
-  Levels(int _nsamples = 1024, int _dbpb = 5)
+  Levels(size_t _nsamples = 1024, int _dbpb = 5)
   :NullFilter(FORMAT_MASK_LINEAR)
   {
     set_nsamples(_nsamples);
@@ -114,8 +114,8 @@ public:
   /////////////////////////////////////////////////////////
   // Levels interface
 
-  inline int  get_nsamples() const;
-  inline void set_nsamples(int);
+  inline size_t get_nsamples() const;
+  inline void set_nsamples(size_t);
 
   inline int  get_dbpb() const;
   inline void set_dbpb(int dbpb);
@@ -131,14 +131,14 @@ public:
 ///////////////////////////////////////////////////////////
 // Levels inlines
 
-int
+size_t
 Levels::get_nsamples() const
 {
   return nsamples;
 }
 
 void
-Levels::set_nsamples(int _nsamples)
+Levels::set_nsamples(size_t _nsamples)
 {
   nsamples = _nsamples;
 }

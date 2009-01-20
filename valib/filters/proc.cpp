@@ -13,7 +13,7 @@ AudioProcessor::AudioProcessor(size_t _nsamples)
   rebuild_chain();
 }
 
-int
+size_t
 AudioProcessor::get_info(char *_buf, size_t _len) const
 {
   return chain.chain_text(_buf, _len);

@@ -64,7 +64,7 @@ protected:
   inline void drop_pre_samples();
 
   void reset_resample();
-  int process_resample(sample_t *in_buf[], int nsamples);
+  size_t process_resample(sample_t *in_buf[], size_t nsamples);
   bool flush_resample();
 
 protected:

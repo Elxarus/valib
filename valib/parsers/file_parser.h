@@ -16,16 +16,16 @@ class FileParser // : public Source
 protected:
   StreamBuffer stream;
 
-  FILE *f;
-  char *filename;
-  int   filesize;
+  FILE  *f;
+  char  *filename;
+  size_t filesize;
 
   uint8_t *buf;
-  int buf_size;
-  int buf_data;
-  int buf_pos;
+  size_t buf_size;
+  size_t buf_data;
+  size_t buf_pos;
 
-  int   stat_size;          // number of measurments done by stat() call
+  size_t stat_size;          // number of measurments done by stat() call
   float avg_frame_interval; // average frame interval
   float avg_bitrate;        // average bitrate
 
@@ -58,13 +58,13 @@ public:
   /////////////////////////////////////////////////////////////////////////////
   // Positioning
 
-  int    get_pos() const;
+  size_t get_pos() const;
   double get_pos(units_t units) const;
 
-  int    get_size() const;
+  size_t get_size() const;
   double get_size(units_t units) const;
   
-  void   seek(int pos);
+  void   seek(size_t pos);
   void   seek(double pos, units_t units);
 
   /////////////////////////////////////////////////////////////////////////////

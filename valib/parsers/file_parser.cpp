@@ -96,7 +96,7 @@ FileParser::stats(int max_measurments, vtime_t precision)
 {
   if (!f) return false;
 
-  int old_pos = get_pos();
+  size_t old_pos = get_pos();
 
   // If we cannot load a frame we will not gather any stats.
   // (If file format is unknown measurments may take much of time)
@@ -203,7 +203,7 @@ FileParser::units_factor(units_t units) const
   return 0.0;
 }
 
-int
+size_t
 FileParser::get_pos() const
 {
   return f? ftell(f) - buf_data + buf_pos: 0;
@@ -215,7 +215,7 @@ FileParser::get_pos(units_t units) const
   return get_pos() * units_factor(units);
 }
 
-int
+size_t
 FileParser::get_size() const
 {
   return filesize;
@@ -228,7 +228,7 @@ FileParser::get_size(units_t units) const
 }
 
 void
-FileParser::seek(int pos)
+FileParser::seek(size_t pos)
 { 
   fseek(f, pos, SEEK_SET);
   reset();

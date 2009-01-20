@@ -41,7 +41,7 @@ DecoderGraph::get_user() const
   return user_spk;
 }
 
-int
+size_t
 DecoderGraph::get_info(char *_buf, size_t _len) const
 {
   Speakers spk;

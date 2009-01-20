@@ -5,7 +5,7 @@
 const TestResult test_passed(true);
 const TestResult test_failed(false);
 
-const char *compact_suffix(int size)
+const char *compact_suffix(size_t size)
 {
   if (size > 10000000) return "M";
   if (size > 10000) return "K";
@@ -175,7 +175,7 @@ double calc_rms(Source *source)
 
   Chunk chunk;
 
-  int n = 0;
+  size_t n = 0;
   double sum = 0.0;
   while (!source->is_empty())
   {

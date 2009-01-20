@@ -77,7 +77,7 @@ protected:
     uint16_t type;    // Pc data type
     uint16_t len;     // Pd length-code (bits)
 
-    inline void set(uint16_t _type, size_t _len_bits)
+    inline void set(uint16_t _type, uint16_t _len_bits)
     {
       zero1 = 0;
       zero2 = 0;

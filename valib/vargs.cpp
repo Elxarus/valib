@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "defs.h"
 #include "vargs.h"
 
 bool is_arg(char *arg, const char *name, arg_type type)

@@ -312,7 +312,7 @@ DVDGraph::get_spdif_status() const
   return spdif_status;
 }
 
-int
+size_t
 DVDGraph::get_info(char *_buf, size_t _len) const
 {
   Speakers spk;

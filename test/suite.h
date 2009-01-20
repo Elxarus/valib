@@ -158,7 +158,7 @@ public:
     return 0;
   }
 
-  int ntests() const { return tests.size(); }
+  size_t ntests() const { return tests.size(); }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
