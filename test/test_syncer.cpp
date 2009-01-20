@@ -144,9 +144,8 @@ test_syncer(Log *log)
 {
   log->open_group("Testing Syncer");
 
-  int i;
-  for (i = 0; i < array_size(syncwords); i++)
-    s.set(i, syncwords[i], 0xffffffff);
+  for (int isync = 0; isync < array_size(syncwords); isync++)
+    s.set(isync, syncwords[isync], 0xffffffff);
 
   const int max_ptr_offset = 32;
   const int max_block_size = 32;
@@ -154,7 +153,7 @@ test_syncer(Log *log)
   const int buf_size = max_ptr_offset + max_block_size + max_offset + 16;
   int isyncword;
   int ptr_offset;
-  int block_size;
+  size_t block_size;
   int offset;
 
   uint8_t *buf = new uint8_t[buf_size];
@@ -174,7 +173,7 @@ test_syncer(Log *log)
           *(uint32_t *)(buf + ptr_offset + offset) = swab_u32(syncwords[isyncword]);
           s.reset();
 
-          for (i = 0; i < offset + 16; i += block_size)
+          for (size_t i = 0; i < offset + 16; i += block_size)
           {
             size_t gone = s.scan(buf + i + ptr_offset, block_size);
 
@@ -237,7 +236,7 @@ test_syncer(Log *log)
           *(uint32_t *)(buf + ptr_offset + offset) = swab_u32(syncwords[isyncword]);
           s.reset();
 
-          for (i = 0; i < offset + 16; i += block_size)
+          for (size_t i = 0; i < offset + 16; i += block_size)
           {
             size_t gone = s.scan(scanbuf, buf + i + ptr_offset, block_size);
 

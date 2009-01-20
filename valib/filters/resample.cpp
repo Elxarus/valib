@@ -546,7 +546,7 @@ Resample::process_resample(sample_t *in_buf[], size_t nsamples)
   {
     for (ch = 0; ch < nch; ch++)
       memcpy(buf1[ch] + pos1, in_buf[ch], nsamples * sizeof(sample_t));
-    pos1 += nsamples;
+    pos1 += (int)nsamples;
     return nsamples;
   }
   for (ch = 0; ch < nch; ch++)

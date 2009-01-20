@@ -64,7 +64,7 @@ bool
 DSoundSource::open(WAVEFORMATEX *wf, size_t _buf_size_ms, LPCGUID _device)
 {
   buf_size_ms = _buf_size_ms;
-  buf_size = wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000;
+  buf_size = DWORD(wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000);
   bytes2time = 1.0 / wf->nAvgBytesPerSec;
 
   // DirectSound buffer description

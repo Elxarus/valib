@@ -150,6 +150,6 @@ WAVSink::process(const Chunk *_chunk)
       return false;
 
   f.write(_chunk->rawdata, _chunk->size);
-  data_size += _chunk->size;
+  data_size += (DWORD)_chunk->size;
   return true;
 }

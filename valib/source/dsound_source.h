@@ -18,7 +18,7 @@ protected:
   // directly determined from thoose
 
   Speakers  spk;
-  size_t    buf_size;
+  DWORD     buf_size;
   size_t    buf_size_ms;
   double    bytes2time;
 
