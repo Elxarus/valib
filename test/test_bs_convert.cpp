@@ -186,7 +186,7 @@ public:
     {
       ref_size &= ~7;
 
-      int n = ref_size;
+      size_t n = ref_size;
       if (bs_type1 == BITSTREAM_14LE)
         n++;
 

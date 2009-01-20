@@ -7,7 +7,7 @@
 class Counter : public NullFilter
 {
 protected:
-  int counter;
+  size_t counter;
 
   /////////////////////////////////////////////////////////
   // NullFilter overrides
@@ -29,7 +29,7 @@ public:
     counter = 0;
   };
 
-  inline int get_count() 
+  inline size_t get_count() 
   {
     return counter; 
   }

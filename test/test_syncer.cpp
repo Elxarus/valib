@@ -176,7 +176,7 @@ test_syncer(Log *log)
 
           for (i = 0; i < offset + 16; i += block_size)
           {
-            int gone = s.scan(buf + i + ptr_offset, block_size);
+            size_t gone = s.scan(buf + i + ptr_offset, block_size);
 
             if (s.get_sync())
             {
@@ -239,7 +239,7 @@ test_syncer(Log *log)
 
           for (i = 0; i < offset + 16; i += block_size)
           {
-            int gone = s.scan(scanbuf, buf + i + ptr_offset, block_size);
+            size_t gone = s.scan(scanbuf, buf + i + ptr_offset, block_size);
 
             if (s.get_sync(scanbuf))
             {

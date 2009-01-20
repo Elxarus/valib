@@ -150,7 +150,7 @@ public:
 
   int passthrough(const char *filename, const HeaderParser *hparser, int file_streams, int file_frames)
   {
-    const int chunk_size[] = { 0, 1, 2, hparser->max_frame_size(), hparser->max_frame_size() + 1, hparser->max_frame_size() - 1 };
+    const size_t chunk_size[] = { 0, 1, 2, hparser->max_frame_size(), hparser->max_frame_size() + 1, hparser->max_frame_size() - 1 };
 
     AutoFile f(filename);
     if (!f.is_open())
@@ -171,7 +171,7 @@ public:
     return 0;
   }
 
-  int passthrough_int(uint8_t *buf, int buf_size, int file_streams, int file_frames, int chunk_size)
+  int passthrough_int(uint8_t *buf, size_t buf_size, int file_streams, int file_frames, size_t chunk_size)
   {
     // setup pointers
     uint8_t *ptr = buf;

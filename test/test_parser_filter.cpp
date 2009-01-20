@@ -89,8 +89,8 @@ public:
 
     // Work constants
 
-    const int frame_interval = stream.get_frame_interval();
-    const int max_frame_size = frame_parser->header_parser()->max_frame_size();
+    const size_t frame_interval = stream.get_frame_interval();
+    const size_t max_frame_size = frame_parser->header_parser()->max_frame_size();
 
     // Prepare noise buffer
     NoiseGen noise(spk_rawdata, seed, int(max_frame_size * 2.5), int(max_frame_size * 2.5));
