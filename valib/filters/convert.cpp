@@ -61,7 +61,7 @@ inline int16_t s2i16(sample_t s)
 #else
 
 static inline int set_rounding() { return 0; }
-static inline int restore_rounding(int) {}
+static inline void restore_rounding(int) {}
 
 inline int32_t s2i32(sample_t s) { return (int32_t)floor(s+0.5); }
 inline int32_t s2i24(sample_t s) { return (int24_t)(int32_t)floor(s+0.5); }
