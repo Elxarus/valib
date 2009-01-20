@@ -49,7 +49,7 @@ public:
   bool stats(unsigned max_measurments = 100, vtime_t precision = 0.5);
 
   bool is_open() const { return f != 0; }
-  bool eof() const { return feof(f) != 0 && (buf_pos >= buf_data) && !stream.is_frame_loaded(); }
+  bool eof() const { return f.eof() && (buf_pos >= buf_data) && !stream.is_frame_loaded(); }
 
   const char *get_filename() const { return filename; }
   const HeaderParser *get_parser() const { return stream.get_parser(); }
