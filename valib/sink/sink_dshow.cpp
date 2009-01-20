@@ -339,7 +339,7 @@ DShowSink::process(const Chunk *chunk)
   IMediaSample *sample;
 
   uint8_t *sample_buf;
-  size_t sample_size;
+  long sample_size;
 
   uint8_t *chunk_buf = chunk->rawdata;
   size_t chunk_size = chunk->size;
@@ -376,7 +376,7 @@ DShowSink::process(const Chunk *chunk)
 
     // Data
     sample->GetPointer((BYTE**)&sample_buf);
-    sample_size = MIN(sample->GetSize(), chunk_size);
+    sample_size = (long)MIN(sample->GetSize(), chunk_size);
     if FAILED(sample->SetActualDataLength(sample_size))
     {
       sample->Release();

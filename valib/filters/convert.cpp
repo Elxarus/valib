@@ -94,7 +94,7 @@ static const convert_t pcm2linear_tbl[NCHANNELS][7] = {
 
 
 
-Converter::Converter(int _nsamples)
+Converter::Converter(size_t _nsamples)
 :NullFilter(0) // use own query_input()
 {
   convert = 0;

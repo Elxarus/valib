@@ -5,13 +5,11 @@
 
 
 #define FLOAT_THRESHOLD 1e-20
-static const int max_buf_size = 65536;
+static const size_t max_buf_size = 65536;
 
 FileParser::FileParser()
 {
-  f = 0;
   filename = 0;
-  filesize = 0;
 
   buf = new uint8_t[max_buf_size];
   buf_size = buf? max_buf_size: 0;
@@ -45,15 +43,11 @@ FileParser::open(const char *_filename, const HeaderParser *_parser, size_t _max
   if (!stream.set_parser(_parser))
     return false;
 
-  f = fopen(_filename, "rb");
-  if (!f) return false;
+  if (!f.open(_filename))
+    return false;
 
   max_scan = _max_scan;
   filename = strdup(_filename);
-
-  fseek(f, 0, SEEK_END);
-  filesize = ftell(f);
-  fseek(f, 0, SEEK_SET);
 
   reset();
   return true;
@@ -63,15 +57,9 @@ void
 FileParser::close()
 {
   stream.release_parser();
-
-  if (f) 
-  {
-    fclose(f);
-    f = 0;
-  }
+  f.close();
 
   safe_delete(filename);
-  filesize = 0;
 
   stat_size = 0;
   avg_frame_interval = 0;
@@ -85,24 +73,24 @@ FileParser::probe()
 {
   if (!f) return false;
 
-  size_t old_pos = get_pos();
+  fsize_t old_pos = f.pos();
   bool result = load_frame();
-  seek(old_pos);
+  f.seek(old_pos);
   return result;
 }
 
 bool
-FileParser::stats(int max_measurments, vtime_t precision)
+FileParser::stats(unsigned max_measurments, vtime_t precision)
 {
   if (!f) return false;
 
-  size_t old_pos = get_pos();
+  fsize_t old_pos = f.pos();
 
   // If we cannot load a frame we will not gather any stats.
   // (If file format is unknown measurments may take much of time)
   if (!load_frame())
   {
-    seek(old_pos);
+    f.seek(old_pos);
     return false;
   }
 
@@ -114,10 +102,10 @@ FileParser::stats(int max_measurments, vtime_t precision)
   vtime_t new_length;
 
   old_length = 0;
-  for (int i = 0; i < max_measurments; i++)
+  for (unsigned i = 0; i < max_measurments; i++)
   {
-    int file_pos = int((double)rand() * filesize / RAND_MAX);
-    seek(file_pos);
+    fsize_t file_pos = fsize_t((double)rand() * f.size() / RAND_MAX);
+    f.seek(file_pos);
 
     if (!load_frame())
       continue;
@@ -136,7 +124,7 @@ FileParser::stats(int max_measurments, vtime_t precision)
 
     if (precision > FLOAT_THRESHOLD)
     {
-      new_length = double(filesize) * 8 * stat_size / avg_bitrate;
+      new_length = double(f.size()) * 8 * stat_size / avg_bitrate;
       if (stat_size > 10 && fabs(old_length - new_length) < precision)
         break;
       old_length = new_length;
@@ -162,7 +150,7 @@ FileParser::file_info(char *buf, size_t size) const
     "File: %s\n"
     "Size: %i\n",
     filename,
-    filesize);
+    (int)f.size());
 
   if (stat_size)
     len += sprintf(info + len,
@@ -190,7 +178,7 @@ FileParser::units_factor(units_t units) const
   switch (units)
   {
     case bytes:    return 1.0;
-    case relative: return 1.0 / filesize;
+    case relative: return 1.0 / f.size();
   }
 
   if (stat_size)
@@ -203,10 +191,10 @@ FileParser::units_factor(units_t units) const
   return 0.0;
 }
 
-size_t
+FileParser::fsize_t
 FileParser::get_pos() const
 {
-  return f? ftell(f) - buf_data + buf_pos: 0;
+  return f.is_open()? fsize_t(f.pos() - buf_data + buf_pos): 0;
 }
 
 double 
@@ -215,20 +203,20 @@ FileParser::get_pos(units_t units) const
   return get_pos() * units_factor(units);
 }
 
-size_t
+FileParser::fsize_t
 FileParser::get_size() const
 {
-  return filesize;
+  return f.size();
 }
 
 double 
 FileParser::get_size(units_t units) const
 {
-  return filesize * units_factor(units);
+  return f.size() * units_factor(units);
 }
 
 void
-FileParser::seek(size_t pos)
+FileParser::seek(fsize_t pos)
 { 
   fseek(f, pos, SEEK_SET);
   reset();

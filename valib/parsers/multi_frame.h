@@ -42,7 +42,7 @@ protected:
 
   Speakers  spk;
   samples_t samples;
-  int       nsamples;
+  size_t    nsamples;
   uint8_t  *rawdata;
   size_t    rawsize;
 

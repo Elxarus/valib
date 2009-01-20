@@ -14,7 +14,7 @@ class AC3Enc : public NullFilter
 {
 public:
   // filter data
-  int sample;
+  size_t sample;
   SampleBuf frame_samples;
   DataBuf   frame_buf;
   SampleBuf window;

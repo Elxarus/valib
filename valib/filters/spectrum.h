@@ -10,7 +10,7 @@
 class Spectrum : public NullFilter
 {
 protected:
-  size_t length;
+  unsigned length;
 
   double *buf;
 
@@ -34,7 +34,7 @@ public:
   Spectrum();
 
   size_t get_length() const;
-  bool   set_length(size_t length);
+  bool   set_length(unsigned length);
   void   get_spectrum(sample_t *data, double *bin2hz);
 };
 

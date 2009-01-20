@@ -237,7 +237,7 @@ public:
   inline void     set_eq(bool eq);
   inline void     set_eq_bands(size_t nbands, const int *freq, const double *gain);
   // Spectrum
-  inline void     set_spectrum_length(size_t length);
+  inline void     set_spectrum_length(unsigned length);
   // Delays
   inline void     set_delay(bool delay);
   inline void     set_delay_units(int delay_units);
@@ -523,7 +523,7 @@ AudioProcessor::set_eq_bands(size_t nbands, const int *freq, const double *gain)
 { equalizer.set_bands(nbands, freq, gain); }
 
 inline void     
-AudioProcessor::set_spectrum_length(size_t length)
+AudioProcessor::set_spectrum_length(unsigned length)
 { spectrum.set_length(length); }
 
 inline void     

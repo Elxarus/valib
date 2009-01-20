@@ -6,6 +6,7 @@
 #define VALIB_FILE_PARSER_H
 
 #include <stdio.h>
+#include "../auto_file.h"
 #include "../filter.h"
 #include "../parser.h"
 #include "../mpeg_demux.h"
@@ -16,9 +17,8 @@ class FileParser // : public Source
 protected:
   StreamBuffer stream;
 
-  FILE  *f;
-  char  *filename;
-  size_t filesize;
+  AutoFile f;
+  char *filename;
 
   uint8_t *buf;
   size_t buf_size;
@@ -30,6 +30,7 @@ protected:
   float avg_bitrate;        // average bitrate
 
 public:
+  typedef AutoFile::fsize_t fsize_t;
   size_t max_scan;
   enum units_t { bytes, relative, frames, time };
   inline double units_factor(units_t units) const;
@@ -45,7 +46,7 @@ public:
   void close();
 
   bool probe();
-  bool stats(int max_measurments = 100, vtime_t precision = 0.5);
+  bool stats(unsigned max_measurments = 100, vtime_t precision = 0.5);
 
   bool is_open() const { return f != 0; }
   bool eof() const { return feof(f) != 0 && (buf_pos >= buf_data) && !stream.is_frame_loaded(); }
@@ -58,14 +59,14 @@ public:
   /////////////////////////////////////////////////////////////////////////////
   // Positioning
 
-  size_t get_pos() const;
-  double get_pos(units_t units) const;
+  fsize_t get_pos() const;
+  double  get_pos(units_t units) const;
 
-  size_t get_size() const;
-  double get_size(units_t units) const;
+  fsize_t get_size() const;
+  double  get_size(units_t units) const;
   
-  void   seek(size_t pos);
-  void   seek(double pos, units_t units);
+  void    seek(fsize_t pos);
+  void    seek(double pos, units_t units);
 
   /////////////////////////////////////////////////////////////////////////////
   // Frame-level interface (StreamBuffer interface wrapper)

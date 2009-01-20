@@ -368,7 +368,7 @@ DSoundSink::flush()
   void *data1, *data2;
   DWORD data1_bytes, data2_bytes;
   DWORD play_cur;
-  size_t data_size;
+  DWORD data_size;
 
   ///////////////////////////////////////////////////////
   // Determine size of data in playback buffer
@@ -533,7 +533,7 @@ bool DSoundSink::process(const Chunk *_chunk)
   void *data1, *data2;
   DWORD data1_bytes, data2_bytes;
   DWORD play_cur;
-  size_t data_size;
+  DWORD data_size;
 
   size_t  size = _chunk->size;
   uint8_t *buf = _chunk->rawdata;
@@ -568,7 +568,7 @@ bool DSoundSink::process(const Chunk *_chunk)
       data_size = playing? 0: buf_size;
 
     if (data_size > size)
-      data_size = size;
+      data_size = (DWORD)size;
 
     ///////////////////////////////////////////////////////
     // Put data to playback buffer
@@ -622,7 +622,7 @@ bool DSoundSink::process(const Chunk *_chunk)
       // we have free at least half of playback buffer
       // Note that we must finish immediately on ev_stop
 
-      data_size = min(size, buf_size / 2);
+      data_size = (DWORD)min(size, buf_size / 2);
       if (WaitForSingleObject(ev_stop, DWORD(data_size * bytes2time * 1000 + 1)) == WAIT_OBJECT_0)
         return true;
       continue;

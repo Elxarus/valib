@@ -29,7 +29,7 @@ size_t Spectrum::get_length() const
   return length;
 }
 
-bool Spectrum::set_length(size_t length_)
+bool Spectrum::set_length(unsigned length_)
 {
   if (length == length_)
     return length == 0 || buf != 0;

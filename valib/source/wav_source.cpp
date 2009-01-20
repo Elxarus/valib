@@ -241,8 +241,8 @@ WAVSource::is_empty() const
 bool
 WAVSource::get_chunk(Chunk *_chunk)
 {
-  int len = MIN(data_remains, block_size);
-  int data_read = f.read(buf, len);
+  size_t len = MIN(data_remains, block_size);
+  size_t data_read = f.read(buf, len);
 
   if (data_read < len) // eof
     data_remains = 0;
