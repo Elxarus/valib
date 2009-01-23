@@ -24,7 +24,7 @@ Spectrum::Spectrum():
 {
 }
 
-size_t Spectrum::get_length() const
+unsigned Spectrum::get_length() const
 {
   return length;
 }

@@ -33,9 +33,9 @@ protected:
 public:
   Spectrum();
 
-  size_t get_length() const;
-  bool   set_length(unsigned length);
-  void   get_spectrum(sample_t *data, double *bin2hz);
+  unsigned get_length() const;
+  bool     set_length(unsigned length);
+  void     get_spectrum(sample_t *data, double *bin2hz);
 };
 
 #endif

@@ -184,7 +184,7 @@ public:
   inline size_t   get_eq_nbands();
   inline void     get_eq_bands(int *freq, double *gain);
   // Spectrum
-  inline size_t   get_spectrum_length();
+  inline unsigned get_spectrum_length();
   inline void     get_spectrum(sample_t *spectrum, double *bin2hz);
   // Delay
   inline bool     get_delay();
@@ -363,7 +363,7 @@ inline void
 AudioProcessor::get_eq_bands(int *freq, double *gain)
 { equalizer.get_bands(freq, gain); }
 
-inline size_t
+inline unsigned
 AudioProcessor::get_spectrum_length()
 { return spectrum.get_length(); }
 
