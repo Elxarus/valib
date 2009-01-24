@@ -9,6 +9,7 @@ EXTERN_SUITE(suite_test);
 
 EXTERN_SUITE(general);
 EXTERN_TEST(rng);
+EXTERN_SUITE(bitstream);
 EXTERN_SUITE(base);
 EXTERN_SUITE(fir);
 
@@ -31,6 +32,7 @@ FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(suite_test),
   SUITE_FACTORY(general),
    TEST_FACTORY(rng),
+  SUITE_FACTORY(bitstream),
   SUITE_FACTORY(base),
   SUITE_FACTORY(fir),
    TEST_FACTORY(slice),
