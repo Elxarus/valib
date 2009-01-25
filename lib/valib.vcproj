@@ -266,6 +266,10 @@
 			Name="common"
 			>
 			<File
+				RelativePath="..\valib\auto_buf.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\auto_file.h"
 				>
 			</File>
