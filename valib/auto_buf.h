@@ -58,5 +58,6 @@ public:
 };
 
 typedef AutoBuf<uint8_t> Rawdata;
+typedef AutoBuf<sample_t> Samples;
 
 #endif
