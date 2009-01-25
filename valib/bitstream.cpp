@@ -23,7 +23,7 @@ ReadBS2::set(const uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 void 
 ReadBS2::set_pos_bits(size_t pos_bits)
 {
-  assert(pos_bits < size_bits);
+  assert(pos_bits <= size_bits);
 
   pos = start + (start_bit + pos_bits) / 32;
   bits_left = 32 - ((start_bit + pos_bits) & 0x1f);
@@ -92,6 +92,8 @@ WriteBS2::set(uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 void
 WriteBS2::move(size_t pos_bits)
 {
+  assert(pos_bits <= size_bits);
+
   pos = start + (start_bit + pos_bits) / 32;
   current_word = 0;
   bits_left = 32 - ((start_bit + pos_bits) & 0x1f);

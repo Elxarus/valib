@@ -74,6 +74,24 @@ TEST(bitstream_read, "ReadBS")
   }
 
   /////////////////////////////////////////////////////////
+  // ReadBS::get_bit_pos()
+  // Bit position is calculated from all of the following:
+  // start pointer, current pointer, start_bit and bits_left.
+  // Therefore we have to check it all...
+
+  {
+    for (uint8_t *pos = buf; pos < buf + max_align; pos++)
+      for (size_t start_bit = 0; start_bit < max_start_bit; start_bit++)
+        for (size_t pos_bits = 0; pos_bits <= 32; pos_bits++)
+        {
+          bs.set(pos, start_bit, 32);
+          bs.set_pos_bits(pos_bits);
+          size_t test_pos_bits = bs.get_pos_bits();
+          CHECKT(test_pos_bits == pos_bits, ("bs.get_pos_bits() fails. pos=%i start_bit=%i pos_bits=%i", pos-buf, start_bit, pos_bits));
+        }
+  }
+
+  /////////////////////////////////////////////////////////
   // ReadBS::get()
   // Test all number of bits
 
@@ -221,6 +239,24 @@ TEST(bitstream_write, "WriteBS")
   }
 
   /////////////////////////////////////////////////////////
+  // ReadBS::get_bit_pos()
+  // Bit position is calculated from all of the following:
+  // start pointer, current pointer, start_bit and bits_left.
+  // Therefore we have to check it all...
+
+  {
+    for (uint8_t *pos = buf; pos < buf + max_align; pos++)
+      for (size_t start_bit = 0; start_bit < max_start_bit; start_bit++)
+        for (unsigned pos_bits = 0; pos_bits <= 32; pos_bits++)
+        {
+          bs.set(pos, start_bit, 32);
+          bs.set_pos_bits(pos_bits);
+          size_t test_pos_bits = bs.get_pos_bits();
+          CHECKT(test_pos_bits == pos_bits, ("bs.get_pos_bits() fails. pos=%i start_bit=%i pos_bits=%i", pos-buf, start_bit, pos_bits));
+        }
+  }
+
+  /////////////////////////////////////////////////////////
   // WriteBS::put()
   // Test all number of bits
 
@@ -305,6 +341,24 @@ TEST(bitstream_write, "WriteBS")
         CHECKT(result == test, ("bs.put(%i); bs.put(%i); changes data after the last bit changed", i, j));
       }
   }
+
+  /////////////////////////////////////////////////////////
+  // WriteBS::flush()
+  // set_pos_bits() must flush at old position
+
+  {
+    *(uint32_t *)buf.data() = rng.next();
+    test = rng.next();
+
+    bs.set(buf, 0, 64);
+    bs.put(32, test);
+    bs.set_pos_bits(0);
+
+    result = get_uint32(buf, 0);
+    CHECKT(result == test, ("bs.set_pos_bits() does not flush"));
+  }
+
+
 
 TEST_END(bitstream_write);
 
