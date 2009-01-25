@@ -72,7 +72,7 @@ private:
   // stream_size_bits
   //   Stream size in bits;
   // pos
-  //   Pointer to the next word.
+  //   Pointer to the current word.
   // current_word, bits_left
   //   Current word of the stream and amount of the bits
   //   left unread.
@@ -85,6 +85,7 @@ private:
   uint32_t current_word;
   unsigned bits_left;
 
+  void move(size_t pos_bits);
   void put_next(unsigned num_bits, uint32_t value);
 
 public:
@@ -93,11 +94,11 @@ public:
   void set(uint8_t *buf, size_t start_bit, size_t size_bits);
 
   void   set_pos_bits(size_t pos_bits);
-  size_t get_pos_bits() const { return (pos - start) * 32 - bits_left - start_bit; }
+  size_t get_pos_bits() const { return (pos - start + 1) * 32 - bits_left - start_bit; }
 
   inline void put(unsigned num_bits, uint32_t value);
   inline void put_bool(bool value);
-  inline void flush();
+  void flush();
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,6 +106,7 @@ public:
 inline uint32_t
 ReadBS2::get(unsigned num_bits)
 {
+  uint32_t result;
   assert(num_bits <= 32);
   assert(get_pos_bits() + num_bits <= size_bits);
   assert(bits_left > 0);
@@ -114,18 +116,18 @@ ReadBS2::get(unsigned num_bits)
 
   if (num_bits < bits_left) 
   {
-    uint32_t result;
     result = (current_word << (32 - bits_left)) >> (32 - num_bits);
     bits_left -= num_bits;
     return result;
   }
-
-  return get_next(num_bits);
+  else
+    return get_next(num_bits);
 }
 
 inline int32_t
 ReadBS2::get_signed(unsigned num_bits)
 {
+  int32_t result;
   assert(num_bits <= 32);
   assert(get_pos_bits() + num_bits <= size_bits);
   assert(bits_left > 0);
@@ -135,13 +137,12 @@ ReadBS2::get_signed(unsigned num_bits)
         
   if (num_bits < bits_left) 
   {
-    int32_t result;
     result = int32_t(current_word << (32 - bits_left)) >> (32 - num_bits);
     bits_left -= num_bits;
     return result;
   }
-
-  return get_next_signed(num_bits);
+  else
+    return get_next_signed(num_bits);
 }
 
 inline bool
@@ -165,8 +166,8 @@ WriteBS2::put(unsigned num_bits, uint32_t value)
 
   if (num_bits < bits_left) 
   {
-    current_word = (current_word << num_bits) | value;
     bits_left -= num_bits;
+    current_word = current_word | (value << bits_left);
   }
   else
     put_next(num_bits, value);

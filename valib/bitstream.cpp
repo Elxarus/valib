@@ -23,6 +23,8 @@ ReadBS2::set(const uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 void 
 ReadBS2::set_pos_bits(size_t pos_bits)
 {
+  assert(pos_bits < size_bits);
+
   pos = start + (start_bit + pos_bits) / 32;
   bits_left = 32 - ((start_bit + pos_bits) & 0x1f);
   current_word = be2uint32(*pos);
@@ -84,38 +86,52 @@ WriteBS2::set(uint8_t *buf_, size_t start_bit_, size_t size_bits_)
   start_bit = start_bit_ + align * 8;
   size_bits = size_bits_;
 
-  set_pos_bits(0);
+  move(0);
+}
+
+void
+WriteBS2::move(size_t pos_bits)
+{
+  pos = start + (start_bit + pos_bits) / 32;
+  current_word = 0;
+  bits_left = 32 - ((start_bit + pos_bits) & 0x1f);
+
+  if (bits_left < 32)
+    current_word = (be2uint32(*pos) >> bits_left) << bits_left;
 }
 
 void 
 WriteBS2::set_pos_bits(size_t pos_bits)
 {
-  pos = start + (start_bit + pos_bits) / 32;
-  bits_left = 32 - (start_bit + pos_bits) & 0x1f;
-  current_word = be2uint32(*pos) >> bits_left;
+  flush();
+  move(pos_bits);
 }
 
 void
 WriteBS2::put_next(unsigned num_bits, uint32_t value)
 {
-  current_word = (current_word << bits_left) | (value >> (num_bits - bits_left));
   num_bits -= bits_left;
+  current_word = current_word | (value >> num_bits);
 
   *pos = uint2be32(current_word);
   pos++;
 
-  current_word = value;
+  current_word = 0;
   bits_left = 32 - num_bits;
+
+  if (num_bits != 0)
+    current_word = value << bits_left;
 }
 
 void
 WriteBS2::flush()
 {
-  uint32_t temp = be2uint32(*pos);
-  temp = (temp << (32 - bits_left)) >> (32 - bits_left);
-  temp |= current_word << bits_left;
-
-  *pos = uint2be32(temp);
+  if (bits_left < 32)
+  {
+    uint32_t temp = be2uint32(*pos);
+    temp = current_word | ((temp << (32 - bits_left)) >> (32 - bits_left));
+    *pos = uint2be32(temp);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
