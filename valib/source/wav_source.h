@@ -5,15 +5,15 @@
 #ifndef WAV_SOURCE_H
 #define WAV_SOURCE_H
 
-#include "../filter.h"
-#include "../data.h"
+#include "../auto_buf.h"
 #include "../auto_file.h"
+#include "../filter.h"
 
 class WAVSource : public Source
 {
 protected:
   AutoFile f;
-  DataBuf  buf;
+  Rawdata  buf;
   Speakers spk;
 
   size_t block_size;

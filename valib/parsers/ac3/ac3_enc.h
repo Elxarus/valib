@@ -1,6 +1,7 @@
 #ifndef VALIB_AC3_ENC_H
 #define VALIB_AC3_ENC_H
 
+#include "../../auto_buf.h"
 #include "../../filter.h"
 #include "../../bitstream.h"
 #include "../../data.h"
@@ -14,9 +15,9 @@ class AC3Enc : public NullFilter
 {
 public:
   // filter data
-  size_t sample;
+  size_t    sample;
   SampleBuf frame_samples;
-  DataBuf   frame_buf;
+  Rawdata   frame_buf;
   SampleBuf window;
 
   // decoder mode

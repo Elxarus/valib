@@ -214,8 +214,8 @@ DSoundSource::get_chunk(Chunk *_chunk)
   if FAILED(ds_buf->Lock(cur, data_size, &data1, &len1, &data2, &len2, 0))
     return false;
 
-  memcpy(out_buf.get_data(), data1, len1);
-  memcpy(out_buf.get_data() + len1, data2, len2);
+  memcpy(out_buf.data(), data1, len1);
+  memcpy(out_buf.data() + len1, data2, len2);
 
   cur += len1 + len2;
   if (cur >= buf_size)
@@ -224,7 +224,7 @@ DSoundSource::get_chunk(Chunk *_chunk)
   if FAILED(ds_buf->Unlock(data1, len1, data2, len2))
     return false;
 
-  _chunk->set_rawdata(spk, out_buf.get_data(), len1 + len2, true, time);
+  _chunk->set_rawdata(spk, out_buf.data(), len1 + len2, true, time);
   time += (len1 + len2) * bytes2time;
   return true;
 };

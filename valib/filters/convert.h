@@ -15,8 +15,8 @@
 #ifndef VALIB_CONVERT_H
 #define VALIB_CONVERT_H
 
+#include "../auto_buf.h"
 #include "../filter.h"
-#include "../data.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Converter class
@@ -36,8 +36,8 @@ protected:
                            // channel order to convert from when converting to linear format
 
   // converted samples buffer
-  DataBuf buf;             // buffer for converted data
-  size_t nsamples;         // buffer size in samples
+  Rawdata   buf;           // buffer for converted data
+  size_t    nsamples;      // buffer size in samples
 
   // output data pointers
   uint8_t  *out_rawdata;   // buffer pointer for pcm data

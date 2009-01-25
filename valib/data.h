@@ -16,7 +16,7 @@ class SampleBuf;
 // Method of allocating data buffers.
 // Now it's just simple aliged data block
 
-class DataBuf
+class OldDataBuf
 {
 protected:
   uint8_t  *buf;
@@ -38,7 +38,7 @@ public:
   // inline uint8_t  *get_data() const
   // inline uint8_t  *operator()() const
 
-  DataBuf()
+  OldDataBuf()
   {
     buf = 0;
     buf_aligned = 0;
@@ -47,7 +47,7 @@ public:
     size = 0;
   }
 
-  ~DataBuf()
+  ~OldDataBuf()
   {
     drop();
   }
@@ -106,7 +106,7 @@ public:
 class SampleBuf
 {
 protected:
-  DataBuf   buf;
+  OldDataBuf   buf;
 
   size_t    nch;
   size_t    size;

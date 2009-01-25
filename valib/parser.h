@@ -5,8 +5,8 @@
 #ifndef VALIB_PARSER_H
 #define VALIB_PARSER_H
 
+#include "auto_buf.h"
 #include "spk.h"
-#include "data.h"
 
 struct HeaderInfo;
 class HeaderParser;
@@ -461,7 +461,7 @@ protected:
   // we have to keep a copy of the header. So we need 2 buffers: header buffer
   // and sync buffer. Header buffer size is always header_size.
 
-  DataBuf  buf;
+  Rawdata  buf;
 
   uint8_t *header_buf;           // header buffer pointer
   HeaderInfo hinfo;              // header info (parsed header buffer)

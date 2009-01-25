@@ -191,7 +191,7 @@ Converter::initialize()
   if (format == FORMAT_LINEAR)
   {
     // set channel pointers
-    out_samples[0] = (sample_t *)buf.get_data();
+    out_samples[0] = (sample_t *)buf.data();
     for (int ch = 1; ch < spk.nch(); ch++)
       out_samples[ch] = out_samples[ch-1] + nsamples;
     out_samples.reorder_to_std(spk, order);
@@ -200,7 +200,7 @@ Converter::initialize()
   else
   {
     // set rawdata pointer
-    out_rawdata = buf.get_data();
+    out_rawdata = buf.data();
     out_samples.zero();
   }
 

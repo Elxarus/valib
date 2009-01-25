@@ -5,16 +5,16 @@
 #ifndef VALIB_RAW_SOURCE
 #define VALIB_RAW_SOURCE
 
-#include "../data.h"
-#include "../filter.h"
+#include "../auto_buf.h"
 #include "../auto_file.h"
+#include "../filter.h"
 
 class RAWSource: public Source
 {
 protected:
   AutoFile f;
   Speakers spk;
-  DataBuf  buf;
+  Rawdata  buf;
   size_t   block_size;
 
 public:

@@ -6,8 +6,8 @@
 #define VALIB_DSOUND_SOURCE_H
 
 #include <dsound.h>
+#include "../auto_buf.h"
 #include "../filter.h"
-#include "../data.h"
 #include "../vtime.h"
 
 class DSoundSource : public Source
@@ -31,7 +31,7 @@ protected:
   /////////////////////////////////////////////////////////
   // Processing variables
 
-  DataBuf out_buf;
+  Rawdata out_buf;
   bool    capturing;
   vtime_t time;
   DWORD   cur;

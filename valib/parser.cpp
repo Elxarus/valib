@@ -131,9 +131,9 @@ StreamBuffer::set_parser(const HeaderParser *_parser)
   min_frame_size = parser->min_frame_size();
   max_frame_size = parser->max_frame_size();
 
-  header_buf = buf.get_data();
+  header_buf = buf.data();
 
-  sync_buf = buf.get_data() + header_size;
+  sync_buf = buf.data() + header_size;
   sync_size = max_frame_size * 2 + header_size;
 
   return true;

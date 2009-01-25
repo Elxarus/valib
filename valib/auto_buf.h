@@ -6,6 +6,7 @@
 #define VALIB_AUTO_BUF_H
 
 #include <string.h>
+#include "defs.h"
 
 template <class T> class AutoBuf
 {
@@ -55,5 +56,7 @@ public:
   inline T *data()     { return f_buf;  }
   inline operator T*() { return f_buf;  }
 };
+
+typedef AutoBuf<uint8_t> Rawdata;
 
 #endif
