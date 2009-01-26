@@ -3,13 +3,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ReadBS2::ReadBS2(): 
+ReadBS::ReadBS(): 
   start(0), start_bit(0), size_bits(0),
   pos(0), current_word(0), bits_left(0)
 {}
 
 void 
-ReadBS2::set(const uint8_t *buf_, size_t start_bit_, size_t size_bits_)
+ReadBS::set(const uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 {
   size_t align = (size_t)buf_ & 3;
 
@@ -21,7 +21,7 @@ ReadBS2::set(const uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 }
 
 void 
-ReadBS2::set_pos_bits(size_t pos_bits)
+ReadBS::set_pos_bits(size_t pos_bits)
 {
   assert(pos_bits <= size_bits);
 
@@ -32,7 +32,7 @@ ReadBS2::set_pos_bits(size_t pos_bits)
 }
 
 uint32_t
-ReadBS2::get_next(unsigned num_bits)
+ReadBS::get_next(unsigned num_bits)
 {
   uint32_t result;
   result = (current_word << (32 - bits_left)) >> (32 - bits_left);
@@ -51,7 +51,7 @@ ReadBS2::get_next(unsigned num_bits)
 }
 
 int32_t
-ReadBS2::get_next_signed(unsigned num_bits)
+ReadBS::get_next_signed(unsigned num_bits)
 {
   int32_t result;
 
@@ -136,68 +136,6 @@ WriteBS::flush()
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-
-void 
-ReadBS::set_ptr(const uint8_t *_buf, int _type)
-{
-  int align;
-
-  start = (uint32_t *)_buf;
-  type = _type;
-
-  align = (long)_buf & 3;
-  pos = (uint32_t *) (_buf - align);
-  bits_left = 0;
-
-  if (type == BITSTREAM_14BE || type == BITSTREAM_14LE)
-    get(align * 7);
-  else
-    get(align * 8);
-}
-
-uint32_t
-ReadBS::get_bh(unsigned num_bits)
-{
-  uint32_t result;
-
-  num_bits -= bits_left;
-  result = ((current_word << (32 - bits_left)) >> (32 - bits_left));
-
-  fill_current();
-
-  if(num_bits != 0)
-    result = (result << num_bits) | ((current_word << (32 - bits_left)) >> (32 - num_bits));
-
-  bits_left -= num_bits;
-
-  return result;
-}
-
-int32_t
-ReadBS::get_bh_signed(unsigned num_bits)
-{
-  int32_t result;
-
-  num_bits -= bits_left;
-  result = ((((int32_t)current_word) << (32 - bits_left)) >> (32 - bits_left));
-
-  fill_current();
-
-  if(num_bits != 0)
-    result = (result << num_bits) | ((current_word << (32 - bits_left)) >> (32 - num_bits));
-        
-  bits_left -= num_bits;
-
-  return result;
-}
-
-size_t
-ReadBS::get_pos() const
-{
-  return (pos - start) * 32 - bits_left;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Bitstream conversion functions

@@ -112,6 +112,7 @@ protected:
   int       bs_type;
 
   ReadBS    bs;
+  Rawdata   frame_buf;
   SampleBuf samples;
 
   int current_subframe;

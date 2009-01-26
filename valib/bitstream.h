@@ -6,8 +6,6 @@
   -----------------
   Low endian streams MUST be aligned to stream word boundary
   (16 bit for 14 and 16 bit stream and 32 bit for 32 bit stream)
-
-  We must not use ReadBS::get(0).
 */
 
 #ifndef VALIB_BITSTREAM_H              
@@ -16,8 +14,10 @@
 #include "defs.h"
 
 ///////////////////////////////////////////////////////////////////////////////
+// ReadBS - bitstream reader
+///////////////////////////////////////////////////////////////////////////////
 
-class ReadBS2
+class ReadBS
 {
 private:
   /////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ private:
   int32_t  get_next_signed(unsigned num_bits);
 
 public:
-  ReadBS2();
+  ReadBS();
 
   void set(const uint8_t *buf, size_t start_bit, size_t size_bits);
 
@@ -104,7 +104,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 inline uint32_t
-ReadBS2::get(unsigned num_bits)
+ReadBS::get(unsigned num_bits)
 {
   uint32_t result;
   assert(num_bits <= 32);
@@ -125,7 +125,7 @@ ReadBS2::get(unsigned num_bits)
 }
 
 inline int32_t
-ReadBS2::get_signed(unsigned num_bits)
+ReadBS::get_signed(unsigned num_bits)
 {
   int32_t result;
   assert(num_bits <= 32);
@@ -146,7 +146,7 @@ ReadBS2::get_signed(unsigned num_bits)
 }
 
 inline bool
-ReadBS2::get_bool()
+ReadBS::get_bool()
 {
   return get(1) != 0;
 }
@@ -178,34 +178,6 @@ WriteBS::put_bool(bool value)
 {
   put(1, value);
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-class ReadBS
-{
-private:
-  const uint32_t *start;
-  const uint32_t *pos;
-
-  unsigned  bits_left;
-  uint32_t  current_word;
-  int       type;      // BITSTREAM_XXXX constants
-  
-  inline void fill_current();
-  uint32_t get_bh(unsigned num_bits);
-  int32_t  get_bh_signed(unsigned num_bits);
-
-public:
-  void set_ptr(const uint8_t *buf, int type = BITSTREAM_8);
-
-  inline uint32_t get(unsigned num_bits);
-  inline int32_t  get_signed(unsigned num_bits);
-  inline bool     get_bool();
-
-  inline int get_type() const { return type; }
-  size_t get_pos() const;
-};
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Bitstream conversion functions
@@ -256,83 +228,5 @@ size_t bs_conv_16le_14be(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
 size_t bs_conv_16le_14le(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
 size_t bs_conv_14be_16le(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
 size_t bs_conv_14le_16le(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-// ReadBS inlines
-//
-
-inline void 
-ReadBS::fill_current()
-{
-  uint32_t tmp;
-  tmp = *(pos++);
-  switch (type)
-  {
-    case BITSTREAM_8:
-    case BITSTREAM_16BE: 
-    case BITSTREAM_32BE: 
-      current_word = swab_u32(tmp);
-      bits_left = 32;
-      break;
-
-    case BITSTREAM_16LE:
-      current_word = (tmp >> 16) | (tmp << 16);
-      bits_left = 32;
-      break;
-
-    case BITSTREAM_14BE:
-      tmp = swab_u32(tmp);
-      current_word = (tmp & 0x3fff) | ((tmp & 0x3fff0000) >> 2);
-      bits_left = 28;
-      break;
-
-    case BITSTREAM_14LE:
-      tmp = (tmp >> 16) | (tmp << 16);
-      current_word = (tmp & 0x3fff) | ((tmp & 0x3fff0000) >> 2);
-      bits_left = 28;
-      break;
-
-    default:
-      current_word = 0;
-  }
-}
-
-inline uint32_t 
-ReadBS::get(unsigned num_bits)
-{
-  uint32_t result;
-
-  if (num_bits < bits_left) 
-  {
-    result = (current_word << (32 - bits_left)) >> (32 - num_bits);
-    bits_left -= num_bits;
-    return result;
-  }
-
-  return get_bh(num_bits);
-}
-
-inline int32_t 
-ReadBS::get_signed(unsigned num_bits)
-{
-  int32_t result;
-        
-  if (num_bits < bits_left) 
-  {
-    result = (((int32_t)current_word) << (32 - bits_left)) >> (32 - num_bits);
-    bits_left -= num_bits;
-    return result;
-  }
-
-  return get_bh_signed(num_bits);
-}
-
-inline bool 
-ReadBS::get_bool()
-{
-  return get(1) != 0;
-}
 
 #endif

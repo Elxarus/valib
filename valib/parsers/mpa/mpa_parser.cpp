@@ -52,7 +52,12 @@ MPAParser::parse_frame(uint8_t *frame, size_t size)
   if (!parse_header(frame, size))
     return false;
 
-  bs.set_ptr(frame, bsi.bs_type);
+  // convert bitstream format
+  if (bsi.bs_type != BITSTREAM_8)
+    if (bs_convert(frame, size, bsi.bs_type, frame, BITSTREAM_8) == 0)
+      return false;
+
+  bs.set(frame, 0, size * 8);
   bs.get(32); // skip header
   if (hdr.error_protection)
     bs.get(16); // skip crc

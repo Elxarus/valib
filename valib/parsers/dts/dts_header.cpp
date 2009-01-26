@@ -1,5 +1,4 @@
 #include "dts_header.h"
-#include "../../bitstream.h"
 
 const DTSHeader dts_header;
 
@@ -26,61 +25,67 @@ bool
 DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 {
   int bs_type;
+  int nblks, amode, sfreq, lff;
+  uint16_t *hdr16 = (uint16_t *)hdr;
 
   // 16 bits big endian bitstream
   if      (hdr[0] == 0x7f && hdr[1] == 0xfe &&
            hdr[2] == 0x80 && hdr[3] == 0x01)
+  {
     bs_type = BITSTREAM_16BE;
+    nblks = (be2uint16(hdr16[2]) >> 2)  & 0x7f;
+    amode = (be2uint16(hdr16[3]) << 2)  & 0x3c |
+            (be2uint16(hdr16[4]) >> 14) & 0x03;
+    sfreq = (be2uint16(hdr16[4]) >> 10) & 0x0f;
+    lff   = (be2uint16(hdr16[3]) >> 9)  & 0x03;
+  }
 
   // 16 bits low endian bitstream
   else if (hdr[0] == 0xfe && hdr[1] == 0x7f &&
            hdr[2] == 0x01 && hdr[3] == 0x80)
+  {
     bs_type = BITSTREAM_16LE;
+    nblks = (le2uint16(hdr16[2]) >> 2)  & 0x7f;
+    amode = (le2uint16(hdr16[3]) << 2)  & 0x3c |
+            (le2uint16(hdr16[4]) >> 14) & 0x03;
+    sfreq = (le2uint16(hdr16[4]) >> 10) & 0x0f;
+    lff   = (le2uint16(hdr16[3]) >> 9)  & 0x03;
+  }
 
   // 14 bits big endian bitstream
   else if (hdr[0] == 0x1f && hdr[1] == 0xff &&
            hdr[2] == 0xe8 && hdr[3] == 0x00 &&
            hdr[4] == 0x07 && (hdr[5] & 0xf0) == 0xf0)
+  {
     bs_type = BITSTREAM_14BE;
+    nblks = (be2uint16(hdr16[2]) << 4)  & 0x70 |
+            (be2uint16(hdr16[3]) >> 10) & 0x0f;
+    amode = (be2uint16(hdr16[4]) >> 4)  & 0x3f;
+    sfreq = (be2uint16(hdr16[4]) >> 0)  & 0x0f;
+    lff   = (be2uint16(hdr16[6]) >> 11) & 0x03;
+  }
 
   // 14 bits low endian bitstream
   else if (hdr[0] == 0xff && hdr[1] == 0x1f &&
            hdr[2] == 0x00 && hdr[3] == 0xe8 &&
           (hdr[4] & 0xf0) == 0xf0 && hdr[5] == 0x07)
+  {
     bs_type = BITSTREAM_14LE;
-
+    nblks = (le2uint16(hdr16[2]) << 4)  & 0x70 |
+            (le2uint16(hdr16[3]) >> 10) & 0x0f;
+    amode = (le2uint16(hdr16[4]) >> 4)  & 0x3f;
+    sfreq = (le2uint16(hdr16[4]) >> 0)  & 0x0f;
+    lff   = (le2uint16(hdr16[6]) >> 11) & 0x03;
+  }
   // no sync
   else
     return false;
 
-
-  ReadBS bs_tmp;
-  bs_tmp.set_ptr(hdr, bs_type);
-  bs_tmp.get(32);                         // Sync
-  bs_tmp.get(6);                          // Frame type(1), Deficit sample count(5)
-
-  int cpf = bs_tmp.get(1);                // CRC present flag
-
-  int nblks = bs_tmp.get(7) + 1;          // Number of PCM sample blocks
   if (nblks < 6) return false;            // constraint
-
-  size_t frame_size = bs_tmp.get(14) + 1; // Primary frame byte size
-  if (frame_size < 96) return false;      // constraint
-
-  int amode = bs_tmp.get(6);              // Audio channel arrangement
   if (amode > 0xc) return false;          // we don't work with more than 6 channels
-
-  int sfreq = bs_tmp.get(4);              // Core audio sampling frequency
-  if (!dts_sample_rates[sfreq])           // constraint
+  if (dts_sample_rates[sfreq] == 0)       // constraint
     return false; 
-
-  bs_tmp.get(15);                         // Transmission bit rate(5), and other flags....
-
-  int lff = bs_tmp.get(2);                // Low frequency effects flag
   if (lff == 3) return false;             // constraint
-
-  if (!hinfo)
-    return true;
 
   int sample_rate = dts_sample_rates[sfreq];
   int mask = amode2mask_tbl[amode];

@@ -160,7 +160,35 @@ DTSParser::parse_frame(uint8_t *frame, size_t size)
   nsamples = hinfo.nsamples;
   bs_type = hinfo.bs_type;
 
-  bs.set_ptr(frame, bs_type);
+  /////////////////////////////////////////////////////////
+  // Convert the bitstream type
+  // Note that we have to allocate a buffer for 14bit
+  // stream, because the size of the stream increases
+  // during conversion.
+
+  if (bs_type == BITSTREAM_14BE || bs_type == BITSTREAM_14LE)
+  {
+    // Buffered conversion
+    if (frame_buf.size() < size * 8 / 7)
+      if (frame_buf.allocate(size * 8 / 7))
+        return false;
+
+    size_t data_size = bs_convert(frame, size, bs_type, frame_buf, BITSTREAM_8);
+    if (data_size == 0)
+      return false;
+
+    bs.set(frame_buf, 0, data_size * 8);
+  }
+  else
+  {
+    // Inplace conversion
+    size_t data_size = bs_convert(frame, size, bs_type, frame, BITSTREAM_8);
+    if (data_size == 0)
+      return false;
+
+    bs.set(frame, 0, data_size * 8);
+  }
+
   if (!parse_frame_header())
     return false;
 

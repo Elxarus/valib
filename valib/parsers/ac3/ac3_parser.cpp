@@ -184,11 +184,15 @@ AC3Parser::start_parse(uint8_t *_frame, size_t _size)
   frame_size = hinfo.frame_size;
   bs_type = hinfo.bs_type;
 
+  if (bs_type != BITSTREAM_8)
+    if (bs_convert(frame, _size, bs_type, frame, BITSTREAM_8) == 0)
+      return false;
+
   if (do_crc)
     if (!crc_check())
       return false;
 
-  bs.set_ptr(frame, bs_type);
+  bs.set(frame, 0, frame_size * 8);
   return true;
 }
 
@@ -216,7 +220,7 @@ AC3Parser::crc_check()
   // CRC is initialized by 0 (from previous point) and test
   // result must be also 0.
 
-  crc = crc16.calc(0, frame + frame_size1, frame_size - frame_size1, bs_type);
+  crc = crc16.calc(0, frame + frame_size1, frame_size - frame_size1);
   if (crc) 
     return false;
 
@@ -790,7 +794,7 @@ AC3Parser::parse_block()
       counter.add_bap(lfebap, 0, 7);
     }
 
-    if (bs.get_pos() + counter.bits > frame_size * 8)
+    if (bs.get_pos_bits() + counter.bits > frame_size * 8)
       return false;
   }
 
