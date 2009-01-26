@@ -269,6 +269,9 @@ Converter::query_input(Speakers _spk) const
   if ((FORMAT_MASK(_spk.format) & converter_formats) == 0)
     return false;
 
+  if (_spk.nch() == 0)
+    return false;
+
   if (find_conversion(format, _spk) == 0)
     return false;
 
