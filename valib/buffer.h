@@ -1,5 +1,8 @@
 /*
   Buffer allocation
+  * Rawdata   - raw data buffer
+  * Samples   - array of samples
+  * SampleBuf - multichannel sample buffer
 */
 
 #ifndef VALIB_DATA_H
@@ -7,6 +10,9 @@
 
 #include "auto_buf.h"
 #include "spk.h"
+
+typedef AutoBuf<uint8_t> Rawdata;
+typedef AutoBuf<sample_t> Samples;
 
 class SampleBuf
 {

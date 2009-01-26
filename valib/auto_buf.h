@@ -57,7 +57,4 @@ public:
   inline operator T*() { return f_buf;  }
 };
 
-typedef AutoBuf<uint8_t> Rawdata;
-typedef AutoBuf<sample_t> Samples;
-
 #endif

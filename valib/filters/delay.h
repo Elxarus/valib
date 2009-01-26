@@ -17,8 +17,8 @@
 #ifndef VALIB_DELAY_H
 #define VALIB_DELAY_H
 
+#include "../buffer.h"
 #include "../filter.h"
-#include "../data.h"
 
 
 #define DELAY_SP 0 // samples

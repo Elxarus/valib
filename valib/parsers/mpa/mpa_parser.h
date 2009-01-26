@@ -8,7 +8,7 @@
 
 #include "../../parser.h"
 #include "../../bitstream.h"
-#include "../../data.h"
+#include "../../buffer.h"
 #include "mpa_defs.h"
 #include "mpa_synth.h"
 

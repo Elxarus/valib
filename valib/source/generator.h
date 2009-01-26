@@ -10,7 +10,7 @@
 #define VALIB_GENERATOR_H
 
 #include "../filter.h"
-#include "../data.h"
+#include "../buffer.h"
 #include "../rng.h"
 
 class Generator : public Source

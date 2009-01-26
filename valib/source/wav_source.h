@@ -5,7 +5,7 @@
 #ifndef WAV_SOURCE_H
 #define WAV_SOURCE_H
 
-#include "../auto_buf.h"
+#include "../buffer.h"
 #include "../auto_file.h"
 #include "../filter.h"
 

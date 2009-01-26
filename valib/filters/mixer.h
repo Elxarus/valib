@@ -30,8 +30,8 @@
 #ifndef VALIB_MIXER_H
 #define VALIB_MIXER_H
 
+#include "../buffer.h"
 #include "../filter.h"
-#include "../data.h"
 
 
 typedef sample_t matrix_t[NCHANNELS][NCHANNELS];

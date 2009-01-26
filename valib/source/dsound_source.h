@@ -6,7 +6,7 @@
 #define VALIB_DSOUND_SOURCE_H
 
 #include <dsound.h>
-#include "../auto_buf.h"
+#include "../buffer.h"
 #include "../filter.h"
 #include "../vtime.h"
 

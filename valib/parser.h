@@ -5,7 +5,7 @@
 #ifndef VALIB_PARSER_H
 #define VALIB_PARSER_H
 
-#include "auto_buf.h"
+#include "buffer.h"
 #include "spk.h"
 
 struct HeaderInfo;

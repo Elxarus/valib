@@ -1,10 +1,9 @@
 #ifndef VALIB_AC3_ENC_H
 #define VALIB_AC3_ENC_H
 
-#include "../../auto_buf.h"
 #include "../../filter.h"
 #include "../../bitstream.h"
-#include "../../data.h"
+#include "../../buffer.h"
 #include "ac3_defs.h"
 #include "ac3_mdct.h"
 

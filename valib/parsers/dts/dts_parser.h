@@ -5,7 +5,7 @@
 #ifndef VALIB_DTS_PARSER_H
 #define VALIB_DTS_PARSER_H
 
-#include "../../data.h"
+#include "../../buffer.h"
 #include "../../parser.h"
 #include "../../bitstream.h"
 #include "dts_defs.h"

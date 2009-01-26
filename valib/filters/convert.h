@@ -15,7 +15,7 @@
 #ifndef VALIB_CONVERT_H
 #define VALIB_CONVERT_H
 
-#include "../auto_buf.h"
+#include "../buffer.h"
 #include "../filter.h"
 
 ///////////////////////////////////////////////////////////////////////////////

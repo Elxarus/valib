@@ -5,7 +5,7 @@
 #ifndef VALIB_RAW_SOURCE
 #define VALIB_RAW_SOURCE
 
-#include "../auto_buf.h"
+#include "../buffer.h"
 #include "../auto_file.h"
 #include "../filter.h"
 

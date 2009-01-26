@@ -1,7 +1,7 @@
 #ifndef VALIB_AC3_PARSER_H
 #define VALIB_AC3_PARSER_H
 
-#include "../../data.h"
+#include "../../buffer.h"
 #include "../../parser.h"
 #include "../../bitstream.h"
 #include "ac3_defs.h"
