@@ -59,7 +59,7 @@ public:
   inline bool     get_bool();
 };
 
-class WriteBS2
+class WriteBS
 {
 private:
   /////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ private:
   void put_next(unsigned num_bits, uint32_t value);
 
 public:
-  WriteBS2();
+  WriteBS();
 
   void set(uint8_t *buf, size_t start_bit, size_t size_bits);
 
@@ -154,7 +154,7 @@ ReadBS2::get_bool()
 ///////////////////////////////////////////////////////////////////////////////
 
 inline void
-WriteBS2::put(unsigned num_bits, uint32_t value)
+WriteBS::put(unsigned num_bits, uint32_t value)
 {
   assert(num_bits <= 32);
   assert(num_bits == 32 || (value >> num_bits) == 0);
@@ -174,7 +174,7 @@ WriteBS2::put(unsigned num_bits, uint32_t value)
 }
 
 inline void
-WriteBS2::put_bool(bool value)
+WriteBS::put_bool(bool value)
 {
   put(1, value);
 }
@@ -206,29 +206,6 @@ public:
   size_t get_pos() const;
 };
 
-
-class WriteBS
-{
-public:
-  uint32_t bit_buf;
-  unsigned bit_left;
-
-  uint8_t *buf;           // output buffer begin
-  uint8_t *buf_end;       // output buffer end
-  uint8_t *buf_ptr;       // current buffer pointer
-
-public:
-  void set_ptr(uint8_t *data, size_t data_size);
-
-  void put_bits(unsigned num_bits, int value);
-  void put_bool(bool value);
-  void flush();
-
-  inline uint8_t *get_buf() const { return buf;     }
-  inline uint8_t *get_end() const { return buf_end; }
-  inline uint8_t *get_ptr() const { return buf_ptr; }
-  size_t get_pos() const;
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Bitstream conversion functions
@@ -356,48 +333,6 @@ inline bool
 ReadBS::get_bool()
 {
   return get(1) != 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// WriteBS inlines
-//
-
-inline void
-WriteBS::put_bits(unsigned num_bits, int value)
-{
-  if (num_bits < bit_left) 
-  {
-    bit_buf = (bit_buf << num_bits) | value;
-    bit_left -= num_bits;
-  } 
-  else 
-  {
-    bit_buf <<= bit_left;
-    bit_buf |= value >> (num_bits - bit_left);
-    *(uint32_t *)buf_ptr = swab_u32(bit_buf);
-    buf_ptr  += 4;
-    bit_left += 32 - num_bits;
-    bit_buf   = value;
-  }
-}
-
-inline void
-WriteBS::put_bool(bool value)
-{
-  int v = value & 1;
-  if (bit_left > 1) 
-  {
-    bit_buf = (bit_buf << 1) | v;
-    bit_left--;
-  } 
-  else 
-  {
-    bit_buf = (bit_buf << 1) | v;
-    *(uint32_t *)buf_ptr = swab_u32(bit_buf);
-    buf_ptr  += 4;
-    bit_left += 31;
-    bit_buf   = value;
-  }
 }
 
 #endif

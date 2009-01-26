@@ -26,7 +26,7 @@ public:
   int frames;
 
   MDCT mdct;
-  WriteBS pb;
+  WriteBS bs;
 
   // stream-level data
   int  acmod;

@@ -72,13 +72,13 @@ ReadBS2::get_next_signed(unsigned num_bits)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-WriteBS2::WriteBS2(): 
+WriteBS::WriteBS(): 
   start(0), start_bit(0), size_bits(0),
   pos(0), current_word(0), bits_left(0)
 {}
 
 void 
-WriteBS2::set(uint8_t *buf_, size_t start_bit_, size_t size_bits_)
+WriteBS::set(uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 {
   size_t align = (size_t)buf_ & 3;
 
@@ -90,7 +90,7 @@ WriteBS2::set(uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 }
 
 void
-WriteBS2::move(size_t pos_bits)
+WriteBS::move(size_t pos_bits)
 {
   assert(pos_bits <= size_bits);
 
@@ -103,14 +103,14 @@ WriteBS2::move(size_t pos_bits)
 }
 
 void 
-WriteBS2::set_pos_bits(size_t pos_bits)
+WriteBS::set_pos_bits(size_t pos_bits)
 {
   flush();
   move(pos_bits);
 }
 
 void
-WriteBS2::put_next(unsigned num_bits, uint32_t value)
+WriteBS::put_next(unsigned num_bits, uint32_t value)
 {
   num_bits -= bits_left;
   current_word = current_word | (value >> num_bits);
@@ -126,7 +126,7 @@ WriteBS2::put_next(unsigned num_bits, uint32_t value)
 }
 
 void
-WriteBS2::flush()
+WriteBS::flush()
 {
   if (bits_left < 32)
   {
@@ -197,39 +197,6 @@ size_t
 ReadBS::get_pos() const
 {
   return (pos - start) * 32 - bits_left;
-}
-
-
-void 
-WriteBS::set_ptr(uint8_t *buffer, size_t buffer_size)
-{
-  buf      = buffer;
-  buf_end  = buf + buffer_size;
-
-  buf_ptr  = buf;
-  bit_left = 32;
-  bit_buf  = 0;
-}
-
-void 
-WriteBS::flush()
-{
-  bit_buf <<= bit_left;
-  while (bit_left < 32) 
-  {
-    // todo: should test end of buffer
-    *buf_ptr ++= bit_buf >> 24;
-    bit_buf  <<= 8;
-    bit_left  += 8;
-  }
-  bit_left = 32;
-  bit_buf  = 0;
-}
-
-size_t
-WriteBS::get_pos() const
-{
-  return (buf_ptr - buf) * 8 + 32 - bit_left;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

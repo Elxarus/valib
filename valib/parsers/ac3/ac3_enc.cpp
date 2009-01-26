@@ -646,41 +646,42 @@ AC3Enc::encode_frame()
   ///////////////////////////////////////////////////////////////////
   // Output everything
 
-  pb.set_ptr(frame_buf, frame_size);
+  memset(frame_buf, 0, frame_size);
+  bs.set(frame_buf, 0, frame_size * 8);
 
   ///////////////////////////////////////////////////////////////////
   // BSI
 
-  pb.put_bits(16, 0x0b77);// 'syncword'
-  pb.put_bits(16, 0);     // 'crc1'
-  pb.put_bits(2, fscod);  // 'fscod'
-  pb.put_bits(6, frmsizecod);
-  pb.put_bits(5, bsid);   // 'bsid'
-  pb.put_bits(3, 0);      // 'bsmod' = complete main audio service
-  pb.put_bits(3, acmod);
+  bs.put(16, 0x0b77);// 'syncword'
+  bs.put(16, 0);     // 'crc1'
+  bs.put(2, fscod);  // 'fscod'
+  bs.put(6, frmsizecod);
+  bs.put(5, bsid);   // 'bsid'
+  bs.put(3, 0);      // 'bsmod' = complete main audio service
+  bs.put(3, acmod);
 
   if (acmod & 1 && acmod != 1)
-    pb.put_bits(2, 0);    // 'cmixlev' = -3dB
+    bs.put(2, 0);    // 'cmixlev' = -3dB
 
   if (acmod & 4)
-    pb.put_bits(2, 0);    // 'surmixlev' = -3dB
+    bs.put(2, 0);    // 'surmixlev' = -3dB
 
   if (acmod == 2)
     if (spk.relation)
-      pb.put_bits(2, 2);  // 'dsurmod' = Dolby surround encoded
+      bs.put(2, 2);  // 'dsurmod' = Dolby surround encoded
     else
-      pb.put_bits(2, 0);  // 'dsurmod' = surround not indicated
+      bs.put(2, 0);  // 'dsurmod' = surround not indicated
 
-  pb.put_bool(spk.lfe()); // 'lfeon'
-  pb.put_bits(5, 31);     // 'dialnorm' = -31dB
-  pb.put_bool(false);     // 'compre'
-  pb.put_bool(false);     // 'langcode'
-  pb.put_bool(false);     // 'audprodie'
-  pb.put_bool(false);     // 'copyrightb'
-  pb.put_bool(true);      // 'origbs'
-  pb.put_bool(false);     // 'timecod1e'
-  pb.put_bool(false);     // 'timecod2e'
-  pb.put_bool(false);     // 'addbsie'
+  bs.put_bool(spk.lfe()); // 'lfeon'
+  bs.put(5, 31);     // 'dialnorm' = -31dB
+  bs.put_bool(false);     // 'compre'
+  bs.put_bool(false);     // 'langcode'
+  bs.put_bool(false);     // 'audprodie'
+  bs.put_bool(false);     // 'copyrightb'
+  bs.put_bool(true);      // 'origbs'
+  bs.put_bool(false);     // 'timecod1e'
+  bs.put_bool(false);     // 'timecod2e'
+  bs.put_bool(false);     // 'addbsie'
 
 
   ///////////////////////////////////////////////////////////////////
@@ -689,88 +690,88 @@ AC3Enc::encode_frame()
   for (b = 0; b < AC3_NBLOCKS; b++)
   {
     for (ch = 0; ch < nfchans; ch++)
-      pb.put_bool(false);              // 'blksw[ch]' - 512-tap mdct
+      bs.put_bool(false);              // 'blksw[ch]' - 512-tap mdct
 
     for (ch = 0; ch < nfchans; ch++)
-      pb.put_bool(true);               // 'dithflag[ch]' - use dithering
+      bs.put_bool(true);               // 'dithflag[ch]' - use dithering
 
-    pb.put_bool(false);                // 'dynrnge'
+    bs.put_bool(false);                // 'dynrnge'
 
     if (b == 0)
     {
-      pb.put_bool(true);               // 'cplstre'
-      pb.put_bool(false);              // 'cplinu'
+      bs.put_bool(true);               // 'cplstre'
+      bs.put_bool(false);              // 'cplinu'
     }
     else
-      pb.put_bool(false);              // 'cplstre'
+      bs.put_bool(false);              // 'cplstre'
 
     if (acmod == AC3_MODE_STEREO)
       if (b == 0)
       {
-        pb.put_bool(true);             // 'rematstr'
-        pb.put_bool(false);            // 'rematflg[0]'
-        pb.put_bool(false);            // 'rematflg[1]'
-        pb.put_bool(false);            // 'rematflg[2]'
-        pb.put_bool(false);            // 'rematflg[3]'
+        bs.put_bool(true);             // 'rematstr'
+        bs.put_bool(false);            // 'rematflg[0]'
+        bs.put_bool(false);            // 'rematflg[1]'
+        bs.put_bool(false);            // 'rematflg[2]'
+        bs.put_bool(false);            // 'rematflg[3]'
       }
       else
-        pb.put_bool(false);            // 'rematstr'
+        bs.put_bool(false);            // 'rematstr'
   
     for (ch = 0; ch < nfchans; ch++)
-      pb.put_bits(2, expstr[ch][b]);   // 'chexpstr'
+      bs.put(2, expstr[ch][b]);   // 'chexpstr'
 
     if (lfe)
-      pb.put_bits(1, expstr[nfchans][b]); // 'lfeexpstr'
+      bs.put(1, expstr[nfchans][b]); // 'lfeexpstr'
 
     for (ch = 0; ch < nfchans; ch++)
       if (expstr[ch][b] != EXP_REUSE)
-        pb.put_bits(6, chbwcod[ch]);   // 'chbwcod'
+        bs.put(6, chbwcod[ch]);   // 'chbwcod'
 
     // exponents
 
     for (ch = 0; ch < nfchans; ch++)
       if (expstr[ch][b] != EXP_REUSE)
       {
-        pb.put_bits(4, expcod[ch][b][0]);   // 'exps[ch][0]'
+        bs.put(4, expcod[ch][b][0]);   // 'exps[ch][0]'
         for (s = 1; s < ngrps[ch][b]+1; s++)// note: include the last group!
-          pb.put_bits(7, expcod[ch][b][s]); // 'exps[ch][grp]'
-        pb.put_bits(2, 0);                  // 'gainrng[ch]'
+          bs.put(7, expcod[ch][b][s]); // 'exps[ch][grp]'
+        bs.put(2, 0);                  // 'gainrng[ch]'
       }
 
     if (lfe && expstr[nfchans][b] != EXP_REUSE)
     {
-      pb.put_bits(4, expcod[nfchans][b][0]);    // 'lfeexp[0]'
+      bs.put(4, expcod[nfchans][b][0]);    // 'lfeexp[0]'
       for (s = 1; s < ngrps[nfchans][b]+1; s++) // note: include the last group!
-        pb.put_bits(7, expcod[nfchans][b][s]);  // 'lfeexp[grp]'
+        bs.put(7, expcod[nfchans][b][s]);  // 'lfeexp[grp]'
     }
 
     // bit allocation 
 
     if (b == 0)
     {
-      pb.put_bool(true);               // 'baie'
-      pb.put_bits(2, sdcycod);         // 'sdcycod'
-      pb.put_bits(2, fdcycod);         // 'fdcycod'
-      pb.put_bits(2, sgaincod);        // 'sgaincod'
-      pb.put_bits(2, dbpbcod);         // 'dbpbcod'
-      pb.put_bits(3, floorcod);        // 'floorcod'
+      bs.put_bool(true);               // 'baie'
+      bs.put(2, sdcycod);         // 'sdcycod'
+      bs.put(2, fdcycod);         // 'fdcycod'
+      bs.put(2, sgaincod);        // 'sgaincod'
+      bs.put(2, dbpbcod);         // 'dbpbcod'
+      bs.put(3, floorcod);        // 'floorcod'
 
-      pb.put_bool(true);               // 'snroffste'
-      pb.put_bits(6, csnroffst);       // 'csnroffst'
+      bs.put_bool(true);               // 'snroffste'
+      bs.put(6, csnroffst);       // 'csnroffst'
       for (ch = 0; ch < nch; ch++)
       {
-        pb.put_bits(4, fsnroffst);     // 'fsnroffst[ch]'/'lfesnroffst'
-        pb.put_bits(3, fgaincod);      // 'fgaincod[ch]'/'lfegaincod'
+        bs.put(4, fsnroffst);     // 'fsnroffst[ch]'/'lfesnroffst'
+        bs.put(3, fgaincod);      // 'fgaincod[ch]'/'lfegaincod'
       }
     }
     else
     {
-      pb.put_bool(false);              // 'baie'
-      pb.put_bool(false);              // 'snroffste'
+      bs.put_bool(false);              // 'baie'
+      bs.put_bool(false);              // 'snroffste'
     }
 
-    pb.put_bool(false);                // 'deltbaie'
-    pb.put_bool(false);                // 'skiple'
+    bs.put_bool(false);                // 'deltbaie'
+    bs.put_bool(false);                // 'skiple'
 
     // mantissas
 
@@ -837,7 +838,7 @@ AC3Enc::encode_frame()
             // seek for next value to group
             GROUP_NEXT(1, v, 3, 1)
 
-            pb.put_bits(5, v);
+            bs.put(5, v);
             COUNT_BITS(1, 5);
             break;
 
@@ -853,12 +854,12 @@ AC3Enc::encode_frame()
             GROUP_NEXT(2, v, 5, 5);
             GROUP_NEXT(2, v, 5, 1);
 
-            pb.put_bits(7, v);
+            bs.put(7, v);
             COUNT_BITS(2, 7);
             break;
 
           case 3:
-            pb.put_bits(3, sym_quant(mant[ch][b][s], 7));
+            bs.put(3, sym_quant(mant[ch][b][s], 7));
             COUNT_BITS(0, 3);
             break;
 
@@ -871,27 +872,27 @@ AC3Enc::encode_frame()
             qs4 = s + 1;
             GROUP_NEXT(4, v, 11, 1);
 
-            pb.put_bits(7, v);
+            bs.put(7, v);
             COUNT_BITS(4, 7);
             break;
 
           case 5:
-            pb.put_bits(4, sym_quant(mant[ch][b][s], 15));
+            bs.put(4, sym_quant(mant[ch][b][s], 15));
             COUNT_BITS(0, 4);
             break;
 
           case 14:
-            pb.put_bits(14, asym_quant(mant[ch][b][s], 14));
+            bs.put(14, asym_quant(mant[ch][b][s], 14));
             COUNT_BITS(0, 14);
             break;
 
           case 15:
-            pb.put_bits(16, asym_quant(mant[ch][b][s], 16));
+            bs.put(16, asym_quant(mant[ch][b][s], 16));
             COUNT_BITS(0, 16);
             break;
 
           default:
-            pb.put_bits(bap[ch][b][s] - 1, asym_quant(mant[ch][b][s], bap[ch][b][s] - 1));
+            bs.put(bap[ch][b][s] - 1, asym_quant(mant[ch][b][s], bap[ch][b][s] - 1));
             COUNT_BITS(0, bap[ch][b][s] - 1);
             break;      
         } // switch (bap[s])
@@ -899,9 +900,7 @@ AC3Enc::encode_frame()
     // for (ch = 0; ch < nch; ch++)
 
   } // for (b = 0; b < AC3_NBLOCKS; b++)
-
-  pb.flush();
-  memset(pb.get_ptr(), 0, frame_size - (pb.get_ptr() - pb.get_buf()));
+  bs.flush();
 
   // calc CRC
   int frame_size1 = ((frame_size >> 1) + (frame_size >> 3)) & ~1; // should be even
