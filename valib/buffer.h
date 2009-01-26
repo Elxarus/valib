@@ -34,7 +34,7 @@ public:
 
   inline bool allocate(unsigned nch, size_t nsamples)
   {
-    if (f_nch * f_nsamples < nch * nsamples)
+    if (f_buf.size() < nch * nsamples)
     {
       drop();
       if (f_buf.allocate(nch * nsamples) == 0)
@@ -43,6 +43,7 @@ public:
 
     f_nch = nch;
     f_nsamples = nsamples;
+    f_samples.zero();
     for (unsigned ch = 0; ch < nch; ch++)
       f_samples[ch] = f_buf.data() + ch * nsamples;
     return true;
