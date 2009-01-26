@@ -37,9 +37,9 @@ DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     amode = (be2uint16(hdr16[3]) << 2)  & 0x3c |
             (be2uint16(hdr16[4]) >> 14) & 0x03;
     sfreq = (be2uint16(hdr16[4]) >> 10) & 0x0f;
-    lff   = (be2uint16(hdr16[3]) >> 9)  & 0x03;
+    lff   = (be2uint16(hdr16[5]) >> 9)  & 0x03;
+    nblks++;
   }
-
   // 16 bits low endian bitstream
   else if (hdr[0] == 0xfe && hdr[1] == 0x7f &&
            hdr[2] == 0x01 && hdr[3] == 0x80)
@@ -49,9 +49,9 @@ DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     amode = (le2uint16(hdr16[3]) << 2)  & 0x3c |
             (le2uint16(hdr16[4]) >> 14) & 0x03;
     sfreq = (le2uint16(hdr16[4]) >> 10) & 0x0f;
-    lff   = (le2uint16(hdr16[3]) >> 9)  & 0x03;
+    lff   = (le2uint16(hdr16[5]) >> 9)  & 0x03;
+    nblks++;
   }
-
   // 14 bits big endian bitstream
   else if (hdr[0] == 0x1f && hdr[1] == 0xff &&
            hdr[2] == 0xe8 && hdr[3] == 0x00 &&
@@ -63,8 +63,8 @@ DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     amode = (be2uint16(hdr16[4]) >> 4)  & 0x3f;
     sfreq = (be2uint16(hdr16[4]) >> 0)  & 0x0f;
     lff   = (be2uint16(hdr16[6]) >> 11) & 0x03;
+    nblks++;
   }
-
   // 14 bits low endian bitstream
   else if (hdr[0] == 0xff && hdr[1] == 0x1f &&
            hdr[2] == 0x00 && hdr[3] == 0xe8 &&
@@ -76,16 +76,26 @@ DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     amode = (le2uint16(hdr16[4]) >> 4)  & 0x3f;
     sfreq = (le2uint16(hdr16[4]) >> 0)  & 0x0f;
     lff   = (le2uint16(hdr16[6]) >> 11) & 0x03;
+    nblks++;
   }
   // no sync
   else
     return false;
+
+  /////////////////////////////////////////////////////////
+  // Constraints
 
   if (nblks < 6) return false;            // constraint
   if (amode > 0xc) return false;          // we don't work with more than 6 channels
   if (dts_sample_rates[sfreq] == 0)       // constraint
     return false; 
   if (lff == 3) return false;             // constraint
+
+  /////////////////////////////////////////////////////////
+  // Fill HeaderInfo
+
+  if (!hinfo)
+    return true;
 
   int sample_rate = dts_sample_rates[sfreq];
   int mask = amode2mask_tbl[amode];
