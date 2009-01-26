@@ -33,10 +33,13 @@ public:
 
   inline T *allocate(size_t size)
   {
-    drop();
-    f_buf = new T[size];
-    if (f_buf)
-      f_size = size;
+    if (f_size < size)
+    {
+      drop();
+      f_buf = new T[size];
+      if (f_buf)
+        f_size = size;
+    }
     return f_buf;
   }
 

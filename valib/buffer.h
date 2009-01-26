@@ -34,16 +34,18 @@ public:
 
   inline bool allocate(unsigned nch, size_t nsamples)
   {
-    drop();
-    if (f_buf.allocate(nch * nsamples))
+    if (f_nch * f_nsamples < nch * nsamples)
     {
-      f_nch = nch;
-      f_nsamples = nsamples;
-      for (unsigned ch = 0; ch < nch; ch++)
-        f_samples[ch] = f_buf.data() + ch * nsamples;
-      return true;
+      drop();
+      if (f_buf.allocate(nch * nsamples) == 0)
+        return false;
     }
-    return false;
+
+    f_nch = nch;
+    f_nsamples = nsamples;
+    for (unsigned ch = 0; ch < nch; ch++)
+      f_samples[ch] = f_buf.data() + ch * nsamples;
+    return true;
   }
 
   inline void drop()
