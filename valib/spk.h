@@ -323,10 +323,6 @@ struct samples_t
 {
   sample_t *samples[NCHANNELS];
 
-  inline sample_t *&operator [](int ch)          { return samples[ch]; }
-  inline sample_t  *operator [](int ch) const    { return samples[ch]; }
-  inline sample_t *&operator [](size_t ch)       { return samples[ch]; }
-  inline sample_t  *operator [](size_t ch) const { return samples[ch]; }
   inline sample_t *&operator [](unsigned ch)       { return samples[ch]; }
   inline sample_t  *operator [](unsigned ch) const { return samples[ch]; }
 
