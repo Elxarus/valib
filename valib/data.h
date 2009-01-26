@@ -74,18 +74,6 @@ public:
     drop();
   }
 
-  inline bool allocate(size_t _size)
-  {
-    if (!buf.allocate(_size))
-      return false;
-
-    nch = 0;
-    size = _size;
-    rawdata = buf;
-    samples.zero();
-    return true;
-  }
-
   inline bool allocate(size_t _nch, size_t _size)
   {
     if (!buf.allocate(_size * sizeof(sample_t) * _nch))
@@ -114,10 +102,8 @@ public:
   }
 
   inline size_t    get_size() const              { return size;         }
-  inline uint8_t  *get_rawdata() const           { return rawdata;      }
   inline samples_t get_samples() const           { return samples;      }
 
-  inline operator uint8_t *() const              { return rawdata;      }
   inline operator samples_t() const              { return samples;      }
   inline sample_t *operator[](int _ch) const     { return samples[_ch]; }
 };

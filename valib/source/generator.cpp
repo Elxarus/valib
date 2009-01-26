@@ -31,12 +31,14 @@ Generator::init(Speakers _spk, size_t _stream_len, size_t _chunk_size)
 
   if (_spk.format == FORMAT_LINEAR)
   {
-    if (!buf.allocate(_spk.nch(), _chunk_size))
+    rawdata.drop();
+    if (!samples.allocate(_spk.nch(), _chunk_size))
       return false;
   }
   else
   {
-    if (!buf.allocate(_chunk_size))
+    samples.drop();
+    if (!rawdata.allocate(_chunk_size))
       return false;
   }
 
@@ -77,14 +79,12 @@ Generator::get_chunk(Chunk *_chunk)
 
   if (spk.format == FORMAT_LINEAR)
   {
-    samples_t samples = buf.get_samples();
     gen_samples(samples, n);
     _chunk->set_linear(spk, samples, n, false, 0, eos);
     return true;
   }
   else
   {
-    uint8_t *rawdata = buf.get_rawdata();
     gen_rawdata(rawdata, n);
     _chunk->set_rawdata(spk, rawdata, n, false, 0, eos);
     return true;

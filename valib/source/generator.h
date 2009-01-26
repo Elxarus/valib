@@ -17,7 +17,8 @@ class Generator : public Source
 {
 protected:
   Speakers  spk;
-  SampleBuf buf;
+  SampleBuf samples;
+  Rawdata   rawdata;
   size_t    chunk_size;
   size_t    stream_len;
 
