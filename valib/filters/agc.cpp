@@ -329,7 +329,7 @@ AGC::get_chunk(Chunk *_chunk)
     _chunk->set_linear
     (
       spk, 
-      buf[block].get_samples(), sample[block], 
+      buf[block], sample[block], 
       buf_sync[block], buf_time[block],
       flushing && (sample[next_block()] == 0)
     );
