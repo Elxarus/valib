@@ -4,15 +4,10 @@
 
   This class provides following functionality:
   * Can work with any given polinomial up to 32 bit width
-  * Can work with any kind of bitstream (8/14/16/32 bits big/low endian)
   * Can work with byte streams and bit streams
 
-  This module provides 2 predefined constant classes for CRC16 and CRC32.
-
-  Important note!!!
-  -----------------
-  Low endian streams MUST be aligned to stream word boundary
-  (16 bit for 14 and 16 bit stream and 32 bit for 32 bit stream)
+  This module provides 2 predefined constant classes for standard
+  CRC16 and CRC32 polinomials
 */
 
 #ifndef VALIB_CRC_H
@@ -35,7 +30,14 @@ protected:
   uint32_t poly;
   unsigned power;
   uint32_t tbl[256];
-  uint32_t tbl6[64];
+
+  /////////////////////////////////////////////////////////////////////////////
+  // CRC primitives
+  // __forceinline is required because VC6 sometimes does not inline these 
+  // functions what leads to dramatic performance decrease.
+
+  __forceinline uint32_t add_8    (uint32_t crc, uint32_t data) const;
+  __forceinline uint32_t add_32   (uint32_t crc, uint32_t data) const;
 
 public:
   CRC() {};
@@ -45,106 +47,19 @@ public:
   void init(uint32_t poly, unsigned power);
 
   /////////////////////////////////////////////////////////////////////////////
-  // Pre- and post- CRC processing
+  // Pre- and post- CRC shift
   // Required because 32bit left-aligned CRC value is used internally.
-  //
-  // We may not do this if start and and crc values equal to 0.
-  // We may not do this if we compare CRC result with left-aligned value.
-  // We may not do this for 32bit CRC.
 
   inline uint32_t crc_init(uint32_t crc) const { return crc << (32 - power); }
   inline uint32_t crc_get(uint32_t crc)  const { return crc >> (32 - power); }
 
   /////////////////////////////////////////////////////////////////////////////
-  // CRC primitives
-  // __forceinline is required because VC6 sometimes does not inline these 
-  // functions what leads to dramatic performance decrease.
-
-  __forceinline uint32_t add_bits (uint32_t crc, uint32_t data, size_t bits) const;
-  __forceinline uint32_t add_8    (uint32_t crc, uint32_t data) const;
-  __forceinline uint32_t add_14   (uint32_t crc, uint32_t data) const;
-  __forceinline uint32_t add_16   (uint32_t crc, uint32_t data) const;
-  __forceinline uint32_t add_32   (uint32_t crc, uint32_t data) const;
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Byte stream interface
-
-  uint32_t calc(uint32_t crc, uint8_t *data, size_t bytes, int bs_type) const;
+  // CRC calculations
 
   uint32_t calc(uint32_t crc, uint8_t *data, size_t size) const;
-  uint32_t calc_14be(uint32_t crc, uint16_t *data, size_t size) const;
-  uint32_t calc_14le(uint32_t crc, uint16_t *data, size_t size) const;
-  uint32_t calc_16be(uint32_t crc, uint16_t *data, size_t size) const;
-  uint32_t calc_16le(uint32_t crc, uint16_t *data, size_t size) const;
-  uint32_t calc_32be(uint32_t crc, uint32_t *data, size_t size) const;
-  uint32_t calc_32le(uint32_t crc, uint32_t *data, size_t size) const;
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Bit stream interface
-
-  uint32_t calc_bits(uint32_t crc, uint8_t *data, size_t start_bit, size_t bits, int bs_type) const;
-
   uint32_t calc_bits(uint32_t crc, uint8_t *data, size_t start_bit, size_t bits) const;
-  uint32_t calc_bits_14be(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits) const;
-  uint32_t calc_bits_14le(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits) const;
-  uint32_t calc_bits_16be(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits) const;
-  uint32_t calc_bits_16le(uint32_t crc, uint16_t *data, size_t start_bit, size_t bits) const;
-  uint32_t calc_bits_32be(uint32_t crc, uint32_t *data, size_t start_bit, size_t bits) const;
-  uint32_t calc_bits_32le(uint32_t crc, uint32_t *data, size_t start_bit, size_t bits) const;
+  uint32_t add_bits (uint32_t crc, uint32_t data, size_t bits) const;
 };
-
-///////////////////////////////////////////////////////////////////////////////
-// CRC primitives (inline)
-
-uint32_t 
-CRC::add_bits(uint32_t crc, uint32_t data, size_t bits) const
-{
-  if (bits)
-  {
-    crc ^= (data << (32 - bits));
-    while (bits--)
-      if (crc & 0x80000000)
-        crc = (crc << 1) ^ poly;
-      else
-        crc <<= 1;
-  }
-  return crc;
-}
-
-uint32_t
-CRC::add_8(uint32_t crc, uint32_t data) const
-{
-  return (crc << 8) ^ tbl[(crc >> 24) ^ (data & 0xff)];
-}
-
-uint32_t
-CRC::add_14(uint32_t crc, uint32_t data) const
-{
-  crc ^= data << 18;
-  crc = (crc << 8) ^ tbl[crc >> 24];
-  crc = (crc << 6) ^ tbl6[crc >> 26];
-  return crc;
-}
-
-uint32_t
-CRC::add_16(uint32_t crc, uint32_t data) const
-{
-  crc ^= data << 16;
-  crc = (crc << 8) ^ tbl[crc >> 24];
-  crc = (crc << 8) ^ tbl[crc >> 24];
-  return crc;
-}
-
-uint32_t
-CRC::add_32(uint32_t crc, uint32_t data) const
-{
-  crc ^= data;
-  crc = (crc << 8) ^ tbl[crc >> 24];
-  crc = (crc << 8) ^ tbl[crc >> 24];
-  crc = (crc << 8) ^ tbl[crc >> 24];
-  crc = (crc << 8) ^ tbl[crc >> 24];
-  return crc;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Simple CRC16 table algorithm
