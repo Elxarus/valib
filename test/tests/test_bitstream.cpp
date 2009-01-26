@@ -29,7 +29,7 @@ static uint32_t get_uint32(uint8_t *buf, size_t start_bit)
 ///////////////////////////////////////////////////////////////////////////////
 
 TEST(bitstream_read, "ReadBS")
-  ReadBS2 bs;
+  ReadBS bs;
   uint32_t result, test;
 
   const size_t max_align = 64;
@@ -185,7 +185,7 @@ TEST_END(bitstream_read);
 ///////////////////////////////////////////////////////////////////////////////
 
 TEST(bitstream_write, "WriteBS")
-  WriteBS2 bs;
+  WriteBS bs;
   uint32_t result, test;
 
   const size_t max_align = 64;
