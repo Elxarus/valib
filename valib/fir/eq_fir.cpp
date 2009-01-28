@@ -68,7 +68,7 @@ EqFIR::set_bands(size_t nbands_, const int *freq_, const double *gain_)
           freq[i+1] = f;
           double g = gain[i];
           gain[i] = gain[i+1];
-          gain[i+1] = f;
+          gain[i+1] = g;
           sorted = false;
         }
     }
