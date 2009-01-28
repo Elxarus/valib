@@ -226,7 +226,6 @@ Resample::init_resample(int _nch, int _fs, int _fd)
   // Find filters' parameters: transition band width and cennter frequency
 
   double phi = double(l1) / double(m1);
-  double big_phi = double(l) / double(m);
   double df1, lpf1, df2, lpf2;
 
   if (fs < fd) // upsample
@@ -630,7 +629,6 @@ Resample::flush_resample()
 double t_upsample(int l1, int m1, int l2, int m2, double a, double q)
 {
   double phi = double(l1) / double(m1);
-  double rate = double(l1 * l2) / double(m1 * m2);
   double alpha_conv = (a + log10(double(m1))*20 + 6 - 7.95) / 14.36;
   double alpha_fft  = (a + log10(double(m2))*20 + 6 - 7.95) / 14.36;
 

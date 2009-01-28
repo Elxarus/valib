@@ -126,14 +126,12 @@ ParamFIR::make(int sample_rate) const
 
     case FIR_BAND_PASS:
       for (i = 0; i < n; i++)
-        filter[i] = (sample_t) 
-          filter[i] = (sample_t) ((2 * f2_ * sinc((i - c) * 2 * M_PI * f2_) - 2 * f1_ * sinc((i - c) * 2 * M_PI * f1_)) * kaiser_window(i - c, n, alpha));
+        filter[i] = (sample_t) ((2 * f2_ * sinc((i - c) * 2 * M_PI * f2_) - 2 * f1_ * sinc((i - c) * 2 * M_PI * f1_)) * kaiser_window(i - c, n, alpha));
       return new DynamicFIRInstance(sample_rate, firt_custom, n, c, filter);
 
     case FIR_BAND_STOP:
       for (i = 0; i < n; i++)
-        filter[i] = (sample_t) 
-          filter[i] = (sample_t) ((2 * f1_ * sinc((i - c) * 2 * M_PI * f1_) - 2 * f2_ * sinc((i - c) * 2 * M_PI * f2_)) * kaiser_window(i - c, n, alpha));
+        filter[i] = (sample_t) ((2 * f1_ * sinc((i - c) * 2 * M_PI * f1_) - 2 * f2_ * sinc((i - c) * 2 * M_PI * f2_)) * kaiser_window(i - c, n, alpha));
       filter[c] = (sample_t) ((2 * f1_ + 1 - 2 * f2_) * kaiser_window(0, n, alpha));
       return new DynamicFIRInstance(sample_rate, firt_custom, n, c, filter);
   };

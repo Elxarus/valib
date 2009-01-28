@@ -43,7 +43,8 @@ public:
   {
     if (f) close();
     filesize = 0;
-    if (f = fopen(filename, mode))
+    f = fopen(filename, mode);
+    if (f)
     {
       fseek(f, 0, SEEK_END);
       filesize = ftell(f);

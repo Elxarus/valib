@@ -46,8 +46,9 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="4"
+				DisableSpecificWarnings="4100,4127,4244,4201,4210"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

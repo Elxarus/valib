@@ -512,8 +512,6 @@ AC3Enc::encode_frame()
   int dbknee    = dbknee_tbl[dbpbcod];
   int floor     = floor_tbl[floorcod];
   int fgain     = fgain_tbl[fgaincod];
-  int fastleak  = 0;
-  int slowlwak  = 0;
 
   const int snroffset_max = (((63 - 15) << 4) + 15) << 2;
   const int snroffset_min = (((0 - 15) << 4) + 0) << 2;
@@ -1018,6 +1016,7 @@ AC3Enc::encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLE
   expcod[0] = min(exp[0], 15); // limit DC exponent
   switch (expstr)
   {
+    default:
     case EXP_D15:     
       for (s = 1; s < endmant; s++)
         expcod[s] = exp[s];
@@ -1036,8 +1035,6 @@ AC3Enc::encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLE
                           min(exp[s+2], exp[s+3]));
       ngrps = s1;
       break;
-
-    default: assert(false); // we should never be here;
   }
 
   // encode differential exponents

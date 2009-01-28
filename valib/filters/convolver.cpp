@@ -42,7 +42,6 @@ bool
 Convolver::init()
 {
   int i, ch;
-  int sample_rate = spk.sample_rate;
   int nch = spk.nch();
 
   if (spk.is_unknown())
@@ -121,7 +120,7 @@ Convolver::init()
   pos = 0;
   pre_samples = c;
   post_samples = fir->length - c;
-  memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
+  memset(delay[0], 0, n * nch * sizeof(sample_t));
   sync_helper.reset();
 
   return true;
@@ -365,8 +364,4 @@ Convolver::get_chunk(Chunk *chunk)
     chunk->set_dummy();
     return true;
   }
-
-  // never be here
-  assert(false);
-  return false;
 }

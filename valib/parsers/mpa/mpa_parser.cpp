@@ -459,6 +459,10 @@ MPAParser::II_decode_fraction(
             d  = d_tbl[2];
             ba = 12;
             break;
+
+          default:
+            assert(false);
+            return;
           } 
         } // if (ba > 0) .. else ..
 

@@ -187,7 +187,6 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
   IDirectSoundBuffer *test_ds_buf = 0;
 
   DWORD test_buf_size = wf->nBlockAlign * wf->nSamplesPerSec * buf_size_ms / 1000;
-  DWORD test_preload_size = wf->nBlockAlign * wf->nSamplesPerSec * preload_ms / 1000;
 
   // DirectSound buffer description
   DSBUFFERDESC dsbdesc;
@@ -601,7 +600,7 @@ bool DSoundSink::process(const Chunk *_chunk)
     if (!playing && cur > preload_size)
     {
       if (!paused)
-        HRESULT hr = ds_buf->Play(0, 0, DSBPLAY_LOOPING);
+        ds_buf->Play(0, 0, DSBPLAY_LOOPING);
       playing = true;
     }
 

@@ -117,6 +117,9 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
     case 2: 
       hinfo->frame_size = 6 * bitrate;
       sample_rate = 32000 >> halfrate;
+
+    default:
+      return false;
   }
 
   hinfo->spk = Speakers(FORMAT_AC3, acmod2mask_tbl[acmod], sample_rate, 1.0, dolby);

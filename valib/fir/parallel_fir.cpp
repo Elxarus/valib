@@ -99,9 +99,7 @@ ParallelFIR::make(int sample_rate) const
     double *data = new double[length];
     if (data)
     {
-      int current_length = fir[0]->length;
       memset(data, 0, length * sizeof(double));
-
       for (i = 0; i < fir_count; i++)
         for (int j = 0; j < fir[i]->length; j++)
           data[j + center - fir[i]->center] += fir[i]->data[j];
