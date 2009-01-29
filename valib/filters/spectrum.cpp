@@ -105,7 +105,7 @@ Spectrum::init()
 
   // build the window
   double alpha = kaiser_alpha(100); // 100dB attenuation
-  int odd_length = (int)length-1;
+  int odd_length = length-1;
   for (int i = 0; i < 2 * odd_length + 1; i++)
     win[i] = (sample_t) kaiser_window(i - odd_length, 2 * odd_length + 1, alpha);
     

@@ -348,7 +348,7 @@ SyncScan::scan(uint8_t *buf, size_t size)
   ///////////////////////////////////////////////////////
   // Process unaligned start
 
-  while (((uint32_t)pos & 3) && (pos < end))
+  while ((pos < end) && align32(pos) != 0)
   {
     sync = (sync << 8) | *pos++;
     if (is_sync(sync))
@@ -362,7 +362,7 @@ SyncScan::scan(uint8_t *buf, size_t size)
   // Setup 32bit transfer
 
   uint32_t *pos32 = (uint32_t *)pos;
-  uint32_t *end32 = (uint32_t *)((uint32_t)end & ~3);
+  uint32_t *end32 = (uint32_t *)(end - align32(end));
 
   ///////////////////////////////////////////////////////
   // Process main block
@@ -470,7 +470,7 @@ SyncScan::scan(uint8_t *syncbuf, uint8_t *buf, size_t size) const
   ///////////////////////////////////////////////////////
   // Process unaligned start
 
-  while (((uint32_t)pos & 3) && (pos < end))
+  while ((pos < end) && align32(pos) != 0)
   {
     sync = (sync << 8) | *pos++;
     if (is_sync(sync))
@@ -484,7 +484,7 @@ SyncScan::scan(uint8_t *syncbuf, uint8_t *buf, size_t size) const
   // Setup 32bit transfer
 
   uint32_t *pos32 = (uint32_t *)pos;
-  uint32_t *end32 = (uint32_t *)((uint32_t)end & ~3);
+  uint32_t *end32 = (uint32_t *)(end - align32(end));
 
   ///////////////////////////////////////////////////////
   // Process main block

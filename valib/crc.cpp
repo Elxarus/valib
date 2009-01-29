@@ -87,14 +87,14 @@ CRC::calc(uint32_t crc, uint8_t *data, size_t size) const
   // Because data pointer is unaligned we may need up
   // to 3 byte loads to align pointer to 32bit boundary.
 
-  while ((data < end) && ((uint32_t)data & 3))
+  while (data < end && align32(data) != 0)
     crc = add_8(crc, *data++);
 
   /////////////////////////////////////////////////////
   // Process main block (32bit)
 
   uint32_t *data32 = (uint32_t *)data;
-  uint32_t *end32  = (uint32_t *)((uint32_t)end & ~3);
+  uint32_t *end32  = (uint32_t *)(end - align32(end));
   while (data32 < end32)
   {
     crc = add_32(crc, be2uint32(*data32));

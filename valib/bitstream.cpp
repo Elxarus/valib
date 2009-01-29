@@ -11,8 +11,7 @@ ReadBS::ReadBS():
 void 
 ReadBS::set(const uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 {
-  size_t align = (size_t)buf_ & 3;
-
+  size_t align = align32(buf_);
   start = (const uint32_t *)(buf_ - align);
   start_bit = start_bit_ + align * 8;
   size_bits = size_bits_;
@@ -80,8 +79,7 @@ WriteBS::WriteBS():
 void 
 WriteBS::set(uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 {
-  size_t align = (size_t)buf_ & 3;
-
+  size_t align = align32(buf_);
   start = (uint32_t *)(buf_ - align);
   start_bit = start_bit_ + align * 8;
   size_bits = size_bits_;

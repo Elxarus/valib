@@ -69,7 +69,7 @@ RNG::fill_raw(void *data, size_t size)
 
   // arrange to 32-bit boundary
   ptr8 = (uint8_t *)data;
-  head_len = (unsigned int)data & 3;
+  head_len = align32(data);
   size -= head_len;
   for (i = 0; i < head_len; i++)
     ptr8[i] = next() >> 23; // use high 8 bits of 31-bit word

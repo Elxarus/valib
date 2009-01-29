@@ -376,7 +376,7 @@ DShowSink::process(const Chunk *chunk)
 
     // Data
     sample->GetPointer((BYTE**)&sample_buf);
-    sample_size = (long)MIN(sample->GetSize(), chunk_size);
+    sample_size = (long)MIN((size_t)sample->GetSize(), chunk_size);
     if FAILED(sample->SetActualDataLength(sample_size))
     {
       sample->Release();

@@ -524,7 +524,7 @@ size_t
 Resample::process_resample(sample_t *in_buf[], size_t nsamples)
 {
   int ch, i, j;
-  int processed = 0;
+  size_t processed = 0;
   out_size = 0;
 
   ///////////////////////////////////////////////////////
@@ -541,7 +541,7 @@ Resample::process_resample(sample_t *in_buf[], size_t nsamples)
   // Stage 1 processing
 
   int n = n2*m1/l1 + n1x + 1;
-  if (nsamples < n - pos1)
+  if (nsamples < (size_t)n - pos1)
   {
     for (ch = 0; ch < nch; ch++)
       memcpy(buf1[ch] + pos1, in_buf[ch], nsamples * sizeof(sample_t));
@@ -570,6 +570,7 @@ Resample::process_resample(sample_t *in_buf[], size_t nsamples)
   // the size of input data. Therefore we can process it
   // in-place.
 
+  i = shift; j = 0;
   for (ch = 0; ch < nch; ch++)
     for (i = shift, j = 0; i < n2; i += m2, j++)
       buf2[ch][j] = buf2[ch][i] + delay2[ch][j];

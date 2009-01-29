@@ -177,9 +177,14 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 //
 //   MIN(a, b)           finds minimum
 //   MAX(a, b)           finds maximum
+//
 //   value2db(value)     convert to decibels (requires math.h)
 //   db2value(db)        convert from decibels (requires math.h)
+//
 //   array_size(array)   calculates array size
+//   safe_delete()       deletes a buffer only when it is allocated and
+//                       zeroes the pointer
+//   align32(ptr)        32bit_aligned_pointer = ptr - align32(ptr);
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef MIN
@@ -196,6 +201,8 @@ typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 #define array_size(array) (sizeof(array) / sizeof(array[0]))
 #define safe_delete(x) { if (x) delete(x); x = 0; }
 
+inline size_t align32(const void *ptr)
+{ return (size_t)ptr & 3; }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Byte-swap functions
