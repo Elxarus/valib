@@ -28,14 +28,14 @@ public:
 
   ~AutoBuf()
   { 
-    drop();
+    free();
   }
 
   inline T *allocate(size_t size)
   {
     if (f_size < size)
     {
-      drop();
+      free();
       f_buf = new T[size];
       if (f_buf)
         f_size = size;
@@ -43,7 +43,7 @@ public:
     return f_buf;
   }
 
-  inline void drop()
+  inline void free()
   {
     safe_delete(f_buf);
     f_size = 0;

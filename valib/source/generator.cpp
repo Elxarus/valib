@@ -31,13 +31,13 @@ Generator::init(Speakers _spk, size_t _stream_len, size_t _chunk_size)
 
   if (_spk.format == FORMAT_LINEAR)
   {
-    rawdata.drop();
+    rawdata.free();
     if (!samples.allocate(_spk.nch(), _chunk_size))
       return false;
   }
   else
   {
-    samples.drop();
+    samples.free();
     if (!rawdata.allocate(_chunk_size))
       return false;
   }

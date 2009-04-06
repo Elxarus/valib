@@ -36,7 +36,7 @@ public:
   {
     if (f_buf.size() < nch * nsamples)
     {
-      drop();
+      free();
       if (f_buf.allocate(nch * nsamples) == 0)
         return false;
     }
@@ -49,12 +49,12 @@ public:
     return true;
   }
 
-  inline void drop()
+  inline void free()
   {
     f_nch = 0;
     f_nsamples = 0;
     f_samples.zero();
-    f_buf.drop();
+    f_buf.free();
   }
 
   inline void zero()
