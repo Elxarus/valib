@@ -16,10 +16,7 @@ inline unsigned int clp2(unsigned int x)
 }
 
 Spectrum::Spectrum():
-  length(0),
-  buf(0), data(0), spectrum(0), win(0),
-  fft_ip(0), fft_w(0),
-  pos(0), converted(false),
+  length(0), pos(0), is_ok(true),
   NullFilter(FORMAT_MASK_LINEAR)
 {
 }
@@ -32,40 +29,53 @@ unsigned Spectrum::get_length() const
 bool Spectrum::set_length(unsigned length_)
 {
   if (length == length_)
-    return length == 0 || buf != 0;
+    return length == 0 || is_ok;
 
   length = length_;
   if (length == 0)
   {
-    uninit();
+    pos = 0;
+    is_ok = true;
     return true;
   }
   else
     return init();
 }
 
-void Spectrum::get_spectrum(sample_t *data_, double *bin2hz)
+void Spectrum::get_spectrum(int ch, sample_t *out, double *bin2hz)
 {
-  if (!buf)
+  if (!is_ok)
     return;
 
-  if (data_ && !converted)
+  if (out)
   {
     size_t i;
+
+    // copy samples to spectrum buffer;
+    if (ch < 0 || ch >= NCHANNELS)
+    {
+      memcpy(spectrum, data[0], length * 2 * sizeof(sample_t));
+      for (ch = 1; ch < spk.nch(); ch++)
+        for (i = 0; i < 2 * length; i++)
+          spectrum[i] += data[ch][i];
+    }
+    else if (CH_MASK(ch) & spk.mask)
+      memcpy(spectrum, data[ch], length * 2 * sizeof(sample_t));
+    else
+      memset(spectrum, 0, length * 2 * sizeof(sample_t));
+
+    // apply the window and normalize
     double norm = 1.0 / (spk.level * length);
     for (i = 0; i < 2 * length; i++)
-      spectrum[i] = data[i] * win[i] * norm;
+      spectrum[i] *= win[i] * norm;
 
-    rdft(length * 2, 1, spectrum, fft_ip, fft_w);
+    // FFT
+    fft.rdft(spectrum);
 
+    // amplitude
     for (i = 0; i < length; i++)
-      spectrum[i] = sqrt(spectrum[i*2]*spectrum[i*2] + spectrum[i*2+1]*spectrum[i*2+1]);
-
-    converted = true;
+      out[i] = sqrt(spectrum[i*2]*spectrum[i*2] + spectrum[i*2+1]*spectrum[i*2+1]);
   }
-
-  if (data_)
-    memcpy(data_, spectrum, length * sizeof(sample_t));
 
   if (bin2hz)
   {
@@ -79,96 +89,64 @@ void Spectrum::get_spectrum(sample_t *data_, double *bin2hz)
 bool
 Spectrum::init()
 {
-  uninit();
-
+  int nch = spk.nch();
   length = clp2(length);
-  
-  buf      = new sample_t[length * 6];
-  fft_ip   = new int[(int)(2 + sqrt(double(length * 2)))];
-  fft_w    = new sample_t[length];
 
-  if (buf == 0 || fft_ip == 0 || fft_w == 0)
+  data.allocate(nch, length * 2);
+  data.zero();
+
+  spectrum.allocate(length * 2);
+  win.allocate(length * 2);
+  fft.set_length(length * 2);
+
+  if (!data.is_allocated() ||
+      !spectrum.is_allocated() ||
+      !win.is_allocated() ||
+      !fft.is_ok())
   {
-    safe_delete(buf);
-    safe_delete(fft_ip);
-    safe_delete(fft_w);
+    is_ok = false;
     return false;
   }
-
-  data     = buf;
-  spectrum = buf + 2 * length;
-  win      = buf + 4 * length;
-
-  fft_ip[0] = 0;
-
-  memset(buf, 0, 6 * length * sizeof(sample_t));
 
   // build the window
   double alpha = kaiser_alpha(100); // 100dB attenuation
   int odd_length = length-1;
   for (int i = 0; i < 2 * odd_length + 1; i++)
     win[i] = (sample_t) kaiser_window(i - odd_length, 2 * odd_length + 1, alpha);
+  win[length * 2 - 1] = 0;
     
   pos = 0;
-  converted = true;
-
+  is_ok = true;
   return true;
-}
-
-void
-Spectrum::uninit()
-{
-  safe_delete(buf);
-  safe_delete(fft_ip);
-  safe_delete(fft_w);
-
-  data     = 0;
-  spectrum = 0;
-  win      = 0;
-
-  pos = 0;
-  converted = true;
 }
 
 bool
 Spectrum::on_process()
 {
-  if (!buf)
-    return true;
-
-  if (size == 0)
+  if (!is_ok || size == 0)
     return true;
 
   if (size >= 2*length)
   {
     size_t pos = size - 2 * length;
-    memcpy(data, samples[0] + pos, 2*length*sizeof(sample_t));
-    for (int ch = 1; ch < spk.nch(); ch++)
-      for (size_t s = 0; s < 2*length; s++)
-        data[s] += samples[ch][s + pos];
+    for (int ch = 0; ch < spk.nch(); ch++)
+      memcpy(data[ch], samples[ch] + pos, 2*length*sizeof(sample_t));
   }
   else
   {
     size_t pos = 2 * length - size;
-    memmove(data, data + size, pos * sizeof(sample_t));
-    memcpy(data + pos, samples[0], size * sizeof(sample_t));
-    for (int ch = 1; ch < spk.nch(); ch++)
-      for (size_t s = pos; s < 2*length; s++)
-        data[s] += samples[ch][s - pos];
+    for (int ch = 0; ch < spk.nch(); ch++)
+    {
+      memmove(data[ch], data[ch] + size, pos * sizeof(sample_t));
+      memcpy(data[ch] + pos, samples[ch], size * sizeof(sample_t));
+    }
   }
-  converted = false;
   return true;
 }
 
 void
 Spectrum::on_reset()
 {
-  if (buf)
-  {
-    memset(data, 0, 2 * length * sizeof(sample_t));
-    memset(spectrum, 0, 2 * length * sizeof(sample_t));
-  }
-
+  data.zero();
   pos = 0;
-  converted = true;
 }

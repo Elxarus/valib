@@ -411,6 +411,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\dsp\fft.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\dsp\fft.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\dsp\fftsg.c"
 				>
 			</File>
