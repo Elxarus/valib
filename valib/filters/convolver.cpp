@@ -25,13 +25,10 @@ Convolver::Convolver(const FIRGen *gen_):
   NullFilter(FORMAT_MASK_LINEAR),
   gen(gen_), fir(0),
   n(0), c(0),
-  filter(0), fft_ip(0), fft_w(0),
+  fft_ip(0), fft_w(0),
   pos(0), pre_samples(0), post_samples(0),
   state(state_pass)
-{
-  buf[0] = 0;
-  delay[0] = 0;
-}
+{}
 
 Convolver::~Convolver()
 {
@@ -41,7 +38,7 @@ Convolver::~Convolver()
 bool
 Convolver::init()
 {
-  int i, ch;
+  int i;
   int nch = spk.nch();
 
   if (spk.is_unknown())
@@ -77,28 +74,18 @@ Convolver::init()
   /////////////////////////////////////////////////////////
   // Allocate buffers
 
-  filter   = new sample_t[n * 2];
   fft_ip   = new int[(int)(2 + sqrt(double(n * 2)))];
   fft_w    = new sample_t[n];
-  buf[0]   = new sample_t[n * 2 * nch];
-  delay[0] = new sample_t[n * nch];
+  filter.allocate(n * 2);
+  buf.allocate(nch, n * 2);
+  delay.allocate(nch, n);
 
   // handle buffer allocation error
-  if (filter == 0 || buf[0] == 0 || fft_ip == 0 || fft_w == 0)
+  if (!filter.is_allocated() || !buf.is_allocated() || !delay.is_allocated() || fft_ip == 0 || fft_w == 0)
   {
     uninit();
     return false;
   }
-
-  for (ch = 1; ch < nch; ch++)
-    buf[ch] = buf[ch-1] + n * 2;
-
-  for (ch = 1; ch < nch; ch++)
-    delay[ch] = delay[ch-1] + n;
-
-  out.zero();
-  for (ch = 0; ch < nch; ch++)
-    out[ch] = buf[ch];
 
   /////////////////////////////////////////////////////////
   // Build the filter
@@ -137,12 +124,8 @@ Convolver::uninit()
   state = state_pass;
 
   safe_delete(fir);
-  safe_delete(filter);
   safe_delete(fft_ip);
   safe_delete(fft_w);
-  safe_delete(buf[0]);
-  safe_delete(delay[0]);
-  out.zero();
 }
 
 void
@@ -235,7 +218,7 @@ Convolver::get_chunk(Chunk *chunk)
         memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
 
       process_block();
-      chunk->set_linear(spk, out, pos + c);
+      chunk->set_linear(spk, buf.samples(), pos + c);
 
       post_samples = 0;
       pos = 0;
@@ -309,7 +292,7 @@ Convolver::get_chunk(Chunk *chunk)
     pos = 0;
 
     process_block();
-    chunk->set_linear(spk, out, n);
+    chunk->set_linear(spk, buf.samples(), n);
     if (pre_samples)
     {
       chunk->samples += pre_samples;
@@ -333,7 +316,7 @@ Convolver::get_chunk(Chunk *chunk)
         memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
 
       process_block();
-      chunk->set_linear(spk, out, pos + c);
+      chunk->set_linear(spk, buf.samples(), pos + c);
 
       post_samples = 0;
       pos = 0;

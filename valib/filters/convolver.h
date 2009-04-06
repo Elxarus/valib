@@ -5,6 +5,8 @@
 #include "../filter.h"
 #include "../fir.h"
 #include "../sync.h"
+#include "../buffer.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Convolver class
@@ -20,14 +22,14 @@ protected:
   SyncHelper sync_helper;
 
   int       n, c;
-  sample_t *filter;
   int      *fft_ip;
   sample_t *fft_w;
 
   int       pos;
-  sample_t *buf[NCHANNELS];
-  sample_t *delay[NCHANNELS];
-  samples_t out;
+
+  Samples   filter;
+  SampleBuf buf;
+  SampleBuf delay;
 
   int pre_samples;
   int post_samples;
