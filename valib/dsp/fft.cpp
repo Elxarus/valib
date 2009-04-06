@@ -33,7 +33,7 @@ FFT::rdft(sample_t *samples)
 }
 
 void
-FFT::irdft(sample_t *samples)
+FFT::inv_rdft(sample_t *samples)
 {
-  ::rdft(len, 0, samples, fft_ip, fft_w);
+  ::rdft(len, -1, samples, fft_ip, fft_w);
 }

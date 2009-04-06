@@ -24,7 +24,7 @@ public:
   bool is_ok() const { return fft_ip.is_allocated() && fft_w.is_allocated(); }
 
   void rdft(sample_t *samples);
-  void irdft(sample_t *samples);
+  void inv_rdft(sample_t *samples);
 };
 
 #endif

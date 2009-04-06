@@ -25,7 +25,6 @@ Convolver::Convolver(const FIRGen *gen_):
   NullFilter(FORMAT_MASK_LINEAR),
   gen(gen_), fir(0),
   n(0), c(0),
-  fft_ip(0), fft_w(0),
   pos(0), pre_samples(0), post_samples(0),
   state(state_pass)
 {}
@@ -74,14 +73,16 @@ Convolver::init()
   /////////////////////////////////////////////////////////
   // Allocate buffers
 
-  fft_ip   = new int[(int)(2 + sqrt(double(n * 2)))];
-  fft_w    = new sample_t[n];
+  fft.set_length(n * 2);
   filter.allocate(n * 2);
   buf.allocate(nch, n * 2);
   delay.allocate(nch, n);
 
   // handle buffer allocation error
-  if (!filter.is_allocated() || !buf.is_allocated() || !delay.is_allocated() || fft_ip == 0 || fft_w == 0)
+  if (!filter.is_allocated() ||
+      !buf.is_allocated() ||
+      !delay.is_allocated() ||
+      !fft.is_ok())
   {
     uninit();
     return false;
@@ -96,8 +97,7 @@ Convolver::init()
   for (i = i; i < 2 * n; i++)
     filter[i] = 0;
 
-  fft_ip[0] = 0;
-  rdft(n * 2, 1, filter, fft_ip, fft_w);
+  fft.rdft(filter);
 
   state = state_filter;
 
@@ -124,8 +124,6 @@ Convolver::uninit()
   state = state_pass;
 
   safe_delete(fir);
-  safe_delete(fft_ip);
-  safe_delete(fft_w);
 }
 
 void
@@ -137,7 +135,7 @@ Convolver::process_block()
   {
     memset(buf[ch] + n, 0, n * sizeof(sample_t));
 
-    rdft(n * 2, 1, buf[ch], fft_ip, fft_w);
+    fft.rdft(buf[ch]);
 
     buf[ch][0] = filter[0] * buf[ch][0];
     buf[ch][1] = filter[1] * buf[ch][1]; 
@@ -151,7 +149,7 @@ Convolver::process_block()
       buf[ch][i*2+1] = im;
     }
 
-    rdft(n * 2, -1, buf[ch], fft_ip, fft_w);
+    fft.inv_rdft(buf[ch]);
   }
 
   for (ch = 0; ch < spk.nch(); ch++)

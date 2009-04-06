@@ -6,6 +6,7 @@
 #include "../fir.h"
 #include "../sync.h"
 #include "../buffer.h"
+#include "../dsp/fft.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,11 +23,9 @@ protected:
   SyncHelper sync_helper;
 
   int       n, c;
-  int      *fft_ip;
-  sample_t *fft_w;
-
   int       pos;
 
+  FFT       fft;
   Samples   filter;
   SampleBuf buf;
   SampleBuf delay;
