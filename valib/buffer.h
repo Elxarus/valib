@@ -59,7 +59,6 @@ public:
 
   inline void zero()
   {
-    assert(is_allocated());
     f_buf.zero();
   }
 

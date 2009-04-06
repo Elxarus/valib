@@ -51,7 +51,6 @@ public:
 
   inline void zero()
   {
-    assert(is_allocated());
     if (f_buf)
       memset(f_buf, 0, sizeof(T) * f_size);
   }
