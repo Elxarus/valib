@@ -51,13 +51,15 @@ public:
 
   inline void zero()
   {
+    assert(is_allocated());
     if (f_buf)
       memset(f_buf, 0, sizeof(T) * f_size);
   }
 
-  inline size_t size() { return f_size; }
-  inline T *data()     { return f_buf;  }
-  inline operator T*() { return f_buf;  }
+  inline size_t size() const { return f_size; }
+  inline T *data()     const { return f_buf;  }
+  inline operator T*() const { return f_buf;  }
+  inline bool is_allocated() const { return f_buf != 0; }
 };
 
 #endif

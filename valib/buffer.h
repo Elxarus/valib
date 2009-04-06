@@ -59,12 +59,14 @@ public:
 
   inline void zero()
   {
+    assert(is_allocated());
     f_buf.zero();
   }
 
   inline unsigned  nch()      const { return f_nch;      }
   inline size_t    nsamples() const { return f_nsamples; }
   inline samples_t samples()  const { return f_samples;  }
+  inline bool is_allocated()  const { return f_buf.is_allocated(); }
 
   inline operator samples_t() const { return f_samples; }
   inline sample_t *operator [](unsigned ch) const { return f_samples[ch]; }

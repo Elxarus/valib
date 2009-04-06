@@ -283,15 +283,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\buffer.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\crc.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\valib\crc.h"
-				>
-			</File>
-			<File
-				RelativePath="..\valib\data.h"
 				>
 			</File>
 			<File
