@@ -175,7 +175,7 @@ Convolver::reset()
     pos = 0;
     pre_samples = c;
     post_samples = n - c;
-    memset(delay[0], 0, n * spk.nch() * sizeof(sample_t));
+    delay.zero();
   }
 }
 
