@@ -19,6 +19,7 @@ LinearFilter::reset()
 
   if (want_reinit())
   {
+    out_spk = in_spk;
     init(in_spk, out_spk);
 
     // Timing won't work correctly with SRC, because it's
@@ -55,6 +56,7 @@ LinearFilter::set_input(Speakers spk)
   }
 
   in_spk = spk;
+  out_spk = spk;
   FILTER_SAFE(init(spk, out_spk));
   assert(in_spk.sample_rate == out_spk.sample_rate);
   reset();
@@ -87,7 +89,7 @@ LinearFilter::process(const Chunk *chunk)
   {
     size_t gone = 0;
     FILTER_SAFE(process_samples(samples, size, out_samples, out_size, gone));
-    if (gone >= size) gone = size;
+    if (gone > size) gone = size;
     buffered_samples += gone - out_size;
     size -= gone;
     samples += gone;
@@ -104,7 +106,9 @@ LinearFilter::get_output() const
 bool
 LinearFilter::is_empty() const
 {
-  return !size && !out_size && !flushing && !want_reinit();
+  if (size > 0 || out_size > 0 || flushing) return false;
+  if (want_reinit() && need_flushing()) return false;
+  return true;
 }
 
 bool
@@ -114,7 +118,7 @@ LinearFilter::get_chunk(Chunk *chunk)
   {
     size_t gone = 0;
     FILTER_SAFE(process_samples(samples, size, out_samples, out_size, gone));
-    if (gone >= size) gone = size;
+    if (gone > size) gone = size;
     buffered_samples += gone - out_size;
     size -= gone;
     samples += gone;
@@ -148,7 +152,8 @@ LinearFilter::get_chunk(Chunk *chunk)
     chunk->set_eos();
     if (flush_reinit)
     {
-      init(in_spk, out_spk);
+      out_spk = in_spk;
+      FILTER_SAFE(init(in_spk, out_spk));
       assert(in_spk.sample_rate == out_spk.sample_rate);
     }
     reset();

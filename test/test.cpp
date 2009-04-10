@@ -17,6 +17,7 @@ EXTERN_TEST(linear_filter);
 
 EXTERN_TEST(slice);
 EXTERN_TEST(convolver);
+EXTERN_TEST(convolver_mch);
 EXTERN_SUITE(resample);
 EXTERN_SUITE(proc);
 EXTERN_TEST(old_style);
@@ -40,6 +41,7 @@ FLAT_SUITE(tests, "Common tests")
    TEST_FACTORY(linear_filter),
    TEST_FACTORY(slice),
    TEST_FACTORY(convolver),
+   TEST_FACTORY(convolver_mch),
   SUITE_FACTORY(resample),
   SUITE_FACTORY(proc),
 

@@ -401,6 +401,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\tests\filters\test_convolver_mch.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\filters\test_linear_filter.cpp"
 					>
 				</File>

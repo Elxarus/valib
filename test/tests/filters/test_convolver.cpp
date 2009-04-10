@@ -1,6 +1,7 @@
 #include <math.h>
 #include "source/generator.h"
 #include "filters/convolver.h"
+#include "filters/gain.h"
 #include "filters/slice.h"
 #include "fir/param_fir.h"
 #include "../../suite.h"
@@ -12,6 +13,7 @@ static const int seed = 123123;
 TEST(convolver, "Convolver test")
 
   const double gain = 0.5;
+  Gain gain_filter(gain);
 
   FIRZero zero_fir;
   FIRIdentity identity_fir;
@@ -43,6 +45,17 @@ TEST(convolver, "Convolver test")
   CHECK(conv.get_fir() == &identity_fir);
 
   /////////////////////////////////////////////////////////
+  // Convolve with null response
+
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed, noise_size);
+
+  conv.set_fir(0);
+  conv.reset();
+
+  CHECK(compare(log, &noise1, &conv, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
   // Convolve with zero response
 
   noise1.init(spk, seed, noise_size);
@@ -63,6 +76,17 @@ TEST(convolver, "Convolver test")
   conv.reset();
 
   CHECK(compare(log, &noise1, &conv, &noise2, 0) == 0);
+
+  /////////////////////////////////////////////////////////
+  // Convolve with gain response
+
+  noise1.init(spk, seed, noise_size);
+  noise2.init(spk, seed, noise_size);
+
+  conv.set_fir(&gain_fir);
+  conv.reset();
+
+  CHECK(compare(log, &noise1, &conv, &noise2, &gain_filter) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with low-pass filter

@@ -467,6 +467,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\convolver_mch.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\convolver_mch.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\counter.h"
 				>
 			</File>
@@ -540,6 +548,14 @@
 			</File>
 			<File
 				RelativePath="..\valib\filters\equalizer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\equalizer_mch.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\equalizer_mch.h"
 				>
 			</File>
 			<File
