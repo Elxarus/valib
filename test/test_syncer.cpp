@@ -154,7 +154,7 @@ test_syncer(Log *log)
   int isyncword;
   int ptr_offset;
   size_t block_size;
-  int offset;
+  size_t offset;
 
   uint8_t *buf = new uint8_t[buf_size];
   uint8_t scanbuf[4];
