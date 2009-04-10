@@ -2,7 +2,7 @@
 #define VALIB_CONVOLVER_H
 
 #include <math.h>
-#include "../filter.h"
+#include "linear_filter.h"
 #include "../fir.h"
 #include "../sync.h"
 #include "../buffer.h"
@@ -14,7 +14,7 @@
 // Use impulse response to implement FIR filtering.
 ///////////////////////////////////////////////////////////////////////////////
 
-class Convolver : public NullFilter
+class Convolver : public LinearFilter
 {
 protected:
   int ver;
@@ -33,9 +33,8 @@ protected:
   int pre_samples;
   int post_samples;
 
-  bool init();
   void uninit();
-  void process_block();
+  void convolve();
 
   enum { state_filter, state_zero, state_pass, state_gain } state;
 
@@ -53,10 +52,14 @@ public:
   /////////////////////////////////////////////////////////
   // Filter interface
 
-  virtual void reset();
-  virtual bool set_input(Speakers spk);
-  virtual bool process(const Chunk *chunk);
-  virtual bool get_chunk(Chunk *chunk);
+  virtual bool init(Speakers spk, Speakers &out_spk);
+  virtual void reset_state();
+
+  virtual bool process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone);
+  virtual bool flush(samples_t &out, size_t &out_size);
+
+  virtual bool need_flushing() const;
+  virtual bool want_reinit() const;
 };
 
 #endif

@@ -12,6 +12,8 @@ EXTERN_TEST(rng);
 EXTERN_SUITE(bitstream);
 EXTERN_SUITE(base);
 EXTERN_SUITE(fir);
+EXTERN_TEST(linear_filter);
+
 
 EXTERN_TEST(slice);
 EXTERN_TEST(convolver);
@@ -35,6 +37,7 @@ FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(bitstream),
   SUITE_FACTORY(base),
   SUITE_FACTORY(fir),
+   TEST_FACTORY(linear_filter),
    TEST_FACTORY(slice),
    TEST_FACTORY(convolver),
   SUITE_FACTORY(resample),

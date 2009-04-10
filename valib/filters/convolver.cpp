@@ -5,7 +5,6 @@
 //   for short filter lengths (up to ~1000)
 
 #include <string.h>
-#include "../dsp/fftsg.h"
 #include "convolver.h"
 
 inline unsigned int clp2(unsigned int x)
@@ -21,32 +20,64 @@ inline unsigned int clp2(unsigned int x)
 }
 
 
-Convolver::Convolver(const FIRGen *gen_): 
-  NullFilter(FORMAT_MASK_LINEAR),
+Convolver::Convolver(const FIRGen *gen_):
   gen(gen_), fir(0),
   n(0), c(0),
   pos(0), pre_samples(0), post_samples(0),
   state(state_pass)
-{}
+{
+  ver = gen.version();
+}
 
 Convolver::~Convolver()
 {
   uninit();
 }
 
-bool
-Convolver::init()
+void
+Convolver::convolve()
+{
+  int ch, i;
+  int nch = in_spk.nch();
+
+  for (ch = 0; ch < nch; ch++)
+  {
+    memset(buf[ch] + n, 0, n * sizeof(sample_t));
+
+    fft.rdft(buf[ch]);
+
+    buf[ch][0] = filter[0] * buf[ch][0];
+    buf[ch][1] = filter[1] * buf[ch][1]; 
+
+    for (i = 1; i < n; i++)
+    {
+      sample_t re,im;
+      re = filter[i*2  ] * buf[ch][i*2] - filter[i*2+1] * buf[ch][i*2+1];
+      im = filter[i*2+1] * buf[ch][i*2] + filter[i*2  ] * buf[ch][i*2+1];
+      buf[ch][i*2  ] = re;
+      buf[ch][i*2+1] = im;
+    }
+
+    fft.inv_rdft(buf[ch]);
+  }
+
+  for (ch = 0; ch < nch; ch++)
+    for (i = 0; i < n; i++)
+      buf[ch][i] += delay[ch][i];
+
+  for (ch = 0; ch < nch; ch++)
+    memcpy(delay[ch], buf[ch] + n, n * sizeof(sample_t));
+}
+
+bool Convolver::init(Speakers in_spk_, Speakers &out_spk_)
 {
   int i;
-  int nch = spk.nch();
-
-  if (spk.is_unknown())
-    // filter is uninitialized
-    return true;
+  int nch = in_spk_.nch();
+  out_spk_ = in_spk_;
 
   uninit();
   ver = gen.version();
-  fir = gen.make(spk.sample_rate);
+  fir = gen.make(in_spk_.sample_rate);
 
   if (!fir)
   {
@@ -108,7 +139,6 @@ Convolver::init()
   pre_samples = c;
   post_samples = fir->length - c;
   memset(delay[0], 0, n * nch * sizeof(sample_t));
-  sync_helper.reset();
 
   return true;
 }
@@ -127,49 +157,8 @@ Convolver::uninit()
 }
 
 void
-Convolver::process_block()
+Convolver::reset_state()
 {
-  int ch, i;
-
-  for (ch = 0; ch < spk.nch(); ch++)
-  {
-    memset(buf[ch] + n, 0, n * sizeof(sample_t));
-
-    fft.rdft(buf[ch]);
-
-    buf[ch][0] = filter[0] * buf[ch][0];
-    buf[ch][1] = filter[1] * buf[ch][1]; 
-
-    for (i = 1; i < n; i++)
-    {
-      sample_t re,im;
-      re = filter[i*2  ] * buf[ch][i*2] - filter[i*2+1] * buf[ch][i*2+1];
-      im = filter[i*2+1] * buf[ch][i*2] + filter[i*2  ] * buf[ch][i*2+1];
-      buf[ch][i*2  ] = re;
-      buf[ch][i*2+1] = im;
-    }
-
-    fft.inv_rdft(buf[ch]);
-  }
-
-  for (ch = 0; ch < spk.nch(); ch++)
-    for (i = 0; i < n; i++)
-      buf[ch][i] += delay[ch][i];
-
-  for (ch = 0; ch < spk.nch(); ch++)
-    memcpy(delay[ch], buf[ch] + n, n * sizeof(sample_t));
-}
-
-void
-Convolver::reset()
-{
-  NullFilter::reset();
-
-  sync_helper.reset();
-
-  if (ver != gen.version())
-    init();
-
   if (state == state_filter)
   {
     pos = 0;
@@ -180,169 +169,108 @@ Convolver::reset()
 }
 
 bool
-Convolver::set_input(Speakers spk)
+Convolver::process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone)
 {
-  FILTER_SAFE(NullFilter::set_input(spk));
-  return init();
-}
+  int ch;
+  int nch = in_spk.nch();
 
-bool
-Convolver::process(const Chunk *chunk)
-{
-  FILTER_SAFE(NullFilter::process(chunk));
-  sync_helper.receive_sync(chunk, pos);
+  /////////////////////////////////////////////////////////
+  // Trivial filtering
+
+  if (state != state_filter)
+  {
+    size_t s;
+    sample_t gain;
+    switch (state)
+    {
+      case state_zero:
+        for (ch = 0; ch < nch; ch++)
+          memset(in[ch], 0, in_size * sizeof(sample_t));
+        break;
+
+      case state_gain:
+        gain = fir->data[0];
+        for (ch = 0; ch < nch; ch++)
+          for (s = 0; s < in_size; s++)
+            in[ch][s] *= gain;
+        break;
+    }
+
+    out = in;
+    out_size = in_size;
+    gone = in_size;
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////
+  // Convolution
+
+  if (pos < n)
+  {
+    gone = MIN(int(in_size), n - pos);
+    for (ch = 0; ch < nch; ch++)
+      memcpy(buf[ch] + pos, in[ch], sizeof(sample_t) * gone);
+    pos += gone;
+
+    if (pos < n)
+    {
+      out.zero();
+      out_size = 0;
+      return true;
+    }
+  }
+
+  pos = 0;
+  convolve();
+
+  out = buf;
+  out_size = n;
+  if (pre_samples)
+  {
+    out += pre_samples;
+    out_size -= pre_samples;
+    pre_samples = 0;
+  }
+
   return true;
 }
 
 bool
-Convolver::get_chunk(Chunk *chunk)
+Convolver::flush(samples_t &out, size_t &out_size)
 {
-
-  int ch;
-  size_t s;
-
-  /////////////////////////////////////////////////////////
-  // Rebuild the filter if nessesary
-  // In case of trivial filtering only init() will be called
-
-  if (ver != gen.version())
+  if (!need_flushing())
   {
-    if (state == state_filter && post_samples > 0)
-    {
-      /////////////////////////////////////////////////////
-      // Flush buffered data
-
-      for (ch = 0; ch < spk.nch(); ch++)
-        memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
-
-      process_block();
-      chunk->set_linear(spk, buf.samples(), pos + c);
-
-      post_samples = 0;
-      pos = 0;
-
-      if (pre_samples)
-      {
-        chunk->samples += pre_samples;
-        chunk->size -= pre_samples;
-        pre_samples = 0;
-      }
-
-      sync_helper.send_sync(chunk, 1.0 / spk.sample_rate);
-      sync_helper.drop(chunk->size);
-      sync = false;
-
-      if (post_samples <= 0)
-        chunk->set_eos();
-
-      return true;
-    }
-
-    init();
-  }
-
-  /////////////////////////////////////////////////////////
-  // Do trivial filtering inplace
-
-  switch (state)
-  {
-    case state_zero:
-      for (ch = 0; ch < spk.nch(); ch++)
-        memset(samples[ch], 0, size * sizeof(sample_t));
-      send_chunk_inplace(chunk, size);
-      return true;
-
-    case state_pass:
-      send_chunk_inplace(chunk, size);
-      return true;
-
-    case state_gain:
-      double gain = fir->data[0];
-      for (ch = 0; ch < spk.nch(); ch++)
-        for (s = 0; s < size; s++)
-          samples[ch][s] *= gain;
-      send_chunk_inplace(chunk, size);
-      return true;
-  }
-
-  /////////////////////////////////////////////////////////
-  // Filter
-
-  if (size)
-  {
-    ///////////////////////////////////////////////////////
-    // Normal processing
-
-    if (pos < n)
-    {
-      int l = MIN(int(size), n - pos);
-      for (ch = 0; ch < spk.nch(); ch++)
-        memcpy(buf[ch] + pos, samples[ch], sizeof(sample_t) * l);
-      drop_samples(l);
-      pos += l;
-
-      if (pos < n)
-      {
-        chunk->set_dummy();
-        return true;
-      }
-    }
-    pos = 0;
-
-    process_block();
-    chunk->set_linear(spk, buf.samples(), n);
-    if (pre_samples)
-    {
-      chunk->samples += pre_samples;
-      chunk->size -= pre_samples;
-      pre_samples = 0;
-    }
-    sync_helper.send_sync(chunk, 1.0 / spk.sample_rate);
-    sync_helper.drop(chunk->size);
-    sync = false;
-
+    out.zero();
+    out_size = 0;
     return true;
   }
-  else if (flushing)
+
+  for (int ch = 0; ch < in_spk.nch(); ch++)
+    memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
+
+  convolve();
+  out = buf;
+  out_size = pos + c;
+  post_samples = 0;
+  pos = 0;
+
+  if (pre_samples)
   {
-    ///////////////////////////////////////////////////////
-    // Flushing
-
-    if (post_samples > 0)
-    {
-      for (ch = 0; ch < spk.nch(); ch++)
-        memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
-
-      process_block();
-      chunk->set_linear(spk, buf.samples(), pos + c);
-
-      post_samples = 0;
-      pos = 0;
-
-      if (pre_samples)
-      {
-        chunk->samples += pre_samples;
-        chunk->size -= pre_samples;
-        pre_samples = 0;
-      }
-      sync_helper.send_sync(chunk, 1.0 / spk.sample_rate);
-      sync_helper.drop(chunk->size);
-      sync = false;
-
-      return true;
-    }
-
-    chunk->set_empty(spk);
-    chunk->set_eos();
-    reset();
-    return true;
+    out += pre_samples;
+    out_size -= pre_samples;
+    pre_samples = 0;
   }
-  else
-  {
-    ///////////////////////////////////////////////////////
-    // Not enough data
+  return true;
+}
 
-    chunk->set_dummy();
-    return true;
-  }
+bool
+Convolver::need_flushing() const
+{
+  return state == state_filter && post_samples > 0;
+}
+
+bool
+Convolver::want_reinit() const
+{
+  return ver != gen.version();
 }
