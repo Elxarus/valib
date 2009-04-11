@@ -286,12 +286,24 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
   {
     gone = MIN(in_size, size_t(n - pos));
     for (ch = 0; ch < nch; ch++)
-      memcpy(buf[ch] + pos, in[ch], sizeof(sample_t) * gone);
+      if (type[ch] == type_conv)
+        memcpy(buf[ch] + pos, in[ch], gone * sizeof(sample_t));
+      else
+        // Trivial cases are shifted
+        memcpy(buf[ch] + c + pos, in[ch], gone * sizeof(sample_t));
     pos += gone;
 
     if (pos < n)
       return true;
   }
+
+  // Apply delayed samples (trivial cases)
+  for (ch = 0; ch < nch; ch++)
+    if (type[ch] != type_conv)
+    {
+      memcpy(buf[ch], delay[ch], c * sizeof(sample_t));
+      memcpy(delay[ch], buf[ch] + n, c * sizeof(sample_t));
+    }
 
   pos = 0;
   process_trivial(buf, n);
@@ -316,7 +328,10 @@ ConvolverMch::flush(samples_t &out, size_t &out_size)
     return true;
 
   for (int ch = 0; ch < in_spk.nch(); ch++)
-    memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
+    if (type[ch] == type_conv)
+      memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
+    else
+      memcpy(buf[ch], delay[ch], c * sizeof(sample_t));
 
   process_trivial(buf, n);
   process_convolve();
