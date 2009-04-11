@@ -17,6 +17,7 @@ protected:
   EqFIR master;               // master equalizer
   EqFIR ch_eq[NCHANNELS];     // channel equalizers
   MultiFIR multi_fir[NCHANNELS]; // sum of master and channel equalizers
+  const FIRGen *firs[NCHANNELS];
 
   bool enabled;
   ConvolverMch conv;
@@ -24,13 +25,14 @@ protected:
 public:
   EqualizerMch(): enabled(false)
   {
-    FIRGen *fir_sequence[2];
-    fir_sequence[0] = &master;
+    FIRGen *master_plus_channel[2];
+    master_plus_channel[0] = &master;
 
     for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
     {
-      fir_sequence[1] = &ch_eq[ch_name];
-      multi_fir[ch_name].set(fir_sequence, 2);
+      master_plus_channel[1] = &ch_eq[ch_name];
+      multi_fir[ch_name].set(master_plus_channel, 2);
+      firs[ch_name] = &multi_fir[ch_name];
     }
   }
 
@@ -49,7 +51,7 @@ public:
     {
       enabled = new_enabled;
       if (enabled)
-        conv.set_all_firs(&multi_fir);
+        conv.set_all_firs(firs);
       else
         conv.release_all_firs();
     }
