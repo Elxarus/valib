@@ -58,7 +58,7 @@ public:
   void set_units(int units);
 
   void get_delays(float delays[NCHANNELS]) const;
-  void set_delays(float delays[NCHANNELS]);
+  void set_delays(const float delays[NCHANNELS]);
 };
 
 

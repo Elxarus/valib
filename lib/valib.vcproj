@@ -607,6 +607,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\proc_state.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\proc_state.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\resample.cpp"
 				>
 			</File>

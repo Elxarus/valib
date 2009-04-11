@@ -45,7 +45,7 @@ public:
 
   size_t get_nbands() const { return eq.get_nbands(); };
   bool set_bands(size_t nbands, const int *freq, const double *gain) { return eq.set_bands(nbands, freq, gain); }
-  void get_bands(int *freq, double *gain) const { eq.get_bands(freq, gain); }
+  void get_bands(int *freq, double *gain, int first_band, int nbands) const { eq.get_bands(freq, gain, first_band, nbands); }
   void reset_eq() { eq.reset(); }
 
   /////////////////////////////////////////////////////////

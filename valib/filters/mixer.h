@@ -109,7 +109,7 @@ public:
   inline void     get_input_gains(sample_t input_gains[NCHANNELS]);
   inline void     get_output_gains(sample_t output_gains[NCHANNELS]);
 
-  inline void     set_matrix(matrix_t *matrix);
+  inline void     set_matrix(const matrix_t *matrix);
   inline void     set_auto_matrix(bool auto_matrix);
   inline void     set_normalize_matrix(bool normalize_matrix);
   inline void     set_voice_control(bool voice_control);
@@ -118,8 +118,8 @@ public:
   inline void     set_slev(sample_t slev);
   inline void     set_lfelev(sample_t lfelev);
   inline void     set_gain(sample_t gain);
-  inline void     set_input_gains(sample_t input_gains[NCHANNELS]);
-  inline void     set_output_gains(sample_t output_gains[NCHANNELS]);
+  inline void     set_input_gains(const sample_t input_gains[NCHANNELS]);
+  inline void     set_output_gains(const sample_t output_gains[NCHANNELS]);
 
   // mixing functions
   void io_mix11(samples_t input, samples_t output, size_t nsamples);
@@ -271,7 +271,7 @@ Mixer::get_output_gains(sample_t _output_gains[NCHANNELS])
 
 
 inline void 
-Mixer::set_matrix(matrix_t *_matrix)
+Mixer::set_matrix(const matrix_t *_matrix)
 {
   if (!auto_matrix)
   {
@@ -336,14 +336,14 @@ Mixer::set_gain(sample_t _gain)
 }
 
 inline void 
-Mixer::set_input_gains(sample_t _input_gains[NCHANNELS])
+Mixer::set_input_gains(const sample_t _input_gains[NCHANNELS])
 {
   memcpy(input_gains, _input_gains, sizeof(input_gains));
   prepare_matrix();
 }
 
 inline void 
-Mixer::set_output_gains(sample_t _output_gains[NCHANNELS])
+Mixer::set_output_gains(const sample_t _output_gains[NCHANNELS])
 {
   memcpy(output_gains, _output_gains, sizeof(output_gains));
   prepare_matrix();

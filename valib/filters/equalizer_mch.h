@@ -59,19 +59,17 @@ public:
 
   // Master equalizer
 
-  size_t get_master_nbands() const;
-  bool set_master_bands(size_t nbands, const int *freq, const double *gain);
-  void get_master_bands(int *freq, double *gain) const;
-  void reset_master_eq();
-  void is_master_set();
+  size_t get_master_nbands() const { return master.get_nbands(); };
+  bool set_master_bands(size_t nbands, const int *freq, const double *gain) { return master.set_bands(nbands, freq, gain); }
+  void get_master_bands(int *freq, double *gain, int first_band, int nbands) const { master.get_bands(freq, gain, first_band, nbands); }
+  void reset_master_eq() { master.reset(); }
 
   // Per-channel equalizers
 
   size_t get_nbands(int ch_name) const;
   bool set_bands(int ch_name, size_t nbands, const int *freq, const double *gain);
-  void get_bands(int ch_name, int *freq, double *gain) const;
+  void get_bands(int ch_name, int *freq, double *gain, int first_band, int nbands) const;
   void reset_eq(int ch_name);
-  void is_set(int ch_name);
 
   /////////////////////////////////////////////////////////
   // Filter interface

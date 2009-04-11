@@ -78,6 +78,13 @@ LinearFilter::process(const Chunk *chunk)
   if (in_spk != chunk->spk)
     FILTER_SAFE(set_input(chunk->spk));
 
+  if (want_reinit() && !need_flushing())
+  {
+    out_spk = in_spk;
+    FILTER_SAFE(init(in_spk, out_spk));
+    assert(in_spk.sample_rate == out_spk.sample_rate);
+  }
+
   sync_helper.receive_sync(chunk, buffered_samples);
   flushing = chunk->eos;
   samples  = chunk->samples;

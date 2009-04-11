@@ -79,11 +79,19 @@ EqFIR::set_bands(size_t nbands_, const int *freq_, const double *gain_)
 }
 
 void
-EqFIR::get_bands(int *freq_, double *gain_) const
+EqFIR::get_bands(int *freq_, double *gain_, int first_band_, int nbands_) const
 {
-  size_t i;
-  if (freq_) for (i = 0; i < nbands; i++) freq_[i] = freq[i];
-  if (gain_) for (i = 0; i < nbands; i++) gain_[i] = gain[i];
+  int i;
+
+  // validate input parameters
+  if (first_band_ >= int(nbands) || first_band_ < 0) return;
+  if (nbands_ == -1) nbands_ = nbands - first_band_;
+  if (nbands_ < 0) return;
+  if (first_band_ + nbands_ > int(nbands)) nbands_ = nbands - first_band_;
+
+  // copy bands
+  if (freq_) for (i = 0; i < nbands_; i++) freq_[i] = freq[i + first_band_];
+  if (gain_) for (i = 0; i < nbands_; i++) gain_[i] = gain[i + first_band_];
 }
 
 void

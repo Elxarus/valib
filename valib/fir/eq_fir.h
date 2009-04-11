@@ -27,7 +27,7 @@ public:
 
   size_t get_nbands() const;
   bool set_bands(size_t nbands, const int *freq, const double *gain);
-  void get_bands(int *freq, double *gain) const;
+  void get_bands(int *freq, double *gain, int first_band, int nbands) const;
   void reset();
 
   /////////////////////////////////////////////////////////

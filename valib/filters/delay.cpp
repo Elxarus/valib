@@ -60,7 +60,7 @@ Delay::get_delays(float _delays[NCHANNELS]) const
 }
 
 void    
-Delay::set_delays(float _delays[NCHANNELS])
+Delay::set_delays(const float _delays[NCHANNELS])
 {
   memcpy(delays, _delays, sizeof(delays));
   reset();

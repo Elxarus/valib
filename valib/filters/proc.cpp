@@ -229,3 +229,131 @@ AudioProcessor::get_chunk(Chunk *_chunk)
 {
   return chain.get_chunk(_chunk);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+AudioProcessorState *
+AudioProcessor::get_state(vtime_t time)
+{
+  AudioProcessorState *state = new AudioProcessorState;
+  if (!state) return 0;
+
+  // Channel order
+  get_input_order(state->input_order);
+  get_output_order(state->output_order);
+  // Master gain
+  state->master = get_master();
+  state->gain   = get_gain();
+  // AGC options
+  state->auto_gain = get_auto_gain();
+  state->normalize = get_normalize();
+  state->attack    = get_attack();
+  state->release   = get_release();
+  // DRC
+  state->drc       = get_drc();
+  state->drc_power = get_drc_power();
+  state->drc_level = get_drc_level();
+  // Matrix
+  get_matrix(&state->matrix);
+  // Automatrix options
+  state->auto_matrix      = get_auto_matrix();
+  state->normalize_matrix = get_normalize_matrix();
+  state->voice_control    = get_voice_control();
+  state->expand_stereo    = get_expand_stereo();
+  // Automatrix levels
+  state->clev = get_clev();
+  state->slev = get_slev();
+  state->lfelev = get_lfelev();
+  // Input/output gains
+  get_input_gains(state->input_gains);
+  get_output_gains(state->output_gains);
+  // Input/output levels
+  get_input_levels(time, state->input_levels);
+  get_output_levels(time, state->output_levels);
+  // SRC
+  state->src_quality = get_src_quality();
+  state->src_att     = get_src_att();
+  // Equalizer
+  state->eq = get_eq();
+  state->eq_master_nbands = get_eq_master_nbands();
+  if (state->eq_master_nbands)
+  {
+    state->eq_master_freq = new int[state->eq_master_nbands];
+    state->eq_master_gain = new double[state->eq_master_nbands];
+    get_eq_master_bands(state->eq_master_freq, state->eq_master_gain, 0, -1);
+  }
+  for (int ch = 0; ch < NCHANNELS; ch++)
+  {
+    state->eq_nbands[ch] = get_eq_nbands(ch);
+    if (state->eq_nbands[ch])
+    {
+      state->eq_freq[ch] = new int[state->eq_nbands[ch]];
+      state->eq_gain[ch] = new double[state->eq_nbands[ch]];
+      get_eq_bands(ch, state->eq_freq[ch], state->eq_gain[ch], 0, -1);
+    }
+  }
+  // Spectrum
+  state->spectrum_length = get_spectrum_length();
+  // Bass redirection
+  state->bass_redir = get_bass_redir();
+  state->bass_freq = get_bass_freq();
+  // Delays
+  state->delay = get_delay();
+  state->delay_units = get_delay_units();
+  get_delays(state->delays);
+
+  return state;
+}
+
+void
+AudioProcessor::set_state(const AudioProcessorState *state)
+{
+  if (!state) return;
+
+  // Channel order
+  set_input_order(state->input_order);
+  set_output_order(state->output_order);
+  // Master gain
+  set_master(state->gain);
+  // AGC
+  set_auto_gain(state->auto_gain);
+  set_normalize(state->normalize);
+  set_attack(state->attack);
+  set_release(state->release);
+  // DRC
+  set_drc(state->drc);
+  set_drc_power(state->drc_power);
+  // Matrix
+  set_matrix(&state->matrix);
+  // Automatrix options
+  set_auto_matrix(state->auto_matrix);
+  set_normalize_matrix(state->normalize_matrix);
+  set_voice_control(state->voice_control);
+  set_expand_stereo(state->expand_stereo);
+  // Automatrix levels
+  set_clev(state->clev);
+  set_slev(state->slev);
+  set_lfelev(state->lfelev);
+  // Input/output gains
+  set_input_gains(state->input_gains);
+  set_output_gains(state->output_gains);
+  // SRC
+  set_src_quality(state->src_quality);
+  set_src_att(state->src_att);
+  // Eqalizer
+  set_eq(state->eq);
+  if (state->eq_master_nbands > 0 && state->eq_master_freq && state->eq_master_gain)
+    set_eq_master_bands(state->eq_master_nbands, state->eq_master_freq, state->eq_master_gain);
+  for (int ch = 0; ch < NCHANNELS; ch++)
+    if (state->eq_nbands[ch] > 0 && state->eq_freq[ch] && state->eq_gain[ch])
+      set_eq_bands(ch, state->eq_nbands[ch], state->eq_freq[ch], state->eq_gain[ch]);
+  // Spectrum
+  set_spectrum_length(state->spectrum_length);
+  // Bass redirection
+  set_bass_redir(state->bass_redir);
+  set_bass_freq(state->bass_freq);
+  // Delays
+  set_delay(state->delay);
+  set_delay_units(state->delay_units);
+  set_delays(state->delays);
+}
