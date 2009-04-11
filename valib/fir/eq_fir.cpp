@@ -6,52 +6,37 @@ inline double sinc(double x) { return x == 0 ? 1 : sin(x)/x; }
 inline double lpf(int i, double f) { return 2 * f * sinc(i * 2 * M_PI * f); }
 
 
-EqFIR::EqFIR(): ver(0), nbands(0), freq(0), gain(0)
+EqFIR::EqFIR(): ver(0), nbands(0)
 {}
 
-EqFIR::EqFIR(size_t nbands_, int *freq_, double *gain_): ver(0), nbands(0), freq(0), gain(0)
+EqFIR::EqFIR(const EqBand *new_bands, size_t new_nbands): ver(0), nbands(0)
 {
-  set_bands(nbands_, freq_, gain_);
-}
-
-EqFIR::~EqFIR()
-{
-  reset();
+  set_bands(new_bands, new_nbands);
 }
 
 size_t
 EqFIR::get_nbands() const
-{ return nbands; }
+{
+  return nbands;
+}
 
-bool
-EqFIR::set_bands(size_t nbands_, const int *freq_, const double *gain_)
+size_t
+EqFIR::set_bands(const EqBand *new_bands, size_t new_nbands)
 {
   size_t i;
 
   reset();
+  if (new_nbands == 0 || !new_bands)
+    return 0;
 
-  if (nbands_ == 0)
-    return true;
-
-  if (!freq_ || !gain_)
-    return false;
-
-  freq = new int[nbands_];
-  gain = new double[nbands_];
-  if (!freq && !gain)
-  {
-    reset();
-    return false;
-  }
+  bands.allocate(new_nbands);
+  if (!bands.is_allocated())
+    return 0;
 
   nbands = 0;
-  for (i = 0; i < nbands_; i++)
-    if (freq_[i] > 0)
-    {
-      freq[nbands] = freq_[i];
-      gain[nbands] = gain_[i];
-      nbands++;
-    }
+  for (i = 0; i < new_nbands; i++)
+    if (new_bands[i].freq > 0)
+      bands[nbands++] = new_bands[i];
 
   // simple bubble sort
   if (nbands > 1)
@@ -61,37 +46,33 @@ EqFIR::set_bands(size_t nbands_, const int *freq_, const double *gain_)
     {
       sorted = true;
       for (i = 0; i < nbands-1; i++)
-        if (freq[i] > freq[i+1])
+        if (bands[i].freq > bands[i+1].freq)
         {
-          int f = freq[i];
-          freq[i] = freq[i+1];
-          freq[i+1] = f;
-          double g = gain[i];
-          gain[i] = gain[i+1];
-          gain[i+1] = g;
+          EqBand tmp = bands[i];
+          bands[i] = bands[i+1];
+          bands[i+1] = tmp;
           sorted = false;
         }
     }
   }
 
   ver++;
-  return true;
+  return nbands;
 }
 
-void
-EqFIR::get_bands(int *freq_, double *gain_, int first_band_, int nbands_) const
+size_t
+EqFIR::get_bands(EqBand *out_bands, size_t first_band, size_t out_nbands) const
 {
-  int i;
+  if (!out_bands || !out_nbands || first_band >= nbands)
+    return 0;
 
-  // validate input parameters
-  if (first_band_ >= int(nbands) || first_band_ < 0) return;
-  if (nbands_ == -1) nbands_ = nbands - first_band_;
-  if (nbands_ < 0) return;
-  if (first_band_ + nbands_ > int(nbands)) nbands_ = nbands - first_band_;
+  if (first_band + out_nbands > nbands)
+    out_nbands = nbands - first_band;
 
-  // copy bands
-  if (freq_) for (i = 0; i < nbands_; i++) freq_[i] = freq[i + first_band_];
-  if (gain_) for (i = 0; i < nbands_; i++) gain_[i] = gain[i + first_band_];
+  for (size_t i = 0; i < out_nbands; i++)
+    out_bands[i] = bands[first_band + i];
+
+  return nbands;
 }
 
 void
@@ -100,17 +81,13 @@ EqFIR::reset()
   if (nbands)
   {
     nbands = 0;
-    safe_delete(freq);
-    safe_delete(gain);
     ver++;
   }
 }
 
 int
 EqFIR::version() const
-{ 
-  return ver; 
-}
+{ return ver; }
 
 const FIRInstance *
 EqFIR::make(int sample_rate) const
@@ -122,7 +99,7 @@ EqFIR::make(int sample_rate) const
   // Find the last meaningful band
 
   size_t max_band = 0;
-  while (max_band < nbands && freq[max_band] <= sample_rate / 2)
+  while (max_band < nbands && bands[max_band].freq <= sample_rate / 2)
     max_band++;
 
   /////////////////////////////////////////////////////////
@@ -131,7 +108,7 @@ EqFIR::make(int sample_rate) const
   if (max_band == 0)
     return new IdentityFIRInstance(sample_rate);
   else if (max_band == 1)
-    return new GainFIRInstance(sample_rate, gain[0]);
+    return new GainFIRInstance(sample_rate, bands[0].gain);
 
   /////////////////////////////////////////////////////////
   // Find the filter length
@@ -141,11 +118,11 @@ EqFIR::make(int sample_rate) const
   double max_a = 0;
   for (i = 0; i < max_band - 1; i++)
   {
-    double dg = gain[i+1] - gain[i];
+    double dg = bands[i+1].gain - bands[i].gain;
     if (fabs(dg) > 0)
     {
-      double df = double(freq[i+1] - freq[i]) / sample_rate;
-      double a  = -value2db(gain[i] * q / fabs(dg));
+      double df = double(bands[i+1].freq - bands[i].freq) / sample_rate;
+      double a  = -value2db(bands[i].gain * q / fabs(dg));
       int n = kaiser_n(a, df) | 1;
       if (n > max_n) max_n = n, max_a = a;
     }
@@ -164,15 +141,15 @@ EqFIR::make(int sample_rate) const
 
   for (j = 0; j < max_n; j++) data[j] = 0;
 
-  data[max_c] += gain[max_band-1];
+  data[max_c] += bands[max_band-1].gain;
   for (i = 0; i < max_band - 1; i++)
-    if (gain[i] != gain[i+1])
+    if (bands[i].gain != bands[i+1].gain)
     {
-      double df = double(freq[i+1] - freq[i]) / sample_rate;
-      double cf = double(freq[i+1] + freq[i]) / 2 / sample_rate;
+      double df = double(bands[i+1].freq - bands[i].freq) / sample_rate;
+      double cf = double(bands[i+1].freq + bands[i].freq) / 2 / sample_rate;
       double alpha = kaiser_alpha(kaiser_a(max_n, df));
       for (int j = -max_c; j < max_c; j++)
-        data[max_c + j] += (gain[i] - gain[i+1]) * lpf(j, cf) * kaiser_window(j, max_n, alpha);
+        data[max_c + j] += (bands[i].gain - bands[i+1].gain) * lpf(j, cf) * kaiser_window(j, max_n, alpha);
     }
 
 /*
@@ -189,9 +166,9 @@ EqFIR::make(int sample_rate) const
 
   data[max_c] += gain[max_band-1];
   for (i = 0; i < max_band - 1; i++)
-    if (gain[i] != gain[i+1])
+    if (bands[i].gain != bands[i+1].gain)
       for (int j = -max_c; j < max_c; j++)
-        data[max_c + j] += (gain[i] - gain[i+1]) * lpf(j, double(freq[i+1] - freq[i]) / sample_rate);
+        data[max_c + j] += (bands[i].gain - bands[i+1].gain) * lpf(j, double(bands[i+1].freq - bands[i].freq) / sample_rate);
 
   double alpha = kaiser_alpha(max_a);
   for (j = -max_c; j < max_c; j++)

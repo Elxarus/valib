@@ -2,6 +2,7 @@
 #define PROC_STATE_H
 
 #include "../defs.h"
+#include "../fir/eq_fir.h"
 
 struct AudioProcessorState
 {
@@ -53,11 +54,9 @@ struct AudioProcessorState
   // Equalizer
   bool     eq;
   size_t   eq_master_nbands;
-  int     *eq_master_freq;
-  double  *eq_master_gain;
+  EqBand  *eq_master_bands;
   size_t   eq_nbands[NCHANNELS];
-  int     *eq_freq[NCHANNELS];
-  double  *eq_gain[NCHANNELS];
+  EqBand  *eq_bands[NCHANNELS];
 
   // Spectrum
   unsigned spectrum_length;

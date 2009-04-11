@@ -3,32 +3,31 @@
 size_t
 EqualizerMch::get_nbands(int ch_name) const
 {
+  if (ch_name == -1) return get_master_nbands();
   if (ch_name < 0 || ch_name > NCHANNELS) return 0;
   return ch_eq[ch_name].get_nbands();
 }
 
-bool
-EqualizerMch::set_bands(int ch_name, size_t nbands, const int *freq, const double *gain)
+size_t
+EqualizerMch::set_bands(int ch_name, const EqBand *bands, size_t nbands)
 {
+  if (ch_name == -1) return set_master_bands(bands, nbands);
   if (ch_name < 0 || ch_name > NCHANNELS) return 0;
-  return ch_eq[ch_name].set_bands(nbands, freq, gain);
+  return ch_eq[ch_name].set_bands(bands, nbands);
 }
 
-void
-EqualizerMch::get_bands(int ch_name, int *freq, double *gain, int first_band, int nbands) const
+size_t
+EqualizerMch::get_bands(int ch_name, EqBand *bands, size_t first_band, size_t nbands) const
 {
-  int i;
-  if (ch_name < 0 || ch_name > NCHANNELS)
-  {
-    if (freq) for (i = 0; i < nbands; i++) freq[i] = 0;
-    if (gain) for (i = 0; i < nbands; i++) gain[i] = 0;
-  }
-  ch_eq[ch_name].get_bands(freq, gain, first_band, nbands);
+  if (ch_name == -1) return get_master_bands(bands, first_band, nbands);
+  if (ch_name < 0 || ch_name > NCHANNELS) return 0;
+  return ch_eq[ch_name].get_bands(bands, first_band, nbands);
 }
 
 void
 EqualizerMch::reset_eq(int ch_name)
 {
+  if (ch_name == -1) { reset_master_eq(); return; }
   if (ch_name < 0 || ch_name > NCHANNELS) return;
   ch_eq[ch_name].reset();
 }

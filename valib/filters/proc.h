@@ -234,12 +234,12 @@ public:
   inline void     set_eq(bool eq);
 
   inline size_t   get_eq_master_nbands();
-  inline void     get_eq_master_bands(int *freq, double *gain, int first_band, int nbands);
+  inline size_t   get_eq_master_bands(EqBand *bands, size_t first_band, size_t nbands);
   inline size_t   get_eq_nbands(int ch);
-  inline void     get_eq_bands(int ch, int *freq, double *gain, int first_band, int nbands);
+  inline size_t   get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands);
 
-  inline void     set_eq_master_bands(size_t nbands, const int *freq, const double *gain);
-  inline void     set_eq_bands(int ch, size_t nbands, const int *freq, const double *gain);
+  inline size_t   set_eq_master_bands(const EqBand *bands, size_t nbands);
+  inline size_t   set_eq_bands(int ch, const EqBand *bands, size_t nbands);
 
   // Spectrum
 
@@ -461,20 +461,20 @@ inline void AudioProcessor::set_eq(bool eq)
 inline size_t AudioProcessor::get_eq_master_nbands()
 { return equalizer.get_master_nbands(); }
 
-inline void AudioProcessor::get_eq_master_bands(int *freq, double *gain, int first_band, int nbands)
-{ equalizer.get_master_bands(freq, gain, first_band, nbands); }
+inline size_t AudioProcessor::get_eq_master_bands(EqBand *bands, size_t first_band, size_t nbands)
+{ return equalizer.get_master_bands(bands, first_band, nbands); }
 
 inline size_t AudioProcessor::get_eq_nbands(int ch)
 { return equalizer.get_nbands(ch); }
 
-inline void AudioProcessor::get_eq_bands(int ch, int *freq, double *gain, int first_band, int nbands)
-{ equalizer.get_bands(ch, freq, gain, first_band, nbands); }
+inline size_t AudioProcessor::get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands)
+{ return equalizer.get_bands(ch, bands, first_band, nbands); }
 
-inline void AudioProcessor::set_eq_master_bands(size_t nbands, const int *freq, const double *gain)
-{ equalizer.set_master_bands(nbands, freq, gain); }
+inline size_t AudioProcessor::set_eq_master_bands(const EqBand *bands, size_t nbands)
+{ return equalizer.set_master_bands(bands, nbands); }
 
-inline void AudioProcessor::set_eq_bands(int ch, size_t nbands, const int *freq, const double *gain)
-{ equalizer.set_bands(ch, nbands, freq, gain); }
+inline size_t AudioProcessor::set_eq_bands(int ch, const EqBand *bands, size_t nbands)
+{ return equalizer.set_bands(ch, bands, nbands); }
 
 // Spectrum
 

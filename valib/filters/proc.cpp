@@ -276,22 +276,25 @@ AudioProcessor::get_state(vtime_t time)
   // Equalizer
   state->eq = get_eq();
   state->eq_master_nbands = get_eq_master_nbands();
+
+  state->eq_master_bands = 0;
   if (state->eq_master_nbands)
   {
-    state->eq_master_freq = new int[state->eq_master_nbands];
-    state->eq_master_gain = new double[state->eq_master_nbands];
-    get_eq_master_bands(state->eq_master_freq, state->eq_master_gain, 0, -1);
+    state->eq_master_bands = new EqBand[state->eq_master_nbands];
+    get_eq_master_bands(state->eq_master_bands, 0, state->eq_master_nbands);
   }
+
   for (int ch = 0; ch < NCHANNELS; ch++)
   {
     state->eq_nbands[ch] = get_eq_nbands(ch);
+    state->eq_bands[ch] = 0;
     if (state->eq_nbands[ch])
     {
-      state->eq_freq[ch] = new int[state->eq_nbands[ch]];
-      state->eq_gain[ch] = new double[state->eq_nbands[ch]];
-      get_eq_bands(ch, state->eq_freq[ch], state->eq_gain[ch], 0, -1);
+      state->eq_bands[ch] = new EqBand[state->eq_nbands[ch]];
+      get_eq_bands(ch, state->eq_bands[ch], 0, state->eq_nbands[ch]);
     }
   }
+
   // Spectrum
   state->spectrum_length = get_spectrum_length();
   // Bass redirection
@@ -342,11 +345,11 @@ AudioProcessor::set_state(const AudioProcessorState *state)
   set_src_att(state->src_att);
   // Eqalizer
   set_eq(state->eq);
-  if (state->eq_master_nbands > 0 && state->eq_master_freq && state->eq_master_gain)
-    set_eq_master_bands(state->eq_master_nbands, state->eq_master_freq, state->eq_master_gain);
+  if (state->eq_master_bands)
+    set_eq_master_bands(state->eq_master_bands, state->eq_master_nbands);
   for (int ch = 0; ch < NCHANNELS; ch++)
-    if (state->eq_nbands[ch] > 0 && state->eq_freq[ch] && state->eq_gain[ch])
-      set_eq_bands(ch, state->eq_nbands[ch], state->eq_freq[ch], state->eq_gain[ch]);
+    if (state->eq_bands[ch])
+      set_eq_bands(ch, state->eq_bands[ch], state->eq_nbands[ch]);
   // Spectrum
   set_spectrum_length(state->spectrum_length);
   // Bass redirection

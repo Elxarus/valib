@@ -60,15 +60,15 @@ public:
   // Master equalizer
 
   size_t get_master_nbands() const { return master.get_nbands(); };
-  bool set_master_bands(size_t nbands, const int *freq, const double *gain) { return master.set_bands(nbands, freq, gain); }
-  void get_master_bands(int *freq, double *gain, int first_band, int nbands) const { master.get_bands(freq, gain, first_band, nbands); }
+  size_t set_master_bands(const EqBand *bands, size_t nbands) { return master.set_bands(bands, nbands); }
+  size_t get_master_bands(EqBand *bands, size_t first_band, size_t nbands) const { return master.get_bands(bands, first_band, nbands); }
   void reset_master_eq() { master.reset(); }
 
   // Per-channel equalizers
 
   size_t get_nbands(int ch_name) const;
-  bool set_bands(int ch_name, size_t nbands, const int *freq, const double *gain);
-  void get_bands(int ch_name, int *freq, double *gain, int first_band, int nbands) const;
+  size_t set_bands(int ch_name, const EqBand *bands, size_t nbands);
+  size_t get_bands(int ch_name, EqBand *bands, size_t first_band, size_t nbands) const;
   void reset_eq(int ch_name);
 
   /////////////////////////////////////////////////////////

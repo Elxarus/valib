@@ -6,6 +6,13 @@
 #define VALIB_EQ_FIR_H
 
 #include "../fir.h"
+#include "../auto_buf.h"
+
+struct EqBand
+{
+  int freq;
+  double gain;
+};
 
 class EqFIR : public FIRGen
 {
@@ -14,20 +21,18 @@ protected:
 
   // bands info
   size_t nbands;
-  int *freq;
-  double *gain;
+  AutoBuf<EqBand> bands;
 
 public:
   EqFIR();
-  EqFIR(size_t nbands, int *freq, double *gain);
-  ~EqFIR();
+  EqFIR(const EqBand *bands, size_t nbands);
 
   /////////////////////////////////////////////////////////
   // Equalizer interface
 
   size_t get_nbands() const;
-  bool set_bands(size_t nbands, const int *freq, const double *gain);
-  void get_bands(int *freq, double *gain, int first_band, int nbands) const;
+  size_t set_bands(const EqBand *bands, size_t nbands);
+  size_t get_bands(EqBand *bands, size_t first_band, size_t nbands) const;
   void reset();
 
   /////////////////////////////////////////////////////////

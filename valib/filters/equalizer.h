@@ -21,7 +21,7 @@ public:
   Equalizer(): enabled(false)
   {}
 
-  Equalizer(int nbands, int *freq, double *gain): eq(nbands, freq, gain), enabled(true)
+  Equalizer(const EqBand *bands, size_t nbands): eq(bands, nbands), enabled(true)
   { conv.set_fir(&eq); }
 
   ~Equalizer()
@@ -44,8 +44,8 @@ public:
   }
 
   size_t get_nbands() const { return eq.get_nbands(); };
-  bool set_bands(size_t nbands, const int *freq, const double *gain) { return eq.set_bands(nbands, freq, gain); }
-  void get_bands(int *freq, double *gain, int first_band, int nbands) const { eq.get_bands(freq, gain, first_band, nbands); }
+  size_t set_bands(const EqBand *bands, size_t nbands) { return eq.set_bands(bands, nbands); }
+  size_t get_bands(EqBand *bands, size_t first_band, size_t nbands) const { return eq.get_bands(bands, first_band, nbands); }
   void reset_eq() { eq.reset(); }
 
   /////////////////////////////////////////////////////////
