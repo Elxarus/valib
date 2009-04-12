@@ -1,3 +1,4 @@
+#include <math.h>
 #include <string.h>
 #include "../dsp/fftsg.h"
 #include "../dsp/kaiser.h"

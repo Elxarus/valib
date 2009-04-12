@@ -427,6 +427,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\dsp\kaiser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\dsp\kaiser.h"
 				>
 			</File>
