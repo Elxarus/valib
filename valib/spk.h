@@ -180,7 +180,7 @@
 #define CH_SL   3  // Surround left channel
 #define CH_SR   4  // Surround right channel
 #define CH_LFE  5  // LFE channel
-#define CH_NONE 6  // indicates that channel is not used in channel order
+#define CH_NONE -1 // indicates that channel is not used in channel order
 
 // synonyms
 #define CH_M    1  // Mono channel = center channel

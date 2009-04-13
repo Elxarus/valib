@@ -233,13 +233,12 @@ public:
   inline bool     get_eq();
   inline void     set_eq(bool eq);
 
-  inline size_t   get_eq_master_nbands();
-  inline size_t   get_eq_master_bands(EqBand *bands, size_t first_band, size_t nbands);
   inline size_t   get_eq_nbands(int ch);
   inline size_t   get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands);
+  inline double   get_eq_ripple(int ch);
 
-  inline size_t   set_eq_master_bands(const EqBand *bands, size_t nbands);
   inline size_t   set_eq_bands(int ch, const EqBand *bands, size_t nbands);
+  inline void     set_eq_ripple(int ch, double ripple_db);
 
   // Spectrum
 
@@ -458,23 +457,20 @@ inline void AudioProcessor::set_eq(bool eq)
   dither.level = dithering_level();
 }
 
-inline size_t AudioProcessor::get_eq_master_nbands()
-{ return equalizer.get_master_nbands(); }
-
-inline size_t AudioProcessor::get_eq_master_bands(EqBand *bands, size_t first_band, size_t nbands)
-{ return equalizer.get_master_bands(bands, first_band, nbands); }
-
 inline size_t AudioProcessor::get_eq_nbands(int ch)
 { return equalizer.get_nbands(ch); }
 
 inline size_t AudioProcessor::get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands)
 { return equalizer.get_bands(ch, bands, first_band, nbands); }
 
-inline size_t AudioProcessor::set_eq_master_bands(const EqBand *bands, size_t nbands)
-{ return equalizer.set_master_bands(bands, nbands); }
+inline double AudioProcessor::get_eq_ripple(int ch)
+{ return equalizer.get_ripple(ch); }
 
 inline size_t AudioProcessor::set_eq_bands(int ch, const EqBand *bands, size_t nbands)
 { return equalizer.set_bands(ch, bands, nbands); }
+
+inline void AudioProcessor::set_eq_ripple(int ch, double ripple_db)
+{ return equalizer.set_ripple(ch, ripple_db); }
 
 // Spectrum
 

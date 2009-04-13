@@ -22,6 +22,7 @@ protected:
   // bands info
   size_t nbands;
   AutoBuf<EqBand> bands;
+  double ripple;
 
 public:
   EqFIR();
@@ -33,6 +34,8 @@ public:
   size_t get_nbands() const;
   size_t set_bands(const EqBand *bands, size_t nbands);
   size_t get_bands(EqBand *bands, size_t first_band, size_t nbands) const;
+  double get_ripple() const;
+  void set_ripple(double ripple_db);
   void reset();
 
   /////////////////////////////////////////////////////////
