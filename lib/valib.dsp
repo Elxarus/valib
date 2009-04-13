@@ -324,6 +324,14 @@ SOURCE=..\valib\filters\convolver.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\convolver_mch.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\convolver_mch.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\counter.h
 # End Source File
 # Begin Source File
@@ -400,11 +408,35 @@ SOURCE=..\valib\filters\equalizer.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\equalizer_mch.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\equalizer_mch.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\gain.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\gain.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\levels.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\filters\levels.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\linear_filter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\linear_filter.h
 # End Source File
 # Begin Source File
 
@@ -432,11 +464,27 @@ SOURCE=..\valib\filters\proc.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\proc_state.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\proc_state.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\resample.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\filters\resample.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\slice.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\slice.h
 # End Source File
 # Begin Source File
 
@@ -772,11 +820,23 @@ SOURCE=..\valib\dsp\dbesi0.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\dsp\fft.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\dsp\fft.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\dsp\fftsg.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\valib\dsp\fftsg.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\dsp\kaiser.cpp
 # End Source File
 # Begin Source File
 

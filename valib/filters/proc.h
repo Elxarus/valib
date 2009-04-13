@@ -470,7 +470,7 @@ inline size_t AudioProcessor::set_eq_bands(int ch, const EqBand *bands, size_t n
 { return equalizer.set_bands(ch, bands, nbands); }
 
 inline void AudioProcessor::set_eq_ripple(int ch, double ripple_db)
-{ return equalizer.set_ripple(ch, ripple_db); }
+{ equalizer.set_ripple(ch, ripple_db); }
 
 // Spectrum
 
