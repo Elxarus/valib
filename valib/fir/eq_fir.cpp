@@ -5,8 +5,12 @@
 inline double sinc(double x) { return x == 0 ? 1 : sin(x)/x; }
 inline double lpf(int i, double f) { return 2 * f * sinc(i * 2 * M_PI * f); }
 
+static const double min_ripple = 0.001;
+static const double max_ripple = 3.0;
+static const double def_ripple = 0.1;
+static const int max_length = 64*1024-1; // Max filter length is 64K
 
-EqFIR::EqFIR(): ver(0), nbands(0), ripple(0.5)
+EqFIR::EqFIR(): ver(0), nbands(0), ripple(def_ripple)
 {}
 
 EqFIR::EqFIR(const EqBand *new_bands, size_t new_nbands): ver(0), nbands(0)
@@ -86,6 +90,10 @@ EqFIR::get_ripple() const
 void
 EqFIR::set_ripple(double new_ripple)
 {
+  new_ripple = fabs(new_ripple);
+  if (new_ripple > max_ripple) new_ripple = max_ripple;
+  if (new_ripple < min_ripple) new_ripple = min_ripple;
+
   if (ripple != new_ripple)
   {
     ripple = new_ripple;
@@ -141,6 +149,7 @@ EqFIR::make(int sample_rate) const
       double df = double(bands[i+1].freq - bands[i].freq) / sample_rate;
       double a  = -value2db(q / fabs(dg));
       int n = kaiser_n(a, df) | 1;
+      if (n > max_length) n = max_length;
       if (n > max_n) max_n = n, max_a = a;
     }
   max_c = max_n / 2;
@@ -165,6 +174,7 @@ EqFIR::make(int sample_rate) const
       double a  = -value2db(q / fabs(dg));
       double alpha = kaiser_alpha(a);
       int n = kaiser_n(a, df) | 1;
+      if (n > max_length) n = max_length;
       int c = n / 2;
 
       for (int j = -c; j <= c; j++)
