@@ -24,8 +24,8 @@ protected:
   const FIRInstance *fir[NCHANNELS];
   enum { type_pass, type_gain, type_zero, type_conv } type[NCHANNELS];
 
-  int  n, c;
-  size_t pos;
+  int n, c;
+  int pos;
 
   FFT       fft;
   SampleBuf filter;

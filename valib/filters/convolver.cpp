@@ -37,7 +37,8 @@ Convolver::~Convolver()
 void
 Convolver::convolve()
 {
-  int ch, i;
+  int i;
+  int ch;
   int nch = in_spk.nch();
 
   for (ch = 0; ch < nch; ch++)
@@ -207,10 +208,10 @@ Convolver::process_samples(samples_t in, size_t in_size, samples_t &out, size_t 
 
   if (pos < n)
   {
-    gone = MIN((int)(in_size), n - pos);
+    gone = MIN(in_size, size_t(n - pos));
     for (ch = 0; ch < nch; ch++)
       memcpy(buf[ch] + pos, in[ch], sizeof(sample_t) * gone);
-    pos += gone;
+    pos += (int)gone;
 
     if (pos < n)
     {

@@ -291,7 +291,7 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
       else
         // Trivial cases are shifted
         memcpy(buf[ch] + c + pos, in[ch], gone * sizeof(sample_t));
-    pos += gone;
+    pos += (int)gone;
 
     if (pos < n)
       return true;
