@@ -23,7 +23,7 @@ protected:
   SyncHelper sync_helper;
 
   int       n, c;
-  int       pos;
+  size_t    pos;
 
   FFT       fft;
   Samples   filter;

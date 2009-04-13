@@ -17,7 +17,7 @@ private:
   size_t     size;
   samples_t  out_samples;
   size_t     out_size;
-  int        buffered_samples;
+  size_t     buffered_samples;
 
 protected:
   Speakers   in_spk;

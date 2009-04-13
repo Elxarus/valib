@@ -25,7 +25,7 @@ protected:
   enum { type_pass, type_gain, type_zero, type_conv } type[NCHANNELS];
 
   int  n, c;
-  int  pos;
+  size_t pos;
 
   FFT       fft;
   SampleBuf filter;
