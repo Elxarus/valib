@@ -276,7 +276,7 @@ AudioProcessor::get_state(vtime_t time)
   // Equalizer
   state->eq = get_eq();
   state->eq_master_nbands = get_eq_nbands(CH_NONE);
-
+  state->eq_master_ripple = get_eq_ripple(CH_NONE);
   state->eq_master_bands = 0;
   if (state->eq_master_nbands)
   {
@@ -287,6 +287,7 @@ AudioProcessor::get_state(vtime_t time)
   for (int ch = 0; ch < NCHANNELS; ch++)
   {
     state->eq_nbands[ch] = get_eq_nbands(ch);
+    state->eq_ripple[ch] = get_eq_ripple(ch);
     state->eq_bands[ch] = 0;
     if (state->eq_nbands[ch])
     {

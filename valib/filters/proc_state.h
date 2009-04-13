@@ -55,8 +55,10 @@ struct AudioProcessorState
   bool     eq;
   size_t   eq_master_nbands;
   EqBand  *eq_master_bands;
+  double   eq_master_ripple;
   size_t   eq_nbands[NCHANNELS];
   EqBand  *eq_bands[NCHANNELS];
+  double   eq_ripple[NCHANNELS];
 
   // Spectrum
   unsigned spectrum_length;
