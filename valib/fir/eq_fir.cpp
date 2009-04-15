@@ -139,15 +139,28 @@ EqFIR::make(int sample_rate) const
   /////////////////////////////////////////////////////////
   // Find the filter length
 
+  // minimum attenuation required
+  double min_g = bands[0].gain;
+  double max_g = bands[0].gain;
+  for (i = 1; i < max_band; i++)
+  {
+    if (min_g > bands[i].gain) min_g = bands[i].gain;
+    if (max_g < bands[i].gain) max_g = bands[i].gain;
+  }
+  double min_a = -value2db(min_g * q / (max_g - min_g));
+
   int max_n = 1;
   int max_c = 0;
-  double max_a = 0;
+  double max_a = min_a;
   for (i = 0; i < max_band - 1; i++)
     if (bands[i+1].gain != bands[i].gain)
     {
-      double dg = bands[i+1].gain - bands[i].gain;
+      double g = MIN(bands[i+1].gain, bands[i].gain);
+      double dg = bands[i].gain - bands[i+1].gain;
       double df = double(bands[i+1].freq - bands[i].freq) / sample_rate;
-      double a  = -value2db(q / fabs(dg));
+      double a  = -value2db(g * q / fabs(dg));
+      if (a < min_a) a = min_a;
+
       int n = kaiser_n(a, df) | 1;
       if (n > max_length) n = max_length;
       if (n > max_n) max_n = n, max_a = a;
@@ -168,10 +181,13 @@ EqFIR::make(int sample_rate) const
   for (i = 0; i < max_band - 1; i++)
     if (bands[i].gain != bands[i+1].gain)
     {
+      double g = MIN(bands[i+1].gain, bands[i].gain);
       double dg = bands[i].gain - bands[i+1].gain;
       double df = double(bands[i+1].freq - bands[i].freq) / sample_rate;
       double cf = double(bands[i+1].freq + bands[i].freq) / 2 / sample_rate;
-      double a  = -value2db(q / fabs(dg));
+      double a  = -value2db(g * q / fabs(dg));
+      if (a < min_a) a = min_a;
+
       double alpha = kaiser_alpha(a);
       int n = kaiser_n(a, df) | 1;
       if (n > max_length) n = max_length;
@@ -180,52 +196,6 @@ EqFIR::make(int sample_rate) const
       for (int j = -c; j <= c; j++)
         data[max_c + j] += dg * lpf(j, cf) * kaiser_window(j, n, alpha);
     }
-/*
-  /////////////////////////////////////////////////////////
-  // Build the filter
-  // Use variable transition bandwidth to minimize Gibbs
-  // effect. To do this, adjust Kaiser window parameter
-  // for each filter. Wider the band, lower the ripple.
 
-  double *data = new double[max_n];
-  if (!data)
-    return 0;
-
-  for (j = 0; j < max_n; j++) data[j] = 0;
-
-  data[max_c] += bands[max_band-1].gain;
-  for (i = 0; i < max_band - 1; i++)
-    if (bands[i].gain != bands[i+1].gain)
-    {
-      double dg = bands[i].gain - bands[i+1].gain;
-      double df = double(bands[i+1].freq - bands[i].freq) / sample_rate;
-      double cf = double(bands[i+1].freq + bands[i].freq) / 2 / sample_rate;
-      double alpha = kaiser_alpha(kaiser_a(max_n, df));
-      for (int j = -max_c; j < max_c; j++)
-        data[max_c + j] += dg * lpf(j, cf) * kaiser_window(j, max_n, alpha);
-    }
-*/
-/*
-  /////////////////////////////////////////////////////////
-  // Build the filter
-  // Constant transition band width, but only one window
-  // calculation. Equal ripple at each band.
-
-  double *data = new double[max_n];
-  if (!data)
-    return 0;
-
-  for (j = 0; j < max_n; j++) data[j] = 0;
-
-  data[max_c] += bands[max_band-1].gain;
-  for (i = 0; i < max_band - 1; i++)
-    if (bands[i].gain != bands[i+1].gain)
-      for (int j = -max_c; j < max_c; j++)
-        data[max_c + j] += (bands[i].gain - bands[i+1].gain) * lpf(j, double(bands[i+1].freq - bands[i].freq) / sample_rate);
-
-  double alpha = kaiser_alpha(max_a);
-  for (j = -max_c; j < max_c; j++)
-    data[max_c + j] *= kaiser_window(j, max_n, alpha);
-*/
   return new DynamicFIRInstance(sample_rate, firt_custom, max_n, max_c, data);
 }
