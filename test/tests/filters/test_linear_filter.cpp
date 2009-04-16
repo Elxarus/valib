@@ -58,6 +58,7 @@ protected:
   bool need_reset_after_flushing;
   bool err;
   int seq;
+  bool do_reinit;
 
   SampleBuf buf;
   int pos;
@@ -73,6 +74,9 @@ public:
   ~LinearFilterTester()
   {}
 
+  void reinit() { do_reinit = true; }
+  void reset_seq() { seq = 0; }
+
   virtual bool is_ok() const
   { return !err; }
 
@@ -84,12 +88,13 @@ public:
 
   virtual bool init(Speakers spk, Speakers &out_spk)
   {
+    do_reinit = false;
     buf.allocate(spk.nch(), block_size * 2);
     pos = 0;
 
     out_spk = spk;
-    if (queried_spk != spk) err = true;
-    queried_spk = spk_unknown;
+    if (queried_spk != spk)
+      err = true;
     return true;
   }
 
@@ -97,13 +102,13 @@ public:
   {
     need_reset_after_init = false;
     need_reset_after_flushing = false;
-    seq = 0;
     pos = 0;
   }
 
   virtual bool process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone)
   {
-    if (int(in[0][0]) != seq) err = true;
+    if (int(in[0][0]) != seq)
+      err = true;
 
     if (pos >= 2 * block_size)
     {
@@ -140,7 +145,8 @@ public:
 
   virtual bool flush(samples_t &out, size_t &out_size)
   {
-    if (!need_flushing()) err = true;
+    if (!need_flushing())
+      err = true;
     need_reset_after_flushing = true;
 
     if (pos >= 2 * block_size)
@@ -160,10 +166,7 @@ public:
   { return pos > 0; }
 
   virtual bool want_reinit() const
-  { return false; }
-
-  virtual size_t buffered_samples() const
-  { return pos < 2 * block_size? pos: block_size; }
+  { return do_reinit; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -178,6 +181,7 @@ TEST(linear_filter, "LinearFilter test")
   const size_t block_multipliers[] =
   { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 16 };
   const int nmultipliers = array_size(block_multipliers);
+  bool was_reinit = false;
 
   Chunk chunk;
   SequenceGen gen;
@@ -189,6 +193,8 @@ TEST(linear_filter, "LinearFilter test")
   for (int i = 0; i < nmultipliers * 2; i++)
   {
     int seq = 0;
+    f.reset_seq();
+
     size_t current_chunk = 0;
     size_t current_block_size = i < nmultipliers? 
       block_size / block_multipliers[i]:
@@ -197,6 +203,12 @@ TEST(linear_filter, "LinearFilter test")
     gen.init(spk, data_size, current_block_size);
     while (!gen.is_empty())
     {
+      if (seq >= block_size && !was_reinit)
+      {
+        f.reinit();
+        was_reinit = true;
+      }
+
       while (f.is_empty())
       {
         gen.get_chunk(&chunk);
