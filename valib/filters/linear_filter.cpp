@@ -1,7 +1,7 @@
 #include "linear_filter.h"
 
 LinearFilter::LinearFilter()
-: flushing(false), size(0), out_size(0), buffered_samples(0)
+: flushing(flush_none), size(0), out_size(0), buffered_samples(0)
 {}
 
 LinearFilter::~LinearFilter()
@@ -10,7 +10,7 @@ LinearFilter::~LinearFilter()
 void
 LinearFilter::reset()
 {
-  flushing = false;
+  flushing = flush_none;
   samples.zero();
   size = 0;
   out_samples.zero();
@@ -80,27 +80,25 @@ LinearFilter::process(const Chunk *chunk)
 
   if (want_reinit() && !need_flushing())
   {
+    // We should flush if we have buffered samples
+    assert(buffered_samples == 0);
+
     out_spk = in_spk;
     FILTER_SAFE(init(in_spk, out_spk));
     assert(in_spk.sample_rate == out_spk.sample_rate);
+    reset_state();
+    buffered_samples = 0;
   }
 
   sync_helper.receive_sync(chunk, buffered_samples);
-  flushing = chunk->eos;
   samples  = chunk->samples;
   size     = chunk->size;
+  if (chunk->eos)
+    flushing = flush_chunk;
 
   out_size = 0;
   out_samples.zero();
-  while (size > 0 && out_size == 0)
-  {
-    size_t gone = 0;
-    FILTER_SAFE(process_samples(samples, size, out_samples, out_size, gone));
-    if (gone > size) gone = size;
-    buffered_samples += gone - out_size;
-    size -= gone;
-    samples += gone;
-  }
+  FILTER_SAFE(process());
   return true;
 }
 
@@ -113,23 +111,15 @@ LinearFilter::get_output() const
 bool
 LinearFilter::is_empty() const
 {
-  if (size > 0 || out_size > 0 || flushing) return false;
-  if (want_reinit() && need_flushing()) return false;
+  if (size > 0 || out_size > 0 || flushing != flush_none) return false;
   return true;
 }
 
 bool
 LinearFilter::get_chunk(Chunk *chunk)
 {
-  while (size > 0 && out_size == 0)
-  {
-    size_t gone = 0;
-    FILTER_SAFE(process_samples(samples, size, out_samples, out_size, gone));
-    if (gone > size) gone = size;
-    buffered_samples += gone - out_size;
-    size -= gone;
-    samples += gone;
-  }
+  if (out_size == 0)
+    FILTER_SAFE(process());
 
   if (out_size)
   {
@@ -140,12 +130,13 @@ LinearFilter::get_chunk(Chunk *chunk)
     return true;
   }
 
-  bool flush_reinit = want_reinit();
-  if ((flush_reinit || flushing) && need_flushing())
-  {
-    while (out_size == 0 && need_flushing())
-      FILTER_SAFE(flush(out_samples, out_size));
+  if (flushing == flush_none)
+    if (want_reinit() && need_flushing())
+      flushing = flush_reinit;
 
+  if (flushing != flush_none && need_flushing())
+  {
+    FILTER_SAFE(flush());
     chunk->set_linear(out_spk, out_samples, out_size);
     sync_helper.send_sync(chunk, 1.0 / in_spk.sample_rate);
     sync_helper.drop(out_size);
@@ -154,16 +145,65 @@ LinearFilter::get_chunk(Chunk *chunk)
   }
 
   chunk->set_empty(out_spk);
-  if (flush_reinit || flushing)
+  if (flushing != flush_none)
   {
-    chunk->set_eos();
-    if (flush_reinit)
+    if (buffered_samples != 0)
     {
-      out_spk = in_spk;
-      FILTER_SAFE(init(in_spk, out_spk));
-      assert(in_spk.sample_rate == out_spk.sample_rate);
+      // incorrect_number of samples flushed
+      assert(false);
     }
+
+    chunk->set_eos();
     reset();
+  }
+  return true;
+}
+
+bool
+LinearFilter::process()
+{
+  out_size = 0;
+  while (size > 0 && out_size == 0)
+  {
+    size_t gone = 0;
+    FILTER_SAFE(process_samples(samples, size, out_samples, out_size, gone));
+
+    if (gone > size)
+    {
+      // incorrect number of samples processed
+      assert(false);
+      gone = size;
+    }
+    size -= gone;
+    samples += gone;
+
+    buffered_samples += gone;
+    if (buffered_samples < out_size)
+    {
+      // incorrect output number of samples
+      assert(false);
+      buffered_samples = out_size;
+    }
+    buffered_samples -= out_size;
+  }
+  return true;
+}
+
+bool
+LinearFilter::flush()
+{
+  out_size = 0;
+  while (out_size == 0 && need_flushing())
+  {
+    FILTER_SAFE(flush(out_samples, out_size));
+
+    if (buffered_samples > out_size)
+    {
+      // incorrect number of samples flushed
+      assert(false);
+      buffered_samples = out_size;
+    }
+    buffered_samples -= out_size;
   }
   return true;
 }

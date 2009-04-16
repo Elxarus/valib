@@ -11,13 +11,16 @@ class LinearFilter : public Filter
 {
 private:
   SyncHelper sync_helper;
-  bool       flushing;
+  enum      { flush_none, flush_reinit, flush_chunk } flushing;
 
   samples_t  samples;
   size_t     size;
   samples_t  out_samples;
   size_t     out_size;
   size_t     buffered_samples;
+
+  bool process();
+  bool flush();
 
 protected:
   Speakers   in_spk;
