@@ -254,7 +254,7 @@ AudioProcessor::get_state(vtime_t time)
   state->drc_power = get_drc_power();
   state->drc_level = get_drc_level();
   // Matrix
-  get_matrix(&state->matrix);
+  get_matrix(state->matrix);
   // Automatrix options
   state->auto_matrix      = get_auto_matrix();
   state->normalize_matrix = get_normalize_matrix();
@@ -328,7 +328,7 @@ AudioProcessor::set_state(const AudioProcessorState *state)
   set_drc(state->drc);
   set_drc_power(state->drc_power);
   // Matrix
-  set_matrix(&state->matrix);
+  set_matrix(state->matrix);
   // Automatrix options
   set_auto_matrix(state->auto_matrix);
   set_normalize_matrix(state->normalize_matrix);

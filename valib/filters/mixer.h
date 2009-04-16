@@ -34,7 +34,7 @@
 #include "../filter.h"
 
 
-typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
+//typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Mixer class
@@ -97,19 +97,19 @@ public:
   void calc_matrix();
 
   // options get/set
-  inline void     get_matrix(matrix_t *matrix);
-  inline bool     get_auto_matrix();
-  inline bool     get_normalize_matrix();
-  inline bool     get_voice_control();
-  inline bool     get_expand_stereo();
-  inline sample_t get_clev();
-  inline sample_t get_slev();
-  inline sample_t get_lfelev();
-  inline sample_t get_gain();
-  inline void     get_input_gains(sample_t input_gains[NCHANNELS]);
-  inline void     get_output_gains(sample_t output_gains[NCHANNELS]);
+  inline void     get_matrix(matrix_t &matrix) const;
+  inline bool     get_auto_matrix() const;
+  inline bool     get_normalize_matrix() const;
+  inline bool     get_voice_control() const;
+  inline bool     get_expand_stereo() const;
+  inline sample_t get_clev() const;
+  inline sample_t get_slev() const;
+  inline sample_t get_lfelev() const;
+  inline sample_t get_gain() const;
+  inline void     get_input_gains(sample_t input_gains[NCHANNELS]) const;
+  inline void     get_output_gains(sample_t output_gains[NCHANNELS]) const;
 
-  inline void     set_matrix(const matrix_t *matrix);
+  inline void     set_matrix(const matrix_t &matrix);
   inline void     set_auto_matrix(bool auto_matrix);
   inline void     set_normalize_matrix(bool normalize_matrix);
   inline void     set_voice_control(bool voice_control);
@@ -225,57 +225,57 @@ Mixer::set_buffer(size_t _nsamples)
 
 // Options get/set
 
-inline void 
-Mixer::get_matrix(matrix_t *_matrix)
-{ memcpy(_matrix, matrix, sizeof(matrix_t)); }
+inline void
+Mixer::get_matrix(matrix_t &_matrix) const
+{ _matrix = matrix; }
 
 inline bool 
-Mixer::get_auto_matrix()
+Mixer::get_auto_matrix() const
 { return auto_matrix; }
 
 inline bool 
-Mixer::get_normalize_matrix()
+Mixer::get_normalize_matrix() const
 { return normalize_matrix; }
 
 inline bool 
-Mixer::get_voice_control()
+Mixer::get_voice_control() const
 { return voice_control; }
 
 inline bool 
-Mixer::get_expand_stereo()
+Mixer::get_expand_stereo() const
 { return expand_stereo; }
 
 inline sample_t 
-Mixer::get_clev()
+Mixer::get_clev() const
 { return clev; }
 
 inline sample_t 
-Mixer::get_slev()
+Mixer::get_slev() const
 { return slev; }
 
 inline sample_t 
-Mixer::get_lfelev()
+Mixer::get_lfelev() const
 { return lfelev; }
 
 inline sample_t 
-Mixer::get_gain()
+Mixer::get_gain() const
 { return gain; }
 
 inline void 
-Mixer::get_input_gains(sample_t _input_gains[NCHANNELS])
+Mixer::get_input_gains(sample_t _input_gains[NCHANNELS]) const
 { memcpy(_input_gains, input_gains, sizeof(input_gains)); }
 
 inline void 
-Mixer::get_output_gains(sample_t _output_gains[NCHANNELS])
+Mixer::get_output_gains(sample_t _output_gains[NCHANNELS]) const
 { memcpy(_output_gains, output_gains, sizeof(output_gains)); }
 
 
 inline void 
-Mixer::set_matrix(const matrix_t *_matrix)
+Mixer::set_matrix(const matrix_t &_matrix)
 {
   if (!auto_matrix)
   {
-    memcpy(matrix, _matrix, sizeof(matrix_t));
+    matrix = _matrix;
     prepare_matrix();
   }
 }

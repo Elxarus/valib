@@ -170,7 +170,31 @@ struct int24_t // int24_t is a low-endian structure
 #define EQUAL_SAMPLES(s1, s2) (fabs((s1) - (s2)) < SAMPLE_THRESHOLD)
 
 typedef double vtime_t;
-typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
+class matrix_t
+{
+protected:
+  sample_t matrix[NCHANNELS][NCHANNELS];
+
+public:
+  matrix_t()
+  { zero(); }
+
+  matrix_t(const matrix_t &m)
+  { *this = m; }
+
+  inline const sample_t *operator [](int i) const
+  { assert(i > 0 && i < NCHANNELS); return matrix[i]; }
+
+  inline sample_t *operator [](int i)
+  { assert(i > 0 && i < NCHANNELS); return matrix[i]; }
+
+  bool operator ==(const matrix_t &m) const;
+  bool operator !=(const matrix_t &m) const;
+
+  matrix_t &operator =(const matrix_t &m);
+  matrix_t &zero();
+  matrix_t &identity();
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Some utilities

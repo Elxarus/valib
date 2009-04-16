@@ -1,6 +1,53 @@
 #include <stdio.h>
 #include "defs.h"
 
+///////////////////////////////////////////////////////////////////////////////
+// matrix_t
+
+matrix_t &
+matrix_t::operator =(const matrix_t &m)
+{
+  for (int i = 0; i < NCHANNELS; i++)
+    for (int j = 0; j < NCHANNELS; j++)
+      matrix[i][j] = m[i][j];
+  return *this;
+}
+
+matrix_t &
+matrix_t::zero()
+{
+  for (int i = 0; i < NCHANNELS; i++)
+    for (int j = 0; j < NCHANNELS; j++)
+      matrix[i][j] = 0;
+  return *this;
+}
+
+matrix_t &
+matrix_t::identity()
+{
+  zero();
+  for (int i = 0; i < NCHANNELS; i++)
+    matrix[i][i] = 1.0;
+  return *this;
+}
+
+bool
+matrix_t::operator ==(const matrix_t &m) const
+{
+  for (int i = 0; i < NCHANNELS; i++)
+    for (int j = 0; j < NCHANNELS; j++)
+      if (matrix[i][j] != m.matrix[i][j])
+        return false;
+  return true;
+}
+
+bool
+matrix_t::operator !=(const matrix_t &m) const
+{ return !(*this == m); }
+
+///////////////////////////////////////////////////////////////////////////////
+// Build info
+
 static char info_str[1024];
 
 const char *valib_build_info()

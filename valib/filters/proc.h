@@ -147,24 +147,24 @@ public:
 
   // Channel order
 
-  inline void     get_input_order(int order[NCHANNELS]);
-  inline void     get_output_order(int order[NCHANNELS]);
+  inline void     get_input_order(int order[NCHANNELS]) const;
+  inline void     get_output_order(int order[NCHANNELS]) const;
 
   inline void     set_input_order(const int order[NCHANNELS]);
   inline void     set_output_order(const int order[NCHANNELS]);
 
   // Master gain
 
-  inline sample_t get_master();
-  inline sample_t get_gain(); // r/o
+  inline sample_t get_master() const;
+  inline sample_t get_gain() const; // r/o
   inline void     set_master(sample_t gain);
 
   // AGC
 
-  inline bool     get_auto_gain();
-  inline bool     get_normalize();
-  inline sample_t get_attack();
-  inline sample_t get_release();
+  inline bool     get_auto_gain() const;
+  inline bool     get_normalize() const;
+  inline sample_t get_attack() const;
+  inline sample_t get_release() const;
 
   inline void     set_auto_gain(bool auto_gain);
   inline void     set_normalize(bool normalize);
@@ -173,24 +173,24 @@ public:
 
   // DRC
 
-  inline bool     get_drc();
-  inline sample_t get_drc_power();
-  inline sample_t get_drc_level(); // r/o
+  inline bool     get_drc() const;
+  inline sample_t get_drc_power() const;
+  inline sample_t get_drc_level() const; // r/o
 
   inline void     set_drc(bool drc);
   inline void     set_drc_power(sample_t drc_power);
 
   // Matrix
 
-  inline void     get_matrix(matrix_t *matrix);
-  inline void     set_matrix(const matrix_t *matrix);
+  inline void     get_matrix(matrix_t &matrix) const;
+  inline void     set_matrix(const matrix_t &matrix);
 
   // Automatrix options
 
-  inline bool     get_auto_matrix();
-  inline bool     get_normalize_matrix();
-  inline bool     get_voice_control();
-  inline bool     get_expand_stereo();
+  inline bool     get_auto_matrix() const;
+  inline bool     get_normalize_matrix() const;
+  inline bool     get_voice_control() const;
+  inline bool     get_expand_stereo() const;
 
   inline void     set_auto_matrix(bool auto_matrix);
   inline void     set_normalize_matrix(bool normalize_matrix);
@@ -199,9 +199,9 @@ public:
 
   // Automatrix levels
 
-  inline sample_t get_clev();
-  inline sample_t get_slev();
-  inline sample_t get_lfelev();
+  inline sample_t get_clev() const;
+  inline sample_t get_slev() const;
+  inline sample_t get_lfelev() const;
 
   inline void     set_clev(sample_t clev);
   inline void     set_slev(sample_t slev);
@@ -209,8 +209,8 @@ public:
 
   // Input/output gains
 
-  inline void     get_input_gains(sample_t input_gains[NCHANNELS]);
-  inline void     get_output_gains(sample_t output_gains[NCHANNELS]);
+  inline void     get_input_gains(sample_t input_gains[NCHANNELS]) const;
+  inline void     get_output_gains(sample_t output_gains[NCHANNELS]) const;
 
   inline void     set_input_gains(const sample_t input_gains[NCHANNELS]);
   inline void     set_output_gains(const sample_t output_gains[NCHANNELS]);
@@ -222,60 +222,60 @@ public:
 
   // SRC
 
-  inline double   get_src_quality();
-  inline double   get_src_att();
+  inline double   get_src_quality() const;
+  inline double   get_src_att() const;
 
   inline void     set_src_quality(double q);
   inline void     set_src_att(double a);
 
   // Eqalizer
 
-  inline bool     get_eq();
+  inline bool     get_eq() const;
   inline void     set_eq(bool eq);
 
-  inline size_t   get_eq_nbands(int ch);
-  inline size_t   get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands);
-  inline double   get_eq_ripple(int ch);
+  inline size_t   get_eq_nbands(int ch) const;
+  inline size_t   get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands) const;
+  inline double   get_eq_ripple(int ch) const;
 
   inline size_t   set_eq_bands(int ch, const EqBand *bands, size_t nbands);
   inline void     set_eq_ripple(int ch, double ripple_db);
 
   // Spectrum
 
-  inline unsigned get_spectrum_length();
+  inline unsigned get_spectrum_length() const;
   inline void     get_spectrum(int ch, sample_t *spectrum, double *bin2hz);
   inline void     set_spectrum_length(unsigned length);
 
   // Bass redirection
 
-  inline bool     get_bass_redir();
-  inline int      get_bass_freq();
+  inline bool     get_bass_redir() const;
+  inline int      get_bass_freq() const;
 
   inline void     set_bass_redir(bool bass_redir);
   inline void     set_bass_freq(int freq);
 
   // Delays
 
-  inline bool     get_delay();
+  inline bool     get_delay() const;
   inline void     set_delay(bool delay);
 
-  inline int      get_delay_units();
-  inline void     get_delays(float delays[NCHANNELS]);
+  inline int      get_delay_units() const;
+  inline void     get_delays(float delays[NCHANNELS]) const;
 
   inline void     set_delay_units(int delay_units);
   inline void     set_delays(const float delays[NCHANNELS]);
 
   // Input/output histogram
 
-  inline int      get_dbpb();
+  inline int      get_dbpb() const;
   inline void     set_dbpb(int dbpb);
 
-  inline void     get_input_histogram(double *input_histogram, size_t count); // r/o
-  inline void     get_input_histogram(int ch, double *input_histogram, size_t count); // r/o
-  inline void     get_output_histogram(double *output_histogram, size_t count); // r/o
-  inline void     get_output_histogram(int ch, double *output_histogram, size_t count); // r/o
-  inline sample_t get_max_level();
-  inline sample_t get_max_level(int ch);
+  inline void     get_input_histogram(double *input_histogram, size_t count) const; // r/o
+  inline void     get_input_histogram(int ch, double *input_histogram, size_t count) const; // r/o
+  inline void     get_output_histogram(double *output_histogram, size_t count) const; // r/o
+  inline void     get_output_histogram(int ch, double *output_histogram, size_t count) const; // r/o
+  inline sample_t get_max_level() const;
+  inline sample_t get_max_level(int ch) const;
 
   // State
 
@@ -290,10 +290,10 @@ public:
 
 // Channel order
 
-inline void AudioProcessor::get_input_order(int _order[NCHANNELS])
+inline void AudioProcessor::get_input_order(int _order[NCHANNELS]) const
 { in_conv.get_order(_order); }
 
-inline void AudioProcessor::get_output_order(int _order[NCHANNELS])
+inline void AudioProcessor::get_output_order(int _order[NCHANNELS]) const
 { out_conv.get_order(_order); }
 
 inline void AudioProcessor::set_input_order (const int _order[NCHANNELS])
@@ -304,10 +304,10 @@ inline void AudioProcessor::set_output_order(const int _order[NCHANNELS])
 
 // Master gain
 
-inline sample_t AudioProcessor::get_master()
+inline sample_t AudioProcessor::get_master() const
 { return mixer.get_gain(); }
 
-inline sample_t AudioProcessor::get_gain()
+inline sample_t AudioProcessor::get_gain() const
 { return mixer.get_gain() * agc.gain; }
 
 inline void AudioProcessor::set_master(sample_t _gain)
@@ -315,16 +315,16 @@ inline void AudioProcessor::set_master(sample_t _gain)
 
 // AGC
 
-inline bool AudioProcessor::get_auto_gain()
+inline bool AudioProcessor::get_auto_gain() const
 { return agc.auto_gain; }
 
-inline bool AudioProcessor::get_normalize()
+inline bool AudioProcessor::get_normalize() const
 { return agc.normalize; }
 
-inline sample_t AudioProcessor::get_attack()
+inline sample_t AudioProcessor::get_attack() const
 { return agc.attack; }
 
-inline sample_t AudioProcessor::get_release()
+inline sample_t AudioProcessor::get_release() const
 { return agc.release; }
 
 inline void AudioProcessor::set_auto_gain(bool _auto_gain)
@@ -341,13 +341,13 @@ inline void AudioProcessor::set_release(sample_t _release)
 
 // DRC
 
-inline bool AudioProcessor::get_drc()
+inline bool AudioProcessor::get_drc() const
 { return agc.drc; }
 
-inline sample_t AudioProcessor::get_drc_power()
+inline sample_t AudioProcessor::get_drc_power() const
 { return agc.drc_power; }
 
-inline sample_t AudioProcessor::get_drc_level()
+inline sample_t AudioProcessor::get_drc_level() const
 { return agc.drc_level; }
 
 inline void AudioProcessor::set_drc(bool _drc)
@@ -358,24 +358,24 @@ inline void AudioProcessor::set_drc_power(sample_t _drc_power)
 
 // Matrix
 
-inline void AudioProcessor::get_matrix(matrix_t *_matrix)
+inline void AudioProcessor::get_matrix(matrix_t &_matrix) const
 { mixer.get_matrix(_matrix); }
 
-inline void AudioProcessor::set_matrix(const matrix_t *_matrix)
+inline void AudioProcessor::set_matrix(const matrix_t &_matrix)
 { mixer.set_matrix(_matrix); }
 
 // Automatrix options
 
-inline bool AudioProcessor::get_auto_matrix()
+inline bool AudioProcessor::get_auto_matrix() const
 { return mixer.get_auto_matrix(); }
 
-inline bool AudioProcessor::get_normalize_matrix()
+inline bool AudioProcessor::get_normalize_matrix() const
 { return mixer.get_normalize_matrix(); }
 
-inline bool AudioProcessor::get_voice_control()
+inline bool AudioProcessor::get_voice_control() const
 { return mixer.get_voice_control(); }
 
-inline bool AudioProcessor::get_expand_stereo()
+inline bool AudioProcessor::get_expand_stereo() const
 { return mixer.get_expand_stereo(); }
 
 inline void AudioProcessor::set_auto_matrix(bool _auto_matrix)
@@ -392,13 +392,13 @@ inline void AudioProcessor::set_expand_stereo(bool _expand_stereo)
 
 // Automatrix levels
 
-inline sample_t AudioProcessor::get_clev()
+inline sample_t AudioProcessor::get_clev() const
 { return mixer.get_clev(); }
 
-inline sample_t AudioProcessor::get_slev()
+inline sample_t AudioProcessor::get_slev() const
 { return mixer.get_slev(); }
 
-inline sample_t AudioProcessor::get_lfelev()
+inline sample_t AudioProcessor::get_lfelev() const
 { return mixer.get_lfelev(); }
 
 inline void AudioProcessor::set_clev(sample_t _clev)
@@ -412,10 +412,10 @@ inline void AudioProcessor::set_lfelev(sample_t _lfelev)
 
 // Input/output gains
 
-inline void AudioProcessor::get_input_gains(sample_t _input_gains[NCHANNELS])
+inline void AudioProcessor::get_input_gains(sample_t _input_gains[NCHANNELS]) const
 { mixer.get_input_gains(_input_gains); }
 
-inline void AudioProcessor::get_output_gains(sample_t _output_gains[NCHANNELS])
+inline void AudioProcessor::get_output_gains(sample_t _output_gains[NCHANNELS]) const
 { mixer.get_output_gains(_output_gains); }
 
 inline void AudioProcessor::set_input_gains(const sample_t _input_gains[NCHANNELS])
@@ -434,10 +434,10 @@ inline void AudioProcessor::get_output_levels(vtime_t _time, sample_t _output_le
 
 // SRC
 
-inline double AudioProcessor::get_src_quality()
+inline double AudioProcessor::get_src_quality() const
 { return resample.get_quality(); }
 
-inline double AudioProcessor::get_src_att()
+inline double AudioProcessor::get_src_att() const
 { return resample.get_attenuation(); }
 
 inline void AudioProcessor::set_src_quality(double q)
@@ -448,7 +448,7 @@ inline void AudioProcessor::set_src_att(double a)
 
 // Equalizer
 
-inline bool AudioProcessor::get_eq()
+inline bool AudioProcessor::get_eq() const
 { return equalizer.get_enabled(); }
 
 inline void AudioProcessor::set_eq(bool eq)
@@ -457,13 +457,13 @@ inline void AudioProcessor::set_eq(bool eq)
   dither.level = dithering_level();
 }
 
-inline size_t AudioProcessor::get_eq_nbands(int ch)
+inline size_t AudioProcessor::get_eq_nbands(int ch) const
 { return equalizer.get_nbands(ch); }
 
-inline size_t AudioProcessor::get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands)
+inline size_t AudioProcessor::get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands) const
 { return equalizer.get_bands(ch, bands, first_band, nbands); }
 
-inline double AudioProcessor::get_eq_ripple(int ch)
+inline double AudioProcessor::get_eq_ripple(int ch) const
 { return equalizer.get_ripple(ch); }
 
 inline size_t AudioProcessor::set_eq_bands(int ch, const EqBand *bands, size_t nbands)
@@ -474,7 +474,7 @@ inline void AudioProcessor::set_eq_ripple(int ch, double ripple_db)
 
 // Spectrum
 
-inline unsigned AudioProcessor::get_spectrum_length()
+inline unsigned AudioProcessor::get_spectrum_length() const
 { return spectrum.get_length(); }
 
 inline void AudioProcessor::get_spectrum(int ch, sample_t *data, double *bin2hz)
@@ -485,10 +485,10 @@ inline void AudioProcessor::set_spectrum_length(unsigned length)
 
 // Bass redirection
 
-inline bool AudioProcessor::get_bass_redir()
+inline bool AudioProcessor::get_bass_redir() const
 { return bass_redir.get_enabled(); }
 
-inline int AudioProcessor::get_bass_freq()
+inline int AudioProcessor::get_bass_freq() const
 { return (int)bass_redir.get_freq(); }
 
 inline void AudioProcessor::set_bass_redir(bool _bass_redir)
@@ -499,16 +499,16 @@ inline void AudioProcessor::set_bass_freq(int _bass_freq)
 
 // Delays
 
-inline bool AudioProcessor::get_delay()
+inline bool AudioProcessor::get_delay() const
 { return delay.get_enabled(); }
 
 inline void AudioProcessor::set_delay(bool _delay)
 { delay.set_enabled(_delay); }
 
-inline int AudioProcessor::get_delay_units()
+inline int AudioProcessor::get_delay_units() const
 { return delay.get_units(); }
 
-inline void AudioProcessor::get_delays(float _delays[NCHANNELS])
+inline void AudioProcessor::get_delays(float _delays[NCHANNELS]) const
 { delay.get_delays(_delays); }
 
 inline void AudioProcessor::set_delay_units(int _delay_units)
@@ -525,25 +525,25 @@ inline void AudioProcessor::set_dbpb(int _dbpb)
 
 // Histogram
 
-inline int AudioProcessor::get_dbpb()
+inline int AudioProcessor::get_dbpb() const
 { return in_levels.get_dbpb(); }
 
-inline void AudioProcessor::get_input_histogram(double *_input_histogram, size_t _count)
+inline void AudioProcessor::get_input_histogram(double *_input_histogram, size_t _count) const
 { in_levels.get_histogram(_input_histogram, _count); }
 
-inline void AudioProcessor::get_input_histogram(int _ch, double *_input_histogram, size_t _count)
+inline void AudioProcessor::get_input_histogram(int _ch, double *_input_histogram, size_t _count) const
 { in_levels.get_histogram(_ch, _input_histogram, _count); }
 
-inline void AudioProcessor::get_output_histogram(double *_output_histogram, size_t _count)
+inline void AudioProcessor::get_output_histogram(double *_output_histogram, size_t _count) const
 { out_levels.get_histogram(_output_histogram, _count); }
 
-inline void AudioProcessor::get_output_histogram(int _ch, double *_output_histogram, size_t _count)
+inline void AudioProcessor::get_output_histogram(int _ch, double *_output_histogram, size_t _count) const
 { out_levels.get_histogram(_ch, _output_histogram, _count); }
 
-inline sample_t AudioProcessor::get_max_level()
+inline sample_t AudioProcessor::get_max_level() const
 { return out_levels.get_max_level(); }
 
-inline sample_t AudioProcessor::get_max_level(int ch)
+inline sample_t AudioProcessor::get_max_level(int ch) const
 { return out_levels.get_max_level(ch); }
 
 #endif
