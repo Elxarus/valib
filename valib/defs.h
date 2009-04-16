@@ -183,10 +183,10 @@ public:
   { *this = m; }
 
   inline const sample_t *operator [](int i) const
-  { assert(i > 0 && i < NCHANNELS); return matrix[i]; }
+  { assert(i >= 0 && i < NCHANNELS); return matrix[i]; }
 
   inline sample_t *operator [](int i)
-  { assert(i > 0 && i < NCHANNELS); return matrix[i]; }
+  { assert(i >= 0 && i < NCHANNELS); return matrix[i]; }
 
   bool operator ==(const matrix_t &m) const;
   bool operator !=(const matrix_t &m) const;
