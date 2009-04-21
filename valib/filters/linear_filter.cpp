@@ -1,5 +1,9 @@
 #include "linear_filter.h"
 
+static const int flush_none = 0;
+static const int flush_chunk = 1;
+static const int flush_reinit = 2;
+
 LinearFilter::LinearFilter()
 : flushing(flush_none), size(0), out_size(0), buffered_samples(0)
 {}
@@ -10,14 +14,7 @@ LinearFilter::~LinearFilter()
 void
 LinearFilter::reset()
 {
-  flushing = flush_none;
-  samples.zero();
-  size = 0;
-  out_samples.zero();
-  out_size = 0;
-  buffered_samples = 0;
-
-  if (want_reinit())
+  if (flushing & flush_reinit)
   {
     out_spk = in_spk;
     init(in_spk, out_spk);
@@ -27,8 +24,14 @@ LinearFilter::reset()
     // filter in this case.
     assert(in_spk.sample_rate == out_spk.sample_rate);
   }
-
+  flushing = flush_none;
   reset_state();
+
+  samples.zero();
+  size = 0;
+  out_samples.zero();
+  out_size = 0;
+  buffered_samples = 0;
   sync_helper.reset();
 }
 
@@ -78,23 +81,12 @@ LinearFilter::process(const Chunk *chunk)
   if (in_spk != chunk->spk)
     FILTER_SAFE(set_input(chunk->spk));
 
-  if (want_reinit() && !need_flushing())
-  {
-    // We should flush if we have buffered samples
-    assert(buffered_samples == 0);
-
-    out_spk = in_spk;
-    FILTER_SAFE(init(in_spk, out_spk));
-    assert(in_spk.sample_rate == out_spk.sample_rate);
-    reset_state();
-    buffered_samples = 0;
-  }
-
   sync_helper.receive_sync(chunk, buffered_samples);
   samples  = chunk->samples;
   size     = chunk->size;
+
   if (chunk->eos)
-    flushing = flush_chunk;
+    flushing |= flush_chunk;
 
   out_size = 0;
   out_samples.zero();
@@ -118,7 +110,7 @@ LinearFilter::is_empty() const
 bool
 LinearFilter::get_chunk(Chunk *chunk)
 {
-  if (out_size == 0)
+  if (size > 0 && out_size == 0)
     FILTER_SAFE(process());
 
   if (out_size)
@@ -129,10 +121,6 @@ LinearFilter::get_chunk(Chunk *chunk)
     out_size = 0;
     return true;
   }
-
-  if (flushing == flush_none)
-    if (want_reinit() && need_flushing())
-      flushing = flush_reinit;
 
   if (flushing != flush_none && need_flushing())
   {
@@ -153,6 +141,8 @@ LinearFilter::get_chunk(Chunk *chunk)
       assert(false);
     }
 
+    // reset() may call init() and change output format
+    // thus we have to send eos always
     chunk->set_eos();
     reset();
   }
@@ -168,6 +158,9 @@ LinearFilter::process()
     size_t gone = 0;
     FILTER_SAFE(process_samples(samples, size, out_samples, out_size, gone));
 
+    // detect endless loop
+    assert(gone > 0 || out_size > 0);
+
     if (gone > size)
     {
       // incorrect number of samples processed
@@ -180,7 +173,7 @@ LinearFilter::process()
     buffered_samples += gone;
     if (buffered_samples < out_size)
     {
-      // incorrect output number of samples
+      // incorrect number of output samples
       assert(false);
       buffered_samples = out_size;
     }
@@ -197,6 +190,9 @@ LinearFilter::flush()
   {
     FILTER_SAFE(flush(out_samples, out_size));
 
+    // detect endless loop
+    assert(out_size > 0 || !need_flushing());
+
     if (buffered_samples > out_size)
     {
       // incorrect number of samples flushed
@@ -205,6 +201,26 @@ LinearFilter::flush()
     }
     buffered_samples -= out_size;
   }
+  return true;
+}
+
+bool
+LinearFilter::reinit()
+{
+  if (!need_flushing())
+  {
+    // We should flush if we have buffered samples
+    assert(buffered_samples == 0);
+
+    out_spk = in_spk;
+    init(in_spk, out_spk);
+    assert(in_spk.sample_rate == out_spk.sample_rate);
+    reset_state();
+    buffered_samples = 0;
+  }
+  else
+    flushing |= flush_reinit;
+
   return true;
 }
 
@@ -253,12 +269,6 @@ LinearFilter::flush(samples_t &out, size_t &out_size)
 
 bool
 LinearFilter::need_flushing() const
-{
-  return false;
-}
-
-bool
-LinearFilter::want_reinit() const
 {
   return false;
 }

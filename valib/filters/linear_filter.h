@@ -11,13 +11,13 @@ class LinearFilter : public Filter
 {
 private:
   SyncHelper sync_helper;
-  enum      { flush_none, flush_reinit, flush_chunk } flushing;
 
   samples_t  samples;
   size_t     size;
   samples_t  out_samples;
   size_t     out_size;
   size_t     buffered_samples;
+  int flushing;
 
   bool process();
   bool flush();
@@ -25,6 +25,8 @@ private:
 protected:
   Speakers   in_spk;
   Speakers   out_spk;
+
+  bool reinit();
 
 public:
   LinearFilter();
@@ -42,7 +44,6 @@ public:
   virtual bool flush(samples_t &out, size_t &out_size);
 
   virtual bool need_flushing() const;
-  virtual bool want_reinit() const;
 
   /////////////////////////////////////////////////////////////////////////////
   // Filter interface (fully implemented)

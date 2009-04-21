@@ -64,7 +64,6 @@ public:
   virtual bool flush(samples_t &out, size_t &out_size);
 
   virtual bool need_flushing() const;
-  virtual bool want_reinit() const;
 };
 
 #endif

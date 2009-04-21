@@ -269,9 +269,3 @@ Convolver::need_flushing() const
 {
   return state == state_filter && post_samples > 0;
 }
-
-bool
-Convolver::want_reinit() const
-{
-  return ver != gen.version();
-}

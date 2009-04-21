@@ -45,9 +45,9 @@ public:
   /////////////////////////////////////////////////////////
   // Handle FIR generator changes
 
-  void set_fir(const FIRGen *gen_) { gen.set(gen_);    }
+  void set_fir(const FIRGen *gen_) { gen.set(gen_); reinit(); }
   const FIRGen *get_fir() const    { return gen.get(); }
-  void release_fir()               { gen.release();    }
+  void release_fir()               { gen.release(); reinit(); }
 
   /////////////////////////////////////////////////////////
   // Filter interface
@@ -59,7 +59,6 @@ public:
   virtual bool flush(samples_t &out, size_t &out_size);
 
   virtual bool need_flushing() const;
-  virtual bool want_reinit() const;
 };
 
 #endif
