@@ -13,6 +13,7 @@ EXTERN_SUITE(bitstream);
 EXTERN_SUITE(base);
 EXTERN_SUITE(fir);
 EXTERN_SUITE(linear_filter);
+EXTERN_TEST(cache);
 
 
 EXTERN_TEST(slice);
@@ -39,6 +40,7 @@ FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(base),
   SUITE_FACTORY(fir),
   SUITE_FACTORY(linear_filter),
+   TEST_FACTORY(cache),
    TEST_FACTORY(slice),
    TEST_FACTORY(convolver),
    TEST_FACTORY(convolver_mch),

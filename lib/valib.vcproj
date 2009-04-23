@@ -455,6 +455,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\cache.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\cache.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\convert.cpp"
 				>
 			</File>

@@ -397,6 +397,10 @@
 				Name="filter"
 				>
 				<File
+					RelativePath=".\tests\filters\test_cache.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\filters\test_convolver.cpp"
 					>
 				</File>
