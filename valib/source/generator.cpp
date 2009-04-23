@@ -167,3 +167,38 @@ ToneGen::gen_rawdata(uint8_t *rawdata, size_t n)
   // never be here
   assert(false);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// LineGen
+// Line generator
+
+bool
+LineGen::query_spk(Speakers _spk) const
+{
+  return _spk.format == FORMAT_LINEAR;
+}
+
+bool
+LineGen::init(Speakers _spk, double _start, double _k, size_t _stream_len, size_t _chunk_size)
+{
+  phase = _start;
+  k = _k;
+  return Generator::init(_spk, _stream_len, _chunk_size);
+}
+void
+LineGen::gen_samples(samples_t samples, size_t n)
+{
+  for (size_t i = 0; i < n; i++)
+    samples[0][i] = phase + i*k;
+  phase += n*k;
+
+  for (int ch = 1; ch < spk.nch(); ch++)
+    memcpy(samples[ch], samples[0], n * sizeof(sample_t));
+}
+
+void
+LineGen::gen_rawdata(uint8_t *rawdata, size_t n)
+{
+  // never be here
+  assert(false);
+}

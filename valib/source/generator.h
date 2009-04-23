@@ -4,6 +4,7 @@
   * Silence generator (ZeroGen)
   * Noise generator (NoiseGen)
   * Sine wave generator (SineGen)
+  * Line generator (LinGen)
 */
 
 #ifndef VALIB_GENERATOR_H
@@ -88,6 +89,25 @@ public:
   { init(_spk, _freq, _stream_len, _chunk_size); }
 
   bool init(Speakers spk, int freq, size_t stream_len, size_t chunk_size = 4096);
+};
+
+class LineGen : public Generator
+{
+protected:
+  double phase;
+  double k;
+
+  virtual bool query_spk(Speakers spk) const;
+  virtual void gen_samples(samples_t samples, size_t n);
+  virtual void gen_rawdata(uint8_t *rawdata, size_t n);
+
+public:
+  LineGen(): phase(0), k(1.0) {};
+  LineGen(Speakers _spk, double _start, double _k, size_t _stream_len, size_t _chunk_size = 4096):
+  Generator(_spk, _stream_len, _chunk_size), phase(0), k(1.0)
+  { init(_spk, _start, _k, _stream_len, _chunk_size); }
+
+  bool init(Speakers spk, double _start, double _k, size_t stream_len, size_t chunk_size = 4096);
 };
 
 #endif
