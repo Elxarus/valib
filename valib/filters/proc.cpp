@@ -100,6 +100,7 @@ AudioProcessor::rebuild_chain()
 
   // processing chain
   FILTER_SAFE(chain.add_back(&in_levels, "Input levels"));
+  FILTER_SAFE(chain.add_back(&in_cache, "Input cache"));
   if (out_spk.nch() < in_spk.nch())
   {
     FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
@@ -116,7 +117,7 @@ AudioProcessor::rebuild_chain()
   FILTER_SAFE(chain.add_back(&dither,    "Dither"));
   FILTER_SAFE(chain.add_back(&agc,       "AGC"));
   FILTER_SAFE(chain.add_back(&delay,     "Delay"));
-  FILTER_SAFE(chain.add_back(&spectrum,  "Spectrum"));
+  FILTER_SAFE(chain.add_back(&out_cache, "Output cache"));
   FILTER_SAFE(chain.add_back(&out_levels,"Output levels"));
 
   // setup mixer
@@ -296,8 +297,6 @@ AudioProcessor::get_state(vtime_t time)
     }
   }
 
-  // Spectrum
-  state->spectrum_length = get_spectrum_length();
   // Bass redirection
   state->bass_redir = get_bass_redir();
   state->bass_freq = get_bass_freq();
@@ -351,8 +350,6 @@ AudioProcessor::set_state(const AudioProcessorState *state)
   for (int ch = 0; ch < NCHANNELS; ch++)
     if (state->eq_bands[ch])
       set_eq_bands(ch, state->eq_bands[ch], state->eq_nbands[ch]);
-  // Spectrum
-  set_spectrum_length(state->spectrum_length);
   // Bass redirection
   set_bass_redir(state->bass_redir);
   set_bass_freq(state->bass_freq);

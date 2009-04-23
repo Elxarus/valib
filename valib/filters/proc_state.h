@@ -60,9 +60,6 @@ struct AudioProcessorState
   EqBand  *eq_bands[NCHANNELS];
   double   eq_ripple[NCHANNELS];
 
-  // Spectrum
-  unsigned spectrum_length;
-
   // Bass redirection
   bool     bass_redir;
   int      bass_freq;

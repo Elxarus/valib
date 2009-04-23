@@ -75,9 +75,9 @@
 #define VALIB_PROC_H
 
 #include "../filter_graph.h"
+#include "cache.h"
 #include "equalizer_mch.h"
 #include "levels.h"
-#include "spectrum.h"
 #include "mixer.h"
 #include "resample.h"
 #include "bass_redir.h"
@@ -97,18 +97,21 @@ protected:
   Speakers out_spk;  // actual output format
 
   // filters
-  Converter  in_conv;
-  Levels     in_levels;
-  Mixer      mixer;
-  Resample   resample;
+  Converter    in_conv;
+  CacheFilter  in_cache;
+  Levels       in_levels;
+
+  Mixer        mixer;
+  Resample     resample;
   EqualizerMch equalizer;
-  Dither     dither;
-  BassRedir  bass_redir;
-  AGC        agc;
-  Delay      delay;
-  Spectrum   spectrum;
-  Levels     out_levels;
-  Converter  out_conv;
+  Dither       dither;
+  BassRedir    bass_redir;
+  AGC          agc;
+  Delay        delay;
+
+  Levels       out_levels;
+  CacheFilter  out_cache;
+  Converter    out_conv;
 
   FilterChain chain;
   bool rebuild_chain();
@@ -240,12 +243,6 @@ public:
   inline size_t   set_eq_bands(int ch, const EqBand *bands, size_t nbands);
   inline void     set_eq_ripple(int ch, double ripple_db);
 
-  // Spectrum
-
-  inline unsigned get_spectrum_length() const;
-  inline void     get_spectrum(int ch, sample_t *spectrum, double *bin2hz);
-  inline void     set_spectrum_length(unsigned length);
-
   // Bass redirection
 
   inline bool     get_bass_redir() const;
@@ -264,6 +261,18 @@ public:
 
   inline void     set_delay_units(int delay_units);
   inline void     set_delays(const float delays[NCHANNELS]);
+
+  // Input/output cache
+
+  inline vtime_t  get_input_cache_size() const;
+  inline vtime_t  get_output_cache_size() const;
+  inline void     set_input_cache_size(vtime_t size);
+  inline void     set_output_cache_size(vtime_t size);
+
+  inline vtime_t  get_input_time() const;
+  inline vtime_t  get_output_time() const;
+  inline size_t   get_input_cache(vtime_t time, samples_t buf, size_t size);
+  inline size_t   get_output_cache(vtime_t time, samples_t buf, size_t size);
 
   // Input/output histogram
 
@@ -472,17 +481,6 @@ inline size_t AudioProcessor::set_eq_bands(int ch, const EqBand *bands, size_t n
 inline void AudioProcessor::set_eq_ripple(int ch, double ripple_db)
 { equalizer.set_ripple(ch, ripple_db); }
 
-// Spectrum
-
-inline unsigned AudioProcessor::get_spectrum_length() const
-{ return spectrum.get_length(); }
-
-inline void AudioProcessor::get_spectrum(int ch, sample_t *data, double *bin2hz)
-{ spectrum.get_spectrum(ch, data, bin2hz); }
-
-inline void AudioProcessor::set_spectrum_length(unsigned length)
-{ spectrum.set_length(length); }
-
 // Bass redirection
 
 inline bool AudioProcessor::get_bass_redir() const
@@ -522,6 +520,32 @@ inline void AudioProcessor::set_dbpb(int _dbpb)
   in_levels.set_dbpb(_dbpb); 
   out_levels.set_dbpb(_dbpb); 
 }
+
+// Cache
+
+inline vtime_t AudioProcessor::get_input_cache_size() const
+{ return in_cache.get_size(); }
+
+inline vtime_t AudioProcessor::get_output_cache_size() const
+{ return out_cache.get_size(); }
+
+inline void AudioProcessor::set_input_cache_size(vtime_t size)
+{ in_cache.set_size(size); }
+
+inline void AudioProcessor::set_output_cache_size(vtime_t size)
+{ out_cache.set_size(size); }
+
+inline vtime_t AudioProcessor::get_input_time() const
+{ return in_cache.get_time(); }
+
+inline vtime_t AudioProcessor::get_output_time() const
+{ return out_cache.get_time(); }
+
+inline size_t AudioProcessor::get_input_cache(vtime_t time, samples_t buf, size_t size)
+{ return in_cache.get_samples(time, buf, size); }
+
+inline size_t AudioProcessor::get_output_cache(vtime_t time, samples_t buf, size_t size)
+{ return out_cache.get_samples(time, buf, size); }
 
 // Histogram
 
