@@ -18,7 +18,7 @@ void
 CacheFilter::set_size(vtime_t size)
 {
   buf_time = size;
-  buf_samples = buf_time * get_in_spk().sample_rate;
+  buf_samples = (int)(buf_time * get_in_spk().sample_rate + 0.5);
   buf.allocate(get_in_spk().nch(), buf_samples);
   buf.zero();
   pos = 0;
@@ -34,7 +34,7 @@ CacheFilter::get_samples(vtime_t time, samples_t samples, size_t size)
 
   if (start_pos < 0) start_pos = 0;
   if (start_pos + size > (size_t)buf_samples)
-    start_pos = buf_samples - size;
+    start_pos = buf_samples - (int)size;
 
   start_pos += pos;
   if (start_pos >= buf_samples)
@@ -69,7 +69,7 @@ bool
 CacheFilter::init(Speakers spk, Speakers &out_spk)
 {
   stream_time = 0;
-  buf_samples = buf_time * spk.sample_rate;
+  buf_samples = (int)(buf_time * spk.sample_rate + 0.5);
   buf.allocate(spk.nch(), buf_samples);
   buf.zero();
   pos = 0;
@@ -105,8 +105,8 @@ CacheFilter::process_inplace(samples_t samples, size_t size)
 
   if (pos + size > (size_t)buf_samples)
   {
-    size_t size1 = buf_samples - pos;
-    size_t size2 = pos + size - buf_samples;
+    int size1 = buf_samples - pos;
+    int size2 = pos + (int)size - buf_samples;
     for (ch = 0; ch < get_in_spk().nch(); ch++)
     {
       memcpy(buf[ch] + pos, samples[ch], size1 * sizeof(sample_t));
@@ -118,7 +118,7 @@ CacheFilter::process_inplace(samples_t samples, size_t size)
 
   for (ch = 0; ch < get_in_spk().nch(); ch++)
     memcpy(buf[ch] + pos, samples[ch], size * sizeof(sample_t));
-  pos += size;
+  pos += (int)size;
   if (pos >= buf_samples)
     pos = 0;
   return true;
