@@ -39,7 +39,7 @@ Convolver::convolve()
 {
   int i;
   int ch;
-  int nch = in_spk.nch();
+  int nch = get_in_spk().nch();
 
   for (ch = 0; ch < nch; ch++)
   {
@@ -173,7 +173,7 @@ bool
 Convolver::process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone)
 {
   int ch;
-  int nch = in_spk.nch();
+  int nch = get_in_spk().nch();
 
   /////////////////////////////////////////////////////////
   // Trivial filtering
@@ -246,7 +246,7 @@ Convolver::flush(samples_t &out, size_t &out_size)
     return true;
   }
 
-  for (int ch = 0; ch < in_spk.nch(); ch++)
+  for (int ch = 0; ch < get_in_spk().nch(); ch++)
     memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
 
   convolve();

@@ -92,7 +92,7 @@ ConvolverMch::process_trivial(samples_t samples, size_t size)
   size_t s;
   sample_t gain;
 
-  for (int ch = 0; ch < in_spk.nch(); ch++)
+  for (int ch = 0; ch < get_in_spk().nch(); ch++)
     switch (type[ch])
     {
       case type_zero:
@@ -111,7 +111,7 @@ void
 ConvolverMch::process_convolve()
 {
   int ch, i;
-  int nch = in_spk.nch();
+  int nch = get_in_spk().nch();
   sample_t *buf_ch, *filter_ch, *delay_ch;
 
   for (ch = 0; ch < nch; ch++)
@@ -157,7 +157,7 @@ bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
 
   for (ch = 0; ch < nch; ch++)
   {
-    ch_name = in_spk.order()[ch];
+    ch_name = get_in_spk().order()[ch];
     ver[ch_name] = gen[ch_name].version();
 
     fir[ch] = gen[ch_name].make(new_in_spk.sample_rate);
@@ -245,7 +245,7 @@ ConvolverMch::uninit()
   pos = 0;
 
   trivial = true;
-  for (int ch = 0; ch < in_spk.nch(); ch++)
+  for (int ch = 0; ch < get_in_spk().nch(); ch++)
   {
     safe_delete(fir[ch]);
     type[ch] = type_pass;
@@ -268,7 +268,7 @@ bool
 ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone)
 {
   int ch;
-  int nch = in_spk.nch();
+  int nch = get_in_spk().nch();
 
   /////////////////////////////////////////////////////////
   // Trivial filtering
@@ -331,7 +331,7 @@ ConvolverMch::flush(samples_t &out, size_t &out_size)
   if (!need_flushing())
     return true;
 
-  for (int ch = 0; ch < in_spk.nch(); ch++)
+  for (int ch = 0; ch < get_in_spk().nch(); ch++)
     if (type[ch] == type_conv)
       memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
     else

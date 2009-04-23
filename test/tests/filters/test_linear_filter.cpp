@@ -10,42 +10,6 @@ inline bool equal_time(vtime_t time1, vtime_t time2, vtime_t max_diff = 1e-6)
 { return fabs(time1 - time2) < max_diff; }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Generator makes a signal where sample[x] = x
-
-class SequenceGen : public Generator
-{
-protected:
-  int seq;
-
-  virtual bool query_spk(Speakers spk) const
-  { return spk.format == FORMAT_LINEAR; }
-  
-  virtual void gen_samples(samples_t samples, size_t n)
-  {
-    for (size_t i = 0; i < n; i++)
-      samples[0][i] = i + seq;
-    for (int ch = 1; ch < spk.nch(); ch++)
-      memcpy(samples[ch], samples[0], n * sizeof(sample_t));
-    seq += n;
-  }
-
-  virtual void gen_rawdata(uint8_t *rawdata, size_t n)
-  {}
-
-public:
-  SequenceGen(): seq(0) {};
-  SequenceGen(Speakers spk, size_t stream_len, size_t chunk_size = 4096):
-  Generator(spk, stream_len, chunk_size), seq(0)
-  { init(spk, stream_len, chunk_size); }
-
-  bool init(Speakers spk, size_t stream_len, size_t chunk_size = 4096)
-  {
-    seq = 0;
-    return Generator::init(spk, stream_len, chunk_size);
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////////
 // LinearFilterInplace - inplace filter
 // LinearFilterBuffered - buffered filter
 // Checks:
@@ -146,7 +110,7 @@ public:
 
     if (pos >= 2 * block_size)
     {
-      for (int ch = 0; ch < in_spk.nch(); ch++)
+      for (int ch = 0; ch < get_in_spk().nch(); ch++)
         memmove(buf[ch], buf[ch] + block_size, block_size * sizeof(sample_t));
       pos = block_size;
     }
@@ -154,7 +118,7 @@ public:
     size_t n = block_size * 2 - pos;
     if (in_size < n)
     {
-      for (int ch = 0; ch < in_spk.nch(); ch++)
+      for (int ch = 0; ch < get_in_spk().nch(); ch++)
         memcpy(buf[ch] + pos, in[ch], in_size * sizeof(sample_t));
 
       gone = in_size;
@@ -163,7 +127,7 @@ public:
     }
     else
     {
-      for (int ch = 0; ch < in_spk.nch(); ch++)
+      for (int ch = 0; ch < get_in_spk().nch(); ch++)
         memcpy(buf[ch] + pos, in[ch], n * sizeof(sample_t));
 
       out = buf;
@@ -182,7 +146,7 @@ public:
 
     if (pos >= 2 * block_size)
     {
-      for (int ch = 0; ch < in_spk.nch(); ch++)
+      for (int ch = 0; ch < get_in_spk().nch(); ch++)
         memmove(buf[ch], buf[ch] + block_size, block_size * sizeof(sample_t));
       pos = block_size;
     }
@@ -202,7 +166,7 @@ public:
 TestResult linear_filter_test(Log *log, LinearFilterTester *f)
 {
   Chunk chunk;
-  SequenceGen gen;
+  LineGen gen;
   bool result;
 
   const Speakers spk_mono(FORMAT_LINEAR, MODE_MONO, 48000);
@@ -240,7 +204,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   // filter must call init() and reset_state()
   // process checks that reset_state() was actually called
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   gen.get_chunk(&chunk);
   f->reset_seq();
   f->set_input(spk_mono);
@@ -252,7 +216,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   // Chunk has a different format
   // filter must call init() and reset_state()
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   gen.get_chunk(&chunk);
   f->reset_seq();
   f->set_input(spk_mono);
@@ -266,7 +230,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   /////////////////////////////////////////////////////////
   // Reinit from init state
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   f->reset_seq();
   f->set_input(spk_stereo);
 
@@ -280,7 +244,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   /////////////////////////////////////////////////////////
   // Reinit immediately from full state
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   gen.get_chunk(&chunk);
   f->reset_seq();
   f->set_input(spk_stereo);
@@ -298,7 +262,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   /////////////////////////////////////////////////////////
   // Reinit immediately from empty state
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   gen.get_chunk(&chunk);
   f->reset_seq();
   f->set_input(spk_stereo);
@@ -317,7 +281,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   /////////////////////////////////////////////////////////
   // Reinit after flushing from flushing state
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   gen.get_chunk(&chunk);
   chunk.set_eos();
   f->reset_seq();
@@ -341,7 +305,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   /////////////////////////////////////////////////////////
   // Init state, full chunk
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   gen.get_chunk(&chunk);
   chunk.set_eos();
 
@@ -361,7 +325,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   /////////////////////////////////////////////////////////
   // Init state, empty chunk
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   chunk.set_empty(spk_stereo);
   chunk.set_eos();
 
@@ -381,7 +345,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   /////////////////////////////////////////////////////////
   // Empty state, full chunk
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   gen.get_chunk(&chunk);
   f->reset_seq();
   f->set_input(spk_stereo);
@@ -405,7 +369,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
   /////////////////////////////////////////////////////////
   // Empty state, empty chunk
 
-  gen.init(spk_stereo, data_size, block_size);
+  gen.init(spk_stereo, 0, 1, data_size, block_size);
   gen.get_chunk(&chunk);
   f->reset_seq();
   f->set_input(spk_stereo);
@@ -448,7 +412,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
       block_size / block_multipliers[i]:
       block_size * block_multipliers[i - nmultipliers];
 
-    gen.init(spk_stereo, data_size, current_block_size);
+    gen.init(spk_stereo, 0, 1, data_size, current_block_size);
     while (!gen.is_empty())
     {
       if (seq >= block_size && !was_reinit)

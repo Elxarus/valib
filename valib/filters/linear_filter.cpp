@@ -11,6 +11,10 @@ LinearFilter::LinearFilter()
 LinearFilter::~LinearFilter()
 {}
 
+///////////////////////////////////////////////////////////////////////////////
+// Filter interface
+///////////////////////////////////////////////////////////////////////////////
+
 void
 LinearFilter::reset()
 {
@@ -80,6 +84,9 @@ LinearFilter::process(const Chunk *chunk)
 
   if (in_spk != chunk->spk)
     FILTER_SAFE(set_input(chunk->spk));
+
+  if (chunk->sync)
+    sync(chunk->time);
 
   sync_helper.receive_sync(chunk, buffered_samples);
   samples  = chunk->samples;
@@ -225,6 +232,8 @@ LinearFilter::reinit()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// LinearFilter interface
+///////////////////////////////////////////////////////////////////////////////
 
 bool
 LinearFilter::query(Speakers spk) const
@@ -241,6 +250,10 @@ LinearFilter::init(Speakers spk, Speakers &out_spk)
 
 void
 LinearFilter::reset_state()
+{}
+
+void
+LinearFilter::sync(vtime_t time)
 {}
 
 bool

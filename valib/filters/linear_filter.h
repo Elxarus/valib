@@ -12,6 +12,8 @@ class LinearFilter : public Filter
 private:
   SyncHelper sync_helper;
 
+  Speakers   in_spk;
+  Speakers   out_spk;
   samples_t  samples;
   size_t     size;
   samples_t  out_samples;
@@ -23,14 +25,9 @@ private:
   bool flush();
 
 protected:
-  Speakers   in_spk;
-  Speakers   out_spk;
-
+  Speakers get_in_spk() const { return in_spk; }
+  Speakers get_out_spk() const { return out_spk; }
   bool reinit();
-
-public:
-  LinearFilter();
-  virtual ~LinearFilter();
 
   /////////////////////////////////////////////////////////////////////////////
   // Interface to override
@@ -39,11 +36,16 @@ public:
   virtual bool init(Speakers spk, Speakers &out_spk);
   virtual void reset_state();
 
+  virtual void sync(vtime_t time);
   virtual bool process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone);
   virtual bool process_inplace(samples_t in, size_t in_size);
   virtual bool flush(samples_t &out, size_t &out_size);
 
   virtual bool need_flushing() const;
+
+public:
+  LinearFilter();
+  virtual ~LinearFilter();
 
   /////////////////////////////////////////////////////////////////////////////
   // Filter interface (fully implemented)
