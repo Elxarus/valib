@@ -25,34 +25,6 @@ CacheFilter::set_size(vtime_t size)
 }
 
 size_t
-CacheFilter::get_samples(int ch, vtime_t time, sample_t *samples, size_t size)
-{
-  int start_pos = buf_samples - int((stream_time - time) * get_in_spk().sample_rate + 0.5);
-  if (size > (size_t)buf_samples)
-    size = buf_samples;
-
-  if (start_pos < 0) start_pos = 0;
-  if (start_pos + size > (size_t)buf_samples)
-    start_pos = buf_samples - size;
-
-  start_pos += pos;
-  if (start_pos >= buf_samples)
-    start_pos -= buf_samples;
-
-  if (start_pos + size > (size_t)buf_samples)
-  {
-    size_t size1 = buf_samples - start_pos;
-    size_t size2 = size - size1;
-    memcpy(samples, buf[ch] + start_pos, size1 * sizeof(sample_t));
-    memcpy(samples + size1, buf[ch], size2 * sizeof(sample_t));
-  }
-  else
-    memcpy(samples, buf[ch] + start_pos, size * sizeof(sample_t));
-
-  return size;
-}
-
-size_t
 CacheFilter::get_samples(vtime_t time, samples_t samples, size_t size)
 {
   int ch;
@@ -73,15 +45,17 @@ CacheFilter::get_samples(vtime_t time, samples_t samples, size_t size)
     size_t size1 = buf_samples - start_pos;
     size_t size2 = size - size1;
     for (ch = 0; ch < get_in_spk().nch(); ch++)
-    {
-      memcpy(samples[ch], buf[ch] + start_pos, size1 * sizeof(sample_t));
-      memcpy(samples[ch] + size1, buf[ch], size2 * sizeof(sample_t));
-    }
+      if (samples[ch])
+      {
+        memcpy(samples[ch], buf[ch] + start_pos, size1 * sizeof(sample_t));
+        memcpy(samples[ch] + size1, buf[ch], size2 * sizeof(sample_t));
+      }
   }
   else
   {
     for (ch = 0; ch < get_in_spk().nch(); ch++)
-      memcpy(samples[ch], buf[ch] + start_pos, size * sizeof(sample_t));
+      if (samples[ch])
+        memcpy(samples[ch], buf[ch] + start_pos, size * sizeof(sample_t));
   }
 
   return size;

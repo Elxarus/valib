@@ -34,9 +34,7 @@ public:
   vtime_t get_time() const;
   vtime_t get_size() const;
   void set_size(vtime_t size);
-
-  size_t get_samples(int ch, vtime_t time, sample_t *samples, size_t size);
-  size_t get_samples(vtime_t time, samples_t samples, size_t size);
+  size_t get_samples(vtime_t time, samples_t buf, size_t size);
 };
 
 #endif
