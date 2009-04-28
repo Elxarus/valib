@@ -317,7 +317,7 @@ AudioProcessor::set_state(const AudioProcessorState *state)
   set_input_order(state->input_order);
   set_output_order(state->output_order);
   // Master gain
-  set_master(state->gain);
+  set_master(state->master);
   // AGC
   set_auto_gain(state->auto_gain);
   set_normalize(state->normalize);
