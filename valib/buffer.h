@@ -34,11 +34,10 @@ public:
 
   inline bool allocate(unsigned nch, size_t nsamples)
   {
-    if (f_buf.size() < nch * nsamples)
+    if (f_buf.allocate(nch * nsamples) == 0)
     {
       free();
-      if (f_buf.allocate(nch * nsamples) == 0)
-        return false;
+      return false;
     }
 
     f_nch = nch;
@@ -46,6 +45,45 @@ public:
     f_samples.zero();
     for (unsigned ch = 0; ch < nch; ch++)
       f_samples[ch] = f_buf.data() + ch * nsamples;
+    return true;
+  }
+
+  inline bool reallocate(unsigned nch, size_t nsamples)
+  {
+    unsigned ch;
+    unsigned min_nch = MIN(f_nch, nch);
+
+    // Compact data before reallocation
+    if (min_nch > 1 && nsamples < f_nsamples)
+      for (ch = 1; ch < min_nch; ch++)
+        memmove(f_buf + ch * nsamples, f_buf + ch * f_nsamples, nsamples * sizeof(sample_t));
+
+    // Reallocate
+    if (f_buf.reallocate(nch * nsamples) == 0)
+    {
+      free();
+      return false;
+    }
+
+    // Expand data after reallocation
+    // Zero the tail
+    if (min_nch > 1 && nsamples > f_nsamples)
+      for (ch = min_nch - 1; ch > 0; ch--)
+      {
+        memmove(f_buf + ch * nsamples, f_buf + ch * f_nsamples, f_nsamples * sizeof(sample_t));
+        memset(f_buf + ch * nsamples + f_nsamples, 0, (nsamples - f_nsamples) * sizeof(sample_t));
+      }
+
+    // Zero new channels
+    if (nch > f_nch)
+      memset(f_buf.data() + f_nch * nsamples, 0, (nch - f_nch) * nsamples * sizeof(sample_t));
+
+    // Update state
+    f_nch = nch;
+    f_nsamples = nsamples;
+    for (ch = 0; ch < nch; ch++)
+      f_samples[ch] = f_buf.data() + ch * nsamples;
+
     return true;
   }
 
