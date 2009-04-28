@@ -35,9 +35,11 @@ protected:
   int pre_samples;
   int post_samples;
 
+  bool fir_changed() const;
   void uninit();
   void process_trivial(samples_t samples, size_t size);
   void process_convolve();
+
 
 public:
   ConvolverMch();

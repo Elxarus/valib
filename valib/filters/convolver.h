@@ -33,6 +33,7 @@ protected:
   int pre_samples;
   int post_samples;
 
+  bool fir_changed() const;
   void uninit();
   void convolve();
 

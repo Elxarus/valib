@@ -39,6 +39,15 @@ ConvolverMch::~ConvolverMch()
   uninit();
 }
 
+bool
+ConvolverMch::fir_changed() const
+{
+  for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
+    if (ver[ch_name] != gen[ch_name].version())
+      return true;
+  return false;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void
@@ -269,6 +278,12 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
 {
   int ch;
   int nch = get_in_spk().nch();
+
+  /////////////////////////////////////////////////////////
+  // Handle FIR change
+
+  if (fir_changed())
+    reinit();
 
   /////////////////////////////////////////////////////////
   // Trivial filtering

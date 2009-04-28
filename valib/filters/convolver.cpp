@@ -34,6 +34,12 @@ Convolver::~Convolver()
   uninit();
 }
 
+bool
+Convolver::fir_changed() const
+{
+  return ver != gen.version();
+}
+
 void
 Convolver::convolve()
 {
@@ -174,6 +180,12 @@ Convolver::process_samples(samples_t in, size_t in_size, samples_t &out, size_t 
 {
   int ch;
   int nch = get_in_spk().nch();
+
+  /////////////////////////////////////////////////////////
+  // Handle FIR change
+
+  if (fir_changed())
+    reinit();
 
   /////////////////////////////////////////////////////////
   // Trivial filtering
