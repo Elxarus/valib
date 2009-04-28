@@ -16,11 +16,13 @@
 class CacheFilter : public LinearFilter
 {
 protected:
-  vtime_t stream_time;
-  SampleBuf buf;
-  vtime_t buf_time;
-  int buf_samples;
-  int pos;
+  vtime_t stream_time; // Time after the last cached sample
+  SampleBuf buf;       // Cache buffer (circular buffer)
+
+  vtime_t buf_size;    // Size of the buffer in time units
+  int buf_samples;     // Size fo the buffer in samples
+  int cached_samples;  // Number of samples cached
+  int pos;             // Position of the end of the circular buffer
 
   virtual bool init(Speakers spk, Speakers &out_spk);
   virtual void reset_state();
