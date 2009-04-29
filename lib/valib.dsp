@@ -308,6 +308,14 @@ SOURCE=..\valib\filters\bass_redir.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\cache.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\cache.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\convert.cpp
 # End Source File
 # Begin Source File
