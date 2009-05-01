@@ -15,16 +15,19 @@ CacheFilter::get_size() const
 { return buf_size; }
 
 void
-CacheFilter::set_size(vtime_t size)
+CacheFilter::set_size(vtime_t new_size)
 {
   int ch, nch = get_in_spk().nch();
 
-  if (size < 0) size = 0;
-  buf_size = size;
+  if (new_size < 0) new_size = 0;
 
-  int new_buf_samples = (int)(buf_size * get_in_spk().sample_rate + 0.5);
+  int new_buf_samples = (int)(new_size * get_in_spk().sample_rate + 0.5);
   if (new_buf_samples == buf_samples)
     return;
+
+  int new_cached_samples = cached_samples;
+  if (new_buf_samples < buf_samples)
+    new_cached_samples = new_buf_samples;
 
   int new_pos = pos;
   if (new_buf_samples < new_pos)
@@ -61,7 +64,9 @@ CacheFilter::set_size(vtime_t size)
       memset(buf[ch] + pos, 0, (new_pos - pos) * sizeof(sample_t));
     }
 
+  buf_size = new_size;
   buf_samples = new_buf_samples;
+  cached_samples = new_cached_samples;
   pos = new_pos;
 }
 
