@@ -164,11 +164,13 @@ bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
   int min_point = 0;
   int max_point = 0;
 
+  // Update versions
+  for (ch_name = 0; ch_name < NCHANNELS; ch++)
+    ver[ch_name] = gen[ch_name].version();
+
   for (ch = 0; ch < nch; ch++)
   {
     ch_name = get_in_spk().order()[ch];
-    ver[ch_name] = gen[ch_name].version();
-
     fir[ch] = gen[ch_name].make(new_in_spk.sample_rate);
 
     // fir generation error
