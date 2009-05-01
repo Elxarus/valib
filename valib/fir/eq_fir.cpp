@@ -10,6 +10,35 @@ static const double max_ripple = 3.0;
 static const double def_ripple = 0.1;
 static const int max_length = 64*1024-1; // Max filter length is 64K
 
+struct StepFilter
+{
+  double a;  // Attenuation
+  double df; // Normalized filter width
+  double cf; // Normalized center freq
+  double dg; // Filter gain
+  int n, c;  // Filter length and center
+
+  void calc(EqBand band1, EqBand band2, double q, double min_g, int sample_rate)
+  {
+    double g1 = MIN(band1.gain, band2.gain);
+    double g2 = MAX(band1.gain, band2.gain);
+    double a1 = -value2db(g1 * q / (g2 - g1));
+    double a2 = -value2db(min_g * q / (g2 - min_g));
+
+    a = MAX(a1, a2);
+    df = double(band2.freq - band1.freq) / sample_rate;
+    cf = double(band2.freq + band1.freq) / 2 / sample_rate;
+    dg = band1.gain - band2.gain;
+
+    n = kaiser_n(a, df) | 1;
+    if (n > max_length)
+      n = max_length;
+    c = n / 2;
+  }
+};
+
+
+
 EqFIR::EqFIR(): ver(0), nbands(0), ripple(def_ripple)
 {}
 
@@ -120,6 +149,7 @@ EqFIR::make(int sample_rate) const
 {
   size_t i; int j;
   double q = db2value(ripple) - 1;
+  StepFilter step;
 
   /////////////////////////////////////////////////////////
   // Find the last meaningful band
@@ -139,31 +169,18 @@ EqFIR::make(int sample_rate) const
   /////////////////////////////////////////////////////////
   // Find the filter length
 
-  // minimum attenuation required
+  // minimum gain required
   double min_g = bands[0].gain;
-  double max_g = bands[0].gain;
   for (i = 1; i < max_band; i++)
-  {
     if (min_g > bands[i].gain) min_g = bands[i].gain;
-    if (max_g < bands[i].gain) max_g = bands[i].gain;
-  }
-  double min_a = -value2db(min_g * q / (max_g - min_g));
 
   int max_n = 1;
   int max_c = 0;
-  double max_a = min_a;
   for (i = 0; i < max_band - 1; i++)
-    if (bands[i+1].gain != bands[i].gain)
+    if (bands[i].gain != bands[i+1].gain)
     {
-      double g = MIN(bands[i+1].gain, bands[i].gain);
-      double dg = bands[i].gain - bands[i+1].gain;
-      double df = double(bands[i+1].freq - bands[i].freq) / sample_rate;
-      double a  = -value2db(g * q / fabs(dg));
-      if (a < min_a) a = min_a;
-
-      int n = kaiser_n(a, df) | 1;
-      if (n > max_length) n = max_length;
-      if (n > max_n) max_n = n, max_a = a;
+      step.calc(bands[i], bands[i+1], q, min_g, sample_rate);
+      if (step.n > max_n) max_n = step.n;
     }
   max_c = max_n / 2;
 
@@ -181,20 +198,10 @@ EqFIR::make(int sample_rate) const
   for (i = 0; i < max_band - 1; i++)
     if (bands[i].gain != bands[i+1].gain)
     {
-      double g = MIN(bands[i+1].gain, bands[i].gain);
-      double dg = bands[i].gain - bands[i+1].gain;
-      double df = double(bands[i+1].freq - bands[i].freq) / sample_rate;
-      double cf = double(bands[i+1].freq + bands[i].freq) / 2 / sample_rate;
-      double a  = -value2db(g * q / fabs(dg));
-      if (a < min_a) a = min_a;
-
-      double alpha = kaiser_alpha(a);
-      int n = kaiser_n(a, df) | 1;
-      if (n > max_length) n = max_length;
-      int c = n / 2;
-
-      for (int j = -c; j <= c; j++)
-        data[max_c + j] += dg * lpf(j, cf) * kaiser_window(j, n, alpha);
+      step.calc(bands[i], bands[i+1], q, min_g, sample_rate);
+      double alpha = kaiser_alpha(step.a);
+      for (int j = -step.c; j <= step.c; j++)
+        data[max_c + j] += step.dg * lpf(j, step.cf) * kaiser_window(j, step.n, alpha);
     }
 
   return new DynamicFIRInstance(sample_rate, firt_custom, max_n, max_c, data);
