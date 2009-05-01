@@ -165,7 +165,7 @@ bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
   int max_point = 0;
 
   // Update versions
-  for (ch_name = 0; ch_name < NCHANNELS; ch++)
+  for (ch_name = 0; ch_name < NCHANNELS; ch_name++)
     ver[ch_name] = gen[ch_name].version();
 
   for (ch = 0; ch < nch; ch++)
