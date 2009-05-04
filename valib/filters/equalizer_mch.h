@@ -63,8 +63,6 @@ public:
   size_t get_nbands(int ch_name) const;
   size_t set_bands(int ch_name, const EqBand *bands, size_t nbands);
   size_t get_bands(int ch_name, EqBand *bands, size_t first_band, size_t nbands) const;
-  double get_ripple(int ch_name) const;
-  void set_ripple(int ch_name, double ripple_db);
   void reset_eq(int ch_name);
 
   /////////////////////////////////////////////////////////

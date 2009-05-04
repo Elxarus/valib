@@ -238,10 +238,7 @@ public:
 
   inline size_t   get_eq_nbands(int ch) const;
   inline size_t   get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands) const;
-  inline double   get_eq_ripple(int ch) const;
-
   inline size_t   set_eq_bands(int ch, const EqBand *bands, size_t nbands);
-  inline void     set_eq_ripple(int ch, double ripple_db);
 
   // Bass redirection
 
@@ -472,14 +469,8 @@ inline size_t AudioProcessor::get_eq_nbands(int ch) const
 inline size_t AudioProcessor::get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands) const
 { return equalizer.get_bands(ch, bands, first_band, nbands); }
 
-inline double AudioProcessor::get_eq_ripple(int ch) const
-{ return equalizer.get_ripple(ch); }
-
 inline size_t AudioProcessor::set_eq_bands(int ch, const EqBand *bands, size_t nbands)
 { return equalizer.set_bands(ch, bands, nbands); }
-
-inline void AudioProcessor::set_eq_ripple(int ch, double ripple_db)
-{ equalizer.set_ripple(ch, ripple_db); }
 
 // Bass redirection
 
