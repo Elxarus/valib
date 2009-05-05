@@ -43,8 +43,11 @@ TEST(cache, "Cache filter")
           continue;
 
         size = f.get_samples(time, buf, size);
-        CHECKT(int(buf[0][0] - time_samples) == 0, ("chunk_size = %i, cache_samples = %i, get time (samples) = %i", chunk_size, cache_samples, time_samples));
-        CHECKT(int(buf[0][size-1] - (time_samples + size - 1)) == 0, ("i = %i, j = %i, get time (samples) = %i", chunk_size, cache_samples, time_samples));
+        if (size > 0)
+        {
+          CHECKT(int(buf[0][0] - time_samples) == 0, ("chunk_size = %i, cache_samples = %i, get time (samples) = %i", chunk_size, cache_samples, time_samples));
+          CHECKT(int(buf[0][size-1] - (time_samples + size - 1)) == 0, ("i = %i, j = %i, get time (samples) = %i", chunk_size, cache_samples, time_samples));
+        }
       }
     }
 TEST_END(cache);
