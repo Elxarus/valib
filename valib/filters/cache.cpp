@@ -142,6 +142,10 @@ CacheFilter::process_inplace(samples_t samples, size_t size)
   int ch;
 
   stream_time += vtime_t(size) / get_in_spk().sample_rate;
+  cached_samples += (int)size;
+  if (cached_samples > buf_samples)
+    cached_samples = buf_samples;
+
   if (size > (size_t)buf_samples)
   {
     size_t start = size - buf_samples;
@@ -170,10 +174,6 @@ CacheFilter::process_inplace(samples_t samples, size_t size)
   pos += (int)size;
   if (pos >= buf_samples)
     pos = 0;
-
-  cached_samples += (int)size;
-  if (cached_samples > buf_samples)
-    cached_samples = buf_samples;
 
   return true;
 }
