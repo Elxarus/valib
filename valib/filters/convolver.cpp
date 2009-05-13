@@ -185,7 +185,7 @@ Convolver::process_samples(samples_t in, size_t in_size, samples_t &out, size_t 
   // Handle FIR change
 
   if (fir_changed())
-    reinit();
+    reinit(false);
 
   /////////////////////////////////////////////////////////
   // Trivial filtering

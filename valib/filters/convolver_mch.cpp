@@ -54,7 +54,7 @@ void
 ConvolverMch::set_fir(int ch_name, const FIRGen *new_gen)
 {
   gen[ch_name] = new_gen;
-  reinit();
+  reinit(false);
 }
 
 const FIRGen *
@@ -67,7 +67,7 @@ void
 ConvolverMch::release_fir(int ch_name)
 {
   gen[ch_name].release();
-  reinit();
+  reinit(false);
 }
 
 void
@@ -75,7 +75,7 @@ ConvolverMch::set_all_firs(const FIRGen *new_gen[NCHANNELS])
 {
   for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
     gen[ch_name] = new_gen[ch_name];
-  reinit();
+  reinit(false);
 }
 
 void
@@ -90,7 +90,7 @@ ConvolverMch::release_all_firs()
 {
   for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
     gen[ch_name].release();
-  reinit();
+  reinit(false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -285,7 +285,7 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
   // Handle FIR change
 
   if (fir_changed())
-    reinit();
+    reinit(false);
 
   /////////////////////////////////////////////////////////
   // Trivial filtering

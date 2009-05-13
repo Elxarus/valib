@@ -46,9 +46,9 @@ public:
   /////////////////////////////////////////////////////////
   // Handle FIR generator changes
 
-  void set_fir(const FIRGen *gen_) { gen.set(gen_); reinit(); }
+  void set_fir(const FIRGen *gen_) { gen.set(gen_); reinit(false); }
   const FIRGen *get_fir() const    { return gen.get(); }
-  void release_fir()               { gen.release(); reinit(); }
+  void release_fir()               { gen.release(); reinit(false); }
 
   /////////////////////////////////////////////////////////
   // Filter interface

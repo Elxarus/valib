@@ -27,7 +27,7 @@ private:
 protected:
   Speakers get_in_spk() const { return in_spk; }
   Speakers get_out_spk() const { return out_spk; }
-  bool reinit();
+  bool reinit(bool format_change);
 
   /////////////////////////////////////////////////////////////////////////////
   // Interface to override

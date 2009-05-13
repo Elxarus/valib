@@ -24,7 +24,7 @@ protected:
   bool need_reset_after_flushing;
   bool need_reinit;
   bool err;
-  int seq;
+  size_t seq;
 
 public:
   LinearFilterTester():
@@ -35,7 +35,7 @@ public:
     err(false)
   {}
 
-  void do_reinit() { need_reinit = true; reinit(); }
+  void do_reinit() { need_reinit = true; reinit(false); }
   void reset_seq() { seq = 0; }
   bool is_ok() const { return !err; }
 
@@ -83,7 +83,7 @@ class LinearFilterBuffered : public LinearFilterTester
 {
 protected:
   SampleBuf buf;
-  int pos;
+  size_t pos;
 
 public:
   LinearFilterBuffered(): pos(0) {}
@@ -106,7 +106,7 @@ public:
     if (need_reset_after_init) err = true;
     if (need_reset_after_flushing) err = true;
     if (need_reinit) err = true;
-    if (int(in[0][0]) != seq) err = true;
+    if (size_t(in[0][0]) != seq) err = true;
 
     if (pos >= 2 * block_size)
     {
@@ -404,7 +404,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
 
   for (int i = 0; i < nmultipliers * 2; i++)
   {
-    int seq = 0;
+    size_t seq = 0;
     f->reset_seq();
 
     size_t current_chunk = 0;
@@ -425,7 +425,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
       {
         gen.get_chunk(&chunk);
         chunk.sync = true;
-        chunk.time = current_chunk * 100;
+        chunk.time = vtime_t(current_chunk * 100);
         current_chunk++;
 
         if (gen.is_empty())
@@ -439,7 +439,7 @@ TestResult linear_filter_test(Log *log, LinearFilterTester *f)
         f->get_chunk(&chunk);
         CHECK(f->is_ok());
         if (chunk.size)
-          CHECK(int(chunk.samples[0][0]) == seq);
+          CHECK(size_t(chunk.samples[0][0]) == seq);
 
         if (chunk.sync)
         {

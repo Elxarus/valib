@@ -1,7 +1,7 @@
 #include "linear_filter.h"
 
-static const int flush_none = 0;
-static const int flush_chunk = 1;
+static const int flush_none   = 0;
+static const int flush_eos    = 1;
 static const int flush_reinit = 2;
 
 LinearFilter::LinearFilter()
@@ -93,7 +93,7 @@ LinearFilter::process(const Chunk *chunk)
   size     = chunk->size;
 
   if (chunk->eos)
-    flushing |= flush_chunk;
+    flushing |= flush_eos;
 
   out_size = 0;
   out_samples.zero();
@@ -142,16 +142,24 @@ LinearFilter::get_chunk(Chunk *chunk)
   chunk->set_empty(out_spk);
   if (flushing != flush_none)
   {
-    if (buffered_samples != 0)
+    assert(buffered_samples == 0); // incorrect number of samples flushed
+    if (flushing & flush_eos)
     {
-      // incorrect_number of samples flushed
-      assert(false);
+      chunk->set_eos();
+      reset();
     }
+    else
+    {
+      Speakers old_out_spk = out_spk;
+      out_spk = in_spk;
+      init(in_spk, out_spk);
+      reset_state();
+      buffered_samples = 0;
 
-    // reset() may call init() and change output format
-    // thus we have to send eos always
-    chunk->set_eos();
-    reset();
+      assert(old_out_spk == out_spk); // format change is not allowed
+      assert(in_spk.sample_rate == out_spk.sample_rate); // sample rate conversion is not allowed
+    }
+    flushing = flush_none;
   }
   return true;
 }
@@ -212,19 +220,23 @@ LinearFilter::flush()
 }
 
 bool
-LinearFilter::reinit()
+LinearFilter::reinit(bool format_change)
 {
-  if (!need_flushing())
+  if (!need_flushing() && !format_change)
   {
-    // We should flush if we have buffered samples
-    assert(buffered_samples == 0);
+    assert(buffered_samples == 0); // we should flush if we have buffered samples
 
+    Speakers old_out_spk = out_spk;
     out_spk = in_spk;
     init(in_spk, out_spk);
-    assert(in_spk.sample_rate == out_spk.sample_rate);
     reset_state();
     buffered_samples = 0;
+
+    assert(old_out_spk == out_spk); // format change is not allowed
+    assert(in_spk.sample_rate == out_spk.sample_rate); // sample rate conversion is not allowed
   }
+  else if (format_change)
+    flushing |= flush_eos;
   else
     flushing |= flush_reinit;
 
