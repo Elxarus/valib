@@ -143,9 +143,9 @@ ToneGen::query_spk(Speakers _spk) const
 }
 
 bool
-ToneGen::init(Speakers _spk, int _freq, size_t _stream_len, size_t _chunk_size)
+ToneGen::init(Speakers _spk, int _freq, double _phase, size_t _stream_len, size_t _chunk_size)
 {
-  phase = 0;
+  phase = _phase;
   freq = _freq;
   return Generator::init(_spk, _stream_len, _chunk_size);
 }

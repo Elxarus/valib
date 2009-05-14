@@ -249,9 +249,9 @@ TEST(param_fir, "ParamFIR")
   /////////////////////////////////////////////////////////
   // Tone in the pass band must remain unchanged
 
-  tone.init(spk, freq - trans, noise_size + 2 * len);
+  tone.init(spk, freq - trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  ref_tone.init(spk, freq - trans, noise_size + 2 * len);
+  ref_tone.init(spk, freq - trans, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
   conv.reset();
 
@@ -262,7 +262,7 @@ TEST(param_fir, "ParamFIR")
   /////////////////////////////////////////////////////////
   // Tone in the stop band must be filtered out
 
-  tone.init(spk, freq + trans, noise_size + 2 * len);
+  tone.init(spk, freq + trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
   conv.reset();
 
@@ -284,9 +284,9 @@ TEST(param_fir, "ParamFIR")
   /////////////////////////////////////////////////////////
   // Tone in the pass band must remain unchanged
 
-  tone.init(spk, freq + trans, noise_size + 2 * len);
+  tone.init(spk, freq + trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  ref_tone.init(spk, freq + trans, noise_size + 2 * len);
+  ref_tone.init(spk, freq + trans, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
   conv.reset();
 
@@ -297,7 +297,7 @@ TEST(param_fir, "ParamFIR")
   /////////////////////////////////////////////////////////
   // Tone in the stop band must be filtered out
 
-  tone.init(spk, freq - trans, noise_size + 2 * len);
+  tone.init(spk, freq - trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
   conv.reset();
 
@@ -319,9 +319,9 @@ TEST(param_fir, "ParamFIR")
   /////////////////////////////////////////////////////////
   // Tone in the pass band must remain unchanged
 
-  tone.init(spk, freq, noise_size + 2 * len);
+  tone.init(spk, freq, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  ref_tone.init(spk, freq, noise_size + 2 * len);
+  ref_tone.init(spk, freq, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
   conv.reset();
 
@@ -332,7 +332,7 @@ TEST(param_fir, "ParamFIR")
   /////////////////////////////////////////////////////////
   // Tones at stop bands must be filtered out
 
-  tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  tone.init(spk, freq - 2 * trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
   conv.reset();
 
@@ -340,7 +340,7 @@ TEST(param_fir, "ParamFIR")
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
-  tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  tone.init(spk, freq + 2 * trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
   conv.reset();
 
@@ -362,9 +362,9 @@ TEST(param_fir, "ParamFIR")
   /////////////////////////////////////////////////////////
   // Tones at pass bands must remain unchanged
 
-  tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  tone.init(spk, freq - 2 * trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  ref_tone.init(spk, freq - 2 * trans, noise_size + 2 * len);
+  ref_tone.init(spk, freq - 2 * trans, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
   conv.reset();
 
@@ -372,9 +372,9 @@ TEST(param_fir, "ParamFIR")
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
-  tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  tone.init(spk, freq + 2 * trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  ref_tone.init(spk, freq + 2 * trans, noise_size + 2 * len);
+  ref_tone.init(spk, freq + 2 * trans, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
   conv.reset();
 
@@ -385,7 +385,7 @@ TEST(param_fir, "ParamFIR")
   /////////////////////////////////////////////////////////
   // Tone in the stop band must be filtered out
 
-  tone.init(spk, freq, noise_size + 2 * len);
+  tone.init(spk, freq, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
   conv.reset();
 

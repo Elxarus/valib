@@ -114,9 +114,9 @@ TEST(convolver, "Convolver test")
 
   // Tone in the pass band must remain unchanged
 
-  tone.init(spk, freq - df, noise_size + 2 * filter_len);
+  tone.init(spk, freq - df, 0, noise_size + 2 * filter_len);
   slice.init(filter_len, noise_size + filter_len);
-  ref_tone.init(spk, freq - df, noise_size + 2 * filter_len);
+  ref_tone.init(spk, freq - df, 0, noise_size + 2 * filter_len);
   ref_slice.init(filter_len, filter_len + noise_size);
   conv.set_fir(&low_pass);
   conv.reset();
@@ -127,7 +127,7 @@ TEST(convolver, "Convolver test")
 
   // Tone in the stop band must be filtered out
 
-  tone.init(spk, freq + df, noise_size + 2 * filter_len);
+  tone.init(spk, freq + df, 0, noise_size + 2 * filter_len);
   slice.init(filter_len, noise_size + filter_len);
   conv.reset();
 
