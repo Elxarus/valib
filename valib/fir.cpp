@@ -22,7 +22,11 @@ FIRInstance(sample_rate_, firt_identity, 1, 0, &one)
 
 GainFIRInstance::GainFIRInstance(int sample_rate_, double gain_):
 FIRInstance(sample_rate_, firt_gain, 1, 0, 0), gain(gain_)
-{ data = &gain; }
+{
+  if (gain == 0.0) type = firt_zero;
+  if (gain == 1.0) type = firt_identity;
+  data = &gain;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Special generator classes
@@ -37,14 +41,7 @@ FIRIdentity::make(int sample_rate_) const
 
 const FIRInstance *
 FIRGain::make(int sample_rate_) const
-{
-  if (gain == 0.0)
-    return new ZeroFIRInstance(sample_rate_);
-  else if (gain == 1.0)
-    return new IdentityFIRInstance(sample_rate_);
-  else
-    return new GainFIRInstance(sample_rate_, gain);
-}
+{ return new GainFIRInstance(sample_rate_, gain); }
 
 FIRGain::FIRGain(): ver(0), gain(1.0)
 {}
