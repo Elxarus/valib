@@ -94,8 +94,19 @@ ParallelFIR::make(int sample_rate) const
     result = 0;
   else if (fir_count == 1)
     result = fir[0];
+  else if (length == 0)
+    result = 0;
+  else if (length == 1)
+  {
+    // Zero, Gain or Identity response
+    double gain = 0.0;
+    for (i = 0; i < fir_count; i++)
+      gain += fir[i]->data[0];
+    result = new GainFIRInstance(sample_rate, gain);
+  }
   else
   {
+    // Custom response response
     double *data = new double[length];
     if (data)
     {

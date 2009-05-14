@@ -55,9 +55,6 @@ const FIRInstance *
 MultiFIR::make(int sample_rate) const
 {
   size_t i;
-  size_t fir_count = 0;
-  int length = 1;
-  int center = 0;
 
   if (count == 0) return 0;
   const FIRInstance *result = 0;
@@ -67,7 +64,10 @@ MultiFIR::make(int sample_rate) const
   /////////////////////////////////////////////////////////
   // Build FIR instances
 
-  fir_count = 0;
+  int length = 1;
+  int center = 0;
+  size_t fir_count = 0;
+
   for (i = 0; i < count; i++)
   {
     if (list[i] == 0) continue;
@@ -96,8 +96,17 @@ MultiFIR::make(int sample_rate) const
     result = 0;
   else if (fir_count == 1)
     result = fir[0];
+  else if (length == 1)
+  {
+    // Zero, Gain or Identity response
+    double gain = 1.0;
+    for (i = 0; i < fir_count; i++)
+      gain *= fir[i]->data[0];
+    result = new GainFIRInstance(sample_rate, gain);
+  }
   else
   {
+    // Custom response
     double *data = new double[length];
     if (data)
     {

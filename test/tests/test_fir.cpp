@@ -398,7 +398,8 @@ TEST_END(param_fir);
 ///////////////////////////////////////////////////////////////////////////////
 // MultiFIR class test
 //
-// Combine ParamFIR with GainFIR and ShiftFIR and get original ParamFIR, but
+// * Combine 2 gains and get gain, identity and zero results
+// * Combine ParamFIR with GainFIR and ShiftFIR and get original ParamFIR, but
 // gained and shifted.
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -434,6 +435,40 @@ TEST(multi_fir, "MultiFIR test")
 
   MultiFIR f2(list_zero, array_size(list_zero));
   fir = f2.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_zero);
+  safe_delete(fir);
+
+  /////////////////////////////////////////////////////////
+  // Combine 2 gains
+
+  FIRGain gain1;
+  FIRGain gain2;
+  const FIRGen *gain_list[] = { &gain1, &gain2 };
+
+  f.set(gain_list, array_size(gain_list));
+
+  gain1.set_gain(1.0);
+  gain2.set_gain(2.0);
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_gain);
+  CHECK(fir->data[0] == 2.0);
+  safe_delete(fir);
+
+  gain1.set_gain(2.0);
+  gain2.set_gain(0.5);
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_identity);
+  safe_delete(fir);
+
+  gain1.set_gain(2.0);
+  gain2.set_gain(0.0);
+
+  fir = f.make(sample_rate);
   CHECK(fir != 0);
   CHECK(fir->type == firt_zero);
   safe_delete(fir);
@@ -479,7 +514,9 @@ TEST_END(multi_fir);
 
 ///////////////////////////////////////////////////////////////////////////////
 // ParallelFIR class test
-// Sum HPF, LPF, Delay, Zero and Gain filters get Echo result
+//
+// * Combine 2 gains and get gain, identity and zero results
+// * Sum HPF, LPF, Delay, Zero and Gain filters get Echo result
 ///////////////////////////////////////////////////////////////////////////////
 
 TEST(parallel_fir, "ParallelFIR test")
@@ -537,6 +574,40 @@ TEST(parallel_fir, "ParallelFIR test")
   fir = f.make(sample_rate);
   CHECK(fir != 0);
   CHECK(fir->type == firt_identity);
+  safe_delete(fir);
+
+  /////////////////////////////////////////////////////////
+  // Combine 2 gains
+
+  FIRGain gain1;
+  FIRGain gain2;
+  const FIRGen *gain_list[] = { &gain1, &gain2 };
+
+  f.set(gain_list, array_size(gain_list));
+
+  gain1.set_gain(1.0);
+  gain2.set_gain(2.0);
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_gain);
+  CHECK(fir->data[0] == 3.0);
+  safe_delete(fir);
+
+  gain1.set_gain(0.5);
+  gain2.set_gain(0.5);
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_identity);
+  safe_delete(fir);
+
+  gain1.set_gain(0.0);
+  gain2.set_gain(0.0);
+
+  fir = f.make(sample_rate);
+  CHECK(fir != 0);
+  CHECK(fir->type == firt_zero);
   safe_delete(fir);
 
   /////////////////////////////////////////////////////////
