@@ -13,7 +13,7 @@ TEST(cache, "Cache filter")
   Chunk chunk;
   LineGen gen;
   CacheFilter f;
-  SampleBuf buf;
+  Samples buf;
 
   double block_multipliers[] = { 0.3, 0.5, 1, 2, 3 };
   int nmultipliers = array_size(block_multipliers);
@@ -25,7 +25,7 @@ TEST(cache, "Cache filter")
       size_t chunk_size = size_t(block_size * block_multipliers[i]);
 
       gen.init(spk, 0, 1, data_size, chunk_size);
-      buf.allocate(spk.nch(), cache_samples);
+      buf.allocate(cache_samples);
       f.set_size(cache_time);
       while (!gen.is_empty())
       {
@@ -42,11 +42,11 @@ TEST(cache, "Cache filter")
           // cache have no enough data
           continue;
 
-        size = f.get_samples(time, buf, size);
+        size = f.get_samples(CH_L, time, buf, size);
         if (size > 0)
         {
-          CHECKT(int(buf[0][0] - time_samples) == 0, ("chunk_size = %i, cache_samples = %i, get time (samples) = %i", chunk_size, cache_samples, time_samples));
-          CHECKT(int(buf[0][size-1] - (time_samples + size - 1)) == 0, ("i = %i, j = %i, get time (samples) = %i", chunk_size, cache_samples, time_samples));
+          CHECKT(int(buf[0] - time_samples) == 0, ("chunk_size = %i, cache_samples = %i, get time (samples) = %i", chunk_size, cache_samples, time_samples));
+          CHECKT(int(buf[size-1] - (time_samples + size - 1)) == 0, ("i = %i, j = %i, get time (samples) = %i", chunk_size, cache_samples, time_samples));
         }
       }
     }

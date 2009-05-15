@@ -36,7 +36,11 @@ public:
   vtime_t get_time() const;
   vtime_t get_size() const;
   void set_size(vtime_t size);
-  size_t get_samples(vtime_t time, samples_t buf, size_t size);
+
+  // Copy data cached into the buffer
+  // You can specify CH_NONE to get sum of all channels
+  // Returns actual number of samples copied
+  size_t get_samples(int ch_name, vtime_t time, sample_t *buf, size_t size);
 };
 
 #endif

@@ -266,10 +266,10 @@ public:
   inline void     set_input_cache_size(vtime_t size);
   inline void     set_output_cache_size(vtime_t size);
 
-  inline vtime_t  get_input_time() const;
-  inline vtime_t  get_output_time() const;
-  inline size_t   get_input_cache(vtime_t time, samples_t buf, size_t size);
-  inline size_t   get_output_cache(vtime_t time, samples_t buf, size_t size);
+  inline vtime_t  get_input_cache_time() const;
+  inline vtime_t  get_output_cache_time() const;
+  inline size_t   get_input_cache(int ch_name, vtime_t time, sample_t *buf, size_t size);
+  inline size_t   get_output_cache(int ch_name, vtime_t time, sample_t *buf, size_t size);
 
   // Input/output histogram
 
@@ -526,17 +526,17 @@ inline void AudioProcessor::set_input_cache_size(vtime_t size)
 inline void AudioProcessor::set_output_cache_size(vtime_t size)
 { out_cache.set_size(size); }
 
-inline vtime_t AudioProcessor::get_input_time() const
+inline vtime_t AudioProcessor::get_input_cache_time() const
 { return in_cache.get_time(); }
 
-inline vtime_t AudioProcessor::get_output_time() const
+inline vtime_t AudioProcessor::get_output_cache_time() const
 { return out_cache.get_time(); }
 
-inline size_t AudioProcessor::get_input_cache(vtime_t time, samples_t buf, size_t size)
-{ return in_cache.get_samples(time, buf, size); }
+inline size_t AudioProcessor::get_input_cache(int ch_name, vtime_t time, sample_t *buf, size_t size)
+{ return in_cache.get_samples(ch_name, time, buf, size); }
 
-inline size_t AudioProcessor::get_output_cache(vtime_t time, samples_t buf, size_t size)
-{ return out_cache.get_samples(time, buf, size); }
+inline size_t AudioProcessor::get_output_cache(int ch_name, vtime_t time, sample_t *buf, size_t size)
+{ return out_cache.get_samples(ch_name, time, buf, size); }
 
 // Histogram
 

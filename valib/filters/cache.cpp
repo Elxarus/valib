@@ -71,13 +71,20 @@ CacheFilter::set_size(vtime_t new_size)
 }
 
 size_t
-CacheFilter::get_samples(vtime_t time, samples_t samples, size_t size)
+CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t size)
 {
+  int i;
+  Speakers spk = get_in_spk();
+  int ch, nch = spk.nch();
+
+  if (!samples) return 0;
+  if (ch_name != CH_NONE && (CH_MASK(ch_name) & spk.mask) == 0) return 0;
+
   int actual_size = cached_samples;
   if (size < (size_t)cached_samples)
     actual_size = (int)size;
 
-  int start_pos = int((stream_time - time) * get_in_spk().sample_rate + 0.5);
+  int start_pos = int((stream_time - time) * spk.sample_rate + 0.5);
 
   if (start_pos < actual_size) start_pos = actual_size;
   if (start_pos > cached_samples) start_pos = cached_samples;
@@ -86,22 +93,36 @@ CacheFilter::get_samples(vtime_t time, samples_t samples, size_t size)
   if (start_pos >= buf_samples)
     start_pos -= buf_samples;
 
+  int size1 = actual_size;
+  int size2 = 0;
   if (start_pos + actual_size > buf_samples)
   {
-    int size1 = buf_samples - start_pos;
-    int size2 = actual_size - size1;
-    for (int ch = 0; ch < get_in_spk().nch(); ch++)
-      if (samples[ch])
+    size1 = buf_samples - start_pos;
+    size2 = actual_size - size1;
+  }
+
+  if (ch_name != CH_NONE)
+  {
+    // Copy one channel
+    for (ch = 0; ch < nch; ch++)
+      if (spk.order()[ch] == ch_name)
       {
-        memcpy(samples[ch], buf[ch] + start_pos, size1 * sizeof(sample_t));
-        memcpy(samples[ch] + size1, buf[ch], size2 * sizeof(sample_t));
+        memcpy(samples, buf[ch] + start_pos, size1 * sizeof(sample_t));
+        memcpy(samples + size1, buf[ch], size2 * sizeof(sample_t));
       }
   }
   else
   {
-    for (int ch = 0; ch < get_in_spk().nch(); ch++)
-      if (samples[ch])
-        memcpy(samples[ch], buf[ch] + start_pos, actual_size * sizeof(sample_t));
+    // Sum channels
+    memcpy(samples, buf[0] + start_pos, size1 * sizeof(sample_t));
+    memcpy(samples + size1, buf[0], size2 * sizeof(sample_t));
+    for (int ch = 1; ch < nch; ch++)
+    {
+      for (i = 0; i < size1; i++)
+        samples[i] += buf[ch][i + start_pos];
+      for (i = 0; i < size2; i++)
+        samples[i + size1] += buf[ch][i];
+    }
   }
 
   return actual_size;
