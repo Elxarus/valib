@@ -24,22 +24,23 @@ protected:
   const FIRInstance *fir[NCHANNELS];
   enum { type_pass, type_gain, type_zero, type_conv } type[NCHANNELS];
 
+  int buf_size;
   int n, c;
   int pos;
 
   FFT       fft;
   SampleBuf filter;
   SampleBuf buf;
-  SampleBuf delay;
+  Samples   fft_buf;
 
   int pre_samples;
   int post_samples;
 
   bool fir_changed() const;
   void uninit();
+
   void process_trivial(samples_t samples, size_t size);
   void process_convolve();
-
 
 public:
   ConvolverMch();

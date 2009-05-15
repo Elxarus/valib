@@ -1,11 +1,12 @@
 // TODO!!!
 // * use simple convolution for short filters (up to ~32 taps)
 //   (FFT filtering is less effective for such lengths)
-// * short output chunks are uneffective; do several filtering cycles
-//   for short filter lengths (up to ~1000)
 
 #include <string.h>
 #include "convolver_mch.h"
+
+static const int min_fft_size = 16;
+static const int min_chunk_size = 1024;
 
 inline unsigned int clp2(unsigned int x)
 {
@@ -21,7 +22,7 @@ inline unsigned int clp2(unsigned int x)
 
 
 ConvolverMch::ConvolverMch():
-  n(0), c(0),
+  buf_size(0), n(0), c(0),
   pos(0), pre_samples(0), post_samples(0)
 {
   for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
@@ -125,34 +126,36 @@ ConvolverMch::process_convolve()
 
   for (ch = 0; ch < nch; ch++)
     if (type[ch] == type_conv)
-    {
-      buf_ch = buf[ch];
-      filter_ch = filter[ch];
-      delay_ch = delay[ch];
-
-      memset(buf_ch + n, 0, n * sizeof(sample_t));
-
-      fft.rdft(buf_ch);
-
-      buf_ch[0] = filter_ch[0] * buf_ch[0];
-      buf_ch[1] = filter_ch[1] * buf_ch[1]; 
-
-      for (i = 1; i < n; i++)
+      for (int fft_pos = 0; fft_pos < buf_size; fft_pos += n)
       {
-        sample_t re,im;
-        re = filter_ch[i*2  ] * buf_ch[i*2] - filter_ch[i*2+1] * buf_ch[i*2+1];
-        im = filter_ch[i*2+1] * buf_ch[i*2] + filter_ch[i*2  ] * buf_ch[i*2+1];
-        buf_ch[i*2  ] = re;
-        buf_ch[i*2+1] = im;
+        buf_ch = buf[ch];
+        delay_ch = buf[ch] + buf_size;
+        filter_ch = filter[ch];
+
+        memcpy(fft_buf, buf_ch + fft_pos, n * sizeof(sample_t));
+        memset(fft_buf + n, 0, n * sizeof(sample_t));
+
+        fft.rdft(fft_buf);
+
+        fft_buf[0] = filter_ch[0] * fft_buf[0];
+        fft_buf[1] = filter_ch[1] * fft_buf[1]; 
+
+        for (i = 1; i < n; i++)
+        {
+          sample_t re,im;
+          re = filter_ch[i*2  ] * fft_buf[i*2] - filter_ch[i*2+1] * fft_buf[i*2+1];
+          im = filter_ch[i*2+1] * fft_buf[i*2] + filter_ch[i*2  ] * fft_buf[i*2+1];
+          fft_buf[i*2  ] = re;
+          fft_buf[i*2+1] = im;
+        }
+
+        fft.inv_rdft(fft_buf);
+
+        for (i = 0; i < n; i++)
+          buf_ch[fft_pos + i] = fft_buf[i] + delay_ch[i];
+
+        memcpy(delay_ch, fft_buf + n, n * sizeof(sample_t));
       }
-
-      fft.inv_rdft(buf_ch);
-
-      for (i = 0; i < n; i++)
-        buf_ch[i] += delay_ch[i];
-
-      memcpy(delay_ch, buf_ch + n, n * sizeof(sample_t));
-    }
 }
 
 bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
@@ -214,13 +217,23 @@ bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
   n = clp2(max_point - min_point);
   c = -min_point;
 
+  if (n < min_fft_size / 2)
+    n = min_fft_size / 2;
+
+  buf_size = n;
+  if (buf_size < min_chunk_size)
+    buf_size = clp2(min_chunk_size);
+
   fft.set_length(n * 2);
   filter.allocate(nch, n * 2);
-  buf.allocate(nch, n * 2);
-  delay.allocate(nch, n);
+  buf.allocate(nch, buf_size + n);
+  fft_buf.allocate(n * 2);
 
   // handle buffer allocation error
-  if (!filter.is_allocated() || !buf.is_allocated() || !delay.is_allocated() || !fft.is_ok())
+  if (!filter.is_allocated() ||
+      !buf.is_allocated() ||
+      !fft_buf.is_allocated() ||
+      !fft.is_ok())
   {
     uninit();
     return false;
@@ -244,13 +257,14 @@ bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
   pos = 0;
   pre_samples = c;
   post_samples = n - c;
-  delay.zero();
+  buf.zero();
   return true;
 }
 
 void
 ConvolverMch::uninit()
 {
+  buf_size = 0;
   n = 0;
   c = 0;
   pos = 0;
@@ -272,7 +286,7 @@ ConvolverMch::reset_state()
   pos = 0;
   pre_samples = c;
   post_samples = n - c;
-  delay.zero();
+  buf.zero();
 }
 
 bool
@@ -303,9 +317,17 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
   /////////////////////////////////////////////////////////
   // Convolution
 
-  if (pos < n)
+  // Trivial cases:
+  // Copy delayed samples to the start of the buffer
+  if (pos == 0)
+    for (ch = 0; ch < nch; ch++)
+      if (type[ch] != type_conv)
+        memcpy(buf[ch], buf[ch] + buf_size, c * sizeof(sample_t));
+
+  // Accumulate the buffer
+  if (pos < buf_size)
   {
-    gone = MIN(in_size, size_t(n - pos));
+    gone = MIN(in_size, size_t(buf_size - pos));
     for (ch = 0; ch < nch; ch++)
       if (type[ch] == type_conv)
         memcpy(buf[ch] + pos, in[ch], gone * sizeof(sample_t));
@@ -314,24 +336,16 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
         memcpy(buf[ch] + c + pos, in[ch], gone * sizeof(sample_t));
     pos += (int)gone;
 
-    if (pos < n)
+    if (pos < buf_size)
       return true;
   }
 
-  // Apply delayed samples (trivial cases)
-  for (ch = 0; ch < nch; ch++)
-    if (type[ch] != type_conv)
-    {
-      memcpy(buf[ch], delay[ch], c * sizeof(sample_t));
-      memcpy(delay[ch], buf[ch] + n, c * sizeof(sample_t));
-    }
-
   pos = 0;
-  process_trivial(buf, n);
+  process_trivial(buf, buf_size);
   process_convolve();
 
   out = buf;
-  out_size = n;
+  out_size = buf_size;
   if (pre_samples)
   {
     out += pre_samples;
@@ -345,16 +359,20 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
 bool
 ConvolverMch::flush(samples_t &out, size_t &out_size)
 {
+  int ch, nch = get_in_spk().nch();
   if (!need_flushing())
     return true;
 
-  for (int ch = 0; ch < get_in_spk().nch(); ch++)
-    if (type[ch] == type_conv)
-      memset(buf[ch] + pos, 0, (n - pos) * sizeof(sample_t));
-    else
-      memcpy(buf[ch], delay[ch], c * sizeof(sample_t));
+  if (pos == 0)
+    for (ch = 0; ch < nch; ch++)
+      if (type[ch] != type_conv)
+        memcpy(buf[ch], buf[ch] + buf_size, c * sizeof(sample_t));
 
-  process_trivial(buf, n);
+  for (ch = 0; ch < nch; ch++)
+    if (type[ch] == type_conv)
+      memset(buf[ch] + pos, 0, (buf_size - pos) * sizeof(sample_t));
+
+  process_trivial(buf, buf_size);
   process_convolve();
 
   out = buf;

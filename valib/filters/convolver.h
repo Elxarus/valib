@@ -22,13 +22,14 @@ protected:
   const FIRInstance *fir;
   SyncHelper sync_helper;
 
-  int       n, c;
-  int       pos;
+  int buf_size;
+  int n, c;
+  int pos;
 
   FFT       fft;
   Samples   filter;
   SampleBuf buf;
-  SampleBuf delay;
+  Samples   fft_buf;
 
   int pre_samples;
   int post_samples;
