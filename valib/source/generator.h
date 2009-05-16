@@ -84,9 +84,9 @@ protected:
 
 public:
   ToneGen(): phase(0), freq(0) {};
-  ToneGen(Speakers _spk, int _freq, double phase, size_t _stream_len, size_t _chunk_size = 4096):
+  ToneGen(Speakers _spk, int _freq, double _phase, size_t _stream_len, size_t _chunk_size = 4096):
   Generator(_spk, _stream_len, _chunk_size), phase(0), freq(0)
-  { init(_spk, _freq, _stream_len, _chunk_size); }
+  { init(_spk, _freq, _phase, _stream_len, _chunk_size); }
 
   bool init(Speakers spk, int freq, double phase, size_t stream_len, size_t chunk_size = 4096);
 };
