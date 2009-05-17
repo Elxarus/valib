@@ -14,4 +14,6 @@ rem Build files
 
 rmdir /s /q Debug 2> nul
 rmdir /s /q Release 2> nul
+rmdir /s /q Debug_Libc 2> nul
+rmdir /s /q Release_Libc 2> nul
 rmdir /s /q x64 2> nul
