@@ -324,9 +324,11 @@ AudioProcessor::set_state(const AudioProcessorState *state)
   set_drc(state->drc);
   set_drc_power(state->drc_power);
   // Matrix
+  // (!) Auto matrix option must be set before setting the matrix
+  // because when auto matrix is on, mixer rejects the new matrix.
+  set_auto_matrix(state->auto_matrix);
   set_matrix(state->matrix);
   // Automatrix options
-  set_auto_matrix(state->auto_matrix);
   set_normalize_matrix(state->normalize_matrix);
   set_voice_control(state->voice_control);
   set_expand_stereo(state->expand_stereo);
