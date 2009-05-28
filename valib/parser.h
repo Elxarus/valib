@@ -356,7 +356,7 @@ public:
 //  +   -   +   -   inter-frame debris (2)
 //  +   -   +   +   frame with debris
 //  +   +   -   +   sync on a new stream
-//  +   +   +   +   sync on a new stream with debris (2)
+//  +   +   +   +   sync on a new stream with debris
 // (1) - all input buffer data is known to be processed after load() call
 // (2) - state is possible but not used in curent implementation.
 //
@@ -469,6 +469,8 @@ protected:
   uint8_t *sync_buf;             // sync buffer pointer
   size_t   sync_size;            // size of sync buffer
   size_t   sync_data;            // data loaded to the sync buffer
+  size_t   pre_frame;            // amount of pre-frame data allowed
+                                 // (see comment to sync() function)
 
   // Data (frame data and debris)
 
@@ -485,6 +487,8 @@ protected:
   bool new_stream;               // frame loaded belongs to a new stream
   int  frames;                   // number of frames loaded
 
+  inline bool load_buffer(uint8_t **data, uint8_t *end, size_t required_size);
+  inline void drop_buffer(size_t size);
   bool sync(uint8_t **data, uint8_t *data_end);
 
 public:
