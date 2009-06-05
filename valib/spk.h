@@ -376,6 +376,8 @@ Speakers::set(int _format, int _mask, int _sample_rate, sample_t _level, int _re
     case FORMAT_PCM16: case FORMAT_PCM16_BE: level = 32787; break;
     case FORMAT_PCM24: case FORMAT_PCM24_BE: level = 8388607; break;
     case FORMAT_PCM32: case FORMAT_PCM32_BE: level = 2147483647; break;
+    case FORMAT_LPCM20: level = 524288; break;
+    case FORMAT_LPCM24: level = 8388607; break;
     default: level = 1.0;
   }
   relation = _relation;

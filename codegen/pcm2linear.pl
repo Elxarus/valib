@@ -1,10 +1,10 @@
 use strict;
 
 my @chs      = qw(1 2 3 4 5 6);
-my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCM16_BE FORMAT_PCM24_BE FORMAT_PCM32_BE FORMAT_PCMFLOAT );
-my @names    = qw(pcm16    pcm24    pcm32    pcm16_be pcm24_be pcm32_be pcmfloat );
-my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float    );
-my @funcs    = qw(le2int16 le2int24 le2int32 be2int16 be2int24 be2int32 sample_t );
+my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCM16_BE FORMAT_PCM24_BE FORMAT_PCM32_BE FORMAT_PCMFLOAT FORMAT_PCMDOUBLE);
+my @names    = qw(pcm16    pcm24    pcm32    pcm16_be pcm24_be pcm32_be pcmfloat pcmdouble );
+my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float    double    );
+my @funcs    = qw(le2int16 le2int24 le2int32 be2int16 be2int24 be2int32 sample_t sample_t  );
 
 my $ch;
 my $i;

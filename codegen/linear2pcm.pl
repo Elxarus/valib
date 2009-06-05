@@ -1,10 +1,10 @@
 use strict;
 
 my @chs      = qw(1 2 3 4 5 6);
-my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCM16_BE FORMAT_PCM24_BE FORMAT_PCM32_BE FORMAT_PCMFLOAT );
-my @names    = qw(pcm16    pcm24    pcm32    pcm16_be pcm24_be pcm32_be pcmfloat );
-my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float    );
-my @funcs    = qw(s2i16    s2i24    s2i32    s2i16    s2i24    s2i32    (float)  );
+my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCM16_BE FORMAT_PCM24_BE FORMAT_PCM32_BE FORMAT_PCMFLOAT FORMAT_PCMDOUBLE);
+my @names    = qw(pcm16    pcm24    pcm32    pcm16_be pcm24_be pcm32_be pcmfloat pcmdouble );
+my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float    double    );
+my @funcs    = qw(s2i16    s2i24    s2i32    s2i16    s2i24    s2i32    (float)  (double)  );
 my @swabs    = qw(int2le16 int2le24 int2le32 int2be16 int2be24 int2be32);
 
 my $ch;

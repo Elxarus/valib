@@ -5,6 +5,7 @@ void linear_pcm16_be_1ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_be_1ch(uint8_t *, samples_t, size_t);
 void linear_pcm32_be_1ch(uint8_t *, samples_t, size_t);
 void linear_pcmfloat_1ch(uint8_t *, samples_t, size_t);
+void linear_pcmdouble_1ch(uint8_t *, samples_t, size_t);
 
 void linear_pcm16_2ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_2ch(uint8_t *, samples_t, size_t);
@@ -13,6 +14,7 @@ void linear_pcm16_be_2ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_be_2ch(uint8_t *, samples_t, size_t);
 void linear_pcm32_be_2ch(uint8_t *, samples_t, size_t);
 void linear_pcmfloat_2ch(uint8_t *, samples_t, size_t);
+void linear_pcmdouble_2ch(uint8_t *, samples_t, size_t);
 
 void linear_pcm16_3ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_3ch(uint8_t *, samples_t, size_t);
@@ -21,6 +23,7 @@ void linear_pcm16_be_3ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_be_3ch(uint8_t *, samples_t, size_t);
 void linear_pcm32_be_3ch(uint8_t *, samples_t, size_t);
 void linear_pcmfloat_3ch(uint8_t *, samples_t, size_t);
+void linear_pcmdouble_3ch(uint8_t *, samples_t, size_t);
 
 void linear_pcm16_4ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_4ch(uint8_t *, samples_t, size_t);
@@ -29,6 +32,7 @@ void linear_pcm16_be_4ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_be_4ch(uint8_t *, samples_t, size_t);
 void linear_pcm32_be_4ch(uint8_t *, samples_t, size_t);
 void linear_pcmfloat_4ch(uint8_t *, samples_t, size_t);
+void linear_pcmdouble_4ch(uint8_t *, samples_t, size_t);
 
 void linear_pcm16_5ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_5ch(uint8_t *, samples_t, size_t);
@@ -37,6 +41,7 @@ void linear_pcm16_be_5ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_be_5ch(uint8_t *, samples_t, size_t);
 void linear_pcm32_be_5ch(uint8_t *, samples_t, size_t);
 void linear_pcmfloat_5ch(uint8_t *, samples_t, size_t);
+void linear_pcmdouble_5ch(uint8_t *, samples_t, size_t);
 
 void linear_pcm16_6ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_6ch(uint8_t *, samples_t, size_t);
@@ -45,20 +50,21 @@ void linear_pcm16_be_6ch(uint8_t *, samples_t, size_t);
 void linear_pcm24_be_6ch(uint8_t *, samples_t, size_t);
 void linear_pcm32_be_6ch(uint8_t *, samples_t, size_t);
 void linear_pcmfloat_6ch(uint8_t *, samples_t, size_t);
+void linear_pcmdouble_6ch(uint8_t *, samples_t, size_t);
 
 typedef void (*convert_t)(uint8_t *, samples_t, size_t);
 
-static const int formats_tbl[] = { FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE, FORMAT_PCMFLOAT };
+static const int formats_tbl[] = { FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE, FORMAT_PCMFLOAT, FORMAT_PCMDOUBLE };
 
-static const int formats = FORMAT_PCM16 | FORMAT_PCM24 | FORMAT_PCM32 | FORMAT_PCM16_BE | FORMAT_PCM24_BE | FORMAT_PCM32_BE | FORMAT_PCMFLOAT;
+static const int formats = FORMAT_PCM16 | FORMAT_PCM24 | FORMAT_PCM32 | FORMAT_PCM16_BE | FORMAT_PCM24_BE | FORMAT_PCM32_BE | FORMAT_PCMFLOAT | FORMAT_PCMDOUBLE;
 
-static const convert_t linear2pcm_tbl[NCHANNELS][7] = {
- { linear_pcm16_1ch, linear_pcm24_1ch, linear_pcm32_1ch, linear_pcm16_be_1ch, linear_pcm24_be_1ch, linear_pcm32_be_1ch, linear_pcmfloat_1ch },
- { linear_pcm16_2ch, linear_pcm24_2ch, linear_pcm32_2ch, linear_pcm16_be_2ch, linear_pcm24_be_2ch, linear_pcm32_be_2ch, linear_pcmfloat_2ch },
- { linear_pcm16_3ch, linear_pcm24_3ch, linear_pcm32_3ch, linear_pcm16_be_3ch, linear_pcm24_be_3ch, linear_pcm32_be_3ch, linear_pcmfloat_3ch },
- { linear_pcm16_4ch, linear_pcm24_4ch, linear_pcm32_4ch, linear_pcm16_be_4ch, linear_pcm24_be_4ch, linear_pcm32_be_4ch, linear_pcmfloat_4ch },
- { linear_pcm16_5ch, linear_pcm24_5ch, linear_pcm32_5ch, linear_pcm16_be_5ch, linear_pcm24_be_5ch, linear_pcm32_be_5ch, linear_pcmfloat_5ch },
- { linear_pcm16_6ch, linear_pcm24_6ch, linear_pcm32_6ch, linear_pcm16_be_6ch, linear_pcm24_be_6ch, linear_pcm32_be_6ch, linear_pcmfloat_6ch },
+static const convert_t linear2pcm_tbl[NCHANNELS][8] = {
+ { linear_pcm16_1ch, linear_pcm24_1ch, linear_pcm32_1ch, linear_pcm16_be_1ch, linear_pcm24_be_1ch, linear_pcm32_be_1ch, linear_pcmfloat_1ch, linear_pcmdouble_1ch },
+ { linear_pcm16_2ch, linear_pcm24_2ch, linear_pcm32_2ch, linear_pcm16_be_2ch, linear_pcm24_be_2ch, linear_pcm32_be_2ch, linear_pcmfloat_2ch, linear_pcmdouble_2ch },
+ { linear_pcm16_3ch, linear_pcm24_3ch, linear_pcm32_3ch, linear_pcm16_be_3ch, linear_pcm24_be_3ch, linear_pcm32_be_3ch, linear_pcmfloat_3ch, linear_pcmdouble_3ch },
+ { linear_pcm16_4ch, linear_pcm24_4ch, linear_pcm32_4ch, linear_pcm16_be_4ch, linear_pcm24_be_4ch, linear_pcm32_be_4ch, linear_pcmfloat_4ch, linear_pcmdouble_4ch },
+ { linear_pcm16_5ch, linear_pcm24_5ch, linear_pcm32_5ch, linear_pcm16_be_5ch, linear_pcm24_be_5ch, linear_pcm32_be_5ch, linear_pcmfloat_5ch, linear_pcmdouble_5ch },
+ { linear_pcm16_6ch, linear_pcm24_6ch, linear_pcm32_6ch, linear_pcm16_be_6ch, linear_pcm24_be_6ch, linear_pcm32_be_6ch, linear_pcmfloat_6ch, linear_pcmdouble_6ch },
 };
 
 void
@@ -168,6 +174,22 @@ linear_pcmfloat_1ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     dst[0] = ((float)(src[0][0])); src[0]++;
+
+    dst += nch;
+  }
+  restore_rounding(r);
+}
+void
+linear_pcmdouble_1ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  const int nch = 1;
+  samples_t src = samples;
+  double *dst = (double *)rawdata;
+
+  int r = set_rounding();  
+  while (size--)
+  {
+    dst[0] = ((double)(src[0][0])); src[0]++;
 
     dst += nch;
   }
@@ -288,6 +310,23 @@ linear_pcmfloat_2ch(uint8_t *rawdata, samples_t samples, size_t size)
   {
     dst[0] = ((float)(src[0][0])); src[0]++;
     dst[1] = ((float)(src[1][0])); src[1]++;
+
+    dst += nch;
+  }
+  restore_rounding(r);
+}
+void
+linear_pcmdouble_2ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  const int nch = 2;
+  samples_t src = samples;
+  double *dst = (double *)rawdata;
+
+  int r = set_rounding();  
+  while (size--)
+  {
+    dst[0] = ((double)(src[0][0])); src[0]++;
+    dst[1] = ((double)(src[1][0])); src[1]++;
 
     dst += nch;
   }
@@ -415,6 +454,24 @@ linear_pcmfloat_3ch(uint8_t *rawdata, samples_t samples, size_t size)
     dst[0] = ((float)(src[0][0])); src[0]++;
     dst[1] = ((float)(src[1][0])); src[1]++;
     dst[2] = ((float)(src[2][0])); src[2]++;
+
+    dst += nch;
+  }
+  restore_rounding(r);
+}
+void
+linear_pcmdouble_3ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  const int nch = 3;
+  samples_t src = samples;
+  double *dst = (double *)rawdata;
+
+  int r = set_rounding();  
+  while (size--)
+  {
+    dst[0] = ((double)(src[0][0])); src[0]++;
+    dst[1] = ((double)(src[1][0])); src[1]++;
+    dst[2] = ((double)(src[2][0])); src[2]++;
 
     dst += nch;
   }
@@ -549,6 +606,25 @@ linear_pcmfloat_4ch(uint8_t *rawdata, samples_t samples, size_t size)
     dst[1] = ((float)(src[1][0])); src[1]++;
     dst[2] = ((float)(src[2][0])); src[2]++;
     dst[3] = ((float)(src[3][0])); src[3]++;
+
+    dst += nch;
+  }
+  restore_rounding(r);
+}
+void
+linear_pcmdouble_4ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  const int nch = 4;
+  samples_t src = samples;
+  double *dst = (double *)rawdata;
+
+  int r = set_rounding();  
+  while (size--)
+  {
+    dst[0] = ((double)(src[0][0])); src[0]++;
+    dst[1] = ((double)(src[1][0])); src[1]++;
+    dst[2] = ((double)(src[2][0])); src[2]++;
+    dst[3] = ((double)(src[3][0])); src[3]++;
 
     dst += nch;
   }
@@ -690,6 +766,26 @@ linear_pcmfloat_5ch(uint8_t *rawdata, samples_t samples, size_t size)
     dst[2] = ((float)(src[2][0])); src[2]++;
     dst[3] = ((float)(src[3][0])); src[3]++;
     dst[4] = ((float)(src[4][0])); src[4]++;
+
+    dst += nch;
+  }
+  restore_rounding(r);
+}
+void
+linear_pcmdouble_5ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  const int nch = 5;
+  samples_t src = samples;
+  double *dst = (double *)rawdata;
+
+  int r = set_rounding();  
+  while (size--)
+  {
+    dst[0] = ((double)(src[0][0])); src[0]++;
+    dst[1] = ((double)(src[1][0])); src[1]++;
+    dst[2] = ((double)(src[2][0])); src[2]++;
+    dst[3] = ((double)(src[3][0])); src[3]++;
+    dst[4] = ((double)(src[4][0])); src[4]++;
 
     dst += nch;
   }
@@ -838,6 +934,27 @@ linear_pcmfloat_6ch(uint8_t *rawdata, samples_t samples, size_t size)
     dst[3] = ((float)(src[3][0])); src[3]++;
     dst[4] = ((float)(src[4][0])); src[4]++;
     dst[5] = ((float)(src[5][0])); src[5]++;
+
+    dst += nch;
+  }
+  restore_rounding(r);
+}
+void
+linear_pcmdouble_6ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  const int nch = 6;
+  samples_t src = samples;
+  double *dst = (double *)rawdata;
+
+  int r = set_rounding();  
+  while (size--)
+  {
+    dst[0] = ((double)(src[0][0])); src[0]++;
+    dst[1] = ((double)(src[1][0])); src[1]++;
+    dst[2] = ((double)(src[2][0])); src[2]++;
+    dst[3] = ((double)(src[3][0])); src[3]++;
+    dst[4] = ((double)(src[4][0])); src[4]++;
+    dst[5] = ((double)(src[5][0])); src[5]++;
 
     dst += nch;
   }
