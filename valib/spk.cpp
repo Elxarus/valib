@@ -5,7 +5,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 /*
 // special-purpose formats
-#define FORMAT_UNKNOWN     -1
+#define FORMAT_UNKNOWN     (-1)
 #define FORMAT_RAWDATA     0
 #define FORMAT_LINEAR      1
 
@@ -21,6 +21,7 @@
 
 // PCM floating-point
 #define FORMAT_PCMFLOAT    8
+#define FORMAT_PCMDOUBLE   9
 
 // container formats
 #define FORMAT_PES        10 // MPEG1/2 Program Elementary Stream
@@ -31,23 +32,19 @@
 #define FORMAT_AC3        13
 #define FORMAT_DTS        14
 
-// other compressed formats
-#define FORMAT_AAC        15
-#define FORMAT_OGG        16
+// DVD LPCM
+// Note: the sample size for this formats is doubled because
+// LPCM samples are packed into blocks of 2 samples.
+#define FORMAT_LPCM20     15
+#define FORMAT_LPCM24     16
 */
+
 ///////////////////////////////////////////////////////////////////////////////
 // Constants for common audio formats
 ///////////////////////////////////////////////////////////////////////////////
 
 extern const Speakers spk_unknown = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
 extern const Speakers spk_rawdata = Speakers(FORMAT_RAWDATA, 0, 0, 0, 0);
-/*
-extern const Speakers def_spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000, 1.0, NO_RELATION);
-extern const Speakers err_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
-extern const Speakers unk_spk = Speakers(FORMAT_UNKNOWN, 0, 0, 0, 0);
-extern const Speakers stereo_spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32768.0, NO_RELATION); // stereo 16bit
-*/
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constants for common channel orders
@@ -78,11 +75,11 @@ extern const int sample_size_tbl[32] =
   sizeof(int32_t),
 
   sizeof(float),
-
-  0,                // reserved
+  sizeof(double),
 
   1, 1,             // PES/SPDIF
-  1, 1, 1, 1, 1,    // compresed formats
+  1, 1, 1,          // MPA, AC3, DTS
+  5, 6,             // DVD LPCM 20/24 bit
 
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };

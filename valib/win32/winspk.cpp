@@ -232,6 +232,26 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
       }
       break;
 
+    case FORMAT_PCMDOUBLE:
+      wfx->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+      wfx->nChannels = nchannels;
+      wfx->nSamplesPerSec = spk.sample_rate;
+      wfx->wBitsPerSample = 64;
+      wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
+      wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
+      wfx->cbSize = 0;
+
+      if (use_extensible)
+      {
+        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+        wfx->cbSize = 22;
+
+        ext->SubFormat = GUID_SUBTYPE_IEEE_FLOAT;
+        ext->Samples.wValidBitsPerSample = 64;
+        ext->dwChannelMask = ds_channels_tbl[spk.mask];
+      }
+      break;
+
     default:
       // unknown format
       return false;
@@ -263,7 +283,12 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
 
     // determine sample format
     if (wfex->SubFormat == GUID_SUBTYPE_IEEE_FLOAT)
-      format = FORMAT_PCMFLOAT;
+      switch (wfx->wBitsPerSample)
+      {
+        case 32: format = FORMAT_PCMFLOAT;  break;
+        case 64: format = FORMAT_PCMDOUBLE; break;
+        default: return false;
+      }
     else if (wfex->SubFormat == GUID_SUBTYPE_PCM)
       switch (wfx->wBitsPerSample)
       {
@@ -291,7 +316,12 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
     switch (wfx->wFormatTag)
     {
       case WAVE_FORMAT_IEEE_FLOAT:
-        format = FORMAT_PCMFLOAT;
+        switch (wfx->wBitsPerSample)
+        {
+          case 32: format = FORMAT_PCMFLOAT;  break;
+          case 64: format = FORMAT_PCMDOUBLE; break;
+          default: return false;
+        }
         break;
 
       case WAVE_FORMAT_PCM:

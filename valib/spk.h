@@ -109,6 +109,7 @@
 
 // PCM floating-point
 #define FORMAT_PCMFLOAT    8
+#define FORMAT_PCMDOUBLE   9
 
 // container formats
 #define FORMAT_PES        10 // MPEG1/2 Program Elementary Stream
@@ -119,9 +120,11 @@
 #define FORMAT_AC3        13
 #define FORMAT_DTS        14
 
-// other compressed formats
-#define FORMAT_AAC        15
-#define FORMAT_OGG        16
+// DVD LPCM
+// Note: the sample size for this formats is doubled because
+// LPCM samples are packed into blocks of 2 samples.
+#define FORMAT_LPCM20     15
+#define FORMAT_LPCM24     16
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format masks
@@ -146,6 +149,7 @@
 
 // PCM floating-point format masks
 #define FORMAT_MASK_PCMFLOAT     FORMAT_MASK(FORMAT_PCMFLOAT)
+#define FORMAT_MASK_PCMDOUBLE    FORMAT_MASK(FORMAT_PCMDOUBLE)
 
 // container format masks
 #define FORMAT_MASK_PES          FORMAT_MASK(FORMAT_PES)
@@ -155,8 +159,10 @@
 #define FORMAT_MASK_AC3          FORMAT_MASK(FORMAT_AC3)
 #define FORMAT_MASK_MPA          FORMAT_MASK(FORMAT_MPA)
 #define FORMAT_MASK_DTS          FORMAT_MASK(FORMAT_DTS)
-#define FORMAT_MASK_AAC          FORMAT_MASK(FORMAT_AAC)
-#define FORMAT_MASK_OGG          FORMAT_MASK(FORMAT_OGG)
+
+// DVD LPCM
+#define FORMAT_MASK_LPCM20       FORMAT_MASK(FORMAT_LPCM20)
+#define FORMAT_MASK_LPCM24       FORMAT_MASK(FORMAT_LPCM24)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format classes (bitmasks)
@@ -164,7 +170,9 @@
 
 #define FORMAT_CLASS_PCM_LE      (FORMAT_MASK_PCM16    | FORMAT_MASK_PCM24    | FORMAT_MASK_PCM32)
 #define FORMAT_CLASS_PCM_BE      (FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE)
-#define FORMAT_CLASS_PCM         (FORMAT_CLASS_PCM_LE  | FORMAT_CLASS_PCM_BE  | FORMAT_MASK_PCMFLOAT)
+#define FORMAT_CLASS_PCM_FP      (FORMAT_MASK_PCMFLOAT | FORMAT_MASK_PCMDOUBLE)
+#define FORMAT_CLASS_PCM         (FORMAT_CLASS_PCM_LE  | FORMAT_CLASS_PCM_BE  | FORMAT_CLASS_PCM_FP)
+#define FORMAT_CLASS_LPCM        (FORMAT_MASK_LPCM20   | FORMAT_MASK_LPCM24)
 #define FORMAT_CLASS_CONTAINER   (FORMAT_MASK_PES | FORMAT_MASK_SPDIF)
 #define FORMAT_CLASS_SPDIFABLE   (FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS)
 #define FORMAT_CLASS_COMPRESSED  0x1f000
@@ -300,12 +308,6 @@ public:
 
 extern const Speakers spk_unknown;
 extern const Speakers spk_rawdata;
-/*
-extern const Speakers def_spk;
-extern const Speakers err_spk;
-extern const Speakers unk_spk;
-extern const Speakers stereo_spk;
-*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Constants for common channel orders
@@ -462,6 +464,7 @@ Speakers::format_text() const
     case FORMAT_PCM32_BE:    return "PCM32 BE";
 
     case FORMAT_PCMFLOAT:    return "PCM Float";
+    case FORMAT_PCMDOUBLE:   return "PCM Double";
 
     case FORMAT_PES:         return "MPEG Program Stream";
     case FORMAT_SPDIF:       return "SPDIF";
@@ -469,8 +472,9 @@ Speakers::format_text() const
     case FORMAT_AC3:         return "AC3";
     case FORMAT_MPA:         return "MPEG Audio";
     case FORMAT_DTS:         return "DTS";
-    case FORMAT_AAC:         return "AAC";
-    case FORMAT_OGG:         return "OGG";
+
+    case FORMAT_LPCM20:      return "LPCM 20bit";
+    case FORMAT_LPCM24:      return "LPCM 24bit";
 
     default: return "Unknown";
   };

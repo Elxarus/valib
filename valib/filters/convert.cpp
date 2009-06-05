@@ -3,7 +3,7 @@
 
 // todo: PCM-to-PCM conversions
 
-static const int converter_formats = FORMAT_MASK_LINEAR | FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE | FORMAT_MASK_PCMFLOAT;
+static const int converter_formats = FORMAT_MASK_LINEAR | FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE | FORMAT_MASK_PCMFLOAT | FORMAT_MASK_PCMDOUBLE;
 static void passthrough(uint8_t *, samples_t, size_t) {}
 
 Converter::Converter(size_t _nsamples)

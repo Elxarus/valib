@@ -102,6 +102,10 @@ Syncer::set_input(Speakers _spk)
       size2time = 1.0 / sizeof(float) / _spk.nch()  / _spk.sample_rate;
       break;
 
+    case FORMAT_PCMDOUBLE:
+      size2time = 1.0 / sizeof(double) / _spk.nch()  / _spk.sample_rate;
+      break;
+
     case FORMAT_SPDIF:
       size2time = 1.0 / 4.0 / _spk.sample_rate;
       break;
