@@ -1,16 +1,13 @@
 {
   const int nch = $ch;
-  const size_t sample_size = sizeof($type) * $ch;
-
   samples_t src = samples;
-  $type *dst = ($type *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  $type *dst = ($type *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
 $convert
     dst += nch;
   }
+  restore_rounding(r);
 }

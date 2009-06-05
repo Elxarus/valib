@@ -1,354 +1,308 @@
-  void linear_pcm16_1ch();
-  void linear_pcm24_1ch();
-  void linear_pcm32_1ch();
-  void linear_pcm16_be_1ch();
-  void linear_pcm24_be_1ch();
-  void linear_pcm32_be_1ch();
-  void linear_pcmfloat_1ch();
+void linear_pcm16_1ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_1ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_1ch(uint8_t *, samples_t, size_t);
+void linear_pcm16_be_1ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_be_1ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_be_1ch(uint8_t *, samples_t, size_t);
+void linear_pcmfloat_1ch(uint8_t *, samples_t, size_t);
 
-  void linear_pcm16_2ch();
-  void linear_pcm24_2ch();
-  void linear_pcm32_2ch();
-  void linear_pcm16_be_2ch();
-  void linear_pcm24_be_2ch();
-  void linear_pcm32_be_2ch();
-  void linear_pcmfloat_2ch();
+void linear_pcm16_2ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_2ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_2ch(uint8_t *, samples_t, size_t);
+void linear_pcm16_be_2ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_be_2ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_be_2ch(uint8_t *, samples_t, size_t);
+void linear_pcmfloat_2ch(uint8_t *, samples_t, size_t);
 
-  void linear_pcm16_3ch();
-  void linear_pcm24_3ch();
-  void linear_pcm32_3ch();
-  void linear_pcm16_be_3ch();
-  void linear_pcm24_be_3ch();
-  void linear_pcm32_be_3ch();
-  void linear_pcmfloat_3ch();
+void linear_pcm16_3ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_3ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_3ch(uint8_t *, samples_t, size_t);
+void linear_pcm16_be_3ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_be_3ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_be_3ch(uint8_t *, samples_t, size_t);
+void linear_pcmfloat_3ch(uint8_t *, samples_t, size_t);
 
-  void linear_pcm16_4ch();
-  void linear_pcm24_4ch();
-  void linear_pcm32_4ch();
-  void linear_pcm16_be_4ch();
-  void linear_pcm24_be_4ch();
-  void linear_pcm32_be_4ch();
-  void linear_pcmfloat_4ch();
+void linear_pcm16_4ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_4ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_4ch(uint8_t *, samples_t, size_t);
+void linear_pcm16_be_4ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_be_4ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_be_4ch(uint8_t *, samples_t, size_t);
+void linear_pcmfloat_4ch(uint8_t *, samples_t, size_t);
 
-  void linear_pcm16_5ch();
-  void linear_pcm24_5ch();
-  void linear_pcm32_5ch();
-  void linear_pcm16_be_5ch();
-  void linear_pcm24_be_5ch();
-  void linear_pcm32_be_5ch();
-  void linear_pcmfloat_5ch();
+void linear_pcm16_5ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_5ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_5ch(uint8_t *, samples_t, size_t);
+void linear_pcm16_be_5ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_be_5ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_be_5ch(uint8_t *, samples_t, size_t);
+void linear_pcmfloat_5ch(uint8_t *, samples_t, size_t);
 
-  void linear_pcm16_6ch();
-  void linear_pcm24_6ch();
-  void linear_pcm32_6ch();
-  void linear_pcm16_be_6ch();
-  void linear_pcm24_be_6ch();
-  void linear_pcm32_be_6ch();
-  void linear_pcmfloat_6ch();
+void linear_pcm16_6ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_6ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_6ch(uint8_t *, samples_t, size_t);
+void linear_pcm16_be_6ch(uint8_t *, samples_t, size_t);
+void linear_pcm24_be_6ch(uint8_t *, samples_t, size_t);
+void linear_pcm32_be_6ch(uint8_t *, samples_t, size_t);
+void linear_pcmfloat_6ch(uint8_t *, samples_t, size_t);
 
-typedef void (Converter::*convert_t)();
+typedef void (*convert_t)(uint8_t *, samples_t, size_t);
 
 static const int formats_tbl[] = { FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE, FORMAT_PCMFLOAT };
 
 static const int formats = FORMAT_PCM16 | FORMAT_PCM24 | FORMAT_PCM32 | FORMAT_PCM16_BE | FORMAT_PCM24_BE | FORMAT_PCM32_BE | FORMAT_PCMFLOAT;
 
 static const convert_t linear2pcm_tbl[NCHANNELS][7] = {
- { &Converter::linear_pcm16_1ch, &Converter::linear_pcm24_1ch, &Converter::linear_pcm32_1ch, &Converter::linear_pcm16_be_1ch, &Converter::linear_pcm24_be_1ch, &Converter::linear_pcm32_be_1ch, &Converter::linear_pcmfloat_1ch },
- { &Converter::linear_pcm16_2ch, &Converter::linear_pcm24_2ch, &Converter::linear_pcm32_2ch, &Converter::linear_pcm16_be_2ch, &Converter::linear_pcm24_be_2ch, &Converter::linear_pcm32_be_2ch, &Converter::linear_pcmfloat_2ch },
- { &Converter::linear_pcm16_3ch, &Converter::linear_pcm24_3ch, &Converter::linear_pcm32_3ch, &Converter::linear_pcm16_be_3ch, &Converter::linear_pcm24_be_3ch, &Converter::linear_pcm32_be_3ch, &Converter::linear_pcmfloat_3ch },
- { &Converter::linear_pcm16_4ch, &Converter::linear_pcm24_4ch, &Converter::linear_pcm32_4ch, &Converter::linear_pcm16_be_4ch, &Converter::linear_pcm24_be_4ch, &Converter::linear_pcm32_be_4ch, &Converter::linear_pcmfloat_4ch },
- { &Converter::linear_pcm16_5ch, &Converter::linear_pcm24_5ch, &Converter::linear_pcm32_5ch, &Converter::linear_pcm16_be_5ch, &Converter::linear_pcm24_be_5ch, &Converter::linear_pcm32_be_5ch, &Converter::linear_pcmfloat_5ch },
- { &Converter::linear_pcm16_6ch, &Converter::linear_pcm24_6ch, &Converter::linear_pcm32_6ch, &Converter::linear_pcm16_be_6ch, &Converter::linear_pcm24_be_6ch, &Converter::linear_pcm32_be_6ch, &Converter::linear_pcmfloat_6ch },
+ { linear_pcm16_1ch, linear_pcm24_1ch, linear_pcm32_1ch, linear_pcm16_be_1ch, linear_pcm24_be_1ch, linear_pcm32_be_1ch, linear_pcmfloat_1ch },
+ { linear_pcm16_2ch, linear_pcm24_2ch, linear_pcm32_2ch, linear_pcm16_be_2ch, linear_pcm24_be_2ch, linear_pcm32_be_2ch, linear_pcmfloat_2ch },
+ { linear_pcm16_3ch, linear_pcm24_3ch, linear_pcm32_3ch, linear_pcm16_be_3ch, linear_pcm24_be_3ch, linear_pcm32_be_3ch, linear_pcmfloat_3ch },
+ { linear_pcm16_4ch, linear_pcm24_4ch, linear_pcm32_4ch, linear_pcm16_be_4ch, linear_pcm24_be_4ch, linear_pcm32_be_4ch, linear_pcmfloat_4ch },
+ { linear_pcm16_5ch, linear_pcm24_5ch, linear_pcm32_5ch, linear_pcm16_be_5ch, linear_pcm24_be_5ch, linear_pcm32_be_5ch, linear_pcmfloat_5ch },
+ { linear_pcm16_6ch, linear_pcm24_6ch, linear_pcm32_6ch, linear_pcm16_be_6ch, linear_pcm24_be_6ch, linear_pcm32_be_6ch, linear_pcmfloat_6ch },
 };
 
 void
-Converter::linear_pcm16_1ch()
+linear_pcm16_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 1;
-  const size_t sample_size = sizeof(int16_t) * 1;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le16(s2i16(src[0][0])); src[0]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_1ch()
+linear_pcm24_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 1;
-  const size_t sample_size = sizeof(int24_t) * 1;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le24(s2i24(src[0][0])); src[0]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_1ch()
+linear_pcm32_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 1;
-  const size_t sample_size = sizeof(int32_t) * 1;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le32(s2i32(src[0][0])); src[0]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm16_be_1ch()
+linear_pcm16_be_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 1;
-  const size_t sample_size = sizeof(int16_t) * 1;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be16(s2i16(src[0][0])); src[0]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_be_1ch()
+linear_pcm24_be_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 1;
-  const size_t sample_size = sizeof(int24_t) * 1;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be24(s2i24(src[0][0])); src[0]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_be_1ch()
+linear_pcm32_be_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 1;
-  const size_t sample_size = sizeof(int32_t) * 1;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be32(s2i32(src[0][0])); src[0]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcmfloat_1ch()
+linear_pcmfloat_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 1;
-  const size_t sample_size = sizeof(float) * 1;
-
   samples_t src = samples;
-  float *dst = (float *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  float *dst = (float *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = ((float)(src[0][0])); src[0]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 
 void
-Converter::linear_pcm16_2ch()
+linear_pcm16_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 2;
-  const size_t sample_size = sizeof(int16_t) * 2;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2le16(s2i16(src[1][0])); src[1]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_2ch()
+linear_pcm24_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 2;
-  const size_t sample_size = sizeof(int24_t) * 2;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2le24(s2i24(src[1][0])); src[1]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_2ch()
+linear_pcm32_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 2;
-  const size_t sample_size = sizeof(int32_t) * 2;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2le32(s2i32(src[1][0])); src[1]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm16_be_2ch()
+linear_pcm16_be_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 2;
-  const size_t sample_size = sizeof(int16_t) * 2;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2be16(s2i16(src[1][0])); src[1]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_be_2ch()
+linear_pcm24_be_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 2;
-  const size_t sample_size = sizeof(int24_t) * 2;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2be24(s2i24(src[1][0])); src[1]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_be_2ch()
+linear_pcm32_be_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 2;
-  const size_t sample_size = sizeof(int32_t) * 2;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2be32(s2i32(src[1][0])); src[1]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcmfloat_2ch()
+linear_pcmfloat_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 2;
-  const size_t sample_size = sizeof(float) * 2;
-
   samples_t src = samples;
-  float *dst = (float *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  float *dst = (float *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = ((float)(src[0][0])); src[0]++;
     dst[1] = ((float)(src[1][0])); src[1]++;
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 
 void
-Converter::linear_pcm16_3ch()
+linear_pcm16_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 3;
-  const size_t sample_size = sizeof(int16_t) * 3;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2le16(s2i16(src[1][0])); src[1]++;
@@ -356,20 +310,17 @@ Converter::linear_pcm16_3ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_3ch()
+linear_pcm24_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 3;
-  const size_t sample_size = sizeof(int24_t) * 3;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2le24(s2i24(src[1][0])); src[1]++;
@@ -377,20 +328,17 @@ Converter::linear_pcm24_3ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_3ch()
+linear_pcm32_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 3;
-  const size_t sample_size = sizeof(int32_t) * 3;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2le32(s2i32(src[1][0])); src[1]++;
@@ -398,20 +346,17 @@ Converter::linear_pcm32_3ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm16_be_3ch()
+linear_pcm16_be_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 3;
-  const size_t sample_size = sizeof(int16_t) * 3;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2be16(s2i16(src[1][0])); src[1]++;
@@ -419,20 +364,17 @@ Converter::linear_pcm16_be_3ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_be_3ch()
+linear_pcm24_be_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 3;
-  const size_t sample_size = sizeof(int24_t) * 3;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2be24(s2i24(src[1][0])); src[1]++;
@@ -440,20 +382,17 @@ Converter::linear_pcm24_be_3ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_be_3ch()
+linear_pcm32_be_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 3;
-  const size_t sample_size = sizeof(int32_t) * 3;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2be32(s2i32(src[1][0])); src[1]++;
@@ -461,20 +400,17 @@ Converter::linear_pcm32_be_3ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcmfloat_3ch()
+linear_pcmfloat_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 3;
-  const size_t sample_size = sizeof(float) * 3;
-
   samples_t src = samples;
-  float *dst = (float *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  float *dst = (float *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = ((float)(src[0][0])); src[0]++;
     dst[1] = ((float)(src[1][0])); src[1]++;
@@ -482,21 +418,18 @@ Converter::linear_pcmfloat_3ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 
 void
-Converter::linear_pcm16_4ch()
+linear_pcm16_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 4;
-  const size_t sample_size = sizeof(int16_t) * 4;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2le16(s2i16(src[1][0])); src[1]++;
@@ -505,20 +438,17 @@ Converter::linear_pcm16_4ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_4ch()
+linear_pcm24_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 4;
-  const size_t sample_size = sizeof(int24_t) * 4;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2le24(s2i24(src[1][0])); src[1]++;
@@ -527,20 +457,17 @@ Converter::linear_pcm24_4ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_4ch()
+linear_pcm32_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 4;
-  const size_t sample_size = sizeof(int32_t) * 4;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2le32(s2i32(src[1][0])); src[1]++;
@@ -549,20 +476,17 @@ Converter::linear_pcm32_4ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm16_be_4ch()
+linear_pcm16_be_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 4;
-  const size_t sample_size = sizeof(int16_t) * 4;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2be16(s2i16(src[1][0])); src[1]++;
@@ -571,20 +495,17 @@ Converter::linear_pcm16_be_4ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_be_4ch()
+linear_pcm24_be_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 4;
-  const size_t sample_size = sizeof(int24_t) * 4;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2be24(s2i24(src[1][0])); src[1]++;
@@ -593,20 +514,17 @@ Converter::linear_pcm24_be_4ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_be_4ch()
+linear_pcm32_be_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 4;
-  const size_t sample_size = sizeof(int32_t) * 4;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2be32(s2i32(src[1][0])); src[1]++;
@@ -615,20 +533,17 @@ Converter::linear_pcm32_be_4ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcmfloat_4ch()
+linear_pcmfloat_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 4;
-  const size_t sample_size = sizeof(float) * 4;
-
   samples_t src = samples;
-  float *dst = (float *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  float *dst = (float *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = ((float)(src[0][0])); src[0]++;
     dst[1] = ((float)(src[1][0])); src[1]++;
@@ -637,21 +552,18 @@ Converter::linear_pcmfloat_4ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 
 void
-Converter::linear_pcm16_5ch()
+linear_pcm16_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 5;
-  const size_t sample_size = sizeof(int16_t) * 5;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2le16(s2i16(src[1][0])); src[1]++;
@@ -661,20 +573,17 @@ Converter::linear_pcm16_5ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_5ch()
+linear_pcm24_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 5;
-  const size_t sample_size = sizeof(int24_t) * 5;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2le24(s2i24(src[1][0])); src[1]++;
@@ -684,20 +593,17 @@ Converter::linear_pcm24_5ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_5ch()
+linear_pcm32_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 5;
-  const size_t sample_size = sizeof(int32_t) * 5;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2le32(s2i32(src[1][0])); src[1]++;
@@ -707,20 +613,17 @@ Converter::linear_pcm32_5ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm16_be_5ch()
+linear_pcm16_be_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 5;
-  const size_t sample_size = sizeof(int16_t) * 5;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2be16(s2i16(src[1][0])); src[1]++;
@@ -730,20 +633,17 @@ Converter::linear_pcm16_be_5ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_be_5ch()
+linear_pcm24_be_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 5;
-  const size_t sample_size = sizeof(int24_t) * 5;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2be24(s2i24(src[1][0])); src[1]++;
@@ -753,20 +653,17 @@ Converter::linear_pcm24_be_5ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_be_5ch()
+linear_pcm32_be_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 5;
-  const size_t sample_size = sizeof(int32_t) * 5;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2be32(s2i32(src[1][0])); src[1]++;
@@ -776,20 +673,17 @@ Converter::linear_pcm32_be_5ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcmfloat_5ch()
+linear_pcmfloat_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 5;
-  const size_t sample_size = sizeof(float) * 5;
-
   samples_t src = samples;
-  float *dst = (float *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  float *dst = (float *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = ((float)(src[0][0])); src[0]++;
     dst[1] = ((float)(src[1][0])); src[1]++;
@@ -799,21 +693,18 @@ Converter::linear_pcmfloat_5ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 
 void
-Converter::linear_pcm16_6ch()
+linear_pcm16_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 6;
-  const size_t sample_size = sizeof(int16_t) * 6;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2le16(s2i16(src[1][0])); src[1]++;
@@ -824,20 +715,17 @@ Converter::linear_pcm16_6ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_6ch()
+linear_pcm24_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 6;
-  const size_t sample_size = sizeof(int24_t) * 6;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2le24(s2i24(src[1][0])); src[1]++;
@@ -848,20 +736,17 @@ Converter::linear_pcm24_6ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_6ch()
+linear_pcm32_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 6;
-  const size_t sample_size = sizeof(int32_t) * 6;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2le32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2le32(s2i32(src[1][0])); src[1]++;
@@ -872,20 +757,17 @@ Converter::linear_pcm32_6ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm16_be_6ch()
+linear_pcm16_be_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 6;
-  const size_t sample_size = sizeof(int16_t) * 6;
-
   samples_t src = samples;
-  int16_t *dst = (int16_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int16_t *dst = (int16_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be16(s2i16(src[0][0])); src[0]++;
     dst[1] = int2be16(s2i16(src[1][0])); src[1]++;
@@ -896,20 +778,17 @@ Converter::linear_pcm16_be_6ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm24_be_6ch()
+linear_pcm24_be_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 6;
-  const size_t sample_size = sizeof(int24_t) * 6;
-
   samples_t src = samples;
-  int24_t *dst = (int24_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int24_t *dst = (int24_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be24(s2i24(src[0][0])); src[0]++;
     dst[1] = int2be24(s2i24(src[1][0])); src[1]++;
@@ -920,20 +799,17 @@ Converter::linear_pcm24_be_6ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcm32_be_6ch()
+linear_pcm32_be_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 6;
-  const size_t sample_size = sizeof(int32_t) * 6;
-
   samples_t src = samples;
-  int32_t *dst = (int32_t *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  int32_t *dst = (int32_t *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = int2be32(s2i32(src[0][0])); src[0]++;
     dst[1] = int2be32(s2i32(src[1][0])); src[1]++;
@@ -944,20 +820,17 @@ Converter::linear_pcm32_be_6ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 void
-Converter::linear_pcmfloat_6ch()
+linear_pcmfloat_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
   const int nch = 6;
-  const size_t sample_size = sizeof(float) * 6;
-
   samples_t src = samples;
-  float *dst = (float *)out_rawdata;
-  size_t n = MIN(size, nsamples);
-  drop_samples(n);
-  out_size = n * sample_size;
+  float *dst = (float *)rawdata;
 
-  while (n--)
+  int r = set_rounding();  
+  while (size--)
   {
     dst[0] = ((float)(src[0][0])); src[0]++;
     dst[1] = ((float)(src[1][0])); src[1]++;
@@ -968,5 +841,6 @@ Converter::linear_pcmfloat_6ch()
 
     dst += nch;
   }
+  restore_rounding(r);
 }
 

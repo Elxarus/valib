@@ -1,4059 +1,762 @@
-  void pcm16_linear_1ch();
-  void pcm24_linear_1ch();
-  void pcm32_linear_1ch();
-  void pcm16_be_linear_1ch();
-  void pcm24_be_linear_1ch();
-  void pcm32_be_linear_1ch();
-  void pcmfloat_linear_1ch();
+void pcm16_linear_1ch(uint8_t *, samples_t, size_t);
+void pcm24_linear_1ch(uint8_t *, samples_t, size_t);
+void pcm32_linear_1ch(uint8_t *, samples_t, size_t);
+void pcm16_be_linear_1ch(uint8_t *, samples_t, size_t);
+void pcm24_be_linear_1ch(uint8_t *, samples_t, size_t);
+void pcm32_be_linear_1ch(uint8_t *, samples_t, size_t);
+void pcmfloat_linear_1ch(uint8_t *, samples_t, size_t);
 
-  void pcm16_linear_2ch();
-  void pcm24_linear_2ch();
-  void pcm32_linear_2ch();
-  void pcm16_be_linear_2ch();
-  void pcm24_be_linear_2ch();
-  void pcm32_be_linear_2ch();
-  void pcmfloat_linear_2ch();
+void pcm16_linear_2ch(uint8_t *, samples_t, size_t);
+void pcm24_linear_2ch(uint8_t *, samples_t, size_t);
+void pcm32_linear_2ch(uint8_t *, samples_t, size_t);
+void pcm16_be_linear_2ch(uint8_t *, samples_t, size_t);
+void pcm24_be_linear_2ch(uint8_t *, samples_t, size_t);
+void pcm32_be_linear_2ch(uint8_t *, samples_t, size_t);
+void pcmfloat_linear_2ch(uint8_t *, samples_t, size_t);
 
-  void pcm16_linear_3ch();
-  void pcm24_linear_3ch();
-  void pcm32_linear_3ch();
-  void pcm16_be_linear_3ch();
-  void pcm24_be_linear_3ch();
-  void pcm32_be_linear_3ch();
-  void pcmfloat_linear_3ch();
+void pcm16_linear_3ch(uint8_t *, samples_t, size_t);
+void pcm24_linear_3ch(uint8_t *, samples_t, size_t);
+void pcm32_linear_3ch(uint8_t *, samples_t, size_t);
+void pcm16_be_linear_3ch(uint8_t *, samples_t, size_t);
+void pcm24_be_linear_3ch(uint8_t *, samples_t, size_t);
+void pcm32_be_linear_3ch(uint8_t *, samples_t, size_t);
+void pcmfloat_linear_3ch(uint8_t *, samples_t, size_t);
 
-  void pcm16_linear_4ch();
-  void pcm24_linear_4ch();
-  void pcm32_linear_4ch();
-  void pcm16_be_linear_4ch();
-  void pcm24_be_linear_4ch();
-  void pcm32_be_linear_4ch();
-  void pcmfloat_linear_4ch();
+void pcm16_linear_4ch(uint8_t *, samples_t, size_t);
+void pcm24_linear_4ch(uint8_t *, samples_t, size_t);
+void pcm32_linear_4ch(uint8_t *, samples_t, size_t);
+void pcm16_be_linear_4ch(uint8_t *, samples_t, size_t);
+void pcm24_be_linear_4ch(uint8_t *, samples_t, size_t);
+void pcm32_be_linear_4ch(uint8_t *, samples_t, size_t);
+void pcmfloat_linear_4ch(uint8_t *, samples_t, size_t);
 
-  void pcm16_linear_5ch();
-  void pcm24_linear_5ch();
-  void pcm32_linear_5ch();
-  void pcm16_be_linear_5ch();
-  void pcm24_be_linear_5ch();
-  void pcm32_be_linear_5ch();
-  void pcmfloat_linear_5ch();
+void pcm16_linear_5ch(uint8_t *, samples_t, size_t);
+void pcm24_linear_5ch(uint8_t *, samples_t, size_t);
+void pcm32_linear_5ch(uint8_t *, samples_t, size_t);
+void pcm16_be_linear_5ch(uint8_t *, samples_t, size_t);
+void pcm24_be_linear_5ch(uint8_t *, samples_t, size_t);
+void pcm32_be_linear_5ch(uint8_t *, samples_t, size_t);
+void pcmfloat_linear_5ch(uint8_t *, samples_t, size_t);
 
-  void pcm16_linear_6ch();
-  void pcm24_linear_6ch();
-  void pcm32_linear_6ch();
-  void pcm16_be_linear_6ch();
-  void pcm24_be_linear_6ch();
-  void pcm32_be_linear_6ch();
-  void pcmfloat_linear_6ch();
+void pcm16_linear_6ch(uint8_t *, samples_t, size_t);
+void pcm24_linear_6ch(uint8_t *, samples_t, size_t);
+void pcm32_linear_6ch(uint8_t *, samples_t, size_t);
+void pcm16_be_linear_6ch(uint8_t *, samples_t, size_t);
+void pcm24_be_linear_6ch(uint8_t *, samples_t, size_t);
+void pcm32_be_linear_6ch(uint8_t *, samples_t, size_t);
+void pcmfloat_linear_6ch(uint8_t *, samples_t, size_t);
 
-typedef void (Converter::*convert_t)();
+typedef void (Converter::*convert_t)(uint8_t *rawdata, samples_t samples, size_t size);
 
 static const int formats_tbl[] = { FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE, FORMAT_PCMFLOAT };
 
 static const int formats = FORMAT_PCM16 | FORMAT_PCM24 | FORMAT_PCM32 | FORMAT_PCM16_BE | FORMAT_PCM24_BE | FORMAT_PCM32_BE | FORMAT_PCMFLOAT;
 
 static const convert_t pcm2linear_tbl[NCHANNELS][7] = {
- { &Converter::pcm16_linear_1ch, &Converter::pcm24_linear_1ch, &Converter::pcm32_linear_1ch, &Converter::pcm16_be_linear_1ch, &Converter::pcm24_be_linear_1ch, &Converter::pcm32_be_linear_1ch, &Converter::pcmfloat_linear_1ch },
- { &Converter::pcm16_linear_2ch, &Converter::pcm24_linear_2ch, &Converter::pcm32_linear_2ch, &Converter::pcm16_be_linear_2ch, &Converter::pcm24_be_linear_2ch, &Converter::pcm32_be_linear_2ch, &Converter::pcmfloat_linear_2ch },
- { &Converter::pcm16_linear_3ch, &Converter::pcm24_linear_3ch, &Converter::pcm32_linear_3ch, &Converter::pcm16_be_linear_3ch, &Converter::pcm24_be_linear_3ch, &Converter::pcm32_be_linear_3ch, &Converter::pcmfloat_linear_3ch },
- { &Converter::pcm16_linear_4ch, &Converter::pcm24_linear_4ch, &Converter::pcm32_linear_4ch, &Converter::pcm16_be_linear_4ch, &Converter::pcm24_be_linear_4ch, &Converter::pcm32_be_linear_4ch, &Converter::pcmfloat_linear_4ch },
- { &Converter::pcm16_linear_5ch, &Converter::pcm24_linear_5ch, &Converter::pcm32_linear_5ch, &Converter::pcm16_be_linear_5ch, &Converter::pcm24_be_linear_5ch, &Converter::pcm32_be_linear_5ch, &Converter::pcmfloat_linear_5ch },
- { &Converter::pcm16_linear_6ch, &Converter::pcm24_linear_6ch, &Converter::pcm32_linear_6ch, &Converter::pcm16_be_linear_6ch, &Converter::pcm24_be_linear_6ch, &Converter::pcm32_be_linear_6ch, &Converter::pcmfloat_linear_6ch },
+ { pcm16_linear_1ch, pcm24_linear_1ch, pcm32_linear_1ch, pcm16_be_linear_1ch, pcm24_be_linear_1ch, pcm32_be_linear_1ch, pcmfloat_linear_1ch },
+ { pcm16_linear_2ch, pcm24_linear_2ch, pcm32_linear_2ch, pcm16_be_linear_2ch, pcm24_be_linear_2ch, pcm32_be_linear_2ch, pcmfloat_linear_2ch },
+ { pcm16_linear_3ch, pcm24_linear_3ch, pcm32_linear_3ch, pcm16_be_linear_3ch, pcm24_be_linear_3ch, pcm32_be_linear_3ch, pcmfloat_linear_3ch },
+ { pcm16_linear_4ch, pcm24_linear_4ch, pcm32_linear_4ch, pcm16_be_linear_4ch, pcm24_be_linear_4ch, pcm32_be_linear_4ch, pcmfloat_linear_4ch },
+ { pcm16_linear_5ch, pcm24_linear_5ch, pcm32_linear_5ch, pcm16_be_linear_5ch, pcm24_be_linear_5ch, pcm32_be_linear_5ch, pcmfloat_linear_5ch },
+ { pcm16_linear_6ch, pcm24_linear_6ch, pcm32_linear_6ch, pcm16_be_linear_6ch, pcm24_be_linear_6ch, pcm32_be_linear_6ch, pcmfloat_linear_6ch },
 };
 
 void
-Converter::pcm16_linear_1ch()
+pcm16_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 1;
-  const size_t sample_size = sizeof(int16_t) * 1;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2le16(src[0]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le16(src[0]);
+    dst[0][0] = le2int16(src[0]); dst[0]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_linear_1ch()
+pcm24_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 1;
-  const size_t sample_size = sizeof(int24_t) * 1;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2le24(src[0]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le24(src[0]);
+    dst[0][0] = le2int24(src[0]); dst[0]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_linear_1ch()
+pcm32_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 1;
-  const size_t sample_size = sizeof(int32_t) * 1;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2le32(src[0]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le32(src[0]);
+    dst[0][0] = le2int32(src[0]); dst[0]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm16_be_linear_1ch()
+pcm16_be_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 1;
-  const size_t sample_size = sizeof(int16_t) * 1;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2be16(src[0]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be16(src[0]);
+    dst[0][0] = be2int16(src[0]); dst[0]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_be_linear_1ch()
+pcm24_be_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 1;
-  const size_t sample_size = sizeof(int24_t) * 1;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2be24(src[0]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be24(src[0]);
+    dst[0][0] = be2int24(src[0]); dst[0]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_be_linear_1ch()
+pcm32_be_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 1;
-  const size_t sample_size = sizeof(int32_t) * 1;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2be32(src[0]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be32(src[0]);
+    dst[0][0] = be2int32(src[0]); dst[0]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcmfloat_linear_1ch()
+pcmfloat_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 1;
-  const size_t sample_size = sizeof(float) * 1;
+  samples_t dst = samples;
+  float *src = (float *)rawdata;
 
-  float *src;
-  float *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (float *)part_buf;
-    dst[nsamples * 0] = (src[0]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (float *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = (src[0]);
+    dst[0][0] = sample_t(src[0]); dst[0]++;
 
     src += nch;
-    dst++;
   }
 }
 
 void
-Converter::pcm16_linear_2ch()
+pcm16_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 2;
-  const size_t sample_size = sizeof(int16_t) * 2;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
+    dst[0][0] = le2int16(src[0]); dst[0]++;
+    dst[1][0] = le2int16(src[1]); dst[1]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_linear_2ch()
+pcm24_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 2;
-  const size_t sample_size = sizeof(int24_t) * 2;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
+    dst[0][0] = le2int24(src[0]); dst[0]++;
+    dst[1][0] = le2int24(src[1]); dst[1]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_linear_2ch()
+pcm32_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 2;
-  const size_t sample_size = sizeof(int32_t) * 2;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
+    dst[0][0] = le2int32(src[0]); dst[0]++;
+    dst[1][0] = le2int32(src[1]); dst[1]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm16_be_linear_2ch()
+pcm16_be_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 2;
-  const size_t sample_size = sizeof(int16_t) * 2;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
+    dst[0][0] = be2int16(src[0]); dst[0]++;
+    dst[1][0] = be2int16(src[1]); dst[1]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_be_linear_2ch()
+pcm24_be_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 2;
-  const size_t sample_size = sizeof(int24_t) * 2;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
+    dst[0][0] = be2int24(src[0]); dst[0]++;
+    dst[1][0] = be2int24(src[1]); dst[1]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_be_linear_2ch()
+pcm32_be_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 2;
-  const size_t sample_size = sizeof(int32_t) * 2;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
+    dst[0][0] = be2int32(src[0]); dst[0]++;
+    dst[1][0] = be2int32(src[1]); dst[1]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcmfloat_linear_2ch()
+pcmfloat_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 2;
-  const size_t sample_size = sizeof(float) * 2;
+  samples_t dst = samples;
+  float *src = (float *)rawdata;
 
-  float *src;
-  float *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (float *)part_buf;
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (float *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
+    dst[0][0] = sample_t(src[0]); dst[0]++;
+    dst[1][0] = sample_t(src[1]); dst[1]++;
 
     src += nch;
-    dst++;
   }
 }
 
 void
-Converter::pcm16_linear_3ch()
+pcm16_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 3;
-  const size_t sample_size = sizeof(int16_t) * 3;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-    dst[nsamples * 2] = int2le16(src[2]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-    dst[nsamples * 2] = int2le16(src[2]);
+    dst[0][0] = le2int16(src[0]); dst[0]++;
+    dst[1][0] = le2int16(src[1]); dst[1]++;
+    dst[2][0] = le2int16(src[2]); dst[2]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_linear_3ch()
+pcm24_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 3;
-  const size_t sample_size = sizeof(int24_t) * 3;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-    dst[nsamples * 2] = int2le24(src[2]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-    dst[nsamples * 2] = int2le24(src[2]);
+    dst[0][0] = le2int24(src[0]); dst[0]++;
+    dst[1][0] = le2int24(src[1]); dst[1]++;
+    dst[2][0] = le2int24(src[2]); dst[2]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_linear_3ch()
+pcm32_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 3;
-  const size_t sample_size = sizeof(int32_t) * 3;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-    dst[nsamples * 2] = int2le32(src[2]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-    dst[nsamples * 2] = int2le32(src[2]);
+    dst[0][0] = le2int32(src[0]); dst[0]++;
+    dst[1][0] = le2int32(src[1]); dst[1]++;
+    dst[2][0] = le2int32(src[2]); dst[2]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm16_be_linear_3ch()
+pcm16_be_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 3;
-  const size_t sample_size = sizeof(int16_t) * 3;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-    dst[nsamples * 2] = int2be16(src[2]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-    dst[nsamples * 2] = int2be16(src[2]);
+    dst[0][0] = be2int16(src[0]); dst[0]++;
+    dst[1][0] = be2int16(src[1]); dst[1]++;
+    dst[2][0] = be2int16(src[2]); dst[2]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_be_linear_3ch()
+pcm24_be_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 3;
-  const size_t sample_size = sizeof(int24_t) * 3;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-    dst[nsamples * 2] = int2be24(src[2]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-    dst[nsamples * 2] = int2be24(src[2]);
+    dst[0][0] = be2int24(src[0]); dst[0]++;
+    dst[1][0] = be2int24(src[1]); dst[1]++;
+    dst[2][0] = be2int24(src[2]); dst[2]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_be_linear_3ch()
+pcm32_be_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 3;
-  const size_t sample_size = sizeof(int32_t) * 3;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-    dst[nsamples * 2] = int2be32(src[2]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-    dst[nsamples * 2] = int2be32(src[2]);
+    dst[0][0] = be2int32(src[0]); dst[0]++;
+    dst[1][0] = be2int32(src[1]); dst[1]++;
+    dst[2][0] = be2int32(src[2]); dst[2]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcmfloat_linear_3ch()
+pcmfloat_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 3;
-  const size_t sample_size = sizeof(float) * 3;
+  samples_t dst = samples;
+  float *src = (float *)rawdata;
 
-  float *src;
-  float *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (float *)part_buf;
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-    dst[nsamples * 2] = (src[2]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (float *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-    dst[nsamples * 2] = (src[2]);
+    dst[0][0] = sample_t(src[0]); dst[0]++;
+    dst[1][0] = sample_t(src[1]); dst[1]++;
+    dst[2][0] = sample_t(src[2]); dst[2]++;
 
     src += nch;
-    dst++;
   }
 }
 
 void
-Converter::pcm16_linear_4ch()
+pcm16_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 4;
-  const size_t sample_size = sizeof(int16_t) * 4;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-    dst[nsamples * 2] = int2le16(src[2]);
-    dst[nsamples * 3] = int2le16(src[3]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-    dst[nsamples * 2] = int2le16(src[2]);
-    dst[nsamples * 3] = int2le16(src[3]);
+    dst[0][0] = le2int16(src[0]); dst[0]++;
+    dst[1][0] = le2int16(src[1]); dst[1]++;
+    dst[2][0] = le2int16(src[2]); dst[2]++;
+    dst[3][0] = le2int16(src[3]); dst[3]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_linear_4ch()
+pcm24_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 4;
-  const size_t sample_size = sizeof(int24_t) * 4;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-    dst[nsamples * 2] = int2le24(src[2]);
-    dst[nsamples * 3] = int2le24(src[3]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-    dst[nsamples * 2] = int2le24(src[2]);
-    dst[nsamples * 3] = int2le24(src[3]);
+    dst[0][0] = le2int24(src[0]); dst[0]++;
+    dst[1][0] = le2int24(src[1]); dst[1]++;
+    dst[2][0] = le2int24(src[2]); dst[2]++;
+    dst[3][0] = le2int24(src[3]); dst[3]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_linear_4ch()
+pcm32_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 4;
-  const size_t sample_size = sizeof(int32_t) * 4;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-    dst[nsamples * 2] = int2le32(src[2]);
-    dst[nsamples * 3] = int2le32(src[3]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-    dst[nsamples * 2] = int2le32(src[2]);
-    dst[nsamples * 3] = int2le32(src[3]);
+    dst[0][0] = le2int32(src[0]); dst[0]++;
+    dst[1][0] = le2int32(src[1]); dst[1]++;
+    dst[2][0] = le2int32(src[2]); dst[2]++;
+    dst[3][0] = le2int32(src[3]); dst[3]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm16_be_linear_4ch()
+pcm16_be_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 4;
-  const size_t sample_size = sizeof(int16_t) * 4;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-    dst[nsamples * 2] = int2be16(src[2]);
-    dst[nsamples * 3] = int2be16(src[3]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-    dst[nsamples * 2] = int2be16(src[2]);
-    dst[nsamples * 3] = int2be16(src[3]);
+    dst[0][0] = be2int16(src[0]); dst[0]++;
+    dst[1][0] = be2int16(src[1]); dst[1]++;
+    dst[2][0] = be2int16(src[2]); dst[2]++;
+    dst[3][0] = be2int16(src[3]); dst[3]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_be_linear_4ch()
+pcm24_be_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 4;
-  const size_t sample_size = sizeof(int24_t) * 4;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-    dst[nsamples * 2] = int2be24(src[2]);
-    dst[nsamples * 3] = int2be24(src[3]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-    dst[nsamples * 2] = int2be24(src[2]);
-    dst[nsamples * 3] = int2be24(src[3]);
+    dst[0][0] = be2int24(src[0]); dst[0]++;
+    dst[1][0] = be2int24(src[1]); dst[1]++;
+    dst[2][0] = be2int24(src[2]); dst[2]++;
+    dst[3][0] = be2int24(src[3]); dst[3]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_be_linear_4ch()
+pcm32_be_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 4;
-  const size_t sample_size = sizeof(int32_t) * 4;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-    dst[nsamples * 2] = int2be32(src[2]);
-    dst[nsamples * 3] = int2be32(src[3]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-    dst[nsamples * 2] = int2be32(src[2]);
-    dst[nsamples * 3] = int2be32(src[3]);
+    dst[0][0] = be2int32(src[0]); dst[0]++;
+    dst[1][0] = be2int32(src[1]); dst[1]++;
+    dst[2][0] = be2int32(src[2]); dst[2]++;
+    dst[3][0] = be2int32(src[3]); dst[3]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcmfloat_linear_4ch()
+pcmfloat_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 4;
-  const size_t sample_size = sizeof(float) * 4;
+  samples_t dst = samples;
+  float *src = (float *)rawdata;
 
-  float *src;
-  float *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (float *)part_buf;
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-    dst[nsamples * 2] = (src[2]);
-    dst[nsamples * 3] = (src[3]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (float *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-    dst[nsamples * 2] = (src[2]);
-    dst[nsamples * 3] = (src[3]);
+    dst[0][0] = sample_t(src[0]); dst[0]++;
+    dst[1][0] = sample_t(src[1]); dst[1]++;
+    dst[2][0] = sample_t(src[2]); dst[2]++;
+    dst[3][0] = sample_t(src[3]); dst[3]++;
 
     src += nch;
-    dst++;
   }
 }
 
 void
-Converter::pcm16_linear_5ch()
+pcm16_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 5;
-  const size_t sample_size = sizeof(int16_t) * 5;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-    dst[nsamples * 2] = int2le16(src[2]);
-    dst[nsamples * 3] = int2le16(src[3]);
-    dst[nsamples * 4] = int2le16(src[4]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-    dst[nsamples * 2] = int2le16(src[2]);
-    dst[nsamples * 3] = int2le16(src[3]);
-    dst[nsamples * 4] = int2le16(src[4]);
+    dst[0][0] = le2int16(src[0]); dst[0]++;
+    dst[1][0] = le2int16(src[1]); dst[1]++;
+    dst[2][0] = le2int16(src[2]); dst[2]++;
+    dst[3][0] = le2int16(src[3]); dst[3]++;
+    dst[4][0] = le2int16(src[4]); dst[4]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_linear_5ch()
+pcm24_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 5;
-  const size_t sample_size = sizeof(int24_t) * 5;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-    dst[nsamples * 2] = int2le24(src[2]);
-    dst[nsamples * 3] = int2le24(src[3]);
-    dst[nsamples * 4] = int2le24(src[4]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-    dst[nsamples * 2] = int2le24(src[2]);
-    dst[nsamples * 3] = int2le24(src[3]);
-    dst[nsamples * 4] = int2le24(src[4]);
+    dst[0][0] = le2int24(src[0]); dst[0]++;
+    dst[1][0] = le2int24(src[1]); dst[1]++;
+    dst[2][0] = le2int24(src[2]); dst[2]++;
+    dst[3][0] = le2int24(src[3]); dst[3]++;
+    dst[4][0] = le2int24(src[4]); dst[4]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_linear_5ch()
+pcm32_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 5;
-  const size_t sample_size = sizeof(int32_t) * 5;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-    dst[nsamples * 2] = int2le32(src[2]);
-    dst[nsamples * 3] = int2le32(src[3]);
-    dst[nsamples * 4] = int2le32(src[4]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-    dst[nsamples * 2] = int2le32(src[2]);
-    dst[nsamples * 3] = int2le32(src[3]);
-    dst[nsamples * 4] = int2le32(src[4]);
+    dst[0][0] = le2int32(src[0]); dst[0]++;
+    dst[1][0] = le2int32(src[1]); dst[1]++;
+    dst[2][0] = le2int32(src[2]); dst[2]++;
+    dst[3][0] = le2int32(src[3]); dst[3]++;
+    dst[4][0] = le2int32(src[4]); dst[4]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm16_be_linear_5ch()
+pcm16_be_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 5;
-  const size_t sample_size = sizeof(int16_t) * 5;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-    dst[nsamples * 2] = int2be16(src[2]);
-    dst[nsamples * 3] = int2be16(src[3]);
-    dst[nsamples * 4] = int2be16(src[4]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-    dst[nsamples * 2] = int2be16(src[2]);
-    dst[nsamples * 3] = int2be16(src[3]);
-    dst[nsamples * 4] = int2be16(src[4]);
+    dst[0][0] = be2int16(src[0]); dst[0]++;
+    dst[1][0] = be2int16(src[1]); dst[1]++;
+    dst[2][0] = be2int16(src[2]); dst[2]++;
+    dst[3][0] = be2int16(src[3]); dst[3]++;
+    dst[4][0] = be2int16(src[4]); dst[4]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_be_linear_5ch()
+pcm24_be_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 5;
-  const size_t sample_size = sizeof(int24_t) * 5;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-    dst[nsamples * 2] = int2be24(src[2]);
-    dst[nsamples * 3] = int2be24(src[3]);
-    dst[nsamples * 4] = int2be24(src[4]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-    dst[nsamples * 2] = int2be24(src[2]);
-    dst[nsamples * 3] = int2be24(src[3]);
-    dst[nsamples * 4] = int2be24(src[4]);
+    dst[0][0] = be2int24(src[0]); dst[0]++;
+    dst[1][0] = be2int24(src[1]); dst[1]++;
+    dst[2][0] = be2int24(src[2]); dst[2]++;
+    dst[3][0] = be2int24(src[3]); dst[3]++;
+    dst[4][0] = be2int24(src[4]); dst[4]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_be_linear_5ch()
+pcm32_be_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 5;
-  const size_t sample_size = sizeof(int32_t) * 5;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-    dst[nsamples * 2] = int2be32(src[2]);
-    dst[nsamples * 3] = int2be32(src[3]);
-    dst[nsamples * 4] = int2be32(src[4]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-    dst[nsamples * 2] = int2be32(src[2]);
-    dst[nsamples * 3] = int2be32(src[3]);
-    dst[nsamples * 4] = int2be32(src[4]);
+    dst[0][0] = be2int32(src[0]); dst[0]++;
+    dst[1][0] = be2int32(src[1]); dst[1]++;
+    dst[2][0] = be2int32(src[2]); dst[2]++;
+    dst[3][0] = be2int32(src[3]); dst[3]++;
+    dst[4][0] = be2int32(src[4]); dst[4]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcmfloat_linear_5ch()
+pcmfloat_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 5;
-  const size_t sample_size = sizeof(float) * 5;
+  samples_t dst = samples;
+  float *src = (float *)rawdata;
 
-  float *src;
-  float *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (float *)part_buf;
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-    dst[nsamples * 2] = (src[2]);
-    dst[nsamples * 3] = (src[3]);
-    dst[nsamples * 4] = (src[4]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (float *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-    dst[nsamples * 2] = (src[2]);
-    dst[nsamples * 3] = (src[3]);
-    dst[nsamples * 4] = (src[4]);
+    dst[0][0] = sample_t(src[0]); dst[0]++;
+    dst[1][0] = sample_t(src[1]); dst[1]++;
+    dst[2][0] = sample_t(src[2]); dst[2]++;
+    dst[3][0] = sample_t(src[3]); dst[3]++;
+    dst[4][0] = sample_t(src[4]); dst[4]++;
 
     src += nch;
-    dst++;
   }
 }
 
 void
-Converter::pcm16_linear_6ch()
+pcm16_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 6;
-  const size_t sample_size = sizeof(int16_t) * 6;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-    dst[nsamples * 2] = int2le16(src[2]);
-    dst[nsamples * 3] = int2le16(src[3]);
-    dst[nsamples * 4] = int2le16(src[4]);
-    dst[nsamples * 5] = int2le16(src[5]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le16(src[0]);
-    dst[nsamples * 1] = int2le16(src[1]);
-    dst[nsamples * 2] = int2le16(src[2]);
-    dst[nsamples * 3] = int2le16(src[3]);
-    dst[nsamples * 4] = int2le16(src[4]);
-    dst[nsamples * 5] = int2le16(src[5]);
+    dst[0][0] = le2int16(src[0]); dst[0]++;
+    dst[1][0] = le2int16(src[1]); dst[1]++;
+    dst[2][0] = le2int16(src[2]); dst[2]++;
+    dst[3][0] = le2int16(src[3]); dst[3]++;
+    dst[4][0] = le2int16(src[4]); dst[4]++;
+    dst[5][0] = le2int16(src[5]); dst[5]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_linear_6ch()
+pcm24_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 6;
-  const size_t sample_size = sizeof(int24_t) * 6;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-    dst[nsamples * 2] = int2le24(src[2]);
-    dst[nsamples * 3] = int2le24(src[3]);
-    dst[nsamples * 4] = int2le24(src[4]);
-    dst[nsamples * 5] = int2le24(src[5]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le24(src[0]);
-    dst[nsamples * 1] = int2le24(src[1]);
-    dst[nsamples * 2] = int2le24(src[2]);
-    dst[nsamples * 3] = int2le24(src[3]);
-    dst[nsamples * 4] = int2le24(src[4]);
-    dst[nsamples * 5] = int2le24(src[5]);
+    dst[0][0] = le2int24(src[0]); dst[0]++;
+    dst[1][0] = le2int24(src[1]); dst[1]++;
+    dst[2][0] = le2int24(src[2]); dst[2]++;
+    dst[3][0] = le2int24(src[3]); dst[3]++;
+    dst[4][0] = le2int24(src[4]); dst[4]++;
+    dst[5][0] = le2int24(src[5]); dst[5]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_linear_6ch()
+pcm32_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 6;
-  const size_t sample_size = sizeof(int32_t) * 6;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-    dst[nsamples * 2] = int2le32(src[2]);
-    dst[nsamples * 3] = int2le32(src[3]);
-    dst[nsamples * 4] = int2le32(src[4]);
-    dst[nsamples * 5] = int2le32(src[5]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2le32(src[0]);
-    dst[nsamples * 1] = int2le32(src[1]);
-    dst[nsamples * 2] = int2le32(src[2]);
-    dst[nsamples * 3] = int2le32(src[3]);
-    dst[nsamples * 4] = int2le32(src[4]);
-    dst[nsamples * 5] = int2le32(src[5]);
+    dst[0][0] = le2int32(src[0]); dst[0]++;
+    dst[1][0] = le2int32(src[1]); dst[1]++;
+    dst[2][0] = le2int32(src[2]); dst[2]++;
+    dst[3][0] = le2int32(src[3]); dst[3]++;
+    dst[4][0] = le2int32(src[4]); dst[4]++;
+    dst[5][0] = le2int32(src[5]); dst[5]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm16_be_linear_6ch()
+pcm16_be_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 6;
-  const size_t sample_size = sizeof(int16_t) * 6;
+  samples_t dst = samples;
+  int16_t *src = (int16_t *)rawdata;
 
-  int16_t *src;
-  int16_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int16_t *)part_buf;
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-    dst[nsamples * 2] = int2be16(src[2]);
-    dst[nsamples * 3] = int2be16(src[3]);
-    dst[nsamples * 4] = int2be16(src[4]);
-    dst[nsamples * 5] = int2be16(src[5]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int16_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int16_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be16(src[0]);
-    dst[nsamples * 1] = int2be16(src[1]);
-    dst[nsamples * 2] = int2be16(src[2]);
-    dst[nsamples * 3] = int2be16(src[3]);
-    dst[nsamples * 4] = int2be16(src[4]);
-    dst[nsamples * 5] = int2be16(src[5]);
+    dst[0][0] = be2int16(src[0]); dst[0]++;
+    dst[1][0] = be2int16(src[1]); dst[1]++;
+    dst[2][0] = be2int16(src[2]); dst[2]++;
+    dst[3][0] = be2int16(src[3]); dst[3]++;
+    dst[4][0] = be2int16(src[4]); dst[4]++;
+    dst[5][0] = be2int16(src[5]); dst[5]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm24_be_linear_6ch()
+pcm24_be_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 6;
-  const size_t sample_size = sizeof(int24_t) * 6;
+  samples_t dst = samples;
+  int24_t *src = (int24_t *)rawdata;
 
-  int24_t *src;
-  int24_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int24_t *)part_buf;
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-    dst[nsamples * 2] = int2be24(src[2]);
-    dst[nsamples * 3] = int2be24(src[3]);
-    dst[nsamples * 4] = int2be24(src[4]);
-    dst[nsamples * 5] = int2be24(src[5]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int24_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int24_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be24(src[0]);
-    dst[nsamples * 1] = int2be24(src[1]);
-    dst[nsamples * 2] = int2be24(src[2]);
-    dst[nsamples * 3] = int2be24(src[3]);
-    dst[nsamples * 4] = int2be24(src[4]);
-    dst[nsamples * 5] = int2be24(src[5]);
+    dst[0][0] = be2int24(src[0]); dst[0]++;
+    dst[1][0] = be2int24(src[1]); dst[1]++;
+    dst[2][0] = be2int24(src[2]); dst[2]++;
+    dst[3][0] = be2int24(src[3]); dst[3]++;
+    dst[4][0] = be2int24(src[4]); dst[4]++;
+    dst[5][0] = be2int24(src[5]); dst[5]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcm32_be_linear_6ch()
+pcm32_be_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 6;
-  const size_t sample_size = sizeof(int32_t) * 6;
+  samples_t dst = samples;
+  int32_t *src = (int32_t *)rawdata;
 
-  int32_t *src;
-  int32_t *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (int32_t *)part_buf;
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-    dst[nsamples * 2] = int2be32(src[2]);
-    dst[nsamples * 3] = int2be32(src[3]);
-    dst[nsamples * 4] = int2be32(src[4]);
-    dst[nsamples * 5] = int2be32(src[5]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (int32_t *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (int32_t *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = int2be32(src[0]);
-    dst[nsamples * 1] = int2be32(src[1]);
-    dst[nsamples * 2] = int2be32(src[2]);
-    dst[nsamples * 3] = int2be32(src[3]);
-    dst[nsamples * 4] = int2be32(src[4]);
-    dst[nsamples * 5] = int2be32(src[5]);
+    dst[0][0] = be2int32(src[0]); dst[0]++;
+    dst[1][0] = be2int32(src[1]); dst[1]++;
+    dst[2][0] = be2int32(src[2]); dst[2]++;
+    dst[3][0] = be2int32(src[3]); dst[3]++;
+    dst[4][0] = be2int32(src[4]); dst[4]++;
+    dst[5][0] = be2int32(src[5]); dst[5]++;
 
     src += nch;
-    dst++;
   }
 }
 void
-Converter::pcmfloat_linear_6ch()
+pcmfloat_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
 {
-  // input: spk, nsamples, rawdata, size
-  // output: out_samples, out_size
-  // intermediate: part_buf, part_size
-
   const int nch = 6;
-  const size_t sample_size = sizeof(float) * 6;
+  samples_t dst = samples;
+  float *src = (float *)rawdata;
 
-  float *src;
-  float *end;
-  sample_t *dst = out_samples[0];
-  out_size = 0;
-
-  /////////////////////////////////////////////////////////
-  // Process part of sample
-
-  if (part_size)
+  while (size--)
   {
-    // assert: part_size < sample_size
-    size_t delta = sample_size - part_size;
-    if (size < delta)
-    {
-      // not enough data to fill sample buffer
-      memcpy(part_buf + part_size, rawdata, size);
-      part_size += size;
-      size = 0;
-      return;
-    }
-    else
-    {
-      // finish & convert incomplete sample 
-      memcpy(part_buf + part_size, rawdata, delta);
-      drop_rawdata(delta);
-      part_size = 0;
-
-      src = (float *)part_buf;
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-    dst[nsamples * 2] = (src[2]);
-    dst[nsamples * 3] = (src[3]);
-    dst[nsamples * 4] = (src[4]);
-    dst[nsamples * 5] = (src[5]);
-
-      dst++;
-      out_size++;
-    }   
-  }
-
-  /////////////////////////////////////////////////////////
-  // Set processing buffer start & end and remember 
-  // remaining part of sample
-
-  src = (float *)rawdata;
-
-  // integral number of samples (and its size in bytes)
-  size_t n = nsamples - out_size;
-  size_t n_size = n * sample_size;
-
-  if (n_size < size)
-  {
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-  }
-  else
-  {
-    n = size / sample_size;
-    n_size = n * sample_size;
-
-    drop_rawdata(n_size);
-    end = (float *)(((uint8_t *)src) + n_size);
-    out_size += n;
-
-    // remember part of sample
-    if (size)
-    {
-      memcpy(part_buf, end, size);
-      part_size = size;
-      size = 0;
-    }
-  }
-
-  /////////////////////////////////////////////////////////
-  // Convert
-
-  while (src < end)
-  {
-    dst[nsamples * 0] = (src[0]);
-    dst[nsamples * 1] = (src[1]);
-    dst[nsamples * 2] = (src[2]);
-    dst[nsamples * 3] = (src[3]);
-    dst[nsamples * 4] = (src[4]);
-    dst[nsamples * 5] = (src[5]);
+    dst[0][0] = sample_t(src[0]); dst[0]++;
+    dst[1][0] = sample_t(src[1]); dst[1]++;
+    dst[2][0] = sample_t(src[2]); dst[2]++;
+    dst[3][0] = sample_t(src[3]); dst[3]++;
+    dst[4][0] = sample_t(src[4]); dst[4]++;
+    dst[5][0] = sample_t(src[5]); dst[5]++;
 
     src += nch;
-    dst++;
   }
 }
 

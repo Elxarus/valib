@@ -471,6 +471,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\convert_func.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\convert_func.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\convolver.cpp"
 				>
 			</File>

@@ -17,6 +17,7 @@
 
 #include "../buffer.h"
 #include "../filter.h"
+#include "convert_func.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Converter class
@@ -26,8 +27,7 @@ class Converter : public NullFilter
 {
 protected:
   // conversion function pointer
-  typedef void (Converter::*convert_t)();
-  convert_t convert;       // conversion function
+  void (*convert)(uint8_t *, samples_t, size_t);
 
   // format
   int  format;             // format to convert to
@@ -48,8 +48,10 @@ protected:
   uint8_t   part_buf[24];  // partial sample left from previous call
   size_t    part_size;     // partial sample size in bytes
 
-  bool initialize();       // initialize convertor
   convert_t find_conversion(int _format, Speakers _spk) const;
+  bool initialize();       // initialize convertor
+  void convert_pcm2linear();
+  void convert_linear2pcm();
 
 public:
   Converter(size_t _nsamples);
@@ -78,107 +80,6 @@ public:
 
   virtual Speakers get_output() const;
   virtual bool get_chunk(Chunk *out);
-
-  /////////////////////////////////////////////////////////
-  // Conversion functions
-
-  void passthrough();
-
-  void linear_pcm16_1ch();
-  void linear_pcm24_1ch();
-  void linear_pcm32_1ch();
-  void linear_pcm16_be_1ch();
-  void linear_pcm24_be_1ch();
-  void linear_pcm32_be_1ch();
-  void linear_pcmfloat_1ch();
-
-  void linear_pcm16_2ch();
-  void linear_pcm24_2ch();
-  void linear_pcm32_2ch();
-  void linear_pcm16_be_2ch();
-  void linear_pcm24_be_2ch();
-  void linear_pcm32_be_2ch();
-  void linear_pcmfloat_2ch();
-
-  void linear_pcm16_3ch();
-  void linear_pcm24_3ch();
-  void linear_pcm32_3ch();
-  void linear_pcm16_be_3ch();
-  void linear_pcm24_be_3ch();
-  void linear_pcm32_be_3ch();
-  void linear_pcmfloat_3ch();
-
-  void linear_pcm16_4ch();
-  void linear_pcm24_4ch();
-  void linear_pcm32_4ch();
-  void linear_pcm16_be_4ch();
-  void linear_pcm24_be_4ch();
-  void linear_pcm32_be_4ch();
-  void linear_pcmfloat_4ch();
-
-  void linear_pcm16_5ch();
-  void linear_pcm24_5ch();
-  void linear_pcm32_5ch();
-  void linear_pcm16_be_5ch();
-  void linear_pcm24_be_5ch();
-  void linear_pcm32_be_5ch();
-  void linear_pcmfloat_5ch();
-
-  void linear_pcm16_6ch();
-  void linear_pcm24_6ch();
-  void linear_pcm32_6ch();
-  void linear_pcm16_be_6ch();
-  void linear_pcm24_be_6ch();
-  void linear_pcm32_be_6ch();
-  void linear_pcmfloat_6ch();
-
-  void pcm16_linear_1ch();
-  void pcm24_linear_1ch();
-  void pcm32_linear_1ch();
-  void pcm16_be_linear_1ch();
-  void pcm24_be_linear_1ch();
-  void pcm32_be_linear_1ch();
-  void pcmfloat_linear_1ch();
-
-  void pcm16_linear_2ch();
-  void pcm24_linear_2ch();
-  void pcm32_linear_2ch();
-  void pcm16_be_linear_2ch();
-  void pcm24_be_linear_2ch();
-  void pcm32_be_linear_2ch();
-  void pcmfloat_linear_2ch();
-
-  void pcm16_linear_3ch();
-  void pcm24_linear_3ch();
-  void pcm32_linear_3ch();
-  void pcm16_be_linear_3ch();
-  void pcm24_be_linear_3ch();
-  void pcm32_be_linear_3ch();
-  void pcmfloat_linear_3ch();
-
-  void pcm16_linear_4ch();
-  void pcm24_linear_4ch();
-  void pcm32_linear_4ch();
-  void pcm16_be_linear_4ch();
-  void pcm24_be_linear_4ch();
-  void pcm32_be_linear_4ch();
-  void pcmfloat_linear_4ch();
-
-  void pcm16_linear_5ch();
-  void pcm24_linear_5ch();
-  void pcm32_linear_5ch();
-  void pcm16_be_linear_5ch();
-  void pcm24_be_linear_5ch();
-  void pcm32_be_linear_5ch();
-  void pcmfloat_linear_5ch();
-
-  void pcm16_linear_6ch();
-  void pcm24_linear_6ch();
-  void pcm32_linear_6ch();
-  void pcm16_be_linear_6ch();
-  void pcm24_be_linear_6ch();
-  void pcm32_be_linear_6ch();
-  void pcmfloat_linear_6ch();
 };
 
 #endif

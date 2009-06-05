@@ -21,13 +21,13 @@ my $text;
 
 
 ###############################################################################
-# class members
+# function declarations
 
 foreach $ch (@chs)
 {
   foreach $name (@names)
   {
-    print "  void linear_".$name."_".$ch."ch();\n";
+    print "void linear_${name}_${ch}ch(uint8_t *, samples_t, size_t);\n";
   }
   print "\n";
 }
@@ -35,7 +35,7 @@ foreach $ch (@chs)
 ###############################################################################
 # array of functions
 
-print "typedef void (Converter::*convert_t)();\n\n";
+print "typedef void (*convert_t)(uint8_t *, samples_t, size_t);\n\n";
 print "static const int formats_tbl[] = { ".join(", ", @formats)." };\n\n";
 print "static const int formats = ".join(" | ", @formats).";\n\n";
 
@@ -43,7 +43,7 @@ print "static const convert_t linear2pcm_tbl[NCHANNELS][".($#formats+1)."] = {\n
 foreach $ch (@chs)
 {
   print " { ";
-  print join ", ", map { "&Converter::linear_".$_."_".$ch."ch" } @names;
+  print join ", ", map { "linear_${_}_${ch}ch" } @names;
   print " },\n";
 }
 print "};\n\n";
@@ -66,7 +66,7 @@ foreach $ch (@chs)
     $text =~ s/(\$\w+)/$1/gee;
 
     print "void\n";
-    print "Converter::linear_".$name."_".$ch."ch()\n";
+    print "linear_${name}_${ch}ch(uint8_t *rawdata, samples_t samples, size_t size)\n";
     print $text;
   }
   print "\n";
