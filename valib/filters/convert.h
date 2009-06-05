@@ -45,7 +45,7 @@ protected:
   size_t    out_size;      // buffer size in bytes/samples for pcm/linear data
 
   // part of sample from previous call
-  uint8_t   part_buf[24];  // partial sample left from previous call
+  uint8_t   part_buf[48];  // partial sample left from previous call
   size_t    part_size;     // partial sample size in bytes
 
   convert_t find_conversion(int _format, Speakers _spk) const;
