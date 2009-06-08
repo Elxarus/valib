@@ -175,7 +175,7 @@
 #define FORMAT_CLASS_LPCM        (FORMAT_MASK_LPCM20   | FORMAT_MASK_LPCM24)
 #define FORMAT_CLASS_CONTAINER   (FORMAT_MASK_PES | FORMAT_MASK_SPDIF)
 #define FORMAT_CLASS_SPDIFABLE   (FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS)
-#define FORMAT_CLASS_COMPRESSED  0x1f000
+#define FORMAT_CLASS_COMPRESSED  (FORMAT_MASK_MPA | FORMAT_MASK_AC3 | FORMAT_MASK_DTS)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Channel numbers (that also define 'standard' channel order)
