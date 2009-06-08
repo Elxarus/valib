@@ -124,17 +124,18 @@ PSParser::spk()
     // parse LPCM header
     // note that MPEG LPCM uses big-endian format
     int format, mask, sample_rate;
-    sample_t level;
 
     switch (subheader[4] >> 6)
     {
-      case 0: format = FORMAT_PCM16_BE; level = 32767;    break;
-      case 2: format = FORMAT_LPCM24;   level = 8388607;  break;
+      case 0: format = FORMAT_PCM16_BE; break;
+      case 1: format = FORMAT_LPCM20;   break;
+      case 2: format = FORMAT_LPCM24;   break;
       default: return spk_unknown;
     }
 
     mask = nch2mask[subheader[4] & 7];
-    if (!mask) return spk_unknown;
+    if (!mask)
+      return spk_unknown;
 
     switch ((subheader[4] >> 4) & 3)
     {
@@ -143,8 +144,7 @@ PSParser::spk()
       default: return spk_unknown;
     }
 
-    return Speakers(format, mask, sample_rate, level);
-
+    return Speakers(format, mask, sample_rate);
   }
   else
     // not an audio format
