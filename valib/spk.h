@@ -350,7 +350,7 @@ extern const char *mode_text[64];
 
 inline int sample_size(int format)
 {
-  return sample_size_tbl[format & 0x2f];
+  return sample_size_tbl[format & 0x1f];
 }
 
 inline int mask_nch(int mask)
