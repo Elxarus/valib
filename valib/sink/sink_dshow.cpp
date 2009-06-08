@@ -45,64 +45,81 @@ DEFINE_GUID(MEDIASUBTYPE_AVI_DTS,
 
 bool mt2spk(CMediaType mt, Speakers &spk)
 {
-  int sample_rate = 0;
-  if (*mt.FormatType() == FORMAT_WaveFormatEx)
-    sample_rate = ((WAVEFORMATEX *)mt.Format())->nSamplesPerSec;
+  const GUID type = *mt.Type();
+  const GUID subtype = *mt.Subtype();
 
-  if ((*mt.Type() == MEDIATYPE_MPEG2_PES) ||
-      (*mt.Type() == MEDIATYPE_DVD_ENCRYPTED_PACK))
+  WAVEFORMATEX *wf = 0;
+  int sample_rate = 0;
+
+  if (*mt.FormatType() == FORMAT_WaveFormatEx)
   {
-    spk = Speakers(FORMAT_PES, 0, sample_rate);
-    return true;
+    wf = (WAVEFORMATEX *)mt.Format();
+    sample_rate = wf->nSamplesPerSec;
   }
 
-  if (*mt.Subtype() == MEDIASUBTYPE_DOLBY_AC3 || 
-      *mt.Subtype() == MEDIASUBTYPE_AVI_AC3)
+  if (type == MEDIATYPE_MPEG2_PES ||
+      type == MEDIATYPE_DVD_ENCRYPTED_PACK)
+    if (subtype == MEDIASUBTYPE_DOLBY_AC3 ||
+        subtype == MEDIASUBTYPE_DTS ||
+        subtype == MEDIASUBTYPE_MPEG1AudioPayload ||
+        subtype == MEDIASUBTYPE_MPEG2_AUDIO ||
+        subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO)
+    {
+      spk = Speakers(FORMAT_PES, 0, sample_rate);
+      return true;
+    }
+
+  if (subtype == MEDIASUBTYPE_DOLBY_AC3 || 
+      subtype == MEDIASUBTYPE_AVI_AC3)
   {
     spk = Speakers(FORMAT_AC3, 0, sample_rate);
     return true;
   }
 
-  if (*mt.Subtype() == MEDIASUBTYPE_DTS || 
-      *mt.Subtype() == MEDIASUBTYPE_AVI_DTS)
+  if (subtype == MEDIASUBTYPE_DTS || 
+      subtype == MEDIASUBTYPE_AVI_DTS)
   {
     spk = Speakers(FORMAT_DTS, 0, sample_rate);
     return true;
   }
 
-  if (*mt.Subtype() == MEDIASUBTYPE_MPEG1AudioPayload)
+  if (subtype == MEDIASUBTYPE_MPEG1AudioPayload ||
+      subtype == MEDIASUBTYPE_MPEG2_AUDIO)
   {
     spk = Speakers(FORMAT_MPA, 0, sample_rate);
     return true;
   }
 
-  if (*mt.Subtype() == MEDIASUBTYPE_MPEG2_AUDIO)
-  {
-    spk = Speakers(FORMAT_MPA, 0, sample_rate);
-    return true;
-  }
-
-  if (*mt.Subtype() == MEDIASUBTYPE_DOLBY_AC3_SPDIF)
+  if (subtype == MEDIASUBTYPE_DOLBY_AC3_SPDIF)
   {
     spk = Speakers(FORMAT_SPDIF, 0, sample_rate);
     return true;
   }
 
-  if (*mt.FormatType() != FORMAT_WaveFormatEx)
-    return false;
-
-  if (!wfx2spk((WAVEFORMATEX *)mt.Format(), spk))
-    return false;
-
-  // DVD LPCM uses big-endian format
-  if (*mt.Subtype() == MEDIASUBTYPE_DVD_LPCM_AUDIO)
-    switch (spk.format)
+  if (sample_rate && subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO)
+  {
+    int format, mode;
+    switch (wf->wBitsPerSample)
     {
-      case FORMAT_PCM16: spk.format = FORMAT_PCM16_BE; break;
-      case FORMAT_PCM24: spk.format = FORMAT_PCM24_BE; break;
-      case FORMAT_PCM32: spk.format = FORMAT_PCM32_BE; break;
-      case FORMAT_PCMFLOAT: spk.format = FORMAT_PCMFLOAT; break;
+      case 16: format = FORMAT_PCM16_BE; break;
+      case 20: format = FORMAT_LPCM20; break;
+      case 24: format = FORMAT_LPCM24; break;
+      default: return false;
     }
+
+    switch (wf->nChannels)
+    {
+      case 1: mode = MODE_MONO; break;
+      case 2: mode = MODE_STEREO; break;
+      default: return false;
+    }
+
+    spk = Speakers(format, mode, sample_rate);
+    return true;
+  }
+
+  if (!wfx2spk(wf, spk))
+    return false;
 
   return true;
 }

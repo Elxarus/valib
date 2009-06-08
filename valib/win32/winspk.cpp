@@ -267,6 +267,9 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
   sample_t level = 1.0;
   WAVEFORMATEXTENSIBLE *wfex = 0;
 
+  if (!wfx)
+    return false;
+
   if (wfx->wFormatTag == WAVE_FORMAT_DOLBY_AC3_SPDIF)
   {
     spk = Speakers(FORMAT_SPDIF, 0, wfx->nSamplesPerSec);
