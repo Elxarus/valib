@@ -155,7 +155,7 @@ void lpcm20_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+1*0]) << 4) | (rawdata[1*4+0] >> 4); dst[0][1] = (be2int16(src[0+1*1]) << 4) | (rawdata[1*4+0] & 0xf); dst[0]+=2;
+    dst[0][0] = be2int16(src[0+1*0]) << 4; dst[0][1] = be2int16(src[0+1*1]) << 4; dst[0]+=2;
     rawdata += 5;
   }
 }
@@ -165,7 +165,7 @@ void lpcm24_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+1*0]) << 8) | rawdata[1*4+0*2+0]; dst[0][1] = (be2int16(src[0+1*1]) << 8) | rawdata[1*4+0*2+1]; dst[0]+=2;
+    dst[0][0] = (be2int16(src[0+1*0]) << 8) | rawdata[1*4+0+1*0]; dst[0][1] = (be2int16(src[0+1*1]) << 8) | rawdata[1*4+0+1*1]; dst[0]+=2;
     rawdata += 6;
   }
 }
@@ -263,8 +263,8 @@ void lpcm20_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+2*0]) << 4) | (rawdata[2*4+0] >> 4); dst[0][1] = (be2int16(src[0+2*1]) << 4) | (rawdata[2*4+0] & 0xf); dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+2*0]) << 4) | (rawdata[2*4+1] >> 4); dst[1][1] = (be2int16(src[1+2*1]) << 4) | (rawdata[2*4+1] & 0xf); dst[1]+=2;
+    dst[0][0] = be2int16(src[0+2*0]) << 4; dst[0][1] = be2int16(src[0+2*1]) << 4; dst[0]+=2;
+    dst[1][0] = be2int16(src[1+2*0]) << 4; dst[1][1] = be2int16(src[1+2*1]) << 4; dst[1]+=2;
     rawdata += 10;
   }
 }
@@ -274,8 +274,8 @@ void lpcm24_linear_2ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+2*0]) << 8) | rawdata[2*4+0*2+0]; dst[0][1] = (be2int16(src[0+2*1]) << 8) | rawdata[2*4+0*2+1]; dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+2*0]) << 8) | rawdata[2*4+1*2+0]; dst[1][1] = (be2int16(src[1+2*1]) << 8) | rawdata[2*4+1*2+1]; dst[1]+=2;
+    dst[0][0] = (be2int16(src[0+2*0]) << 8) | rawdata[2*4+0+2*0]; dst[0][1] = (be2int16(src[0+2*1]) << 8) | rawdata[2*4+0+2*1]; dst[0]+=2;
+    dst[1][0] = (be2int16(src[1+2*0]) << 8) | rawdata[2*4+1+2*0]; dst[1][1] = (be2int16(src[1+2*1]) << 8) | rawdata[2*4+1+2*1]; dst[1]+=2;
     rawdata += 12;
   }
 }
@@ -381,9 +381,9 @@ void lpcm20_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+3*0]) << 4) | (rawdata[3*4+0] >> 4); dst[0][1] = (be2int16(src[0+3*1]) << 4) | (rawdata[3*4+0] & 0xf); dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+3*0]) << 4) | (rawdata[3*4+1] >> 4); dst[1][1] = (be2int16(src[1+3*1]) << 4) | (rawdata[3*4+1] & 0xf); dst[1]+=2;
-    dst[2][0] = (be2int16(src[2+3*0]) << 4) | (rawdata[3*4+2] >> 4); dst[2][1] = (be2int16(src[2+3*1]) << 4) | (rawdata[3*4+2] & 0xf); dst[2]+=2;
+    dst[0][0] = be2int16(src[0+3*0]) << 4; dst[0][1] = be2int16(src[0+3*1]) << 4; dst[0]+=2;
+    dst[1][0] = be2int16(src[1+3*0]) << 4; dst[1][1] = be2int16(src[1+3*1]) << 4; dst[1]+=2;
+    dst[2][0] = be2int16(src[2+3*0]) << 4; dst[2][1] = be2int16(src[2+3*1]) << 4; dst[2]+=2;
     rawdata += 15;
   }
 }
@@ -393,9 +393,9 @@ void lpcm24_linear_3ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+3*0]) << 8) | rawdata[3*4+0*2+0]; dst[0][1] = (be2int16(src[0+3*1]) << 8) | rawdata[3*4+0*2+1]; dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+3*0]) << 8) | rawdata[3*4+1*2+0]; dst[1][1] = (be2int16(src[1+3*1]) << 8) | rawdata[3*4+1*2+1]; dst[1]+=2;
-    dst[2][0] = (be2int16(src[2+3*0]) << 8) | rawdata[3*4+2*2+0]; dst[2][1] = (be2int16(src[2+3*1]) << 8) | rawdata[3*4+2*2+1]; dst[2]+=2;
+    dst[0][0] = (be2int16(src[0+3*0]) << 8) | rawdata[3*4+0+3*0]; dst[0][1] = (be2int16(src[0+3*1]) << 8) | rawdata[3*4+0+3*1]; dst[0]+=2;
+    dst[1][0] = (be2int16(src[1+3*0]) << 8) | rawdata[3*4+1+3*0]; dst[1][1] = (be2int16(src[1+3*1]) << 8) | rawdata[3*4+1+3*1]; dst[1]+=2;
+    dst[2][0] = (be2int16(src[2+3*0]) << 8) | rawdata[3*4+2+3*0]; dst[2][1] = (be2int16(src[2+3*1]) << 8) | rawdata[3*4+2+3*1]; dst[2]+=2;
     rawdata += 18;
   }
 }
@@ -509,10 +509,10 @@ void lpcm20_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+4*0]) << 4) | (rawdata[4*4+0] >> 4); dst[0][1] = (be2int16(src[0+4*1]) << 4) | (rawdata[4*4+0] & 0xf); dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+4*0]) << 4) | (rawdata[4*4+1] >> 4); dst[1][1] = (be2int16(src[1+4*1]) << 4) | (rawdata[4*4+1] & 0xf); dst[1]+=2;
-    dst[2][0] = (be2int16(src[2+4*0]) << 4) | (rawdata[4*4+2] >> 4); dst[2][1] = (be2int16(src[2+4*1]) << 4) | (rawdata[4*4+2] & 0xf); dst[2]+=2;
-    dst[3][0] = (be2int16(src[3+4*0]) << 4) | (rawdata[4*4+3] >> 4); dst[3][1] = (be2int16(src[3+4*1]) << 4) | (rawdata[4*4+3] & 0xf); dst[3]+=2;
+    dst[0][0] = be2int16(src[0+4*0]) << 4; dst[0][1] = be2int16(src[0+4*1]) << 4; dst[0]+=2;
+    dst[1][0] = be2int16(src[1+4*0]) << 4; dst[1][1] = be2int16(src[1+4*1]) << 4; dst[1]+=2;
+    dst[2][0] = be2int16(src[2+4*0]) << 4; dst[2][1] = be2int16(src[2+4*1]) << 4; dst[2]+=2;
+    dst[3][0] = be2int16(src[3+4*0]) << 4; dst[3][1] = be2int16(src[3+4*1]) << 4; dst[3]+=2;
     rawdata += 20;
   }
 }
@@ -522,10 +522,10 @@ void lpcm24_linear_4ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+4*0]) << 8) | rawdata[4*4+0*2+0]; dst[0][1] = (be2int16(src[0+4*1]) << 8) | rawdata[4*4+0*2+1]; dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+4*0]) << 8) | rawdata[4*4+1*2+0]; dst[1][1] = (be2int16(src[1+4*1]) << 8) | rawdata[4*4+1*2+1]; dst[1]+=2;
-    dst[2][0] = (be2int16(src[2+4*0]) << 8) | rawdata[4*4+2*2+0]; dst[2][1] = (be2int16(src[2+4*1]) << 8) | rawdata[4*4+2*2+1]; dst[2]+=2;
-    dst[3][0] = (be2int16(src[3+4*0]) << 8) | rawdata[4*4+3*2+0]; dst[3][1] = (be2int16(src[3+4*1]) << 8) | rawdata[4*4+3*2+1]; dst[3]+=2;
+    dst[0][0] = (be2int16(src[0+4*0]) << 8) | rawdata[4*4+0+4*0]; dst[0][1] = (be2int16(src[0+4*1]) << 8) | rawdata[4*4+0+4*1]; dst[0]+=2;
+    dst[1][0] = (be2int16(src[1+4*0]) << 8) | rawdata[4*4+1+4*0]; dst[1][1] = (be2int16(src[1+4*1]) << 8) | rawdata[4*4+1+4*1]; dst[1]+=2;
+    dst[2][0] = (be2int16(src[2+4*0]) << 8) | rawdata[4*4+2+4*0]; dst[2][1] = (be2int16(src[2+4*1]) << 8) | rawdata[4*4+2+4*1]; dst[2]+=2;
+    dst[3][0] = (be2int16(src[3+4*0]) << 8) | rawdata[4*4+3+4*0]; dst[3][1] = (be2int16(src[3+4*1]) << 8) | rawdata[4*4+3+4*1]; dst[3]+=2;
     rawdata += 24;
   }
 }
@@ -647,11 +647,11 @@ void lpcm20_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+5*0]) << 4) | (rawdata[5*4+0] >> 4); dst[0][1] = (be2int16(src[0+5*1]) << 4) | (rawdata[5*4+0] & 0xf); dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+5*0]) << 4) | (rawdata[5*4+1] >> 4); dst[1][1] = (be2int16(src[1+5*1]) << 4) | (rawdata[5*4+1] & 0xf); dst[1]+=2;
-    dst[2][0] = (be2int16(src[2+5*0]) << 4) | (rawdata[5*4+2] >> 4); dst[2][1] = (be2int16(src[2+5*1]) << 4) | (rawdata[5*4+2] & 0xf); dst[2]+=2;
-    dst[3][0] = (be2int16(src[3+5*0]) << 4) | (rawdata[5*4+3] >> 4); dst[3][1] = (be2int16(src[3+5*1]) << 4) | (rawdata[5*4+3] & 0xf); dst[3]+=2;
-    dst[4][0] = (be2int16(src[4+5*0]) << 4) | (rawdata[5*4+4] >> 4); dst[4][1] = (be2int16(src[4+5*1]) << 4) | (rawdata[5*4+4] & 0xf); dst[4]+=2;
+    dst[0][0] = be2int16(src[0+5*0]) << 4; dst[0][1] = be2int16(src[0+5*1]) << 4; dst[0]+=2;
+    dst[1][0] = be2int16(src[1+5*0]) << 4; dst[1][1] = be2int16(src[1+5*1]) << 4; dst[1]+=2;
+    dst[2][0] = be2int16(src[2+5*0]) << 4; dst[2][1] = be2int16(src[2+5*1]) << 4; dst[2]+=2;
+    dst[3][0] = be2int16(src[3+5*0]) << 4; dst[3][1] = be2int16(src[3+5*1]) << 4; dst[3]+=2;
+    dst[4][0] = be2int16(src[4+5*0]) << 4; dst[4][1] = be2int16(src[4+5*1]) << 4; dst[4]+=2;
     rawdata += 25;
   }
 }
@@ -661,11 +661,11 @@ void lpcm24_linear_5ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+5*0]) << 8) | rawdata[5*4+0*2+0]; dst[0][1] = (be2int16(src[0+5*1]) << 8) | rawdata[5*4+0*2+1]; dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+5*0]) << 8) | rawdata[5*4+1*2+0]; dst[1][1] = (be2int16(src[1+5*1]) << 8) | rawdata[5*4+1*2+1]; dst[1]+=2;
-    dst[2][0] = (be2int16(src[2+5*0]) << 8) | rawdata[5*4+2*2+0]; dst[2][1] = (be2int16(src[2+5*1]) << 8) | rawdata[5*4+2*2+1]; dst[2]+=2;
-    dst[3][0] = (be2int16(src[3+5*0]) << 8) | rawdata[5*4+3*2+0]; dst[3][1] = (be2int16(src[3+5*1]) << 8) | rawdata[5*4+3*2+1]; dst[3]+=2;
-    dst[4][0] = (be2int16(src[4+5*0]) << 8) | rawdata[5*4+4*2+0]; dst[4][1] = (be2int16(src[4+5*1]) << 8) | rawdata[5*4+4*2+1]; dst[4]+=2;
+    dst[0][0] = (be2int16(src[0+5*0]) << 8) | rawdata[5*4+0+5*0]; dst[0][1] = (be2int16(src[0+5*1]) << 8) | rawdata[5*4+0+5*1]; dst[0]+=2;
+    dst[1][0] = (be2int16(src[1+5*0]) << 8) | rawdata[5*4+1+5*0]; dst[1][1] = (be2int16(src[1+5*1]) << 8) | rawdata[5*4+1+5*1]; dst[1]+=2;
+    dst[2][0] = (be2int16(src[2+5*0]) << 8) | rawdata[5*4+2+5*0]; dst[2][1] = (be2int16(src[2+5*1]) << 8) | rawdata[5*4+2+5*1]; dst[2]+=2;
+    dst[3][0] = (be2int16(src[3+5*0]) << 8) | rawdata[5*4+3+5*0]; dst[3][1] = (be2int16(src[3+5*1]) << 8) | rawdata[5*4+3+5*1]; dst[3]+=2;
+    dst[4][0] = (be2int16(src[4+5*0]) << 8) | rawdata[5*4+4+5*0]; dst[4][1] = (be2int16(src[4+5*1]) << 8) | rawdata[5*4+4+5*1]; dst[4]+=2;
     rawdata += 30;
   }
 }
@@ -795,12 +795,12 @@ void lpcm20_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+6*0]) << 4) | (rawdata[6*4+0] >> 4); dst[0][1] = (be2int16(src[0+6*1]) << 4) | (rawdata[6*4+0] & 0xf); dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+6*0]) << 4) | (rawdata[6*4+1] >> 4); dst[1][1] = (be2int16(src[1+6*1]) << 4) | (rawdata[6*4+1] & 0xf); dst[1]+=2;
-    dst[2][0] = (be2int16(src[2+6*0]) << 4) | (rawdata[6*4+2] >> 4); dst[2][1] = (be2int16(src[2+6*1]) << 4) | (rawdata[6*4+2] & 0xf); dst[2]+=2;
-    dst[3][0] = (be2int16(src[3+6*0]) << 4) | (rawdata[6*4+3] >> 4); dst[3][1] = (be2int16(src[3+6*1]) << 4) | (rawdata[6*4+3] & 0xf); dst[3]+=2;
-    dst[4][0] = (be2int16(src[4+6*0]) << 4) | (rawdata[6*4+4] >> 4); dst[4][1] = (be2int16(src[4+6*1]) << 4) | (rawdata[6*4+4] & 0xf); dst[4]+=2;
-    dst[5][0] = (be2int16(src[5+6*0]) << 4) | (rawdata[6*4+5] >> 4); dst[5][1] = (be2int16(src[5+6*1]) << 4) | (rawdata[6*4+5] & 0xf); dst[5]+=2;
+    dst[0][0] = be2int16(src[0+6*0]) << 4; dst[0][1] = be2int16(src[0+6*1]) << 4; dst[0]+=2;
+    dst[1][0] = be2int16(src[1+6*0]) << 4; dst[1][1] = be2int16(src[1+6*1]) << 4; dst[1]+=2;
+    dst[2][0] = be2int16(src[2+6*0]) << 4; dst[2][1] = be2int16(src[2+6*1]) << 4; dst[2]+=2;
+    dst[3][0] = be2int16(src[3+6*0]) << 4; dst[3][1] = be2int16(src[3+6*1]) << 4; dst[3]+=2;
+    dst[4][0] = be2int16(src[4+6*0]) << 4; dst[4][1] = be2int16(src[4+6*1]) << 4; dst[4]+=2;
+    dst[5][0] = be2int16(src[5+6*0]) << 4; dst[5][1] = be2int16(src[5+6*1]) << 4; dst[5]+=2;
     rawdata += 30;
   }
 }
@@ -810,12 +810,12 @@ void lpcm24_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
   while (size--)
   {
     int16_t *src = (int16_t *)rawdata;
-    dst[0][0] = (be2int16(src[0+6*0]) << 8) | rawdata[6*4+0*2+0]; dst[0][1] = (be2int16(src[0+6*1]) << 8) | rawdata[6*4+0*2+1]; dst[0]+=2;
-    dst[1][0] = (be2int16(src[1+6*0]) << 8) | rawdata[6*4+1*2+0]; dst[1][1] = (be2int16(src[1+6*1]) << 8) | rawdata[6*4+1*2+1]; dst[1]+=2;
-    dst[2][0] = (be2int16(src[2+6*0]) << 8) | rawdata[6*4+2*2+0]; dst[2][1] = (be2int16(src[2+6*1]) << 8) | rawdata[6*4+2*2+1]; dst[2]+=2;
-    dst[3][0] = (be2int16(src[3+6*0]) << 8) | rawdata[6*4+3*2+0]; dst[3][1] = (be2int16(src[3+6*1]) << 8) | rawdata[6*4+3*2+1]; dst[3]+=2;
-    dst[4][0] = (be2int16(src[4+6*0]) << 8) | rawdata[6*4+4*2+0]; dst[4][1] = (be2int16(src[4+6*1]) << 8) | rawdata[6*4+4*2+1]; dst[4]+=2;
-    dst[5][0] = (be2int16(src[5+6*0]) << 8) | rawdata[6*4+5*2+0]; dst[5][1] = (be2int16(src[5+6*1]) << 8) | rawdata[6*4+5*2+1]; dst[5]+=2;
+    dst[0][0] = (be2int16(src[0+6*0]) << 8) | rawdata[6*4+0+6*0]; dst[0][1] = (be2int16(src[0+6*1]) << 8) | rawdata[6*4+0+6*1]; dst[0]+=2;
+    dst[1][0] = (be2int16(src[1+6*0]) << 8) | rawdata[6*4+1+6*0]; dst[1][1] = (be2int16(src[1+6*1]) << 8) | rawdata[6*4+1+6*1]; dst[1]+=2;
+    dst[2][0] = (be2int16(src[2+6*0]) << 8) | rawdata[6*4+2+6*0]; dst[2][1] = (be2int16(src[2+6*1]) << 8) | rawdata[6*4+2+6*1]; dst[2]+=2;
+    dst[3][0] = (be2int16(src[3+6*0]) << 8) | rawdata[6*4+3+6*0]; dst[3][1] = (be2int16(src[3+6*1]) << 8) | rawdata[6*4+3+6*1]; dst[3]+=2;
+    dst[4][0] = (be2int16(src[4+6*0]) << 8) | rawdata[6*4+4+6*0]; dst[4][1] = (be2int16(src[4+6*1]) << 8) | rawdata[6*4+4+6*1]; dst[4]+=2;
+    dst[5][0] = (be2int16(src[5+6*0]) << 8) | rawdata[6*4+5+6*0]; dst[5][1] = (be2int16(src[5+6*1]) << 8) | rawdata[6*4+5+6*1]; dst[5]+=2;
     rawdata += 36;
   }
 }

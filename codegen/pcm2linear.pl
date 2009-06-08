@@ -16,12 +16,12 @@ my @pcm2lin  =
 '*dst[$ch] = sample_t(src[$ch]); dst[$ch]++;',
 '*dst[$ch] = sample_t(src[$ch]); dst[$ch]++;',
 
-'dst[$ch][0] = (be2int16(src[$ch+$nch*0]) << 4) | (rawdata[$nch*4+$ch] >> 4); '.
-'dst[$ch][1] = (be2int16(src[$ch+$nch*1]) << 4) | (rawdata[$nch*4+$ch] & 0xf); '.
+'dst[$ch][0] = be2int16(src[$ch+$nch*0]) << 4; '.
+'dst[$ch][1] = be2int16(src[$ch+$nch*1]) << 4; '.
 'dst[$ch]+=2;',
 
-'dst[$ch][0] = (be2int16(src[$ch+$nch*0]) << 8) | rawdata[$nch*4+$ch*2+0]; '.
-'dst[$ch][1] = (be2int16(src[$ch+$nch*1]) << 8) | rawdata[$nch*4+$ch*2+1]; '.
+'dst[$ch][0] = (be2int16(src[$ch+$nch*0]) << 8) | rawdata[$nch*4+$ch+$nch*0]; '.
+'dst[$ch][1] = (be2int16(src[$ch+$nch*1]) << 8) | rawdata[$nch*4+$ch+$nch*1]; '.
 'dst[$ch]+=2;',
 );
 
@@ -35,7 +35,7 @@ open TEMPL, "<pcm2linear.template";
 close TEMPL;
 
 ###############################################################################
-# array of functions
+# array of functions                     &
 
 print "typedef void (Converter::*convert_t)(uint8_t *rawdata, samples_t samples, size_t size);\n";
 print "static const int formats_tbl[] = { ".join(", ", @formats)." };\n\n";
