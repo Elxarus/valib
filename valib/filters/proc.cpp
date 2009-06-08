@@ -4,7 +4,8 @@ static const int format_mask =
   FORMAT_MASK_LINEAR | 
   FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 |
   FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE | 
-  FORMAT_MASK_PCMFLOAT | FORMAT_MASK_PCMDOUBLE;
+  FORMAT_MASK_PCMFLOAT | FORMAT_MASK_PCMDOUBLE |
+  FORMAT_MASK_LPCM20 | FORMAT_MASK_LPCM24;
 
 AudioProcessor::AudioProcessor(size_t _nsamples)
 :in_conv(_nsamples), mixer(_nsamples), agc(_nsamples), out_conv(_nsamples)

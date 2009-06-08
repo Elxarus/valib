@@ -52,6 +52,7 @@ protected:
   bool initialize();       // initialize convertor
   void convert_pcm2linear();
   void convert_linear2pcm();
+  bool is_lpcm(int format) { return format == FORMAT_LPCM20 || format == FORMAT_LPCM24; }
 
 public:
   Converter(size_t _nsamples);

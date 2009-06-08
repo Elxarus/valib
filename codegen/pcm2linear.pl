@@ -1,47 +1,50 @@
 use strict;
 
-my @chs      = qw(1 2 3 4 5 6);
-my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCM16_BE FORMAT_PCM24_BE FORMAT_PCM32_BE FORMAT_PCMFLOAT FORMAT_PCMDOUBLE);
-my @names    = qw(pcm16    pcm24    pcm32    pcm16_be pcm24_be pcm32_be pcmfloat pcmdouble );
-my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float    double    );
-my @funcs    = qw(le2int16 le2int24 le2int32 be2int16 be2int24 be2int32 sample_t sample_t  );
+my @chs      = (1..6);
+my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCM16_BE FORMAT_PCM24_BE FORMAT_PCM32_BE FORMAT_PCMFLOAT FORMAT_PCMDOUBLE FORMAT_LPCM20 FORMAT_LPCM24);
+my @names    = qw(pcm16    pcm24    pcm32    pcm16_be pcm24_be pcm32_be pcmfloat pcmdouble lpcm20  lpcm24  );
+my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float    double    int16_t int16_t );
+my @sample_size = (2, 3, 4, 2, 3, 4, 4, 8, 5, 6);
+my @pcm2lin  =
+(
+'*dst[$ch] = le2int16(src[$ch]); dst[$ch]++;',
+'*dst[$ch] = le2int24(src[$ch]); dst[$ch]++;',
+'*dst[$ch] = le2int32(src[$ch]); dst[$ch]++;',
+'*dst[$ch] = be2int16(src[$ch]); dst[$ch]++;',
+'*dst[$ch] = be2int24(src[$ch]); dst[$ch]++;',
+'*dst[$ch] = be2int32(src[$ch]); dst[$ch]++;',
+'*dst[$ch] = sample_t(src[$ch]); dst[$ch]++;',
+'*dst[$ch] = sample_t(src[$ch]); dst[$ch]++;',
 
-my $ch;
-my $i;
-my $format;
-my $name;
-my $type;
-my $func;
+'dst[$ch][0] = (be2int16(src[$ch+$nch*0]) << 4) | (rawdata[$nch*4+$ch] >> 4); '.
+'dst[$ch][1] = (be2int16(src[$ch+$nch*1]) << 4) | (rawdata[$nch*4+$ch] & 0xf); '.
+'dst[$ch]+=2;',
 
-my @template = <>;
-my $convert;
-my $text;
+'dst[$ch][0] = (be2int16(src[$ch+$nch*0]) << 8) | rawdata[$nch*4+$ch*2+0]; '.
+'dst[$ch][1] = (be2int16(src[$ch+$nch*1]) << 8) | rawdata[$nch*4+$ch*2+1]; '.
+'dst[$ch]+=2;',
+);
 
 
 ###############################################################################
-# class members
+# load template
 
-foreach $ch (@chs)
-{
-  foreach $name (@names)
-  {
-    print "void ${name}_linear_${ch}ch(uint8_t *, samples_t, size_t);\n";
-  }
-  print "\n";
-}
+my @templ;
+open TEMPL, "<pcm2linear.template";
+@templ = <TEMPL>;
+close TEMPL;
 
 ###############################################################################
 # array of functions
 
-print "typedef void (Converter::*convert_t)(uint8_t *rawdata, samples_t samples, size_t size);\n\n";
+print "typedef void (Converter::*convert_t)(uint8_t *rawdata, samples_t samples, size_t size);\n";
 print "static const int formats_tbl[] = { ".join(", ", @formats)." };\n\n";
-print "static const int formats = ".join(" | ", @formats).";\n\n";
 
 print "static const convert_t pcm2linear_tbl[NCHANNELS][".($#formats+1)."] = {\n";
-foreach $ch (@chs)
+foreach my $nch (@chs)
 {
   print " { ";
-  print join ", ", map { "${_}_linear_${ch}ch" } @names;
+  print join ", ", map { "${_}_linear_${nch}ch" } @names;
   print " },\n";
 }
 print "};\n\n";
@@ -49,22 +52,37 @@ print "};\n\n";
 ###############################################################################
 # function implementation
 
-foreach $ch (@chs)
+foreach my $nch (@chs)
 {
-  for ($i = 0; $i <= $#formats; $i++)
+  for (my $i = 0; $i <= $#formats; $i++)
   {
-    $format = $formats[$i];
-    $name = $names[$i];
-    $type = $types[$i];
-    $func = $funcs[$i];
-    $convert = "";
-    $convert = $convert."    dst[$_][0] = $func(src[$_]); dst[$_]++;\n" foreach (0..$ch-1);
-    $text = join('', @template);
-    $text =~ s/(\$\w+)/$1/gee;
+    my $format = $formats[$i];
+    my $name = $names[$i];
+    my $type = $types[$i];
+    my $sample_size = $sample_size[$i] * $nch;
 
-    print "void\n";
-    print "${name}_linear_${ch}ch(uint8_t *rawdata, samples_t samples, size_t size)\n";
-    print $text;
+    foreach my $templ (@templ)
+    {
+      if (substr($templ, 0, 1) eq '*')
+      {
+        for (my $ch = 0; $ch < $nch; $ch++)
+        {
+          my $convert = $pcm2lin[$i];
+          $convert =~ s/(\$\w+)/$1/gee;
+          $convert =~ s/(\${\w+})/$1/gee;
+          my $ch_templ = substr($templ, 1);
+          $ch_templ =~ s/(\$\w+)/$1/gee;
+          $ch_templ =~ s/(\${\w+})/$1/gee;
+          print $ch_templ;
+        }
+      }
+      else
+      {
+        my $tmp_templ = $templ;
+        $tmp_templ =~ s/(\$\w+)/$1/gee;
+        $tmp_templ =~ s/(\${\w+})/$1/gee;
+        print $tmp_templ;
+      }
+    }
   }
-  print "\n";
 }

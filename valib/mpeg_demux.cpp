@@ -129,7 +129,7 @@ PSParser::spk()
     switch (subheader[4] >> 6)
     {
       case 0: format = FORMAT_PCM16_BE; level = 32767;    break;
-      case 2: format = FORMAT_PCM24_BE; level = 8388607;  break;
+      case 2: format = FORMAT_LPCM24;   level = 8388607;  break;
       default: return spk_unknown;
     }
 
@@ -404,6 +404,3 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
     } // switch (state)
   } // while (1)
 }
-
-
-

@@ -3,7 +3,7 @@
 
 // todo: PCM-to-PCM conversions
 
-static const int converter_formats = FORMAT_MASK_LINEAR | FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE | FORMAT_MASK_PCMFLOAT | FORMAT_MASK_PCMDOUBLE;
+static const int converter_formats = FORMAT_MASK_LINEAR | FORMAT_MASK_PCM16 | FORMAT_MASK_PCM24 | FORMAT_MASK_PCM32 | FORMAT_MASK_PCM16_BE | FORMAT_MASK_PCM24_BE | FORMAT_MASK_PCM32_BE | FORMAT_MASK_PCMFLOAT | FORMAT_MASK_PCMDOUBLE | FORMAT_MASK_LPCM20 | FORMAT_MASK_LPCM24;
 static void passthrough(uint8_t *, samples_t, size_t) {}
 
 Converter::Converter(size_t _nsamples)
@@ -143,14 +143,23 @@ Converter::convert_pcm2linear()
 
       dst += 1;
       out_size++;
+      if (is_lpcm(spk.format))
+      {
+        dst += 1;
+        out_size++;
+      }
     }   
   }
 
   /////////////////////////////////////////////////////////
   // Determine the number of samples to convert and
   // the size of raw data required for conversion
+  // Note: LPCM sample size is doubled because one block
+  // contains 2 samples. Also, decoding is done in 2 sample
+  // blocks, thus we have to specify less cycles.
 
   size_t n = nsamples - out_size;
+  if (is_lpcm(spk.format)) n /= 2;
   size_t n_size = n * sample_size;
   if (n_size > size)
   {
@@ -165,6 +174,8 @@ Converter::convert_pcm2linear()
 
   drop_rawdata(n_size);
   out_size += n;
+  if (is_lpcm(spk.format))
+    out_size += n;
 
   /////////////////////////////////////////////////////////
   // Remember the remaining part of a sample
