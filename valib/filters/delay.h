@@ -41,11 +41,13 @@ protected:
   int       lag;                  // time lag
 
   double    units2samples(int _units);
+  void      init(Speakers _spk);
 
   /////////////////////////////////////////////////////////
   // NullFilter overrides
 
   virtual void on_reset();
+  virtual bool on_set_input(Speakers _spk);
   virtual bool on_process();
 
 public:

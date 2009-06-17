@@ -36,7 +36,6 @@ Delay::units2samples(int _units)
   return 1.0;
 }
 
-
 int  
 Delay::get_units() const
 {
@@ -63,17 +62,17 @@ void
 Delay::set_delays(const float _delays[NCHANNELS])
 {
   memcpy(delays, _delays, sizeof(delays));
-  reset();
+  init(spk);
 }
 
-void 
-Delay::on_reset()
+void
+Delay::init(Speakers _spk)
 {
   int ch;
-  int nch = spk.nch();
-  const int *order = spk.order();
+  const int nch = _spk.nch();
+  const int *order = _spk.order();
+  const double factor = units2samples(units);
 
-  double factor = units2samples(units);
   memset(ch_delays, 0, sizeof(ch_delays));
   for (ch = 0; ch < nch; ch++)
     ch_delays[ch] = int(delays[order[ch]] * factor);
@@ -92,6 +91,20 @@ Delay::on_reset()
       nsamples = ch_delays[ch];
 
   buf.allocate(nch, nsamples * 2);
+  buf.zero();
+  first_half = true;
+}
+
+bool
+Delay::on_set_input(Speakers _spk)
+{
+  init(_spk);
+  return true;
+}
+
+void 
+Delay::on_reset()
+{
   buf.zero();
   first_half = true;
 }
