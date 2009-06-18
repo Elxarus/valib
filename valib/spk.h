@@ -286,6 +286,7 @@ public:
   inline bool is_rawdata() const;
 
   inline bool is_pcm()   const;
+  inline bool is_floating_point() const;
   inline bool is_spdif() const;
 
   inline int  nch()   const;
@@ -373,7 +374,7 @@ Speakers::set(int _format, int _mask, int _sample_rate, sample_t _level, int _re
   level = _level;
   if (level < 0) switch (format)
   {
-    case FORMAT_PCM16: case FORMAT_PCM16_BE: level = 32787; break;
+    case FORMAT_PCM16: case FORMAT_PCM16_BE: level = 32767; break;
     case FORMAT_PCM24: case FORMAT_PCM24_BE: level = 8388607; break;
     case FORMAT_PCM32: case FORMAT_PCM32_BE: level = 2147483647; break;
     case FORMAT_LPCM20: level = 524288; break;
@@ -404,6 +405,9 @@ inline bool Speakers::is_rawdata() const
 
 inline bool Speakers::is_pcm() const
 { return (FORMAT_MASK(format) & FORMAT_CLASS_PCM) != 0; }
+
+inline bool Speakers::is_floating_point() const
+{ return (FORMAT_MASK(format) & FORMAT_CLASS_PCM_FP) != 0; }
 
 inline bool Speakers::is_spdif() const
 { return format == FORMAT_SPDIF; }
