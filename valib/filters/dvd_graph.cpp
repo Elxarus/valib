@@ -4,7 +4,7 @@
 DVDGraph::DVDGraph(int _nsamples, const Sink *_sink)
 :FilterGraph(-1), proc(_nsamples)
 {
-  user_spk = Speakers(FORMAT_PCM16, 0, 0, 32767);
+  user_spk = Speakers(FORMAT_PCM16, 0, 0);
 
   use_spdif = false;
   use_detector = false;
@@ -902,7 +902,7 @@ Speakers
 Spdif2PCM::get_output() const
 {
   if (spk.format == FORMAT_SPDIF)
-    return Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate, 32767);
+    return Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
   else
     return spk;
 }
@@ -911,6 +911,6 @@ Spdif2PCM::get_chunk(Chunk *_chunk)
 { 
   send_chunk_inplace(_chunk, size);
   if (_chunk->spk.format == FORMAT_SPDIF)
-    _chunk->spk = Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate, 32767);
+    _chunk->spk = Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
   return true;
 }

@@ -64,8 +64,8 @@ public:
     compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
     compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.madp.mix.spdif", f, "a.madp.mix.spdif");
 
-    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
-    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767), "a.madp.mix.spdif", f, "a.madp.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.madp.mix.spdif", f, "a.madp.mix.spdif");
 
     compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
     compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.madp.mix.spdif", f, "a.madp.mix.spdif");

@@ -109,7 +109,7 @@ public:
 
     // PES to SPDIF transform with format changes
     dvd.set_sink(0);
-    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
+    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
 
     log->open_group("Test PES->SPDIF transform");
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
@@ -131,7 +131,7 @@ public:
     log->open_group("Test PCM->SPDIF transform (using detector)");
     dvd.set_use_detector(true);
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
-    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000, 32767), "a.madp.mix.spdif",  f, "a.madp.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.madp.mix.spdif",  f, "a.madp.mix.spdif");
     log->close_group();
 
     log->close_group();
@@ -145,7 +145,7 @@ public:
     log->open_group("Dynamical user format change");
 
     user_format_change("a.ac3.03f.ac3", Speakers(FORMAT_AC3, MODE_5_1, 48000));
-    user_format_change("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 48000, 32767));
+    user_format_change("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 48000));
 
     log->close_group();
   }
@@ -153,19 +153,19 @@ public:
   int user_format_change(const char *file_name, Speakers spk)
   {
     Speakers formats[] = {
-      Speakers(FORMAT_PCM16, 0, 0, 32767),                 // pcm16 as-is
-      Speakers(FORMAT_PCM16, MODE_STEREO, 0, 32767),       // pcm16 stereo (possible downmix)
-      Speakers(FORMAT_PCM16, MODE_5_1, 0, 32767),          // pcm16 5.1 (possible upmix)
-      Speakers(FORMAT_PCM32, 0, 0, 2147483647),            // pcm32 as-is
-      Speakers(FORMAT_PCM32, MODE_STEREO, 0, 2147483647),  // pcm32 stereo (possible downmix)
-      Speakers(FORMAT_PCM32, MODE_5_1, 0, 2147483647),     // pcm32 5.1 (possible upmix)
+      Speakers(FORMAT_PCM16, 0, 0),            // pcm16 as-is
+      Speakers(FORMAT_PCM16, MODE_STEREO, 0),  // pcm16 stereo (possible downmix)
+      Speakers(FORMAT_PCM16, MODE_5_1, 0),     // pcm16 5.1 (possible upmix)
+      Speakers(FORMAT_PCM32, 0, 0),            // pcm32 as-is
+      Speakers(FORMAT_PCM32, MODE_STEREO, 0),  // pcm32 stereo (possible downmix)
+      Speakers(FORMAT_PCM32, MODE_5_1, 0),     // pcm32 5.1 (possible upmix)
       // spdif pt
-      Speakers(FORMAT_PCM16, 0, 0, 32767),                 // pcm16 as-is
-      Speakers(FORMAT_PCM16, MODE_STEREO, 0, 32767),       // pcm16 stereo (possible downmix)
-      Speakers(FORMAT_PCM16, MODE_5_1, 0, 32767),          // pcm16 5.1 (possible upmix)
-      Speakers(FORMAT_PCM32, 0, 0, 2147483647),            // pcm32 as-is
-      Speakers(FORMAT_PCM32, MODE_STEREO, 0, 2147483647),  // pcm32 stereo (possible downmix)
-      Speakers(FORMAT_PCM32, MODE_5_1, 0, 2147483647),     // pcm32 5.1 (possible upmix)
+      Speakers(FORMAT_PCM16, 0, 0),            // pcm16 as-is
+      Speakers(FORMAT_PCM16, MODE_STEREO, 0),  // pcm16 stereo (possible downmix)
+      Speakers(FORMAT_PCM16, MODE_5_1, 0),     // pcm16 5.1 (possible upmix)
+      Speakers(FORMAT_PCM32, 0, 0),            // pcm32 as-is
+      Speakers(FORMAT_PCM32, MODE_STEREO, 0),  // pcm32 stereo (possible downmix)
+      Speakers(FORMAT_PCM32, MODE_5_1, 0),     // pcm32 5.1 (possible upmix)
     };
     bool spdif_stereo_pt[] = {
       false, false, false, false, false, false, 
@@ -259,8 +259,8 @@ public:
     spdif_rebuild("a.mp2.005.pes", Speakers(FORMAT_PES, 0, 0), true, true);
 
     // PCM streams
-    spdif_rebuild("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 48000, 32767), false, true);
-    spdif_rebuild("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 45000, 32767), false, false);
+    spdif_rebuild("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 48000), false, true);
+    spdif_rebuild("a.pcm.005.lpcm", Speakers(FORMAT_PCM16_BE, MODE_STEREO, 45000), false, false);
     spdif_rebuild("a.pcm.005.pes",  Speakers(FORMAT_PES, 0, 0), false, true);
 
     log->close_group();
@@ -354,14 +354,14 @@ public:
 
   int test_decode(Source *src)
   {
-    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
+    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(false, 0, false, false, false);
     return test_cycle("test_decode()", src, SPDIF_MODE_DISABLED, "decode", FORMAT_PCM16);
   }
 
   int test_passthrough(Source *src, bool spdif_allowed)
   {
-    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
+    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, false, false);
     if (spdif_allowed)
       return test_cycle("test_passthrough()", src, SPDIF_MODE_PASSTHROUGH, "spdif passthrough", FORMAT_SPDIF);
@@ -371,7 +371,7 @@ public:
 
   int test_encode(Source *src, bool spdif_allowed, bool can_encode)
   {
-    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0, 32767));
+    dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(true, 0, false, true, false);
 
     if (!can_encode)
@@ -385,7 +385,7 @@ public:
 
   int test_stereo_passthrough(Source *src)
   {
-    dvd.set_user(Speakers(FORMAT_PCM16, MODE_STEREO, 0, 32767));
+    dvd.set_user(Speakers(FORMAT_PCM16, MODE_STEREO, 0));
     dvd.set_spdif(true, 0, false, true, true);
     return test_cycle("test_stereo_passthrough()", src, SPDIF_MODE_DISABLED, "stereo pcm passthrough", FORMAT_PCM16);
   }

@@ -264,7 +264,6 @@ bool
 wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
 {
   int format, mask;
-  sample_t level = 1.0;
   WAVEFORMATEXTENSIBLE *wfex = 0;
 
   if (!wfx)
@@ -295,9 +294,9 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
     else if (wfex->SubFormat == GUID_SUBTYPE_PCM)
       switch (wfx->wBitsPerSample)
       {
-        case 16: format = FORMAT_PCM16; level = 32767;      break;
-        case 24: format = FORMAT_PCM24; level = 8388607;    break;
-        case 32: format = FORMAT_PCM32; level = 2147483647; break;
+        case 16: format = FORMAT_PCM16; break;
+        case 24: format = FORMAT_PCM24; break;
+        case 32: format = FORMAT_PCM32; break;
         default: return false;
       }
     else if (wfex->SubFormat == GUID_DOLBY_AC3_SPDIF)
@@ -330,9 +329,9 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
       case WAVE_FORMAT_PCM:
         switch (wfx->wBitsPerSample)
         {
-          case 16: format = FORMAT_PCM16; level = 32767;      break;
-          case 24: format = FORMAT_PCM24; level = 8388607;    break;
-          case 32: format = FORMAT_PCM32; level = 2147483647; break;
+          case 16: format = FORMAT_PCM16; break;
+          case 24: format = FORMAT_PCM24; break;
+          case 32: format = FORMAT_PCM32; break;
           default: return false;
         }
         break;
@@ -368,7 +367,7 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
       }
   }
 
-  spk = Speakers(format, mask, wfx->nSamplesPerSec, level);
+  spk = Speakers(format, mask, wfx->nSamplesPerSec);
   return true;
 }
 

@@ -4,7 +4,7 @@
 DecoderGraph::DecoderGraph()
 :FilterGraph(-1), proc(4096)
 {
-  user_spk = Speakers(FORMAT_PCM16, 0, 0, 32767);
+  user_spk = Speakers(FORMAT_PCM16, 0, 0);
 };
 
 ///////////////////////////////////////////////////////////
