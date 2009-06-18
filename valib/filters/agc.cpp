@@ -310,8 +310,8 @@ AGC::reset()
   buf_time[0] = 0;
   buf_time[1] = 0;
 
-  level  = 0; //?
-  factor = 0; //?
+  level  = 1.0;
+  factor = 1.0;
 }
 
 bool 
