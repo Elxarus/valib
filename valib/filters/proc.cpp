@@ -79,11 +79,29 @@ AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
 double
 AudioProcessor::dithering_level() const
 {
-  if (equalizer.get_enabled() || in_spk.sample_rate != user_spk.sample_rate)
-    if (out_spk.level > 128)
-      return 0.5 / out_spk.level;
+  // Do not apply dithering to floating-point output
+  if (out_spk.is_floating_point() || out_spk.format == FORMAT_LINEAR)
+    return 0;
 
-  return 0.0;
+  bool use_dither = false;
+
+  if (equalizer.get_enabled())
+    // dither equalizer's output
+    use_dither = true;
+
+  if (user_spk.sample_rate && in_spk.sample_rate != user_spk.sample_rate)
+    // dither on sample rate conversion
+    use_dither = true;
+
+  if (out_spk.level < in_spk.level)
+    // dither on sample size degrade
+    use_dither = true;
+
+  // Return dithering level
+  if (use_dither && out_spk.level > 0)
+    return 0.5 / out_spk.level;
+  else
+    return 0.0;
 }
 
 
