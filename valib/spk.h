@@ -374,11 +374,12 @@ Speakers::set(int _format, int _mask, int _sample_rate, sample_t _level, int _re
   level = _level;
   if (level < 0) switch (format)
   {
-    case FORMAT_PCM16: case FORMAT_PCM16_BE: level = 32767; break;
-    case FORMAT_PCM24: case FORMAT_PCM24_BE: level = 8388607; break;
-    case FORMAT_PCM32: case FORMAT_PCM32_BE: level = 2147483647; break;
-    case FORMAT_LPCM20: level = 524288; break;
-    case FORMAT_LPCM24: level = 8388607; break;
+    // See filters/convert_func.cpp for notes about fractional levels
+    case FORMAT_PCM16: case FORMAT_PCM16_BE: level = 32767.5; break;
+    case FORMAT_PCM24: case FORMAT_PCM24_BE: level = 8388607.5; break;
+    case FORMAT_PCM32: case FORMAT_PCM32_BE: level = 2147483647.5; break;
+    case FORMAT_LPCM20: level = 524288.5; break;
+    case FORMAT_LPCM24: level = 8388607.5; break;
     default: level = 1.0;
   }
   relation = _relation;

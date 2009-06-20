@@ -7,21 +7,23 @@ my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float   
 my @sample_size = (2, 3, 4, 2, 3, 4, 4, 8, 5, 6);
 my @pcm2lin  =
 (
-'*dst[$ch] = le2int16(src[$ch]); dst[$ch]++;',
-'*dst[$ch] = le2int24(src[$ch]); dst[$ch]++;',
-'*dst[$ch] = le2int32(src[$ch]); dst[$ch]++;',
-'*dst[$ch] = be2int16(src[$ch]); dst[$ch]++;',
-'*dst[$ch] = be2int24(src[$ch]); dst[$ch]++;',
-'*dst[$ch] = be2int32(src[$ch]); dst[$ch]++;',
+'*dst[$ch] = i2s(le2int16(src[$ch])); dst[$ch]++;',
+'*dst[$ch] = i2s(le2int24(src[$ch])); dst[$ch]++;',
+'*dst[$ch] = i2s(le2int32(src[$ch])); dst[$ch]++;',
+
+'*dst[$ch] = i2s(be2int16(src[$ch])); dst[$ch]++;',
+'*dst[$ch] = i2s(be2int24(src[$ch])); dst[$ch]++;',
+'*dst[$ch] = i2s(be2int32(src[$ch])); dst[$ch]++;',
+
 '*dst[$ch] = sample_t(src[$ch]); dst[$ch]++;',
 '*dst[$ch] = sample_t(src[$ch]); dst[$ch]++;',
 
-'dst[$ch][0] = be2int16(src[$ch+$nch*0]) << 4; '.
-'dst[$ch][1] = be2int16(src[$ch+$nch*1]) << 4; '.
+'dst[$ch][0] = i2s(int32_t(be2int16(src[$ch+$nch*0])) << 4); '.
+'dst[$ch][1] = i2s(int32_t(be2int16(src[$ch+$nch*1])) << 4); '.
 'dst[$ch]+=2;',
 
-'dst[$ch][0] = (be2int16(src[$ch+$nch*0]) << 8) | rawdata[$nch*4+$ch+$nch*0]; '.
-'dst[$ch][1] = (be2int16(src[$ch+$nch*1]) << 8) | rawdata[$nch*4+$ch+$nch*1]; '.
+'dst[$ch][0] = i2s(int32_t(be2int16(src[$ch+$nch*0]) << 8) | rawdata[$nch*4+$ch+$nch*0]); '.
+'dst[$ch][1] = i2s(int32_t(be2int16(src[$ch+$nch*1]) << 8) | rawdata[$nch*4+$ch+$nch*1]); '.
 'dst[$ch]+=2;',
 );
 
@@ -38,7 +40,7 @@ close TEMPL;
 # array of functions                     &
 
 print "typedef void (Converter::*convert_t)(uint8_t *rawdata, samples_t samples, size_t size);\n";
-print "static const int formats_tbl[] = { ".join(", ", @formats)." };\n\n";
+print "static const int pcm2linear_formats[] = { ".join(", ", @formats)." };\n\n";
 
 print "static const convert_t pcm2linear_tbl[NCHANNELS][".($#formats+1)."] = {\n";
 foreach my $nch (@chs)
