@@ -4,6 +4,9 @@
 #include "../defs.h"
 #include "../fir/eq_fir.h"
 
+#define PROC_DITHER_NONE 0
+#define PROC_DITHER_AUTO 1
+
 struct AudioProcessorState
 {
   // Channel order
@@ -48,8 +51,8 @@ struct AudioProcessorState
   sample_t output_levels[NCHANNELS];
 
   // SRC
-  double src_quality;
-  double src_att;
+  double   src_quality;
+  double   src_att;
 
   // Equalizer
   bool     eq;
@@ -66,6 +69,9 @@ struct AudioProcessorState
   bool     delay;
   int      delay_units;
   float    delays[NCHANNELS];
+
+  // Dithering
+  int      dithering;
 
   AudioProcessorState();
   ~AudioProcessorState();

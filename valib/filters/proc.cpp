@@ -10,6 +10,7 @@ static const int format_mask =
 AudioProcessor::AudioProcessor(size_t _nsamples)
 :in_conv(_nsamples), mixer(_nsamples), agc(_nsamples), out_conv(_nsamples)
 {
+  dithering = PROC_DITHER_AUTO;
   user_spk = spk_unknown;
   rebuild_chain();
 }
@@ -79,6 +80,10 @@ AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
 double
 AudioProcessor::dithering_level() const
 {
+  // Do not apply dithering when explicitly disabled
+  if (dithering == PROC_DITHER_NONE)
+    return 0;
+
   // Do not apply dithering to floating-point output
   if (out_spk.is_floating_point() || out_spk.format == FORMAT_LINEAR)
     return 0;
@@ -95,6 +100,10 @@ AudioProcessor::dithering_level() const
 
   if (out_spk.level < in_spk.level)
     // dither on sample size degrade
+    use_dither = true;
+
+  if (in_spk.is_floating_point() || in_spk.format == FORMAT_LINEAR)
+    // dither on fp to int conversion
     use_dither = true;
 
   // Return dithering level
@@ -320,6 +329,8 @@ AudioProcessor::get_state(vtime_t time)
   state->delay = get_delay();
   state->delay_units = get_delay_units();
   get_delays(state->delays);
+  // Dithering
+  state->dithering = get_dithering();
 
   return state;
 }
@@ -375,4 +386,6 @@ AudioProcessor::set_state(const AudioProcessorState *state)
   set_delay(state->delay);
   set_delay_units(state->delay_units);
   set_delays(state->delays);
+  // Dithering
+  set_dithering(state->dithering);
 }

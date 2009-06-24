@@ -96,6 +96,11 @@ protected:
   Speakers user_spk; // user-specified format (may be partially-specified)
   Speakers out_spk;  // actual output format
 
+  // dithering
+
+  int dithering;
+  double dithering_level() const;
+  
   // filters
   Converter    in_conv;
   CacheFilter  in_cache;
@@ -115,7 +120,6 @@ protected:
 
   FilterChain chain;
   bool rebuild_chain();
-  double dithering_level() const;
 
 public:
   AudioProcessor(size_t nsamples);
@@ -258,6 +262,11 @@ public:
 
   inline void     set_delay_units(int delay_units);
   inline void     set_delays(const float delays[NCHANNELS]);
+
+  // Dithering
+
+  inline int      get_dithering() const;
+  inline void     set_dithering(int dithering);
 
   // Input/output cache
 
@@ -510,6 +519,17 @@ inline void AudioProcessor::set_dbpb(int _dbpb)
 { 
   in_levels.set_dbpb(_dbpb); 
   out_levels.set_dbpb(_dbpb); 
+}
+
+// Dithering
+
+inline int AudioProcessor::get_dithering() const
+{ return dithering; }
+
+inline void AudioProcessor::set_dithering(int _dithering)
+{
+  dithering = _dithering; 
+  dither.level = dithering_level();
 }
 
 // Cache
