@@ -9,6 +9,9 @@
   2Gb because position in standard library is signed and may not work
   correctly over this limit.
 
+  VC6 does not support uint64_t to double cast, therefoere we have to use
+  the signed type int64_t.
+
   Note, that file size type, fsize_t may be larger than size_t (it's true on
   32bit system). It's because the file may be larger than memory address space.
   Therefore we cannot safely cast fsize_t to size_t.
@@ -26,7 +29,7 @@
 class AutoFile
 {
 public:
-  typedef uint64_t fsize_t;
+  typedef int64_t fsize_t;
   static const fsize_t max_size;
 
   static bool is_large(fsize_t value) { return value > (fsize_t)(size_t)-1; }

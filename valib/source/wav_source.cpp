@@ -222,8 +222,8 @@ WAVSource::pos() const
 int
 WAVSource::seek(AutoFile::fsize_t _pos)
 {
-  if (_pos > data_size)
-    _pos = data_size;
+  if (_pos < 0) _pos = 0;
+  if (_pos > data_size) _pos = data_size;
 
   int result = f.seek(_pos + data_start);
   data_remains = data_size - _pos;

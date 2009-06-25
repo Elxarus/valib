@@ -1,7 +1,7 @@
 #include <limits.h>
 #include "auto_file.h"
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Vistual C implementation

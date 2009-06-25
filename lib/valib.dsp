@@ -160,6 +160,10 @@ LIB32=link.exe -lib
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\valib\auto_file.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\auto_file.h
 # End Source File
 # Begin Source File
@@ -321,6 +325,22 @@ SOURCE=..\valib\filters\convert.cpp
 # Begin Source File
 
 SOURCE=..\valib\filters\convert.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\convert_func.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\convert_func.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\convert_linear2pcm.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\convert_pcm2linear.h
 # End Source File
 # Begin Source File
 
