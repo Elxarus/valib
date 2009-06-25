@@ -3,6 +3,7 @@
 #include "../win32/winspk.h"
 
 const uint32_t fcc_riff = be2int32('RIFF');
+const uint32_t fcc_rf64 = be2int32('RF64');
 const uint32_t fcc_wave = be2int32('WAVE');
 const uint32_t fcc_fmt  = be2int32('fmt ');
 const uint32_t fcc_data = be2int32('data');
@@ -93,7 +94,7 @@ WAVSource::open_riff()
   f.seek(0);
   buf_data = f.read(buf, sizeof(RIFFChunk));
   if (buf_data < sizeof(RIFFChunk) ||
-      riff->fcc != fcc_riff || 
+      (riff->fcc != fcc_riff && riff->fcc != fcc_rf64) || 
       riff->type != fcc_wave)
     return false;
 
