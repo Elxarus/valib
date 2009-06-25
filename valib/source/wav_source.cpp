@@ -101,7 +101,7 @@ WAVSource::open_riff()
   // Seek fmt-chunk
   // Init spk
 
-  int next = f.pos();
+  AutoFile::fsize_t next = f.pos();
   while (1)
   {
     ///////////////////////////////////////////////////////
@@ -167,11 +167,19 @@ WAVSource::open_riff()
     }
 
     ///////////////////////////////////////////////////////
-    // Determine actual data size (cut file possible)
+    // Determine actual data size
 
     data_start = next + sizeof(ChunkHeader);
-    f.seek(data_start + header->size);
-    data_size = f.pos() - data_start;
+    data_size = header->size;
+
+    if (f.size() != f.max_size)
+    {
+      AutoFile::fsize_t file_tail = f.size() - data_start;
+      if (header->size >= 0xffffff00 || header->size > file_tail)
+        // * File is a big WAV file >4Gb
+        // * File is cut down (incomplete download, etc)
+        data_size = file_tail;
+    }
 
     f.seek(data_start);
     data_remains = data_size;
@@ -198,29 +206,27 @@ WAVSource::is_open() const
 }
 
 
-int
+AutoFile::fsize_t
 WAVSource::size() const
 {
   return data_size;
 }
 
-int
+AutoFile::fsize_t
 WAVSource::pos() const
 {
   return f.pos() - data_start;
 }
 
-void
-WAVSource::seek(int _pos)
+int
+WAVSource::seek(AutoFile::fsize_t _pos)
 {
   if (_pos > data_size)
     _pos = data_size;
 
-  if (_pos < 0)
-    _pos = 0;
-
-  f.seek(_pos + data_start);
+  int result = f.seek(_pos + data_start);
   data_remains = data_size - _pos;
+  return result;
 }
 
 ///////////////////////////////////////////////////////////
@@ -241,7 +247,10 @@ WAVSource::is_empty() const
 bool
 WAVSource::get_chunk(Chunk *_chunk)
 {
-  size_t len = MIN(data_remains, block_size);
+  size_t len = block_size;
+  if (data_remains < block_size)
+    len = f.size_cast(data_remains);
+
   size_t data_read = f.read(buf, len);
 
   if (data_read < len) // eof

@@ -7,6 +7,30 @@
 #define FLOAT_THRESHOLD 1e-20
 static const size_t max_buf_size = 65536;
 
+int compact_size(AutoFile::fsize_t size)
+{
+  int iter = 0;
+  while (size >= 10000 && iter < 5)
+  {
+    size /= 1024;
+    iter++;
+  }
+  return (int)size;
+}
+
+const char *compact_suffix(AutoFile::fsize_t size)
+{
+  static const char *suffixes[] = { "", "K", "M", "G", "T", "P" };
+
+  int iter = 0;
+  while (size >= 10000 && iter < 5)
+  {
+    size /= 1024;
+    iter++;
+  }
+  return suffixes[iter];
+}
+
 FileParser::FileParser()
 {
   filename = 0;
@@ -148,9 +172,9 @@ FileParser::file_info(char *buf, size_t size) const
 
   size_t len = sprintf(info,
     "File: %s\n"
-    "Size: %i\n",
+    "Size: %.0f (%i %sB)\n",
     filename,
-    (int)f.size());
+    (double)f.size(), compact_size(f.size()), compact_suffix(f.size()));
 
   if (stat_size)
     len += sprintf(info + len,
@@ -215,19 +239,21 @@ FileParser::get_size(units_t units) const
   return f.size() * units_factor(units);
 }
 
-void
+int
 FileParser::seek(fsize_t pos)
-{ 
-  fseek(f, pos, SEEK_SET);
+{
+  int result = f.seek(pos);
   reset();
+  return result;
 }
 
-void
+int
 FileParser::seek(double pos, units_t units)
 { 
   double factor = units_factor(units);
   if (factor > FLOAT_THRESHOLD)
-    seek(int(pos / factor));
+    return seek(fsize_t(pos / factor));
+  return -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

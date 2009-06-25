@@ -54,36 +54,29 @@ public:
 
     // Load the file into memory
 
-    AutoFile f(file_name);
-    if (!f.is_open())
+    MemFile f(file_name);
+    if (!f)
     {
       log->err("Cannot open file %s", file_name);
       return;
     }
 
-    size_t buf_size = f.size();
-    uint8_t *buf = new uint8_t[buf_size];
-    f.read(buf, buf_size);
-    f.close();
-
     // Detect frame interval
 
-    uint8_t *ptr = buf;
-    uint8_t *end = ptr + buf_size;
+    uint8_t *ptr = f;
+    uint8_t *end = ptr + f.size();
 
     StreamBuffer stream;
     stream.set_parser(frame_parser->header_parser());
     if (!stream.load_frame(&ptr, end))
     {
       log->err("Cannot determine frame interval for file %s", file_name);
-      delete buf;
       return;
     }
 
-    if (buf_size < 10 * stream.get_frame_interval())
+    if (f.size() < 10 * stream.get_frame_interval())
     {
       log->err("File %s is too small for the test", file_name);
-      delete buf;
       return;
     }
 
@@ -161,7 +154,7 @@ public:
           int new_frame_pos = (int)(input_chunks[i].end_pos * frame_interval);
           assert(new_frame_pos - frame_pos > 0);
           chunk.set_rawdata(
-            spk_rawdata, buf + frame_pos, new_frame_pos - frame_pos, 
+            spk_rawdata, f + frame_pos, new_frame_pos - frame_pos, 
             input_chunks[i].sync, input_chunks[i].time);
           frame_pos = new_frame_pos;
           break;
@@ -187,7 +180,6 @@ public:
       if (!parser.process(&chunk))
       {
         log->err("Processing error");
-        delete buf;
         return;
       }
 
@@ -209,7 +201,6 @@ public:
           log->err("Timing error. Must be (sync: %s, time: %i), but got (sync: %s, time: %i)",
             (output_chunks[o].sync? "true": "false"), (int)output_chunks[o].time,
             (chunk.sync? "true": "false"), (int)chunk.time);
-          delete buf;
           return;
         }
         o++;
@@ -220,11 +211,9 @@ public:
     {
       log->err("Not all output chunks generated. Must be %i, but %i generated",
         array_size(output_chunks), o);
-      delete buf;
       return;
     }
     
-    delete buf;
     return;
   }
 };

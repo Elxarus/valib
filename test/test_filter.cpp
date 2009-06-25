@@ -1012,17 +1012,12 @@ int test_rules_filter_int(Log *log, Filter *filter,
   {
     log->msg("All-at-once processing test");
 
-    RAWSource file(spk_supported, filename);
-    if (!file.is_open())
-      return log->err("Cannot open file %s", filename);
-
-    size_t filesize = file.size();
-    file.open(spk_supported, filename, filesize);
-    if (!file.is_open())
-      return log->err("Cannot open file %s at once", filename);
-
-    file.get_chunk(&chunk);
-    chunk.eos = true;
+    // Load the whole file
+    MemFile file(filename);
+    if (!file)
+      return log->err("Cannot load the file %s", filename);
+    chunk.set_rawdata(spk_supported, file, file.size());
+    chunk.set_eos();
 
     f.reset_streams();
     PROCESS_OK(chunk,               "process(%s %s %i) failed");

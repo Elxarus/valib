@@ -18,9 +18,9 @@ protected:
 
   size_t block_size;
 
-  int data_start;
-  int data_size;
-  size_t data_remains;
+  AutoFile::fsize_t data_start;
+  AutoFile::fsize_t data_size;
+  AutoFile::fsize_t data_remains;
 
   bool open_riff();
 
@@ -32,9 +32,9 @@ public:
   void close();
   bool is_open() const;
 
-  int size() const;
-  int pos() const;
-  void seek(int pos);
+  AutoFile::fsize_t size() const;
+  AutoFile::fsize_t pos() const;
+  int seek(AutoFile::fsize_t pos);
 
   /////////////////////////////////////////////////////////
   // Source interface

@@ -152,22 +152,16 @@ public:
   {
     const size_t chunk_size[] = { 0, 1, 2, hparser->max_frame_size(), hparser->max_frame_size() + 1, hparser->max_frame_size() - 1 };
 
-    AutoFile f(filename);
-    if (!f.is_open())
+    MemFile f(filename);
+    if (!f)
       return log->err("Cannot open file %s", filename);
 
     log->msg("Passthrough test %s", filename);
 
-    // load file into memory
-    size_t buf_size = f.size();
-    uint8_t *buf = new uint8_t[buf_size];
-    f.read(buf, buf_size);
-
     streambuf.set_parser(hparser);
     for (int i = 0; i < array_size(chunk_size); i++)
-      passthrough_int(buf, buf_size, file_streams, file_frames, chunk_size[i]);
+      passthrough_int(f, f.size(), file_streams, file_frames, chunk_size[i]);
 
-    delete buf;
     return 0;
   }
 
@@ -298,18 +292,13 @@ public:
   int speed_file(const char *filename, const HeaderParser *hparser)
   {
     CPUMeter cpu;
-    AutoFile f(filename);
-    if (!f.is_open())
+    MemFile f(filename);
+    if (!f)
       return log->err("Cannot open file %s", filename);
 
     streambuf.set_parser(hparser);
 
-    size_t buf_size = f.size();
-    uint8_t *buf = new uint8_t[buf_size];
-    f.read(buf, buf_size);
-
     int runs = 0;
-
     cpu.reset();
     cpu.start();
     while (cpu.get_thread_time() < time_per_test)
@@ -317,8 +306,8 @@ public:
       runs++;
 
       // Process the whole file
-      uint8_t *ptr = buf;
-      uint8_t *end = ptr + buf_size;
+      uint8_t *ptr = f;
+      uint8_t *end = ptr + f.size();
       streambuf.reset();
       while (ptr < end)
         streambuf.load(&ptr, end);
@@ -326,9 +315,8 @@ public:
     cpu.stop();
 
     log->msg("StreamBuffer speed on %s: %iMB/s", 
-      filename, int(double(buf_size) * runs / cpu.get_thread_time() / 1000000));
+      filename, int(double(f.size()) * runs / cpu.get_thread_time() / 1000000));
 
-    delete buf;
     return log->get_errors();
   }
 };

@@ -25,7 +25,7 @@ protected:
   size_t buf_data;
   size_t buf_pos;
 
-  size_t stat_size;          // number of measurments done by stat() call
+  size_t stat_size;         // number of measurments done by stat() call
   float avg_frame_interval; // average frame interval
   float avg_bitrate;        // average bitrate
 
@@ -65,8 +65,8 @@ public:
   fsize_t get_size() const;
   double  get_size(units_t units) const;
   
-  void    seek(fsize_t pos);
-  void    seek(double pos, units_t units);
+  int     seek(fsize_t pos);
+  int     seek(double pos, units_t units);
 
   /////////////////////////////////////////////////////////////////////////////
   // Frame-level interface (StreamBuffer interface wrapper)
