@@ -178,11 +178,11 @@ FileParser::file_info(char *buf, size_t size) const
 
   if (stat_size)
     len += sprintf(info + len,
-      "Length: %i:%02i\n"
+      "Length: %i:%02i:%02i\n"
       "Frames: %i\n"
       "Frame interval: %i\n"
       "Bitrate: %ikbps\n",
-      int(get_size(time)) / 60, int(get_size(time)) % 60,
+      int(get_size(time)) / 3600, int(get_size(time)) % 3600 / 60, int(get_size(time)) % 60,
       int(get_size(frames)), 
       int(avg_frame_interval),
       int(avg_bitrate / 1000));
