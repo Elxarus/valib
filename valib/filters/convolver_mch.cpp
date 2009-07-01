@@ -128,11 +128,11 @@ ConvolverMch::process_convolve()
     if (type[ch] == type_conv)
       for (int fft_pos = 0; fft_pos < buf_size; fft_pos += n)
       {
-        buf_ch = buf[ch];
+        buf_ch = buf[ch] + fft_pos;
         delay_ch = buf[ch] + buf_size;
         filter_ch = filter[ch];
 
-        memcpy(fft_buf, buf_ch + fft_pos, n * sizeof(sample_t));
+        memcpy(fft_buf, buf_ch, n * sizeof(sample_t));
         memset(fft_buf + n, 0, n * sizeof(sample_t));
 
         fft.rdft(fft_buf);
@@ -152,7 +152,7 @@ ConvolverMch::process_convolve()
         fft.inv_rdft(fft_buf);
 
         for (i = 0; i < n; i++)
-          buf_ch[fft_pos + i] = fft_buf[i] + delay_ch[i];
+          buf_ch[i] = fft_buf[i] + delay_ch[i];
 
         memcpy(delay_ch, fft_buf + n, n * sizeof(sample_t));
       }

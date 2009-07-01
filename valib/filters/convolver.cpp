@@ -51,7 +51,7 @@ Convolver::convolve()
   for (ch = 0; ch < nch; ch++)
     for (int fft_pos = 0; fft_pos < buf_size; fft_pos += n)
     {
-      buf_ch = buf[ch];
+      buf_ch = buf[ch] + fft_pos;
       delay_ch = buf[ch] + buf_size;
 
       memcpy(fft_buf, buf_ch, n * sizeof(sample_t));
@@ -74,7 +74,7 @@ Convolver::convolve()
       fft.inv_rdft(fft_buf);
 
       for (i = 0; i < n; i++)
-        buf_ch[fft_pos + i] = fft_buf[i] + delay_ch[i];
+        buf_ch[i] = fft_buf[i] + delay_ch[i];
 
       memcpy(delay_ch, fft_buf + n, n * sizeof(sample_t));
     }
@@ -232,7 +232,7 @@ Convolver::process_samples(samples_t in, size_t in_size, samples_t &out, size_t 
 
   if (pos < buf_size)
   {
-    gone = MIN(in_size, size_t(n - pos));
+    gone = MIN(in_size, size_t(buf_size - pos));
     for (ch = 0; ch < nch; ch++)
       memcpy(buf[ch] + pos, in[ch], sizeof(sample_t) * gone);
     pos += (int)gone;
@@ -245,7 +245,7 @@ Convolver::process_samples(samples_t in, size_t in_size, samples_t &out, size_t 
   convolve();
 
   out = buf;
-  out_size = n;
+  out_size = buf_size;
   if (pre_samples)
   {
     out += pre_samples;
