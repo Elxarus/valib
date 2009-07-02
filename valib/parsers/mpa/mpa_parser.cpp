@@ -65,16 +65,36 @@ MPAParser::parse_frame(uint8_t *frame, size_t size)
   switch (bsi.layer)
   {
     case MPA_LAYER_I:
-      I_decode_frame();
+      I_decode_frame(frame);
       break;
 
     case MPA_LAYER_II:
-      II_decode_frame();
+      II_decode_frame(frame);
       break;
   }
 
   return true;
 }
+
+bool
+MPAParser::crc_check(const uint8_t *frame, size_t protected_data_bits) const
+{
+  if (!hdr.error_protection)
+    return true;
+
+  /////////////////////////////////////////////////////////
+  // CRC check
+  // Note that we include CRC word into processing AFTER
+  // protected data. Due to CRC properties we must get
+  // zero result in case of no errors.
+
+  uint32_t crc = crc16.crc_init(0xffff);
+  crc = crc16.calc_bits(crc, frame + 2, 0, 16); // header
+  crc = crc16.calc_bits(crc, frame + 6, 0, protected_data_bits); // frame data
+  crc = crc16.calc_bits(crc, frame + 4, 0, 16); // crc
+  return crc == 0;
+}
+
 
 size_t
 MPAParser::stream_info(char *buf, size_t size) const 
@@ -112,20 +132,6 @@ MPAParser::frame_info(char *buf, size_t size) const
   return 0;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// BaseParser overrides
-/*
-bool
-MPAParser::crc_check()
-{
-  // Note: MPA uses standard CRC16 polinomial and 0xffff start value
-  // MPA LayerII has variable number of protected bits.
-  // To calculate it we must parse much of bs.
-  // So we will check CRC on frame decode.
-  // Maybe later.........
-  return true;
-}
-*/
 //////////////////////////////////////////////////////////////////////
 // MPA parsing
 //////////////////////////////////////////////////////////////////////
@@ -222,7 +228,7 @@ MPAParser::parse_header(const uint8_t *frame, size_t size)
 
 
 bool 
-MPAParser::II_decode_frame()
+MPAParser::II_decode_frame(const uint8_t *frame)
 {
   int sb, ch;
   int nch     = bsi.nch;
@@ -295,22 +301,10 @@ MPAParser::II_decode_frame()
 
   /////////////////////////////////////////////////////////
   // CRC check
-  // Do crc check up to current point. Note that we 
-  // include CRC word into processing AFTER protected 
-  // data. Due to CRC properties we must get zero result
-  // in case of no errors.
-/*
-  if (hdr.error_protection && do_crc)
-  {
-    uint32_t crc_bits = bs.get_pos() - 32 - 16;
-    uint32_t crc = crc16.crc_init(0xffff);
-    crc = crc16.calc_bits(crc, frame + 2, 0, 16,       bs_type); // header
-    crc = crc16.calc_bits(crc, frame + 6, 0, crc_bits, bs_type); // frame data
-    crc = crc16.calc_bits(crc, frame + 4, 0, 16,       bs_type); // crc
-    if (crc)
-      return false;
-  }
-*/
+
+  if (!crc_check(frame, bs.get_pos_bits() - 32 - 16))
+    return false;
+
   /////////////////////////////////////////////////////////
   // Load scalefactors
 
@@ -526,7 +520,7 @@ MPAParser::II_decode_fraction(
 
 
 bool 
-MPAParser::I_decode_frame()
+MPAParser::I_decode_frame(const uint8_t *frame)
 {
   int ch, sb;
   int nch     = bsi.nch;
@@ -535,23 +529,6 @@ MPAParser::I_decode_frame()
   int16_t  bit_alloc[MPA_NCH][SBLIMIT]; 
   sample_t scale[MPA_NCH][SBLIMIT];
   
-  /////////////////////////////////////////////////////////
-  // CRC check
-  // Note that we include CRC word into processing AFTER 
-  // protected data. Due to CRC properties we must get zero
-  // result in case of no errors.
-/*
-  if (hdr.error_protection && do_crc)
-  {
-    uint32_t crc_bits = (jsbound << 3) + ((32 - jsbound) << 2);
-    uint32_t crc = crc16.crc_init(0xffff);
-    crc = crc16.calc_bits(crc, frame + 2, 0, 16,       bs_type); // header
-    crc = crc16.calc_bits(crc, frame + 6, 0, crc_bits, bs_type); // frame data
-    crc = crc16.calc_bits(crc, frame + 4, 0, 16,       bs_type); // crc
-    if (crc)
-      return false;
-  }
-*/
   /////////////////////////////////////////////////////////
   // Load bitalloc
   
@@ -562,6 +539,12 @@ MPAParser::I_decode_frame()
   for (sb = jsbound; sb < SBLIMIT; sb++) 
     bit_alloc[0][sb] = bit_alloc[1][sb] = bs.get(4);
     
+  /////////////////////////////////////////////////////////
+  // CRC check
+
+  if (!crc_check(frame, bs.get_pos_bits() - 32 - 16))
+    return false;
+
   /////////////////////////////////////////////////////////
   // Load scale
 

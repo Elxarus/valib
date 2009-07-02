@@ -93,11 +93,12 @@ private:
   // Common decoding functions
 
   bool parse_header(const uint8_t *frame, size_t size);
+  bool crc_check(const uint8_t *frame, size_t protected_data_bits) const;
 
   /////////////////////////////////////////////////////////
   // Layer I
 
-  bool I_decode_frame();
+  bool I_decode_frame(const uint8_t *frame);
   void I_decode_fraction(
          sample_t *fraction[MPA_NCH], // pointers to sample_t[SBLIMIT] arrays
          int16_t  bit_alloc[MPA_NCH][SBLIMIT],
@@ -106,7 +107,7 @@ private:
   /////////////////////////////////////////////////////////
   // Layer II
 
-  bool II_decode_frame();
+  bool II_decode_frame(const uint8_t *frame);
   void II_decode_fraction(
          sample_t *fraction[MPA_NCH], // pointers to sample_t[SBLIMIT*3] arrays
          int16_t  bit_alloc[MPA_NCH][SBLIMIT],
