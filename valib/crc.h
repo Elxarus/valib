@@ -56,8 +56,8 @@ public:
   /////////////////////////////////////////////////////////////////////////////
   // CRC calculations
 
-  uint32_t calc(uint32_t crc, uint8_t *data, size_t size) const;
-  uint32_t calc_bits(uint32_t crc, uint8_t *data, size_t start_bit, size_t bits) const;
+  uint32_t calc(uint32_t crc, const uint8_t *data, size_t size) const;
+  uint32_t calc_bits(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const;
   uint32_t add_bits (uint32_t crc, uint32_t data, size_t bits) const;
 };
 

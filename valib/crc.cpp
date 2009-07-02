@@ -78,9 +78,9 @@ CRC::init(uint32_t _poly, unsigned _power)
 // Calc CRC
 
 uint32_t 
-CRC::calc(uint32_t crc, uint8_t *data, size_t size) const
+CRC::calc(uint32_t crc, const uint8_t *data, size_t size) const
 {
-  uint8_t *end = data + size;
+  const uint8_t *end = data + size;
 
   /////////////////////////////////////////////////////
   // Process unaligned start (8bit)
@@ -114,7 +114,7 @@ CRC::calc(uint32_t crc, uint8_t *data, size_t size) const
 }
 
 uint32_t 
-CRC::calc_bits(uint32_t crc, uint8_t *data, size_t start_bit, size_t bits) const
+CRC::calc_bits(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const
 {
   data += start_bit >> 3;
   start_bit &= 7;
