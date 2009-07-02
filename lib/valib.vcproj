@@ -1027,6 +1027,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\filters.cd"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
