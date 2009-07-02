@@ -10,7 +10,7 @@ static const int format_mask =
 AudioProcessor::AudioProcessor(size_t _nsamples)
 :in_conv(_nsamples), mixer(_nsamples), agc(_nsamples), out_conv(_nsamples)
 {
-  dithering = PROC_DITHER_AUTO;
+  dithering = DITHER_AUTO;
   user_spk = spk_unknown;
   rebuild_chain();
 }
@@ -81,7 +81,7 @@ double
 AudioProcessor::dithering_level() const
 {
   // Do not apply dithering when explicitly disabled
-  if (dithering == PROC_DITHER_NONE)
+  if (dithering == DITHER_NONE)
     return 0;
 
   // Do not apply dithering to floating-point output
@@ -90,20 +90,27 @@ AudioProcessor::dithering_level() const
 
   bool use_dither = false;
 
-  if (equalizer.get_enabled())
-    // dither equalizer's output
+  if (dithering & DITHER_ALWAYS)
     use_dither = true;
 
-  if (user_spk.sample_rate && in_spk.sample_rate != user_spk.sample_rate)
-    // dither on sample rate conversion
+  // dither on sample size degrade
+  if ((dithering & DITHER_SAMPLE_TYPE_CONV) &&
+      out_spk.level < in_spk.level)
     use_dither = true;
 
-  if (out_spk.level < in_spk.level)
-    // dither on sample size degrade
+  // floating-point to integer conversion
+  if ((dithering & DITHER_SAMPLE_TYPE_CONV) &&
+      in_spk.is_floating_point() || in_spk.format == FORMAT_LINEAR)
     use_dither = true;
 
-  if (in_spk.is_floating_point() || in_spk.format == FORMAT_LINEAR)
-    // dither on fp to int conversion
+  // dither on sample rate conversion
+  if ((dithering & DITHER_SAMPLE_RATE_CONV) && 
+      user_spk.sample_rate && in_spk.sample_rate != user_spk.sample_rate)
+    use_dither = true;
+
+  // dither equalizer's output
+  if ((dithering & DITHER_EQUALIZER) &&
+      equalizer.get_enabled())
     use_dither = true;
 
   // Return dithering level

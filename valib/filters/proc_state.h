@@ -4,8 +4,17 @@
 #include "../defs.h"
 #include "../fir/eq_fir.h"
 
-#define PROC_DITHER_NONE 0
-#define PROC_DITHER_AUTO 1
+// Dithering mode constants
+// Mode is a combination of the following flags.
+
+#define DITHER_NONE             0
+#define DITHER_AUTO             0x7fff
+#define DITHER_ALWAYS           0x8000
+
+#define DITHER_SAMPLE_TYPE_CONV 1
+#define DITHER_SAMPLE_RATE_CONV 4
+#define DITHER_EQUALIZER        8
+
 
 struct AudioProcessorState
 {
