@@ -132,6 +132,14 @@ AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 bool
 AC3Header::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 {
+  // Compare headers; we must exclude:
+  // * crc (bytes 2 and 3)
+  // * 'compre' and 'compre' fields
+  // * last bit of frmsizcod (used to match the bitrate in 44100Hz mode).
+  //
+  // Positions of 'compre' and 'compr' fields are determined by 'acmod'
+  // field. To exclude them we use masking (acmod2mask table).
+  
   static const int acmod2mask[] = { 0x80, 0x80, 0xe0, 0xe0, 0xe0, 0xf8, 0xe0, 0xf8 };
 
   /////////////////////////////////////////////////////////
@@ -143,16 +151,10 @@ AC3Header::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
     if ((hdr1[4] & 0x3f) > 0x25) return false;   // 'frmesizecod'
     if ((hdr1[4] & 0xc0) > 0x80) return false;   // 'fscod'
 
-    // compare headers; we must exclude:
-    // * crc (bytes 2 and 3)
-    // * 'compre' and 'compre' fields
-    // Positions of 'compre' and 'compr' fields are determined by 'acmod'
-    // field. To exclude them we use masking.
-    
     int mask = acmod2mask[hdr1[6] >> 5];
     return
       hdr1[0] == hdr2[0] && hdr1[1] == hdr2[1] &&
-      hdr1[4] == hdr2[4] && hdr1[5] == hdr2[5] && 
+      (hdr1[4] & 0xfe) == (hdr2[4] & 0xfe) && hdr1[5] == hdr2[5] &&
       hdr1[6] == hdr2[6] && (hdr1[7] & mask) == (hdr2[7] & mask);
   }
   /////////////////////////////////////////////////////////
@@ -164,16 +166,10 @@ AC3Header::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
     if ((hdr1[5] & 0x3f) > 0x25) return false;   // 'frmesizecod'
     if ((hdr1[5] & 0xc0) > 0x80) return false;   // 'fscod'
 
-    // compare headers; we must exclude:
-    // * crc (bytes 2 and 3)
-    // * 'compre' and 'compre' fields
-    // Positions of 'compre' and 'compr' fields are determined by 'acmod'
-    // field. To exclude them we use masking.
-
     int mask = acmod2mask[hdr1[7] >> 5];
     return
       hdr1[1] == hdr2[1] && hdr1[0] == hdr2[0] &&
-      hdr1[5] == hdr2[5] && hdr1[4] == hdr2[4] && 
+      (hdr1[5] & 0xfe) == (hdr2[5] & 0xfe) && hdr1[4] == hdr2[4] &&
       hdr1[7] == hdr2[7] && (hdr1[6] & mask) == (hdr2[6] & mask);
   }
 
