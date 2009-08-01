@@ -10,14 +10,14 @@ Generator::Generator()
 {
 }
 
-Generator::Generator(Speakers _spk, size_t _stream_len, size_t _chunk_size)
+Generator::Generator(Speakers _spk, uint64_t _stream_len, size_t _chunk_size)
 :spk(spk_unknown), stream_len(0), chunk_size(0)
 {
   init(_spk, _stream_len, _chunk_size);
 }
 
 bool 
-Generator::init(Speakers _spk, size_t _stream_len, size_t _chunk_size)
+Generator::init(Speakers _spk, uint64_t _stream_len, size_t _chunk_size)
 {
   spk = spk_unknown;
   stream_len = 0;
@@ -113,7 +113,7 @@ ZeroGen::gen_rawdata(uint8_t *rawdata, size_t n)
 // Noise generator
 
 bool
-NoiseGen::init(Speakers _spk, int _seed, size_t _stream_len, size_t _chunk_size)
+NoiseGen::init(Speakers _spk, int _seed, uint64_t _stream_len, size_t _chunk_size)
 {
   rng.seed(_seed);
   return Generator::init(_spk, _stream_len, _chunk_size);
@@ -143,7 +143,7 @@ ToneGen::query_spk(Speakers _spk) const
 }
 
 bool
-ToneGen::init(Speakers _spk, int _freq, double _phase, size_t _stream_len, size_t _chunk_size)
+ToneGen::init(Speakers _spk, int _freq, double _phase, uint64_t _stream_len, size_t _chunk_size)
 {
   phase = _phase;
   freq = _freq;
@@ -179,7 +179,7 @@ LineGen::query_spk(Speakers _spk) const
 }
 
 bool
-LineGen::init(Speakers _spk, double _start, double _k, size_t _stream_len, size_t _chunk_size)
+LineGen::init(Speakers _spk, double _start, double _k, uint64_t _stream_len, size_t _chunk_size)
 {
   phase = _start;
   k = _k;
