@@ -11,8 +11,11 @@ protected:
   Speakers spk;
 
   uint32_t header_size;  // WAV header size;
-  uint32_t data_size;    // data size written to file
+  uint64_t data_size;    // data size written to the file
   uint8_t *file_format;  // WAVEFORMAT *
+
+  void init_riff();
+  void close_riff();
 
 public:
   WAVSink();
