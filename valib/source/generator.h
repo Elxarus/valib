@@ -27,10 +27,10 @@ protected:
   virtual void gen_samples(samples_t samples, size_t n) { assert(false); }
   virtual void gen_rawdata(uint8_t *rawdata, size_t n) { assert(false); }
 
-  bool init(Speakers spk, size_t stream_len, size_t chunk_size = 4096);
+  bool init(Speakers spk, uint64_t stream_len, size_t chunk_size = 4096);
 
   Generator();
-  Generator(Speakers spk, size_t stream_len, size_t chunk_size = 4096);
+  Generator(Speakers spk, uint64_t stream_len, size_t chunk_size = 4096);
 
 public:
   size_t get_chunk_size() const { return chunk_size; }
@@ -53,7 +53,7 @@ public:
   ZeroGen(Speakers _spk, size_t _stream_len, size_t _chunk_size = 4096)
   :Generator(_spk, _stream_len, _chunk_size) {}
 
-  bool init(Speakers _spk, size_t _stream_len, size_t _chunk_size = 4096)
+  bool init(Speakers _spk, uint64_t _stream_len, size_t _chunk_size = 4096)
   { return Generator::init(_spk, _stream_len, _chunk_size); }
 };
 
@@ -66,10 +66,10 @@ protected:
 
 public:
   NoiseGen() {};
-  NoiseGen(Speakers _spk, int _seed, size_t _stream_len, size_t _chunk_size = 4096)
+  NoiseGen(Speakers _spk, int _seed, uint64_t _stream_len, size_t _chunk_size = 4096)
   :Generator(_spk, _stream_len, _chunk_size), rng(_seed) {}
 
-  bool init(Speakers spk, int seed, size_t stream_len, size_t chunk_size = 4096);
+  bool init(Speakers spk, int seed, uint64_t stream_len, size_t chunk_size = 4096);
 };
 
 class ToneGen : public Generator
@@ -84,11 +84,11 @@ protected:
 
 public:
   ToneGen(): phase(0), freq(0) {};
-  ToneGen(Speakers _spk, int _freq, double _phase, size_t _stream_len, size_t _chunk_size = 4096):
+  ToneGen(Speakers _spk, int _freq, double _phase, uint64_t _stream_len, size_t _chunk_size = 4096):
   Generator(_spk, _stream_len, _chunk_size), phase(0), freq(0)
   { init(_spk, _freq, _phase, _stream_len, _chunk_size); }
 
-  bool init(Speakers spk, int freq, double phase, size_t stream_len, size_t chunk_size = 4096);
+  bool init(Speakers spk, int freq, double phase, uint64_t stream_len, size_t chunk_size = 4096);
 };
 
 class LineGen : public Generator
@@ -103,11 +103,11 @@ protected:
 
 public:
   LineGen(): phase(0), k(1.0) {};
-  LineGen(Speakers _spk, double _start, double _k, size_t _stream_len, size_t _chunk_size = 4096):
+  LineGen(Speakers _spk, double _start, double _k, uint64_t _stream_len, size_t _chunk_size = 4096):
   Generator(_spk, _stream_len, _chunk_size), phase(0), k(1.0)
   { init(_spk, _start, _k, _stream_len, _chunk_size); }
 
-  bool init(Speakers spk, double _start, double _k, size_t stream_len, size_t chunk_size = 4096);
+  bool init(Speakers spk, double _start, double _k, uint64_t stream_len, size_t chunk_size = 4096);
 };
 
 #endif
