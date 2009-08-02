@@ -125,63 +125,63 @@ WAVSource::open_riff()
     if (buf_data < sizeof(ChunkHeader))
       return false;
 
-    switch (header->fcc)
+    ///////////////////////////////////////////////////////
+    // Format chunk
+
+    if (header->fcc == fcc_fmt)
     {
-      ///////////////////////////////////////////////////////
-      // Format chunk
+      if (data_size + header->size > buf_size)
+        return false;
 
-      case fcc_fmt:
-      {
-        if (data_size + header->size > buf_size)
-          return false;
+      memset(&fmt->wfx, 0, sizeof(fmt->wfx));
+      buf_data = f.read(buf + buf_data, header->size);
+      if (buf_data < header->size)
+        return false;
 
-        memset(&fmt->wfx, 0, sizeof(fmt->wfx));
-        buf_data = f.read(buf + buf_data, header->size);
-        if (buf_data < header->size)
-          return false;
+      if (!wfx2spk(&fmt->wfx, spk))
+        return false;
 
-        if (!wfx2spk(&fmt->wfx, spk))
-          return false;
+      have_fmt = true;
+      break;
+    }
 
-        have_fmt = true;
-        break;
-      }
+    ///////////////////////////////////////////////////////
+    // ds64 chunk
 
-      ///////////////////////////////////////////////////////
-      // ds64 chunk
+    if (header->fcc == fcc_ds64)
+    {
+      buf_data += f.read(buf + buf_data, sizeof(DS64Chunk) - buf_data);
+      if (buf_data < sizeof(DS64Chunk))
+        return false;
 
-      case fcc_ds64:
-      {
-        buf_data += f.read(buf + buf_data, sizeof(DS64Chunk) - buf_data);
-        if (buf_data < sizeof(DS64Chunk))
-          return false;
+      data_size64 = ds64->data_size;
+      have_ds64 = true;
+      break;
+    }
 
-        data_size64 = ds64->data_size;
-        have_ds64 = true;
-        break;
-      }
+    ///////////////////////////////////////////////////////
+    // Data chunk
 
-      ///////////////////////////////////////////////////////
-      // Data chunk
+    if (header->fcc == fcc_data)
+    {
+      if (!have_fmt)
+        return false;
 
-      case fcc_data:
-      {
-        if (!have_fmt)
-          return false;
+      data_start = next + sizeof(ChunkHeader);
+      data_size = header->size;
+      if (have_ds64 && header->size >= 0xffffff00)
+        data_size = data_size64;
 
-        data_start = next + sizeof(ChunkHeader);
-        data_size = header->size;
-        if (have_ds64 && header->size >= 0xffffff00)
-          data_size = data_size64;
-
-        f.seek(data_start);
-        data_remains = data_size;
-        return true;
-      }
+      f.seek(data_start);
+      data_remains = data_size;
+      return true;
     }
 
     next += header->size + sizeof(ChunkHeader);
   }
+
+  // never be here
+  return false;
 }
 
 void
