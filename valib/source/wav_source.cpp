@@ -5,6 +5,7 @@
 const uint32_t fcc_riff = be2int32('RIFF');
 const uint32_t fcc_rf64 = be2int32('RF64');
 const uint32_t fcc_wave = be2int32('WAVE');
+const uint32_t fcc_ds64 = be2int32('ds64');
 const uint32_t fcc_fmt  = be2int32('fmt ');
 const uint32_t fcc_data = be2int32('data');
 
@@ -19,6 +20,16 @@ struct RIFFChunk
   uint32_t fcc;
   uint32_t size;
   uint32_t type;
+};
+
+struct DS64Chunk
+{
+  uint32_t fcc;
+  uint32_t size;
+  uint64_t riff_size;
+  uint64_t data_size;
+  uint64_t sample_count;
+  uint32_t table_length;
 };
 
 struct FMTChunk
@@ -81,11 +92,13 @@ WAVSource::open_riff()
   /////////////////////////////////////////////////////////
   // Initializes spk, data_start and data_size
 
-  uint8_t buf[255];
+  const size_t buf_size = 256;
+  uint8_t buf[buf_size];
   size_t buf_data;
 
   ChunkHeader *header = (ChunkHeader *)buf;
   RIFFChunk   *riff   = (RIFFChunk *)buf;
+  DS64Chunk   *ds64   = (DS64Chunk *)buf;
   FMTChunk    *fmt    = (FMTChunk *)buf;
 
   /////////////////////////////////////////////////////////
@@ -99,92 +112,75 @@ WAVSource::open_riff()
     return false;
 
   /////////////////////////////////////////////////////////
-  // Seek fmt-chunk
-  // Init spk
+  // Chunk walk
 
+  bool have_fmt = false;
+  bool have_ds64 = false;
+  uint64_t data_size64 = 0;
   AutoFile::fsize_t next = f.pos();
   while (1)
   {
-    ///////////////////////////////////////////////////////
-    // Read a chunk header
-
     f.seek(next);
     buf_data = f.read(buf, sizeof(ChunkHeader));
     if (buf_data < sizeof(ChunkHeader))
       return false;
 
-    ///////////////////////////////////////////////////////
-    // Check FCC and go to the next chunk if it is not fmt
-
-    if (header->fcc != fcc_fmt)
+    switch (header->fcc)
     {
-      next += header->size + sizeof(ChunkHeader);
-      continue;
+      ///////////////////////////////////////////////////////
+      // Format chunk
+
+      case fcc_fmt:
+      {
+        if (data_size + header->size > buf_size)
+          return false;
+
+        memset(&fmt->wfx, 0, sizeof(fmt->wfx));
+        buf_data = f.read(buf + buf_data, header->size);
+        if (buf_data < header->size)
+          return false;
+
+        if (!wfx2spk(&fmt->wfx, spk))
+          return false;
+
+        have_fmt = true;
+        break;
+      }
+
+      ///////////////////////////////////////////////////////
+      // ds64 chunk
+
+      case fcc_ds64:
+      {
+        buf_data += f.read(buf + buf_data, sizeof(DS64Chunk) - buf_data);
+        if (buf_data < sizeof(DS64Chunk))
+          return false;
+
+        data_size64 = ds64->data_size;
+        have_ds64 = true;
+        break;
+      }
+
+      ///////////////////////////////////////////////////////
+      // Data chunk
+
+      case fcc_data:
+      {
+        if (!have_fmt)
+          return false;
+
+        data_start = next + sizeof(ChunkHeader);
+        data_size = header->size;
+        if (have_ds64 && header->size >= 0xffffff00)
+          data_size = data_size64;
+
+        f.seek(data_start);
+        data_remains = data_size;
+        return true;
+      }
     }
 
-    ///////////////////////////////////////////////////////
-    // Load format chunk
-
-    memset(&fmt->wfx, 0, sizeof(fmt->wfx));
-    buf_data = f.read(buf + buf_data, header->size);
-
-    if (buf_data < header->size)
-      return false;
-
-    ///////////////////////////////////////////////////////
-    // Convert format
-
-    if (!wfx2spk(&fmt->wfx, spk))
-      return false;
-
-    ///////////////////////////////////////////////////////
-    // Ok
-
-    next += fmt->size + sizeof(ChunkHeader);
-    break;
-  }
-
-  /////////////////////////////////////////////////////////
-  // Seek data-chunk
-  // Init data_start and buf_data
-
-  while (1)
-  {
-    ///////////////////////////////////////////////////////
-    // Read a chunk header
-
-    f.seek(next);
-    buf_data = f.read(buf, sizeof(ChunkHeader));
-    if (buf_data < sizeof(ChunkHeader))
-      return false;
-
-    ///////////////////////////////////////////////////////
-    // Check FCC and go to the next chunk if it is not data
-
-    if (header->fcc != fcc_data)
-    {
-      next += header->size + sizeof(ChunkHeader);
-      continue;
-    }
-
-    ///////////////////////////////////////////////////////
-    // Determine actual data size
-
-    data_start = next + sizeof(ChunkHeader);
-    data_size = header->size;
-
-    if (f.size() != f.max_size)
-    {
-      AutoFile::fsize_t file_tail = f.size() - data_start;
-      if (header->size >= 0xffffff00 || header->size > file_tail)
-        // * File is a big WAV file >4Gb
-        // * File is cut down (incomplete download, etc)
-        data_size = file_tail;
-    }
-
-    f.seek(data_start);
-    data_remains = data_size;
-    return true;
+    next += header->size + sizeof(ChunkHeader);
   }
 }
 
@@ -206,11 +202,12 @@ WAVSource::is_open() const
   return f.is_open();
 }
 
-
 AutoFile::fsize_t
 WAVSource::size() const
 {
-  return data_size;
+  if (data_size > (uint64_t)AutoFile::max_size)
+    return AutoFile::max_size;
+  return (AutoFile::fsize_t) data_size;
 }
 
 AutoFile::fsize_t
@@ -223,7 +220,7 @@ int
 WAVSource::seek(AutoFile::fsize_t _pos)
 {
   if (_pos < 0) _pos = 0;
-  if (_pos > data_size) _pos = data_size;
+  if ((uint64_t)_pos > data_size) _pos = data_size;
 
   int result = f.seek(_pos + data_start);
   data_remains = data_size - _pos;
