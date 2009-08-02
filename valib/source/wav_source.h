@@ -19,8 +19,8 @@ protected:
   size_t block_size;
 
   AutoFile::fsize_t data_start;
-  AutoFile::fsize_t data_size;
-  AutoFile::fsize_t data_remains;
+  uint64_t          data_size;
+  uint64_t          data_remains;
 
   bool open_riff();
 
