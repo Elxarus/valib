@@ -21,7 +21,7 @@ protected:
   SampleBuf samples;
   Rawdata   rawdata;
   size_t    chunk_size;
-  size_t    stream_len;
+  uint64_t  stream_len;
 
   virtual bool query_spk(Speakers spk) const { return true; }
   virtual void gen_samples(samples_t samples, size_t n) { assert(false); }
@@ -33,8 +33,8 @@ protected:
   Generator(Speakers spk, uint64_t stream_len, size_t chunk_size = 4096);
 
 public:
-  size_t get_chunk_size() const { return chunk_size; }
-  size_t get_stream_len() const { return stream_len; }
+  size_t   get_chunk_size() const { return chunk_size; }
+  uint64_t get_stream_len() const { return stream_len; }
 
   // Source interface
   virtual Speakers get_output() const;
