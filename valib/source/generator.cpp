@@ -70,7 +70,7 @@ Generator::get_chunk(Chunk *_chunk)
 
   if (n >= stream_len)
   {
-    n = stream_len;
+    n = (size_t)stream_len;
     stream_len = 0;
     eos = true;
   }
