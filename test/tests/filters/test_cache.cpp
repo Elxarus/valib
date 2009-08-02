@@ -34,8 +34,8 @@ TEST(cache, "Cache filter")
         while (!f.is_empty())
           f.get_chunk(&chunk);
 
-        size_t size = rng.get_range(cache_samples);
-        vtime_t time = f.get_time() - vtime_t(size + rng.get_range(cache_samples - size)) / spk.sample_rate;
+        size_t size = rng.get_range((uint32_t)cache_samples);
+        vtime_t time = f.get_time() - vtime_t(size + rng.get_range((uint32_t)(cache_samples - size))) / spk.sample_rate;
         int time_samples = int(time * spk.sample_rate + 0.5);
 
         if (time < 0)
