@@ -96,7 +96,6 @@ Converter::initialize()
     out_samples[0] = (sample_t *)buf.data();
     for (int ch = 1; ch < spk.nch(); ch++)
       out_samples[ch] = out_samples[ch-1] + nsamples;
-    out_samples.reorder_to_std(spk, order);
     out_rawdata = 0;
   }
   else
@@ -309,6 +308,8 @@ Converter::process(const Chunk *_chunk)
 bool 
 Converter::get_chunk(Chunk *_chunk)
 {
+  const Speakers out_spk = get_output();
+
   if (spk.format == format)
   {
     send_chunk_inplace(_chunk, size);
@@ -325,11 +326,14 @@ Converter::get_chunk(Chunk *_chunk)
 
   _chunk->set
   (
-    get_output(), 
+    out_spk, 
     out_rawdata, out_samples, out_size, 
     sync, time, 
     flushing && !size
   );
+
+  if (out_spk.is_linear())
+    _chunk->samples.reorder_to_std(spk, order);
 
   flushing = flushing && size;
   sync = false;
