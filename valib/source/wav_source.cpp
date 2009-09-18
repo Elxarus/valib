@@ -142,7 +142,6 @@ WAVSource::open_riff()
         return false;
 
       have_fmt = true;
-      break;
     }
 
     ///////////////////////////////////////////////////////
@@ -156,7 +155,6 @@ WAVSource::open_riff()
 
       data_size64 = ds64->data_size;
       have_ds64 = true;
-      break;
     }
 
     ///////////////////////////////////////////////////////
