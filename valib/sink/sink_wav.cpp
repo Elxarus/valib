@@ -172,7 +172,7 @@ WAVSink::set_input(Speakers _spk)
   if (_spk.format == FORMAT_LINEAR)
     return false;
 
-  if (_spk.format & FORMAT_CLASS_PCM)
+  if (FORMAT_MASK(_spk.format) & FORMAT_CLASS_PCM)
     if (_spk.mask != MODE_MONO && _spk.mask != MODE_STEREO)
       use_wfx = true;
 
