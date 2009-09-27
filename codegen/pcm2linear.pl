@@ -1,6 +1,6 @@
 use strict;
 
-my @chs      = (1..6);
+my @chs      = (1..8);
 my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCM16_BE FORMAT_PCM24_BE FORMAT_PCM32_BE FORMAT_PCMFLOAT FORMAT_PCMDOUBLE FORMAT_LPCM20 FORMAT_LPCM24);
 my @names    = qw(pcm16    pcm24    pcm32    pcm16_be pcm24_be pcm32_be pcmfloat pcmdouble lpcm20  lpcm24  );
 my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float    double    int16_t int16_t );

@@ -23,8 +23,8 @@ static const int formats[] =
 
 static const int modes[] = 
 { 
-  MODE_1_0,     MODE_2_0,     MODE_3_0,     MODE_2_1,     MODE_3_1,     MODE_2_2,
-  MODE_1_0_LFE, MODE_2_0_LFE, MODE_3_0_LFE, MODE_2_1_LFE, MODE_3_1_LFE, MODE_2_2_LFE,
+  MODE_1_0, MODE_2_0, MODE_3_0, MODE_2_1, MODE_3_1, MODE_2_2, MODE_3_2, MODE_3_2_1, MODE_3_2_2, MODE_5_2, 
+  MODE_1_0_LFE, MODE_2_0_LFE, MODE_3_0_LFE, MODE_2_1_LFE, MODE_3_1_LFE, MODE_2_2_LFE, MODE_3_2_LFE, MODE_3_2_1_LFE, MODE_3_2_2_LFE, MODE_5_2_LFE
 };
 
 ///////////////////////////////////////////////////////////////////////////////

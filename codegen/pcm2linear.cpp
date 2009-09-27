@@ -8,6 +8,8 @@ static const convert_t pcm2linear_tbl[NCHANNELS][10] = {
  { pcm16_linear_4ch, pcm24_linear_4ch, pcm32_linear_4ch, pcm16_be_linear_4ch, pcm24_be_linear_4ch, pcm32_be_linear_4ch, pcmfloat_linear_4ch, pcmdouble_linear_4ch, lpcm20_linear_4ch, lpcm24_linear_4ch },
  { pcm16_linear_5ch, pcm24_linear_5ch, pcm32_linear_5ch, pcm16_be_linear_5ch, pcm24_be_linear_5ch, pcm32_be_linear_5ch, pcmfloat_linear_5ch, pcmdouble_linear_5ch, lpcm20_linear_5ch, lpcm24_linear_5ch },
  { pcm16_linear_6ch, pcm24_linear_6ch, pcm32_linear_6ch, pcm16_be_linear_6ch, pcm24_be_linear_6ch, pcm32_be_linear_6ch, pcmfloat_linear_6ch, pcmdouble_linear_6ch, lpcm20_linear_6ch, lpcm24_linear_6ch },
+ { pcm16_linear_7ch, pcm24_linear_7ch, pcm32_linear_7ch, pcm16_be_linear_7ch, pcm24_be_linear_7ch, pcm32_be_linear_7ch, pcmfloat_linear_7ch, pcmdouble_linear_7ch, lpcm20_linear_7ch, lpcm24_linear_7ch },
+ { pcm16_linear_8ch, pcm24_linear_8ch, pcm32_linear_8ch, pcm16_be_linear_8ch, pcm24_be_linear_8ch, pcm32_be_linear_8ch, pcmfloat_linear_8ch, pcmdouble_linear_8ch, lpcm20_linear_8ch, lpcm24_linear_8ch },
 };
 
 void pcm16_linear_1ch(uint8_t *rawdata, samples_t samples, size_t size)
@@ -758,5 +760,335 @@ void lpcm24_linear_6ch(uint8_t *rawdata, samples_t samples, size_t size)
     dst[4][0] = i2s(int32_t(be2int16(src[4+6*0]) << 8) | rawdata[6*4+4+6*0]); dst[4][1] = i2s(int32_t(be2int16(src[4+6*1]) << 8) | rawdata[6*4+4+6*1]); dst[4]+=2;
     dst[5][0] = i2s(int32_t(be2int16(src[5+6*0]) << 8) | rawdata[6*4+5+6*0]); dst[5][1] = i2s(int32_t(be2int16(src[5+6*1]) << 8) | rawdata[6*4+5+6*1]); dst[5]+=2;
     rawdata += 36;
+  }
+}
+void pcm16_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int16_t *src = (int16_t *)rawdata;
+    *dst[0] = i2s(le2int16(src[0])); dst[0]++;
+    *dst[1] = i2s(le2int16(src[1])); dst[1]++;
+    *dst[2] = i2s(le2int16(src[2])); dst[2]++;
+    *dst[3] = i2s(le2int16(src[3])); dst[3]++;
+    *dst[4] = i2s(le2int16(src[4])); dst[4]++;
+    *dst[5] = i2s(le2int16(src[5])); dst[5]++;
+    *dst[6] = i2s(le2int16(src[6])); dst[6]++;
+    rawdata += 14;
+  }
+}
+void pcm24_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int24_t *src = (int24_t *)rawdata;
+    *dst[0] = i2s(le2int24(src[0])); dst[0]++;
+    *dst[1] = i2s(le2int24(src[1])); dst[1]++;
+    *dst[2] = i2s(le2int24(src[2])); dst[2]++;
+    *dst[3] = i2s(le2int24(src[3])); dst[3]++;
+    *dst[4] = i2s(le2int24(src[4])); dst[4]++;
+    *dst[5] = i2s(le2int24(src[5])); dst[5]++;
+    *dst[6] = i2s(le2int24(src[6])); dst[6]++;
+    rawdata += 21;
+  }
+}
+void pcm32_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int32_t *src = (int32_t *)rawdata;
+    *dst[0] = i2s(le2int32(src[0])); dst[0]++;
+    *dst[1] = i2s(le2int32(src[1])); dst[1]++;
+    *dst[2] = i2s(le2int32(src[2])); dst[2]++;
+    *dst[3] = i2s(le2int32(src[3])); dst[3]++;
+    *dst[4] = i2s(le2int32(src[4])); dst[4]++;
+    *dst[5] = i2s(le2int32(src[5])); dst[5]++;
+    *dst[6] = i2s(le2int32(src[6])); dst[6]++;
+    rawdata += 28;
+  }
+}
+void pcm16_be_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int16_t *src = (int16_t *)rawdata;
+    *dst[0] = i2s(be2int16(src[0])); dst[0]++;
+    *dst[1] = i2s(be2int16(src[1])); dst[1]++;
+    *dst[2] = i2s(be2int16(src[2])); dst[2]++;
+    *dst[3] = i2s(be2int16(src[3])); dst[3]++;
+    *dst[4] = i2s(be2int16(src[4])); dst[4]++;
+    *dst[5] = i2s(be2int16(src[5])); dst[5]++;
+    *dst[6] = i2s(be2int16(src[6])); dst[6]++;
+    rawdata += 14;
+  }
+}
+void pcm24_be_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int24_t *src = (int24_t *)rawdata;
+    *dst[0] = i2s(be2int24(src[0])); dst[0]++;
+    *dst[1] = i2s(be2int24(src[1])); dst[1]++;
+    *dst[2] = i2s(be2int24(src[2])); dst[2]++;
+    *dst[3] = i2s(be2int24(src[3])); dst[3]++;
+    *dst[4] = i2s(be2int24(src[4])); dst[4]++;
+    *dst[5] = i2s(be2int24(src[5])); dst[5]++;
+    *dst[6] = i2s(be2int24(src[6])); dst[6]++;
+    rawdata += 21;
+  }
+}
+void pcm32_be_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int32_t *src = (int32_t *)rawdata;
+    *dst[0] = i2s(be2int32(src[0])); dst[0]++;
+    *dst[1] = i2s(be2int32(src[1])); dst[1]++;
+    *dst[2] = i2s(be2int32(src[2])); dst[2]++;
+    *dst[3] = i2s(be2int32(src[3])); dst[3]++;
+    *dst[4] = i2s(be2int32(src[4])); dst[4]++;
+    *dst[5] = i2s(be2int32(src[5])); dst[5]++;
+    *dst[6] = i2s(be2int32(src[6])); dst[6]++;
+    rawdata += 28;
+  }
+}
+void pcmfloat_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    float *src = (float *)rawdata;
+    *dst[0] = sample_t(src[0]); dst[0]++;
+    *dst[1] = sample_t(src[1]); dst[1]++;
+    *dst[2] = sample_t(src[2]); dst[2]++;
+    *dst[3] = sample_t(src[3]); dst[3]++;
+    *dst[4] = sample_t(src[4]); dst[4]++;
+    *dst[5] = sample_t(src[5]); dst[5]++;
+    *dst[6] = sample_t(src[6]); dst[6]++;
+    rawdata += 28;
+  }
+}
+void pcmdouble_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    double *src = (double *)rawdata;
+    *dst[0] = sample_t(src[0]); dst[0]++;
+    *dst[1] = sample_t(src[1]); dst[1]++;
+    *dst[2] = sample_t(src[2]); dst[2]++;
+    *dst[3] = sample_t(src[3]); dst[3]++;
+    *dst[4] = sample_t(src[4]); dst[4]++;
+    *dst[5] = sample_t(src[5]); dst[5]++;
+    *dst[6] = sample_t(src[6]); dst[6]++;
+    rawdata += 56;
+  }
+}
+void lpcm20_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int16_t *src = (int16_t *)rawdata;
+    dst[0][0] = i2s(int32_t(be2int16(src[0+7*0])) << 4); dst[0][1] = i2s(int32_t(be2int16(src[0+7*1])) << 4); dst[0]+=2;
+    dst[1][0] = i2s(int32_t(be2int16(src[1+7*0])) << 4); dst[1][1] = i2s(int32_t(be2int16(src[1+7*1])) << 4); dst[1]+=2;
+    dst[2][0] = i2s(int32_t(be2int16(src[2+7*0])) << 4); dst[2][1] = i2s(int32_t(be2int16(src[2+7*1])) << 4); dst[2]+=2;
+    dst[3][0] = i2s(int32_t(be2int16(src[3+7*0])) << 4); dst[3][1] = i2s(int32_t(be2int16(src[3+7*1])) << 4); dst[3]+=2;
+    dst[4][0] = i2s(int32_t(be2int16(src[4+7*0])) << 4); dst[4][1] = i2s(int32_t(be2int16(src[4+7*1])) << 4); dst[4]+=2;
+    dst[5][0] = i2s(int32_t(be2int16(src[5+7*0])) << 4); dst[5][1] = i2s(int32_t(be2int16(src[5+7*1])) << 4); dst[5]+=2;
+    dst[6][0] = i2s(int32_t(be2int16(src[6+7*0])) << 4); dst[6][1] = i2s(int32_t(be2int16(src[6+7*1])) << 4); dst[6]+=2;
+    rawdata += 35;
+  }
+}
+void lpcm24_linear_7ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int16_t *src = (int16_t *)rawdata;
+    dst[0][0] = i2s(int32_t(be2int16(src[0+7*0]) << 8) | rawdata[7*4+0+7*0]); dst[0][1] = i2s(int32_t(be2int16(src[0+7*1]) << 8) | rawdata[7*4+0+7*1]); dst[0]+=2;
+    dst[1][0] = i2s(int32_t(be2int16(src[1+7*0]) << 8) | rawdata[7*4+1+7*0]); dst[1][1] = i2s(int32_t(be2int16(src[1+7*1]) << 8) | rawdata[7*4+1+7*1]); dst[1]+=2;
+    dst[2][0] = i2s(int32_t(be2int16(src[2+7*0]) << 8) | rawdata[7*4+2+7*0]); dst[2][1] = i2s(int32_t(be2int16(src[2+7*1]) << 8) | rawdata[7*4+2+7*1]); dst[2]+=2;
+    dst[3][0] = i2s(int32_t(be2int16(src[3+7*0]) << 8) | rawdata[7*4+3+7*0]); dst[3][1] = i2s(int32_t(be2int16(src[3+7*1]) << 8) | rawdata[7*4+3+7*1]); dst[3]+=2;
+    dst[4][0] = i2s(int32_t(be2int16(src[4+7*0]) << 8) | rawdata[7*4+4+7*0]); dst[4][1] = i2s(int32_t(be2int16(src[4+7*1]) << 8) | rawdata[7*4+4+7*1]); dst[4]+=2;
+    dst[5][0] = i2s(int32_t(be2int16(src[5+7*0]) << 8) | rawdata[7*4+5+7*0]); dst[5][1] = i2s(int32_t(be2int16(src[5+7*1]) << 8) | rawdata[7*4+5+7*1]); dst[5]+=2;
+    dst[6][0] = i2s(int32_t(be2int16(src[6+7*0]) << 8) | rawdata[7*4+6+7*0]); dst[6][1] = i2s(int32_t(be2int16(src[6+7*1]) << 8) | rawdata[7*4+6+7*1]); dst[6]+=2;
+    rawdata += 42;
+  }
+}
+void pcm16_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int16_t *src = (int16_t *)rawdata;
+    *dst[0] = i2s(le2int16(src[0])); dst[0]++;
+    *dst[1] = i2s(le2int16(src[1])); dst[1]++;
+    *dst[2] = i2s(le2int16(src[2])); dst[2]++;
+    *dst[3] = i2s(le2int16(src[3])); dst[3]++;
+    *dst[4] = i2s(le2int16(src[4])); dst[4]++;
+    *dst[5] = i2s(le2int16(src[5])); dst[5]++;
+    *dst[6] = i2s(le2int16(src[6])); dst[6]++;
+    *dst[7] = i2s(le2int16(src[7])); dst[7]++;
+    rawdata += 16;
+  }
+}
+void pcm24_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int24_t *src = (int24_t *)rawdata;
+    *dst[0] = i2s(le2int24(src[0])); dst[0]++;
+    *dst[1] = i2s(le2int24(src[1])); dst[1]++;
+    *dst[2] = i2s(le2int24(src[2])); dst[2]++;
+    *dst[3] = i2s(le2int24(src[3])); dst[3]++;
+    *dst[4] = i2s(le2int24(src[4])); dst[4]++;
+    *dst[5] = i2s(le2int24(src[5])); dst[5]++;
+    *dst[6] = i2s(le2int24(src[6])); dst[6]++;
+    *dst[7] = i2s(le2int24(src[7])); dst[7]++;
+    rawdata += 24;
+  }
+}
+void pcm32_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int32_t *src = (int32_t *)rawdata;
+    *dst[0] = i2s(le2int32(src[0])); dst[0]++;
+    *dst[1] = i2s(le2int32(src[1])); dst[1]++;
+    *dst[2] = i2s(le2int32(src[2])); dst[2]++;
+    *dst[3] = i2s(le2int32(src[3])); dst[3]++;
+    *dst[4] = i2s(le2int32(src[4])); dst[4]++;
+    *dst[5] = i2s(le2int32(src[5])); dst[5]++;
+    *dst[6] = i2s(le2int32(src[6])); dst[6]++;
+    *dst[7] = i2s(le2int32(src[7])); dst[7]++;
+    rawdata += 32;
+  }
+}
+void pcm16_be_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int16_t *src = (int16_t *)rawdata;
+    *dst[0] = i2s(be2int16(src[0])); dst[0]++;
+    *dst[1] = i2s(be2int16(src[1])); dst[1]++;
+    *dst[2] = i2s(be2int16(src[2])); dst[2]++;
+    *dst[3] = i2s(be2int16(src[3])); dst[3]++;
+    *dst[4] = i2s(be2int16(src[4])); dst[4]++;
+    *dst[5] = i2s(be2int16(src[5])); dst[5]++;
+    *dst[6] = i2s(be2int16(src[6])); dst[6]++;
+    *dst[7] = i2s(be2int16(src[7])); dst[7]++;
+    rawdata += 16;
+  }
+}
+void pcm24_be_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int24_t *src = (int24_t *)rawdata;
+    *dst[0] = i2s(be2int24(src[0])); dst[0]++;
+    *dst[1] = i2s(be2int24(src[1])); dst[1]++;
+    *dst[2] = i2s(be2int24(src[2])); dst[2]++;
+    *dst[3] = i2s(be2int24(src[3])); dst[3]++;
+    *dst[4] = i2s(be2int24(src[4])); dst[4]++;
+    *dst[5] = i2s(be2int24(src[5])); dst[5]++;
+    *dst[6] = i2s(be2int24(src[6])); dst[6]++;
+    *dst[7] = i2s(be2int24(src[7])); dst[7]++;
+    rawdata += 24;
+  }
+}
+void pcm32_be_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int32_t *src = (int32_t *)rawdata;
+    *dst[0] = i2s(be2int32(src[0])); dst[0]++;
+    *dst[1] = i2s(be2int32(src[1])); dst[1]++;
+    *dst[2] = i2s(be2int32(src[2])); dst[2]++;
+    *dst[3] = i2s(be2int32(src[3])); dst[3]++;
+    *dst[4] = i2s(be2int32(src[4])); dst[4]++;
+    *dst[5] = i2s(be2int32(src[5])); dst[5]++;
+    *dst[6] = i2s(be2int32(src[6])); dst[6]++;
+    *dst[7] = i2s(be2int32(src[7])); dst[7]++;
+    rawdata += 32;
+  }
+}
+void pcmfloat_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    float *src = (float *)rawdata;
+    *dst[0] = sample_t(src[0]); dst[0]++;
+    *dst[1] = sample_t(src[1]); dst[1]++;
+    *dst[2] = sample_t(src[2]); dst[2]++;
+    *dst[3] = sample_t(src[3]); dst[3]++;
+    *dst[4] = sample_t(src[4]); dst[4]++;
+    *dst[5] = sample_t(src[5]); dst[5]++;
+    *dst[6] = sample_t(src[6]); dst[6]++;
+    *dst[7] = sample_t(src[7]); dst[7]++;
+    rawdata += 32;
+  }
+}
+void pcmdouble_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    double *src = (double *)rawdata;
+    *dst[0] = sample_t(src[0]); dst[0]++;
+    *dst[1] = sample_t(src[1]); dst[1]++;
+    *dst[2] = sample_t(src[2]); dst[2]++;
+    *dst[3] = sample_t(src[3]); dst[3]++;
+    *dst[4] = sample_t(src[4]); dst[4]++;
+    *dst[5] = sample_t(src[5]); dst[5]++;
+    *dst[6] = sample_t(src[6]); dst[6]++;
+    *dst[7] = sample_t(src[7]); dst[7]++;
+    rawdata += 64;
+  }
+}
+void lpcm20_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int16_t *src = (int16_t *)rawdata;
+    dst[0][0] = i2s(int32_t(be2int16(src[0+8*0])) << 4); dst[0][1] = i2s(int32_t(be2int16(src[0+8*1])) << 4); dst[0]+=2;
+    dst[1][0] = i2s(int32_t(be2int16(src[1+8*0])) << 4); dst[1][1] = i2s(int32_t(be2int16(src[1+8*1])) << 4); dst[1]+=2;
+    dst[2][0] = i2s(int32_t(be2int16(src[2+8*0])) << 4); dst[2][1] = i2s(int32_t(be2int16(src[2+8*1])) << 4); dst[2]+=2;
+    dst[3][0] = i2s(int32_t(be2int16(src[3+8*0])) << 4); dst[3][1] = i2s(int32_t(be2int16(src[3+8*1])) << 4); dst[3]+=2;
+    dst[4][0] = i2s(int32_t(be2int16(src[4+8*0])) << 4); dst[4][1] = i2s(int32_t(be2int16(src[4+8*1])) << 4); dst[4]+=2;
+    dst[5][0] = i2s(int32_t(be2int16(src[5+8*0])) << 4); dst[5][1] = i2s(int32_t(be2int16(src[5+8*1])) << 4); dst[5]+=2;
+    dst[6][0] = i2s(int32_t(be2int16(src[6+8*0])) << 4); dst[6][1] = i2s(int32_t(be2int16(src[6+8*1])) << 4); dst[6]+=2;
+    dst[7][0] = i2s(int32_t(be2int16(src[7+8*0])) << 4); dst[7][1] = i2s(int32_t(be2int16(src[7+8*1])) << 4); dst[7]+=2;
+    rawdata += 40;
+  }
+}
+void lpcm24_linear_8ch(uint8_t *rawdata, samples_t samples, size_t size)
+{
+  samples_t dst = samples;
+  while (size--)
+  {
+    int16_t *src = (int16_t *)rawdata;
+    dst[0][0] = i2s(int32_t(be2int16(src[0+8*0]) << 8) | rawdata[8*4+0+8*0]); dst[0][1] = i2s(int32_t(be2int16(src[0+8*1]) << 8) | rawdata[8*4+0+8*1]); dst[0]+=2;
+    dst[1][0] = i2s(int32_t(be2int16(src[1+8*0]) << 8) | rawdata[8*4+1+8*0]); dst[1][1] = i2s(int32_t(be2int16(src[1+8*1]) << 8) | rawdata[8*4+1+8*1]); dst[1]+=2;
+    dst[2][0] = i2s(int32_t(be2int16(src[2+8*0]) << 8) | rawdata[8*4+2+8*0]); dst[2][1] = i2s(int32_t(be2int16(src[2+8*1]) << 8) | rawdata[8*4+2+8*1]); dst[2]+=2;
+    dst[3][0] = i2s(int32_t(be2int16(src[3+8*0]) << 8) | rawdata[8*4+3+8*0]); dst[3][1] = i2s(int32_t(be2int16(src[3+8*1]) << 8) | rawdata[8*4+3+8*1]); dst[3]+=2;
+    dst[4][0] = i2s(int32_t(be2int16(src[4+8*0]) << 8) | rawdata[8*4+4+8*0]); dst[4][1] = i2s(int32_t(be2int16(src[4+8*1]) << 8) | rawdata[8*4+4+8*1]); dst[4]+=2;
+    dst[5][0] = i2s(int32_t(be2int16(src[5+8*0]) << 8) | rawdata[8*4+5+8*0]); dst[5][1] = i2s(int32_t(be2int16(src[5+8*1]) << 8) | rawdata[8*4+5+8*1]); dst[5]+=2;
+    dst[6][0] = i2s(int32_t(be2int16(src[6+8*0]) << 8) | rawdata[8*4+6+8*0]); dst[6][1] = i2s(int32_t(be2int16(src[6+8*1]) << 8) | rawdata[8*4+6+8*1]); dst[6]+=2;
+    dst[7][0] = i2s(int32_t(be2int16(src[7+8*0]) << 8) | rawdata[8*4+7+8*0]); dst[7][1] = i2s(int32_t(be2int16(src[7+8*1]) << 8) | rawdata[8*4+7+8*1]); dst[7]+=2;
+    rawdata += 48;
   }
 }

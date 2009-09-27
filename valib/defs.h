@@ -52,7 +52,7 @@ const char *valib_credits();
 // one of the most important constants:
 // number of channels passed to processing functions
 
-#define NCHANNELS 6
+#define NCHANNELS 8
 
 // number of channel names
 #define CH_NAMES  11
