@@ -19,7 +19,6 @@ TEST(convolver_mch, "ConvolverMch test")
   const int freq = 1000;
   const int df = 100;
   const double att = 100;
-  const int *order = spk.order();
 
   FIRZero zero_fir;
   FIRIdentity identity_fir;
@@ -50,13 +49,13 @@ TEST(convolver_mch, "ConvolverMch test")
 
   // multichannel generators
 
-  const FIRGen *null_all[NCHANNELS];
-  const FIRGen *zero_all[NCHANNELS];
-  const FIRGen *pass_all[NCHANNELS];
-  const FIRGen *gain_all[NCHANNELS];
-  const FIRGen *lpf_all[NCHANNELS];
+  const FIRGen *null_all[CH_NAMES];
+  const FIRGen *zero_all[CH_NAMES];
+  const FIRGen *pass_all[CH_NAMES];
+  const FIRGen *gain_all[CH_NAMES];
+  const FIRGen *lpf_all[CH_NAMES];
 
-  for (ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
   {
     null_all[ch_name] = 0;
     zero_all[ch_name] = &zero_fir;
@@ -75,7 +74,7 @@ TEST(convolver_mch, "ConvolverMch test")
   /////////////////////////////////////////////////////////
   // Change FIR
 
-  for (ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
   {
     conv.set_fir(ch_name, &zero_fir);
     CHECK(conv.get_fir(ch_name) == &zero_fir);
@@ -85,11 +84,11 @@ TEST(convolver_mch, "ConvolverMch test")
   }
 
   conv.set_all_firs(zero_all);
-  for (ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
     CHECK(conv.get_fir(ch_name) == &zero_fir);
   
   conv.set_all_firs(pass_all);
-  for (ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
     CHECK(conv.get_fir(ch_name) == &identity_fir);
 
   /////////////////////////////////////////////////////////
@@ -169,8 +168,8 @@ TEST(convolver_mch, "ConvolverMch test")
   // lpf1, lpf2, identity and null filters produce identity output
 
   assert(spk.mask & MODE_QUADRO);
-  const FIRGen *mix_pass[NCHANNELS];
-  for (ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  const FIRGen *mix_pass[CH_NAMES];
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
     mix_pass[ch_name] = 0;
 
   mix_pass[CH_L] = &lpf1;
@@ -192,8 +191,8 @@ TEST(convolver_mch, "ConvolverMch test")
   // lpf1, lpf2 and zero filters produce zero output
 
   assert(spk.mask & MODE_QUADRO);
-  const FIRGen *mix_zero[NCHANNELS];
-  for (ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  const FIRGen *mix_zero[CH_NAMES];
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
     mix_zero[ch_name] = &zero_fir;
 
   mix_zero[CH_L] = &lpf1;

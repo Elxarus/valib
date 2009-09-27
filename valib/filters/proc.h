@@ -154,11 +154,11 @@ public:
 
   // Channel order
 
-  inline void     get_input_order(int order[NCHANNELS]) const;
-  inline void     get_output_order(int order[NCHANNELS]) const;
+  inline void     get_input_order(order_t order) const;
+  inline void     get_output_order(order_t order) const;
 
-  inline void     set_input_order(const int order[NCHANNELS]);
-  inline void     set_output_order(const int order[NCHANNELS]);
+  inline void     set_input_order(const order_t order);
+  inline void     set_output_order(const order_t order);
 
   // Master gain
 
@@ -216,16 +216,16 @@ public:
 
   // Input/output gains
 
-  inline void     get_input_gains(sample_t input_gains[NCHANNELS]) const;
-  inline void     get_output_gains(sample_t output_gains[NCHANNELS]) const;
+  inline void     get_input_gains(sample_t input_gains[CH_NAMES]) const;
+  inline void     get_output_gains(sample_t output_gains[CH_NAMES]) const;
 
-  inline void     set_input_gains(const sample_t input_gains[NCHANNELS]);
-  inline void     set_output_gains(const sample_t output_gains[NCHANNELS]);
+  inline void     set_input_gains(const sample_t input_gains[CH_NAMES]);
+  inline void     set_output_gains(const sample_t output_gains[CH_NAMES]);
 
   // Input/output levels
 
-  inline void     get_input_levels(vtime_t time, sample_t input_levels[NCHANNELS]); // r/o
-  inline void     get_output_levels(vtime_t time, sample_t output_levels[NCHANNELS]); // r/o
+  inline void     get_input_levels(vtime_t time, sample_t input_levels[CH_NAMES]); // r/o
+  inline void     get_output_levels(vtime_t time, sample_t output_levels[CH_NAMES]); // r/o
 
   // SRC
 
@@ -258,10 +258,10 @@ public:
   inline void     set_delay(bool delay);
 
   inline int      get_delay_units() const;
-  inline void     get_delays(float delays[NCHANNELS]) const;
+  inline void     get_delays(float delays[CH_NAMES]) const;
 
   inline void     set_delay_units(int delay_units);
-  inline void     set_delays(const float delays[NCHANNELS]);
+  inline void     set_delays(const float delays[CH_NAMES]);
 
   // Dithering
 
@@ -305,16 +305,16 @@ public:
 
 // Channel order
 
-inline void AudioProcessor::get_input_order(int _order[NCHANNELS]) const
+inline void AudioProcessor::get_input_order(order_t _order) const
 { in_conv.get_order(_order); }
 
-inline void AudioProcessor::get_output_order(int _order[NCHANNELS]) const
+inline void AudioProcessor::get_output_order(order_t _order) const
 { out_conv.get_order(_order); }
 
-inline void AudioProcessor::set_input_order (const int _order[NCHANNELS])
+inline void AudioProcessor::set_input_order (const order_t _order)
 { in_conv.set_order(_order); }
 
-inline void AudioProcessor::set_output_order(const int _order[NCHANNELS])
+inline void AudioProcessor::set_output_order(const order_t _order)
 { out_conv.set_order(_order); }
 
 // Master gain
@@ -427,24 +427,24 @@ inline void AudioProcessor::set_lfelev(sample_t _lfelev)
 
 // Input/output gains
 
-inline void AudioProcessor::get_input_gains(sample_t _input_gains[NCHANNELS]) const
+inline void AudioProcessor::get_input_gains(sample_t _input_gains[CH_NAMES]) const
 { mixer.get_input_gains(_input_gains); }
 
-inline void AudioProcessor::get_output_gains(sample_t _output_gains[NCHANNELS]) const
+inline void AudioProcessor::get_output_gains(sample_t _output_gains[CH_NAMES]) const
 { mixer.get_output_gains(_output_gains); }
 
-inline void AudioProcessor::set_input_gains(const sample_t _input_gains[NCHANNELS])
+inline void AudioProcessor::set_input_gains(const sample_t _input_gains[CH_NAMES])
 { mixer.set_input_gains(_input_gains); }
 
-inline void AudioProcessor::set_output_gains(const sample_t _output_gains[NCHANNELS])
+inline void AudioProcessor::set_output_gains(const sample_t _output_gains[CH_NAMES])
 { mixer.set_output_gains(_output_gains); }
 
 // Input/output levels
 
-inline void AudioProcessor::get_input_levels(vtime_t _time, sample_t _input_levels[NCHANNELS])
+inline void AudioProcessor::get_input_levels(vtime_t _time, sample_t _input_levels[CH_NAMES])
 { in_levels.get_levels(_time, _input_levels); };
 
-inline void AudioProcessor::get_output_levels(vtime_t _time, sample_t _output_levels[NCHANNELS])
+inline void AudioProcessor::get_output_levels(vtime_t _time, sample_t _output_levels[CH_NAMES])
 { out_levels.get_levels(_time, _output_levels); }
 
 // SRC
@@ -506,13 +506,13 @@ inline void AudioProcessor::set_delay(bool _delay)
 inline int AudioProcessor::get_delay_units() const
 { return delay.get_units(); }
 
-inline void AudioProcessor::get_delays(float _delays[NCHANNELS]) const
+inline void AudioProcessor::get_delays(float _delays[CH_NAMES]) const
 { delay.get_delays(_delays); }
 
 inline void AudioProcessor::set_delay_units(int _delay_units)
 { delay.set_units(_delay_units); }
 
-inline void AudioProcessor::set_delays(const float _delays[NCHANNELS])
+inline void AudioProcessor::set_delays(const float _delays[CH_NAMES])
 { delay.set_delays(_delays); }
 
 inline void AudioProcessor::set_dbpb(int _dbpb)

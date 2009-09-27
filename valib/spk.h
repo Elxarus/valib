@@ -1,5 +1,6 @@
 /*
-  Speakers class
+  ==Speakers class==
+
   Audio format definition class. Minimal set of audio parameters we absolutely
   have to know. Main purpose is to accompany audio data blocks.
 
@@ -81,6 +82,139 @@
   level - absolute value for 0dB level. Generally depends on format, i.e.
     for PCM16 format it is 32767.0, so I think about to get rid of this 
     parameter. Now it is used to pre-scale data.
+
+  ==Channels==
+
+  NCHANNELS - number of channels passed to processing functions
+  CH_NAMES - number of channel names.
+
+  ===Channel name===
+
+  *Channel name* is the channel destination, like 'Front Left' or 'Right
+  Surround'. Note, that we can configure the channel by name. For example, set
+  delays for left and right surrounds. Also note, that it may be more
+  destinations, that channels we can simultaneously process (number of channels
+  passed to processing functions). I.e. NCHANNELS <= CH_NAMES.
+
+  Channel name is an integer from 0 to CH_NAMES-1.
+
+  Constants for channel names:
+  CH_{NAME}
+
+  Where {NAME} is one of:
+
+  | L   |- Front left
+  | C   |- Front center
+  | R   |- Front right
+  | SL  |- Surround left
+  | SR  |- Surround right
+  | LFE |- LFE
+  | CL  |- Front left center
+  | CR  |- Front right center
+  | BL  |- Back left
+  | BC  |- Back center
+  | BR  |- Back right
+
+  ===Channel mask===
+
+  A set of channel names forms *speaker configuration*, or *mode*. Stereo
+  config has 2 channels: left and right. 5.1 config has 6 channels, 3 front,
+  2 surround and 1 low-frequency channel.
+
+  Speaker configuration is represented as an integer value where each bit
+  represents some channel, bit mask, or simply *mask*. Term *channel mask*
+  usually points to a mask with a single bit set for a certain channel.
+
+  Note, that we can process only NCHANNELS at once. Therefore, channel mask
+  cannot have more than NCHANNELS bits set (with some exceptions).
+
+  Constants for channel masks:
+  CH_MASK_{NAME}
+
+  Convert channel name to channel mask:
+  mask = CH_MASK(ch_name1) | CH_MASK(ch_name2)
+
+  Speaker configuration constants:
+  MODE_{MODE}
+
+  ===Channel order===
+
+  *Channel order* defines weight of each channel name. Different sources has
+  different channel orders.
+
+  An array of channel names is used for order:
+  typedef int order_t[CH_NAMES];
+
+  For example, internally this library uses *standard channel order*:
+  CH_L, CH_C, CH_R, CH_SL, CH_SR, CH_LFE, CH_CL, CH_CR, CH_BL, CH_BC, CH_BR
+
+  Windows has the following order:
+  CH_L, CH_R, CH_C, CH_LFE, CH_BL, CH_BR, CH_CL, CH_CR, CH_BC, CH_SL, CH_SR
+
+  AC3 order:
+  CH_L, CH_C, CH_R, CH_SL, CH_SR, CH_LFE, CH_NONE, CH_NONE ...
+
+  Note, that in the last case we have less channels because AC3 format does not
+  know about others. But order array must have a fixed size. To fill the rest
+  CH_NONE constant is used.
+
+  Note that each channel name must be unique in the array and array must be
+  compact. The following orders are prohibited:
+
+  CH_L, CH_R, CH_L, ...    // CH_L is not unique
+  CH_L, CH_NONE, CH_R, ... // gap in the middle
+
+  Each specific channel configuration of each specific source has its own
+  order. For example, 4.1 config has different orders in Windows and AC3:
+
+  CH_L, CH_R, CH_SL, CH_SR, CH_LFE // AC3 order
+  CH_L, CH_R, CH_LFE, CH_SL, CH_SR // Windows order
+
+  But we can decide the specific order from the 'global' order for this source
+  and channel mask for this configuration, by 'throuwing out' unused channels.
+
+  Internally, library uses only one, standard order. You can get order for any
+  configuration by calling Speakers::get_order().
+
+  ===Channel index===
+
+  Channel order is an array of channel names. Zero-based index in this array
+  is the *channel index*, or simply 'channel'. The same index may point to the
+  different channels in different modes. For example, index 1 may point to the
+  right channel in stereo mode or center channel in 5.1 mode.
+
+  Note, that at processing time channel index is in range form 0 to NCHANNELS.
+
+  ===Channel settings===
+
+  Some filters provides individual channel settings (delay, equalizer, gain,
+  etc). This settings are applied to the certain *destination* and therefore
+  should be contained in an array of CH_NAMES elements in standard order.
+
+  The standard order channel name *is its own index*, so we can address left
+  channel in the settings array as:
+
+  sample_t gains[CH_NAMES];
+  left_gain = gains[CH_L];
+
+  But at the processing time we deal with custom order. Therefore, to retrieve
+  a parameter from an array we have to know the channel name by its index. We
+  can do this with an order array built for the given configuration:
+
+  sample_t gains[CH_NAMES];
+
+  function process(Speakers spk, samples_t sampels)
+  {
+    order_t order;
+    spk.get_order(order);
+    for (int ch = 0; ch < spk.nch(); ch++) // ch is index
+    {
+      int ch_name = order[ch];
+      double gain = gains[ch_name];
+      ...
+    }
+    ...
+  }
 */
 
 #ifndef VALIB_SPK_H
@@ -182,19 +316,22 @@
 // may used as index in arrays
 ///////////////////////////////////////////////////////////////////////////////
 
-#define CH_L    0  // Left channel
-#define CH_C    1  // Center channel
-#define CH_R    2  // Right channel
+#define CH_L    0  // Front left channel
+#define CH_C    1  // Front center channel
+#define CH_R    2  // Front right channel
 #define CH_SL   3  // Surround left channel
 #define CH_SR   4  // Surround right channel
 #define CH_LFE  5  // LFE channel
+#define CH_CL   6  // Front left center
+#define CH_CR   7  // Front right center
+#define CH_BL   8  // Back left
+#define CH_BC   9  // Back center
+#define CH_BR   10 // Back right
 #define CH_NONE -1 // indicates that channel is not used in channel order
 
 // synonyms
-#define CH_M    1  // Mono channel = center channel
-#define CH_CH1  0  // Channel 1 in Dual mono mode
-#define CH_CH2  2  // Channel 2 in Dual mono mode
-#define CH_S    3  // Surround channel for x/1 modes
+#define CH_M    CH_C   // Mono channel
+#define CH_S    CH_BC  // Single surround channel
 
 ///////////////////////////////////////////////////////////////////////////////
 // Channel masks
@@ -202,21 +339,24 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // macro to convert channel number to channel mask
-#define CH_MASK(ch)  (1 << (ch & 0x1f))
+#define CH_MASK(ch)  (1 << ch)
 
 // channel masks
-#define CH_MASK_L    1
-#define CH_MASK_C    2
-#define CH_MASK_R    4
-#define CH_MASK_SL   8
-#define CH_MASK_SR   16
-#define CH_MASK_LFE  32
+#define CH_MASK_L    1     // Front left
+#define CH_MASK_C    2     // Front center
+#define CH_MASK_R    4     // Front right
+#define CH_MASK_SL   8     // Surround left
+#define CH_MASK_SR   16    // Surround right
+#define CH_MASK_LFE  32    // LFE
+#define CH_MASK_CL   64    // Front left center
+#define CH_MASK_CR   128   // Front right center
+#define CH_MASK_BL   256   // Back left
+#define CH_MASK_BC   512   // Back center
+#define CH_MASK_BR   1024  // Back right
 
 // synonyms
-#define CH_MASK_M    2
-#define CH_MASK_C1   0
-#define CH_MASK_C2   4
-#define CH_MASK_S    8
+#define CH_MASK_M    CH_MASK_C  // Mono channel
+#define CH_MASK_S    CH_MASK_BC // Single surround channel
 
 ///////////////////////////////////////////////////////////////////////////////
 // Common channel configs
@@ -237,6 +377,13 @@
 #define MODE_3_1_LFE (MODE_3_0  | CH_MASK_S  | CH_MASK_LFE)
 #define MODE_2_2_LFE (MODE_2_0  | CH_MASK_SL | CH_MASK_SR | CH_MASK_LFE)
 #define MODE_3_2_LFE (MODE_3_0  | CH_MASK_SL | CH_MASK_SR | CH_MASK_LFE)
+
+#define MODE_3_2_1     (MODE_3_2   | CH_MASK_BC)
+#define MODE_3_2_2     (MODE_3_2   | CH_MASK_BL | CH_MASK_BR)
+#define MODE_5_2       (MODE_3_2   | CH_MASK_CL | CH_MASK_CR)
+#define MODE_3_2_1_LFE (MODE_3_2_1 | CH_MASK_LFE)
+#define MODE_3_2_2_LFE (MODE_3_2_2 | CH_MASK_LFE)
+#define MODE_5_2_LFE   (MODE_5_2   | CH_MASK_LFE)
 
 // synonyms
 #define MODE_MONO    MODE_1_0
@@ -285,22 +432,23 @@ public:
   inline bool is_linear() const;
   inline bool is_rawdata() const;
 
-  inline bool is_pcm()   const;
+  inline bool is_pcm() const;
   inline bool is_floating_point() const;
   inline bool is_spdif() const;
 
-  inline int  nch()   const;
-  inline bool lfe()   const;
-
-  inline const int *order() const;
+  inline int  nch() const;
+  inline bool lfe() const;
 
   inline int  sample_size() const;
 
   inline bool operator ==(const Speakers &spk) const;
   inline bool operator !=(const Speakers &spk) const;
 
-  inline const char *format_text() const;
-  inline const char *mode_text() const;
+  inline void get_order(order_t order) const;
+
+  const char *format_text() const;
+  const char *mode_text() const;
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -314,8 +462,8 @@ extern const Speakers spk_rawdata;
 // Constants for common channel orders
 ///////////////////////////////////////////////////////////////////////////////
 
-extern const int std_order[NCHANNELS];
-extern const int win_order[NCHANNELS];
+extern const int std_order[CH_NAMES];
+extern const int win_order[CH_NAMES];
 
 ///////////////////////////////////////////////////////////////////////////////
 // samples_t
@@ -335,35 +483,33 @@ struct samples_t
   inline samples_t &operator -=(size_t n);
   inline samples_t &zero();
 
-  void reorder_to_std(Speakers spk, const int order[NCHANNELS]);
-  void reorder_from_std(Speakers spk, const int order[NCHANNELS]);
-  void reorder(Speakers spk, const int input_order[NCHANNELS], const int output_order[NCHANNELS]);
+  void reorder_to_std(Speakers spk, const order_t order);
+  void reorder_from_std(Speakers spk, const order_t order);
+  void reorder(Speakers spk, const order_t input_order, const order_t output_order);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class inlines
 ///////////////////////////////////////////////////////////////////////////////
 
-extern const int sample_size_tbl[32];
-extern const int mask_nch_tbl[64];
-extern const int mask_order_tbl[64][6];
-extern const char *mode_text[64];
-
 inline int sample_size(int format)
 {
+  extern const int sample_size_tbl[32];
+  assert(format >= 0 && format < 32);
   return sample_size_tbl[format & 0x1f];
 }
 
 inline int mask_nch(int mask)
 {
-  return mask_nch_tbl[mask & 0x3f];
+  // Bit counting taken from FXTBook
+  int nch = mask;
+  nch  = ((nch >> 1) & 0x55555555UL) + (nch & 0x55555555UL); // 0-2 in 2 bits
+  nch  = ((nch >> 2) & 0x33333333UL) + (nch & 0x33333333UL); // 0-4 in 4 bits
+  nch  = ((nch >> 4) + nch) & 0x0f0f0f0fUL;                  // 0-8 in 4 bits
+  nch += nch >> 8;    // 0-16 in 8 bits
+  nch += nch >> 16;   // 0-32 in 8 bits
+  return nch & 0xff;
 }
-
-inline const int *mask_order(int mask)
-{
-  return mask_order_tbl[mask & 0x3f];
-}
-
 
 inline void 
 Speakers::set(int _format, int _mask, int _sample_rate, sample_t _level, int _relation)
@@ -418,21 +564,11 @@ inline int Speakers::nch() const
 
 inline bool 
 Speakers::lfe() const
-{
-  return (mask & CH_MASK_LFE) != 0;
-}
+{ return (mask & CH_MASK_LFE) != 0; }
 
-inline const int *
-Speakers::order() const
-{
-  return ::mask_order(mask);
-}
-
-inline int 
+inline int
 Speakers::sample_size() const
-{
-  return ::sample_size(format);
-}
+{ return ::sample_size(format); }
 
 inline bool
 Speakers::operator ==(const Speakers &_spk) const
@@ -454,50 +590,16 @@ Speakers::operator !=(const Speakers &_spk) const
          (relation != _spk.relation);
 }
 
-inline const char *
-Speakers::format_text() const
+inline void
+Speakers::get_order(order_t order) const
 {
-  switch (format)
-  {
-    case FORMAT_RAWDATA:     return "Raw data";
-    case FORMAT_LINEAR:      return "Linear PCM";
+  int ch_index = 0;
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
+    if ((mask >> ch_name) & 1)
+      order[ch_index++] = ch_name;
 
-    case FORMAT_PCM16:       return "PCM16";
-    case FORMAT_PCM24:       return "PCM24";
-    case FORMAT_PCM32:       return "PCM32";
-
-    case FORMAT_PCM16_BE:    return "PCM16 BE";
-    case FORMAT_PCM24_BE:    return "PCM24 BE";
-    case FORMAT_PCM32_BE:    return "PCM32 BE";
-
-    case FORMAT_PCMFLOAT:    return "PCM Float";
-    case FORMAT_PCMDOUBLE:   return "PCM Double";
-
-    case FORMAT_PES:         return "MPEG Program Stream";
-    case FORMAT_SPDIF:       return "SPDIF";
-
-    case FORMAT_AC3:         return "AC3";
-    case FORMAT_MPA:         return "MPEG Audio";
-    case FORMAT_DTS:         return "DTS";
-
-    case FORMAT_LPCM20:      return "LPCM 20bit";
-    case FORMAT_LPCM24:      return "LPCM 24bit";
-
-    default: return "Unknown";
-  };
-}
-
-inline const char *
-Speakers::mode_text() const
-{
-  switch (relation)
-  {
-    case RELATION_DOLBY:   return "Dolby Surround";
-    case RELATION_DOLBY2:  return "Dolby ProLogic II";
-    case RELATION_SUMDIFF: return "Sum-difference";
-  }
-
-  return ::mode_text[mask];
+  for (; ch_index < CH_NAMES; ch_index++)
+    order[ch_index] = CH_NONE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -507,60 +609,44 @@ Speakers::mode_text() const
 inline samples_t &
 samples_t::operator +=(int _n)
 {
-  samples[0] += _n;
-  samples[1] += _n;
-  samples[2] += _n;
-  samples[3] += _n;
-  samples[4] += _n;
-  samples[5] += _n;
+  for (int i = 0; i < NCHANNELS; i++)
+    if (samples[i])
+      samples[i] += _n;
   return *this;
 }
 
 inline samples_t &
 samples_t::operator -=(int _n)
 {
-  samples[0] -= _n;
-  samples[1] -= _n;
-  samples[2] -= _n;
-  samples[3] -= _n;
-  samples[4] -= _n;
-  samples[5] -= _n;
+  for (int i = 0; i < NCHANNELS; i++)
+    if (samples[i])
+      samples[i] -= _n;
   return *this;
 }
 
 inline samples_t &
 samples_t::operator +=(size_t _n)
 {
-  samples[0] += _n;
-  samples[1] += _n;
-  samples[2] += _n;
-  samples[3] += _n;
-  samples[4] += _n;
-  samples[5] += _n;
+  for (int i = 0; i < NCHANNELS; i++)
+    if (samples[i])
+      samples[i] += _n;
   return *this;
 }
 
 inline samples_t &
 samples_t::operator -=(size_t _n)
 {
-  samples[0] -= _n;
-  samples[1] -= _n;
-  samples[2] -= _n;
-  samples[3] -= _n;
-  samples[4] -= _n;
-  samples[5] -= _n;
+  for (int i = 0; i < NCHANNELS; i++)
+    if (samples[i])
+      samples[i] -= _n;
   return *this;
 }
 
 inline samples_t &
 samples_t::zero()
 {
-  samples[0] = 0;
-  samples[1] = 0;
-  samples[2] = 0;
-  samples[3] = 0;
-  samples[4] = 0;
-  samples[5] = 0;
+  for (int i = 0; i < NCHANNELS; i++)
+    samples[i] = 0;
   return *this;
 }
 

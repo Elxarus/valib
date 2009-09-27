@@ -42,10 +42,10 @@ Mixer::Mixer(size_t _nsamples)
 
   // Gains
   gain = 1.0;
-  for (int ch = 0; ch < NCHANNELS; ch++)
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
   {
-    input_gains[ch]  = 1.0;
-    output_gains[ch] = 1.0;
+    input_gains[ch_name]  = 1.0;
+    output_gains[ch_name] = 1.0;
   }
 
   // Matrix
@@ -68,8 +68,11 @@ Mixer::prepare_matrix()
   // todo: do not touch pass-through channels
   // todo: gain channel if possible instead of matrixing
 
-  const int *in_order = spk.order();
-  const int *out_order = out_spk.order();
+  order_t in_order;
+  order_t out_order;
+  spk.get_order(in_order);
+  out_spk.get_order(out_order);
+
   sample_t factor = 1.0;
 
   if (spk.level > 0.0)
@@ -208,8 +211,8 @@ Mixer::calc_matrix()
       out_spk.relation == RELATION_DOLBY2)
     out_dolby = out_spk.relation;
   
-  for (int i = 0; i < NCHANNELS; i++)
-    for (int j = 0; j < NCHANNELS; j++)
+  for (int i = 0; i < CH_NAMES; i++)
+    for (int j = 0; j < CH_NAMES; j++)
       matrix[i][j] = 0;
 
   // Dolby modes are backwards-compatible
@@ -265,6 +268,11 @@ Mixer::calc_matrix()
     if (in_mask & out_mask & CH_MASK_C)  matrix[CH_C] [CH_C]  = clev;
     if (in_mask & out_mask & CH_MASK_SL) matrix[CH_SL][CH_SL] = slev;
     if (in_mask & out_mask & CH_MASK_SR) matrix[CH_SR][CH_SR] = slev;
+    if (in_mask & out_mask & CH_MASK_CL) matrix[CH_CL][CH_CL] = 1.0;
+    if (in_mask & out_mask & CH_MASK_CR) matrix[CH_CR][CH_CR] = 1.0;
+    if (in_mask & out_mask & CH_MASK_BL) matrix[CH_BL][CH_BL] = slev;
+    if (in_mask & out_mask & CH_MASK_BC) matrix[CH_BC][CH_BC] = slev;
+    if (in_mask & out_mask & CH_MASK_BR) matrix[CH_BR][CH_BR] = slev;
 
     // mix front channels
     if (out_nfront == 1 && in_nfront > 1)
@@ -408,17 +416,20 @@ Mixer::calc_matrix()
 
   if (normalize_matrix)
   {
-    double levels[NCHANNELS] = { 0, 0, 0, 0, 0, 0 };
+    double levels[CH_NAMES];
     double max_level;
     double norm;
     int i, j;
 
-    for (i = 0; i < NCHANNELS; i++)
-      for (j = 0; j < NCHANNELS; j++)
+    for (i = 0; i < CH_NAMES; i++)
+    {
+      levels[i] = 0;
+      for (j = 0; j < CH_NAMES; j++)
         levels[i] += fabs(matrix[j][i]);
+    }
 
     max_level = levels[0];
-    for (i = 1; i < NCHANNELS; i++)
+    for (i = 1; i < CH_NAMES; i++)
       if (levels[i] > max_level) 
         max_level = levels[i];
 
@@ -427,8 +438,8 @@ Mixer::calc_matrix()
     else
       norm = 1.0;
 
-    for (i = 0; i < NCHANNELS; i++)
-      for (j = 0; j < NCHANNELS; j++)
+    for (i = 0; i < CH_NAMES; i++)
+      for (j = 0; j < CH_NAMES; j++)
         matrix[j][i] *= norm;
   }
 

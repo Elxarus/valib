@@ -1,45 +1,6 @@
 #include "spk.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Just for reference
-///////////////////////////////////////////////////////////////////////////////
-/*
-// special-purpose formats
-#define FORMAT_UNKNOWN     (-1)
-#define FORMAT_RAWDATA     0
-#define FORMAT_LINEAR      1
-
-// PCM low-endian formats
-#define FORMAT_PCM16       2
-#define FORMAT_PCM24       3
-#define FORMAT_PCM32       4
-
-// PCM big-endian formats
-#define FORMAT_PCM16_BE    5
-#define FORMAT_PCM24_BE    6
-#define FORMAT_PCM32_BE    7
-
-// PCM floating-point
-#define FORMAT_PCMFLOAT    8
-#define FORMAT_PCMDOUBLE   9
-
-// container formats
-#define FORMAT_PES        10 // MPEG1/2 Program Elementary Stream
-#define FORMAT_SPDIF      11 // IEC 61937 stream
-
-// compressed spdifable formats
-#define FORMAT_MPA        12
-#define FORMAT_AC3        13
-#define FORMAT_DTS        14
-
-// DVD LPCM
-// Note: the sample size for this formats is doubled because
-// LPCM samples are packed into blocks of 2 samples.
-#define FORMAT_LPCM20     15
-#define FORMAT_LPCM24     16
-*/
-
-///////////////////////////////////////////////////////////////////////////////
 // Constants for common audio formats
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -50,12 +11,11 @@ extern const Speakers spk_rawdata = Speakers(FORMAT_RAWDATA, 0, 0, 0, 0);
 // Constants for common channel orders
 ///////////////////////////////////////////////////////////////////////////////
 
-extern const int std_order[NCHANNELS] = 
-{ 0, 1, 2, 3, 4, 5 };
+extern const int std_order[CH_NAMES] = 
+{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-extern const int win_order[NCHANNELS] = 
-{ CH_L, CH_R, CH_C, CH_LFE, CH_SL, CH_SR };
-
+extern const int win_order[CH_NAMES] = 
+{ CH_L, CH_R, CH_C, CH_LFE, CH_BL, CH_BR, CH_CL, CH_CR, CH_BC, CH_SL, CH_SR };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Tables for Speakers class
@@ -63,233 +23,170 @@ extern const int win_order[NCHANNELS] =
 
 extern const int sample_size_tbl[32] = 
 {
-  0,
-  sizeof(sample_t), 
+  0,                // FORMAT_RAWDATA
+  sizeof(sample_t), // FORMAT_LINEAR
 
-  sizeof(int16_t),
-  sizeof(int24_t),
-  sizeof(int32_t),
+  sizeof(int16_t),  // FORMAT_PCM16
+  sizeof(int24_t),  // FORMAT_PCM24
+  sizeof(int32_t),  // FORMAT_PCM32
 
-  sizeof(int16_t),
-  sizeof(int24_t),
-  sizeof(int32_t),
+  sizeof(int16_t),  // FORMAT_PCM16_BE
+  sizeof(int24_t),  // FORMAT_PCM24_BE
+  sizeof(int32_t),  // FORMAT_PCM32_BE
 
-  sizeof(float),
-  sizeof(double),
+  sizeof(float),    // FORMAT_PCMFLOAT
+  sizeof(double),   // FORMAT_PCMDOUBLE
 
   1, 1,             // PES/SPDIF
   1, 1, 1,          // MPA, AC3, DTS
   5, 6,             // DVD LPCM 20/24 bit
-
+  
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-extern const int mask_nch_tbl[64] = 
+struct mode_map_s
 {
-  0, 1, 1, 2, 1, 2, 2, 3, 
-  1, 2, 2, 3, 2, 3, 3, 4, 
-  1, 2, 2, 3, 2, 3, 3, 4, 
-  2, 3, 3, 4, 3, 4, 4, 5, 
-  1, 2, 2, 3, 2, 3, 3, 4, 
-  2, 3, 3, 4, 3, 4, 4, 5, 
-  2, 3, 3, 4, 3, 4, 4, 5, 
-  3, 4, 4, 5, 4, 5, 5, 6 
+  int mask;
+  const char *text;
 };
 
-extern const int mask_order_tbl[64][6] =
+static const mode_map_s mode_map[] =
 {
-{ CH_NONE },
-{ CH_L },
-{ CH_C },
-{ CH_L, CH_C },
-{ CH_R },
-{ CH_L, CH_R },
-{ CH_C, CH_R },
-{ CH_L, CH_C, CH_R },
-{ CH_SL },
-{ CH_L, CH_SL },
-{ CH_C, CH_SL },
-{ CH_L, CH_C, CH_SL },
-{ CH_R, CH_SL },
-{ CH_L, CH_R, CH_SL },
-{ CH_C, CH_R, CH_SL },
-{ CH_L, CH_C, CH_R, CH_SL },
-{ CH_SR },
-{ CH_L, CH_SR },
-{ CH_C, CH_SR },
-{ CH_L, CH_C, CH_SR },
-{ CH_R, CH_SR },
-{ CH_L, CH_R, CH_SR },
-{ CH_C, CH_R, CH_SR },
-{ CH_L, CH_C, CH_R, CH_SR },
-{ CH_SL, CH_SR },
-{ CH_L, CH_SL, CH_SR },
-{ CH_C, CH_SL, CH_SR },
-{ CH_L, CH_C, CH_SL, CH_SR },
-{ CH_R, CH_SL, CH_SR },
-{ CH_L, CH_R, CH_SL, CH_SR },
-{ CH_C, CH_R, CH_SL, CH_SR },
-{ CH_L, CH_C, CH_R, CH_SL, CH_SR },
-{ CH_LFE },
-{ CH_L, CH_LFE },
-{ CH_C, CH_LFE },
-{ CH_L, CH_C, CH_LFE },
-{ CH_R, CH_LFE },
-{ CH_L, CH_R, CH_LFE },
-{ CH_C, CH_R, CH_LFE },
-{ CH_L, CH_C, CH_R, CH_LFE },
-{ CH_SL, CH_LFE },
-{ CH_L, CH_SL, CH_LFE },
-{ CH_C, CH_SL, CH_LFE },
-{ CH_L, CH_C, CH_SL, CH_LFE },
-{ CH_R, CH_SL, CH_LFE },
-{ CH_L, CH_R, CH_SL, CH_LFE },
-{ CH_C, CH_R, CH_SL, CH_LFE },
-{ CH_L, CH_C, CH_R, CH_SL, CH_LFE },
-{ CH_SR, CH_LFE },
-{ CH_L, CH_SR, CH_LFE },
-{ CH_C, CH_SR, CH_LFE },
-{ CH_L, CH_C, CH_SR, CH_LFE },
-{ CH_R, CH_SR, CH_LFE },
-{ CH_L, CH_R, CH_SR, CH_LFE },
-{ CH_C, CH_R, CH_SR, CH_LFE },
-{ CH_L, CH_C, CH_R, CH_SR, CH_LFE },
-{ CH_SL, CH_SR, CH_LFE },
-{ CH_L, CH_SL, CH_SR, CH_LFE },
-{ CH_C, CH_SL, CH_SR, CH_LFE },
-{ CH_L, CH_C, CH_SL, CH_SR, CH_LFE },
-{ CH_R, CH_SL, CH_SR, CH_LFE },
-{ CH_L, CH_R, CH_SL, CH_SR, CH_LFE },
-{ CH_C, CH_R, CH_SL, CH_SR, CH_LFE },
-{ CH_L, CH_C, CH_R, CH_SL, CH_SR, CH_LFE },
+  { MODE_1_0,       "Mono" },
+  { MODE_2_0,       "Stereo" },
+  { MODE_3_0,       "3/0" },
+  { MODE_2_1,       "2/1" },
+  { MODE_3_1,       "3/1" },
+  { MODE_2_2,       "Quadro" },
+  { MODE_3_2,       "5.0" },
+  { MODE_1_0_LFE,   "1.1" },
+  { MODE_2_0_LFE,   "2.1" },
+  { MODE_3_0_LFE,   "3/0.1" },
+  { MODE_2_1_LFE,   "2/1.1" },
+  { MODE_3_1_LFE,   "3/1.1" },
+  { MODE_2_2_LFE,   "4.1" },
+  { MODE_3_2_LFE,   "5.1" },
+  { MODE_3_2_1,     "6.0" },
+  { MODE_3_2_2,     "7.0 (3/2/2)" },
+  { MODE_5_2,       "7.0 (5/2)" },
+  { MODE_3_2_1_LFE, "6.1" },
+  { MODE_3_2_2_LFE, "7.1 (3/2/2.1)" },
+  { MODE_5_2_LFE, "7.1 (5/2.1)" },
 };
 
-extern const char *mode_text[64] =
+const char *
+Speakers::format_text() const
 {
-  "-", 
-  "{ L }",
-  "1/0 (mono)",
-  "{ L, C }",
-  "{ R }",
-  "2/0 (stereo)",
-  "{ C, R }",
-  "3/0",
-  "{ SL }",
-  "{ L, SL }",
-  "{ C, SL }",
-  "{ L, C, SL }",
-  "{ R, SL }",
-  "2/1 (surround)",
-  "{ C, R, SL }",
-  "3/1 (surround)",
-  "{ SR }",
-  "{ L, SR }",
-  "{ C, SR }",
-  "{ L, C, SR }",
-  "{ R, SR }",
-  "{ L, R, SR }",
-  "{ C, R, SR }",
-  "{ L, C, R, SR }",
-  "{ SL, SR }",
-  "{ L, SL, SR }",
-  "{ C, SL, SR }",
-  "{ L, C, SL, SR }",
-  "{ R, SL, SR }",
-  "2/2 (quadro)",
-  "{ C, R, SL, SR }",
-  "3/2 (5 channels)",
-  "{ LFE }",
-  "{ L, LFE }",
-  "1/0.1",
-  "{ L, C, LFE }",
-  "{ R, LFE }",
-  "2/0.1 (2.1)",
-  "{ C, R, LFE }",
-  "3/0.1",
-  "{ SL, LFE }",
-  "{ L, SL, LFE }",
-  "{ C, SL, LFE }",
-  "{ L, C, SL, LFE }",
-  "{ R, SL, LFE }",
-  "2/1.1",
-  "{ C, R, SL, LFE }",
-  "3/1.1",
-  "{ SR, LFE }",
-  "{ L, SR, LFE }",
-  "{ C, SR, LFE }",
-  "{ L, C, SR, LFE }",
-  "{ R, SR, LFE }",
-  "{ L, R, SR, LFE }",
-  "{ C, R, SR, LFE }",
-  "{ L, C, R, SR, LFE }",
-  "{ SL, SR, LFE }",
-  "{ L, SL, SR, LFE }",
-  "{ C, SL, SR, LFE }",
-  "{ L, C, SL, SR, LFE }",
-  "{ R, SL, SR, LFE }",
-  "2/2.1 (4.1)",
-  "{ C, R, SL, SR, LFE }",
-  "3/2.1 (5.1)"
-};
+  switch (format)
+  {
+    case FORMAT_RAWDATA:     return "Raw data";
+    case FORMAT_LINEAR:      return "Linear PCM";
+
+    case FORMAT_PCM16:       return "PCM16";
+    case FORMAT_PCM24:       return "PCM24";
+    case FORMAT_PCM32:       return "PCM32";
+
+    case FORMAT_PCM16_BE:    return "PCM16 BE";
+    case FORMAT_PCM24_BE:    return "PCM24 BE";
+    case FORMAT_PCM32_BE:    return "PCM32 BE";
+
+    case FORMAT_PCMFLOAT:    return "PCM Float";
+    case FORMAT_PCMDOUBLE:   return "PCM Double";
+
+    case FORMAT_PES:         return "MPEG Program Stream";
+    case FORMAT_SPDIF:       return "SPDIF";
+
+    case FORMAT_AC3:         return "AC3";
+    case FORMAT_MPA:         return "MPEG Audio";
+    case FORMAT_DTS:         return "DTS";
+
+    case FORMAT_LPCM20:      return "LPCM 20bit";
+    case FORMAT_LPCM24:      return "LPCM 24bit";
+
+    default: return "Unknown";
+  };
+}
+
+const char *
+Speakers::mode_text() const
+{
+  switch (relation)
+  {
+    case RELATION_DOLBY:   return "Dolby Surround";
+    case RELATION_DOLBY2:  return "Dolby ProLogic II";
+    case RELATION_SUMDIFF: return "Sum-difference";
+  }
+
+  for (int i = 0; i < array_size(mode_map); i++)
+    if (mode_map[i].mask == mask)
+      return mode_map[i].text;
+  return "Custom";
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // samples_t
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-samples_t::reorder_to_std(Speakers _spk, const int _order[NCHANNELS])
+samples_t::reorder_to_std(Speakers _spk, const order_t _order)
 {
   int i, ch;
   int mask = _spk.mask;
+  int nch = _spk.nch();
+  assert(nch <= NCHANNELS);
 
-  sample_t *tmp[NCHANNELS];
+  sample_t *tmp[CH_NAMES];
 
   ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
+  for (i = 0; i < CH_NAMES; i++)
     if (mask & CH_MASK(_order[i]))
       tmp[_order[i]] = samples[ch++];
 
   ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
+  for (i = 0; i < CH_NAMES; i++)
     if (mask & CH_MASK(i))
       samples[ch++] = tmp[i];
 }
 
 void
-samples_t::reorder_from_std(Speakers _spk, const int _order[NCHANNELS])
+samples_t::reorder_from_std(Speakers _spk, const order_t _order)
 {
   int i, ch;
   int mask = _spk.mask;
+  int nch = _spk.nch();
+  assert(nch <= NCHANNELS);
 
-  sample_t *tmp[NCHANNELS];
+  sample_t *tmp[CH_NAMES];
 
   ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
+  for (i = 0; i < CH_NAMES; i++)
     if (mask & CH_MASK(i))
       tmp[i] = samples[ch++];
 
   ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
+  for (i = 0; i < CH_NAMES; i++)
     if (mask & CH_MASK(_order[i]))
       samples[ch++] = tmp[_order[i]];
 }
 
 void
-samples_t::reorder(Speakers _spk, const int _input_order[NCHANNELS], const int _output_order[NCHANNELS])
+samples_t::reorder(Speakers _spk, const order_t _input_order, const order_t _output_order)
 {
   int i, ch;
   int mask = _spk.mask;
+  int nch = _spk.nch();
+  assert(nch <= NCHANNELS);
 
-  sample_t *tmp[NCHANNELS];
+  sample_t *tmp[CH_NAMES];
 
   ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
+  for (i = 0; i < CH_NAMES; i++)
     if (mask & CH_MASK(_input_order[i]))
       tmp[_input_order[i]] = samples[ch++];
 
   ch = 0;
-  for (i = 0; i < NCHANNELS; i++)
+  for (i = 0; i < CH_NAMES; i++)
     if (mask & CH_MASK(_output_order[i]))
       samples[ch++] = tmp[_output_order[i]];
 }
-

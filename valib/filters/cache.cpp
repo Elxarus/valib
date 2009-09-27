@@ -75,7 +75,7 @@ CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t si
 {
   int i;
   Speakers spk = get_in_spk();
-  int ch, nch = spk.nch();
+  int nch = spk.nch();
 
   if (!samples) return 0;
   if (ch_name != CH_NONE && (CH_MASK(ch_name) & spk.mask) == 0) return 0;
@@ -104,12 +104,12 @@ CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t si
   if (ch_name != CH_NONE)
   {
     // Copy one channel
-    for (ch = 0; ch < nch; ch++)
-      if (spk.order()[ch] == ch_name)
-      {
-        memcpy(samples, buf[ch] + start_pos, size1 * sizeof(sample_t));
-        memcpy(samples + size1, buf[ch], size2 * sizeof(sample_t));
-      }
+    order_t order;
+    spk.get_order(order);
+    int ch = order[ch_name];
+
+    memcpy(samples, buf[ch] + start_pos, size1 * sizeof(sample_t));
+    memcpy(samples + size1, buf[ch], size2 * sizeof(sample_t));
   }
   else
   {

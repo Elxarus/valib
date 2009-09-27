@@ -32,7 +32,7 @@ protected:
   // format
   int  format;             // format to convert to
                            // affected only by set_format() function
-  int  order[NCHANNELS];   // channel order to convert to when converting from linear format
+  order_t order;           // channel order to convert to when converting from linear format
                            // channel order to convert from when converting to linear format
 
   // converted samples buffer
@@ -67,8 +67,8 @@ public:
   int  get_format() const;
   bool set_format(int _format);
   // output channel order
-  void get_order(int _order[NCHANNELS]) const;
-  void set_order(const int _order[NCHANNELS]);
+  void get_order(order_t _order) const;
+  void set_order(const order_t _order);
 
   /////////////////////////////////////////////////////////
   // Filter interface

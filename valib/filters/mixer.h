@@ -34,8 +34,6 @@
 #include "../filter.h"
 
 
-//typedef sample_t matrix_t[NCHANNELS][NCHANNELS];
-
 ///////////////////////////////////////////////////////////////////////////////
 // Mixer class
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,8 +61,8 @@ protected:
 
   // Gains
   sample_t gain;                     // general gain
-  sample_t input_gains[NCHANNELS];   // input channel gains
-  sample_t output_gains[NCHANNELS];  // output channel gains
+  sample_t input_gains[CH_NAMES];    // input channel gains
+  sample_t output_gains[CH_NAMES];   // output channel gains
 
   // Matrix
   matrix_t matrix;                   // mixing matrix
@@ -106,8 +104,8 @@ public:
   inline sample_t get_slev() const;
   inline sample_t get_lfelev() const;
   inline sample_t get_gain() const;
-  inline void     get_input_gains(sample_t input_gains[NCHANNELS]) const;
-  inline void     get_output_gains(sample_t output_gains[NCHANNELS]) const;
+  inline void     get_input_gains(sample_t input_gains[CH_NAMES]) const;
+  inline void     get_output_gains(sample_t output_gains[CH_NAMES]) const;
 
   inline void     set_matrix(const matrix_t &matrix);
   inline void     set_auto_matrix(bool auto_matrix);
@@ -118,8 +116,8 @@ public:
   inline void     set_slev(sample_t slev);
   inline void     set_lfelev(sample_t lfelev);
   inline void     set_gain(sample_t gain);
-  inline void     set_input_gains(const sample_t input_gains[NCHANNELS]);
-  inline void     set_output_gains(const sample_t output_gains[NCHANNELS]);
+  inline void     set_input_gains(const sample_t input_gains[CH_NAMES]);
+  inline void     set_output_gains(const sample_t output_gains[CH_NAMES]);
 
   // mixing functions
   void io_mix11(samples_t input, samples_t output, size_t nsamples);
@@ -262,11 +260,11 @@ Mixer::get_gain() const
 { return gain; }
 
 inline void 
-Mixer::get_input_gains(sample_t _input_gains[NCHANNELS]) const
+Mixer::get_input_gains(sample_t _input_gains[CH_NAMES]) const
 { memcpy(_input_gains, input_gains, sizeof(input_gains)); }
 
 inline void 
-Mixer::get_output_gains(sample_t _output_gains[NCHANNELS]) const
+Mixer::get_output_gains(sample_t _output_gains[CH_NAMES]) const
 { memcpy(_output_gains, output_gains, sizeof(output_gains)); }
 
 
@@ -336,14 +334,14 @@ Mixer::set_gain(sample_t _gain)
 }
 
 inline void 
-Mixer::set_input_gains(const sample_t _input_gains[NCHANNELS])
+Mixer::set_input_gains(const sample_t _input_gains[CH_NAMES])
 {
   memcpy(input_gains, _input_gains, sizeof(input_gains));
   prepare_matrix();
 }
 
 inline void 
-Mixer::set_output_gains(const sample_t _output_gains[NCHANNELS])
+Mixer::set_output_gains(const sample_t _output_gains[CH_NAMES])
 {
   memcpy(output_gains, _output_gains, sizeof(output_gains));
   prepare_matrix();

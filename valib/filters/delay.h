@@ -33,7 +33,7 @@ class Delay : public NullFilter
 protected:
   bool  enabled;
   int   units;                    // delay units
-  float delays[NCHANNELS];        // delay values
+  float delays[CH_NAMES];         // delay values
 
   SampleBuf buf;                  // sample buffer
   bool      first_half;           // first/second buffer half is used
@@ -59,8 +59,8 @@ public:
   int  get_units() const;
   void set_units(int units);
 
-  void get_delays(float delays[NCHANNELS]) const;
-  void set_delays(const float delays[NCHANNELS]);
+  void get_delays(float delays[CH_NAMES]) const;
+  void set_delays(const float delays[CH_NAMES]);
 };
 
 

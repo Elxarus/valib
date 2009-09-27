@@ -15,7 +15,7 @@ LevelsCache::reset()
   pos = 0;
   end = 0;
 
-  memset(levels_cache[0], 0, sizeof(sample_t) * NCHANNELS);
+  memset(levels_cache[0], 0, sizeof(sample_t) * CH_NAMES);
   levels_time[0] = -1;
 }
 
@@ -29,20 +29,20 @@ LevelsCache::next_pos(int p)
 }
 
 void
-LevelsCache::add_levels(vtime_t _time, sample_t _levels[NCHANNELS])
+LevelsCache::add_levels(vtime_t _time, sample_t _levels[CH_NAMES])
 {
   pos = next_pos(pos);
   if (pos == end)
     end = next_pos(end);
 
   levels_time[pos] = _time;
-  memcpy(levels_cache[pos], _levels, sizeof(sample_t) * NCHANNELS);
+  memcpy(levels_cache[pos], _levels, sizeof(sample_t) * CH_NAMES);
 }
 
 void 
-LevelsCache::get_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool drop)
+LevelsCache::get_levels(vtime_t _time, sample_t _levels[CH_NAMES], bool drop)
 {
-  memcpy(_levels, levels_cache[end], sizeof(sample_t) * NCHANNELS);
+  memcpy(_levels, levels_cache[end], sizeof(sample_t) * CH_NAMES);
   if (_time < 0)
     _time = levels_time[pos];
 
@@ -60,7 +60,7 @@ LevelsCache::get_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool drop)
   i = end;
   while (i != e)
   {
-    for (ch = 0; ch < NCHANNELS; ch++)
+    for (ch = 0; ch < CH_NAMES; ch++)
       if (levels_cache[i][ch] > _levels[ch])
         _levels[ch] = levels_cache[i][ch];
 
@@ -102,9 +102,9 @@ LevelsHistogram::set_dbpb(int _dbpb)
 }
 
 void 
-LevelsHistogram::add_levels(sample_t levels[NCHANNELS])
+LevelsHistogram::add_levels(sample_t levels[CH_NAMES])
 {
-  for (int ch = 0; ch < NCHANNELS; ch++)
+  for (int ch = 0; ch < CH_NAMES; ch++)
     if (levels[ch] > 1e-50)
     {
       if (levels[ch] > max_level[ch])
@@ -130,7 +130,7 @@ LevelsHistogram::get_histogram(double *_histogram, size_t _count) const
     double inv_n = 1.0 / n;
     for (size_t i = 0; i < MAX_HISTOGRAM && i < _count; i++)
     {
-      for (int ch = 0; ch < NCHANNELS; ch++)
+      for (int ch = 0; ch < CH_NAMES; ch++)
         _histogram[i] += double(histogram[ch][i]);
       _histogram[i] *= inv_n;
     }
@@ -141,7 +141,7 @@ void
 LevelsHistogram::get_histogram(int _ch, double *_histogram, size_t _count) const
 {
   memset(_histogram, 0, sizeof(double) * _count);
-  if (n && _ch >= 0 && _ch < NCHANNELS)
+  if (n && _ch >= 0 && _ch < CH_NAMES)
   {
     double inv_n = 1.0 / n;
     for (size_t i = 0; i < MAX_HISTOGRAM && i < _count; i++)
@@ -153,7 +153,7 @@ sample_t
 LevelsHistogram::get_max_level() const
 {
   sample_t max = max_level[0];
-  for (int ch = 1; ch < NCHANNELS; ch++)
+  for (int ch = 1; ch < CH_NAMES; ch++)
     if (max_level[ch] > max)
       max = max_level[ch];
   return max;
@@ -162,7 +162,7 @@ LevelsHistogram::get_max_level() const
 sample_t
 LevelsHistogram::get_max_level(int _ch) const
 {
-  if (_ch >= 0 && _ch < NCHANNELS)
+  if (_ch >= 0 && _ch < CH_NAMES)
     return max_level[_ch];
   return 0.0;
 }
@@ -175,7 +175,7 @@ void
 Levels::on_reset()
 {
   sample = 0;
-  memset(levels, 0, sizeof(sample_t) * NCHANNELS);
+  memset(levels, 0, sizeof(sample_t) * CH_NAMES);
   continuous_time = 0;
 
   cache.reset();
@@ -199,7 +199,9 @@ Levels::on_process()
 
   int nch = spk.nch();
   sample_t spk_level = 1.0 / spk.level;
-  const int *spk_order = spk.order();
+
+  order_t order;
+  spk.get_order(order);
 
   while (n)
   {
@@ -232,14 +234,14 @@ Levels::on_process()
       }
 
       max *= spk_level;
-      if (max > levels[spk_order[ch]])
-        levels[spk_order[ch]] = max;
+      if (max > levels[order[ch]])
+        levels[order[ch]] = max;
     }
 
     if (sample >= nsamples)
     {
       add_levels(continuous_time, levels);
-      memset(levels, 0, sizeof(sample_t) * NCHANNELS);
+      memset(levels, 0, sizeof(sample_t) * CH_NAMES);
       sample = 0;
     }
 

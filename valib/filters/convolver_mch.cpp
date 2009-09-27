@@ -25,10 +25,10 @@ ConvolverMch::ConvolverMch():
   buf_size(0), n(0), c(0),
   pos(0), pre_samples(0), post_samples(0)
 {
-  for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     ver[ch_name] = gen[ch_name].version();
 
-  for (int ch = 0; ch < NCHANNELS; ch++)
+  for (int ch = 0; ch < CH_NAMES; ch++)
   {
     fir[ch] = 0;
     type[ch] = type_pass;
@@ -43,7 +43,7 @@ ConvolverMch::~ConvolverMch()
 bool
 ConvolverMch::fir_changed() const
 {
-  for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     if (ver[ch_name] != gen[ch_name].version())
       return true;
   return false;
@@ -72,24 +72,24 @@ ConvolverMch::release_fir(int ch_name)
 }
 
 void
-ConvolverMch::set_all_firs(const FIRGen *new_gen[NCHANNELS])
+ConvolverMch::set_all_firs(const FIRGen *new_gen[CH_NAMES])
 {
-  for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     gen[ch_name] = new_gen[ch_name];
   reinit(false);
 }
 
 void
-ConvolverMch::get_all_firs(const FIRGen *out_gen[NCHANNELS])
+ConvolverMch::get_all_firs(const FIRGen *out_gen[CH_NAMES])
 {
-  for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     out_gen[ch_name] = gen[ch_name].get();
 }
 
 void
 ConvolverMch::release_all_firs()
 {
-  for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     gen[ch_name].release();
   reinit(false);
 }
@@ -168,12 +168,14 @@ bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
   int max_point = 0;
 
   // Update versions
-  for (ch_name = 0; ch_name < NCHANNELS; ch_name++)
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
     ver[ch_name] = gen[ch_name].version();
 
+  order_t order;
+  new_in_spk.get_order(order);
   for (ch = 0; ch < nch; ch++)
   {
-    ch_name = get_in_spk().order()[ch];
+    ch_name = order[ch];
     fir[ch] = gen[ch_name].make(new_in_spk.sample_rate);
 
     // fir generation error

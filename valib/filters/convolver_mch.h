@@ -17,8 +17,8 @@
 class ConvolverMch : public LinearFilter
 {
 protected:
-  int ver[NCHANNELS];
-  FIRRef gen[NCHANNELS];
+  int ver[CH_NAMES];
+  FIRRef gen[CH_NAMES];
 
   bool trivial;
   const FIRInstance *fir[NCHANNELS];
@@ -53,8 +53,8 @@ public:
   const FIRGen *get_fir(int ch_name) const;
   void release_fir(int ch_name);
 
-  void set_all_firs(const FIRGen *gen[NCHANNELS]);
-  void get_all_firs(const FIRGen *gen[NCHANNELS]);
+  void set_all_firs(const FIRGen *gen[CH_NAMES]);
+  void get_all_firs(const FIRGen *gen[CH_NAMES]);
   void release_all_firs();
 
   /////////////////////////////////////////////////////////
