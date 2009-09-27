@@ -1,7 +1,7 @@
 use strict;
 
 
-my $nch = 6;
+my $nch = 8;
 my $in_nch,;
 my $in_ch;
 my $out_nch;

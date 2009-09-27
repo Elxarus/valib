@@ -134,6 +134,8 @@ static const convert_t pcm2linear_tbl[NCHANNELS][10] = {
  { pcm16_linear_4ch, pcm24_linear_4ch, pcm32_linear_4ch, pcm16_be_linear_4ch, pcm24_be_linear_4ch, pcm32_be_linear_4ch, pcmfloat_linear_4ch, pcmdouble_linear_4ch, lpcm20_linear_4ch, lpcm24_linear_4ch },
  { pcm16_linear_5ch, pcm24_linear_5ch, pcm32_linear_5ch, pcm16_be_linear_5ch, pcm24_be_linear_5ch, pcm32_be_linear_5ch, pcmfloat_linear_5ch, pcmdouble_linear_5ch, lpcm20_linear_5ch, lpcm24_linear_5ch },
  { pcm16_linear_6ch, pcm24_linear_6ch, pcm32_linear_6ch, pcm16_be_linear_6ch, pcm24_be_linear_6ch, pcm32_be_linear_6ch, pcmfloat_linear_6ch, pcmdouble_linear_6ch, lpcm20_linear_6ch, lpcm24_linear_6ch },
+ { pcm16_linear_7ch, pcm24_linear_7ch, pcm32_linear_7ch, pcm16_be_linear_7ch, pcm24_be_linear_7ch, pcm32_be_linear_7ch, pcmfloat_linear_7ch, pcmdouble_linear_7ch, lpcm20_linear_7ch, lpcm24_linear_7ch },
+ { pcm16_linear_8ch, pcm24_linear_8ch, pcm32_linear_8ch, pcm16_be_linear_8ch, pcm24_be_linear_8ch, pcm32_be_linear_8ch, pcmfloat_linear_8ch, pcmdouble_linear_8ch, lpcm20_linear_8ch, lpcm24_linear_8ch },
 };
 
 static const int linear2pcm_formats[] = { FORMAT_PCM16, FORMAT_PCM24, FORMAT_PCM32, FORMAT_PCM16_BE, FORMAT_PCM24_BE, FORMAT_PCM32_BE, FORMAT_PCMFLOAT, FORMAT_PCMDOUBLE };
@@ -144,6 +146,8 @@ static const convert_t linear2pcm_tbl[NCHANNELS][8] = {
  { linear_pcm16_4ch, linear_pcm24_4ch, linear_pcm32_4ch, linear_pcm16_be_4ch, linear_pcm24_be_4ch, linear_pcm32_be_4ch, linear_pcmfloat_4ch, linear_pcmdouble_4ch },
  { linear_pcm16_5ch, linear_pcm24_5ch, linear_pcm32_5ch, linear_pcm16_be_5ch, linear_pcm24_be_5ch, linear_pcm32_be_5ch, linear_pcmfloat_5ch, linear_pcmdouble_5ch },
  { linear_pcm16_6ch, linear_pcm24_6ch, linear_pcm32_6ch, linear_pcm16_be_6ch, linear_pcm24_be_6ch, linear_pcm32_be_6ch, linear_pcmfloat_6ch, linear_pcmdouble_6ch },
+ { linear_pcm16_7ch, linear_pcm24_7ch, linear_pcm32_7ch, linear_pcm16_be_7ch, linear_pcm24_be_7ch, linear_pcm32_be_7ch, linear_pcmfloat_7ch, linear_pcmdouble_7ch },
+ { linear_pcm16_8ch, linear_pcm24_8ch, linear_pcm32_8ch, linear_pcm16_be_8ch, linear_pcm24_be_8ch, linear_pcm32_be_8ch, linear_pcmfloat_8ch, linear_pcmdouble_8ch },
 };
 
 convert_t find_pcm2linear(int pcm_format, int nch)

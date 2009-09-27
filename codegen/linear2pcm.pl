@@ -1,6 +1,6 @@
 use strict;
 
-my @chs      = (1..6);
+my @chs      = (1..8);
 my @formats  = qw(FORMAT_PCM16 FORMAT_PCM24 FORMAT_PCM32 FORMAT_PCM16_BE FORMAT_PCM24_BE FORMAT_PCM32_BE FORMAT_PCMFLOAT FORMAT_PCMDOUBLE);
 my @names    = qw(pcm16    pcm24    pcm32    pcm16_be pcm24_be pcm32_be pcmfloat pcmdouble);
 my @types    = qw(int16_t  int24_t  int32_t  int16_t  int24_t  int32_t  float    double   );
@@ -34,11 +34,11 @@ close TEMPL;
 print "typedef void (Converter::*convert_t)(uint8_t *rawdata, samples_t samples, size_t size);\n";
 print "static const int linear2pcm_formats[] = { ".join(", ", @formats)." };\n\n";
 
-print "static const convert_t pcm2linear_tbl[NCHANNELS][".($#formats+1)."] = {\n";
+print "static const convert_t linear2pcm_tbl[NCHANNELS][".($#formats+1)."] = {\n";
 foreach my $nch (@chs)
 {
   print " { ";
-  print join ", ", map { "${_}_linear_${nch}ch" } @names;
+  print join ", ", map { "linear_${_}_${nch}ch" } @names;
   print " },\n";
 }
 print "};\n\n";
