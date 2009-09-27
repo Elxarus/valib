@@ -13,8 +13,8 @@
 struct AudioProcessorState
 {
   // Channel order
-  int input_order[NCHANNELS];
-  int output_order[NCHANNELS];
+  order_t input_order;
+  order_t output_order;
 
   // Master gain
   sample_t master;
@@ -46,12 +46,12 @@ struct AudioProcessorState
   sample_t lfelev;
 
   // Input/output gains
-  sample_t input_gains[NCHANNELS];
-  sample_t output_gains[NCHANNELS];
+  sample_t input_gains[CH_NAMES];
+  sample_t output_gains[CH_NAMES];
 
   // Input/output levels
-  sample_t input_levels[NCHANNELS];
-  sample_t output_levels[NCHANNELS];
+  sample_t input_levels[CH_NAMES];
+  sample_t output_levels[CH_NAMES];
 
   // SRC
   double   src_quality;
@@ -61,8 +61,8 @@ struct AudioProcessorState
   bool     eq;
   size_t   eq_master_nbands;
   EqBand  *eq_master_bands;
-  size_t   eq_nbands[NCHANNELS];
-  EqBand  *eq_bands[NCHANNELS];
+  size_t   eq_nbands[CH_NAMES];
+  EqBand  *eq_bands[CH_NAMES];
 
   // Bass redirection
   bool     bass_redir;
@@ -71,7 +71,7 @@ struct AudioProcessorState
   // Delay
   bool     delay;
   int      delay_units;
-  float    delays[NCHANNELS];
+  float    delays[CH_NAMES];
 
   // Dithering
   int      dithering;

@@ -232,13 +232,13 @@ Converter::set_format(int _format)
 }
 
 void 
-Converter::get_order(int _order[NCHANNELS]) const
+Converter::get_order(order_t _order) const
 {
   memcpy(_order, order, sizeof(order));
 }
 
 void 
-Converter::set_order(const int _order[NCHANNELS])
+Converter::set_order(const order_t _order)
 {
   if (format == FORMAT_LINEAR)
     out_samples.reorder(spk, order, _order);

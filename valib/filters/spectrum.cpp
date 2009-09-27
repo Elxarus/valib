@@ -53,7 +53,7 @@ void Spectrum::get_spectrum(int ch, sample_t *out, double *bin2hz)
     size_t i;
 
     // copy samples to spectrum buffer;
-    if (ch < 0 || ch >= NCHANNELS)
+    if (ch < 0 || ch >= CH_NAMES)
     {
       memcpy(spectrum, data[0], length * 2 * sizeof(sample_t));
       for (ch = 1; ch < spk.nch(); ch++)

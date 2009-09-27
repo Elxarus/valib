@@ -159,7 +159,7 @@ AC3Enc::reset()
   sample = 0;
 
   memset(delay, 0, sizeof(delay));
-  for (int ch = 0; ch < NCHANNELS; ch++)
+  for (int ch = 0; ch < AC3_NCHANNELS; ch++)
     delay_exp[ch] = 15; // indicate that we have 0 bits in delay array
 
   // reset bit allocation

@@ -35,7 +35,7 @@ class Levels;
 class LevelsCache
 {
 protected:
-  sample_t levels_cache[MAX_LEVELS_CACHE][NCHANNELS];
+  sample_t levels_cache[MAX_LEVELS_CACHE][CH_NAMES];
   vtime_t  levels_time[MAX_LEVELS_CACHE];
 
   int pos;
@@ -48,8 +48,8 @@ public:
   LevelsCache();
 
   void reset();
-  void add_levels(vtime_t time, sample_t levels[NCHANNELS]);
-  void get_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
+  void add_levels(vtime_t time, sample_t levels[CH_NAMES]);
+  void get_levels(vtime_t time, sample_t levels[CH_NAMES], bool drop = true);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,8 +59,8 @@ public:
 class LevelsHistogram
 {
 protected:
-  sample_t max_level[NCHANNELS];
-  int histogram[NCHANNELS][MAX_HISTOGRAM];
+  sample_t max_level[CH_NAMES];
+  int histogram[CH_NAMES][MAX_HISTOGRAM];
   int n;
   int dbpb; // dB per bin
 
@@ -72,7 +72,7 @@ public:
   int  get_dbpb() const;
   void set_dbpb(int dbpb);
 
-  void add_levels(sample_t levels[NCHANNELS]);
+  void add_levels(sample_t levels[CH_NAMES]);
   void get_histogram(double *histogram, size_t count) const;
   void get_histogram(int ch, double *histogram, size_t count) const;
 
@@ -90,7 +90,7 @@ protected:
   LevelsCache cache;
   LevelsHistogram hist;
 
-  sample_t levels[NCHANNELS]; // currently filling 
+  sample_t levels[CH_NAMES]; // currently filling 
 
   size_t nsamples; // number of samples per measure block
   size_t sample;   // current sample
@@ -120,8 +120,8 @@ public:
   inline int  get_dbpb() const;
   inline void set_dbpb(int dbpb);
 
-  inline void add_levels(vtime_t time, sample_t levels[NCHANNELS]);
-  inline void get_levels(vtime_t time, sample_t levels[NCHANNELS], bool drop = true);
+  inline void add_levels(vtime_t time, sample_t levels[CH_NAMES]);
+  inline void get_levels(vtime_t time, sample_t levels[CH_NAMES], bool drop = true);
   inline void get_histogram(double *histogram, size_t count) const;
   inline void get_histogram(int ch, double *histogram, size_t count) const;
   inline sample_t get_max_level() const;
@@ -156,14 +156,14 @@ Levels::set_dbpb(int _dbpb)
 }
 
 void 
-Levels::add_levels(vtime_t _time, sample_t _levels[NCHANNELS])
+Levels::add_levels(vtime_t _time, sample_t _levels[CH_NAMES])
 {
   cache.add_levels(_time, _levels);
   hist.add_levels(_levels);
 }
 
 void 
-Levels::get_levels(vtime_t _time, sample_t _levels[NCHANNELS], bool _drop)
+Levels::get_levels(vtime_t _time, sample_t _levels[CH_NAMES], bool _drop)
 {
   cache.get_levels(_time, _levels, _drop);
 }

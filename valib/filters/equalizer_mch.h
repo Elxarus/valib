@@ -14,10 +14,10 @@
 class EqualizerMch : public Filter
 {
 protected:
-  EqFIR master;               // master equalizer
-  EqFIR ch_eq[NCHANNELS];     // channel equalizers
-  MultiFIR multi_fir[NCHANNELS]; // sum of master and channel equalizers
-  const FIRGen *firs[NCHANNELS];
+  EqFIR master;                 // master equalizer
+  EqFIR ch_eq[CH_NAMES];        // channel equalizers
+  MultiFIR multi_fir[CH_NAMES]; // sum of master and channel equalizers
+  const FIRGen *firs[CH_NAMES];
 
   bool enabled;
   ConvolverMch conv;
@@ -28,7 +28,7 @@ public:
     FIRGen *master_plus_channel[2];
     master_plus_channel[0] = &master;
 
-    for (int ch_name = 0; ch_name < NCHANNELS; ch_name++)
+    for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     {
       master_plus_channel[1] = &ch_eq[ch_name];
       multi_fir[ch_name].set(master_plus_channel, 2);

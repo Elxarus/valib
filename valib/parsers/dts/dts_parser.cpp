@@ -21,8 +21,6 @@
 #define DTS_MODE_2F2R           8
 #define DTS_MODE_3F2R           9
 
-static const int dts_order[NCHANNELS] = { CH_C, CH_L, CH_R, CH_SL, CH_SR, CH_LFE };
-
 static const int amode2mask_tbl[] = 
 {
   MODE_MONO, 
@@ -874,7 +872,7 @@ DTSParser::parse_subsubframe()
   //           SYNTHESIS AND OUTPUT
   /////////////////////////////////////////////////////////
 
-  static const int reorder[10][NCHANNELS] =
+  static const int reorder[10][DTS_NCHANNELS] =
   {                    // nch | arrangement
     { 0 },             //  1  | A
     { 0, 1 },          //  2  | A + B (dual mono)

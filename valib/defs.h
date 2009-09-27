@@ -50,9 +50,12 @@ const char *valib_credits();
 ///////////////////////////////////////////////////////////////////////////////
 
 // one of the most important constants:
-// maximum number of channels supported by library
+// number of channels passed to processing functions
 
 #define NCHANNELS 6
+
+// number of channel names
+#define CH_NAMES  11
 
 // pi constant
 
@@ -145,6 +148,7 @@ struct int24_t // int24_t is a low-endian structure
 //   EQUAL_SAMPLES    - macro to compare two samples
 //
 //   vtime_t    - time type (see vtime.h)
+//   order_t    - channel order
 //   matrix_t   - mixing matrix (see filters\mixer.h)
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -169,11 +173,12 @@ struct int24_t // int24_t is a low-endian structure
 #define SAMPLE_THRESHOLD (1e-10)
 #define EQUAL_SAMPLES(s1, s2) (fabs((s1) - (s2)) < SAMPLE_THRESHOLD)
 
+typedef int order_t[CH_NAMES];
 typedef double vtime_t;
 class matrix_t
 {
 protected:
-  sample_t matrix[NCHANNELS][NCHANNELS];
+  sample_t matrix[CH_NAMES][CH_NAMES];
 
 public:
   matrix_t()
@@ -183,10 +188,10 @@ public:
   { *this = m; }
 
   inline const sample_t *operator [](int i) const
-  { assert(i >= 0 && i < NCHANNELS); return matrix[i]; }
+  { assert(i >= 0 && i < CH_NAMES); return matrix[i]; }
 
   inline sample_t *operator [](int i)
-  { assert(i >= 0 && i < NCHANNELS); return matrix[i]; }
+  { assert(i >= 0 && i < CH_NAMES); return matrix[i]; }
 
   bool operator ==(const matrix_t &m) const;
   bool operator !=(const matrix_t &m) const;
