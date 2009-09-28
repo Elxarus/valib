@@ -23,74 +23,40 @@ static const GUID GUID_SUBTYPE_IEEE_FLOAT = { 0x00000003, 0x0000, 0x0010, { 0x80
 #define SPEAKER_TOP_BACK_CENTER         0x10000
 #define SPEAKER_TOP_BACK_RIGHT          0x20000
 
-
-const unsigned int ds_channels_tbl[64] = 
+static const int mask_tbl[][2] =
 {
-  0, 
-  SPEAKER_FRONT_LEFT, 
-                       SPEAKER_FRONT_CENTER, 
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER,
-                                              SPEAKER_FRONT_RIGHT,
-  SPEAKER_FRONT_LEFT                        | SPEAKER_FRONT_RIGHT,
-                       SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT,
-                                                                    SPEAKER_BACK_LEFT,
-  SPEAKER_FRONT_LEFT                                              | SPEAKER_BACK_LEFT,
-                       SPEAKER_FRONT_CENTER                       | SPEAKER_BACK_LEFT,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER                       | SPEAKER_BACK_LEFT,
-                                              SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT,
-  SPEAKER_FRONT_LEFT                        | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT,
-                       SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT,
-                                                                                        SPEAKER_BACK_RIGHT,
-  SPEAKER_FRONT_LEFT                                                                  | SPEAKER_BACK_RIGHT,
-                       SPEAKER_FRONT_CENTER                                           | SPEAKER_BACK_RIGHT,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER                                           | SPEAKER_BACK_RIGHT,
-                                              SPEAKER_FRONT_RIGHT                     | SPEAKER_BACK_RIGHT,
-  SPEAKER_FRONT_LEFT                        | SPEAKER_FRONT_RIGHT                     | SPEAKER_BACK_RIGHT,
-                       SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT                     | SPEAKER_BACK_RIGHT,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT                     | SPEAKER_BACK_RIGHT,
-                                                                    SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT,
-  SPEAKER_FRONT_LEFT                                              | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT,
-                       SPEAKER_FRONT_CENTER                       | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER                       | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT,
-                                              SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT,
-  SPEAKER_FRONT_LEFT                        | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT,
-                       SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT,
-                                                                                                             SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT                                                                                       | SPEAKER_LOW_FREQUENCY,
-                       SPEAKER_FRONT_CENTER                                                                | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER                                                                | SPEAKER_LOW_FREQUENCY,
-                                              SPEAKER_FRONT_RIGHT                                          | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT                        | SPEAKER_FRONT_RIGHT                                          | SPEAKER_LOW_FREQUENCY,
-                       SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT                                          | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT                                          | SPEAKER_LOW_FREQUENCY,
-                                                                    SPEAKER_BACK_LEFT                      | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT                                              | SPEAKER_BACK_LEFT                      | SPEAKER_LOW_FREQUENCY,
-                       SPEAKER_FRONT_CENTER                       | SPEAKER_BACK_LEFT                      | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER                       | SPEAKER_BACK_LEFT                      | SPEAKER_LOW_FREQUENCY,
-                                              SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT                      | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT                        | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT                      | SPEAKER_LOW_FREQUENCY,
-                       SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT                      | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT                      | SPEAKER_LOW_FREQUENCY,
-                                                                                        SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT                                                                  | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-                       SPEAKER_FRONT_CENTER                                           | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER                                           | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-                                              SPEAKER_FRONT_RIGHT                     | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT                        | SPEAKER_FRONT_RIGHT                     | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-                       SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT                     | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT                     | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-                                                                    SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT                                              | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-                       SPEAKER_FRONT_CENTER                       | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER                       | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-                                              SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT                        | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-                       SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,
-  SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT | SPEAKER_LOW_FREQUENCY,  
+  { CH_MASK_L,   SPEAKER_FRONT_LEFT },
+  { CH_MASK_C,   SPEAKER_FRONT_CENTER },
+  { CH_MASK_R,   SPEAKER_FRONT_RIGHT },
+  { CH_MASK_SL,  SPEAKER_SIDE_LEFT },
+  { CH_MASK_SR,  SPEAKER_SIDE_RIGHT },
+  { CH_MASK_LFE, SPEAKER_LOW_FREQUENCY },
+  { CH_MASK_CL,  SPEAKER_FRONT_LEFT_OF_CENTER },
+  { CH_MASK_CR,  SPEAKER_FRONT_RIGHT_OF_CENTER },
+  { CH_MASK_BL,  SPEAKER_BACK_LEFT },
+  { CH_MASK_BC,  SPEAKER_BACK_CENTER },
+  { CH_MASK_BR,  SPEAKER_BACK_RIGHT }
 };
+
+// Convert DirectSound channel mask to Speakers channel mask
+int ds2mask(int ds_mask)
+{
+  int spk_mask = 0;
+  for (int i = 0; i < array_size(mask_tbl); i++)
+    if (ds_mask & mask_tbl[i][1])
+      spk_mask |= mask_tbl[i][0];
+  return spk_mask;
+}
+
+// Convert Speakers channel mask to DirectSound channel mask
+int mask2ds(int spk_mask)
+{
+  int ds_mask = 0;
+  for (int i = 0; i < array_size(mask_tbl); i++)
+    if (spk_mask & mask_tbl[i][0])
+      ds_mask |= mask_tbl[i][1];
+  return ds_mask;
+}
 
 bool 
 spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
@@ -114,7 +80,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
 
       ext->SubFormat = GUID_DOLBY_AC3_SPDIF;
       ext->Samples.wValidBitsPerSample = 16;
-      ext->dwChannelMask = ds_channels_tbl[MODE_STEREO];
+      ext->dwChannelMask = mask2ds(MODE_STEREO);
     }
     return true;
   }
@@ -168,7 +134,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
 
         ext->SubFormat = GUID_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 16;
-        ext->dwChannelMask = ds_channels_tbl[spk.mask];
+        ext->dwChannelMask = mask2ds(spk.mask);
       }
       break;
 
@@ -188,7 +154,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
 
         ext->SubFormat = GUID_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 24;
-        ext->dwChannelMask = ds_channels_tbl[spk.mask];
+        ext->dwChannelMask = mask2ds(spk.mask);
       }
       break;
 
@@ -208,7 +174,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
 
         ext->SubFormat = GUID_SUBTYPE_PCM;
         ext->Samples.wValidBitsPerSample = 32;
-        ext->dwChannelMask = ds_channels_tbl[spk.mask];
+        ext->dwChannelMask = mask2ds(spk.mask);
       }
       break;
 
@@ -228,7 +194,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
 
         ext->SubFormat = GUID_SUBTYPE_IEEE_FLOAT;
         ext->Samples.wValidBitsPerSample = 32;
-        ext->dwChannelMask = ds_channels_tbl[spk.mask];
+        ext->dwChannelMask = mask2ds(spk.mask);
       }
       break;
 
@@ -248,7 +214,7 @@ spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
 
         ext->SubFormat = GUID_SUBTYPE_IEEE_FLOAT;
         ext->Samples.wValidBitsPerSample = 64;
-        ext->dwChannelMask = ds_channels_tbl[spk.mask];
+        ext->dwChannelMask = mask2ds(spk.mask);
       }
       break;
 
@@ -305,12 +271,7 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
       return false;
 
     // determine audio mode
-    for (mask = 0; mask < sizeof(ds_channels_tbl) / sizeof(ds_channels_tbl[0]); mask++)
-      if (ds_channels_tbl[mask] == wfex->dwChannelMask)
-        break;
-
-    if (mask == sizeof(ds_channels_tbl) / sizeof(ds_channels_tbl[0]))
-      return false;
+    mask = ds2mask(wfex->dwChannelMask);
   }
   else
   {
