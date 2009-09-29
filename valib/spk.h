@@ -358,6 +358,9 @@
 #define CH_MASK_M    CH_MASK_C  // Mono channel
 #define CH_MASK_S    CH_MASK_BC // Single surround channel
 
+// Mask for all channels available
+#define CH_MASK_ALL  0x3ff
+
 ///////////////////////////////////////////////////////////////////////////////
 // Common channel configs
 ///////////////////////////////////////////////////////////////////////////////
@@ -511,6 +514,17 @@ inline int mask_nch(int mask)
   return nch & 0xff;
 }
 
+inline void channel_order(int mask, int order[CH_NAMES])
+{
+  int ch_index = 0;
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
+    if ((mask >> ch_name) & 1)
+      order[ch_index++] = ch_name;
+
+  for (; ch_index < CH_NAMES; ch_index++)
+    order[ch_index] = CH_NONE;
+}
+
 inline void 
 Speakers::set(int _format, int _mask, int _sample_rate, sample_t _level, int _relation)
 {
@@ -592,15 +606,7 @@ Speakers::operator !=(const Speakers &_spk) const
 
 inline void
 Speakers::get_order(order_t order) const
-{
-  int ch_index = 0;
-  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
-    if ((mask >> ch_name) & 1)
-      order[ch_index++] = ch_name;
-
-  for (; ch_index < CH_NAMES; ch_index++)
-    order[ch_index] = CH_NONE;
-}
+{ channel_order(mask, order); }
 
 ///////////////////////////////////////////////////////////////////////////////
 // samples_t inlines

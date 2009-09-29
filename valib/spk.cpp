@@ -44,14 +44,9 @@ extern const int sample_size_tbl[32] =
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-struct mode_map_s
+static const struct { int mask; const char *text; } mode_map[] =
 {
-  int mask;
-  const char *text;
-};
-
-static const mode_map_s mode_map[] =
-{
+  { 0,              "-" },
   { MODE_1_0,       "Mono" },
   { MODE_2_0,       "Stereo" },
   { MODE_3_0,       "3/0" },
@@ -71,7 +66,14 @@ static const mode_map_s mode_map[] =
   { MODE_5_2,       "7.0 (5/2)" },
   { MODE_3_2_1_LFE, "6.1" },
   { MODE_3_2_2_LFE, "7.1 (3/2/2.1)" },
-  { MODE_5_2_LFE, "7.1 (5/2.1)" },
+  { MODE_5_2_LFE,   "7.1 (5/2.1)" },
+};
+
+static const char *custom_modes[] =
+{
+  "Custom 0ch", "Custom 1ch", "Custom 2ch", "Custom 3ch",
+  "Custom 4ch", "Custom 5ch", "Custom 6ch", "Custom 7ch",
+  "Custom 8ch", "Custom 9ch", "Custom 10ch", "Custom 11ch"
 };
 
 const char *
@@ -120,6 +122,11 @@ Speakers::mode_text() const
   for (int i = 0; i < array_size(mode_map); i++)
     if (mode_map[i].mask == mask)
       return mode_map[i].text;
+
+  int nch = mask_nch(mask);
+  if (nch < array_size(custom_modes))
+    return custom_modes[nch];
+
   return "Custom";
 }
 
