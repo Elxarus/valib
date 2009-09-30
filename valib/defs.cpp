@@ -7,8 +7,8 @@
 matrix_t &
 matrix_t::operator =(const matrix_t &m)
 {
-  for (int i = 0; i < NCHANNELS; i++)
-    for (int j = 0; j < NCHANNELS; j++)
+  for (int i = 0; i < CH_NAMES; i++)
+    for (int j = 0; j < CH_NAMES; j++)
       matrix[i][j] = m[i][j];
   return *this;
 }
@@ -16,8 +16,8 @@ matrix_t::operator =(const matrix_t &m)
 matrix_t &
 matrix_t::zero()
 {
-  for (int i = 0; i < NCHANNELS; i++)
-    for (int j = 0; j < NCHANNELS; j++)
+  for (int i = 0; i < CH_NAMES; i++)
+    for (int j = 0; j < CH_NAMES; j++)
       matrix[i][j] = 0;
   return *this;
 }
