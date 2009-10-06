@@ -224,8 +224,8 @@ public:
 #  define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #endif
 
-#define value2db(value) ((value > 0)? log10(value)*20.0: 0)
-#define db2value(db)    pow(10.0, db/20.0)
+#define value2db(value) (((value) > 0)? log10(value)*20.0: 0)
+#define db2value(db)    pow(10.0, (db)/20.0)
 
 #define array_size(array) (sizeof(array) / sizeof(array[0]))
 #define safe_delete(x) { if (x) delete(x); x = 0; }
