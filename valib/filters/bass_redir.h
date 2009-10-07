@@ -6,6 +6,7 @@
 #ifndef VALIB_BASS_REDIR_H
 #define VALIB_BASS_REDIR_H
 
+#include "../buffer.h"
 #include "../filter.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -82,8 +83,15 @@ public:
 class BassRedir : public NullFilter
 {
 protected:
-  bool enabled;
-  LPF  lpf;
+  bool     enabled;
+  double   freq;
+  sample_t gain;
+  int      ch_mask;
+  bool     do_hpf;
+
+  Samples  buf;
+  LPF hpf[NCHANNELS];
+  HPF lpf;
 
   /////////////////////////////////////////////////////////
   // NullFilter overrides
@@ -99,45 +107,24 @@ public:
   // BassRedir interface
 
   // filter is enabled
-  inline bool get_enabled() const;
-  inline void set_enabled(bool _enabled);
+  bool     get_enabled() const;
+  void     set_enabled(bool _enabled);
 
   // cutoff frequency
-  inline double get_freq() const;
-  inline void   set_freq(double _freq);
+  double   get_freq() const;
+  void     set_freq(double _freq);
 
+  // bass gain
+  sample_t get_gain() const;
+  void     set_gain(sample_t gain);
+
+  // channels to mix the bass to
+  int      get_channels() const;
+  void     set_channels(int ch_mask);
+
+  // do high-pass filtering
+  bool     get_hpf() const;
+  void     set_hpf(bool do_hpf);
 };
-
-///////////////////////////////////////////////////////////////////////////////
-// Bass Redir inlines
-///////////////////////////////////////////////////////////////////////////////
-
-inline bool 
-BassRedir::get_enabled() const
-{
-  return enabled;
-}
-
-inline void 
-BassRedir::set_enabled(bool _enabled)
-{
-  if (_enabled && !enabled)
-    lpf.reset();
-  enabled = _enabled;
-}
-
-inline double 
-BassRedir::get_freq() const
-{
-  return lpf.freq;
-}
-
-inline void 
-BassRedir::set_freq(double _freq)
-{
-  lpf.freq = _freq;
-  lpf.update();
-}
-
 
 #endif
