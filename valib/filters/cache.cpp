@@ -106,10 +106,14 @@ CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t si
     // Copy one channel
     order_t order;
     spk.get_order(order);
-    int ch = order[ch_name];
 
-    memcpy(samples, buf[ch] + start_pos, size1 * sizeof(sample_t));
-    memcpy(samples + size1, buf[ch], size2 * sizeof(sample_t));
+    for (int ch = 0; ch < nch; ch++)
+      if (order[ch] == ch_name)
+      {
+        memcpy(samples, buf[ch] + start_pos, size1 * sizeof(sample_t));
+        memcpy(samples + size1, buf[ch], size2 * sizeof(sample_t));
+        break;
+      }
   }
   else
   {
