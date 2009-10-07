@@ -248,9 +248,15 @@ public:
 
   inline bool     get_bass_redir() const;
   inline int      get_bass_freq() const;
+  inline sample_t get_bass_gain() const;
+  inline bool     get_bass_hpf() const;
+  inline int      get_bass_channels() const;
 
   inline void     set_bass_redir(bool bass_redir);
-  inline void     set_bass_freq(int freq);
+  inline void     set_bass_freq(int bass_freq);
+  inline void     set_bass_gain(sample_t bass_gain);
+  inline void     set_bass_hpf(bool bass_hpf);
+  inline void     set_bass_channels(int bass_chanenls);
 
   // Delays
 
@@ -489,11 +495,29 @@ inline bool AudioProcessor::get_bass_redir() const
 inline int AudioProcessor::get_bass_freq() const
 { return (int)bass_redir.get_freq(); }
 
+inline sample_t AudioProcessor::get_bass_gain() const
+{ return bass_redir.get_gain(); }
+
+inline bool AudioProcessor::get_bass_hpf() const
+{ return bass_redir.get_hpf(); }
+
+inline int AudioProcessor::get_bass_channels() const
+{ return bass_redir.get_channels(); }
+
 inline void AudioProcessor::set_bass_redir(bool _bass_redir)
 { bass_redir.set_enabled(_bass_redir); }
 
 inline void AudioProcessor::set_bass_freq(int _bass_freq)
 { bass_redir.set_freq(_bass_freq); }
+
+inline void AudioProcessor::set_bass_gain(sample_t _bass_gain)
+{ bass_redir.set_gain(_bass_gain); }
+
+inline void AudioProcessor::set_bass_hpf(bool _bass_hpf)
+{ bass_redir.set_hpf(_bass_hpf); }
+
+inline void AudioProcessor::set_bass_channels(int _bass_channels)
+{ bass_redir.set_channels(_bass_channels); }
 
 // Delays
 
