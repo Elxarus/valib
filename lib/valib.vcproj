@@ -333,6 +333,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\iir.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\iir.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\log.cpp"
 				>
 			</File>
@@ -1026,6 +1034,26 @@
 			</File>
 			<File
 				RelativePath="..\valib\win32\winspk.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="iir"
+			>
+			<File
+				RelativePath="..\valib\iir\butterworth.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\iir\butterworth.h"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\iir\linkwitz_riley.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\iir\linkwitz_riley.h"
 				>
 			</File>
 		</Filter>
