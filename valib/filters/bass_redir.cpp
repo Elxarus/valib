@@ -1,107 +1,12 @@
 #include <math.h>
 #include "bass_redir.h"
+#include "../iir/linkwitz_riley.h"
 
 #define BUF_SIZE 1024
 
 ///////////////////////////////////////////////////////////////////////////////
-// IIR, HPF, LPF
-///////////////////////////////////////////////////////////////////////////////
-
-void
-IIR::process(sample_t *_samples, size_t _nsamples)
-{
-  double x, x1, x2, y, y1, y2;
-
-  x1 = this->x1;
-  x2 = this->x2;
-  y1 = this->y1;
-  y2 = this->y2;
-
-  while (_nsamples--)
-  {
-    x = *_samples;
-    y = a*x + a1*x1 + a2*x2 - b1*y1 - b2*y2;
-    *_samples++ = y;
-
-    x2 = x1;
-    x1 = x;
-    y2 = y1;
-    y1 = y;
-  }
-
-  this->x1 = x1;
-  this->x2 = x2;
-  this->y1 = y1;
-  this->y2 = y2;
-}
-
-
-void
-LPF::update()
-{
-  if ((sample_rate < 10) || (freq < 10))
-  {
-    // setup as passthrough on incorrect parameters
-    a  = 1.0;
-    a1 = 0;
-    a2 = 0;
-    b1 = 0;
-    b2 = 0;
-    return;
-  }
-
-  double omega = 2.0 * M_PI * freq / sample_rate;
-  double s = sin(omega);
-  double c = cos(omega);
-  double alfa = s * sinh(log(2.0) / 2.0 * omega / s);
-
-  a  = gain * (1.0 + c) / 2.0 / (1.0 + alfa);
-  a1 = gain * -(1.0 + c) / (1.0 + alfa);
-  a2 = gain * (1.0 + c) / 2.0 / (1.0 + alfa);
-  b1 = -(2.0 * c) / (1.0 + alfa);
-  b2 = (1.0 - alfa) / (1.0 + alfa);
-
-}
-
-void
-HPF::update()
-{
-  if ((sample_rate < 10) || (freq < 10))
-  {
-    // setup as passthrough on incorrect parameters
-    a  = 1.0;
-    a1 = 0;
-    a2 = 0;
-    b1 = 0;
-    b2 = 0;
-    return;
-  }
-
-  double omega = 2.0 * M_PI * freq / sample_rate;
-  double s = sin(omega);
-  double c = cos(omega);
-  double alfa = s * sinh(log(2.0) / 2.0 * omega / s);
-
-  a  = gain * (1.0 - c) / 2.0 / (1.0 + alfa);
-  a1 = gain * (1.0 - c) / (1.0 + alfa);
-  a2 = gain * (1.0 - c) / 2.0 / (1.0 + alfa);
-  b1 = -(2.0 * c) / (1.0 + alfa);
-  b2 = (1.0 - alfa) / (1.0 + alfa);
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////////
 // BassRedir
 ///////////////////////////////////////////////////////////////////////////////
-
-double channels_gain(int mask)
-{
-  // When we mix basses to several channels we have to
-  // adjust the gain to keep the resulting loudness
-  double bass_nch = mask_nch(mask);
-  return bass_nch? 1.0 / sqrt(bass_nch) : 1.0;
-}
 
 BassRedir::BassRedir()
 :NullFilter(FORMAT_MASK_LINEAR)
@@ -114,33 +19,51 @@ BassRedir::BassRedir()
   buf.allocate(BUF_SIZE);
 }
 
+void
+BassRedir::update_filters(Speakers _spk)
+{
+  int nch = _spk.nch();
+  int sample_rate = _spk.sample_rate;
+
+  if (sample_rate)
+  {
+    IIRInstance *lpf_iir = IIRLinkwitzRiley(4, freq, true).make(sample_rate);
+    IIRInstance *hpf_iir = IIRLinkwitzRiley(4, freq, false).make(sample_rate);
+
+    // When we mix basses to several channels we have to
+    // adjust the gain to keep the resulting loudness
+    double bass_nch = mask_nch(ch_mask);
+    double ch_gain = bass_nch? 1.0 / sqrt(bass_nch) : 1.0;
+    lpf_iir->apply_gain(gain * ch_gain);
+
+    lpf.init(lpf_iir);
+    for (int i = 0; i < nch; i++)
+      hpf[i].init(hpf_iir);
+
+    safe_delete(lpf_iir);
+    safe_delete(hpf_iir);
+  }
+  else
+  {
+    lpf.uninit();
+    for (int i = 0; i < nch; i++)
+      hpf[i].uninit();
+  }
+}
 
 void
 BassRedir::on_reset()
 {
+  int nch = spk.nch();
   lpf.reset();
-  for (int i = 0; i < NCHANNELS; i++)
+  for (int i = 0; i < nch; i++)
     hpf[i].reset();
 }
 
 bool
 BassRedir::on_set_input(Speakers _spk)
 {
-  lpf.sample_rate = _spk.sample_rate;
-  lpf.freq = freq;
-  lpf.gain = gain * channels_gain(ch_mask & _spk.mask);
-  lpf.update();
-  lpf.reset();
-
-  for (int i = 0; i < NCHANNELS; i++)
-  {
-    hpf[i].sample_rate = _spk.sample_rate;
-    hpf[i].freq = freq;
-    hpf[i].gain = 1.0;
-    hpf[i].update();
-    hpf[i].reset();
-  }
-
+  update_filters(_spk);
   return true;
 }
 
@@ -219,10 +142,11 @@ BassRedir::get_enabled() const
 void 
 BassRedir::set_enabled(bool _enabled)
 {
+  int nch = spk.nch();
   if (_enabled && !enabled)
   {
     lpf.reset();
-    for (int i = 0; i < NCHANNELS; i++)
+    for (int i = 0; i < nch; i++)
       hpf[i].reset();
   }
   enabled = _enabled;
@@ -237,14 +161,10 @@ BassRedir::get_freq() const
 void 
 BassRedir::set_freq(double _freq)
 {
-  freq = _freq;
-
-  lpf.freq = _freq;
-  lpf.update();
-  for (int i = 0; i < NCHANNELS; i++)
+  if (freq != _freq)
   {
-    hpf[i].freq = _freq;
-    hpf[i].update();
+    freq = _freq;
+    update_filters(spk);
   }
 }
 
@@ -257,9 +177,11 @@ BassRedir::get_gain() const
 void 
 BassRedir::set_gain(sample_t _gain)
 {
-  gain = _gain;
-  lpf.gain = gain * channels_gain(ch_mask & spk.mask);
-  lpf.update();
+  if (gain != _gain)
+  {
+    gain = _gain;
+    update_filters(spk);
+  }
 }
 
 int
@@ -271,9 +193,11 @@ BassRedir::get_channels() const
 void
 BassRedir::set_channels(int _ch_mask)
 {
-  ch_mask = _ch_mask & CH_MASK_ALL;
-  lpf.gain = gain * channels_gain(ch_mask & spk.mask);
-  lpf.update();
+  if (ch_mask != _ch_mask)
+  {
+    ch_mask = _ch_mask & CH_MASK_ALL;
+    update_filters(spk);
+  }
 }
 
 bool
