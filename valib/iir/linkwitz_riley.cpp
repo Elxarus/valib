@@ -12,7 +12,7 @@ IIRInstance *linkwitz_riley_proto(int sample_rate, int m)
   int k = (n+1) / 2;
   int odd = n & 1;
 
-  IIRInstance *iir = new IIRInstance(sample_rate, m);
+  IIRInstance *iir = new IIRInstance(sample_rate, n);
   if (!iir) return 0;
   if (!iir->n)
   {
@@ -21,27 +21,12 @@ IIRInstance *linkwitz_riley_proto(int sample_rate, int m)
   }
 
   for (int i = 0; i < k - odd; i++)
-  {
-    Biquad *biquad = iir->sections + i*2;
-    biquad->a[0] = 1.0;
-    biquad->a[1] = -2.0 * cos(double(2 * i + n + 1) / (2 * n) * M_PI);
-    biquad->a[2] = 1.0;
-    biquad->b[0] = 1.0;
-    biquad->b[1] = 0;
-    biquad->b[2] = 0;
-    biquad[1] = biquad[0];
-  }
+    iir->sec[i*2] = iir->sec[i*2+1] = Biquad(
+      1.0, -2.0 * cos(double(2 * i + n + 1) / (2 * n) * M_PI), 1.0,
+      1.0, 0, 0);
 
   if (odd)
-  {
-    Biquad *biquad = iir->sections + (m - 1);
-    biquad->a[0] = 1.0;
-    biquad->a[1] = 2.0;
-    biquad->a[2] = 1.0;
-    biquad->b[0] = 1.0;
-    biquad->b[1] = 0;
-    biquad->b[2] = 0;
-  }
+    iir->sec[n-1].set(1.0, 2.0, 1.0, 1.0, 0, 0);
 
   return iir;
 }
@@ -53,23 +38,15 @@ IIRLinkwitzRiley::make(int sample_rate) const
   if (!iir) return 0;
 
   if (!is_lpf)
-  {
-    // s = 1/s substitution
-    // swap a0 and a2, b0 and b2
     for (int i = 0; i < iir->n; i++)
     {
-      double a0 = iir->sections[i].a[0];
-      iir->sections[i].a[0] = iir->sections[i].a[2];
-      iir->sections[i].a[2] = a0;
-
-      double b0 = iir->sections[i].b[0];
-      iir->sections[i].b[0] = iir->sections[i].b[2];
-      iir->sections[i].b[2] = b0;
+      // s = 1/s substitution
+      Biquad q = iir->sec[i];
+      iir->sec[i] = Biquad(q.a[2], q.a[1], q.a[0], q.b[2], q.b[1], q.b[0]);
     }
-  }
+
   double k = 1 / tan(M_PI * double(f) / sample_rate);
   iir->bilinear(k);
-
 
   return iir;
 }
