@@ -14,26 +14,26 @@ IIRIdentity iir_identity;
 IIRInstance::IIRInstance(int _sample_rate, int _n, double _gain)
 {
   sample_rate = _sample_rate;
-  sections = new Biquad[_n];
-  n = sections? _n: 0;
+  sec = new Biquad[_n];
+  n = sec? _n: 0;
   gain = _gain;
 }
 
 IIRInstance::~IIRInstance()
 {
-  safe_delete(sections);
+  safe_delete(sec);
 }
 
 void IIRInstance::bilinear(double k)
 {
   for (int i = 0; i < n; i++)
-    sections[i].bilinear(k);
+    sec[i].bilinear(k);
 }
 
 void IIRInstance::normalize()
 {
   for (int i = 0; i < n; i++)
-    sections[i].normalize();
+    sec[i].normalize();
 }
 
 void IIRInstance::apply_gain(double _gain)
@@ -45,7 +45,7 @@ double IIRInstance::get_gain() const
 {
   double total_gain = gain;
   for (int i = 0; i < n; i++)
-    total_gain *= sections[i].get_gain();
+    total_gain *= sec[i].get_gain();
   return total_gain;
 }
 
@@ -54,25 +54,20 @@ bool IIRInstance::is_null() const
   if (gain == 0) return true;
 
   for (int i = 0; i < n; i++)
-    if (sections[i].is_null())
+    if (sec[i].is_null())
       return true;
   return false;
 }
 
 bool IIRInstance::is_identity() const
 {
-  if (gain != 1.0) return false;
-
-  for (int i = 0; i < n; i++)
-    if (!sections[i].is_identity())
-      return false;
-  return true;
+  return is_gain() && get_gain() == 1.0;
 }
 
 bool IIRInstance::is_gain() const
 {
   for (int i = 0; i < n; i++)
-    if (!sections[i].is_gain())
+    if (!sec[i].is_gain())
       return false;
   return true;
 }
@@ -80,7 +75,7 @@ bool IIRInstance::is_gain() const
 bool IIRInstance::is_infinity() const
 {
   for (int i = 0; i < n; i++)
-    if (sections[i].is_infinity())
+    if (sec[i].is_infinity())
       return true;
   return false;
 }
@@ -93,6 +88,11 @@ bool IIRInstance::is_infinity() const
 IIRFilter::IIRFilter(): n(0), gain(1.0), sec(0)
 {}
 
+IIRFilter::IIRFilter(const IIRInstance *iir): n(0), gain(1.0), sec(0)
+{
+  init(iir);
+}
+
 IIRFilter::~IIRFilter()
 {
   uninit();
@@ -101,48 +101,65 @@ IIRFilter::~IIRFilter()
 bool
 IIRFilter::init(const IIRInstance *iir)
 {
+  int i, j;
+
   uninit();
+
+  /////////////////////////////////////////////////////////
+  // Special cases
 
   if (!iir)
     return true;
+
+  if (iir->is_infinity())
+    return false;
 
   if (iir->is_null())
   {
     gain = 0;
     return true;
   }
-  if (iir->is_identity())
-  {
-    gain = 1.0;
+
+  /////////////////////////////////////////////////////////
+  // Global gain equals to the filter gain
+  // Note, that we will normalize each section later
+
+  gain = iir->get_gain();
+
+  /////////////////////////////////////////////////////////
+  // Count non-trivial sections
+
+  n = 0;
+  for (i = 0; i < iir->n; i++)
+    if (!iir->sec[i].is_gain())
+      n++;
+
+  if (n == 0)
+    // the filter is triuvial
     return true;
-  }
-  if (iir->is_gain())
+
+  /////////////////////////////////////////////////////////
+  // Build sections array
+
+  sec = new Section[n];
+  if (!sec)
   {
-    gain = iir->get_gain();
-    return true;
-  }
-  if (iir->is_infinity())
+    n = 0;
     return false;
-
-  gain = iir->gain;
-  if (iir->n)
-  {
-    sec = new Section[iir->n];
-    if (!sec) return false;
-    n = iir->n;
-
-    for (int i = 0; i < n; i++)
-    {
-      Biquad *b = iir->sections + i;
-      gain *= b->b[0] / b->a[0];
-      sec[i].a1 = b->a[1] / b->a[0];
-      sec[i].a2 = b->a[2] / b->a[0];
-      sec[i].b1 = b->b[1] / b->b[0];
-      sec[i].b2 = b->b[2] / b->b[0];
-      sec[i].h1 = 0;
-      sec[i].h2 = 0;
-    }
   }
+
+  for (i = 0, j = 0; i < iir->n; i++)
+    if (!iir->sec[i].is_gain())
+    {
+      Biquad b = iir->sec[i];
+      sec[j].a1 = b.a[1] / b.a[0];
+      sec[j].a2 = b.a[2] / b.a[0];
+      sec[j].b1 = b.b[1] / b.b[0];
+      sec[j].b2 = b.b[2] / b.b[0];
+      sec[j].h1 = 0;
+      sec[j].h2 = 0;
+      j++;
+    }
 
   return true;
 }
@@ -161,6 +178,33 @@ IIRFilter::process(sample_t *samples, size_t nsamples)
   Section *s;
   sample_t g = gain;
   sample_t y, h;
+
+  /////////////////////////////////////
+  // Trivial cases
+
+  if (n == 0)
+  {
+    if (gain == 1.0)
+    {
+      // Do nothing
+    }
+    else if (gain == 0)
+    {
+      // Zero samples
+      while (nsamples--)
+        *samples++ = 0;
+    }
+    else
+    {
+      // Gain samples
+      while (nsamples--)
+        *samples++ *= g;
+    }
+    return;
+  }
+
+  /////////////////////////////////////
+  // Apply direct form 2 cascade
 
   while (nsamples--)
   {

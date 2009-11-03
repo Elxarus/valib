@@ -15,26 +15,12 @@ IIRInstance *butterworth_proto(int sample_rate, int n)
   }
 
   for (int i = 0; i < k - odd; i++)
-  {
-    Biquad *biquad = iir->sections + i;
-    biquad->a[0] = 1.0;
-    biquad->a[1] = -2.0 * cos(double(2 * i + n + 1) / (2 * n) * M_PI);
-    biquad->a[2] = 1.0;
-    biquad->b[0] = 1.0;
-    biquad->b[1] = 0;
-    biquad->b[2] = 0;
-  }
+    iir->sec[i] = Biquad(
+      1.0, -2.0 * cos(double(2 * i + n + 1) / (2 * n) * M_PI), 1.0,
+      1.0, 0, 0);
 
   if (odd)
-  {
-    Biquad *biquad = iir->sections + (k - 1);
-    biquad->a[0] = 1.0;
-    biquad->a[1] = 1.0;
-    biquad->a[2] = 0;
-    biquad->b[0] = 1.0;
-    biquad->b[1] = 0;
-    biquad->b[2] = 0;
-  }
+    iir->sec[k-1].set(1.0, 1.0, 0, 1.0, 0, 0);
 
   return iir;
 }
@@ -44,6 +30,14 @@ IIRButterworth::make(int sample_rate) const
 {
   IIRInstance *iir = butterworth_proto(sample_rate, n);
   if (!iir) return 0;
+
+  if (!is_lpf)
+    for (int i = 0; i < iir->n; i++)
+    {
+      // s = 1/s substitution
+      Biquad q = iir->sec[i];
+      iir->sec[i] = Biquad(q.a[2], q.a[1], q.a[0], q.b[2], q.b[1], q.b[0]);
+    }
 
   double k = 1/tan(M_PI * double(f) / sample_rate);
   iir->bilinear(k);

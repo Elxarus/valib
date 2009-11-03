@@ -88,9 +88,9 @@ public:
 // is_null(), is_identity(), is_gain(), is_infinity()
 //   Determine the special case:
 //   * Null biquad is a biquad with b0 = 0.
-//   * Gain biquad is the following biquad: b0 / a0, where a0 <> 0 and b0 <> 0.
-//   * Identity biquad is when b0 = a0 <> 0 and other coefficients are zero.
-//     It is the special case of gain biquad, so is_identity() => is_gain()
+//   * Gain biquad is the following biquad: b0 / a0, where a0 <> 0 and other
+//     coefficients are 0. Null and identity are special cases of the gain biquad.
+//   * Identity biquad is when b0 = a0 && a0 <> 0 and other coefficients are 0.
 //   * Infinity biquad is a biquad with a0 = 0.
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -103,11 +103,15 @@ public:
   Biquad()
   { 
     // default biquad is identity
-    a[0] = 1.0; a[1] = 0; a[2] = 0;
-    b[0] = 1.0; b[1] = 0; b[2] = 0;
+    set(1.0, 0, 0, 1.0, 0, 0);
   }
 
   Biquad(sample_t a0, sample_t a1, sample_t a2, sample_t b0, sample_t b1, sample_t b2)
+  {
+    set(a0, a1, a2, b0, b1, b2);
+  }
+
+  void set(sample_t a0, sample_t a1, sample_t a2, sample_t b0, sample_t b1, sample_t b2)
   {
     a[0] = a0; a[1] = a1; a[2] = a2;
     b[0] = b0; b[1] = b1; b[2] = b2;
@@ -122,14 +126,12 @@ public:
     b0 = b[0] + b[1] * k + b[2] * k * k;
     b1 = 2 * (b[0] - b[2] * k * k);
     b2 = b[0] - b[1] * k + b[2] * k * k;
-
-    a[0] = a0; a[1] = a1; a[2] = a2;
-    b[0] = b0; b[1] = b1; b[2] = b2;
+    set(a0, a1, a2, b0, b1, b2);
   }
 
   void normalize()
   {
-    if (a[0] != 1 && a[0] != 0)
+    if (a[0] != 1.0 && a[0] != 0)
     {
       b[0] /= a[0]; b[1] /= a[0]; b[2] /= a[0];
       a[1] /= a[0]; a[2] /= a[0];
@@ -145,7 +147,7 @@ public:
   double get_gain()  const { return a[0] == 0? 0: b[0] / a[0]; }
 
   bool is_null()     const { return b[0] == 0; }
-  bool is_gain()     const { return b[0] != 0 && b[1] == 0 && b[2] == 0 && a[0] != 0 && a[1] == 0 && a[2] == 0; }
+  bool is_gain()     const { return b[1] == 0 && b[2] == 0 && a[0] != 0 && a[1] == 0 && a[2] == 0; }
   bool is_identity() const { return is_gain() && b[0] == a[0]; }
   bool is_infinity() const { return a[0] == 0; }
 };
@@ -167,8 +169,8 @@ public:
 //   Number of sections of the filter. Zero means that filter is a simple gain
 //   filter (only gain is applied).
 //
-// sections
-//   Biquads array.
+// sec
+//   Filter sections, biquads array.
 //
 // apply_gain(double gain)
 //   Gain the filter. It is applied only to the gain factor, (not the biquads).
@@ -178,21 +180,25 @@ public:
 //   filter's gain.
 //
 // is_null(), is_identity(), is_gain()
-//   Determine the degenerated form.
+//   Determine the special case:
 //   Filter is null when any biquad is null, or the filter's gian is zero.
 //   Filter is the gain filter when all of the biquads are gain biquads.
-//   Filter is identity when all biquads are identity and the filter's gain is 1.
+//   Filter is identity when all biquads are gain and the filter's gain is 1.
 //   Filter is infinity when any biquad is infinity.
 ///////////////////////////////////////////////////////////////////////////////
 
 class IIRInstance
 {
+protected:
+  IIRInstance(const IIRInstance &);
+  IIRInstance &operator=(const IIRInstance &);
+
 public:
   int sample_rate;
   double gain;
 
   int n;
-  Biquad *sections;
+  Biquad *sec;
 
   IIRInstance(int sample_rate, int n, double gain = 1.0);
   ~IIRInstance();
@@ -252,6 +258,20 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // IIRFilter
 // Simple direct form II filter implementation
+//
+// bool init(const IIRInstance *iir);
+//   Setup the filter to use the IIR given.
+//   Returns false if initialization fails.
+//
+// void uninit()
+//   Forget the IIR. Become just a passthrough filter.
+//
+// void process(sample_t *samples, size_t nsamples);
+//   Process samples array.
+//
+// void reset();
+//   Reset the history to process a different stream.
+// 
 ///////////////////////////////////////////////////////////////////////////////
 
 class IIRFilter
@@ -271,6 +291,7 @@ protected:
 
 public:
   IIRFilter();
+  IIRFilter(const IIRInstance *iir);
   ~IIRFilter();
 
   bool init(const IIRInstance *iir);
