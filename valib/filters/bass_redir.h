@@ -20,7 +20,6 @@ protected:
   double    freq;
   sample_t  gain;
   int       ch_mask;
-  bool      do_hpf;
 
   Samples   buf;
   IIRFilter hpf[NCHANNELS];

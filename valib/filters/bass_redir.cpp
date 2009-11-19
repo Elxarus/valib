@@ -112,8 +112,7 @@ BassRedir::on_process()
       if ((CH_MASK(order[ch]) & ch_mask) == 0)
       {
         // High-pass filter
-        if (do_hpf)
-          hpf[ch].process(samples[ch] + pos, block_size);
+        hpf[ch].process(samples[ch] + pos, block_size);
       }
       else
       {
@@ -198,16 +197,4 @@ BassRedir::set_channels(int _ch_mask)
     ch_mask = _ch_mask & CH_MASK_ALL;
     update_filters(spk);
   }
-}
-
-bool
-BassRedir::get_hpf() const
-{
-  return do_hpf;
-}
-
-void
-BassRedir::set_hpf(bool _do_hpf)
-{
-  do_hpf = _do_hpf;
 }
