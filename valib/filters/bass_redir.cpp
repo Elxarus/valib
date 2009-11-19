@@ -151,14 +151,14 @@ BassRedir::set_enabled(bool _enabled)
   enabled = _enabled;
 }
 
-double 
+int
 BassRedir::get_freq() const
 {
   return freq;
 }
 
 void 
-BassRedir::set_freq(double _freq)
+BassRedir::set_freq(int _freq)
 {
   if (freq != _freq)
   {
