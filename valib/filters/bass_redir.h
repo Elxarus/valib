@@ -17,7 +17,7 @@ class BassRedir : public NullFilter
 {
 protected:
   bool      enabled;
-  double    freq;
+  int       freq;
   sample_t  gain;
   int       ch_mask;
 
@@ -45,8 +45,8 @@ public:
   void     set_enabled(bool _enabled);
 
   // cutoff frequency
-  double   get_freq() const;
-  void     set_freq(double _freq);
+  int      get_freq() const;
+  void     set_freq(int _freq);
 
   // bass gain
   sample_t get_gain() const;
