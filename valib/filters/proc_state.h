@@ -67,8 +67,6 @@ struct AudioProcessorState
   // Bass redirection
   bool     bass_redir;
   int      bass_freq;
-  sample_t bass_gain;
-  bool     bass_hpf;
   int      bass_channels;
 
   // Delay

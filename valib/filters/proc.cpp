@@ -331,8 +331,6 @@ AudioProcessor::get_state(vtime_t time)
   // Bass redirection
   state->bass_redir = get_bass_redir();
   state->bass_freq = get_bass_freq();
-  state->bass_gain = get_bass_gain();
-  state->bass_hpf = get_bass_hpf();
   state->bass_channels = get_bass_channels();
   // Delays
   state->delay = get_delay();
@@ -391,8 +389,6 @@ AudioProcessor::set_state(const AudioProcessorState *state)
   // Bass redirection
   set_bass_redir(state->bass_redir);
   set_bass_freq(state->bass_freq);
-  set_bass_gain(state->bass_gain);
-  set_bass_hpf(state->bass_hpf);
   set_bass_channels(state->bass_channels);
   // Delays
   set_delay(state->delay);
