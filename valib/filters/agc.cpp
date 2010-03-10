@@ -184,17 +184,6 @@ AGC::process()
   // it larger. Our task is to decrease the global gain to make the output 
   // level <= 1.0.
 
-  // adjust gain (release)
-
-  if (!auto_gain)
-    gain = master;
-  else
-    if (!normalize)
-      if (gain * release_factor > master)
-        gain = master;
-      else
-        gain *= release_factor;
-
   // DRC
 
   if (drc)
@@ -219,25 +208,39 @@ AGC::process()
 
   // factor
 
+  if (!auto_gain)
+    gain = master;
+
   factor = gain * drc_level;
 
   // adjust gain on overflow
 
   max = MAX(level, old_level) * factor;
-  if (auto_gain && max > 1.0)
-    if (max < attack_factor)
+  if (auto_gain)
+    if (max > 1.0)
     {
-      // corrected with no overflow
-      factor /= max;
-      gain   /= max;
-      max     = 1.0;
+      if (max < attack_factor)
+      {
+        // corrected with no overflow
+        factor /= max;
+        gain   /= max;
+        max     = 1.0;
+      }
+      else
+      {
+        // overflow, will be clipped
+        factor /= attack_factor;
+        gain   /= attack_factor;
+        max    /= attack_factor;
+      }
     }
-    else
+    else if (!normalize)
     {
-      // overflow, will be clipped
-      factor /= attack_factor;
-      gain   /= attack_factor;
-      max    /= attack_factor;
+      // release
+      if (gain * release_factor > master)
+        gain = master;
+      else
+        gain *= release_factor;
     }
 
   ///////////////////////////////////////
@@ -247,7 +250,6 @@ AGC::process()
 
   ///////////////////////////////////////
   // Windowing
-  //
   // * full windowing on gain change
   // * simple gain when gain is applied
   // * no windowing if it is no gain applied
