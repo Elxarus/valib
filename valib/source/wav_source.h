@@ -8,6 +8,7 @@
 #include "../buffer.h"
 #include "../auto_file.h"
 #include "../filter.h"
+#include "../win32/winspk.h"
 
 class WAVSource : public Source
 {
@@ -15,7 +16,8 @@ protected:
   AutoFile f;
   Rawdata  buf;
   Speakers spk;
-
+  Rawdata format;
+  
   size_t block_size;
 
   AutoFile::fsize_t data_start;
@@ -35,6 +37,7 @@ public:
   AutoFile::fsize_t size() const;
   AutoFile::fsize_t pos() const;
   int seek(AutoFile::fsize_t pos);
+  const WAVEFORMATEX *wave_format() const;
 
   /////////////////////////////////////////////////////////
   // Source interface

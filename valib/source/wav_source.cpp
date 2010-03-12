@@ -56,6 +56,9 @@ WAVSource::WAVSource(const char *_filename, size_t _block_size)
   data_size  = 0;
   data_remains = 0;
 
+  format.allocate(sizeof(WAVEFORMATEX));
+  format.zero();
+
   open(_filename, _block_size);
 }
 
@@ -99,7 +102,6 @@ WAVSource::open_riff()
   ChunkHeader *header = (ChunkHeader *)buf;
   RIFFChunk   *riff   = (RIFFChunk *)buf;
   DS64Chunk   *ds64   = (DS64Chunk *)buf;
-  FMTChunk    *fmt    = (FMTChunk *)buf;
 
   /////////////////////////////////////////////////////////
   // Check RIFF header
@@ -130,16 +132,17 @@ WAVSource::open_riff()
 
     if (header->fcc == fcc_fmt)
     {
-      if (data_size + header->size > buf_size)
+      if (!format.allocate(header->size))
         return false;
 
-      memset(&fmt->wfx, 0, sizeof(fmt->wfx));
-      buf_data = f.read(buf + buf_data, header->size);
-      if (buf_data < header->size)
+      format.zero();
+      size_t data_read = f.read(format, header->size);
+      if (data_read < header->size)
         return false;
 
-      if (!wfx2spk(&fmt->wfx, spk))
-        return false;
+      // Determine output format
+      if (!wfx2spk((WAVEFORMATEX *)format.data(), spk))
+        spk = Speakers(FORMAT_RAWDATA, 0, 0);
 
       have_fmt = true;
     }
@@ -224,6 +227,10 @@ WAVSource::seek(AutoFile::fsize_t _pos)
   data_remains = data_size - _pos;
   return result;
 }
+
+const WAVEFORMATEX *
+WAVSource::wave_format() const
+{ return (WAVEFORMATEX *)format.data(); }
 
 ///////////////////////////////////////////////////////////
 // Source interface
