@@ -84,7 +84,9 @@ WAVSink::close_riff()
     uint32_t data_size32 = 0xffffffff;
 
     WAVEFORMATEX *wfx = (WAVEFORMATEX *)file_format;
-    uint64_t sample_count = data_size / wfx->nBlockAlign;
+    uint64_t sample_count = data_size;
+    if (wfx->nBlockAlign > 0)
+      sample_count = data_size / wfx->nBlockAlign;
 
     // RF64 header
     f.seek(0);
