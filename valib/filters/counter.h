@@ -1,38 +1,44 @@
+/*
+  Counter
+  Counter filter counts the number of samples/bytes passed through the filter.
+*/
+
 #ifndef VALIB_COUNTER_H
 #define VALIB_COUNTER_H
 
-#include "../filter.h"
+#include "../filter2.h"
 
-
-class Counter : public NullFilter
+class Counter : public SimpleFilter
 {
 protected:
   size_t counter;
 
-  /////////////////////////////////////////////////////////
-  // NullFilter overrides
-
-  virtual void on_reset()
-  {
-    counter = 0;
-  }
-  virtual bool on_process()
-  {
-    counter += size;
-    return true;
-  };
-
 public:
-  Counter()
-  :NullFilter(-1)
-  {
-    counter = 0;
-  };
+  Counter(): counter(0)
+  {}
 
-  inline size_t get_count() 
+  inline size_t get_count() const
+  { return counter; }
+
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual bool can_open(Speakers spk) const
+  { return true; }
+
+  virtual void reset()
+  { counter = 0; }
+
+  virtual bool process(Chunk2 &in, Chunk2 &out)
   {
-    return counter; 
+    out = in;
+    in.set_empty();
+    counter += out.size;
+    return true;
   }
+
+  virtual bool is_inplace() const
+  { return true; }
 };
 
 #endif
