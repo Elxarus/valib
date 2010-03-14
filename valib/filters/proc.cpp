@@ -134,7 +134,7 @@ AudioProcessor::rebuild_chain()
 
   // processing chain
   FILTER_SAFE(chain.add_back(&in_levels, "Input levels"));
-  FILTER_SAFE(chain.add_back(&in_cache, "Input cache"));
+  FILTER_SAFE(chain.add_back(in_cache.filter(), "Input cache"));
   if (out_spk.nch() < in_spk.nch())
   {
     FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
@@ -150,7 +150,7 @@ AudioProcessor::rebuild_chain()
   FILTER_SAFE(chain.add_back(&dither,    "Dither"));
   FILTER_SAFE(chain.add_back(agc.filter(), "AGC"));
   FILTER_SAFE(chain.add_back(&delay,     "Delay"));
-  FILTER_SAFE(chain.add_back(&out_cache, "Output cache"));
+  FILTER_SAFE(chain.add_back(out_cache.filter(), "Output cache"));
   FILTER_SAFE(chain.add_back(&out_levels,"Output levels"));
 
   // setup mixer
