@@ -261,33 +261,39 @@ public:
 };
 
 
-class SamplesFilter : public Filter2
+class SimpleFilter : public Filter2
 {
 protected:
   bool f_open;
   Speakers spk;
 
 public:
-  SamplesFilter(): f_open(false)
+  SimpleFilter(): f_open(false)
   {}
 
-  virtual ~SamplesFilter()
+  virtual ~SimpleFilter()
   {
     if (is_open())
       close();
   }
 
   /////////////////////////////////////////////////////////
-  // Open/close the filter
+  // Init/Uninit placeholders
 
-  virtual bool can_open(Speakers spk) const
-  {
-    return spk.is_linear() && spk.mask != 0 && spk.sample_rate != 0;
-  }
+  virtual bool init(Speakers spk) { return true; }
+  virtual void uninit() {}
+
+  /////////////////////////////////////////////////////////
+  // Open/close the filter
+  // Do not override it directly, override init/uninit()
+  // placehoilders.
 
   virtual bool open(Speakers new_spk)
   {
     if (!can_open(new_spk))
+      return false;
+
+    if (!init(new_spk))
       return false;
 
     f_open = true;
@@ -297,8 +303,8 @@ public:
 
   virtual void close()
   {
+    uninit();
     f_open = false;
-    spk = spk_unknown;
   }
 
   virtual bool is_open() const
@@ -326,6 +332,17 @@ public:
   { return spk; }
 };
 
+class SamplesFilter : public SimpleFilter
+{
+public:
+  SamplesFilter()
+  {}
+
+  virtual bool can_open(Speakers spk) const
+  {
+    return spk.is_linear() && spk.mask != 0 && spk.sample_rate != 0;
+  }
+};
 
 class FilterThunk : public Filter
 {
