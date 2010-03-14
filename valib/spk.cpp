@@ -1,3 +1,4 @@
+#include <memory.h>
 #include "spk.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -196,4 +197,61 @@ samples_t::reorder(Speakers _spk, const order_t _input_order, const order_t _out
   for (i = 0; i < CH_NAMES; i++)
     if (mask & CH_MASK(_output_order[i]))
       samples[ch++] = tmp[_output_order[i]];
+}
+
+void zero_samples(sample_t *s, size_t size)
+{
+  memset(s, 0, size * sizeof(sample_t));
+}
+void zero_samples(sample_t *s, size_t offset, size_t size)
+{
+  memset(s + offset, 0, size * sizeof(sample_t));
+}
+void zero_samples(samples_t s, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    memset(s[ch], 0, size * sizeof(sample_t));
+}
+void zero_samples(samples_t s, size_t offset, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    memset(s[ch] + offset, 0, size * sizeof(sample_t));
+}
+
+void copy_samples(sample_t *dst, sample_t *src, size_t size)
+{
+  memcpy(dst, src, size * sizeof(sample_t));
+}
+void copy_samples(sample_t *dst, sample_t *src, size_t src_offset, size_t size)
+{
+  memcpy(dst, src + src_offset, size * sizeof(sample_t));
+}
+void copy_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t size)
+{
+  memcpy(dst + dst_offset, src, size * sizeof(sample_t));
+}
+void copy_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size)
+{
+  memcpy(dst + dst_offset, src + src_offset, size * sizeof(sample_t));
+}
+
+void copy_samples(samples_t dst, samples_t src, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    copy_samples(dst[ch], src[ch], size);
+}
+void copy_samples(samples_t dst, samples_t src, size_t src_offset, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    copy_samples(dst[ch], src[ch] + src_offset, size);
+}
+void copy_samples(samples_t dst, size_t dst_offset, samples_t src, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    copy_samples(dst[ch] + dst_offset, src[ch], size);
+}
+void copy_samples(samples_t dst, size_t dst_offset, samples_t src, size_t src_offset, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    copy_samples(dst[ch] + dst_offset, src[ch] + src_offset, size);
 }

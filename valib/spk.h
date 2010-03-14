@@ -491,6 +491,29 @@ struct samples_t
   void reorder(Speakers spk, const order_t input_order, const order_t output_order);
 };
 
+void zero_samples(sample_t *s, size_t size);
+void zero_samples(sample_t *s, size_t offset, size_t size);
+void zero_samples(samples_t s, int nch, size_t size);
+void zero_samples(samples_t s, size_t offset, int nch, size_t size);
+
+void copy_samples(sample_t *dst, sample_t *src, size_t size);
+void copy_samples(sample_t *dst, sample_t *src, size_t src_offset, size_t size);
+void copy_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t size);
+void copy_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size);
+void copy_samples(samples_t dst, samples_t src, size_t size);
+void copy_samples(samples_t dst, samples_t src, size_t src_offset, size_t size);
+void copy_samples(samples_t dst, size_t dst_offset, samples_t src, int nch, size_t size);
+void copy_samples(samples_t dst, size_t dst_offset, samples_t src, int nch, size_t src_offset, size_t size);
+
+void move_samples(sample_t *dst, sample_t *src, size_t size);
+void move_samples(sample_t *dst, sample_t *src, size_t src_offset, size_t size);
+void move_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t size);
+void move_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size);
+void move_samples(samples_t dst, samples_t src, size_t size);
+void move_samples(samples_t dst, samples_t src, size_t src_offset, size_t size);
+void move_samples(samples_t dst, size_t dst_offset, samples_t src, int nch, size_t size);
+void move_samples(samples_t dst, size_t dst_offset, samples_t src, int nch, size_t src_offset, size_t size);
+
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class inlines
 ///////////////////////////////////////////////////////////////////////////////
