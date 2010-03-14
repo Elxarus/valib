@@ -7,12 +7,11 @@
 #define LEVEL_PLUS_100DB 100000.0
 
 AGC::AGC(size_t _nsamples)
-:NullFilter(FORMAT_MASK_LINEAR)
 {
   block       = 0;
 
-  sample[0]  = 0;
-  sample[1]  = 0;
+  sample[0]   = 0;
+  sample[1]   = 0;
   buf_sync[0] = false;
   buf_sync[1] = false;
   buf_time[0] = 0;
@@ -70,46 +69,22 @@ AGC::get_buffer() const
 }
 
 bool 
-AGC::fill_buffer()
+AGC::fill_buffer(Chunk2 &chunk)
 {
-  if (sync && sample[block] == 0)
+  if (chunk.sync && sample[block] == 0)
   {
-    buf_sync[block] = sync;
-    buf_time[block] = time;
-    sync = false;
+    buf_sync[block] = chunk.sync;
+    buf_time[block] = chunk.time;
+    chunk.sync = false;
+    chunk.time = 0;
   }
 
-  int ch;
-  size_t n = nsamples - sample[block];
+  size_t n = MIN(chunk.size, nsamples - sample[block]);
+  copy_samples(buf[block], sample[block], chunk.samples, spk.nch(), n);
 
-  if (size < n)
-  {
-    for (ch = 0; ch < spk.nch(); ch++)
-      memcpy(buf[block][ch] + sample[block], samples[ch], size * sizeof(sample_t));
-
-    sample[block] += size;
-    time += vtime_t(size) / spk.sample_rate;
-    drop_samples(size);
-
-    if (!flushing)
-      return false;
-
-    // zero rest of buffer in case of flushing
-    for (ch = 0; ch < spk.nch(); ch++)
-      memset(buf[block][ch] + sample[block], 0, (nsamples - sample[block]) * sizeof(sample_t));
-    return true;
-  }
-  else
-  {
-    for (ch = 0; ch < spk.nch(); ch++)
-      memcpy(buf[block][ch] + sample[block], samples[ch], n * sizeof(sample_t));
-
-    sample[block] = nsamples;
-    time += vtime_t(n) / spk.sample_rate;
-    drop_samples(n);
-
-    return true;
-  }
+  sample[block] += n;
+  chunk.drop_samples(n);
+  return sample[block] >= nsamples;
 }
 
 void 
@@ -299,12 +274,10 @@ AGC::process()
 void 
 AGC::reset()
 {
-  NullFilter::reset();
-
   block       = 0;
 
-  sample[0]  = 0;
-  sample[1]  = 0;
+  sample[0]   = 0;
+  sample[1]   = 0;
   buf_sync[0] = false;
   buf_sync[1] = false;
   buf_time[0] = 0;
@@ -315,33 +288,46 @@ AGC::reset()
 }
 
 bool 
-AGC::get_chunk(Chunk *_chunk)
+AGC::process(Chunk2 &in, Chunk2 &out)
 {
-  while (fill_buffer())
+  while (fill_buffer(in))
   {
     process();
 
-    // do not send empty block (first block)
+    // do not send empty first block
     if (!sample[block] && sample[next_block()])
       continue;
 
-    // send data
-    _chunk->set_linear
-    (
-      spk, 
-      buf[block], sample[block], 
-      buf_sync[block], buf_time[block],
-      flushing && (sample[next_block()] == 0)
-    );
+    out.set_linear(
+      buf[block], sample[block],
+      buf_sync[block], buf_time[block]);
+
     buf_sync[block] = false;
     sample[block] = 0; // drop block just sent
-    flushing = flushing && (sample[next_block()] != 0); // drop flushing state
     return true;
   }
+  out.set_empty();
+  return true;
+}
 
-  // assert: size == 0 
-  // no more input data left to process
+bool 
+AGC::flush(Chunk2 &out)
+{
+  zero_samples(buf[block], sample[block], spk.nch(), nsamples - sample[block]);
+  process();
 
-  _chunk->set_dummy();
+  // do not send empty first block
+  if (!sample[block])
+  {
+    zero_samples(buf[block], sample[block], spk.nch(), nsamples - sample[block]);
+    process();
+  }
+
+  out.set_linear(
+    buf[block], sample[block],
+    buf_sync[block], buf_time[block]);
+
+  buf_sync[block] = false;
+  sample[block] = 0;
   return true;
 }

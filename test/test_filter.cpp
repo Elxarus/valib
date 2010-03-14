@@ -310,7 +310,7 @@ int test_rules(Log *log)
 
   // Linear format processing filters
 
-  test_rules_filter(log, &agc, "AGC",
+  test_rules_filter(log, agc.filter(), "AGC",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
