@@ -6,14 +6,14 @@
 #define VALIB_BASS_REDIR_H
 
 #include "../buffer.h"
-#include "../filter.h"
+#include "../filter2.h"
 #include "../iir.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Bass Redir - bass redirection filter class
 ///////////////////////////////////////////////////////////////////////////////
 
-class BassRedir : public NullFilter
+class BassRedir : public SamplesFilter
 {
 protected:
   bool      enabled;
@@ -26,13 +26,6 @@ protected:
   IIRFilter lpf;
 
   void update_filters(Speakers spk);
-
-  /////////////////////////////////////////////////////////
-  // NullFilter overrides
-
-  virtual void on_reset();
-  virtual bool on_set_input(Speakers spk);
-  virtual bool on_process();
 
 public:
   BassRedir();
@@ -59,6 +52,16 @@ public:
   // do high-pass filtering
   bool     get_hpf() const;
   void     set_hpf(bool do_hpf);
+
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual void reset();
+  virtual bool open(Speakers spk);
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+
+  virtual bool is_inplace() const
+  { return true; }
 };
 
 #endif

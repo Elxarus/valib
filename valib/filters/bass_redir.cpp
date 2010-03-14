@@ -9,7 +9,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 BassRedir::BassRedir()
-:NullFilter(FORMAT_MASK_LINEAR)
 {
   // use default lpf filter setup (passthrough)
   enabled = false;
@@ -52,7 +51,7 @@ BassRedir::update_filters(Speakers _spk)
 }
 
 void
-BassRedir::on_reset()
+BassRedir::reset()
 {
   int nch = spk.nch();
   lpf.reset();
@@ -61,15 +60,22 @@ BassRedir::on_reset()
 }
 
 bool
-BassRedir::on_set_input(Speakers _spk)
+BassRedir::open(Speakers new_spk)
 {
-  update_filters(_spk);
+  if (!SamplesFilter::open(new_spk))
+    return false;
+
+  update_filters(new_spk);
   return true;
 }
 
 bool 
-BassRedir::on_process()
+BassRedir::process(Chunk2 &in, Chunk2 &out)
 {
+  // Passthrough (process inplace later)
+  out = in;
+  in.set_empty();
+ 
   if (!enabled)
     return true;
 
@@ -85,6 +91,8 @@ BassRedir::on_process()
   int nch = spk.nch();
   order_t order;
   spk.get_order(order);
+  samples_t samples = in.samples;
+  size_t size = in.size;
 
   size_t pos = 0;
   while (pos < size)

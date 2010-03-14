@@ -145,7 +145,7 @@ AudioProcessor::rebuild_chain()
     FILTER_SAFE(chain.add_back(&resample,  "SRC"));
     FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
   }
-  FILTER_SAFE(chain.add_back(&bass_redir,"Bass redirection"));
+  FILTER_SAFE(chain.add_back(bass_redir.filter(),"Bass redirection"));
   FILTER_SAFE(chain.add_back(&equalizer, "Equalizer"));
   FILTER_SAFE(chain.add_back(&dither,    "Dither"));
   FILTER_SAFE(chain.add_back(agc.filter(), "AGC"));
