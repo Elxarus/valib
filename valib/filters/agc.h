@@ -25,13 +25,13 @@
 #define VALIB_AGC_H
 
 #include "../buffer.h"
-#include "../filter.h"
+#include "../filter2.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // AGC class
 ///////////////////////////////////////////////////////////////////////////////
 
-class AGC : public NullFilter
+class AGC : public SamplesFilter
 {
 protected:
   SampleBuf w;
@@ -49,7 +49,7 @@ protected:
 
   inline size_t next_block();
 
-  bool fill_buffer();
+  bool fill_buffer(Chunk2 &chunk);
   void process();
 
 public:
@@ -79,10 +79,17 @@ public:
   void   set_buffer(size_t nsamples);
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // Filter2 interface
 
+  virtual bool is_inplace() const
+  { return false; }
+
+  virtual bool need_flushing() const
+  { return sample[0] || sample[1]; }
+
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool flush(Chunk2 &out);
   virtual void reset();
-  virtual bool get_chunk(Chunk *out);
 };
 
 
