@@ -104,6 +104,14 @@ public:
     time(0)
   {}
 
+  Chunk2(Chunk &chunk):
+    rawdata(chunk.rawdata),
+    samples(chunk.samples),
+    size(chunk.size),
+    sync(chunk.sync),
+    time(chunk.time)
+  {}
+
   Chunk2(bool _sync, vtime_t _time)
   {
     set_empty(_sync, _time);
@@ -202,6 +210,15 @@ public:
     size -= _size;
     sync = false;
   };
+
+  Chunk2 &operator =(Chunk &chunk)
+  {
+    rawdata = chunk.rawdata;
+    samples = chunk.samples;
+    size = chunk.size;
+    sync = chunk.sync;
+    time = chunk.time;
+  }
 };
 
 class Filter2
