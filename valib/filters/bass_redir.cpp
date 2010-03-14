@@ -91,8 +91,8 @@ BassRedir::process(Chunk2 &in, Chunk2 &out)
   int nch = spk.nch();
   order_t order;
   spk.get_order(order);
-  samples_t samples = in.samples;
-  size_t size = in.size;
+  samples_t samples = out.samples;
+  size_t size = out.size;
 
   size_t pos = 0;
   while (pos < size)
