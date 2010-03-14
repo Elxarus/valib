@@ -204,15 +204,6 @@ public:
   };
 };
 
-class Stream
-{
-public:
-  Speakers spk;
-  Rawdata  format_data;
-  size_t   size;
-  vtime_t  length;
-};
-
 class Filter2
 {
 protected:
@@ -231,13 +222,13 @@ public:
   // Open/close the filter
 
   virtual bool can_open(Speakers spk) const = 0;
-  virtual bool open(const Stream *stream) = 0;
+  virtual bool open(Speakers spk) = 0;
   virtual void close() = 0;
 
   // These flags are set after open() and do not change
   virtual bool is_open() const = 0;
   virtual bool is_inplace() const = 0;
-  virtual const Stream *input_stream() = 0;
+  virtual Speakers get_input() = 0;
 
   /////////////////////////////////////////////////////////
   // Processing
@@ -249,7 +240,7 @@ public:
   // These flags may change after process() call
   virtual bool eos() const = 0;
   virtual bool need_flushing() const = 0;
-  virtual const Stream *output_stream() const = 0;
+  virtual Speakers get_output() const = 0;
 };
 
 
@@ -257,11 +248,10 @@ class SamplesFilter : public Filter2
 {
 protected:
   bool f_open;
-  const Stream *stream;
   Speakers spk;
 
 public:
-  SamplesFilter(): f_open(false), stream(0)
+  SamplesFilter(): f_open(false)
   {}
 
   virtual ~SamplesFilter()
@@ -278,32 +268,27 @@ public:
     return spk.is_linear() && spk.mask != 0 && spk.sample_rate != 0;
   }
 
-  virtual bool open(const Stream *new_stream)
+  virtual bool open(Speakers new_spk)
   {
-    if (!new_stream || !can_open(new_stream->spk))
-    {
-      close();
+    if (!can_open(new_spk))
       return false;
-    }
 
     f_open = true;
-    stream = new_stream;
-    spk = new_stream->spk;
+    spk = new_spk;
     return true;
   }
 
   virtual void close()
   {
     f_open = false;
-    stream = 0;
     spk = spk_unknown;
   }
 
   virtual bool is_open() const
   { return f_open; }
 
-  virtual const Stream *input_stream()
-  { return stream; }
+  virtual Speakers get_input()
+  { return spk; }
 
   /////////////////////////////////////////////////////////
   // Processing
@@ -320,8 +305,8 @@ public:
   virtual bool need_flushing() const
   { return false; }
 
-  virtual const Stream *output_stream() const
-  { return stream; }
+  virtual Speakers get_output() const
+  { return spk; }
 };
 
 
@@ -329,8 +314,9 @@ class FilterThunk : public Filter
 {
 protected:
   Filter2 *f;
-  Stream input;
   Chunk2 chunk2;
+
+  Speakers spk;
   bool flushing;
 
 public:
@@ -348,19 +334,23 @@ public:
     return false;
   }
 
-  virtual bool query_input(Speakers spk) const
+  virtual bool query_input(Speakers new_spk) const
   {
-    return f->can_open(spk);
+    return f->can_open(new_spk);
   }
 
-  virtual bool set_input(Speakers spk)
+  virtual bool set_input(Speakers new_spk)
   {
-    input.spk = spk;
     chunk2.set_empty();
     flushing = false;
-    if (!f->open(&input))
+    if (!f->open(new_spk))
+    {
+      spk = spk_unknown;
+      f->reset();
       return false;
+    }
 
+    spk = new_spk;
     f->reset();
     return true;
   }
@@ -369,7 +359,7 @@ public:
   {
     if (!f->is_open())
       return spk_unknown;
-    return input.spk;
+    return spk;
   }
 
   virtual bool process(const Chunk *chunk)
@@ -385,15 +375,17 @@ public:
       chunk->sync, chunk->time);
 
     // format change
-    if (input.spk != chunk->spk)
+    if (spk != chunk->spk)
     {
-      input.spk = chunk->spk;
-      if (!f->open(&input))
+      chunk2.set_empty();
+      flushing = false;
+      if (!f->open(chunk->spk))
       {
-        chunk2.set_empty();
-        flushing = false;
+        spk = spk_unknown;
+        f->reset();
         return false;
       }
+      spk = chunk->spk;
       f->reset();
     }
 
@@ -405,8 +397,7 @@ public:
 
   virtual Speakers get_output() const
   {
-    const Stream *output_stream = f->output_stream();
-    return output_stream? output_stream->spk: spk_unknown;
+    return f->get_output();
   }
 
   virtual bool is_empty() const
@@ -424,7 +415,7 @@ public:
       if (!f->process(chunk2, out_chunk2))
         return false;
 
-      out_chunk->set(input.spk,
+      out_chunk->set(spk,
         out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
         out_chunk2.sync, out_chunk2.time);
       out_chunk->set_eos(f->eos());
@@ -437,14 +428,14 @@ public:
       if (f->need_flushing())
       {
         f->flush(out_chunk2);
-        out_chunk->set(input.spk,
+        out_chunk->set(spk,
           out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
           out_chunk2.sync, out_chunk2.time);
         out_chunk->set_eos(f->eos());
       }
       else
       {
-        out_chunk->set_empty(input.spk);
+        out_chunk->set_empty(spk);
         out_chunk->set_eos(true);
         flushing = false;
       }
