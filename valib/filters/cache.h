@@ -10,10 +10,10 @@
 #ifndef VALIB_CACHE_H
 #define VALIB_CACHE_H
 
-#include "linear_filter.h"
+#include "../filter2.h"
 #include "../buffer.h"
 
-class CacheFilter : public LinearFilter
+class CacheFilter : public SamplesFilter
 {
 protected:
   vtime_t stream_time; // Time after the last cached sample
@@ -23,11 +23,6 @@ protected:
   int buf_samples;     // Size fo the buffer in samples
   int cached_samples;  // Number of samples cached
   int pos;             // Position of the end of the circular buffer
-
-  virtual bool init(Speakers spk, Speakers &out_spk);
-  virtual void reset_state();
-  virtual void sync(vtime_t time);
-  virtual bool process_inplace(samples_t in, size_t in_size);
 
 public:
   CacheFilter();
@@ -41,6 +36,16 @@ public:
   // You can specify CH_NONE to get sum of all channels
   // Returns actual number of samples copied
   size_t get_samples(int ch_name, vtime_t time, sample_t *buf, size_t size);
+
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual bool open(Speakers spk);
+  virtual void reset();
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+
+  virtual bool is_inplace() const
+  { return true; }
 };
 
 #endif

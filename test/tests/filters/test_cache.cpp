@@ -30,9 +30,10 @@ TEST(cache, "Cache filter")
       while (!gen.is_empty())
       {
         gen.get_chunk(&chunk);
-        f.process(&chunk);
-        while (!f.is_empty())
-          f.get_chunk(&chunk);
+
+        Chunk2 in(chunk), out;
+        while (!in.is_dummy())
+          f.process(in, out);
 
         size_t size = rng.get_range((uint32_t)cache_samples);
         vtime_t time = f.get_time() - vtime_t(size + rng.get_range((uint32_t)(cache_samples - size))) / spk.sample_rate;
