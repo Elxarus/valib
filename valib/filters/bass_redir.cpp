@@ -60,11 +60,8 @@ BassRedir::reset()
 }
 
 bool
-BassRedir::open(Speakers new_spk)
+BassRedir::init(Speakers new_spk)
 {
-  if (!SamplesFilter::open(new_spk))
-    return false;
-
   update_filters(new_spk);
   return true;
 }
