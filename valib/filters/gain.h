@@ -5,25 +5,34 @@
 #ifndef VALIB_GAIN_H
 #define VALIB_GAIN_H
 
-#include "../filter.h"
+#include "../filter2.h"
 
-class Gain : public NullFilter
+class Gain : public SamplesFilter
 {
 public:
   double gain;
 
-  Gain(): NullFilter(FORMAT_MASK_LINEAR) {};
-  Gain(double gain_): NullFilter(FORMAT_MASK_LINEAR), gain(gain_) {}
+  Gain(): gain(1.0) {};
+  Gain(double gain_): gain(gain_) {}
 
-protected:
-  virtual bool on_process()
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual bool process(Chunk2 &in, Chunk2 &out)
   {
-    if (gain != 1.0)
+    out = in;
+    in.set_empty();
+
+    const size_t size = out.size;
+    if (!EQUAL_SAMPLES(gain, 1.0))
       for (int ch = 0; ch < spk.nch(); ch++)
         for (size_t s = 0; s < size; s++)
-          samples[ch][s] *= gain;
+          out.samples[ch][s] *= gain;
     return true;
   }
+
+  virtual bool is_inplace() const
+  { return true; }
 };
 
 #endif
