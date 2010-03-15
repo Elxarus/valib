@@ -164,13 +164,13 @@ AudioProcessor::rebuild_chain()
   // format conversion
   if (in_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_front(&in_conv, "PCM->Linear converter"));
+    FILTER_SAFE(chain.add_front(in_conv.filter(), "PCM->Linear converter"));
     FILTER_SAFE(in_conv.set_format(FORMAT_LINEAR));
   }
 
   if (out_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_back(&out_conv, "Linear->PCM converter"));
+    FILTER_SAFE(chain.add_back(out_conv.filter(), "Linear->PCM converter"));
     FILTER_SAFE(out_conv.set_format(out_spk.format));
   }
 

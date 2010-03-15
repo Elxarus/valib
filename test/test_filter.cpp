@@ -241,17 +241,17 @@ int test_rules(Log *log)
 
   // Rawdata filters
 
-  test_rules_filter(log, &conv_ll, "Converter linear->linear",
+  test_rules_filter(log, conv_ll.filter(), "Converter linear->linear",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &conv_lr, "Converter linear->raw",
+  test_rules_filter(log, conv_lr.filter(), "Converter linear->raw",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &conv_rl, "Converter raw->linear",
+  test_rules_filter(log, conv_rl.filter(), "Converter raw->linear",
     Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_PCM32, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
