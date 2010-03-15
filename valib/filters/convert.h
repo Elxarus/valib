@@ -16,14 +16,14 @@
 #define VALIB_CONVERT_H
 
 #include "../buffer.h"
-#include "../filter.h"
+#include "../filter2.h"
 #include "convert_func.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Converter class
 ///////////////////////////////////////////////////////////////////////////////
 
-class Converter : public NullFilter
+class Converter : public SimpleFilter
 {
 protected:
   // conversion function pointer
@@ -49,9 +49,8 @@ protected:
   size_t    part_size;     // partial sample size in bytes
 
   convert_t find_conversion(int _format, Speakers _spk) const;
-  bool initialize();       // initialize convertor
-  void convert_pcm2linear();
-  void convert_linear2pcm();
+  void convert_pcm2linear(Chunk2 &in, Chunk2 &out);
+  void convert_linear2pcm(Chunk2 &in, Chunk2 &out);
   bool is_lpcm(int format) { return format == FORMAT_LPCM20 || format == FORMAT_LPCM24; }
 
 public:
@@ -71,16 +70,19 @@ public:
   void set_order(const order_t _order);
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // SamplesFilter overrides
 
+  virtual bool can_open(Speakers spk) const;
+  virtual bool init(Speakers spk);
+
+  virtual bool process(Chunk2 &in, Chunk2 &out);
   virtual void reset();
 
-  virtual bool query_input(Speakers spk) const;
-  virtual bool set_input(Speakers spk);
-  virtual bool process(const Chunk *chunk);
-
   virtual Speakers get_output() const;
-  virtual bool get_chunk(Chunk *out);
+
+  virtual bool is_inplace() const
+  { return spk.format == format; }
+
 };
 
 #endif
