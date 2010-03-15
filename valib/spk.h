@@ -484,6 +484,12 @@ struct samples_t
   inline samples_t &operator -=(int n);
   inline samples_t &operator +=(size_t n);
   inline samples_t &operator -=(size_t n);
+
+  inline samples_t operator +(int n)    const { samples_t s(*this); return s += n; }
+  inline samples_t operator -(int n)    const { samples_t s(*this); return s -= n; }
+  inline samples_t operator +(size_t n) const { samples_t s(*this); return s += n; }
+  inline samples_t operator -(size_t n) const { samples_t s(*this); return s -= n; }
+
   inline samples_t &zero();
 
   void reorder_to_std(Speakers spk, const order_t order);
