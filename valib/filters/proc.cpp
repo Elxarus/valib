@@ -149,7 +149,7 @@ AudioProcessor::rebuild_chain()
   FILTER_SAFE(chain.add_back(&equalizer, "Equalizer"));
   FILTER_SAFE(chain.add_back(&dither,    "Dither"));
   FILTER_SAFE(chain.add_back(agc.filter(), "AGC"));
-  FILTER_SAFE(chain.add_back(&delay,     "Delay"));
+  FILTER_SAFE(chain.add_back(delay.filter(),     "Delay"));
   FILTER_SAFE(chain.add_back(out_cache.filter(), "Output cache"));
   FILTER_SAFE(chain.add_back(&out_levels,"Output levels"));
 

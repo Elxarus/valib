@@ -11,7 +11,6 @@
 const float sonic_speed = 330; // [m/s]
 
 Delay::Delay()
-:NullFilter(FORMAT_MASK_LINEAR)
 {
   enabled = false;
   units = DELAY_SP;
@@ -65,15 +64,15 @@ Delay::set_delays(const float _delays[CH_NAMES])
   init(spk);
 }
 
-void
-Delay::init(Speakers _spk)
+bool
+Delay::init(Speakers new_spk)
 {
   int ch;
-  const int nch = _spk.nch();
+  const int nch = new_spk.nch();
   const double factor = units2samples(units);
 
   order_t order;
-  _spk.get_order(order);
+  new_spk.get_order(order);
 
   memset(ch_delays, 0, sizeof(ch_delays));
   for (ch = 0; ch < nch; ch++)
@@ -95,41 +94,41 @@ Delay::init(Speakers _spk)
   buf.allocate(nch, nsamples * 2);
   buf.zero();
   first_half = true;
-}
-
-bool
-Delay::on_set_input(Speakers _spk)
-{
-  init(_spk);
   return true;
 }
 
 void 
-Delay::on_reset()
+Delay::reset()
 {
   buf.zero();
   first_half = true;
 }
 
 bool 
-Delay::on_process()
+Delay::process(Chunk2 &in, Chunk2 &out)
 {
+  // Passthrough
+  out = in;
+  in.set_empty();
+
   if (!enabled)
     return true; 
 
-  if (sync)
-    time += vtime_t(lag) / spk.sample_rate;
+  if (out.sync)
+    out.time += vtime_t(lag) / spk.sample_rate;
 
   size_t delay;
   sample_t *ptr1;
   sample_t *ptr2;
   sample_t *s;
 
+  const size_t size = out.size;
   for (int ch = 0; ch < spk.nch(); ch++) 
     if (ch_delays[ch])
     {
-      s = samples[ch];
+      s = out.samples[ch];
       delay = ch_delays[ch];
+
       if (first_half)
       {
         ptr1 = buf[ch] + delay;
