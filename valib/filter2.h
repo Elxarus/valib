@@ -411,10 +411,10 @@ public:
     // format change
     if (spk != chunk->spk)
     {
-      chunk2.set_empty();
       flushing = false;
       if (!f->open(chunk->spk))
       {
+        chunk2.set_empty();
         spk = spk_unknown;
         f->reset();
         return false;
