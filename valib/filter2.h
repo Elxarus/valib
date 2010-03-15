@@ -449,7 +449,7 @@ public:
       if (!f->process(chunk2, out_chunk2))
         return false;
 
-      out_chunk->set(spk,
+      out_chunk->set(get_output(),
         out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
         out_chunk2.sync, out_chunk2.time);
       out_chunk->set_eos(f->eos());
@@ -462,14 +462,14 @@ public:
       if (f->need_flushing())
       {
         f->flush(out_chunk2);
-        out_chunk->set(spk,
+        out_chunk->set(get_output(),
           out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
           out_chunk2.sync, out_chunk2.time);
         out_chunk->set_eos(f->eos());
       }
       else
       {
-        out_chunk->set_empty(spk);
+        out_chunk->set_empty(get_output());
         out_chunk->set_eos(true);
         flushing = false;
       }
