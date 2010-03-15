@@ -18,7 +18,7 @@
 #define VALIB_DELAY_H
 
 #include "../buffer.h"
-#include "../filter.h"
+#include "../filter2.h"
 
 
 #define DELAY_SP 0 // samples
@@ -28,7 +28,7 @@
 #define DELAY_FT 4 // feet 
 #define DELAY_IN 5 // inches
 
-class Delay : public NullFilter
+class Delay : public SamplesFilter
 {
 protected:
   bool  enabled;
@@ -41,14 +41,6 @@ protected:
   int       lag;                  // time lag
 
   double    units2samples(int _units);
-  void      init(Speakers _spk);
-
-  /////////////////////////////////////////////////////////
-  // NullFilter overrides
-
-  virtual void on_reset();
-  virtual bool on_set_input(Speakers _spk);
-  virtual bool on_process();
 
 public:
   Delay();
@@ -61,6 +53,16 @@ public:
 
   void get_delays(float delays[CH_NAMES]) const;
   void set_delays(const float delays[CH_NAMES]);
+
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual void reset();
+  virtual bool init(Speakers spk);
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+
+  virtual bool is_inplace() const
+  { return true; }
 };
 
 
