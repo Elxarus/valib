@@ -31,14 +31,14 @@
 #define VALIB_MIXER_H
 
 #include "../buffer.h"
-#include "../filter.h"
+#include "../filter2.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Mixer class
 ///////////////////////////////////////////////////////////////////////////////
 
-class Mixer : public NullFilter
+class Mixer : public SamplesFilter
 {
 protected:
   // Speakers
@@ -74,11 +74,16 @@ public:
   Mixer(size_t nsamples);
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // SamplesFilter overrides
 
-  virtual bool set_input(Speakers spk);
-  virtual Speakers get_output() const;
-  virtual bool get_chunk(Chunk *out);
+  virtual bool init(Speakers spk);
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+
+  virtual Speakers get_output() const
+  { return out_spk; }
+
+  virtual bool is_inplace() const
+  { return !is_buffered(); }
 
   /////////////////////////////////////////////////////////
   // Mixer interface

@@ -315,12 +315,12 @@ int test_rules(Log *log)
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &mixer_ip, "Mixer (inplace)",
+  test_rules_filter(log, mixer_ip, "Mixer (inplace)",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
     
-  test_rules_filter(log, &mixer_ib, "Mixer (immediate)",
+  test_rules_filter(log, mixer_ib, "Mixer (immediate)",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
