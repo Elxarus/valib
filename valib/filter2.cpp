@@ -28,7 +28,7 @@ Filter2::~Filter2()
 ///////////////////////////////////////////////////////////////////////////////
 
 FilterThunk::FilterThunk(Filter2 *f_):
-f(f_), flushing(false)
+f(f_), flushing(false), send_eos(false)
 {}
 
 void
@@ -38,6 +38,7 @@ FilterThunk::reset()
   in_chunk.set_empty();
   out_chunk.set_dummy();
   flushing = false;
+  send_eos = false;
 }
 
 bool
@@ -107,10 +108,15 @@ FilterThunk::process(const Chunk *chunk)
   if (chunk->eos)
     flushing = true;
 
+  Speakers ref_spk = f->get_output();
+
   out_chunk.set_dummy();
   while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
     if (!make_output())
       return false;
+
+  if (!ref_spk.is_unknown() && ref_spk != f->get_output())
+    return true;
 
   return true;
 }
@@ -124,7 +130,7 @@ FilterThunk::get_output() const
 bool
 FilterThunk::is_empty() const
 {
-  return !flushing && in_chunk.is_empty() && out_chunk.is_dummy();
+  return !flushing && !send_eos && in_chunk.is_empty() && out_chunk.is_dummy();
 }
 
 bool
@@ -141,7 +147,7 @@ FilterThunk::make_output()
     out_chunk.set(get_output(),
       out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
       out_chunk2.sync, out_chunk2.time);
-    out_chunk.set_eos(f->eos());
+    send_eos = f->eos();
     return true;
   }
 
@@ -154,28 +160,46 @@ FilterThunk::make_output()
       out_chunk.set(get_output(),
         out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
         out_chunk2.sync, out_chunk2.time);
-      out_chunk.set_eos(f->eos());
+      send_eos = f->eos();
     }
     else
     {
       out_chunk.set_empty(get_output());
       out_chunk.set_eos(true);
       flushing = false;
+      send_eos = false;
     }
     return true;
   }
 
-  // empty eos or dummy
-  if (f->eos())
-    out_chunk.set_empty(get_output(), false, 0, true);
-  else
-    out_chunk.set_dummy();
+  // dummy
+  out_chunk.set_dummy();
   return true;
 }
 
 bool
 FilterThunk::get_chunk(Chunk *chunk)
 {
+  if (!out_chunk.is_dummy())
+  {
+    *chunk = out_chunk;
+    out_chunk.set_dummy();
+    return true;
+  }
+
+  if (send_eos)
+  {
+    chunk->set_empty(f->get_output());
+    chunk->set_eos(true);
+    send_eos = false;
+
+    while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
+      if (!make_output())
+        return false;
+
+    return true;
+  }
+
   while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
     if (!make_output())
       return false;

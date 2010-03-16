@@ -361,6 +361,7 @@ protected:
 
   Speakers spk;
   bool flushing;
+  bool send_eos;
   bool make_output();
 
 public:
