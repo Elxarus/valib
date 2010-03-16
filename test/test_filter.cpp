@@ -283,7 +283,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_RAWDATA, 0, 0), "a.dts.03f.dts",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &demux, "Demuxer",
+  test_rules_filter(log, demux, "Demuxer",
     Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes",
     Speakers(FORMAT_PES, MODE_STEREO, 48000), "a.ac3.03f.pes",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));

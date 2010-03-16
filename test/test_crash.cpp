@@ -29,7 +29,7 @@ int test_crash(Log *log)
   AudioDecoder dec;
   DVDGraph     dvd;
 
-  test_crash_filter(log, Speakers(FORMAT_PES,     0, 0), &demux, "Demux");
+  test_crash_filter(log, Speakers(FORMAT_PES,     0, 0), demux, "Demux");
 
   test_crash_filter(log, Speakers(FORMAT_AC3,     0, 0), &spdifer, "Spdifer");
   test_crash_filter(log, Speakers(FORMAT_MPA,     0, 0), &spdifer, "Spdifer");

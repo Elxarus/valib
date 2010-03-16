@@ -16,37 +16,47 @@
 #ifndef VALIB_DEMUX_H
 #define VALIB_DEMUX_H
 
-#include "../filter.h"
+#include "../filter2.h"
 #include "../mpeg_demux.h"
 
-class Demux : public NullFilter
+class Demux : public SimpleFilter
 {
 protected:
   PSParser ps;          // MPEG Program Stream parser
-
-  int    stream;        // current stream
-  int    substream;     // current substream
-
-  Speakers out_spk;
-  uint8_t *out_rawdata;
-  size_t   out_size;
-
-  void process();
+  Speakers out_spk;     // current output format
+  int      stream;      // current stream
+  int      substream;   // current substream
 
 public:
   Demux();
 
   inline int get_stream()    const { return stream;    }
   inline int get_substream() const { return substream; }
-    
-  // Filter interface
-  virtual void reset();
-  virtual bool is_ofdd() const;
-  virtual bool process(const Chunk *chunk);
 
-  virtual Speakers get_output() const;
-  virtual bool is_empty() const;
-  virtual bool get_chunk(Chunk *chunk);
+  /////////////////////////////////////////////////////////
+  // SimpleFilter overrides
+
+  virtual bool can_open(Speakers spk) const;
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual void reset();
+
+  virtual Speakers get_output() const
+  { return out_spk; }
+
+  virtual bool is_inplace() const
+  { return true; }
+
+  virtual bool is_ofdd() const
+  { return true; }
+
+  virtual bool eos() const
+  {
+    if ((stream && stream != ps.stream) ||
+        (stream && substream && substream != ps.substream))
+      return true;
+    else
+      return false;
+  }
 };
 
 #endif
