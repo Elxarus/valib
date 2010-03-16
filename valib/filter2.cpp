@@ -36,6 +36,7 @@ FilterThunk::reset()
 {
   f->reset();
   in_chunk.set_empty();
+  out_chunk.set_dummy();
   flushing = false;
 }
 
@@ -78,6 +79,7 @@ bool
 FilterThunk::process(const Chunk *chunk)
 {
   assert(in_chunk.is_empty());
+  assert(out_chunk.is_dummy());
 
   // ignore dummy chunks
   if (chunk->is_dummy())
@@ -104,6 +106,12 @@ FilterThunk::process(const Chunk *chunk)
   // flushing
   if (chunk->eos)
     flushing = true;
+
+  out_chunk.set_dummy();
+  while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
+    if (!make_output())
+      return false;
+
   return true;
 }
 
@@ -116,11 +124,11 @@ FilterThunk::get_output() const
 bool
 FilterThunk::is_empty() const
 {
-  return !flushing && in_chunk.is_empty();
+  return !flushing && in_chunk.is_empty() && out_chunk.is_dummy();
 }
 
 bool
-FilterThunk::get_chunk(Chunk *out_chunk)
+FilterThunk::make_output()
 {
   Chunk2 out_chunk2;
 
@@ -130,10 +138,10 @@ FilterThunk::get_chunk(Chunk *out_chunk)
     if (!f->process(in_chunk, out_chunk2))
       return false;
 
-    out_chunk->set(get_output(),
+    out_chunk.set(get_output(),
       out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
       out_chunk2.sync, out_chunk2.time);
-    out_chunk->set_eos(f->eos());
+    out_chunk.set_eos(f->eos());
     return true;
   }
 
@@ -143,21 +151,36 @@ FilterThunk::get_chunk(Chunk *out_chunk)
     if (f->need_flushing())
     {
       f->flush(out_chunk2);
-      out_chunk->set(get_output(),
+      out_chunk.set(get_output(),
         out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
         out_chunk2.sync, out_chunk2.time);
-      out_chunk->set_eos(f->eos());
+      out_chunk.set_eos(f->eos());
     }
     else
     {
-      out_chunk->set_empty(get_output());
-      out_chunk->set_eos(true);
+      out_chunk.set_empty(get_output());
+      out_chunk.set_eos(true);
       flushing = false;
     }
     return true;
   }
 
-  // dummy
-  out_chunk->set_dummy();
+  // empty eos or dummy
+  if (f->eos())
+    out_chunk.set_empty(get_output(), false, 0, true);
+  else
+    out_chunk.set_dummy();
+  return true;
+}
+
+bool
+FilterThunk::get_chunk(Chunk *chunk)
+{
+  while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
+    if (!make_output())
+      return false;
+
+  *chunk = out_chunk;
+  out_chunk.set_dummy();
   return true;
 }
