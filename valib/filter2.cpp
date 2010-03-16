@@ -54,12 +54,10 @@ FilterThunk::query_input(Speakers new_spk) const
 bool
 FilterThunk::set_input(Speakers new_spk)
 {
-  in_chunk.set_empty();
-  flushing = false;
+  reset();
   if (!f->open(new_spk))
   {
     spk = spk_unknown;
-    f->reset();
     return false;
   }
 
@@ -95,9 +93,8 @@ FilterThunk::process(const Chunk *chunk)
     flushing = false;
     if (!f->open(chunk->spk))
     {
-      in_chunk.set_empty();
+      reset();
       spk = spk_unknown;
-      f->reset();
       return false;
     }
     spk = chunk->spk;
