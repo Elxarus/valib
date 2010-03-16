@@ -13,40 +13,49 @@
 #define VALIB_DITHER_H
 
 #include <math.h>
-#include "../filter.h"
+#include "../filter2.h"
 #include "../rng.h"
 
-class Dither : public NullFilter
+class Dither : public SamplesFilter
 {
-public:
-  double level;
-  Dither(double level_ = 0.0): NullFilter(FORMAT_MASK_LINEAR), level(level_) {};
-
 protected:
   RNG rng;
 
-  virtual bool on_process()
+public:
+  double level;
+  Dither(double level_ = 0.0) {}
+
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual bool process(Chunk2 &in, Chunk2 &out)
   {
+    out = in;
+    in.set_empty();
+
     if (level > 0.0)
     {
       if (EQUAL_SAMPLES(level * spk.level, 1.0))
       {
         // most probable convert-to-pcm dithering
         for (int ch = 0; ch < spk.nch(); ch++)
-          for (size_t s = 0; s < size; s++)
-            samples[ch][s] += rng.get_sample();
+          for (size_t s = 0; s < out.size; s++)
+            out.samples[ch][s] += rng.get_sample();
       }
       else
       {
         // custom dithering
         double factor = level * spk.level;
         for (int ch = 0; ch < spk.nch(); ch++)
-          for (size_t s = 0; s < size; s++)
-            samples[ch][s] += rng.get_sample() * factor;
+          for (size_t s = 0; s < out.size; s++)
+            out.samples[ch][s] += rng.get_sample() * factor;
       }
     }
     return true;
   }
+
+  virtual bool is_inplace() const
+  { return true; }
 };
 
 #endif

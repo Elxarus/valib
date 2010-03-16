@@ -133,7 +133,7 @@ AudioProcessor::rebuild_chain()
     return false;
 
   // processing chain
-  FILTER_SAFE(chain.add_back(&in_levels, "Input levels"));
+  FILTER_SAFE(chain.add_back(in_levels,  "Input levels"));
   FILTER_SAFE(chain.add_back(in_cache,   "Input cache"));
   if (out_spk.nch() < in_spk.nch())
   {
@@ -147,11 +147,11 @@ AudioProcessor::rebuild_chain()
   }
   FILTER_SAFE(chain.add_back(bass_redir, "Bass redirection"));
   FILTER_SAFE(chain.add_back(&equalizer, "Equalizer"));
-  FILTER_SAFE(chain.add_back(&dither,    "Dither"));
+  FILTER_SAFE(chain.add_back(dither,     "Dither"));
   FILTER_SAFE(chain.add_back(agc,        "AGC"));
   FILTER_SAFE(chain.add_back(delay,      "Delay"));
   FILTER_SAFE(chain.add_back(out_cache,  "Output cache"));
-  FILTER_SAFE(chain.add_back(&out_levels,"Output levels"));
+  FILTER_SAFE(chain.add_back(out_levels, "Output levels"));
 
   // setup mixer
   Speakers mixer_spk = out_spk;
