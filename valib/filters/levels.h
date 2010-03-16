@@ -18,7 +18,7 @@
 #define VALIB_LEVELS_H
 
 #include <string.h>
-#include "../filter.h"
+#include "../filter2.h"
 
 class LevelsCache;
 class LevelsHistogram;
@@ -84,7 +84,7 @@ public:
 // Levels filter calss
 ///////////////////////////////////////////////////////////////////////////////
 
-class Levels : public NullFilter
+class Levels : public SamplesFilter
 {
 protected:
   LevelsCache cache;
@@ -96,20 +96,8 @@ protected:
   size_t sample;   // current sample
   vtime_t continuous_time; // we need continuous time counter
  
-  /////////////////////////////////////////////////////////
-  // NullFilter overrides
-
-  virtual void on_reset();
-  virtual bool on_process();
-
 public:
-  Levels(size_t _nsamples = 1024, int _dbpb = 5)
-  :NullFilter(FORMAT_MASK_LINEAR)
-  {
-    set_nsamples(_nsamples);
-    set_dbpb(_dbpb);
-    reset();
-  }
+  Levels(size_t _nsamples = 1024, int _dbpb = 5);
 
   /////////////////////////////////////////////////////////
   // Levels interface
@@ -126,6 +114,15 @@ public:
   inline void get_histogram(int ch, double *histogram, size_t count) const;
   inline sample_t get_max_level() const;
   inline sample_t get_max_level(int ch) const;
+
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual void reset();
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+
+  virtual bool is_inplace() const
+  { return true; }
 };
 
 ///////////////////////////////////////////////////////////

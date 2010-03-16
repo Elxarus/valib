@@ -171,8 +171,15 @@ LevelsHistogram::get_max_level(int _ch) const
 ///////////////////////////////////////////////////////////
 // Levels
 
+Levels::Levels(size_t _nsamples, int _dbpb)
+{
+  set_nsamples(_nsamples);
+  set_dbpb(_dbpb);
+  reset();
+}
+
 void
-Levels::on_reset()
+Levels::reset()
 {
   sample = 0;
   memset(levels, 0, sizeof(sample_t) * CH_NAMES);
@@ -183,12 +190,15 @@ Levels::on_reset()
 }
 
 bool
-Levels::on_process()
+Levels::process(Chunk2 &in, Chunk2 &out)
 {
-  size_t n = size;
+  out = in;
+  in.set_empty();
 
-  if (sync)
-    continuous_time = time;
+  size_t n = out.size;
+
+  if (in.sync)
+    continuous_time = in.time;
 
   /////////////////////////////////////////////////////////
   // Find peak-levels
@@ -212,7 +222,7 @@ Levels::on_process()
     for (int ch = 0; ch < nch; ch++)
     {
       max = 0;
-      sptr = samples[ch];
+      sptr = out.samples[ch];
       send = sptr + block_size - 7;
       while (sptr < send)
       {
