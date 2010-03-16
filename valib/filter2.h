@@ -248,6 +248,7 @@ public:
 
   // These flags are set after open() and do not change
   virtual bool is_open() const = 0;
+  virtual bool is_ofdd() const = 0;
   virtual bool is_inplace() const = 0;
   virtual Speakers get_input() const = 0;
 
@@ -313,6 +314,9 @@ public:
 
   virtual bool is_open() const
   { return f_open; }
+
+  virtual bool is_ofdd() const
+  { return false; }
 
   virtual Speakers get_input() const
   { return spk; }

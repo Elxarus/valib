@@ -42,7 +42,7 @@ FilterThunk::reset()
 bool
 FilterThunk::is_ofdd() const
 {
-  return false;
+  return f->is_ofdd();
 }
 
 bool
