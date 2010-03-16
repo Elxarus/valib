@@ -134,7 +134,7 @@ AudioProcessor::rebuild_chain()
 
   // processing chain
   FILTER_SAFE(chain.add_back(&in_levels, "Input levels"));
-  FILTER_SAFE(chain.add_back(in_cache.filter(), "Input cache"));
+  FILTER_SAFE(chain.add_back(in_cache,   "Input cache"));
   if (out_spk.nch() < in_spk.nch())
   {
     FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
@@ -145,12 +145,12 @@ AudioProcessor::rebuild_chain()
     FILTER_SAFE(chain.add_back(&resample,  "SRC"));
     FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
   }
-  FILTER_SAFE(chain.add_back(bass_redir.filter(),"Bass redirection"));
+  FILTER_SAFE(chain.add_back(bass_redir, "Bass redirection"));
   FILTER_SAFE(chain.add_back(&equalizer, "Equalizer"));
   FILTER_SAFE(chain.add_back(&dither,    "Dither"));
-  FILTER_SAFE(chain.add_back(agc.filter(), "AGC"));
-  FILTER_SAFE(chain.add_back(delay.filter(),     "Delay"));
-  FILTER_SAFE(chain.add_back(out_cache.filter(), "Output cache"));
+  FILTER_SAFE(chain.add_back(agc,        "AGC"));
+  FILTER_SAFE(chain.add_back(delay,      "Delay"));
+  FILTER_SAFE(chain.add_back(out_cache,  "Output cache"));
   FILTER_SAFE(chain.add_back(&out_levels,"Output levels"));
 
   // setup mixer
@@ -164,13 +164,13 @@ AudioProcessor::rebuild_chain()
   // format conversion
   if (in_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_front(in_conv.filter(), "PCM->Linear converter"));
+    FILTER_SAFE(chain.add_front(in_conv, "PCM->Linear converter"));
     FILTER_SAFE(in_conv.set_format(FORMAT_LINEAR));
   }
 
   if (out_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_back(out_conv.filter(), "Linear->PCM converter"));
+    FILTER_SAFE(chain.add_back(out_conv, "Linear->PCM converter"));
     FILTER_SAFE(out_conv.set_format(out_spk.format));
   }
 
