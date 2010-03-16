@@ -39,7 +39,7 @@ public:
   Demux_test(Log *_log)
   {
     log = _log;
-    t.link(&s, log);
+    t.link(s, log);
   }
 
   int test()

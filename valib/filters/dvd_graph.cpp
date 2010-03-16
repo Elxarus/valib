@@ -496,7 +496,7 @@ DVDGraph::init_filter(int node, Speakers spk)
   switch (node)
   {
     case state_demux:
-      return &demux;
+      return demux;
 
     case state_detector:
       return &detector;
@@ -581,7 +581,7 @@ DVDGraph::get_next(int node, Speakers spk) const
     // input -> state_proc_enc
 
     case node_start:
-      if (demux.query_input(spk)) 
+      if (demux->query_input(spk)) 
         return state_demux;
 
       if (use_detector && spk.format == FORMAT_PCM16 && spk.mask == MODE_STEREO)
