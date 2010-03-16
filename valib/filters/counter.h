@@ -21,7 +21,7 @@ public:
   { return counter; }
 
   /////////////////////////////////////////////////////////
-  // SamplesFilter overrides
+  // SimpleFilter overrides
 
   virtual bool can_open(Speakers spk) const
   { return true; }
