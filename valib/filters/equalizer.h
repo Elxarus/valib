@@ -10,7 +10,7 @@
 // Just a wrapper for Convolver and EqFIR
 ///////////////////////////////////////////////////////////////////////////////
 
-class Equalizer : public Filter
+class Equalizer : public Filter2
 {
 protected:
   EqFIR eq;
@@ -49,19 +49,27 @@ public:
   void reset_eq() { eq.reset(); }
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // Open/close the filter
 
-  virtual void reset()                     { conv->reset(); }
-  virtual bool is_ofdd() const             { return false;  }
+  virtual bool can_open(Speakers spk) const { return conv.can_open(spk); }
+  virtual bool open(Speakers spk)           { return conv.open(spk);     }
+  virtual void close()                      { conv.close();              }
 
-  virtual bool query_input(Speakers spk) const { return conv.can_open(spk); }
-  virtual bool set_input(Speakers spk)     { return conv->set_input(spk);   }
-  virtual Speakers get_input() const       { return conv->get_input();      }
-  virtual bool process(const Chunk *chunk) { return conv->process(chunk);   }
+  virtual bool is_open() const              { return conv.is_open();     }
+  virtual bool is_ofdd() const              { return conv.is_ofdd();     }
+  virtual bool is_inplace() const           { return conv.is_inplace();  }
+  virtual Speakers get_input() const        { return conv.get_input();   }
 
-  virtual Speakers get_output() const      { return conv->get_output();     }
-  virtual bool is_empty() const            { return conv->is_empty();       }
-  virtual bool get_chunk(Chunk *chunk)     { return conv->get_chunk(chunk); }
+  /////////////////////////////////////////////////////////
+  // Processing
+
+  virtual bool process(Chunk2 &in, Chunk2 &out) { return conv.process(in, out); }
+  virtual bool flush(Chunk2 &out)           { return conv.flush(out);           }
+  virtual void reset()                      { conv.reset();                     }
+
+  virtual bool eos() const                  { return conv.eos();           }
+  virtual bool need_flushing() const        { return conv.need_flushing(); }
+  virtual Speakers get_output() const       { return conv.get_output();    }
 };
 
 #endif
