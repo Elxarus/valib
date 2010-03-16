@@ -191,7 +191,7 @@ public:
     return size == 0; 
   }
 
-  inline void drop_rawdate(size_t _size)
+  inline void drop_rawdata(size_t _size)
   {
     if (_size > size)
       _size = size;
