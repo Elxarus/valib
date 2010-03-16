@@ -357,9 +357,11 @@ class FilterThunk : public Filter
 protected:
   Filter2 *f;
   Chunk2 in_chunk;
+  Chunk  out_chunk;
 
   Speakers spk;
   bool flushing;
+  bool make_output();
 
 public:
   FilterThunk(Filter2 *f_);
