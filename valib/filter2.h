@@ -230,10 +230,14 @@ protected:
   FilterThunk *thunk;
 
 public:
-  Filter2(): thunk(0) {};
+  Filter2();
   virtual ~Filter2();
 
-  Filter *filter();
+  Filter *as_filter();
+  Filter *operator->();
+  const Filter *operator->() const;
+  operator Filter *();
+  operator const Filter *() const;
 
   /////////////////////////////////////////////////////////
   // Open/close the filter
@@ -245,7 +249,7 @@ public:
   // These flags are set after open() and do not change
   virtual bool is_open() const = 0;
   virtual bool is_inplace() const = 0;
-  virtual Speakers get_input() = 0;
+  virtual Speakers get_input() const = 0;
 
   /////////////////////////////////////////////////////////
   // Processing
@@ -310,7 +314,7 @@ public:
   virtual bool is_open() const
   { return f_open; }
 
-  virtual Speakers get_input()
+  virtual Speakers get_input() const
   { return spk; }
 
   /////////////////////////////////////////////////////////

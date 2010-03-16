@@ -133,7 +133,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(gain_all);
   conv.reset();
 
-  CHECK(compare(log, &noise1, &conv, &noise2, gain_filter.filter()) == 0);
+  CHECK(compare(log, &noise1, &conv, &noise2, gain_filter) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with low-pass filter

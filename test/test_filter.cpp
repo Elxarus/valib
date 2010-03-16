@@ -241,17 +241,17 @@ int test_rules(Log *log)
 
   // Rawdata filters
 
-  test_rules_filter(log, conv_ll.filter(), "Converter linear->linear",
+  test_rules_filter(log, conv_ll, "Converter linear->linear",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, conv_lr.filter(), "Converter linear->raw",
+  test_rules_filter(log, conv_lr, "Converter linear->raw",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, conv_rl.filter(), "Converter raw->linear",
+  test_rules_filter(log, conv_rl, "Converter raw->linear",
     Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_PCM32, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
@@ -310,7 +310,7 @@ int test_rules(Log *log)
 
   // Linear format processing filters
 
-  test_rules_filter(log, agc.filter(), "AGC",
+  test_rules_filter(log, agc, "AGC",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
@@ -340,17 +340,17 @@ int test_rules(Log *log)
     Speakers(FORMAT_LINEAR, MODE_5_1, 48000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, delay.filter(), "Delay",
+  test_rules_filter(log, delay, "Delay",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, bass_redir_ip.filter(), "BassRedir (inplace)",
+  test_rules_filter(log, bass_redir_ip, "BassRedir (inplace)",
     Speakers(FORMAT_LINEAR, MODE_5_1, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_STEREO, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
     
-  test_rules_filter(log, bass_redir_ib.filter(), "BassRedir (immediate)",
+  test_rules_filter(log, bass_redir_ib, "BassRedir (immediate)",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
