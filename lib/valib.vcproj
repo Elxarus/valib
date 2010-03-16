@@ -617,14 +617,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\valib\filters\linear_filter.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\valib\filters\linear_filter.h"
-				>
-			</File>
-			<File
 				RelativePath="..\valib\filters\mixer.cpp"
 				>
 			</File>

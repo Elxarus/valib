@@ -39,7 +39,6 @@ FLAT_SUITE(tests, "Common tests")
   SUITE_FACTORY(bitstream),
   SUITE_FACTORY(base),
   SUITE_FACTORY(fir),
-  SUITE_FACTORY(linear_filter),
    TEST_FACTORY(cache),
    TEST_FACTORY(slice),
    TEST_FACTORY(convolver),
