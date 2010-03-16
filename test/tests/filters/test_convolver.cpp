@@ -53,7 +53,7 @@ TEST(convolver, "Convolver test")
   conv.set_fir(0);
   conv.reset();
 
-  CHECK(compare(log, &noise1, &conv, &noise2, 0) == 0);
+  CHECK(compare(log, &noise1, conv, &noise2, 0) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with zero response
@@ -64,7 +64,7 @@ TEST(convolver, "Convolver test")
   conv.set_fir(&zero_fir);
   conv.reset();
 
-  CHECK(compare(log, &noise1, &conv, &zero, 0) == 0);
+  CHECK(compare(log, &noise1, conv, &zero, 0) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with identity response
@@ -75,7 +75,7 @@ TEST(convolver, "Convolver test")
   conv.set_fir(&identity_fir);
   conv.reset();
 
-  CHECK(compare(log, &noise1, &conv, &noise2, 0) == 0);
+  CHECK(compare(log, &noise1, conv, &noise2, 0) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with gain response
@@ -86,7 +86,7 @@ TEST(convolver, "Convolver test")
   conv.set_fir(&gain_fir);
   conv.reset();
 
-  CHECK(compare(log, &noise1, &conv, &noise2, gain_filter) == 0);
+  CHECK(compare(log, &noise1, conv, &noise2, gain_filter) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with low-pass filter
@@ -105,7 +105,7 @@ TEST(convolver, "Convolver test")
 
   ToneGen tone;
   SliceFilter slice;
-  SourceFilter conv_src(&tone, &conv);
+  SourceFilter conv_src(&tone, conv);
   SourceFilter test_src(&conv_src, &slice);
 
   ToneGen ref_tone;
