@@ -2,7 +2,7 @@
 #define VALIB_CONVOLVER_MCH_H
 
 #include <math.h>
-#include "linear_filter.h"
+#include "../filter2.h"
 #include "../fir.h"
 #include "../sync.h"
 #include "../buffer.h"
@@ -14,11 +14,13 @@
 // Use impulse response to implement FIR filtering.
 ///////////////////////////////////////////////////////////////////////////////
 
-class ConvolverMch : public LinearFilter
+class ConvolverMch : public SamplesFilter
 {
 protected:
   int ver[CH_NAMES];
   FIRRef gen[CH_NAMES];
+
+  SyncHelper sync;
 
   bool trivial;
   const FIRInstance *fir[NCHANNELS];
@@ -37,7 +39,6 @@ protected:
   int post_samples;
 
   bool fir_changed() const;
-  void uninit();
 
   void process_trivial(samples_t samples, size_t size);
   void process_convolve();
@@ -58,15 +59,20 @@ public:
   void release_all_firs();
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // SamplesFilter overrides
 
-  virtual bool init(Speakers spk, Speakers &out_spk);
-  virtual void reset_state();
+  virtual bool init(Speakers spk);
+  virtual void uninit();
 
-  virtual bool process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone);
-  virtual bool flush(samples_t &out, size_t &out_size);
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool flush(Chunk2 &out);
+  virtual void reset();
 
-  virtual bool need_flushing() const;
+  virtual bool need_flushing() const
+  { return !trivial && post_samples > 0; }
+
+  virtual bool is_inplace() const
+  { return trivial; }
 };
 
 #endif

@@ -55,7 +55,6 @@ void
 ConvolverMch::set_fir(int ch_name, const FIRGen *new_gen)
 {
   gen[ch_name] = new_gen;
-  reinit(false);
 }
 
 const FIRGen *
@@ -68,7 +67,6 @@ void
 ConvolverMch::release_fir(int ch_name)
 {
   gen[ch_name].release();
-  reinit(false);
 }
 
 void
@@ -76,7 +74,6 @@ ConvolverMch::set_all_firs(const FIRGen *new_gen[CH_NAMES])
 {
   for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     gen[ch_name] = new_gen[ch_name];
-  reinit(false);
 }
 
 void
@@ -91,7 +88,6 @@ ConvolverMch::release_all_firs()
 {
   for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     gen[ch_name].release();
-  reinit(false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -102,7 +98,7 @@ ConvolverMch::process_trivial(samples_t samples, size_t size)
   size_t s;
   sample_t gain;
 
-  for (int ch = 0; ch < get_in_spk().nch(); ch++)
+  for (int ch = 0; ch < spk.nch(); ch++)
     switch (type[ch])
     {
       case type_zero:
@@ -121,7 +117,7 @@ void
 ConvolverMch::process_convolve()
 {
   int ch, i;
-  int nch = get_in_spk().nch();
+  int nch = spk.nch();
   sample_t *buf_ch, *filter_ch, *delay_ch;
 
   for (ch = 0; ch < nch; ch++)
@@ -158,10 +154,10 @@ ConvolverMch::process_convolve()
       }
 }
 
-bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
+bool ConvolverMch::init(Speakers new_spk)
 {
   int i, ch, ch_name;
-  int nch = new_in_spk.nch();
+  int nch = new_spk.nch();
 
   trivial = true;
   int min_point = 0;
@@ -172,11 +168,11 @@ bool ConvolverMch::init(Speakers new_in_spk, Speakers &new_out_spk)
     ver[ch_name] = gen[ch_name].version();
 
   order_t order;
-  new_in_spk.get_order(order);
+  new_spk.get_order(order);
   for (ch = 0; ch < nch; ch++)
   {
     ch_name = order[ch];
-    fir[ch] = gen[ch_name].make(new_in_spk.sample_rate);
+    fir[ch] = gen[ch_name].make(new_spk.sample_rate);
 
     // fir generation error
     if (!fir[ch])
@@ -272,7 +268,7 @@ ConvolverMch::uninit()
   pos = 0;
 
   trivial = true;
-  for (int ch = 0; ch < get_in_spk().nch(); ch++)
+  for (int ch = 0; ch < spk.nch(); ch++)
   {
     safe_delete(fir[ch]);
     type[ch] = type_pass;
@@ -283,8 +279,9 @@ ConvolverMch::uninit()
 }
 
 void
-ConvolverMch::reset_state()
+ConvolverMch::reset()
 {
+  sync.reset();
   pos = 0;
   pre_samples = c;
   post_samples = n - c;
@@ -292,32 +289,40 @@ ConvolverMch::reset_state()
 }
 
 bool
-ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone)
+ConvolverMch::process(Chunk2 &in, Chunk2 &out)
 {
   int ch;
-  int nch = get_in_spk().nch();
+  int nch = spk.nch();
 
   /////////////////////////////////////////////////////////
   // Handle FIR change
 
   if (fir_changed())
-    reinit(false);
+  {
+    if (need_flushing())
+    {
+      flush(out);
+      return true;
+    }
+    if (!open(spk))
+      return false;
+  }
 
   /////////////////////////////////////////////////////////
   // Trivial filtering
 
   if (trivial)
   {
-    process_trivial(in, in_size);
-
+    process_trivial(in.samples, in.size);
     out = in;
-    out_size = in_size;
-    gone = in_size;
+    in.set_empty();
     return true;
   }
 
   /////////////////////////////////////////////////////////
   // Convolution
+
+  sync.receive_linear(in);
 
   // Trivial cases:
   // Copy delayed samples to the start of the buffer
@@ -329,14 +334,15 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
   // Accumulate the buffer
   if (pos < buf_size)
   {
-    gone = MIN(in_size, size_t(buf_size - pos));
+    size_t gone = MIN(in.size, size_t(buf_size - pos));
     for (ch = 0; ch < nch; ch++)
       if (type[ch] == type_conv)
-        memcpy(buf[ch] + pos, in[ch], gone * sizeof(sample_t));
+        memcpy(buf[ch] + pos, in.samples[ch], gone * sizeof(sample_t));
       else
         // Trivial cases are shifted
-        memcpy(buf[ch] + c + pos, in[ch], gone * sizeof(sample_t));
+        memcpy(buf[ch] + c + pos, in.samples[ch], gone * sizeof(sample_t));
     pos += (int)gone;
+    in.drop_samples(gone);
 
     if (pos < buf_size)
       return true;
@@ -346,22 +352,21 @@ ConvolverMch::process_samples(samples_t in, size_t in_size, samples_t &out, size
   process_trivial(buf, buf_size);
   process_convolve();
 
-  out = buf;
-  out_size = buf_size;
+  out.set_linear(buf, buf_size);
   if (pre_samples)
   {
-    out += pre_samples;
-    out_size -= pre_samples;
+    out.drop_samples(pre_samples);
     pre_samples = 0;
   }
-
+  sync.send_linear(out, spk.sample_rate);
   return true;
 }
 
 bool
-ConvolverMch::flush(samples_t &out, size_t &out_size)
+ConvolverMch::flush(Chunk2 &out)
 {
-  int ch, nch = get_in_spk().nch();
+  int ch, nch = spk.nch();
+
   if (!need_flushing())
     return true;
 
@@ -377,22 +382,15 @@ ConvolverMch::flush(samples_t &out, size_t &out_size)
   process_trivial(buf, buf_size);
   process_convolve();
 
-  out = buf;
-  out_size = pos + c;
+  out.set_linear(buf, pos + c);
   post_samples = 0;
   pos = 0;
 
   if (pre_samples)
   {
-    out += pre_samples;
-    out_size -= pre_samples;
+    out.drop_samples(pre_samples);
     pre_samples = 0;
   }
+  sync.send_linear(out, spk.sample_rate);
   return true;
-}
-
-bool
-ConvolverMch::need_flushing() const
-{
-  return !trivial && post_samples > 0;
 }
