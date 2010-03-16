@@ -2,7 +2,7 @@
 #define VALIB_CONVOLVER_H
 
 #include <math.h>
-#include "linear_filter.h"
+#include "../filter2.h"
 #include "../fir.h"
 #include "../sync.h"
 #include "../buffer.h"
@@ -14,13 +14,13 @@
 // Use impulse response to implement FIR filtering.
 ///////////////////////////////////////////////////////////////////////////////
 
-class Convolver : public LinearFilter
+class Convolver : public SamplesFilter
 {
 protected:
   int ver;
   FIRRef gen;
   const FIRInstance *fir;
-  SyncHelper sync_helper;
+  SyncHelper sync;
 
   int buf_size;
   int n, c;
@@ -35,7 +35,6 @@ protected:
   int post_samples;
 
   bool fir_changed() const;
-  void uninit();
   void convolve();
 
   enum { state_filter, state_zero, state_pass, state_gain } state;
@@ -47,20 +46,25 @@ public:
   /////////////////////////////////////////////////////////
   // Handle FIR generator changes
 
-  void set_fir(const FIRGen *gen_) { gen.set(gen_); reinit(false); }
+  void set_fir(const FIRGen *gen_) { gen.set(gen_);    }
   const FIRGen *get_fir() const    { return gen.get(); }
-  void release_fir()               { gen.release(); reinit(false); }
+  void release_fir()               { gen.release();    }
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // SamplesFilter overrides
 
-  virtual bool init(Speakers spk, Speakers &out_spk);
-  virtual void reset_state();
+  virtual bool init(Speakers spk);
+  virtual void uninit();
 
-  virtual bool process_samples(samples_t in, size_t in_size, samples_t &out, size_t &out_size, size_t &gone);
-  virtual bool flush(samples_t &out, size_t &out_size);
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool flush(Chunk2 &out);
+  virtual void reset();
 
-  virtual bool need_flushing() const;
+  virtual bool need_flushing() const
+  { return state == state_filter && post_samples > 0; }
+
+  virtual bool is_inplace() const
+  { return state != state_filter; }
 };
 
 #endif

@@ -335,7 +335,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_LINEAR, MODE_5_1, 48000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &convolver, "Convolver",
+  test_rules_filter(log, convolver, "Convolver",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 48000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));

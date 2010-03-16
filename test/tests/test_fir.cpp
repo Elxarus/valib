@@ -226,7 +226,7 @@ TEST(param_fir, "ParamFIR")
   ToneGen tone;
   SliceFilter slice;
   Convolver conv;
-  SourceFilter conv_src(&tone, &conv);
+  SourceFilter conv_src(&tone, conv);
   SourceFilter test_src(&conv_src, &slice);
 
   // Reference source ref_src (tone -> slice)
