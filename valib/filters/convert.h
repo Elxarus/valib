@@ -42,7 +42,6 @@ protected:
   // output data pointers
   uint8_t  *out_rawdata;   // buffer pointer for pcm data
   samples_t out_samples;   // buffer pointers for linear data
-  size_t    out_size;      // buffer size in bytes/samples for pcm/linear data
 
   // part of sample from previous call
   uint8_t   part_buf[48];  // partial sample left from previous call
@@ -70,7 +69,7 @@ public:
   void set_order(const order_t _order);
 
   /////////////////////////////////////////////////////////
-  // SamplesFilter overrides
+  // SimpleFilter overrides
 
   virtual bool can_open(Speakers spk) const;
   virtual bool init(Speakers spk);

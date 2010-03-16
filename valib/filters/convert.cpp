@@ -11,7 +11,6 @@ Converter::Converter(size_t _nsamples)
   format = FORMAT_UNKNOWN;
   memcpy(order, std_order, sizeof(order));
   nsamples = _nsamples;
-  out_size = 0;
   part_size = 0;
 }
 
