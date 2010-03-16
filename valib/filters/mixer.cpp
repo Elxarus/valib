@@ -28,7 +28,6 @@ static const ip_mixfunc_t ip_mix_tbl[NCHANNELS][NCHANNELS] = {
 };
 
 Mixer::Mixer(size_t _nsamples)
-:NullFilter(FORMAT_MASK_LINEAR)
 {
   nsamples = _nsamples;
   out_spk = spk_unknown;
@@ -94,22 +93,24 @@ Mixer::prepare_matrix()
 }
 
 bool
-Mixer::set_output(Speakers _spk)
+Mixer::set_output(Speakers new_spk)
 {
-  if (!query_input(_spk)) 
+  if (!new_spk.is_linear() || new_spk.mask == 0)
     return false;
 
-  out_spk = _spk;
+  out_spk = new_spk;
   out_spk.sample_rate = spk.sample_rate;
 
-  if (is_buffered())
-    buf.allocate(out_spk.nch(), nsamples);
+  if (is_open())
+  {
+    if (is_buffered())
+      buf.allocate(out_spk.nch(), nsamples);
 
-  if (auto_matrix)
-    calc_matrix();
+    if (auto_matrix)
+      calc_matrix();
 
-  prepare_matrix();
-
+    prepare_matrix();
+  }
   return true;
 }
 
@@ -117,12 +118,10 @@ Mixer::set_output(Speakers _spk)
 // Filter interface
 
 bool 
-Mixer::set_input(Speakers _spk)
+Mixer::init(Speakers new_spk)
 {
-  if (!NullFilter::set_input(_spk))
-    return false;
-
-  out_spk.sample_rate = spk.sample_rate;
+  spk = new_spk;
+  out_spk.sample_rate = new_spk.sample_rate;
 
   if (is_buffered())
     buf.allocate(out_spk.nch(), nsamples);
@@ -135,55 +134,27 @@ Mixer::set_input(Speakers _spk)
   return true;
 }
 
-Speakers 
-Mixer::get_output() const
-{
-  return out_spk;
-}
-
-
 bool 
-Mixer::get_chunk(Chunk *_chunk)
+Mixer::process(Chunk2 &in, Chunk2 &out)
 {
   if (is_buffered())
   {
     // buffered mixing
-    size_t n = MIN(nsamples, size);
+    size_t n = MIN(nsamples, in.size);
     io_mixfunc_t mixfunc = io_mix_tbl[spk.nch()-1][out_spk.nch()-1];
-    (this->*mixfunc)(samples, buf, n);
-    samples += n;
-    size -= n;
+    (this->*mixfunc)(in.samples, buf, n);
 
-    // fill output chunk
-    _chunk->set_linear
-    (
-      out_spk,
-      buf, n,
-      sync, time, 
-      flushing && !size
-    );
-
-    sync = false;
-    flushing = flushing && size;
+    out.set_linear(buf, n, in.sync, in.time);
+    in.drop_samples(n);
   }
   else
   {
     // in-place mixing
     ip_mixfunc_t mixfunc = ip_mix_tbl[spk.nch()-1][out_spk.nch()-1];
-    (this->*mixfunc)(samples, size);
+    (this->*mixfunc)(in.samples, in.size);
 
-    // fill output chunk
-    _chunk->set_linear
-    (
-      out_spk,
-      samples, size,
-      sync, time,
-      flushing
-    );
-
-    size = 0;
-    sync = false;
-    flushing = false;
+    out = in;
+    in.set_empty();
   }
   return true;
 }

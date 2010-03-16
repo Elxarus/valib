@@ -137,13 +137,13 @@ AudioProcessor::rebuild_chain()
   FILTER_SAFE(chain.add_back(in_cache,   "Input cache"));
   if (out_spk.nch() < in_spk.nch())
   {
-    FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
+    FILTER_SAFE(chain.add_back(mixer,      "Mixer"));
     FILTER_SAFE(chain.add_back(&resample,  "SRC"));
   }
   else
   {
     FILTER_SAFE(chain.add_back(&resample,  "SRC"));
-    FILTER_SAFE(chain.add_back(&mixer,     "Mixer"));
+    FILTER_SAFE(chain.add_back(mixer,      "Mixer"));
   }
   FILTER_SAFE(chain.add_back(bass_redir, "Bass redirection"));
   FILTER_SAFE(chain.add_back(&equalizer, "Equalizer"));
