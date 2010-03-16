@@ -352,138 +352,25 @@ class FilterThunk : public Filter
 {
 protected:
   Filter2 *f;
-  Chunk2 chunk2;
+  Chunk2 in_chunk;
 
   Speakers spk;
   bool flushing;
 
 public:
-  FilterThunk(Filter2 *f_): f(f_), flushing(false) {};
+  FilterThunk(Filter2 *f_);
 
-  virtual void reset()
-  {
-    f->reset();
-    chunk2.set_empty();
-    flushing = false;
-  }
+  virtual void reset();
+  virtual bool is_ofdd() const;
 
-  virtual bool is_ofdd() const
-  {
-    return false;
-  }
+  virtual bool query_input(Speakers spk) const;
+  virtual bool set_input(Speakers spk);
+  virtual Speakers get_input() const;
+  virtual bool process(const Chunk *chunk);
 
-  virtual bool query_input(Speakers new_spk) const
-  {
-    return f->can_open(new_spk);
-  }
-
-  virtual bool set_input(Speakers new_spk)
-  {
-    chunk2.set_empty();
-    flushing = false;
-    if (!f->open(new_spk))
-    {
-      spk = spk_unknown;
-      f->reset();
-      return false;
-    }
-
-    spk = new_spk;
-    f->reset();
-    return true;
-  }
-
-  virtual Speakers get_input() const
-  {
-    if (!f->is_open())
-      return spk_unknown;
-    return spk;
-  }
-
-  virtual bool process(const Chunk *chunk)
-  {
-    assert(chunk2.is_empty());
-
-    // ignore dummy chunks
-    if (chunk->is_dummy())
-      return true;
-
-    // remember data
-    chunk2.set(chunk->rawdata, chunk->samples, chunk->size,
-      chunk->sync, chunk->time);
-
-    // format change
-    if (spk != chunk->spk)
-    {
-      flushing = false;
-      if (!f->open(chunk->spk))
-      {
-        chunk2.set_empty();
-        spk = spk_unknown;
-        f->reset();
-        return false;
-      }
-      spk = chunk->spk;
-      f->reset();
-    }
-
-    // flushing
-    if (chunk->eos)
-      flushing = true;
-    return true;
-  }
-
-  virtual Speakers get_output() const
-  {
-    return f->get_output();
-  }
-
-  virtual bool is_empty() const
-  {
-    return !flushing && chunk2.is_empty();
-  }
-
-  virtual bool get_chunk(Chunk *out_chunk)
-  {
-    Chunk2 out_chunk2;
-
-    // normal processing
-    if (!chunk2.is_empty())
-    {
-      if (!f->process(chunk2, out_chunk2))
-        return false;
-
-      out_chunk->set(get_output(),
-        out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
-        out_chunk2.sync, out_chunk2.time);
-      out_chunk->set_eos(f->eos());
-      return true;
-    }
-
-    // flushing
-    if (flushing)
-    {
-      if (f->need_flushing())
-      {
-        f->flush(out_chunk2);
-        out_chunk->set(get_output(),
-          out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
-          out_chunk2.sync, out_chunk2.time);
-        out_chunk->set_eos(f->eos());
-      }
-      else
-      {
-        out_chunk->set_empty(get_output());
-        out_chunk->set_eos(true);
-        flushing = false;
-      }
-      return true;
-    }
-
-    // dummy
-    out_chunk->set_dummy();
-    return true;
-  }
+  virtual Speakers get_output() const;
+  virtual bool is_empty() const;
+  virtual bool get_chunk(Chunk *chunk);
 };
 
 #endif
