@@ -50,22 +50,15 @@ protected:
   int pre_samples;             // number of samples to drop from the beginning of output data
   int post_samples;            // number of samples to add to the end of input data
 
-  int init_resample(int _nch, int _fs, int _fd);
-  void uninit_resample();
-
   // stage1_in(): how much input samples required to generate N output samples
   // stage1_out(): how much output samples can be made out of N input samples
   // Note that stage1_out(stage1_in(N)) >= N
   inline int stage1_in(int n)  const { return (n + pos_l) * m1 / l1 - pos_m; }
   inline int stage1_out(int n) const { return ((pos_m + n) * l1 + m1 - 1) / m1 - (pos_m * l1 + m1 - 1) / m1; }
 
+  inline void do_resample();
   inline void do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out);
   inline void do_stage2();
-  inline void drop_pre_samples();
-
-  void reset_resample();
-  size_t process_resample(sample_t *in_buf[], size_t nsamples);
-  bool flush_resample();
 
 protected:
   int sample_rate;       // destination sample rate
@@ -103,11 +96,15 @@ public:
   bool set_quality(double _q) { return set(sample_rate, a, _q); }
   double get_quality() const { return q; }
 
+  bool passthrough() const
+  { return !sample_rate || spk.sample_rate == sample_rate; }
+
   /////////////////////////////////////////////////////////
   // SamplesFilter overrides
 
   virtual bool init(Speakers spk);
   virtual void uninit();
+
   virtual bool process(Chunk2 &in, Chunk2 &out);
   virtual bool flush(Chunk2 &out);
   virtual void reset();
@@ -116,7 +113,7 @@ public:
   { return out_spk; }
 
   virtual bool is_inplace() const
-  { return !sample_rate || spk.sample_rate == sample_rate; }
+  { return passthrough(); }
 
   virtual bool need_flushing() const
   { return !is_inplace() && post_samples > 0 && ((stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples) > 0; }
