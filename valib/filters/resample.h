@@ -116,7 +116,7 @@ public:
   { return passthrough(); }
 
   virtual bool need_flushing() const
-  { return !is_inplace() && post_samples > 0 && ((stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples) > 0; }
+  { return !passthrough() && post_samples > 0 && ((stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples) > 0; }
 
 };
 
