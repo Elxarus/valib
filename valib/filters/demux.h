@@ -51,11 +51,8 @@ public:
 
   virtual bool eos() const
   {
-    if ((stream && stream != ps.stream) ||
-        (stream && substream && substream != ps.substream))
-      return true;
-    else
-      return false;
+    return (stream && stream != ps.stream) ||
+           (stream && substream && substream != ps.substream);
   }
 };
 
