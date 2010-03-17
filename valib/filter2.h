@@ -276,12 +276,6 @@ public:
   SimpleFilter(): f_open(false)
   {}
 
-  virtual ~SimpleFilter()
-  {
-    if (is_open())
-      close();
-  }
-
   /////////////////////////////////////////////////////////
   // Init/Uninit placeholders
 
