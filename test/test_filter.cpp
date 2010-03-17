@@ -360,7 +360,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &dejitter, "Dejitter",
+  test_rules_filter(log, dejitter, "Dejitter",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));

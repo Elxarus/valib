@@ -553,7 +553,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       return &spdif2pcm;
 
     case state_dejitter:
-      return &syncer;
+      return syncer;
   }
   return 0;
 }
