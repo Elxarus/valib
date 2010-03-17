@@ -125,8 +125,8 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
 
   FilterChain tst_chain;
   tst_chain.add_back(tst_conv, "Bandlimit");
-  tst_chain.add_back(&res1, "Upsample");
-  tst_chain.add_back(&res2, "Downsample");
+  tst_chain.add_back(res1, "Upsample");
+  tst_chain.add_back(res2, "Downsample");
   tst_chain.add_back(tst_slice, "Slice");
 
   FilterChain ref_chain;

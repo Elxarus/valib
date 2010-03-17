@@ -1,12 +1,12 @@
 #ifndef VALIB_RESAMPLE_H
 #define VALIB_RESAMPLE_H
 
-#include "../filter.h"
+#include "../filter2.h"
 #if RESAMPLE_PERF
 #include "../win32\cpu.h"
 #endif
 
-class Resample : public NullFilter
+class Resample : public SamplesFilter
 {
 protected:
   // user-defined
@@ -74,6 +74,9 @@ protected:
   samples_t out_samples; // output buffer
   int       out_size;    // output number of samples
 
+  bool      sync;
+  vtime_t   time;
+
 #if RESAMPLE_PERF
 public:
   CPUMeter stage1;
@@ -101,12 +104,23 @@ public:
   double get_quality() const { return q; }
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // SamplesFilter overrides
 
+  virtual bool init(Speakers spk);
+  virtual void uninit();
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool flush(Chunk2 &out);
   virtual void reset();
-  virtual bool set_input(Speakers spk);
-  virtual Speakers get_output() const;
-  virtual bool get_chunk(Chunk *chunk);
+
+  virtual Speakers get_output() const
+  { return out_spk; }
+
+  virtual bool is_inplace() const
+  { return !sample_rate || spk.sample_rate == sample_rate; }
+
+  virtual bool need_flushing() const
+  { return !is_inplace() && post_samples > 0 && ((stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples) > 0; }
+
 };
 
 #endif
