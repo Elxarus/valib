@@ -26,7 +26,6 @@ double optimize_downsample(int l, int m, double a, double q, int &l1, int &m1, i
 ///////////////////////////////////////////////////////////////////////////////
 
 Resample::Resample(): 
-  NullFilter(FORMAT_MASK_LINEAR),
   a(100.0), q(0.99), fs(0), fd(0), nch(0), rate(1.0),
   g(0), l(0), m(0), l1(0), l2(0), m1(0), m2(0),
   n1(0), n1x(0), n1y(0),
@@ -46,10 +45,11 @@ Resample::Resample():
   out_spk.set_unknown();
   out_samples.zero();
   out_size = 0;
+  sync = false;
+  time = 0;
 };
 
 Resample::Resample(int _sample_rate, double _a, double _q): 
-  NullFilter(FORMAT_MASK_LINEAR),
   a(100.0), q(0.99), fs(0), fd(0), nch(0), rate(1.0),
   g(0), l(0), m(0), l1(0), l2(0), m1(0), m2(0),
   n1(0), n1x(0), n1y(0),
@@ -69,6 +69,8 @@ Resample::Resample(int _sample_rate, double _a, double _q):
   out_spk.set_unknown();
   out_samples.zero();
   out_size = 0;
+  sync = false;
+  time = 0;
 
   set(_sample_rate, _a, _q);
 };
@@ -117,24 +119,24 @@ Resample::get(int *_sample_rate, double *_a, double *_q)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Filter interface
+// SamplesFilter interface
 ///////////////////////////////////////////////////////////////////////////////
 
 void
 Resample::reset()
 {
-  NullFilter::reset();
+  sync = false;
+  time = 0;
   if (sample_rate)
     reset_resample();
 }
 
 bool
-Resample::set_input(Speakers _spk)
+Resample::init(Speakers new_spk)
 {
-  FILTER_SAFE(NullFilter::set_input(_spk));
-
   uninit_resample();
-  out_spk = _spk;
+  spk = new_spk;
+  out_spk = new_spk;
 
   if (sample_rate)
   {
@@ -145,47 +147,61 @@ Resample::set_input(Speakers _spk)
   return true;
 }
 
-Speakers
-Resample::get_output() const
+void
+Resample::uninit()
 {
-  return out_spk;
+  uninit_resample();
+  out_spk = spk_unknown;
 }
 
 bool
-Resample::get_chunk(Chunk *_chunk)
+Resample::process(Chunk2 &in, Chunk2 &out)
 {
-  if (sample_rate && spk.sample_rate != sample_rate)
+  if (!sample_rate || spk.sample_rate == sample_rate)
   {
-    if (size)
-    {
-      size_t processed = process_resample(samples.samples, size);
-      drop_samples(processed);
-      _chunk->set_linear(out_spk, out_samples, out_size);
-    }
-    else if (flushing)
-    {
-      bool send_eos = flush_resample();
-      _chunk->set_linear(out_spk, out_samples, out_size);
-      if (send_eos)
-      {
-        _chunk->set_eos();
-        reset();
-      }
-    }
-
-    if (sync)
-    {
-      _chunk->set_sync(true, time);
-      sync = false;
-    }
-
+    out = in;
+    in.set_empty();
     return true;
   }
 
-  send_chunk_inplace(_chunk, size);
+  if (in.sync)
+  {
+    sync = true;
+    time = in.time;
+    in.sync = false;
+    in.time = 0;
+  }
+
+  if (in.size)
+  {
+    size_t processed = process_resample(in.samples.samples, in.size);
+    in.drop_samples(processed);
+    out.set_linear(out_samples, out_size);
+  }
+
+  out.set_sync(sync, time);
+  sync = false;
+  time = 0;
   return true;
 }
 
+bool
+Resample::flush(Chunk2 &out)
+{
+  int actual_out_size = (stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples;
+  if (post_samples <= 0 || actual_out_size <= 0 || !sample_rate || spk.sample_rate == sample_rate)
+  {
+    out.set_empty();
+    return true;
+  }
+
+  flush_resample();
+  out.set_linear(out_samples, out_size);
+  out.set_sync(sync, time);
+  sync = false;
+  time = 0;
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Init
@@ -607,7 +623,7 @@ Resample::flush_resample()
   post_samples -= n;
   pos1 += n;
 
-  process_resample(samples.samples, 0);
+  process_resample(out_samples.samples, 0);
 
   if (post_samples <= 0)
   {
