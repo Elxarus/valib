@@ -34,21 +34,15 @@ int compare(Log *log, Source *src, Source *ref)
   size_t len;
   int ch;
 
-  while (1)
+  while ((!src->is_empty() || src_chunk.size) && (!ref->is_empty() || ref_chunk.size))
   {
-    if (!src_chunk.size)
-    {
-      if (src->is_empty()) break;
-      if (!src->get_chunk(&src_chunk)) return log->err("src->get_chunk() fails");
-      if (src_chunk.is_dummy()) continue;
-    }
+    while (!src->is_empty() && !src_chunk.size)
+      if (!src->get_chunk(&src_chunk))
+        return log->err("src->get_chunk() fails");
 
-    if (!ref_chunk.size)
-    {
-      if (ref->is_empty()) break;
-      if (!ref->get_chunk(&ref_chunk)) return log->err("ref->get_chunk() fails");
-      if (ref_chunk.is_dummy()) continue;
-    }
+    while (!ref->is_empty() && !ref_chunk.size)
+      if (!ref->get_chunk(&ref_chunk))
+        return log->err("ref->get_chunk() fails");
 
     ///////////////////////////////////////////////////////
     // Check that stream configurstions are equal
@@ -90,6 +84,14 @@ int compare(Log *log, Source *src, Source *ref)
 
   /////////////////////////////////////////////////////////
   // Verify stream lengths
+
+  while (!src->is_empty() && !src_chunk.size)
+    if (!src->get_chunk(&src_chunk))
+      return log->err("src->get_chunk() fails");
+
+  while (!ref->is_empty() && !ref_chunk.size)
+    if (!ref->get_chunk(&ref_chunk))
+      return log->err("ref->get_chunk() fails");
 
   if (!src->is_empty() || src_chunk.size)
     return log->err("output is longer than reference");
