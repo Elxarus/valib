@@ -42,7 +42,6 @@ Resample::Resample():
   }
 
   sample_rate = 0;
-  out_spk.set_unknown();
   out_samples.zero();
   out_size = 0;
   sync = false;
@@ -66,7 +65,6 @@ Resample::Resample(int _sample_rate, double _a, double _q):
   }
 
   sample_rate = 0;
-  out_spk.set_unknown();
   out_samples.zero();
   out_size = 0;
   sync = false;
@@ -77,7 +75,7 @@ Resample::Resample(int _sample_rate, double _a, double _q):
 
 Resample::~Resample()
 {
-  uninit_resample();
+  uninit();
 }
 
 
@@ -98,13 +96,13 @@ Resample::set(int _sample_rate, double _a, double _q)
   a = _a;
   q = _q;
 
-  uninit_resample();
+  uninit();
   out_spk = spk;
   if (!spk.is_unknown() && sample_rate != 0)
   {
     out_spk.sample_rate = sample_rate;
     if (spk.sample_rate != sample_rate)
-      init_resample(spk.nch(), spk.sample_rate, sample_rate);
+      init(spk);
   }
 
   return true;
@@ -119,103 +117,25 @@ Resample::get(int *_sample_rate, double *_a, double *_q)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// SamplesFilter interface
+// Init
 ///////////////////////////////////////////////////////////////////////////////
-
-void
-Resample::reset()
-{
-  sync = false;
-  time = 0;
-  if (sample_rate)
-    reset_resample();
-}
 
 bool
 Resample::init(Speakers new_spk)
 {
-  uninit_resample();
-  spk = new_spk;
+  uninit();
+
   out_spk = new_spk;
-
   if (sample_rate)
-  {
     out_spk.sample_rate = sample_rate;
-    if (spk.sample_rate != sample_rate)
-      init_resample(spk.nch(), spk.sample_rate, sample_rate);
-  }
-  return true;
-}
 
-void
-Resample::uninit()
-{
-  uninit_resample();
-  out_spk = spk_unknown;
-}
-
-bool
-Resample::process(Chunk2 &in, Chunk2 &out)
-{
-  if (!sample_rate || spk.sample_rate == sample_rate)
-  {
-    out = in;
-    in.set_empty();
+  if (passthrough())
     return true;
-  }
 
-  if (in.sync)
-  {
-    sync = true;
-    time = in.time;
-    in.sync = false;
-    in.time = 0;
-  }
-
-  if (in.size)
-  {
-    size_t processed = process_resample(in.samples.samples, in.size);
-    in.drop_samples(processed);
-    out.set_linear(out_samples, out_size);
-  }
-
-  out.set_sync(sync, time);
-  sync = false;
-  time = 0;
-  return true;
-}
-
-bool
-Resample::flush(Chunk2 &out)
-{
-  int actual_out_size = (stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples;
-  if (post_samples <= 0 || actual_out_size <= 0 || !sample_rate || spk.sample_rate == sample_rate)
-  {
-    out.set_empty();
-    return true;
-  }
-
-  flush_resample();
-  out.set_linear(out_samples, out_size);
-  out.set_sync(sync, time);
-  sync = false;
-  time = 0;
-  return true;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Init
-///////////////////////////////////////////////////////////////////////////////
-
-int
-Resample::init_resample(int _nch, int _fs, int _fd)
-{
   int i;
-  uninit_resample();
-
-  fs = _fs; // source sample rate
-  fd = _fd; // destinationsample rate
-  nch = _nch; // number fo channels
+  fs = new_spk.sample_rate; // source sample rate
+  fd = sample_rate;         // destinationsample rate
+  nch = new_spk.nch();      // number fo channels
   rate = double(fd) / double(fs);
 
   g = gcd(fs, fd);
@@ -369,8 +289,10 @@ Resample::init_resample(int _nch, int _fs, int _fd)
 }
 
 void
-Resample::uninit_resample()
+Resample::uninit()
 {
+  out_spk = spk_unknown;
+
   if (f1) safe_delete(f1[0]);
   safe_delete(f1);
   safe_delete(f1_raw);
@@ -405,6 +327,66 @@ Resample::uninit_resample()
 ///////////////////////////////////////////////////////////////////////////////
 // Processing functions
 ///////////////////////////////////////////////////////////////////////////////
+
+inline void
+Resample::do_resample()
+{
+  int ch, i, j;
+
+  ///////////////////////////////////////////////////////
+  // Stage 1 processing
+
+  int n_out = n2;
+  int n_in = stage1_in(n2);
+  assert(pos1 >= n_in);
+
+  do_stage1(buf1, buf2, n_in, n_out);
+
+  pos1 -= n_in;
+  for (ch = 0; ch < nch; ch++)
+    memmove(buf1[ch], buf1[ch] + n_in, pos1 * sizeof(sample_t));
+
+  ///////////////////////////////////////////////////////
+  // Stage 2 processing
+
+  do_stage2();
+
+  // Decimate and overlap
+  // The size of output data is always less or equal to
+  // the size of input data. Therefore we can process it
+  // in-place.
+
+  i = shift; j = 0;
+  for (ch = 0; ch < nch; ch++)
+    for (i = shift, j = 0; i < n2; i += m2, j++)
+      buf2[ch][j] = buf2[ch][i] + delay2[ch][j];
+  shift = i - n2;
+  out_size = j;
+
+  for (ch = 0; ch < nch; ch++)
+    for (i = n2 + shift, j = 0; i < n2b; i += m2, j++)
+      delay2[ch][j] = buf2[ch][i];
+
+  ///////////////////////////////////////////////////////
+  // Drop null samples from the beginning
+
+  if (pre_samples > 0)
+  {
+    if (pre_samples > out_size)
+    {
+      pre_samples -= out_size;
+      out_size = 0;
+    }
+    else
+    {
+      out_size -= pre_samples;
+      for (int ch = 0; ch < nch; ch++)
+        memmove(out_samples[ch], out_samples[ch] + pre_samples, out_size * sizeof(sample_t));
+      pre_samples = 0;
+    }
+  }
+}
+
 
 inline void
 Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
@@ -492,25 +474,14 @@ Resample::do_stage2()
 }
 
 void
-Resample::drop_pre_samples()
+Resample::reset()
 {
-  if (pre_samples > out_size)
-  {
-    pre_samples -= out_size;
-    out_size = 0;
-  }
-  else
-  {
-    out_size -= pre_samples;
-    for (int ch = 0; ch < nch; ch++)
-      memmove(out_samples[ch], out_samples[ch] + pre_samples, out_size * sizeof(sample_t));
-    pre_samples = 0;
-  }
-}
+  sync = false;
+  time = 0;
 
-void
-Resample::reset_resample()
-{
+  if (passthrough())
+    return;
+
   int ch;
   if (fs && fd)
   {
@@ -537,93 +508,89 @@ Resample::reset_resample()
   }
 }
 
-size_t
-Resample::process_resample(sample_t *in_buf[], size_t nsamples)
+bool
+Resample::process(Chunk2 &in, Chunk2 &out)
 {
-  int ch, i, j;
-  size_t processed = 0;
-  out_size = 0;
+  ///////////////////////////////////////////////////////
+  // Passthrough
+
+  if (passthrough())
+  {
+    out = in;
+    in.set_empty();
+    return true;
+  }
 
   ///////////////////////////////////////////////////////
   // Sync
 
-  if (sync)
+  if (in.sync)
   {
+    sync = true;
+    time = in.time;
     time -= double(pos1 - c1x) / double(fs);
     time -= double(c2) / double(fd * m2);
     time += double(pre_samples) / double(fd);
+
+    in.sync = false;
+    in.time = 0;
   }
 
   ///////////////////////////////////////////////////////
-  // Stage 1 processing
+  // Fill stage 1 buffer
 
+  int ch;
   int n = n2*m1/l1 + n1x + 1;
-  if (nsamples < (size_t)n - pos1)
+  if (in.size < (size_t)n - pos1)
   {
     for (ch = 0; ch < nch; ch++)
-      memcpy(buf1[ch] + pos1, in_buf[ch], nsamples * sizeof(sample_t));
-    pos1 += (int)nsamples;
-    return nsamples;
+      memcpy(buf1[ch] + pos1, in.samples[ch], in.size * sizeof(sample_t));
+    pos1 += (int)in.size;
+
+    in.set_empty();
+    out.set_empty();
+    return true;
   }
-  for (ch = 0; ch < nch; ch++)
-    memcpy(buf1[ch] + pos1, in_buf[ch], (n - pos1) * sizeof(sample_t));
-  processed = n - pos1;
 
-  int n_out = n2;
-  int n_in = stage1_in(n2);
-  do_stage1(buf1, buf2, n_in, n_out);
-
-  pos1 = n - n_in;
   for (ch = 0; ch < nch; ch++)
-    memmove(buf1[ch], buf1[ch] + n_in, pos1 * sizeof(sample_t));
+    memcpy(buf1[ch] + pos1, in.samples[ch], (n - pos1) * sizeof(sample_t));
+  in.drop_samples(n - pos1);
+  pos1 = n;
 
   ///////////////////////////////////////////////////////
-  // Stage 2 processing
+  // Resample & output
 
-  do_stage2();
+  do_resample();
 
-  // Decimate and overlap
-  // The size of output data is always less or equal to
-  // the size of input data. Therefore we can process it
-  // in-place.
-
-  i = shift; j = 0;
-  for (ch = 0; ch < nch; ch++)
-    for (i = shift, j = 0; i < n2; i += m2, j++)
-      buf2[ch][j] = buf2[ch][i] + delay2[ch][j];
-  shift = i - n2;
-  out_size = j;
-
-  for (ch = 0; ch < nch; ch++)
-    for (i = n2 + shift, j = 0; i < n2b; i += m2, j++)
-      delay2[ch][j] = buf2[ch][i];
-
-  ///////////////////////////////////////////////////////
-  // Drop null samples from the beginning
-
-  if (pre_samples > 0)
-    drop_pre_samples();
-
-  return processed;
+  out.set_linear(out_samples, out_size);
+  out.set_sync(sync, time);
+  sync = false;
+  time = 0;
+  return true;
 }
 
 bool
-Resample::flush_resample()
+Resample::flush(Chunk2 &out)
 {
   int ch;
 
-  out_size = 0;
-  int n = n2*m1/l1 + n1x + 1 - pos1;
   int actual_out_size = (stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples;
   if (!actual_out_size)
     return true;
 
+  ///////////////////////////////////////////////////////
+  // Zero the tail of the stage 1 buffer
+
+  int n = n2*m1/l1 + n1x + 1 - pos1;
   for (ch = 0; ch < nch; ch++)
     memset(buf1[ch] + pos1, 0, n * sizeof(sample_t));
   post_samples -= n;
   pos1 += n;
 
-  process_resample(out_samples.samples, 0);
+  ///////////////////////////////////////////////////////
+  // Resample & output
+
+  do_resample();
 
   if (post_samples <= 0)
   {
@@ -637,7 +604,12 @@ Resample::flush_resample()
     out_size = actual_out_size;
     return true;
   }
-  return false;
+
+  out.set_linear(out_samples, out_size);
+  out.set_sync(sync, time);
+  sync = false;
+  time = 0;
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
