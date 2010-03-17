@@ -5,11 +5,11 @@
 #ifndef VALIB_SPECTRUM_H
 #define VALIB_SPECTRUM_H
 
-#include "../filter.h"
+#include "../filter2.h"
 #include "../buffer.h"
 #include "../dsp/fft.h"
 
-class Spectrum : public NullFilter
+class Spectrum : public SamplesFilter
 {
 protected:
   unsigned  length;
@@ -21,10 +21,7 @@ protected:
 
   size_t pos;
   bool is_ok;
-
   bool init();
-  bool on_process();
-  void on_reset();
 
 public:
   Spectrum();
@@ -32,6 +29,16 @@ public:
   unsigned get_length() const;
   bool     set_length(unsigned length);
   void     get_spectrum(int ch, sample_t *data, double *bin2hz);
+
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual void reset();
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+
+  virtual bool is_inplace() const
+  { return true; }
+
 };
 
 #endif

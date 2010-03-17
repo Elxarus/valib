@@ -17,10 +17,8 @@ inline unsigned int clp2(unsigned int x)
 }
 
 Spectrum::Spectrum():
-  length(0), pos(0), is_ok(true),
-  NullFilter(FORMAT_MASK_LINEAR)
-{
-}
+length(0), pos(0), is_ok(true)
+{}
 
 unsigned Spectrum::get_length() const
 {
@@ -122,31 +120,34 @@ Spectrum::init()
 }
 
 bool
-Spectrum::on_process()
+Spectrum::process(Chunk2 &in, Chunk2 &out)
 {
-  if (!is_ok || size == 0)
+  out = in;
+  in.set_empty();
+
+  if (!is_ok || out.size == 0)
     return true;
 
-  if (size >= 2*length)
+  if (out.size >= 2*length)
   {
-    size_t pos = size - 2 * length;
+    size_t pos = out.size - 2 * length;
     for (int ch = 0; ch < spk.nch(); ch++)
-      memcpy(data[ch], samples[ch] + pos, 2*length*sizeof(sample_t));
+      memcpy(data[ch], out.samples[ch] + pos, 2*length*sizeof(sample_t));
   }
   else
   {
-    size_t pos = 2 * length - size;
+    size_t pos = 2 * length - out.size;
     for (int ch = 0; ch < spk.nch(); ch++)
     {
-      memmove(data[ch], data[ch] + size, pos * sizeof(sample_t));
-      memcpy(data[ch] + pos, samples[ch], size * sizeof(sample_t));
+      memmove(data[ch], data[ch] + out.size, pos * sizeof(sample_t));
+      memcpy(data[ch] + pos, out.samples[ch], out.size * sizeof(sample_t));
     }
   }
   return true;
 }
 
 void
-Spectrum::on_reset()
+Spectrum::reset()
 {
   data.zero();
   pos = 0;
