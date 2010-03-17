@@ -6,11 +6,11 @@
 #ifndef VALIB_DEJITTER_H
 #define VALIB_DEJITTER_H
 
-#include "../filter.h"
+#include "../filter2.h"
 
 #define STAT_SIZE 64
 
-class Syncer : public NullFilter
+class Syncer : public SimpleFilter
 {
 protected:
   double size2time;
@@ -46,25 +46,12 @@ protected:
   SyncerStat ostat;
 
 public:
-  Syncer()
-  :NullFilter(FORMAT_MASK_LINEAR | FORMAT_CLASS_PCM | FORMAT_MASK_SPDIF)
-  {
-    size2time   = 1.0;
-
-    continuous_sync = false;
-    continuous_time = 0.0;
-
-    time_shift  = 0;
-    time_factor = 1.0;
-
-    dejitter  = true;
-    threshold = 0.1;
-  }
+  Syncer();
 
   /////////////////////////////////////////////////////////
   // Syncer interface
 
-  void    resync()                               { sync = false; }
+  void    resync()                               { continuous_sync = false; }
 
   // Linear time transform
   vtime_t get_time_shift() const                 { return time_shift; }
@@ -86,15 +73,15 @@ public:
   vtime_t get_output_stddev() const              { return ostat.stddev(); }
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // SimpleFilter overrides
 
-  void reset();
+  virtual bool can_open(Speakers spk) const;
+  virtual bool init(Speakers spk);
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual void reset();
 
-  bool query_input(Speakers spk) const;
-  bool set_input(Speakers spk);
-  bool process(const Chunk *_chunk);
-
-  bool get_chunk(Chunk *_chunk);
+  virtual bool is_inplace() const
+  { return true; }
 };
 
 #endif

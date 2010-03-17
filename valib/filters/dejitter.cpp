@@ -58,65 +58,75 @@ Syncer::SyncerStat::len() const
 }
 
 ///////////////////////////////////////////////////////////
-// Filter interface
+// Syncer
 
-bool
-Syncer::query_input(Speakers _spk) const
+Syncer::Syncer()
 {
-  if (!_spk.sample_rate)
-    return false;
+  size2time = 1.0;
 
-  return (FORMAT_MASK(_spk.format) & format_mask_dejitter) != 0;
+  continuous_sync = false;
+  continuous_time = 0.0;
+
+  time_shift  = 0;
+  time_factor = 1.0;
+
+  dejitter  = true;
+  threshold = 0.1;
 }
 
 bool
-Syncer::set_input(Speakers _spk)
+Syncer::can_open(Speakers new_spk) const
+{
+  return new_spk.sample_rate > 0 &&
+         (FORMAT_MASK(new_spk.format) & format_mask_dejitter) != 0;
+}
+
+bool
+Syncer::init(Speakers new_spk)
 {
   reset();
 
-  if (!_spk.sample_rate)
+  if (!new_spk.sample_rate)
     return false;
 
-  switch (_spk.format)
+  switch (new_spk.format)
   {
     case FORMAT_LINEAR:
-      size2time = 1.0 / _spk.sample_rate;
+      size2time = 1.0 / new_spk.sample_rate;
       break;
 
     case FORMAT_PCM16:
     case FORMAT_PCM16_BE:
-      size2time = 1.0 / 2.0 / _spk.nch()  / _spk.sample_rate;
+      size2time = 1.0 / 2.0 / new_spk.nch() / new_spk.sample_rate;
       break;
 
     case FORMAT_PCM24:
     case FORMAT_PCM24_BE:
-      size2time = 1.0 / 3.0 / _spk.nch()  / _spk.sample_rate; 
+      size2time = 1.0 / 3.0 / new_spk.nch() / new_spk.sample_rate; 
       break;
 
     case FORMAT_PCM32:
     case FORMAT_PCM32_BE:
-      size2time = 1.0 / 4.0 / _spk.nch()  / _spk.sample_rate;
+      size2time = 1.0 / 4.0 / new_spk.nch() / new_spk.sample_rate;
       break;
 
     case FORMAT_PCMFLOAT:
-      size2time = 1.0 / sizeof(float) / _spk.nch()  / _spk.sample_rate;
+      size2time = 1.0 / sizeof(float)  / new_spk.nch() / new_spk.sample_rate;
       break;
 
     case FORMAT_PCMDOUBLE:
-      size2time = 1.0 / sizeof(double) / _spk.nch()  / _spk.sample_rate;
+      size2time = 1.0 / sizeof(double) / new_spk.nch() / new_spk.sample_rate;
       break;
 
     case FORMAT_SPDIF:
-      size2time = 1.0 / 4.0 / _spk.sample_rate;
+      size2time = 1.0 / 4.0 / new_spk.sample_rate;
       break;
 
     default:
       return false;
   }
-
-  return NullFilter::set_input(_spk);
+  return true;
 }
-
 
 void 
 Syncer::reset()
@@ -128,24 +138,20 @@ Syncer::reset()
   continuous_time = 0.0;
   istat.reset();
   ostat.reset();
-  NullFilter::reset();
 }
 
 bool 
-Syncer::process(const Chunk *_chunk)
+Syncer::process(Chunk2 &in, Chunk2 &out)
 {
-  // we must ignore dummy chunks
-  if (_chunk->is_dummy())
-    return true;
-
-  // receive chunk
-  FILTER_SAFE(receive_chunk(_chunk));
+  out = in;
+  in.set_empty();
 
   // ignore non-sync chunks
-  if (!_chunk->sync)
+  if (!out.sync)
     return true;
 
   // catch syncronization
+  vtime_t time = out.time;
   if (!continuous_sync)
   {
     #ifdef SYNCER_LOG_TIMING
@@ -281,6 +287,8 @@ Syncer::process(const Chunk *_chunk)
       DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time, delta, istat.stddev(), istat.mean()));
       DbgLog((LOG_TRACE, 3, "output: %-6.0f correction: %-6.0f", continuous_time, correction));
     #endif
+
+    out.set_sync(continuous_sync, continuous_time * time_factor + time_shift);
   }
   else // no dejitter
   {
@@ -290,24 +298,10 @@ Syncer::process(const Chunk *_chunk)
     #ifdef SYNCER_LOG_TIMING
       DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time, delta, istat.stddev(), istat.mean()));
     #endif
+
+    out.set_sync(true, time * time_factor + time_shift);
   }
 
-  return true;
-}
-
-bool 
-Syncer::get_chunk(Chunk *_chunk)
-{
-  if (dejitter)
-  {
-    sync = continuous_sync;
-    time = continuous_time * time_factor + time_shift;
-  }
-  else if (sync)
-    time = time * time_factor + time_shift;
-
-  continuous_time += size * size2time;
-  send_chunk_inplace(_chunk, size);
-  sync = false;
+  continuous_time += out.size * size2time;
   return true;
 }
