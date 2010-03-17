@@ -41,11 +41,11 @@ TEST(convolver_mch, "ConvolverMch test")
   ToneGen tone;
   SliceFilter slice;
   SourceFilter conv_src(&tone, conv);
-  SourceFilter test_src(&conv_src, &slice);
+  SourceFilter test_src(&conv_src, slice);
 
   ToneGen ref_tone;
   SliceFilter ref_slice;
-  SourceFilter ref_src(&ref_tone, &ref_slice);
+  SourceFilter ref_src(&ref_tone, ref_slice);
 
   // multichannel generators
 

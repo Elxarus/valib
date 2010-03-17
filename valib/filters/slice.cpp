@@ -1,7 +1,7 @@
 #include "slice.h"
 
 SliceFilter::SliceFilter(size_t _start, size_t _end):
-NullFilter(-1), pos(0), start(_start), end(_end) 
+pos(0), start(_start), end(_end) 
 {
   assert(start <= end);
 }
@@ -16,44 +16,47 @@ SliceFilter::init(size_t _start, size_t _end)
 }
 
 void
-SliceFilter::on_reset()
+SliceFilter::reset()
 {
   pos = 0;
 }
 
 bool
-SliceFilter::on_process()
+SliceFilter::process(Chunk2 &in, Chunk2 &out)
 {
+  out = in;
+  in.set_empty();
+
   // ignore everything after the end (except eos)
 
   if (pos >= end)
   {
-    size = 0;
+    out.size = 0;
     return true;
   }
 
   // ignore everything before the beginning (except eos)
-  if (pos + size <= start)
+  if (pos + out.size <= start)
   {
-    pos += size;
-    size = 0;
+    pos += out.size;
+    out.size = 0;
     return true;
   }
 
   // cut off the tail
-  if (pos + size > end)
-    size = end - pos;
+  if (pos + out.size > end)
+    out.size = end - pos;
 
   // cut of the head
   if (pos < start)
   {
     if (spk.is_linear())
-      drop_samples(start - pos);
+      out.drop_samples(start - pos);
     else
-      drop_rawdata(start - pos);
+      out.drop_rawdata(start - pos);
     pos = start;
   }
 
-  pos += size;
+  pos += out.size;
   return true;
 }
