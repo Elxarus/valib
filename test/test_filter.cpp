@@ -303,7 +303,7 @@ int test_rules(Log *log)
     Speakers(FORMAT_SPDIF, 0, 0), "a.ac3.03f.spdif",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_rules_filter(log, &detector, "Detector",
+  test_rules_filter(log, detector, "Detector",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.madp.mix.madp",
     Speakers(FORMAT_SPDIF, 0, 0), "a.madp.mix.spdif",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));

@@ -37,8 +37,8 @@ public:
   Detector_test(Log *_log)
   {
     log = _log;
-    t.link(&detector, log);
-    f = &detector; // do not use FilterTester
+    t.link(detector, log);
+    f = detector; // do not use FilterTester
   }
 
   int test()

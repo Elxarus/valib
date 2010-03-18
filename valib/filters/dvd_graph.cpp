@@ -499,7 +499,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       return demux;
 
     case state_detector:
-      return &detector;
+      return detector;
 
     case state_despdif:
       return &despdifer;
