@@ -8,13 +8,14 @@
 #ifndef VALIB_DETECTOR_H
 #define VALIB_DETECTOR_H
 
+#include "../filter2.h"
 #include "../parser.h"
 #include "../sync.h"
 #include "../parsers/multi_header.h"
 
 
 
-class Detector : public NullFilter
+class Detector : public SimpleFilter
 {
 protected:
   MultiHeader spdif_dts_header;
@@ -22,25 +23,20 @@ protected:
 
   enum state_t 
   {
-    state_trans,
-    state_empty_debris, state_debris, state_no_debris,
-    state_empty_frame, state_frame_debris, state_frame, state_no_frame,
-    state_format_change
+    state_trans, state_passthrough,
+    state_format_change, state_sync_lost,
+    state_next_frame, state_frame
   };
 
   StreamBuffer stream;    // stream buffer
+  SyncHelper   sync;      // synchronization helper
 
-  Speakers out_spk;       // output format
-  state_t  state;         // filter state
-  Sync     sync_helper;   // syncronization helper
+  Speakers out_spk;  // output format
+  state_t  state;    // filter state
+  bool     do_flush; // need flushing
 
   const HeaderParser *find_parser(Speakers spk) const;
-
-  bool load();
-  void send_debris(Chunk *_chunk);
-  void send_frame_debris(Chunk *_chunk);
-  void send_frame(Chunk *_chunk);
-  void send_eos(Chunk *_chunk);
+  void load(Chunk2 &in);
 
 public:
   Detector();
@@ -54,18 +50,29 @@ public:
   HeaderInfo header_info() const { return stream.header_info(); }
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // SimpleFilter overrides
 
+  virtual bool can_open(Speakers spk) const;
+  virtual bool init(Speakers spk);
   virtual void reset();
-  virtual bool is_ofdd() const;
 
-  virtual bool query_input(Speakers spk) const;
-  virtual bool set_input(Speakers spk);
-  virtual bool process(const Chunk *chunk);
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool flush(Chunk2 &out);
 
-  virtual Speakers get_output() const;
-  virtual bool is_empty() const;
-  virtual bool get_chunk(Chunk *chunk);
+  virtual bool eos() const
+  { return state == state_format_change || state == state_sync_lost; }
+
+  virtual bool is_ofdd() const
+  { return true; }
+
+  virtual bool is_inplace() const
+  { return false; }
+
+  virtual bool need_flushing() const
+  { return do_flush; }
+
+  virtual Speakers get_output() const
+  { return out_spk; }
 };
 
 #endif
