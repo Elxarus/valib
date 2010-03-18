@@ -164,6 +164,10 @@ public:
   inline void send_linear(Chunk2 &chunk, int sample_rate);
 
   // Track timestamps manually
+  inline void receive_sync(const Chunk2 &chunk, pos_t pos);
+  inline void send_frame_sync(Chunk2 &chunk);
+  inline void send_sync(Chunk2 &chunk, double size_to_time);
+
   inline void receive_sync(const Chunk *chunk, pos_t pos);
   inline void send_frame_sync(Chunk *chunk);
   inline void send_sync(Chunk *chunk, double size_to_time);
@@ -219,6 +223,49 @@ SyncHelper::shift()
   sync[1] = false;
   time[1] = 0;
   pos[1]  = 0;
+}
+
+inline void
+SyncHelper::receive_sync(const Chunk2 &chunk, pos_t _pos)
+{
+  if (chunk.sync)
+  {
+    if (sync[0] && pos[0] != _pos)
+    {
+      assert(pos[0] < _pos);
+      sync[1] = true;
+      time[1] = chunk.time;
+      pos[1]  = _pos;
+    }
+    else
+    {
+      sync[0] = true;
+      time[0] = chunk.time;
+      pos[0]  = _pos;
+    }
+  }
+}
+
+inline void
+SyncHelper::send_frame_sync(Chunk2 &chunk)
+{
+  if (pos[0] <= 0)
+  {
+    chunk.sync = sync[0];
+    chunk.time = time[0];
+    shift();
+  }
+}
+
+inline void
+SyncHelper::send_sync(Chunk2 &chunk, double size_to_time)
+{
+  if (pos[0] <= 0)
+  {
+    chunk.sync = sync[0];
+    chunk.time = time[0] - pos[0] * size_to_time;
+    shift();
+  }
 }
 
 inline void
