@@ -286,13 +286,12 @@ Detector::flush(Chunk2 &out)
 void
 Detector::load(Chunk2 &in)
 {
+  size_t old_data_size = stream.get_buffer_size() + in.size;
+
   uint8_t *end = in.rawdata + in.size;
   stream.load(&in.rawdata, end);
   in.size = end - in.rawdata;
 
-  if (stream.is_debris_exists())
-    sync.drop(stream.get_debris_size());
-
-  if (stream.is_frame_loaded())
-    sync.drop(stream.get_frame_size());
+  size_t new_data_size = stream.get_buffer_size() + in.size;
+  sync.drop(old_data_size - new_data_size);
 }
