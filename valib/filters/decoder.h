@@ -40,17 +40,17 @@ public:
   /////////////////////////////////////////////////////////
   // Filter interface
 
-  virtual void reset()                     { parser.reset();                 }
-  virtual bool is_ofdd() const             { return parser.is_ofdd();        }
+  virtual void reset()                     { parser->reset();                 }
+  virtual bool is_ofdd() const             { return parser->is_ofdd();        }
 
-  virtual bool query_input(Speakers spk) const { return parser.query_input(spk); }
-  virtual bool set_input(Speakers spk)     { return parser.set_input(spk);   }
-  virtual Speakers get_input() const       { return parser.get_input();      }
-  virtual bool process(const Chunk *chunk) { return parser.process(chunk);   }
+  virtual bool query_input(Speakers spk) const { return parser->query_input(spk); }
+  virtual bool set_input(Speakers spk)     { return parser->set_input(spk);   }
+  virtual Speakers get_input() const       { return parser->get_input();      }
+  virtual bool process(const Chunk *chunk) { return parser->process(chunk);   }
 
-  virtual Speakers get_output() const      { return parser.get_output();     }
-  virtual bool is_empty() const            { return parser.is_empty();       }
-  virtual bool get_chunk(Chunk *chunk)     { return parser.get_chunk(chunk); }
+  virtual Speakers get_output() const      { return parser->get_output();     }
+  virtual bool is_empty() const            { return parser->is_empty();       }
+  virtual bool get_chunk(Chunk *chunk)     { return parser->get_chunk(chunk); }
 };
 
 #endif
