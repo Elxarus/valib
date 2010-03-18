@@ -31,11 +31,11 @@ int test_crash(Log *log)
 
   test_crash_filter(log, Speakers(FORMAT_PES,     0, 0), demux, "Demux");
 
-  test_crash_filter(log, Speakers(FORMAT_AC3,     0, 0), &spdifer, "Spdifer");
-  test_crash_filter(log, Speakers(FORMAT_MPA,     0, 0), &spdifer, "Spdifer");
-  test_crash_filter(log, Speakers(FORMAT_DTS,     0, 0), &spdifer, "Spdifer");
-  test_crash_filter(log, Speakers(FORMAT_SPDIF,   0, 0), &spdifer, "Spdifer");
-  test_crash_filter(log, Speakers(FORMAT_RAWDATA, 0, 0), &spdifer, "Spdifer");
+  test_crash_filter(log, Speakers(FORMAT_AC3,     0, 0), spdifer, "Spdifer");
+  test_crash_filter(log, Speakers(FORMAT_MPA,     0, 0), spdifer, "Spdifer");
+  test_crash_filter(log, Speakers(FORMAT_DTS,     0, 0), spdifer, "Spdifer");
+  test_crash_filter(log, Speakers(FORMAT_SPDIF,   0, 0), spdifer, "Spdifer");
+  test_crash_filter(log, Speakers(FORMAT_RAWDATA, 0, 0), spdifer, "Spdifer");
 
   test_crash_filter(log, Speakers(FORMAT_AC3,     0, 0), &dec, "Decoder");
   test_crash_filter(log, Speakers(FORMAT_MPA,     0, 0), &dec, "Decoder");
