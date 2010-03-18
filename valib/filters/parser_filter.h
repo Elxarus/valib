@@ -6,34 +6,32 @@
 #ifndef VALIB_PARSER_FILTER_H
 #define VALIB_PARSER_FILTER_H
 
-#include "../filter.h"
+#include "../filter2.h"
 #include "../parser.h"
 #include "../sync.h"
 
-class ParserFilter : public NullFilter
+class ParserFilter : public SimpleFilter
 {
 protected:
   enum state_t 
   {
     state_trans,
-    state_empty, 
-    state_full, 
-    state_no_frame, 
-    state_format_change
+    state_format_change,
+    state_next_frame
   };
 
   FrameParser *parser;       // parser to use
   StreamBuffer stream;       // stream buffer
-  SyncHelper   sync_helper;  // syncronization helper
+  SyncHelper   sync;         // syncronization helper
 
   Speakers out_spk;          // output format
   state_t  state;            // filter state
   bool     new_stream;       // new stream found
   int      errors;           // number of parsing errors
 
-  bool load_parse_frame();
-  void send_frame(Chunk *chunk);
-  void send_eos(Chunk *chunk);
+  bool load_frame(Chunk2 &in);
+  bool load_parse_frame(Chunk2 &in);
+  void send_frame(Chunk2 &out);
 
 public:
   ParserFilter();
@@ -53,17 +51,24 @@ public:
   HeaderInfo header_info() const { return stream.header_info(); }
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // SimpleFilter overrides
 
+  virtual bool can_open(Speakers spk) const;
   virtual void reset();
-  virtual bool is_ofdd() const;
 
-  virtual bool query_input(Speakers spk) const;
-  virtual bool process(const Chunk *chunk);
+  virtual bool process(Chunk2 &in, Chunk2 &out);
 
-  virtual Speakers get_output() const;
-  virtual bool is_empty() const;
-  virtual bool get_chunk(Chunk *chunk);
+  virtual bool eos() const
+  { return state == state_format_change; }
+
+  virtual bool is_ofdd() const
+  { return true; }
+
+  virtual bool is_inplace() const
+  { return false; }
+
+  virtual Speakers get_output() const
+  { return out_spk; }
 };
 
 #endif

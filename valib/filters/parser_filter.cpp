@@ -1,121 +1,7 @@
 #include <stdio.h>
 #include "parser_filter.h"
 
-/*
-This filter is data-dependent. Therefore it must follow format change rules
-carefully.
-
-Initial state when output format is not known is called transition state.
-Also we may switch to transition state when we loose syncrinization and after
-flushing.
-
-Filter must flush output on stream change. To correctly finish the stream
-format_change state is used.
-
-
-
-States list
-===========
-trans
-empty
-frame
-no_frame
-format_change
-
-
-
-States description
-==================
-
------
-trans
------
-In this state we do not know output format because we have no enough data to
-determine it. So either stream buffer did not catch a syncronization or it was
-an error during decoding. Filter is empty in this state and output format is 
-unknown.
-
-process() call tries to syncronize, load and decode a new frame.
-
-from state      to state        output format   action          transition description
---------------------------------------------------------------------------------------
-trans           trans                                           not enough data
-trans           trans                           reset()         not enough data and flushing
-trans           full            parser_spk                      frame loaded
-
------
-empty
------
-In this state stream buffer has only a part of a frame loaded. Filter is empty
-and output format equals to the old parser format.
-
-process() tries to load and decode a frame.                   
-
-from state      to state        output format   action          transition description
---------------------------------------------------------------------------------------
-empty           empty                                           not enough data
-empty           no_frame                                        not enough data and flushing (finish the stream)
-empty           full                                            frame loaded
-empty           format_change                                   frame loaded belongs to a new stream
-
-----
-full
-----
-Stream buffer has a frame loaded. Filter is full and just do data output. Note,
-that we cannot load the stream buffer again because this will corrupt data
-returned from this call.
-
-from state      to state        output format   chunk data      transition description
---------------------------------------------------------------------------------------
-full            no_frame                        chunk/frame     data output
-
---------
-no_frame
---------
-Try to load the stream buffer and do data output. Handle output format changes.
-
-from state      to state        output format   chunk data      transition description
---------------------------------------------------------------------------------------
-no_frame        trans           spk_unk         chunk/eos       not enough data and flushing
-no_frame        empty                           chunk/dummy     not enough data
-no_frame        no_frame                        chunk/frame     send a new frame loaded
-no_frame        full            parser_spk      chunk/eos       frame loaded belongs to a new stream  
-
--------------
-format_change
--------------
-Send flushing and handle output format change.
-
-from state      to state        output format   chunk data      transition description
---------------------------------------------------------------------------------------
-format_change   full            parser_spk      chunk/eos       inter-stream flushing
-
-
-
-Transitions list
-================
-
-from state      to state        output format   action          transition description
---------------------------------------------------------------------------------------
-trans           trans                                           not enough data
-trans           trans                           reset()         not enough data and flushing
-trans           full            parser_spk                      frame loaded
-empty           empty                                           not enough data
-empty           no_frame                                        not enough data and flushing (finish the stream)
-empty           full                                            frame loaded
-empty           format_change                                   frame loaded belongs to a new stream
-full            no_frmae                        chunk/frame     data output
-no_frame        trans           spk_unk         chunk/eos       not enough data and flushing
-no_frame        empty                           chunk/dummy     not enough data
-no_frame        no_frame                        chunk/frame     send a new frame loaded
-no_frame        full            parser_spk      chunk/eos       frame loaded belongs to a new stream  
-format_change   full            parser_spk      chunk/eos       inter-stream flushing
-
-*/
-
-
 ParserFilter::ParserFilter()
-:NullFilter(-1)
 {
   parser = 0;
   errors = 0;
@@ -126,7 +12,6 @@ ParserFilter::ParserFilter()
 }
 
 ParserFilter::ParserFilter(FrameParser *_parser)
-:NullFilter(-1)
 {
   parser = 0;
   errors = 0;
@@ -186,26 +71,18 @@ ParserFilter::get_info(char *buf, size_t size) const
 void
 ParserFilter::reset()
 {
-  NullFilter::reset();
-
   out_spk = spk_unknown;
   state = state_trans;
 
   if (parser)
     parser->reset();
   stream.reset();
-  sync_helper.reset();
+  sync.reset();
   new_stream = false;
 }
 
 bool
-ParserFilter::is_ofdd() const
-{
-  return true;
-}
-
-bool
-ParserFilter::query_input(Speakers spk) const
+ParserFilter::can_open(Speakers spk) const
 {
   if (!parser) 
     return false;
@@ -216,164 +93,106 @@ ParserFilter::query_input(Speakers spk) const
 }
 
 bool
-ParserFilter::process(const Chunk *_chunk)
+ParserFilter::process(Chunk2 &in, Chunk2 &out)
 {
-  assert(is_empty());
-
-  if (!parser)
-    return false;
-
-  // we must ignore dummy chunks
-  if (_chunk->is_dummy())
-    return true;
-
-  // receive the chunk
-  FILTER_SAFE(receive_chunk(_chunk));
-  sync_helper.receive_sync(_chunk, stream.get_buffer_size());
-  sync = false;
+  if (in.sync)
+  {
+    sync.receive_sync(in, stream.get_buffer_size());
+    in.sync = false;
+    in.time = 0;
+  }
 
   switch (state)
   {
-  case state_trans:
-    if (load_parse_frame())
-    {
-      out_spk = parser->get_spk();
-      state = state_full;
-      new_stream = false;
-    }
-    else if (flushing)
-    {
-      // if we did not start a stream we must drop data currently buffered
-      // (flushing state is also dropped so we do not pass eos event in this case)
+    ///////////////////////////////////////////////////////
+    // Transition state
+    // Initial state of the detector. No data was loaded
+    // and output format is not known (out_spk = spk_unknown).
+    // Load the stream buffer and switch to sync mode on
+    // successful synchronization
+   
+    case state_trans:
+      load_parse_frame(in);
 
-      // it is implied that reset() does following:
-      // * spk = spk_unknown;
-      // * state = state_trans;
-      // * flushing = false
-      reset();
-    }
-    return true;
-
-  case state_empty:
-    if (load_parse_frame())
-    {
       if (new_stream)
       {
-        state = state_format_change;
+        out_spk = parser->get_spk();
+        state = state_next_frame;
         new_stream = false;
+        send_frame(out);
       }
       else
-        state = state_full;
-    }
-    else if (flushing)
-    {
-      // if we have started a stream we must finish it correctly by sending
-      // end-of-stream chunk (flushing is sent on get_chunk() call).
-      state = state_no_frame;
-    }
-    return true;
+        out.set_empty();
+
+      return true;
+
+    ///////////////////////////////////////////////////////
+    // Format change
+
+    case state_format_change:
+      if (new_stream)
+      {
+        out_spk = parser->get_spk();
+        state = state_next_frame;
+        new_stream = false;
+        send_frame(out);
+      }
+      else if (!stream.is_in_sync())
+      {
+        out_spk = spk_unknown;
+        out.set_empty();
+        state = state_trans;
+      }
+      else
+        assert(false);
+
+      return true;
+
+    ///////////////////////////////////////////////////////
+    // Next frame
+    // We're in sync. Load and send a frame.
+    // Handle sync lost and new stream conditions.
+
+    case state_next_frame:
+      assert(stream.is_in_sync());
+      load_parse_frame(in);
+
+      if (new_stream || !stream.is_in_sync())
+      {
+        // new stream or sync lost
+        out.set_empty();
+        state = state_format_change;
+      }
+      else if (stream.is_frame_loaded())
+        send_frame(out);
+      else
+        out.set_empty();
+
+      return true;
   }
 
-  // never be here
   assert(false);
   return false;
 }
 
-Speakers
-ParserFilter::get_output() const
+bool
+ParserFilter::load_frame(Chunk2 &in)
 {
-  return out_spk;
+  size_t old_data_size = stream.get_buffer_size() + in.size;
+
+  uint8_t *end = in.rawdata + in.size;
+  bool result = stream.load_frame(&in.rawdata, end);
+  in.size = end - in.rawdata;
+
+  size_t new_data_size = stream.get_buffer_size() + in.size;
+  sync.drop(old_data_size - new_data_size);
+  return result;
 }
 
 bool
-ParserFilter::is_empty() const
+ParserFilter::load_parse_frame(Chunk2 &in)
 {
-  return state == state_empty || state == state_trans;
-}
-
-bool
-ParserFilter::get_chunk(Chunk *_chunk)
-{
-  assert(!is_empty());
-
-  if (!parser) 
-    return false;
-
-  switch (state)
-  {
-    case state_full:
-      send_frame(_chunk);
-      state = state_no_frame;
-      return true;
-
-    case state_no_frame:
-      // load next frame, parse and send it
-      // * send inter-stream flusing if new frame belongs to a new stream
-      // * send dummy chunk if we have no enough data to load a frame
-      // * send flushing and reset if we have no enough data to load a frame
-      //   and have received flushing from upstream before
-
-      if (load_parse_frame())
-      {
-        if (new_stream)
-        {
-          // send inter-stream flushing
-          send_eos(_chunk);
-          out_spk = parser->get_spk();
-          state = state_full;
-          new_stream = false;
-        }
-        else
-        {
-          // send the parsed frame
-          send_frame(_chunk);
-          state = state_no_frame;
-        }
-      }
-      else // if (load_parse_frame())
-      {
-        if (flushing)
-        {
-          // send end-of-stream flushing
-          send_eos(_chunk);
-
-          // it is implied that reset() does following:
-          // * spk = spk_unknown;
-          // * state = state_trans;
-          // * flushing = false;
-          reset();
-        }
-        else
-        {
-          // send dummy
-          _chunk->set_dummy();
-          state = state_empty;
-        }
-      }
-
-      return true;
-
-    case state_format_change:
-      // send inter-stream flushing
-      _chunk->set_empty(out_spk);
-      _chunk->set_eos();
-
-      out_spk = parser->get_spk();
-      state = state_full;
-      return true;
-
-    default:
-      return false;
-  }
-}
-
-bool
-ParserFilter::load_parse_frame()
-{
-  uint8_t *end = rawdata + size;
-  size_t old_data_size = size + stream.get_buffer_size();
-
-  while (stream.load_frame(&rawdata, end))
+  while (load_frame(in))
   {
     new_stream |= stream.is_new_stream();
     Speakers old_parser_spk = parser->get_spk();
@@ -381,36 +200,20 @@ ParserFilter::load_parse_frame()
     {
       if (old_parser_spk != parser->get_spk())
         new_stream = true;
-      size = end - rawdata; 
-      sync_helper.drop(old_data_size - size - stream.get_buffer_size());
       return true;
     }
     else
       errors++;
   }
-
-  sync_helper.drop(old_data_size - stream.get_buffer_size());
-  size = 0;
   return false;
 }
 
 void
-ParserFilter::send_frame(Chunk *_chunk)
+ParserFilter::send_frame(Chunk2 &out)
 {
   if (out_spk.is_linear())
-    _chunk->set_linear(out_spk, parser->get_samples(), parser->get_nsamples());
+    out.set_linear(parser->get_samples(), parser->get_nsamples());
   else
-    _chunk->set_rawdata(out_spk, parser->get_rawdata(), parser->get_rawsize());
-
-  sync_helper.send_frame_sync(_chunk);
-}
-
-void
-ParserFilter::send_eos(Chunk *_chunk)
-{
-  _chunk->set_empty(out_spk);
-  _chunk->set_eos(true);
-
-  // reset syncronization after the end of the stream
-  sync_helper.reset(); 
+    out.set_rawdata(parser->get_rawdata(), parser->get_rawsize());
+  sync.send_frame_sync(out);
 }

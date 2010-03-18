@@ -177,7 +177,7 @@ public:
 
       // Process the chunk
 
-      if (!parser.process(&chunk))
+      if (!parser->process(&chunk))
       {
         log->err("Processing error");
         return;
@@ -185,9 +185,9 @@ public:
 
       // Verify output
 
-      while (!parser.is_empty())
+      while (!parser->is_empty())
       {
-        parser.get_chunk(&chunk);
+        parser->get_chunk(&chunk);
 
         if (chunk.is_dummy())
           continue;
