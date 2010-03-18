@@ -59,7 +59,7 @@ public:
   Spdifer_test(Log *_log)
   {
     log = _log;
-    t.link(&spdifer, log);
+    t.link(spdifer, log);
   }
 
   int test()

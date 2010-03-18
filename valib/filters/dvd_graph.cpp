@@ -502,7 +502,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       return detector;
 
     case state_despdif:
-      return &despdifer;
+      return despdifer;
 
     case state_spdif_pt:    
       // reset AudioProcessor to indicate no processing 
@@ -510,7 +510,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       proc.reset();
 
       spdif_status = SPDIF_MODE_PASSTHROUGH;
-      return &spdifer_pt;
+      return spdifer_pt;
 
     case state_decode:
       return &dec;
@@ -547,7 +547,7 @@ DVDGraph::init_filter(int node, Speakers spk)
         return 0;
 
     case state_spdif_enc:
-      return &spdifer_enc;
+      return spdifer_enc;
 
     case state_spdif2pcm:
       return &spdif2pcm;
@@ -587,7 +587,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (use_detector && spk.format == FORMAT_PCM16 && spk.mask == MODE_STEREO)
         return state_detector;
 
-      if (despdifer.query_input(spk))
+      if (despdifer.can_open(spk))
         return state_despdif;
 
       spdif_err = check_spdif_passthrough(spk);
@@ -616,7 +616,7 @@ DVDGraph::get_next(int node, Speakers spk) const
     // state_detector -> state_proc_enc
 
     case state_detector:
-      if (despdifer.query_input(spk))
+      if (despdifer.can_open(spk))
         return state_despdif;
 
       spdif_err = check_spdif_passthrough(spk);

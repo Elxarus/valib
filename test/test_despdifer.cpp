@@ -44,7 +44,7 @@ public:
   Despdifer_test(Log *_log)
   {
     log = _log;
-    t.link(&despdifer, log);
+    t.link(despdifer, log);
   }
 
   int test()
