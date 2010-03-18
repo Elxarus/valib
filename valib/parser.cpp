@@ -493,11 +493,14 @@ bool
 StreamBuffer::flush()
 {
   DROP(debris_size + frame_size);
-  debris_size = 0;
-  frame_size = 0;
 
   in_sync = false;
   new_stream = false;
+  pre_frame = max_frame_size;
+
+  frame = 0;
+  frame_size = 0;
+  frame_interval = 0;
 
   debris = sync_buf;
   debris_size = sync_data;
