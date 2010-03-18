@@ -1,31 +1,32 @@
 #include "filter2.h"
 
-Filter *Filter2::as_filter()
-{ return thunk; }
-
-Filter2::operator Filter *()
-{ return thunk; }
-
-Filter *Filter2::operator ->()
-{ return thunk; }
-
-Filter2::operator const Filter *() const
-{ return thunk; }
-
-const Filter *Filter2::operator ->() const
-{ return thunk; }
-
-Filter2::Filter2()
+class FilterThunk : public Filter
 {
-  thunk = new FilterThunk(this);
-}
+protected:
+  Filter2 *f;
+  Chunk2 in_chunk;
+  Chunk  out_chunk;
 
-Filter2::~Filter2()
-{
-  safe_delete(thunk);
-}
+  Speakers spk;
+  bool flushing;
+  bool send_eos;
+  bool make_output();
 
-///////////////////////////////////////////////////////////////////////////////
+public:
+  FilterThunk(Filter2 *f);
+
+  virtual void reset();
+  virtual bool is_ofdd() const;
+
+  virtual bool query_input(Speakers spk) const;
+  virtual bool set_input(Speakers spk);
+  virtual Speakers get_input() const;
+  virtual bool process(const Chunk *chunk);
+
+  virtual Speakers get_output() const;
+  virtual bool is_empty() const;
+  virtual bool get_chunk(Chunk *chunk);
+};
 
 FilterThunk::FilterThunk(Filter2 *f_):
 f(f_), flushing(false), send_eos(false)
@@ -208,3 +209,27 @@ FilterThunk::get_chunk(Chunk *chunk)
   out_chunk.set_dummy();
   return true;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+Filter2::Filter2()
+{
+  thunk = new FilterThunk(this);
+}
+
+Filter2::~Filter2()
+{
+  safe_delete(thunk);
+}
+
+Filter2::operator Filter *()
+{ return thunk; }
+
+Filter *Filter2::operator ->()
+{ return thunk; }
+
+Filter2::operator const Filter *() const
+{ return thunk; }
+
+const Filter *Filter2::operator ->() const
+{ return thunk; }

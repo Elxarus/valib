@@ -1,6 +1,6 @@
 /*
   Filter2
-  Filter interface
+  Base interface for all filters
 
   bool can_open(Speakers spk) const
     Check format support. Returns true when filter supports the format given.
@@ -221,19 +221,25 @@ public:
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// Filter2
+// Base interface for all filters
+
 class Filter2
 {
 protected:
   // Prohibit assignment
   Filter2(const Filter2 &);
   Filter2 &operator =(const Filter2 &);
-  FilterThunk *thunk;
+  Filter *thunk;
 
 public:
   Filter2();
   virtual ~Filter2();
 
-  Filter *as_filter();
+  /////////////////////////////////////////////////////////
+  // Old filter interface compatibility
+
   Filter *operator->();
   const Filter *operator->() const;
   operator Filter *();
@@ -259,11 +265,18 @@ public:
   virtual bool flush(Chunk2 &out) = 0;
   virtual void reset() = 0;
 
-  // These flags may change after process() call
+  // These flags may change during processing
   virtual bool eos() const = 0;
   virtual bool need_flushing() const = 0;
   virtual Speakers get_output() const = 0;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// SimpleFilter
+// Default implementation for the most of the Filter2 interface.
+//
+// Only 2 funtions left unimplemented: can_open() and is_inplace() becaluse
+// both stongly depends on the filter.
 
 
 class SimpleFilter : public Filter2
@@ -334,6 +347,12 @@ public:
   { return spk; }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// SamplesFilter
+// Most of the linear format filters accept any reasonable linear format.
+// These class implements can_open() function to accept any fully-specified
+// linear format.
+
 class SamplesFilter : public SimpleFilter
 {
 public:
@@ -344,34 +363,6 @@ public:
   {
     return spk.is_linear() && spk.mask != 0 && spk.sample_rate != 0;
   }
-};
-
-class FilterThunk : public Filter
-{
-protected:
-  Filter2 *f;
-  Chunk2 in_chunk;
-  Chunk  out_chunk;
-
-  Speakers spk;
-  bool flushing;
-  bool send_eos;
-  bool make_output();
-
-public:
-  FilterThunk(Filter2 *f_);
-
-  virtual void reset();
-  virtual bool is_ofdd() const;
-
-  virtual bool query_input(Speakers spk) const;
-  virtual bool set_input(Speakers spk);
-  virtual Speakers get_input() const;
-  virtual bool process(const Chunk *chunk);
-
-  virtual Speakers get_output() const;
-  virtual bool is_empty() const;
-  virtual bool get_chunk(Chunk *chunk);
 };
 
 #endif
