@@ -135,7 +135,7 @@ DecoderGraph::init_filter(int node, Speakers spk)
       return despdifer;
 
     case state_decode:
-      return &dec;
+      return dec;
 
     case state_proc:
     {
@@ -163,7 +163,7 @@ DecoderGraph::get_next(int node, Speakers spk) const
       if (despdifer.can_open(spk))
         return state_despdif;
 
-      if (dec.query_input(spk))
+      if (dec->query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
@@ -175,7 +175,7 @@ DecoderGraph::get_next(int node, Speakers spk) const
     // state_despdif -> state_decode
 
     case state_despdif:
-      if (dec.query_input(spk))
+      if (dec->query_input(spk))
         return state_decode;
 
       return node_err;

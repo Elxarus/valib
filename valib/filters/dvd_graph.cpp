@@ -513,7 +513,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       return spdifer_pt;
 
     case state_decode:
-      return &dec;
+      return dec;
 
     case state_proc:
     {
@@ -594,7 +594,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
-      if (dec.query_input(spk))
+      if (dec->query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
@@ -623,7 +623,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
-      if (dec.query_input(spk))
+      if (dec->query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
@@ -646,7 +646,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
-      if (dec.query_input(spk))
+      if (dec->query_input(spk))
         return state_decode;
 
       return node_err;
@@ -662,7 +662,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
-      if (dec.query_input(spk))
+      if (dec->query_input(spk))
         return state_decode;
 
       if (proc.query_input(spk))
