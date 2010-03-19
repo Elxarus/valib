@@ -13,25 +13,15 @@
 class ParserFilter : public SimpleFilter
 {
 protected:
-  enum state_t 
-  {
-    state_trans,
-    state_format_change,
-    state_next_frame
-  };
-
   FrameParser *parser;       // parser to use
   StreamBuffer stream;       // stream buffer
   SyncHelper   sync;         // syncronization helper
 
   Speakers out_spk;          // output format
-  state_t  state;            // filter state
-  bool     new_stream;       // new stream found
+  bool     is_new_stream;    // new stream found
   int      errors;           // number of parsing errors
 
   bool load_frame(Chunk2 &in);
-  bool load_parse_frame(Chunk2 &in);
-  void send_frame(Chunk2 &out);
 
 public:
   ParserFilter();
@@ -58,8 +48,8 @@ public:
 
   virtual bool process(Chunk2 &in, Chunk2 &out);
 
-  virtual bool eos() const
-  { return state == state_format_change; }
+  virtual bool new_stream() const
+  { return is_new_stream; }
 
   virtual bool is_ofdd() const
   { return true; }

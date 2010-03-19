@@ -26,6 +26,7 @@ protected:
   Speakers out_spk;     // current output format
   int      stream;      // current stream
   int      substream;   // current substream
+  bool is_new_stream;   // stream change flag
 
 public:
   Demux();
@@ -49,11 +50,8 @@ public:
   virtual bool is_ofdd() const
   { return true; }
 
-  virtual bool eos() const
-  {
-    return (stream && stream != ps.stream) ||
-           (stream && substream && substream != ps.substream);
-  }
+  virtual bool new_stream() const
+  { return is_new_stream; }
 };
 
 #endif

@@ -19,10 +19,13 @@ Demux::process(Chunk2 &in, Chunk2 &out)
   in.sync = false;
   in.time = 0;
 
+  is_new_stream = false;
   // update stream info after stream change
   if ((stream && stream != ps.stream) ||
       (stream && substream && substream != ps.substream))
   {
+    if (!out_spk.is_unknown())
+      is_new_stream = true;
     stream     = ps.stream;
     substream  = ps.substream;
     out_spk    = spk_unknown;
@@ -84,6 +87,7 @@ Demux::reset()
   stream    = 0;
   substream = 0;
   out_spk   = spk_unknown;
+  is_new_stream = false;
 
   ps.reset();
 }

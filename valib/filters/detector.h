@@ -21,12 +21,7 @@ protected:
   MultiHeader spdif_dts_header;
   MultiHeader uni_header;
 
-  enum state_t 
-  {
-    state_trans, state_passthrough,
-    state_format_change, state_sync_lost,
-    state_next_frame, state_frame
-  };
+  enum state_t { state_load, state_frame };
 
   StreamBuffer stream;    // stream buffer
   SyncHelper   sync;      // synchronization helper
@@ -34,6 +29,7 @@ protected:
   Speakers out_spk;  // output format
   state_t  state;    // filter state
   bool     do_flush; // need flushing
+  bool     is_new_stream;
 
   const HeaderParser *find_parser(Speakers spk) const;
   void load(Chunk2 &in);
@@ -59,8 +55,8 @@ public:
   virtual bool process(Chunk2 &in, Chunk2 &out);
   virtual bool flush(Chunk2 &out);
 
-  virtual bool eos() const
-  { return state == state_format_change || state == state_sync_lost; }
+  virtual bool new_stream() const
+  { return is_new_stream; }
 
   virtual bool is_ofdd() const
   { return true; }
