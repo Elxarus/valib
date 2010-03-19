@@ -67,7 +67,7 @@ public:
   virtual bool flush(Chunk2 &out)           { return conv.flush(out);           }
   virtual void reset()                      { conv.reset();                     }
 
-  virtual bool eos() const                  { return conv.eos();           }
+  virtual bool new_stream() const           { return conv.new_stream();    }
   virtual bool need_flushing() const        { return conv.need_flushing(); }
   virtual Speakers get_output() const       { return conv.get_output();    }
 };

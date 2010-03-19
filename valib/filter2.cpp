@@ -8,8 +8,10 @@ protected:
   Chunk  out_chunk;
 
   Speakers spk;
+  Speakers out_spk;
+
   bool flushing;
-  bool send_eos;
+  bool new_stream;
   bool make_output();
 
 public:
@@ -29,17 +31,18 @@ public:
 };
 
 FilterThunk::FilterThunk(Filter2 *f_):
-f(f_), flushing(false), send_eos(false)
+f(f_), flushing(false), new_stream(false)
 {}
 
 void
 FilterThunk::reset()
 {
   f->reset();
+  out_spk = f->get_output();
   in_chunk.set_empty();
   out_chunk.set_dummy();
   flushing = false;
-  send_eos = false;
+  new_stream = false;
 }
 
 bool
@@ -61,11 +64,13 @@ FilterThunk::set_input(Speakers new_spk)
   if (!f->open(new_spk))
   {
     spk = spk_unknown;
+    out_spk = spk_unknown;
     return false;
   }
 
-  spk = new_spk;
   f->reset();
+  spk = new_spk;
+  out_spk = f->get_output();
   return true;
 }
 
@@ -95,29 +100,27 @@ FilterThunk::process(const Chunk *chunk)
   if (spk != chunk->spk)
   {
     flushing = false;
+    new_stream = false;
     if (!f->open(chunk->spk))
     {
       reset();
       spk = spk_unknown;
+      out_spk = spk_unknown;
       return false;
     }
-    spk = chunk->spk;
     f->reset();
+    spk = chunk->spk;
+    out_spk = f->get_output();
   }
 
   // flushing
   if (chunk->eos)
     flushing = true;
 
-  Speakers ref_spk = f->get_output();
-
   out_chunk.set_dummy();
   while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
     if (!make_output())
       return false;
-
-  if (!ref_spk.is_unknown() && ref_spk != f->get_output())
-    return true;
 
   return true;
 }
@@ -125,13 +128,13 @@ FilterThunk::process(const Chunk *chunk)
 Speakers
 FilterThunk::get_output() const
 {
-  return f->get_output();
+  return out_spk;
 }
 
 bool
 FilterThunk::is_empty() const
 {
-  return !flushing && !send_eos && in_chunk.is_empty() && out_chunk.is_dummy();
+  return !flushing && !new_stream && in_chunk.is_empty() && out_chunk.is_dummy();
 }
 
 bool
@@ -145,10 +148,13 @@ FilterThunk::make_output()
     if (!f->process(in_chunk, out_chunk2))
       return false;
 
-    out_chunk.set(get_output(),
+    out_chunk.set(f->get_output(),
       out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
       out_chunk2.sync, out_chunk2.time);
-    send_eos = f->eos();
+
+    new_stream = f->new_stream();
+    if (!new_stream)
+      out_spk = f->get_output();
     return true;
   }
 
@@ -158,17 +164,19 @@ FilterThunk::make_output()
     if (f->need_flushing())
     {
       f->flush(out_chunk2);
-      out_chunk.set(get_output(),
+      out_chunk.set(f->get_output(),
         out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
         out_chunk2.sync, out_chunk2.time);
-      send_eos = f->eos();
+      new_stream = f->new_stream();
+      if (!new_stream)
+        out_spk = f->get_output();
     }
     else
     {
-      out_chunk.set_empty(get_output());
+      out_chunk.set_empty(out_spk);
       out_chunk.set_eos(true);
       flushing = false;
-      send_eos = false;
+      new_stream = false;
     }
     return true;
   }
@@ -181,6 +189,15 @@ FilterThunk::make_output()
 bool
 FilterThunk::get_chunk(Chunk *chunk)
 {
+  if (new_stream)
+  {
+    chunk->set_empty(out_spk);
+    chunk->set_eos(true);
+    out_spk = f->get_output();
+    new_stream = false;
+    return true;
+  }
+
   if (!out_chunk.is_dummy())
   {
     *chunk = out_chunk;
@@ -188,22 +205,18 @@ FilterThunk::get_chunk(Chunk *chunk)
     return true;
   }
 
-  if (send_eos)
-  {
-    chunk->set_empty(f->get_output());
-    chunk->set_eos(true);
-    send_eos = false;
-
-    while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
-      if (!make_output())
-        return false;
-
-    return true;
-  }
-
   while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
     if (!make_output())
       return false;
+
+  if (new_stream)
+  {
+    chunk->set_empty(out_spk);
+    chunk->set_eos(true);
+    out_spk = f->get_output();
+    new_stream = false;
+    return true;
+  }
 
   *chunk = out_chunk;
   out_chunk.set_dummy();

@@ -2,6 +2,77 @@
   Filter2
   Base interface for all filters
 
+  /////////////////////////////////////////////////////////
+  // Filter usage
+  /////////////////////////////////////////////////////////
+
+  /////////////////////////////////////////////////////////
+  // Simple case: no format changes
+
+  Filter *filter;
+  Chunk2 in, out;
+  ...
+
+  if (!filter->open(format))
+    error_and_exit();
+   
+  while (has_more_data())
+  {
+    in = get_more_data();
+    while (!in.is_dummy())
+    {
+      if (!filter->process(in, out))
+        error_and_exit();
+      do_something(out);
+    }
+  }
+
+  while (filter->need_flushing())
+  {
+    if (!filter->flush(out))
+      error_and_exit();
+    do_something(out);
+  }
+
+  /////////////////////////////////////////////////////////
+  // Format change during processing
+
+  Filter *filter;
+  ...
+  while (has_more_data())
+  {
+    Chunk2 in = get_more_data();
+    Chunk2 out;
+
+    if (new_stream())
+    {
+      while (filter->need_flushing())
+      {
+        if (!filter->flush(out))
+          error_and_exit();
+        do_something(out);
+      }
+      if (!filter->open(new_format()))
+        error_and_exit();
+    }
+
+    while (!in.is_dummy())
+    {
+      if (!filter->process(in, out))
+        error_and_exit();
+      do_something(out);
+    }
+  }
+
+  while (filter->need_flushing())
+  {
+    if (!filter->flush(out))
+      error_and_exit();
+    do_something(out);
+  }
+
+  /////////////////////////////////////////////////////////
+
   bool can_open(Speakers spk) const
     Check format support. Returns true when filter supports the format given.
     Note that filter may refuse to open the stream even when the stream format
@@ -29,12 +100,6 @@
     Returns true when filter modifies data inplace at input buffers. Output
     buffers in this case point inside input buffers.
 
-  bool stream_convert() const
-    Returns true when filter changes the stream format.
-
-  const Stream *input_stream()
-    Returns input stream pointer. Returns pointer passed to open() call.
-
   /////////////////////////////////////////////////////////
   // Processing
 
@@ -56,15 +121,16 @@
     Reset the filter state, zero all internal buffers and prepare to a new
     stream. Do not deallocate resources, because we're awaiting new data.
 
-  bool eos() const
-    End of stream. When filter needs all downstream filters to flush and
-    prepare to a new stream. Filter must set eos flag before changing output
-    stream.
+  bool new_stream() const
+    Filter returns new stream. It may do this for the following reasons:
+    * It want the downstream to flush and prepare to receive a new stream
+    * It wants to change output format
+    Output format returned be get_output() may change when this flag is set.
 
   bool need_flushing()
     Returns true when filter has buffered data and needs flushing.
 
-  const Stream *output_stream()
+  const Stream *get_output()
     Returns output stream. It may return null when output stream is still
     unknown.
 */
@@ -266,7 +332,7 @@ public:
   virtual void reset() = 0;
 
   // These flags may change during processing
-  virtual bool eos() const = 0;
+  virtual bool new_stream() const = 0;
   virtual bool need_flushing() const = 0;
   virtual Speakers get_output() const = 0;
 };
@@ -337,7 +403,7 @@ public:
   virtual void reset()
   {}
 
-  virtual bool eos() const
+  virtual bool new_stream() const
   { return false; }
 
   virtual bool need_flushing() const

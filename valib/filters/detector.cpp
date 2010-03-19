@@ -24,7 +24,7 @@ static const HeaderParser *uni_parsers[] =
 Detector::Detector()
 {
   out_spk = spk_unknown;
-  state = state_trans;
+  state = state_load;
   do_flush = false;
 
   spdif_dts_header.set_parsers(spdif_dts_parsers, array_size(spdif_dts_parsers));
@@ -76,8 +76,9 @@ void
 Detector::reset()
 {
   out_spk = spk_unknown;
-  state = state_trans;
+  state = state_load;
   do_flush = false;
+  is_new_stream = false;
 
   stream.reset();
   sync.reset();
@@ -93,26 +94,19 @@ Detector::process(Chunk2 &in, Chunk2 &out)
     in.time = 0;
   }
 
-  if (!in.size)
-    return true;
-
   do_flush = true;
-  switch (state)
+  is_new_stream = false;
+  while (1) switch (state)
   {
-    ///////////////////////////////////////////////////////
-    // Transition state
-    // Initial state of the detector. No data was loaded
-    // and output format is not known (out_spk = spk_unknown).
-    // Load the stream buffer and switch to either:
-    // * sync mode on successful synchronization
-    // * passthrough mode if we cannot sync
-   
-    case state_trans:
+    case state_load:
       load(in);
 
-      if (stream.is_new_stream())
+      if (stream.is_in_sync())
       {
+        if (!out_spk.is_unknown() && stream.is_new_stream())
+          is_new_stream = true;
         out_spk = stream.get_spk();
+
         if (stream.is_debris_exists())
         {
           out.set_rawdata(stream.get_debris(), stream.get_debris_size());
@@ -122,130 +116,27 @@ Detector::process(Chunk2 &in, Chunk2 &out)
         {
           out.set_rawdata(stream.get_frame(), stream.get_frame_size());
           sync.send_frame_sync(out);
-          state = state_next_frame;
         }
       }
       else if (stream.is_debris_exists())
       {
+        if (!out_spk.is_unknown() && out_spk != spk)
+          is_new_stream = true;
         out_spk = spk;
+
         out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-        sync.send_frame_sync(out);
-        state = state_passthrough;
-      }
-      else
-        out.set_empty();
-
-      return true;
-
-    ///////////////////////////////////////////////////////
-    // Passthrough state
-    // No synchronization found. Output format equals to
-    // input format. Load data into the stream buffer and:
-    // * passthrough if it is no sync
-    // * format change mode on successful synchronization
-
-    case state_passthrough:
-      assert(!stream.is_in_sync());
-      load(in);
-
-      if (stream.is_new_stream())
-      {
-        out.set_empty();
-        state = state_format_change;
-      }
-      else
-      {
-        out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-        sync.send_frame_sync(out);
-      }
-      return true;
-
-    ///////////////////////////////////////////////////////
-    // Format change
-
-    case state_format_change:
-      assert(stream.is_new_stream());
-
-      out_spk = stream.get_spk();
-      if (stream.is_debris_exists())
-      {
-        out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-        state = state_frame;
-      }
-      else
-      {
-        out.set_rawdata(stream.get_frame(), stream.get_frame_size());
-        sync.send_frame_sync(out);
-        state = state_next_frame;
-      }
-      return true;
-
-    ///////////////////////////////////////////////////////
-    // Sync lost
-
-    case state_sync_lost:
-      assert(!stream.is_in_sync());
-
-      if (stream.is_debris_exists())
-      {
-        out_spk = spk;
-        out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-        sync.send_frame_sync(out);
-        state = state_passthrough;
-      }
-      else
-      {
-        out_spk = spk_unknown;
-        out.set_empty();
-        state = state_trans;
-      }
-      return true;
-
-    ///////////////////////////////////////////////////////
-    // Next frame
-    // We're in sync. Load a next frame and send either
-    // debris or frame. Handle sync lost and new stream
-    // conditions.
-
-    case state_next_frame:
-      assert(stream.is_in_sync());
-      load(in);
-
-      if (!stream.is_in_sync())
-      {
-        out.set_empty();
-        state = state_sync_lost;
-      }
-      else if (stream.is_new_stream())
-      {
-        out.set_empty();
-        state = state_format_change;
-      }
-      else if (stream.is_debris_exists())
-      {
-        out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-        if (stream.is_frame_loaded())
-          state = state_frame;
-      }
-      else if (stream.is_frame_loaded())
-      {
-        out.set_rawdata(stream.get_frame(), stream.get_frame_size());
         sync.send_frame_sync(out);
       }
       else
         out.set_empty();
 
       return true;
-
-    ///////////////////////////////////////////////////////
-    // Frame output
-    // Frame was loaded but we didn't send it. Send it and
-    // switch to next frmae state.
 
     case state_frame:
       assert(stream.is_frame_loaded());
       out.set_rawdata(stream.get_frame(), stream.get_frame_size());
-      state = state_next_frame;
+      sync.send_frame_sync(out);
+      state = state_load;
       return true;
   }
 
@@ -258,23 +149,19 @@ Detector::flush(Chunk2 &out)
 {
   switch (state)
   {
-    case state_trans:
-    case state_passthrough:
-    case state_next_frame:
+    case state_load:
       stream.flush();
       if (stream.is_debris_exists())
         out.set_rawdata(stream.get_debris(), stream.get_debris_size());
       else
         out.set_empty();
 
-      state = state_sync_lost;
       do_flush = false;
+      is_new_stream = false;
       return true;
 
-    case state_format_change:
-    case state_sync_lost:
     case state_frame:
-      // We have data in the stream buffer
+      // We have data in the buffer
       // Do dummy processing
       Chunk2 dummy;
       return process(dummy, out);

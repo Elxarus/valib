@@ -56,7 +56,7 @@ public:
   virtual bool flush(Chunk2 &out)           { return parser.flush(out);           }
   virtual void reset()                      { parser.reset();                     }
 
-  virtual bool eos() const                  { return parser.eos();           }
+  virtual bool new_stream() const           { return parser.new_stream();    }
   virtual bool need_flushing() const        { return parser.need_flushing(); }
   virtual Speakers get_output() const       { return parser.get_output();    }
 };
