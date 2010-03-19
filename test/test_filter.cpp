@@ -443,17 +443,17 @@ We need 2 data sources to verify correctness of switching between streams.
   /////////////////////////////////////////////////////////
   // Main tests
 
-  log->msg("Small buffer (%i)", small_data_size);
-  test_rules_filter_int(log, filter, 
-    spk_supported, filename, 
-    spk_supported2, filename2, 
-    spk_unsupported, small_data_size);
-
   log->msg("Large buffer (%i)", large_data_size);
   test_rules_filter_int(log, filter, 
     spk_supported, filename, 
     spk_supported2, filename2, 
     spk_unsupported, large_data_size);
+
+  log->msg("Small buffer (%i)", small_data_size);
+  test_rules_filter_int(log, filter, 
+    spk_supported, filename, 
+    spk_supported2, filename2, 
+    spk_unsupported, small_data_size);
 
   return log->close_group();
 }
@@ -1020,6 +1020,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
     chunk.set_eos();
 
     f.reset_streams();
+    INIT_EMPTY(spk_supported);
     PROCESS_OK(chunk,               "process(%s %s %i) failed");
     EMPTY_FILTER;
 
