@@ -80,7 +80,7 @@ AGC::fill_buffer(Chunk2 &chunk)
   }
 
   size_t n = MIN(chunk.size, nsamples - sample[block]);
-  copy_samples(buf[block].samples() + sample[block], chunk.samples, spk.nch(), n);
+  copy_samples(buf[block], sample[block], chunk.samples, 0, spk.nch(), n);
 
   sample[block] += n;
   chunk.drop_samples(n);
@@ -313,13 +313,13 @@ AGC::process(Chunk2 &in, Chunk2 &out)
 bool 
 AGC::flush(Chunk2 &out)
 {
-  zero_samples(buf[block].samples() + sample[block], spk.nch(), nsamples - sample[block]);
+  zero_samples(buf[block], sample[block], spk.nch(), nsamples - sample[block]);
   process();
 
   // do not send empty first block
   if (!sample[block])
   {
-    zero_samples(buf[block].samples() + sample[block], spk.nch(), nsamples - sample[block]);
+    zero_samples(buf[block], sample[block], spk.nch(), nsamples - sample[block]);
     process();
   }
 
