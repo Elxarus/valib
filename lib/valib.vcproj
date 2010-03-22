@@ -601,6 +601,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\filter_graph2.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\filter_graph2.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\gain.cpp"
 				>
 			</File>
@@ -630,6 +638,10 @@
 			</File>
 			<File
 				RelativePath="..\valib\filters\parser_filter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\passthrough.h"
 				>
 			</File>
 			<File
