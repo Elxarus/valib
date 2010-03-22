@@ -21,6 +21,8 @@ EXTERN_TEST(convolver);
 EXTERN_TEST(convolver_mch);
 EXTERN_SUITE(resample);
 EXTERN_SUITE(proc);
+EXTERN_TEST(filter_graph2);
+
 EXTERN_TEST(old_style);
 
 // Heavy tests
@@ -45,6 +47,7 @@ FLAT_SUITE(tests, "Common tests")
    TEST_FACTORY(convolver_mch),
   SUITE_FACTORY(resample),
   SUITE_FACTORY(proc),
+   TEST_FACTORY(filter_graph2),
 
    TEST_FACTORY(old_style),
 SUITE_END;

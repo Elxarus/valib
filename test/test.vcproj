@@ -409,6 +409,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\tests\filters\test_filter_graph2.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\filters\test_proc.cpp"
 					>
 				</File>
