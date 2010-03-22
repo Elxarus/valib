@@ -62,8 +62,9 @@ int compare(Log *log, Source *src, Source *ref)
     {
       // compare linear
       for (ch = 0; ch < spk.nch(); ch++)
-        if (memcmp(src_chunk.samples[ch], ref_chunk.samples[ch], len * sizeof(sample_t)))
-          return log->err("Data differs");
+        for (size_t i = 0; i < len; i++)
+          if (src_chunk.samples[ch][i] != ref_chunk.samples[ch][i])
+            return log->err("Data differs at channel %i, pos %i (0x%x), chunk pos %i (0x%x)", ch, pos + i, pos + i, i, i);
     }
     else
     {
