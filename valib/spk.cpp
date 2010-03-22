@@ -208,6 +208,17 @@ void zero_samples(samples_t s, int nch, size_t size)
   for (int ch = 0; ch < nch; ch++)
     memset(s[ch], 0, size * sizeof(sample_t));
 }
+
+void zero_samples(sample_t *s, size_t offset, size_t size)
+{
+  memset(s + offset, 0, size * sizeof(sample_t));
+}
+void zero_samples(samples_t s, size_t offset, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    memset(s[ch] + offset, 0, size * sizeof(sample_t));
+}
+
 void copy_samples(sample_t *dst, sample_t *src, size_t size)
 {
   memcpy(dst, src, size * sizeof(sample_t));
@@ -217,6 +228,17 @@ void copy_samples(samples_t dst, samples_t src, int nch, size_t size)
   for (int ch = 0; ch < nch; ch++)
     copy_samples(dst[ch], src[ch], size);
 }
+
+void copy_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size)
+{
+  memcpy(dst + dst_offset, src + src_offset, size * sizeof(sample_t));
+}
+void copy_samples(samples_t dst, size_t dst_offset, samples_t src, size_t src_offset, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    copy_samples(dst[ch] + dst_offset, src[ch] + src_offset, size);
+}
+
 void move_samples(sample_t *dst, sample_t *src, size_t size)
 {
   memmove(dst, src, size * sizeof(sample_t));
@@ -225,4 +247,14 @@ void move_samples(samples_t dst, samples_t src, int nch, size_t size)
 {
   for (int ch = 0; ch < nch; ch++)
     move_samples(dst[ch], src[ch], size);
+}
+
+void move_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size)
+{
+  memmove(dst + dst_offset, src + src_offset, size * sizeof(sample_t));
+}
+void move_samples(samples_t dst, size_t dst_offset, samples_t src, size_t src_offset, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+    move_samples(dst[ch] + dst_offset, src[ch] + src_offset, size);
 }
