@@ -47,15 +47,98 @@ FilterGraph2::uninit()
 bool
 FilterGraph2::process(Chunk2 &in, Chunk2 &out)
 {
-  out = in;
-  in.set_empty();
-  return !out.is_dummy();
+  Node *node = end.prev;
+  while (node->id != node_end)
+  {
+    if (node->id == node_start)
+    {
+      if (in.is_dummy())
+        return false;
+
+      node = node->next;
+      node->input = in;
+      node->has_data = true;
+      in.set_empty();
+      continue;
+    }
+
+    if (!node->has_data)
+    {
+      node = node->prev;
+      continue;
+    }
+
+    node->has_data = node->filter->process(node->input, node->next->input);
+    if (node->has_data)
+    {
+      node = node->next;
+      node->has_data = true;
+    }
+    else
+      node = node->prev;
+  }
+
+  if (!end.has_data)
+    return false;
+
+  out = end.input;
+  end.input.set_empty();
+  end.has_data = false;
+  return true;
 }
 
 bool
 FilterGraph2::flush(Chunk2 &out)
 {
-  return false;
+  Node *node = end.prev;
+  while (node->id != node_end)
+  {
+    if (node->id == node_start)
+    {
+      node = node->next;
+      node->flushing = true;
+      continue;
+    }
+
+    if (node->flushing)
+    {
+      bool still_flushing = node->filter->flush(node->next->input);
+      if (still_flushing)
+      {
+        node = node->next;
+        node->has_data = true;
+      }
+      else
+      {
+        node = node->next;
+        node->flushing = true;
+      }
+      continue;
+    }
+
+    if (!node->has_data)
+    {
+      node = node->prev;
+      continue;
+    }
+
+    node->has_data = node->filter->process(node->input, node->next->input);
+    if (node->has_data)
+    {
+      node = node->next;
+      node->has_data = true;
+    }
+    else
+      node = node->prev;
+  }
+
+  if (!end.has_data)
+    return false;
+
+  out = end.input;
+  end.input.set_empty();
+  end.has_data = false;
+  return true;
 }
 
 void
@@ -65,7 +148,8 @@ FilterGraph2::reset()
   while (node->id != node_end)
   {
     node->filter->reset();
-    node->output.set_empty();
+    node->has_data = false;
+    node->flushing = false;
     node = node->next;
   }
 }
@@ -121,40 +205,29 @@ FilterGraph2::extend(Node *node)
   if (next_node_id == node_err)
     return false;
 
-  // end of the filter chain
-  // truncate the chain
-
-  if (next_node_id == node_end)
-  {
-    if (node->next->id != node_end)
-      truncate(node);
-
-    end.state = ns_ok;
-    end.output.set_empty();
-    return end.filter->open(next_spk);
-  }
-
-  // no need to build a new node
-  // just reopen the next node
-
   if (next_node_id == node->next->id)
   {
+    // end of the chain or next node does not change
+    // no need to build a new node, just reopen the next node
     node->next->state = ns_ok;
-    node->next->output.set_empty();
+    node->next->has_data = false;
+    node->next->flushing = false;
     return node->next->filter->open(next_spk);
   }
+
+  // truncate the chain if nessesary
+  if (node->next->id != node_end)
+    truncate(node);
 
   /////////////////////////////////////////////////////////
   // Build a new node
 
   // create & init the filter
-
   Filter2 *filter = init_filter(next_node_id, next_spk);
   if (!filter || !filter->open(next_spk))
     return false;
 
-  // update filter lists
-
+  // build a new node
   Node *next_node   = new Node;
   next_node->id     = next_node_id;
   next_node->next   = &end;
@@ -162,8 +235,10 @@ FilterGraph2::extend(Node *node)
   next_node->name   = get_name(next_node_id);
   next_node->filter = filter;
   next_node->state  = ns_ok;
-  node->next = next_node;
 
+  // update the list
+  node->next->prev = next_node;
+  node->next = next_node;
   return true;
 }
 

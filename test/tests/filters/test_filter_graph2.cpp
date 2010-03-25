@@ -68,8 +68,7 @@ public:
       buf_pos += in.size;
 
       in.set_empty();
-      out.set_empty();
-      return true;
+      return false;
     }
 
     copy_samples(buf, buf_pos, in.samples, 0, spk.nch(), buf_remains);
@@ -82,17 +81,13 @@ public:
 
   virtual bool flush(Chunk2 &out)
   {
+    if (buf_pos <= 0)
+      return false;
+
     out.set_linear(buf, buf_pos);
     buf_pos = 0;
     return true;
   }
-
-  virtual bool is_inplace() const
-  { return false; }
-
-  virtual bool need_flushing()
-  { return buf_pos > 0; }
-
 };
 
 TEST(filter_graph2, "FilterGraph2")
@@ -159,7 +154,7 @@ TEST(filter_graph2, "FilterGraph2")
 
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, buf_filter, &noise2, 0) == 0);
+    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
   }
 
 

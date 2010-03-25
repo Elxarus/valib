@@ -36,9 +36,11 @@ private:
     const char *name;
 
     state_t state;
-    Chunk2 output;
 
+    Chunk2 input;
     Filter2 *filter;
+    bool has_data;
+    bool flushing;
   };
 
   Node start;
