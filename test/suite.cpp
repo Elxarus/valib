@@ -152,6 +152,7 @@ sample_t calc_peak(Source *source)
   while (!source->is_empty())
   {
     if (!source->get_chunk(&chunk)) return -1.0;
+    if (chunk.is_dummy()) continue;
     if (!chunk.spk.is_linear()) return -1.0;
 
     for (int ch = 0; ch < chunk.spk.nch(); ch++)
@@ -183,6 +184,7 @@ double calc_rms(Source *source)
   while (!source->is_empty())
   {
     if (!source->get_chunk(&chunk)) return -1.0;
+    if (chunk.is_dummy()) continue;
     if (!chunk.spk.is_linear()) return -1.0;
 
     for (int ch = 0; ch < chunk.spk.nch(); ch++)
