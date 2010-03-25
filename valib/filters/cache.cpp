@@ -171,6 +171,8 @@ CacheFilter::process(Chunk2 &in, Chunk2 &out)
   // Passthrough
   out = in;
   in.set_empty();
+  if (out.is_dummy())
+    return false;
 
   // Receive timestamp
   if (in.sync)

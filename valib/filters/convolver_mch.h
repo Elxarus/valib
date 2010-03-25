@@ -39,6 +39,8 @@ protected:
   int post_samples;
 
   bool fir_changed() const;
+  bool need_flushing() const
+  { return !trivial && post_samples > 0; }
 
   void process_trivial(samples_t samples, size_t size);
   void process_convolve();
@@ -67,12 +69,6 @@ public:
   virtual bool process(Chunk2 &in, Chunk2 &out);
   virtual bool flush(Chunk2 &out);
   virtual void reset();
-
-  virtual bool need_flushing() const
-  { return !trivial && post_samples > 0; }
-
-  virtual bool is_inplace() const
-  { return trivial; }
 };
 
 #endif

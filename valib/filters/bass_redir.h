@@ -59,9 +59,6 @@ public:
   virtual void reset();
   virtual bool init(Speakers spk);
   virtual bool process(Chunk2 &in, Chunk2 &out);
-
-  virtual bool is_inplace() const
-  { return true; }
 };
 
 #endif

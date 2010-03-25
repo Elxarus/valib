@@ -306,13 +306,16 @@ AGC::process(Chunk2 &in, Chunk2 &out)
     sample[block] = 0; // drop block just sent
     return true;
   }
-  out.set_empty();
-  return true;
+
+  return false;
 }
 
 bool 
 AGC::flush(Chunk2 &out)
 {
+  if (!sample[0] && !sample[1])
+    return false;
+
   zero_samples(buf[block], sample[block], spk.nch(), nsamples - sample[block]);
   process();
 

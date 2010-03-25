@@ -10,6 +10,7 @@ protected:
   Speakers spk;
   Speakers out_spk;
 
+  bool processing;
   bool flushing;
   bool new_stream;
   bool make_output();
@@ -31,7 +32,7 @@ public:
 };
 
 FilterThunk::FilterThunk(Filter2 *f_):
-f(f_), flushing(false), new_stream(false)
+f(f_), processing(false), flushing(false), new_stream(false)
 {}
 
 void
@@ -39,9 +40,12 @@ FilterThunk::reset()
 {
   f->reset();
   out_spk = f->get_output();
+
   in_chunk.set_empty();
   out_chunk.set_dummy();
-  flushing = false;
+
+  processing = false;;
+  flushing   = false;
   new_stream = false;
 }
 
@@ -85,7 +89,7 @@ FilterThunk::get_input() const
 bool
 FilterThunk::process(const Chunk *chunk)
 {
-  assert(in_chunk.is_empty());
+  assert(!processing);
   assert(out_chunk.is_dummy());
 
   // ignore dummy chunks
@@ -93,6 +97,7 @@ FilterThunk::process(const Chunk *chunk)
     return true;
 
   // remember data
+  processing = true;
   in_chunk.set(chunk->rawdata, chunk->samples, chunk->size,
     chunk->sync, chunk->time);
 
@@ -117,8 +122,7 @@ FilterThunk::process(const Chunk *chunk)
   if (chunk->eos)
     flushing = true;
 
-  out_chunk.set_dummy();
-  while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
+  while (out_chunk.is_dummy() && (processing || flushing))
     if (!make_output())
       return false;
 
@@ -134,7 +138,7 @@ FilterThunk::get_output() const
 bool
 FilterThunk::is_empty() const
 {
-  return !flushing && !new_stream && in_chunk.is_empty() && out_chunk.is_dummy();
+  return out_chunk.is_dummy() && !processing && !flushing && !new_stream;
 }
 
 bool
@@ -143,42 +147,50 @@ FilterThunk::make_output()
   Chunk2 out_chunk2;
 
   // normal processing
-  if (!in_chunk.is_empty())
+  if (processing)
   {
-    if (!f->process(in_chunk, out_chunk2))
-      return false;
+    processing = f->process(in_chunk, out_chunk2);
+    if (processing)
+    {
+      out_chunk.set(f->get_output(),
+        out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
+        out_chunk2.sync, out_chunk2.time);
 
-    out_chunk.set(f->get_output(),
-      out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
-      out_chunk2.sync, out_chunk2.time);
+      new_stream = f->new_stream();
+      if (!new_stream)
+        out_spk = f->get_output();
 
-    new_stream = f->new_stream();
-    if (!new_stream)
-      out_spk = f->get_output();
-    return true;
+      return true;
+    }
+    else
+    {
+      out_chunk.set_dummy();
+      return true;
+    }
   }
 
   // flushing
   if (flushing)
   {
-    if (f->need_flushing())
+    flushing = f->flush(out_chunk2);
+    if (flushing)
     {
-      f->flush(out_chunk2);
       out_chunk.set(f->get_output(),
         out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
         out_chunk2.sync, out_chunk2.time);
+
       new_stream = f->new_stream();
       if (!new_stream)
         out_spk = f->get_output();
+
+      return true;
     }
     else
     {
       out_chunk.set_empty(out_spk);
       out_chunk.set_eos(true);
-      flushing = false;
-      new_stream = false;
+      return true;
     }
-    return true;
   }
 
   // dummy
@@ -205,7 +217,7 @@ FilterThunk::get_chunk(Chunk *chunk)
     return true;
   }
 
-  while (out_chunk.is_dummy() && (flushing || !in_chunk.is_empty()))
+  while (out_chunk.is_dummy() && (processing || flushing))
     if (!make_output())
       return false;
 
@@ -221,6 +233,17 @@ FilterThunk::get_chunk(Chunk *chunk)
   *chunk = out_chunk;
   out_chunk.set_dummy();
   return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+FilterError::FilterError(Filter2 *filter_, int error_code_, const char *desc_):
+filter(filter_), error_code(error_code), desc(strdup(desc_))
+{}
+
+FilterError::~FilterError()
+{
+  safe_delete(desc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

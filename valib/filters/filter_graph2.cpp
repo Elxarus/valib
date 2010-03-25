@@ -47,43 +47,15 @@ FilterGraph2::uninit()
 bool
 FilterGraph2::process(Chunk2 &in, Chunk2 &out)
 {
-  if (!end.output.is_dummy())
-  {
-    out = end.output;
-    end.output.set_empty();
-    return true;
-  }
-
-  if (start.output.is_dummy())
-  {
-    start.output = in;
-    in.set_empty();
-  }
-
-  Node *node = end.prev;
-  while (node->id != node_end)
-  {
-    // Find a full node
-    if (node->output.is_dummy())
-    {
-      node = node->prev;
-      continue;
-    }
-
-    // Process data downstream
-    node->next->filter->process(node->output, node->next->output);
-    node = node->next;
-  }
-
-  out = end.output;
-  end.output.set_empty();
-  return true;
+  out = in;
+  in.set_empty();
+  return !out.is_dummy();
 }
 
 bool
 FilterGraph2::flush(Chunk2 &out)
 {
-  return true;
+  return false;
 }
 
 void

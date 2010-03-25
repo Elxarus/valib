@@ -33,12 +33,12 @@ public:
   {
     out = in;
     in.set_empty();
+    if (out.is_dummy())
+      return false;
+
     counter += out.size;
     return true;
   }
-
-  virtual bool is_inplace() const
-  { return true; }
 };
 
 #endif

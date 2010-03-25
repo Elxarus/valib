@@ -15,6 +15,9 @@ Demux::can_open(Speakers new_spk) const
 bool 
 Demux::process(Chunk2 &in, Chunk2 &out)
 {
+  if (in.is_dummy())
+    return false;
+
   out.set_rawdata(in.rawdata, 0, in.sync, in.time);
   in.sync = false;
   in.time = 0;

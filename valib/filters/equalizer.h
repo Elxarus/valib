@@ -55,21 +55,19 @@ public:
   virtual bool open(Speakers spk)           { return conv.open(spk);     }
   virtual void close()                      { conv.close();              }
 
-  virtual bool is_open() const              { return conv.is_open();     }
-  virtual bool is_ofdd() const              { return conv.is_ofdd();     }
-  virtual bool is_inplace() const           { return conv.is_inplace();  }
-  virtual Speakers get_input() const        { return conv.get_input();   }
-
   /////////////////////////////////////////////////////////
   // Processing
 
   virtual bool process(Chunk2 &in, Chunk2 &out) { return conv.process(in, out); }
   virtual bool flush(Chunk2 &out)           { return conv.flush(out);           }
   virtual void reset()                      { conv.reset();                     }
+  virtual bool new_stream() const           { return conv.new_stream();         }
 
-  virtual bool new_stream() const           { return conv.new_stream();    }
-  virtual bool need_flushing() const        { return conv.need_flushing(); }
-  virtual Speakers get_output() const       { return conv.get_output();    }
+  // Filter state
+  virtual bool is_open() const              { return conv.is_open();     }
+  virtual bool is_ofdd() const              { return conv.is_ofdd();     }
+  virtual Speakers get_input() const        { return conv.get_input();   }
+  virtual Speakers get_output() const       { return conv.get_output();  }
 };
 
 #endif

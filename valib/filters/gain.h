@@ -22,6 +22,8 @@ public:
   {
     out = in;
     in.set_empty();
+    if (out.is_dummy())
+      return false;
 
     const size_t size = out.size;
     if (!EQUAL_SAMPLES(gain, 1.0))
@@ -30,9 +32,6 @@ public:
           out.samples[ch][s] *= gain;
     return true;
   }
-
-  virtual bool is_inplace() const
-  { return true; }
 };
 
 #endif

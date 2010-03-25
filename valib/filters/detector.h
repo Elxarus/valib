@@ -61,12 +61,6 @@ public:
   virtual bool is_ofdd() const
   { return true; }
 
-  virtual bool is_inplace() const
-  { return false; }
-
-  virtual bool need_flushing() const
-  { return do_flush; }
-
   virtual Speakers get_output() const
   { return out_spk; }
 };

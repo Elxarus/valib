@@ -72,6 +72,8 @@ BassRedir::process(Chunk2 &in, Chunk2 &out)
   // Passthrough (process inplace later)
   out = in;
   in.set_empty();
+  if (out.is_dummy())
+    return false;
  
   if (!enabled)
     return true;

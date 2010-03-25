@@ -39,6 +39,9 @@ protected:
 
   enum { state_filter, state_zero, state_pass, state_gain } state;
 
+  bool need_flushing() const
+  { return state == state_filter && post_samples > 0; }
+
 public:
   Convolver(const FIRGen *gen_ = 0);
   ~Convolver();
@@ -59,12 +62,6 @@ public:
   virtual bool process(Chunk2 &in, Chunk2 &out);
   virtual bool flush(Chunk2 &out);
   virtual void reset();
-
-  virtual bool need_flushing() const
-  { return state == state_filter && post_samples > 0; }
-
-  virtual bool is_inplace() const
-  { return state != state_filter; }
 };
 
 #endif

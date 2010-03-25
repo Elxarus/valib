@@ -27,9 +27,6 @@ public:
 
   virtual bool can_open(Speakers spk) const
   { return true; }
-
-  virtual bool is_inplace() const
-  { return true; }
 };
 
 #endif

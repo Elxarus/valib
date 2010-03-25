@@ -81,12 +81,6 @@ public:
   /////////////////////////////////////////////////////////
   // Filter2 interface
 
-  virtual bool is_inplace() const
-  { return false; }
-
-  virtual bool need_flushing() const
-  { return sample[0] || sample[1]; }
-
   virtual bool process(Chunk2 &in, Chunk2 &out);
   virtual bool flush(Chunk2 &out);
   virtual void reset();

@@ -122,8 +122,7 @@ ParserFilter::process(Chunk2 &in, Chunk2 &out)
   }
 
   // not enough data
-  out.set_empty();
-  return true;
+  return false;
 }
 
 bool

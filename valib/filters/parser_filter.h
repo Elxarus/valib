@@ -54,9 +54,6 @@ public:
   virtual bool is_ofdd() const
   { return true; }
 
-  virtual bool is_inplace() const
-  { return false; }
-
   virtual Speakers get_output() const
   { return out_spk; }
 };
