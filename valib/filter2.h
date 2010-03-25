@@ -13,25 +13,22 @@
   Chunk2 in, out;
   ...
 
-  if (!filter->open(format))
-    error_and_exit();
-   
-  while (has_more_data())
+  try
   {
-    in = get_more_data();
-    while (!in.is_dummy())
+    filter->open(format);
+    while (has_more_data())
     {
-      if (!filter->process(in, out))
-        error_and_exit();
-      do_something(out);
+      in = get_more_data();
+      while (filter->process(in, out);)
+        do_something(out);
     }
-  }
 
-  while (filter->need_flushing())
+    while (filter->flush(out);)
+      do_something(out);
+  }
+  catch (FilterError)
   {
-    if (!filter->flush(out))
-      error_and_exit();
-    do_something(out);
+    // Handle filtering errors
   }
 
   /////////////////////////////////////////////////////////
@@ -39,48 +36,50 @@
 
   Filter *filter;
   ...
-  while (has_more_data())
-  {
-    Chunk2 in = get_more_data();
-    Chunk2 out;
 
-    if (new_stream())
+  try
+  {
+    while (has_more_data())
     {
-      while (filter->need_flushing())
+      Chunk2 in = get_more_data();
+      Chunk2 out;
+
+      if (new_stream())
       {
-        if (!filter->flush(out))
-          error_and_exit();
-        do_something(out);
+        while (filter->flush(out))
+          do_something(out);
+        filter->open(new_format());
       }
-      if (!filter->open(new_format()))
-        error_and_exit();
+
+      while (filter->process(in, out))
+        filter->process(in, out);
     }
 
-    while (!in.is_dummy())
-    {
-      if (!filter->process(in, out))
-        error_and_exit();
+    while (filter->flush(out))
       do_something(out);
-    }
+  }
+  catch (FilterError)
+  {
+    // Handle filtering errors
   }
 
-  while (filter->need_flushing())
-  {
-    if (!filter->flush(out))
-      error_and_exit();
-    do_something(out);
-  }
 
   /////////////////////////////////////////////////////////
 
   bool can_open(Speakers spk) const
-    Check format support. Returns true when filter supports the format given.
-    Note that filter may refuse to open the stream even when the stream format
-    is supported.
+    Check format support.
+    Return value:
+    * true: filter supports the format given. Note that filter may fail to
+      to open the stream even when the stream format is supported because
+      of resource allocation errors. Also filter may change its mind when
+      you change parameters of the filter.
+    * false: filter cannot open with the format given.
 
-  bool open(const Stream *stream)
-    Open the filter. Returns true on success. Filter may process data after
-    this call.
+  bool open(Speakers spk)
+    Open the filter and allocate resources.
+    Return value:
+    * true: success
+    * false: fail
 
   void close()
     Close the filter and deallocate resources.
@@ -88,51 +87,75 @@
   bool is_open() const
     Return true when filter is open and can process data.
 
-    Output stream may be set after this call when output format may be
-    determined from input format (or when filter does not change the format
-    at all).
-
-    But sometimes output format may be determined only after some data received
-    (parsers for example). In this case output_format() returns zero until the
-    first output chunk.
-
-  bool is_inplace() const
-    Returns true when filter modifies data inplace at input buffers. Output
-    buffers in this case point inside input buffers.
-
   /////////////////////////////////////////////////////////
   // Processing
-
-  bool process(Chunk &in, Chunk &out)
-    Process data and form one output chunk.
-
-    Filter may process only part of the data. In this case it drops the data
-    processed from the input chunk.
-
-    Filter may buffer data. So when it is not enough data at input, filter may
-    eat all input and produce no output.
-
-  bool flush(Chunk &out)
-    Flush buffered data. We need this only when the filter needs flushing
-    (need_flushing() returns true). Note, that filter may produce several
-    chunks when flushing, so several flush() calls may be required.
 
   void reset()
     Reset the filter state, zero all internal buffers and prepare to a new
     stream. Do not deallocate resources, because we're awaiting new data.
+    This call should be equivalent to filter.open(filter.get_input()), but we
+    do not need to allocate resources once again, just set the internal state
+    to initial values.
+
+  bool process(Chunk &in, Chunk &out)
+    Process input data and make one output chunk.
+
+    Filter may process only part of the data. In this case it may change input
+    chunk's pointers to track the progress. So you may need several process()
+    calls with the same input chunk (filter may make several output chunks for
+    one input chunk when it is too big).
+
+    Filter may have its own buffer. In this case output chunk points to this
+    buffer. When the buffer is not big enough to process the whole input chunk
+    at once filter may return several output chunks.
+
+    Filter may process data inplace, i.e. change data at the input buffer and
+    return pointers to the input buffer. In some cases you should be warned
+    abount this fact. For example imagine that you have 2 filters in the chain
+    and the first filter returns its own buffer, and the second is inplace
+    filter. You call process on the first and feed inplace filter with the
+    output. After this, process() call on the first filter will corrupt data
+    at the output of the second filter.
+
+    When filter finds an error and cannot proceed, it must throw FilterError
+    exception.
+
+    Return value:
+    * true: filter made an output chunk successfully
+    * false: filter needs more input data
+
+  bool flush(Chunk &out)
+    Flush buffered data. When filter does not require flushing it should just
+    return false from this call.
+
+    Note, that filter may produce several chunks when flushing, so several
+    flush() calls may be required.
+
+    When filter finds an error and cannot proceed, it must throw FilterError
+    exception.
+
+    Return value:
+    * true: filter made an output chunk successfully
+    * false: filter has done flushing
 
   bool new_stream() const
-    Filter returns new stream. It may do this for the following reasons:
+    Filter returns a new stream. It may do this for the following reasons:
     * It want the downstream to flush and prepare to receive a new stream
-    * It wants to change output format
-    Output format returned be get_output() may change when this flag is set.
+    * It wants to change the output format
 
-  bool need_flushing()
-    Returns true when filter has buffered data and needs flushing.
+  Speakers get_output()
+    Returns output format of the filter.
 
-  const Stream *get_output()
-    Returns output stream. It may return null when output stream is still
-    unknown.
+    Generally, output format is known immediately after open() call, so you can
+    rely on this and init the next filter in the filter chain. But in some
+    cases filter cannot determine the format after open() and have to receive
+    some data to say what the output format is. In this case output format must
+    be set to FORMAT_UNKNOWN after open(), and to the real format on the first
+    output chunk.
+
+    Most filters do not change output format during the processing, but some
+    can. To change output format filter must explicitly indicate this with
+    help of new_stream() call (it should return true when format changes).
 */
 
 #ifndef VALIB_FILTER2_H
@@ -180,7 +203,8 @@ public:
 
   Chunk2(bool _sync, vtime_t _time)
   {
-    set_empty(_sync, _time);
+    set_empty();
+    set_sync(_sync, _time);
   }
 
   Chunk2(samples_t _samples, size_t _size,
@@ -201,14 +225,13 @@ public:
     set(_rawdata, _samples, _size, _sync, _time);
   }
 
-
-  inline void set_empty(bool _sync = false, vtime_t _time = 0)
+  inline void set_empty()
   {
     rawdata = 0;
     samples.zero();
     size = 0;
-    sync = _sync;
-    time = _time;
+    sync = false;
+    time = 0;
   }
 
   inline void set_linear(samples_t _samples, size_t _size,
@@ -287,6 +310,23 @@ public:
   }
 };
 
+
+///////////////////////////////////////////////////////////////////////////////
+// FilterError exception
+
+class FilterError
+{
+public:
+  Filter2 *filter;
+  const char *name;
+
+  int     error_code;
+  const   char *desc;
+
+  FilterError(Filter2 *filter, int error_code, const char *desc);
+  virtual ~FilterError();
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Filter2
 // Base interface for all filters
@@ -318,22 +358,18 @@ public:
   virtual bool open(Speakers spk) = 0;
   virtual void close() = 0;
 
-  // These flags are set after open() and do not change
-  virtual bool is_open() const = 0;
-  virtual bool is_ofdd() const = 0;
-  virtual bool is_inplace() const = 0;
-  virtual Speakers get_input() const = 0;
-
   /////////////////////////////////////////////////////////
   // Processing
 
+  virtual void reset() = 0;
   virtual bool process(Chunk2 &in, Chunk2 &out) = 0;
   virtual bool flush(Chunk2 &out) = 0;
-  virtual void reset() = 0;
-
-  // These flags may change during processing
   virtual bool new_stream() const = 0;
-  virtual bool need_flushing() const = 0;
+
+  // Filter state
+  virtual bool     is_open() const = 0;
+  virtual bool     is_ofdd() const = 0;
+  virtual Speakers get_input() const = 0;
   virtual Speakers get_output() const = 0;
 };
 
@@ -385,6 +421,20 @@ public:
     f_open = false;
   }
 
+  /////////////////////////////////////////////////////////
+  // Processing
+
+  virtual void reset()
+  {}
+
+  virtual bool flush(Chunk2 &out)
+  { return false; }
+
+  virtual bool new_stream() const
+  { return false; }
+
+  // Filter state
+
   virtual bool is_open() const
   { return f_open; }
 
@@ -393,21 +443,6 @@ public:
 
   virtual Speakers get_input() const
   { return spk; }
-
-  /////////////////////////////////////////////////////////
-  // Processing
-
-  virtual bool flush(Chunk2 &out)
-  { return true; }
-
-  virtual void reset()
-  {}
-
-  virtual bool new_stream() const
-  { return false; }
-
-  virtual bool need_flushing() const
-  { return false; }
 
   virtual Speakers get_output() const
   { return spk; }

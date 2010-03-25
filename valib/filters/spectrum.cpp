@@ -124,6 +124,8 @@ Spectrum::process(Chunk2 &in, Chunk2 &out)
 {
   out = in;
   in.set_empty();
+  if (out.is_dummy())
+    return false;
 
   if (!is_ok || out.size == 0)
     return true;

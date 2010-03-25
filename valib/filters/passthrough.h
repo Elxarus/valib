@@ -24,11 +24,8 @@ public:
   {
     out = in;
     in.set_empty();
-    return true;
+    return !out.is_dummy();
   }
-
-  virtual bool is_inplace() const
-  { return true; }
 };
 
 #endif

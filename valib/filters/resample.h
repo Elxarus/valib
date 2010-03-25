@@ -60,6 +60,9 @@ protected:
   inline void do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out);
   inline void do_stage2();
 
+  bool need_flushing() const
+  { return !passthrough() && post_samples > 0 && ((stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples) > 0; }
+
 protected:
   int sample_rate;       // destination sample rate
 
@@ -111,13 +114,6 @@ public:
 
   virtual Speakers get_output() const
   { return out_spk; }
-
-  virtual bool is_inplace() const
-  { return passthrough(); }
-
-  virtual bool need_flushing() const
-  { return !passthrough() && post_samples > 0 && ((stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples) > 0; }
-
 };
 
 #endif

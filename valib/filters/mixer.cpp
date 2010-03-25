@@ -146,6 +146,7 @@ Mixer::process(Chunk2 &in, Chunk2 &out)
 
     out.set_linear(buf, n, in.sync, in.time);
     in.drop_samples(n);
+    return !out.is_dummy();
   }
   else
   {
@@ -155,8 +156,8 @@ Mixer::process(Chunk2 &in, Chunk2 &out)
 
     out = in;
     in.set_empty();
+    return !out.is_dummy();
   }
-  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

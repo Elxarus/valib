@@ -316,7 +316,7 @@ ConvolverMch::process(Chunk2 &in, Chunk2 &out)
     process_trivial(in.samples, in.size);
     out = in;
     in.set_empty();
-    return true;
+    return !out.is_dummy();
   }
 
   /////////////////////////////////////////////////////////
@@ -345,7 +345,7 @@ ConvolverMch::process(Chunk2 &in, Chunk2 &out)
     in.drop_samples(gone);
 
     if (pos < buf_size)
-      return true;
+      return false;
   }
 
   pos = 0;
@@ -368,7 +368,7 @@ ConvolverMch::flush(Chunk2 &out)
   int ch, nch = spk.nch();
 
   if (!need_flushing())
-    return true;
+    return false;
 
   if (pos == 0)
     for (ch = 0; ch < nch; ch++)

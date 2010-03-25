@@ -124,9 +124,6 @@ public:
   virtual bool can_open(Speakers spk) const
   { return next_id(node_start, spk) != node_err; }
 
-  virtual bool is_inplace() const
-  { return true; }
-
   virtual Speakers get_input() const
   { return start.filter->get_input(); }
 

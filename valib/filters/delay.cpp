@@ -110,6 +110,8 @@ Delay::process(Chunk2 &in, Chunk2 &out)
   // Passthrough
   out = in;
   in.set_empty();
+  if (out.is_dummy())
+    return false;
 
   if (!enabled)
     return true; 

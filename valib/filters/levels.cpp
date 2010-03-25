@@ -194,6 +194,8 @@ Levels::process(Chunk2 &in, Chunk2 &out)
 {
   out = in;
   in.set_empty();
+  if (out.is_dummy())
+    return false;
 
   size_t n = out.size;
 

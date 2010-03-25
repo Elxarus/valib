@@ -43,9 +43,6 @@ public:
   virtual bool open(Speakers spk);
   virtual void reset();
   virtual bool process(Chunk2 &in, Chunk2 &out);
-
-  virtual bool is_inplace() const
-  { return true; }
 };
 
 #endif

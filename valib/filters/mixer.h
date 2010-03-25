@@ -82,9 +82,6 @@ public:
   virtual Speakers get_output() const
   { return out_spk; }
 
-  virtual bool is_inplace() const
-  { return !is_buffered(); }
-
   /////////////////////////////////////////////////////////
   // Mixer interface
 

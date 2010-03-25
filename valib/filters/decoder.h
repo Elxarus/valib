@@ -46,7 +46,6 @@ public:
 
   virtual bool is_open() const              { return parser.is_open();     }
   virtual bool is_ofdd() const              { return parser.is_ofdd();     }
-  virtual bool is_inplace() const           { return parser.is_inplace();  }
   virtual Speakers get_input() const        { return parser.get_input();   }
 
   /////////////////////////////////////////////////////////
@@ -57,7 +56,6 @@ public:
   virtual void reset()                      { parser.reset();                     }
 
   virtual bool new_stream() const           { return parser.new_stream();    }
-  virtual bool need_flushing() const        { return parser.need_flushing(); }
   virtual Speakers get_output() const       { return parser.get_output();    }
 };
 

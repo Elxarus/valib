@@ -518,7 +518,7 @@ Resample::process(Chunk2 &in, Chunk2 &out)
   {
     out = in;
     in.set_empty();
-    return true;
+    return !out.is_dummy();
   }
 
   ///////////////////////////////////////////////////////
@@ -549,7 +549,7 @@ Resample::process(Chunk2 &in, Chunk2 &out)
 
     in.set_empty();
     out.set_empty();
-    return true;
+    return false;
   }
 
   for (ch = 0; ch < nch; ch++)
@@ -572,6 +572,9 @@ Resample::process(Chunk2 &in, Chunk2 &out)
 bool
 Resample::flush(Chunk2 &out)
 {
+  if (!need_flushing())
+    return false;
+
   int ch;
 
   int actual_out_size = (stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples;

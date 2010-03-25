@@ -32,6 +32,8 @@ public:
   {
     out = in;
     in.set_empty();
+    if (out.is_dummy())
+      return false;
 
     if (level > 0.0)
     {
@@ -53,9 +55,6 @@ public:
     }
     return true;
   }
-
-  virtual bool is_inplace() const
-  { return true; }
 };
 
 #endif

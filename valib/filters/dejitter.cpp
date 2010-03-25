@@ -143,8 +143,11 @@ Syncer::reset()
 bool 
 Syncer::process(Chunk2 &in, Chunk2 &out)
 {
+  // passthrough
   out = in;
   in.set_empty();
+  if (out.is_dummy())
+    return false;
 
   // ignore non-sync chunks
   if (!out.sync)

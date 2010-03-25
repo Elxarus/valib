@@ -111,12 +111,16 @@ Detector::process(Chunk2 &in, Chunk2 &out)
         {
           out.set_rawdata(stream.get_debris(), stream.get_debris_size());
           state = state_frame;
+          return true;
         }
-        else
+        else if (stream.is_frame_loaded())
         {
           out.set_rawdata(stream.get_frame(), stream.get_frame_size());
           sync.send_frame_sync(out);
+          return true;
         }
+        else
+          return false;
       }
       else if (stream.is_debris_exists())
       {
@@ -126,11 +130,10 @@ Detector::process(Chunk2 &in, Chunk2 &out)
 
         out.set_rawdata(stream.get_debris(), stream.get_debris_size());
         sync.send_frame_sync(out);
+        return true;
       }
       else
-        out.set_empty();
-
-      return true;
+        return false;
 
     case state_frame:
       assert(stream.is_frame_loaded());
@@ -147,6 +150,9 @@ Detector::process(Chunk2 &in, Chunk2 &out)
 bool
 Detector::flush(Chunk2 &out)
 {
+  if (!do_flush)
+    return false;
+
   switch (state)
   {
     case state_load:

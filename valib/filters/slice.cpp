@@ -26,21 +26,18 @@ SliceFilter::process(Chunk2 &in, Chunk2 &out)
 {
   out = in;
   in.set_empty();
+  if (out.is_dummy())
+    return false;
 
-  // ignore everything after the end (except eos)
-
+  // ignore everything after the end
   if (pos >= end)
-  {
-    out.size = 0;
-    return true;
-  }
+    return false;
 
-  // ignore everything before the beginning (except eos)
+  // ignore everything before the beginning
   if (pos + out.size <= start)
   {
     pos += out.size;
-    out.size = 0;
-    return true;
+    return false;
   }
 
   // cut off the tail

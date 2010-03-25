@@ -25,7 +25,7 @@ Converter::find_conversion(int _format, Speakers _spk) const
   return 0;
 }
 
-void
+bool
 Converter::convert_pcm2linear(Chunk2 &in, Chunk2 &out)
 {
   const size_t sample_size = spk.sample_size() * spk.nch();
@@ -45,9 +45,8 @@ Converter::convert_pcm2linear(Chunk2 &in, Chunk2 &out)
       // not enough data to fill sample buffer
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
-      out.set_empty(in.sync, in.time);
       in.set_empty();
-      return;
+      return false;
     }
     else
     {
@@ -110,9 +109,10 @@ Converter::convert_pcm2linear(Chunk2 &in, Chunk2 &out)
   out.set_linear(out_samples, out_size, in.sync, in.time);
   out.samples.reorder_to_std(spk, order);
   in.set_rawdata(rawdata, size);
+  return !out.is_dummy();
 }
 
-void
+bool
 Converter::convert_linear2pcm(Chunk2 &in, Chunk2 &out)
 {
   size_t n = MIN(in.size, nsamples);
@@ -125,6 +125,7 @@ Converter::convert_linear2pcm(Chunk2 &in, Chunk2 &out)
 
   out.set_rawdata(out_rawdata, out_size, in.sync, in.time);
   in.drop_samples(n);
+  return !out.is_dummy();
 }
 
 ///////////////////////////////////////////////////////////
@@ -256,22 +257,16 @@ Converter::process(Chunk2 &in, Chunk2 &out)
   {
     out = in;
     in.set_empty();
-    return true;
+    return !out.is_dummy();
   }
 
   if (convert == 0)
-    return false;
+    throw new FilterError(this, 0, "Cannot convert: no conversion function");
 
   if (format == FORMAT_LINEAR)
-  {
-    convert_pcm2linear(in, out);
-    return true;
-  }
+    return convert_pcm2linear(in, out);
   else
-  {
-    convert_linear2pcm(in, out);
-    return true;
-  }
+    return convert_linear2pcm(in, out);
 }
 
 void

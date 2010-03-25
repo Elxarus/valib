@@ -231,7 +231,7 @@ Convolver::process(Chunk2 &in, Chunk2 &out)
 
     out = in;
     in.set_empty();
-    return true;
+    return !out.is_dummy();
   }
 
   /////////////////////////////////////////////////////////
@@ -247,7 +247,7 @@ Convolver::process(Chunk2 &in, Chunk2 &out)
     in.drop_samples(gone);
 
     if (pos < buf_size)
-      return true;
+      return false;
   }
 
   pos = 0;
@@ -267,10 +267,7 @@ bool
 Convolver::flush(Chunk2 &out)
 {
   if (!need_flushing())
-  {
-    out.set_empty();
-    return true;
-  }
+    return false;
 
   for (int ch = 0; ch < spk.nch(); ch++)
     memset(buf[ch] + pos, 0, (buf_size - pos) * sizeof(sample_t));

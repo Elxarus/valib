@@ -53,21 +53,19 @@ public:
   virtual bool open(Speakers spk)           { return parser.open(spk);     }
   virtual void close()                      { parser.close();              }
 
-  virtual bool is_open() const              { return parser.is_open();     }
-  virtual bool is_ofdd() const              { return parser.is_ofdd();     }
-  virtual bool is_inplace() const           { return parser.is_inplace();  }
-  virtual Speakers get_input() const        { return parser.get_input();   }
-
   /////////////////////////////////////////////////////////
   // Processing
 
   virtual bool process(Chunk2 &in, Chunk2 &out) { return parser.process(in, out); }
   virtual bool flush(Chunk2 &out)           { return parser.flush(out);           }
   virtual void reset()                      { parser.reset();                     }
+  virtual bool new_stream() const           { return parser.new_stream();         }
 
-  virtual bool new_stream() const           { return parser.new_stream();    }
-  virtual bool need_flushing() const        { return parser.need_flushing(); }
-  virtual Speakers get_output() const       { return parser.get_output();    }
+  // Filter state
+  virtual bool is_open() const              { return parser.is_open();     }
+  virtual bool is_ofdd() const              { return parser.is_ofdd();     }
+  virtual Speakers get_input() const        { return parser.get_input();   }
+  virtual Speakers get_output() const       { return parser.get_output();  }
 };
 
 class Despdifer : public Filter2
@@ -98,21 +96,19 @@ public:
   virtual bool open(Speakers spk)           { return parser.open(spk);     }
   virtual void close()                      { parser.close();              }
 
-  virtual bool is_open() const              { return parser.is_open();     }
-  virtual bool is_ofdd() const              { return parser.is_ofdd();     }
-  virtual bool is_inplace() const           { return parser.is_inplace();  }
-  virtual Speakers get_input() const        { return parser.get_input();   }
-
   /////////////////////////////////////////////////////////
   // Processing
 
   virtual bool process(Chunk2 &in, Chunk2 &out) { return parser.process(in, out); }
   virtual bool flush(Chunk2 &out)           { return parser.flush(out);           }
   virtual void reset()                      { parser.reset();                     }
+  virtual bool new_stream() const           { return parser.new_stream();         }
 
-  virtual bool new_stream() const           { return parser.new_stream();    }
-  virtual bool need_flushing() const        { return parser.need_flushing(); }
-  virtual Speakers get_output() const       { return parser.get_output();    }
+  // Filter state
+  virtual bool is_open() const              { return parser.is_open();     }
+  virtual bool is_ofdd() const              { return parser.is_ofdd();     }
+  virtual Speakers get_input() const        { return parser.get_input();   }
+  virtual Speakers get_output() const       { return parser.get_output();  }
 };
 
 #endif
