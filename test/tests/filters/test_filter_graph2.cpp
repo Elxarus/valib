@@ -206,7 +206,7 @@ TEST(filter_graph2, "FilterGraph2")
   // * Passthrough filter does nothing
   // * Gain filter does not require flushing
   // * SmoothGain has a transition at the beginning
-  // * LinearBufferFilter requires flushing
+  // * LinearBuffer does nothing, but requires flushing
 
   {
     double gain = 0.5;
@@ -233,13 +233,13 @@ TEST(filter_graph2, "FilterGraph2")
     for (int i = 0; i < array_size(tst); i++)
     {
       FilterChain2 graph_filter;
-      graph_filter.add_back(tst[i], 0);
+      graph_filter.add_back(tst[i]);
       graph_filter.reset();
 
       NoiseGen noise1(spk, seed, noise_size);
       NoiseGen noise2(spk, seed, noise_size);
       CHECKT(compare(log, &noise1, graph_filter, &noise2, *ref[i]) == 0, 
-        ("Chain with one filter fails with %s", typeid(*ref[i]).name()));
+        ("Chain with one filter (%s) fails with", typeid(*ref[i]).name()));
     }
   }
 
@@ -254,7 +254,7 @@ TEST(filter_graph2, "FilterGraph2")
   // reference filter
 
   {
-    const double gain = 0.25;
+    const double gain = 0.5;
     const int transition_samples = 10;
     // We need some data to remain in the buffer after
     // processing so buffer size should be fractional.
@@ -283,8 +283,8 @@ TEST(filter_graph2, "FilterGraph2")
         {
           // filter chain
           FilterChain2 graph_filter;
-          graph_filter.add_back(tests[i].f, 0);
-          graph_filter.add_back(tests[j].f, 0);
+          graph_filter.add_back(tests[i].f);
+          graph_filter.add_back(tests[j].f);
 
           SmoothGain ref(
             tests[i].gain * tests[j].gain,
@@ -294,7 +294,7 @@ TEST(filter_graph2, "FilterGraph2")
           NoiseGen noise1(spk, seed, noise_size);
           NoiseGen noise2(spk, seed, noise_size);
           CHECKT(compare(log, &noise1, graph_filter, &noise2, ref) == 0,
-            ("Chain with 2 filters fail: %s -> %s", typeid(*tests[i].f).name(), typeid(*tests[j].f).name()));
+            ("Chain with 2 filters fails: %s -> %s", typeid(*tests[i].f).name(), typeid(*tests[j].f).name()));
         }
   }
 
@@ -304,5 +304,35 @@ TEST(filter_graph2, "FilterGraph2")
   // * Add another filter and test again.
   // * Drop and test
 
-TEST_END(filter_graph2);
+  {
+    const double gain = 0.5;
+    // Reference filters we will compare to
+    Gain         ref_gain1(gain);
+    Gain         ref_gain2(gain*gain);
+    // Filters to include into the chain
+    Gain         tst_gain1(gain);
+    Gain         tst_gain2(gain);
+
+    FilterChain2 graph_filter;
+    NoiseGen noise1(spk, seed, noise_size);
+    NoiseGen noise2(spk, seed, noise_size);
+    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+
+    graph_filter.add_back(&tst_gain1);
+    noise1.init(spk, seed, noise_size);
+    noise2.init(spk, seed, noise_size);
+    CHECK(compare(log, &noise1, graph_filter, &noise2, ref_gain1) == 0);
+
+    graph_filter.add_back(&tst_gain2);
+    noise1.init(spk, seed, noise_size);
+    noise2.init(spk, seed, noise_size);
+    CHECK(compare(log, &noise1, graph_filter, &noise2, ref_gain2) == 0);
+
+    graph_filter.clear();
+    noise1.init(spk, seed, noise_size);
+    noise2.init(spk, seed, noise_size);
+    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+  }
+
+  TEST_END(filter_graph2);
 
