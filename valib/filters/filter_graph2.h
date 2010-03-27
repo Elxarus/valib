@@ -13,8 +13,6 @@
   When format change in the chain change occurs, downstream filters are flushed,
   so it will be no gaps in the output stream. It is important because filters
   may buffer significant amount of data (several seconds for instance).
-
-
 */
 
 #ifndef VALIB_FILTER_GRAPH2_H
@@ -26,7 +24,7 @@
 class FilterGraph2 : public SimpleFilter
 {
 private:
-  enum state_t { ns_ok, ns_dirty, ns_flush, ns_rebuild };
+  enum state_t { state_empty, state_processing, state_rebuild, state_done_flushing };
 
   struct Node
   {
@@ -35,12 +33,12 @@ private:
     Node *prev;
     const char *name;
 
-    state_t state;
-
-    Chunk2 input;
     Filter2 *filter;
-    bool has_data;
-    bool flushing;
+    Chunk2   input;
+    Chunk2   output;
+
+    state_t  state;
+    bool     flushing;
   };
 
   Node start;
@@ -50,14 +48,14 @@ private:
   Passthrough pass_end;
 
   void truncate(Node *node);
-  bool extend(Node *node);
   bool build_chain(Node *node);
+  bool process_chain(Chunk2 &out);
 
 protected:
   /////////////////////////////////////////////////////////
   // invalidate()
   //   Rebuild the chain if nessesary. Call this when
-  //   filter order is suspected to change. For example
+  //   filter chain is suspected to change. For example
   //   after the change of a parameter that switches some
   //   filter on or off. In this case filter chain will be
   //   gracefully rebuilt without interruption of the data
