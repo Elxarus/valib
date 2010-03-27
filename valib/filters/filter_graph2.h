@@ -18,6 +18,9 @@
 #ifndef VALIB_FILTER_GRAPH2_H
 #define VALIB_FILTER_GRAPH2_H
 
+#include <list>
+#include <string>
+
 #include "../filter2.h"
 #include "passthrough.h"
 
@@ -134,9 +137,22 @@ public:
 class FilterChain2 : public FilterGraph2
 {
 protected:
-  Filter2 *chain[32];
-  char    *desc[32];
-  int      chain_size;
+  struct Node
+  {
+    int id;
+    Filter2 *filter;
+    std::string name;
+
+    Node(int id_, Filter2 *filter_, std::string name_):
+    id(id_), filter(filter_), name(name_) {}
+
+    bool operator ==(int id_)          const { return id == id_;         }
+    bool operator ==(Filter2 *filter_) const { return filter == filter_; }
+  };
+
+  int id;
+  std::list<Node> nodes;
+  typedef std::list<Node>::const_iterator const_list_iter;
 
   /////////////////////////////////////////////////////////
   // FilterGraph overrides
@@ -152,9 +168,10 @@ public:
   /////////////////////////////////////////////////////////
   // FilterChain interface
 
-  bool add_front(Filter2 *filter, const char *desc);
-  bool add_back(Filter2 *filter, const char *desc);
-  void drop();
+  bool add_front(Filter2 *filter, std::string name = std::string());
+  bool add_back(Filter2 *filter, std::string name = std::string());
+  void remove(Filter2 *filter);
+  void clear();
 };
 
 #endif

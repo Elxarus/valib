@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "filter_graph2.h"
 
 const int FilterGraph2::node_start = -1;
@@ -397,86 +398,73 @@ FilterGraph2::destroy()
 
 FilterChain2::FilterChain2()
 {
-  chain_size = 0;
+  id = 1;
+  nodes.push_back(Node(node_start, 0, std::string()));
+  nodes.push_back(Node(node_end, 0, std::string()));
 }
 
 FilterChain2::~FilterChain2()
-{
-  for (int i = 0; i < chain_size; i++)
-    safe_delete(desc[i]);
-}
+{}
 
 bool
-FilterChain2::add_front(Filter2 *filter_, const char *desc_)
+FilterChain2::add_front(Filter2 *filter, std::string name)
 {
-  if (chain_size >= array_size(chain))
+  // Insert only when we have no such filter in the list
+  if (find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
 
-  for (int i = chain_size; i > 0; i--)
-  {
-    chain[i] = chain[i-1];
-    desc[i] = desc[i-1];
-  }
-
-  chain[0] = filter_;
-  desc[0] = strdup(desc_);
-  chain_size++;
+  nodes.insert(++nodes.begin(), Node(id++, filter, name));
+  invalidate();
   return true;
 }
 
 bool
-FilterChain2::add_back(Filter2 *filter_, const char *desc_)
+FilterChain2::add_back(Filter2 *filter, std::string name)
 {
-  if (chain_size >= array_size(chain))
+  // Insert only when we have no such filter in the list
+  if (find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
-
-  chain[chain_size] = filter_;
-  desc[chain_size] = strdup(desc_);
-  chain_size++;
+  nodes.insert(--nodes.end(), Node(id++, filter, name));
+  invalidate();
   return true;
 }
 
 void
-FilterChain2::drop()
+FilterChain2::remove(Filter2 *filter)
 {
-  destroy();
-  for (int i = 0; i < chain_size; i++)
-    safe_delete(desc[i]);
-  chain_size = 0;
+  nodes.erase(find(nodes.begin(), nodes.end(), filter));
+  invalidate();
+}
+
+void
+FilterChain2::clear()
+{
+  nodes.clear();
+  nodes.push_back(Node(node_start, 0, std::string()));
+  nodes.push_back(Node(node_end, 0, std::string()));
+  invalidate();
 }
 
 int
-FilterChain2::next_id(int id, Speakers spk) const
+FilterChain2::next_id(int id_, Speakers spk_) const
 {
-  if (id == node_start)
-    return chain_size? 0: node_end;
-
-  if (id < 0)
-    return node_err;
-
-  if (id >= chain_size - 1)
-    return node_end;
-
-  if (chain[id+1]->can_open(spk))
-    return id + 1;
-  else
-    return node_err;
+  const_list_iter it = ++find(nodes.begin(), nodes.end(), id_);
+  if (it == nodes.end()) return node_err;
+  return it->id;
 }
 
 Filter2 *
-FilterChain2::init_filter(int id, Speakers spk)
+FilterChain2::init_filter(int id_, Speakers spk_)
 {
-  if (id < 0 || id >= chain_size)
-    return 0;
-
-  return chain[id];
+  const_list_iter it = find(nodes.begin(), nodes.end(), id_);
+  if (it == nodes.end()) return 0;
+  return it->filter;
 }
 
 const char *
-FilterChain2::get_name(int id) const
+FilterChain2::get_name(int id_) const
 {
-  if (id < 0 || id >= chain_size)
-    return 0;
-
-  return desc[id];
+  const_list_iter it = find(nodes.begin(), nodes.end(), id_);
+  if (it == nodes.end()) return 0;
+  return it->name.c_str();
 }
