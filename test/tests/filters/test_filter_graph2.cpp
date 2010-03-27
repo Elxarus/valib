@@ -9,6 +9,10 @@ static const Speakers spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000);
 static const size_t noise_size = 64 * 1024;
 static const int seed = 123123;
 
+///////////////////////////////////////////////////////////////////////////////
+// GainGraph owns a filter
+// Test correct construction and destruction
+
 class GainGraph : public FilterGraph2
 {
 protected:
@@ -35,11 +39,11 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-// LinearBufferFilter
+// LinearBuffer
 // Simplest buffering filter. Fills the buffer and passes it through without
 // any change. Requires flushing when some data is in the buffer.
 
-class LinearBufferFilter : public SamplesFilter
+class LinearBuffer : public SamplesFilter
 {
 protected:
   size_t buf_size;
@@ -47,7 +51,7 @@ protected:
   SampleBuf buf;
 
 public:
-  LinearBufferFilter(size_t buf_size): buf_size(buf_size)
+  LinearBuffer(size_t buf_size): buf_size(buf_size)
   {}
 
   virtual bool init(Speakers new_spk)
@@ -90,6 +94,78 @@ public:
   }
 };
 
+///////////////////////////////////////////////////////////
+// SmoothGain filter increases the gain smoothly at the
+// beginning of the stream, preventing popping when
+// the playback starts.
+//
+// This filter has an important property, that 
+// process(block1) -> flush (and reset) -> process(block2) -> flush (and reset)
+// does not equal to
+// process(block1) -> process(block2) -> flush (and reset)
+
+class SmoothGain : public SamplesFilter
+{
+protected:
+  double current_gain;
+  int current_sample;
+  
+public:
+  double gain;
+  int transition_samples;
+
+  SmoothGain(): gain(1.0), transition_samples(0)
+  {}
+
+  SmoothGain(double gain_, int transition_samples_):
+  gain(gain_), transition_samples(transition_samples_)
+  {}
+
+  /////////////////////////////////////////////////////////
+  // SamplesFilter overrides
+
+  virtual bool process(Chunk2 &in, Chunk2 &out)
+  {
+    out = in;
+    in.set_empty();
+    if (out.is_dummy())
+      return false;
+
+    const size_t size = out.size;
+    if (!EQUAL_SAMPLES(gain, 1.0))
+      for (int ch = 0; ch < spk.nch(); ch++)
+        for (size_t s = 0; s < size; s++)
+          out.samples[ch][s] *= gain;
+
+    if (current_sample < transition_samples)
+    {
+      double dgain = 1.0 / transition_samples;
+      size_t process_size = MIN(out.size, (size_t)(transition_samples - current_sample));
+
+      for (int ch = 0; ch < spk.nch(); ch++)
+        for (size_t s = 0; s < process_size; s++)
+          out.samples[ch][s] *= current_gain + (dgain * s);
+
+      current_gain += dgain * process_size;
+      current_sample += process_size;
+    }
+    return true;
+  }
+
+  virtual void reset()
+  {
+    current_gain = 0;
+    current_sample = 0;
+  }
+
+  virtual bool flush(Chunk2 &out)
+  {
+    current_gain = 0;
+    current_sample = 0;
+    return false;
+  }
+};
+
 TEST(filter_graph2, "FilterGraph2")
 
   /////////////////////////////////////////////////////////
@@ -127,37 +203,106 @@ TEST(filter_graph2, "FilterGraph2")
 
   /////////////////////////////////////////////////////////
   // FilterChain with one filter must act like this filter
+  // * Passthrough filter does nothing
+  // * Gain filter does not require flushing
+  // * SmoothGain has a transition at the beginning
+  // * LinearBufferFilter requires flushing
 
   {
     double gain = 0.5;
-    Gain ref_filter(gain);
-    Gain gain_filter(gain);
-    FilterChain2 graph_filter;
-    graph_filter.add_back(&gain_filter, 0);
+    int    transition_samples = 10;
+    // We need some data to remain in the buffer after
+    // processing so buffer size should be fractional.
+    const  size_t buf_size = size_t(noise_size / 2.5);
 
-    NoiseGen noise1(spk, seed, noise_size);
-    NoiseGen noise2(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, ref_filter) == 0);
+    // Reference filters we will compare to
+    Passthrough  ref_pass;
+    Gain         ref_gain(gain);
+    SmoothGain   ref_smooth_gain(gain, transition_samples);
+    LinearBuffer ref_linear_buffer(buf_size);
+
+    // Filters to include into the chain
+    Passthrough  tst_pass;
+    Gain         tst_gain(gain);
+    SmoothGain   tst_smooth_gain(gain, transition_samples);
+    LinearBuffer tst_linear_buffer(buf_size);
+
+    Filter2 *ref[] = { &ref_pass, &ref_gain, &ref_smooth_gain, &ref_linear_buffer };
+    Filter2 *tst[] = { &tst_pass, &tst_gain, &tst_smooth_gain, &tst_linear_buffer };
+
+    for (int i = 0; i < array_size(tst); i++)
+    {
+      FilterChain2 graph_filter;
+      graph_filter.add_back(tst[i], 0);
+      graph_filter.reset();
+
+      NoiseGen noise1(spk, seed, noise_size);
+      NoiseGen noise2(spk, seed, noise_size);
+      CHECKT(compare(log, &noise1, graph_filter, &noise2, *ref[i]) == 0, 
+        ("Chain with one filter fails with %s", typeid(*ref[i]).name()));
+    }
   }
 
   /////////////////////////////////////////////////////////
-  // FilterChain with one buffering filter
+  // FilterChain with 2 filters in different combinations
+  // * Passthrough filter does nothing
+  // * Gain filter does not require flushing
+  // * SmoothGain has a transition at the beginning
+  // * LinearBufferFilter requires flushing
+  // Any combination of these filters equals to SmoothGain
+  // with different parameters. So we need only one
+  // reference filter
 
   {
+    const double gain = 0.25;
+    const int transition_samples = 10;
     // We need some data to remain in the buffer after
     // processing so buffer size should be fractional.
     const size_t buf_size = size_t(noise_size / 2.5);
 
-    LinearBufferFilter buf_filter(buf_size);
-    FilterChain2 graph_filter;
-    graph_filter.add_back(&buf_filter, 0);
+    // Filters to include into the chain
+    Passthrough  tst_pass;
+    Gain         tst_gain(gain);
+    SmoothGain   tst_smooth_gain(gain, transition_samples);
+    LinearBuffer tst_linear_buffer(buf_size);
 
-    NoiseGen noise1(spk, seed, noise_size);
-    NoiseGen noise2(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+    struct {
+      Filter2 *f;
+      double gain;
+      int transition_samples;
+    } tests[] = {
+      { &tst_pass,          1.0,  0 },
+      { &tst_gain,          gain, 0 },
+      { &tst_smooth_gain,   gain, transition_samples },
+      { &tst_linear_buffer, 1.0,  0 }
+    };
+
+    for (int i = 0; i < array_size(tests); i++)
+      for (int j = 0; j < array_size(tests); j++)
+        if (i != j)
+        {
+          // filter chain
+          FilterChain2 graph_filter;
+          graph_filter.add_back(tests[i].f, 0);
+          graph_filter.add_back(tests[j].f, 0);
+
+          SmoothGain ref(
+            tests[i].gain * tests[j].gain,
+            tests[i].transition_samples + tests[j].transition_samples);
+
+          // source and compare
+          NoiseGen noise1(spk, seed, noise_size);
+          NoiseGen noise2(spk, seed, noise_size);
+          CHECKT(compare(log, &noise1, graph_filter, &noise2, ref) == 0,
+            ("Chain with 2 filters fail: %s -> %s", typeid(*tests[i].f).name(), typeid(*tests[j].f).name()));
+        }
   }
 
-
+  /////////////////////////////////////////////////////////
+  // Filter chain graph rebuild test
+  // * Add a filter, test
+  // * Add another filter and test again.
+  // * Drop and test
 
 TEST_END(filter_graph2);
 
