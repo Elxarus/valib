@@ -330,13 +330,10 @@ FilterGraph2::build_chain(Node *node)
 
     if (next_node_id == node->next->id)
     {
-      // end of the chain or next node does not change:
-      // we have no need to build a new node, just reopen
-      // the next one and go down.
-
+      // node does not change: we have no need to build
+      // a new node, just reopen the next one and go down.
       if (!node->next->filter->open(next_spk))
         return false;
-
       node->next->state = state_empty;
       node->next->flushing = false;
       node = node->next;
@@ -346,6 +343,15 @@ FilterGraph2::build_chain(Node *node)
     // truncate the chain if nessesary
     if (node->next->id != node_end)
       truncate(node);
+
+    if (next_node_id == node_end)
+    {
+      // end of the chain
+      node->next->filter->open(next_spk);
+      node->next->state = state_empty;
+      node->next->flushing = false;
+      return true;
+    }
 
     /////////////////////////////////////////////////////////
     // Build a new node
