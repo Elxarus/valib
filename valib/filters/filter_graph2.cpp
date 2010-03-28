@@ -391,6 +391,7 @@ FilterGraph2::build_chain(Node *node)
       uninit_filter(next_node_id);
       return false;
     }
+    filter->reset();
 
     // build a new node
     Node *next_node   = new Node;
