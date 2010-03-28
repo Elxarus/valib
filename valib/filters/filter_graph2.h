@@ -134,6 +134,11 @@ public:
   { return end.filter->get_output(); }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// FilterChain
+// Connects filters one after another
+///////////////////////////////////////////////////////////////////////////////
+
 class FilterChain2 : public FilterGraph2
 {
 protected:
@@ -167,11 +172,47 @@ public:
 
   /////////////////////////////////////////////////////////
   // FilterChain interface
+  // add_front()
+  //   Inserts a filter at the beginning of the chain.
+  //
+  //   You can add a filter during processing, regular
+  //   chain rebuild is initiated.
+  //
+  // add_back()
+  //   Add a filter to the end of the chain.
+  //
+  //   You can add a filter during processing, regular
+  //   chain rebuild is initiated.
+  //
+  // remove()
+  //   Remove a filter from the chain.
+  //
+  //   You can remove a filter during processing, regular
+  //   chain rebuild is initiated.
+  //
+  //   Note, that filter is used until the end of the
+  //   rebuild process. Use destroy() if you need to
+  //   release the filter immediately.
+  //
+  // clear()
+  //   Remove all filters form the chain. You can clear
+  //   during processing, regular chain rebuild is initiated.
+  //
+  //   Note, that filters are used until the end of the
+  //   rebuild process. Use destroy() if you need to
+  //   release filters immediately.
+  //
+  // destroy()
+  //   Destroy the chain and release all filters
+  //   immediately. Current processing is interrupted.
 
   bool add_front(Filter2 *filter, std::string name = std::string());
   bool add_back(Filter2 *filter, std::string name = std::string());
+
   void remove(Filter2 *filter);
   void clear();
+
+  void destroy();
 };
 
 #endif
