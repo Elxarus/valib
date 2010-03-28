@@ -396,6 +396,7 @@ void
 FilterGraph2::destroy()
 {
   truncate(&start);
+  reset();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -415,8 +416,7 @@ FilterChain2::~FilterChain2()
 bool
 FilterChain2::add_front(Filter2 *filter, std::string name)
 {
-  // Insert only when we have no such filter in the list
-  if (find(nodes.begin(), nodes.end(), filter) != nodes.end())
+  if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
 
   nodes.insert(++nodes.begin(), Node(id++, filter, name));
@@ -427,9 +427,9 @@ FilterChain2::add_front(Filter2 *filter, std::string name)
 bool
 FilterChain2::add_back(Filter2 *filter, std::string name)
 {
-  // Insert only when we have no such filter in the list
-  if (find(nodes.begin(), nodes.end(), filter) != nodes.end())
+  if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
+
   nodes.insert(--nodes.end(), Node(id++, filter, name));
   invalidate();
   return true;
@@ -438,6 +438,7 @@ FilterChain2::add_back(Filter2 *filter, std::string name)
 void
 FilterChain2::remove(Filter2 *filter)
 {
+  if (!filter) false;
   nodes.erase(find(nodes.begin(), nodes.end(), filter));
   invalidate();
 }
@@ -449,6 +450,15 @@ FilterChain2::clear()
   nodes.push_back(Node(node_start, 0, std::string()));
   nodes.push_back(Node(node_end, 0, std::string()));
   invalidate();
+}
+
+void
+FilterChain2::destroy()
+{
+  nodes.clear();
+  nodes.push_back(Node(node_start, 0, std::string()));
+  nodes.push_back(Node(node_end, 0, std::string()));
+  FilterGraph2::destroy();
 }
 
 int
