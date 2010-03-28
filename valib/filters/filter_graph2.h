@@ -27,7 +27,7 @@
 class FilterGraph2 : public SimpleFilter
 {
 private:
-  enum state_t { state_empty, state_processing, state_rebuild, state_done_flushing };
+  enum state_t { state_init, state_empty, state_processing, state_rebuild, state_done_flushing };
 
   struct Node
   {
@@ -52,6 +52,8 @@ private:
 
   void truncate(Node *node);
   bool build_chain(Node *node);
+
+  bool chain_is_empty() const;
   bool process_chain(Chunk2 &out);
 
 protected:
@@ -117,6 +119,7 @@ public:
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
 
+  virtual bool can_open(Speakers spk);
   virtual bool init(Speakers spk);
   virtual void uninit();
 

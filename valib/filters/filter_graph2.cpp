@@ -11,14 +11,14 @@ FilterGraph2::FilterGraph2()
   start.next = &end;
   start.prev = 0;
   start.filter = &pass_start;
-  start.state = state_empty;
+  start.state = state_init;
   start.flushing = false;
 
   end.id = node_end;
   end.next = 0;
   end.prev = &start;
   end.filter = &pass_end;
-  end.state = state_empty;
+  end.state = state_init;
   end.flushing = false;
 }
 
@@ -31,11 +31,14 @@ FilterGraph2::~FilterGraph2()
 // SimpleFilter overrides
 
 bool
+FilterGraph2::can_open(Speakers spk)
+{
+  return next_id(node_start, spk) != node_err;
+}
+
+bool
 FilterGraph2::init(Speakers spk)
 {
-  if (next_id(node_start, spk) == node_err)
-    return false;
-
   destroy();
   start.filter->open(spk);
   return build_chain(&start);
@@ -111,6 +114,12 @@ FilterGraph2::uninit()
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
+FilterGraph2::chain_is_empty() const
+{
+  return start.state == state_init || start.state == state_empty;
+}
+
+bool
 FilterGraph2::process_chain(Chunk2 &out)
 {
   bool allow_chain_rebuild = false;
@@ -118,7 +127,7 @@ FilterGraph2::process_chain(Chunk2 &out)
 
   // When chain is empty we should start processing from
   // the beginning of the chain and from the end otherwise.
-  Node *node = (start.state == state_empty)? &start: &end;
+  Node *node = chain_is_empty()? &start: &end;
 
   while (node)
   {
@@ -135,7 +144,7 @@ FilterGraph2::process_chain(Chunk2 &out)
     {
       if (node->flushing)
       {
-        node->state = state_empty;
+        node->state = state_init;
         node->flushing = false;
         node = node->prev;
         continue;
@@ -160,6 +169,7 @@ FilterGraph2::process_chain(Chunk2 &out)
 
     switch (node->state)
     {
+    case state_init:
     case state_empty:
     case state_processing:
       /////////////////////////////////////////////////////
@@ -170,12 +180,22 @@ FilterGraph2::process_chain(Chunk2 &out)
       {
         if (!node->filter->flush(node->output))
         {
-          // done flushing this node, flush the downstream
+          // done flushing this node
           node->filter->reset();
-          node->state = state_done_flushing;
           node->flushing = false;
-          node->next->flushing = true;
-          node = node->next;
+          if (node->next->state == state_init)
+          {
+            // no need to flush downstream, go up
+            node->state = state_init;
+            node = node->prev;
+          }
+          else
+          {
+            // flush downstream
+            node->state = state_done_flushing;
+            node->next->flushing = true;
+            node = node->next;
+          }
           continue;
         }
       }
@@ -201,8 +221,13 @@ FilterGraph2::process_chain(Chunk2 &out)
       if (rebuild_chain || node->filter->new_stream())
       {
         node->state = state_rebuild;
-        node->next->flushing = true;
-        node = node->next;
+
+        // flush downstream if nessesary
+        if (node->next->state != state_init)
+        {
+          node->next->flushing = true;
+          node = node->next;
+        }
         continue;
       }
 
@@ -233,7 +258,7 @@ FilterGraph2::process_chain(Chunk2 &out)
       // Downstream was done flushing. Just go up to get
       // more data.
 
-      node->state = state_empty;
+      node->state = state_init;
       node = node->prev;
       continue;
     }
@@ -245,7 +270,7 @@ FilterGraph2::process_chain(Chunk2 &out)
 bool
 FilterGraph2::process(Chunk2 &in, Chunk2 &out)
 {
-  if (start.state != state_empty)
+  if (!chain_is_empty())
     if (process_chain(out))
       return true;
 
@@ -271,7 +296,7 @@ FilterGraph2::reset()
   while (node)
   {
     node->filter->reset();
-    node->state = state_empty;
+    node->state = state_init;
     node->flushing = false;
     node = node->next;
   }
@@ -334,7 +359,7 @@ FilterGraph2::build_chain(Node *node)
       // a new node, just reopen the next one and go down.
       if (!node->next->filter->open(next_spk))
         return false;
-      node->next->state = state_empty;
+      node->next->state = state_init;
       node->next->flushing = false;
       node = node->next;
       continue;
@@ -348,7 +373,7 @@ FilterGraph2::build_chain(Node *node)
     {
       // end of the chain
       node->next->filter->open(next_spk);
-      node->next->state = state_empty;
+      node->next->state = state_init;
       node->next->flushing = false;
       return true;
     }
@@ -374,7 +399,7 @@ FilterGraph2::build_chain(Node *node)
     next_node->prev   = node;
     next_node->name   = get_name(next_node_id);
     next_node->filter = filter;
-    next_node->state  = state_empty;
+    next_node->state  = state_init;
     next_node->flushing = false;
 
     // update the list
