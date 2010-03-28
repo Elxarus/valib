@@ -25,6 +25,8 @@
 
     while (filter->flush(out);)
       do_something(out);
+
+    filter->close();
   }
   catch (FilterError)
   {
@@ -32,13 +34,16 @@
   }
 
   /////////////////////////////////////////////////////////
-  // Format change during processing
+  // Change input format of the filter without interruption
+  // of the data flow.
 
   Filter *filter;
   ...
 
   try
   {
+    filter->open(format);
+    ...
     while (has_more_data())
     {
       Chunk2 in = get_more_data();
@@ -57,6 +62,8 @@
 
     while (filter->flush(out))
       do_something(out);
+
+    filter->close();
   }
   catch (FilterError)
   {
@@ -68,6 +75,7 @@
 
   bool can_open(Speakers spk) const
     Check format support.
+
     Return value:
     * true: filter supports the format given. Note that filter may fail to
       to open the stream even when the stream format is supported because
@@ -77,6 +85,7 @@
 
   bool open(Speakers spk)
     Open the filter and allocate resources.
+
     Return value:
     * true: success
     * false: fail
@@ -140,8 +149,27 @@
 
   bool new_stream() const
     Filter returns a new stream. It may do this for the following reasons:
-    * It want the downstream to flush and prepare to receive a new stream
+    * It want the downstream to flush and prepare to receive a new stream.
     * It wants to change the output format
+    Both process() and flush() calls may affect this flag
+
+    This flag should appear only for the first chunk in the stream. An example:
+
+    call            result  new_stream()  get_output()  comment
+    ---------------------------------------------------------------------------
+    open(spk)       true    false         out_spk       we know output format immediately
+    process(chunk1) true    false         out_spk
+    process(chunk1) false   false         out_spk       need more data
+    process(chunk2) true    false         out_spk
+    process(chunk2) true    true          new_out_spk   data of the new format
+    process(chunk2) true    false         new_out_spk   new stream continues
+
+    call            result  new_stream()  get_output()  comment
+    ---------------------------------------------------------------------------
+    open(spk)       true    false         spk_unknown   output format is initially unknown
+    process(chunk1) false   false         spk_unknown   buffering, need more data
+    process(chunk2) true    true          out_spk       ouput format is determined
+    process(chunk2) true    false         out_spk       new stream continues
 
   Speakers get_output()
     Returns output format of the filter.
