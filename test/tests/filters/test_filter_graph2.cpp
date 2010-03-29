@@ -103,7 +103,7 @@ public:
 // does not equal to
 // process(block1) -> process(block2) -> flush
 //
-// This property help up to detect an excessive flushing.
+// This property help us to detect an excessive flushing.
 
 
 class StepGain : public Gain
@@ -191,6 +191,146 @@ public:
   { return out_spk; }
 
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// FormatChangeMock
+// Simulates format change during processing
+
+class FormatChangeMock : public Passthrough
+{
+protected:
+  int chunk_count;
+  bool format_change;
+
+  int first_change;
+  int second_change;
+
+public:
+  FormatChangeMock():
+  first_change(-1), second_change(-1),
+  chunk_count(0), format_change(false)
+  {}
+
+  FormatChangeMock(int first_change_, int second_change_):
+  first_change(first_change_), second_change(second_change_),
+  chunk_count(0), format_change(false)
+  {}
+
+  void set(int first_change_, int second_change_)
+  {
+    first_change = first_change_;
+    second_change = second_change_;
+  }
+
+  int num_format_changes() const
+  {
+    int count = 0;
+    if (first_change >= 0) count++;
+    if (second_change >= 0) count++;
+    return count;
+  }
+
+  virtual bool process(Chunk2 &in, Chunk2 &out)
+  {
+    if (in.is_dummy())
+      return false;
+
+    format_change = (chunk_count == first_change) || (chunk_count == second_change);
+    chunk_count++;
+
+    out = in;
+    in.set_empty();
+    return true;
+  }
+
+  virtual bool new_stream() const
+  { return format_change; }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// CallCounter
+// Counts calls to Filter2 interface functions.
+
+class CallCounter : public Filter2
+{
+protected:
+  Speakers spk;
+
+public:
+  mutable int n_can_open;
+  int n_open;
+  int n_close;
+  int n_reset;
+  int n_process;
+  int n_flush;
+  mutable int n_new_stream;
+  mutable int n_is_open;
+  mutable int n_get_input;
+  mutable int n_get_output;
+
+  CallCounter()
+  { reset_counters(); }
+
+  void reset_counters()
+  {
+    n_can_open = 0;
+    n_open = 0;
+    n_close = 0;
+    n_reset = 0;
+    n_process = 0;
+    n_flush = 0;
+    n_new_stream = 0;
+    n_is_open = 0;
+    n_get_input = 0;
+    n_get_output = 0;
+  }
+
+  virtual bool can_open(Speakers spk) const
+  { n_can_open++; return true; }
+
+  virtual bool open(Speakers spk_)
+  {
+    n_open++;
+    spk = spk_;
+    return !spk.is_unknown();
+  }
+
+  virtual void close()
+  { n_close++; spk = spk_unknown; }
+
+  virtual void reset()
+  { n_reset++; }
+
+  virtual bool process(Chunk2 &in, Chunk2 &out)
+  {
+    n_process++;
+    out = in;
+    in.set_empty();
+    return !out.is_dummy();
+  }
+
+  virtual bool flush(Chunk2 &out)
+  {
+    n_flush++;
+    return false;
+  }
+
+  virtual bool new_stream() const
+  { n_new_stream++; return false; }
+
+  virtual bool is_open() const
+  { n_is_open++; return !spk.is_unknown(); }
+
+  virtual bool is_ofdd() const
+  { return false; }
+
+  virtual Speakers get_input() const
+  { n_get_input++; return spk; }
+
+  virtual Speakers get_output() const
+  { n_get_output++; return spk; }
+};
+
 
 TEST(filter_graph2, "FilterGraph2")
 
@@ -364,6 +504,52 @@ TEST(filter_graph2, "FilterGraph2")
     noise1.init(spk, seed, noise_size);
     noise2.init(spk, seed, noise_size);
     CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+  }
+
+  /////////////////////////////////////////////////////////
+  // Format change in the chain should do the following:
+  // * Flush downstream
+  // * Rebuild the tail of the chain
+  // * Set new_stream() flag
+
+  {
+    CallCounter counter;
+    FormatChangeMock format_change;
+
+    FilterChain2 graph_filter;
+    graph_filter.add_back(&counter);
+
+    // One open() and one flush() during regular processing
+    NoiseGen noise1(spk, seed, noise_size);
+    NoiseGen noise2(spk, seed, noise_size);
+    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+    CHECK(counter.n_open == 1 && counter.n_flush == 1);
+
+    // Number of open() and flush() calls equals to number of
+    // format changes plus 1.
+
+    int format_change_pos[][2] = {
+      { 0, -1 }, { 1, -1 },
+      { 0,  1 }, { 0,  2 }, { 1,  2 }, { 1,  3 }
+    };
+
+    for (int i = 0; i < array_size(format_change_pos); i++)
+    {
+      graph_filter.clear();
+      graph_filter.add_back(&format_change);
+      graph_filter.add_back(&counter);
+
+      counter.reset_counters();
+      format_change.set(format_change_pos[i][0], format_change_pos[i][1]);
+      int num_streams = format_change.num_format_changes() + 1;
+
+      noise1.init(spk, seed, noise_size);
+      noise2.init(spk, seed, noise_size);
+      CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+      CHECK(counter.n_open == num_streams &&
+            counter.n_flush == num_streams);
+    }
+
   }
 
   TEST_END(filter_graph2);
