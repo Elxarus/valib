@@ -522,13 +522,6 @@ TEST(filter_graph2, "FilterGraph2")
   }
 
   {
-    CallCounter counter;
-    FormatChangeMock format_change;
-
-    FilterChain2 graph_filter;
-    graph_filter.add_back(&format_change);
-    graph_filter.add_back(&counter);
-
     int format_change_pos[][2] = {
       { 0, -1 }, { 1, -1 },
       { 0,  1 }, { 0,  2 }, { 1,  2 }, { 1,  3 }
@@ -536,13 +529,12 @@ TEST(filter_graph2, "FilterGraph2")
 
     for (int i = 0; i < array_size(format_change_pos); i++)
     {
-      graph_filter.clear();
+      CallCounter counter;
+      FormatChangeMock format_change(format_change_pos[i][0], format_change_pos[i][1]);
+
+      FilterChain2 graph_filter;
       graph_filter.add_back(&format_change);
       graph_filter.add_back(&counter);
-      graph_filter.reset();
-
-      counter.reset_counters();
-      format_change.set(format_change_pos[i][0], format_change_pos[i][1]);
 
       // Fitler is open during the chain building
       // and after each format change
@@ -561,6 +553,48 @@ TEST(filter_graph2, "FilterGraph2")
       NoiseGen noise2(spk, seed, noise_size);
       CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
       CHECK(counter.n_open == n_open && counter.n_flush == n_flush);
+    }
+  }
+
+  {
+    // Count new_stream()'s
+    int format_change_pos[][2] = {
+      { 0, -1 }, { 1, -1 },
+      { 0,  1 }, { 0,  2 }, { 1,  2 }, { 1,  3 }
+    };
+
+    for (int i = 0; i < array_size(format_change_pos); i++)
+    {
+      int format_changes = 0;
+      int n_new_stream = 0;
+      if (format_change_pos[i][0] >= 0) format_changes++;
+      if (format_change_pos[i][1] >= 0) format_changes++;
+
+      FormatChangeMock format_change(format_change_pos[i][0], format_change_pos[i][1]);
+
+      FilterChain2 graph_filter;
+      graph_filter.add_back(&format_change);
+      graph_filter.open(spk);
+      CHECK(graph_filter.is_open());
+
+      NoiseGen noise(spk, seed, noise_size);
+      while (!noise.is_empty())
+      {
+        Chunk src_chunk;
+        noise.get_chunk(&src_chunk);
+
+        Chunk2 in(src_chunk), out;
+        while (graph_filter.process(in, out))
+          if (graph_filter.new_stream())
+            n_new_stream++;
+      }
+
+      Chunk2 out;
+      while (graph_filter.flush(out))
+        if (graph_filter.new_stream())
+          n_new_stream++;
+
+      CHECK(n_new_stream == format_changes);
     }
 
   }
