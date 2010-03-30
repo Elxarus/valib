@@ -222,13 +222,8 @@ public:
     second_change = second_change_;
   }
 
-  int num_format_changes() const
-  {
-    int count = 0;
-    if (first_change >= 0) count++;
-    if (second_change >= 0) count++;
-    return count;
-  }
+  virtual void reset()
+  { chunk_count = 0; }
 
   virtual bool process(Chunk2 &in, Chunk2 &out)
   {
@@ -524,9 +519,15 @@ TEST(filter_graph2, "FilterGraph2")
     NoiseGen noise2(spk, seed, noise_size);
     CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
     CHECK(counter.n_open == 1 && counter.n_flush == 1);
+  }
 
-    // Number of open() and flush() calls equals to number of
-    // format changes plus 1.
+  {
+    CallCounter counter;
+    FormatChangeMock format_change;
+
+    FilterChain2 graph_filter;
+    graph_filter.add_back(&format_change);
+    graph_filter.add_back(&counter);
 
     int format_change_pos[][2] = {
       { 0, -1 }, { 1, -1 },
@@ -538,16 +539,28 @@ TEST(filter_graph2, "FilterGraph2")
       graph_filter.clear();
       graph_filter.add_back(&format_change);
       graph_filter.add_back(&counter);
+      graph_filter.reset();
 
       counter.reset_counters();
       format_change.set(format_change_pos[i][0], format_change_pos[i][1]);
-      int num_streams = format_change.num_format_changes() + 1;
 
-      noise1.init(spk, seed, noise_size);
-      noise2.init(spk, seed, noise_size);
+      // Fitler is open during the chain building
+      // and after each format change
+      int n_open = 1;
+      if (format_change_pos[i][0] >= 0) n_open++;
+      if (format_change_pos[i][1] >= 0) n_open++;
+
+      // Filter is flushed after the end of processing
+      // and each format change, excluding the case when
+      // format changes at the first chunk of the stream.
+      int n_flush = 1;
+      if (format_change_pos[i][0] > 0) n_flush++;
+      if (format_change_pos[i][1] > 0) n_flush++;
+
+      NoiseGen noise1(spk, seed, noise_size);
+      NoiseGen noise2(spk, seed, noise_size);
       CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
-      CHECK(counter.n_open == num_streams &&
-            counter.n_flush == num_streams);
+      CHECK(counter.n_open == n_open && counter.n_flush == n_flush);
     }
 
   }
