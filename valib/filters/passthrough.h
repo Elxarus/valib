@@ -3,8 +3,8 @@
   Accept any format and pass the data through.
 */
 
-#ifndef VALIB_COUNTER_H
-#define VALIB_COUNTER_H
+#ifndef VALIB_PASSTHROUGH_H
+#define VALIB_PASSTHROUGH_H
 
 #include "../filter2.h"
 
