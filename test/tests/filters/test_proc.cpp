@@ -50,13 +50,13 @@ TEST(proc_pass, "AudioProcessor noise passthrough test")
       src.init(spk, seed, data_size);
       ref.init(spk, seed, data_size);
 
-      if (!proc.set_input(spk) || !proc.set_user(spk))
+      if (!proc->set_input(spk) || !proc.set_user(spk))
       {
         log->err("Cannot init processor");
         continue;
       }
 
-      compare(log, &src, &proc, &ref);
+      compare(log, &src, proc, &ref);
     }
 
 TEST_END(proc_pass);

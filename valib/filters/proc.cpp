@@ -18,7 +18,8 @@ AudioProcessor::AudioProcessor(size_t _nsamples)
 size_t
 AudioProcessor::get_info(char *_buf, size_t _len) const
 {
-  return chain.chain_text(_buf, _len);
+  return 0;
+//  return chain.chain_text(_buf, _len);
 }
 
 
@@ -56,7 +57,7 @@ AudioProcessor::get_user() const
 Speakers 
 AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
 {
-  if (!query_input(_in_spk) || !query_user(_user_spk))
+  if (!can_open(_in_spk) || !query_user(_user_spk))
     return spk_unknown;
 
   Speakers result = _in_spk;
@@ -123,7 +124,7 @@ AudioProcessor::dithering_level() const
 bool 
 AudioProcessor::rebuild_chain()
 {
-  chain.drop();
+  chain.destroy();
   if (in_spk.is_unknown())
     return true;
 
@@ -133,25 +134,25 @@ AudioProcessor::rebuild_chain()
     return false;
 
   // processing chain
-  FILTER_SAFE(chain.add_back(in_levels,  "Input levels"));
-  FILTER_SAFE(chain.add_back(in_cache,   "Input cache"));
+  FILTER_SAFE(chain.add_back(&in_levels,  "Input levels"));
+  FILTER_SAFE(chain.add_back(&in_cache,   "Input cache"));
   if (out_spk.nch() < in_spk.nch())
   {
-    FILTER_SAFE(chain.add_back(mixer,      "Mixer"));
-    FILTER_SAFE(chain.add_back(resample,   "SRC"));
+    FILTER_SAFE(chain.add_back(&mixer,      "Mixer"));
+    FILTER_SAFE(chain.add_back(&resample,   "SRC"));
   }
   else
   {
-    FILTER_SAFE(chain.add_back(resample,   "SRC"));
-    FILTER_SAFE(chain.add_back(mixer,      "Mixer"));
+    FILTER_SAFE(chain.add_back(&resample,   "SRC"));
+    FILTER_SAFE(chain.add_back(&mixer,      "Mixer"));
   }
-  FILTER_SAFE(chain.add_back(bass_redir, "Bass redirection"));
-  FILTER_SAFE(chain.add_back(equalizer,  "Equalizer"));
-  FILTER_SAFE(chain.add_back(dither,     "Dither"));
-  FILTER_SAFE(chain.add_back(agc,        "AGC"));
-  FILTER_SAFE(chain.add_back(delay,      "Delay"));
-  FILTER_SAFE(chain.add_back(out_cache,  "Output cache"));
-  FILTER_SAFE(chain.add_back(out_levels, "Output levels"));
+  FILTER_SAFE(chain.add_back(&bass_redir, "Bass redirection"));
+  FILTER_SAFE(chain.add_back(&equalizer,  "Equalizer"));
+  FILTER_SAFE(chain.add_back(&dither,     "Dither"));
+  FILTER_SAFE(chain.add_back(&agc,        "AGC"));
+  FILTER_SAFE(chain.add_back(&delay,      "Delay"));
+  FILTER_SAFE(chain.add_back(&out_cache,  "Output cache"));
+  FILTER_SAFE(chain.add_back(&out_levels, "Output levels"));
 
   // setup mixer
   Speakers mixer_spk = out_spk;
@@ -164,61 +165,40 @@ AudioProcessor::rebuild_chain()
   // format conversion
   if (in_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_front(in_conv, "PCM->Linear converter"));
+    FILTER_SAFE(chain.add_front(&in_conv, "PCM->Linear converter"));
     FILTER_SAFE(in_conv.set_format(FORMAT_LINEAR));
   }
 
   if (out_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_back(out_conv, "Linear->PCM converter"));
+    FILTER_SAFE(chain.add_back(&out_conv, "Linear->PCM converter"));
     FILTER_SAFE(out_conv.set_format(out_spk.format));
   }
 
   dither.level = dithering_level();
 
-  FILTER_SAFE(chain.set_input(in_spk));
+  FILTER_SAFE(chain.open(in_spk));
   return true;
 }
 
-// Filter interface
+///////////////////////////////////////////////////////////////////////////////
+// Filter2 interface
 
-void 
-AudioProcessor::reset()
+bool
+AudioProcessor::can_open(Speakers new_spk) const
 {
-  in_levels.reset();
-  mixer.reset();
-  resample.reset();
-  bass_redir.reset();
-  agc.reset();
-  delay.reset();
-  out_levels.reset();
-
-  chain.reset();
+  return (FORMAT_MASK(new_spk.format) & format_mask) && 
+         new_spk.sample_rate && new_spk.mask;
 }
 
 bool
-AudioProcessor::is_ofdd() const
-{
-  return false;
-}
-
-
-bool 
-AudioProcessor::query_input(Speakers _spk) const
-{
-  return (FORMAT_MASK(_spk.format) & format_mask) && 
-         _spk.sample_rate && 
-         _spk.mask;
-}
-
-bool 
-AudioProcessor::set_input(Speakers _spk)
+AudioProcessor::open(Speakers new_spk)
 {
   reset();
-  if (!query_input(_spk)) 
+  if (!can_open(new_spk)) 
     return false;
 
-  in_spk = _spk;
+  in_spk = new_spk;
   if (!rebuild_chain())
   {
     in_spk = spk_unknown;
@@ -228,41 +208,41 @@ AudioProcessor::set_input(Speakers _spk)
   return true;
 }
 
+void
+AudioProcessor::close()
+{ chain.close(); }
+
+void
+AudioProcessor::reset()
+{ chain.reset(); }
+
+bool
+AudioProcessor::process(Chunk2 &in, Chunk2 &out)
+{ return chain.process(in, out); }
+
+bool
+AudioProcessor::flush(Chunk2 &out)
+{ return chain.flush(out); }
+
+bool
+AudioProcessor::new_stream() const
+{ return chain.new_stream(); }
+
+bool
+AudioProcessor::is_open() const
+{ return chain.is_open(); }
+
+bool
+AudioProcessor::is_ofdd() const
+{ return false; }
+
 Speakers
 AudioProcessor::get_input() const
-{
-  return chain.get_input();
-}
+{ return in_spk; }
 
-bool 
-AudioProcessor::process(const Chunk *_chunk)
-{
-  if (_chunk->is_dummy())
-    return true;
-
-  if (_chunk->spk != in_spk && !set_input(_chunk->spk))
-    return false;
-  else
-    return chain.process(_chunk);
-}
-
-Speakers 
+Speakers
 AudioProcessor::get_output() const
-{
-  return out_spk;
-}
-
-bool 
-AudioProcessor::is_empty() const
-{
-  return chain.is_empty();
-}
-
-bool 
-AudioProcessor::get_chunk(Chunk *_chunk)
-{
-  return chain.get_chunk(_chunk);
-}
+{ return out_spk; }
 
 ///////////////////////////////////////////////////////////////////////////////
 

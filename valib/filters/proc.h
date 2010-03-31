@@ -74,7 +74,7 @@
 #ifndef VALIB_PROC_H
 #define VALIB_PROC_H
 
-#include "../filter_graph.h"
+#include "filter_graph2.h"
 #include "cache.h"
 #include "equalizer_mch.h"
 #include "levels.h"
@@ -89,7 +89,7 @@
 
 
 
-class AudioProcessor : public Filter
+class AudioProcessor : public Filter2
 {
 protected:
   Speakers in_spk;   // actual input format
@@ -118,7 +118,7 @@ protected:
   CacheFilter  out_cache;
   Converter    out_conv;
 
-  FilterChain chain;
+  FilterChain2 chain;
   bool rebuild_chain();
 
 public:
@@ -135,19 +135,23 @@ public:
   Speakers user2output(Speakers in_spk, Speakers user_spk) const;
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // Filter2 interface
 
+  virtual bool can_open(Speakers spk) const;
+  virtual bool open(Speakers spk);
+  virtual void close();
+
+  // Processing
   virtual void reset();
-  virtual bool is_ofdd() const;
+  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool flush(Chunk2 &out);
+  virtual bool new_stream() const;
 
-  virtual bool query_input(Speakers spk) const;
-  virtual bool set_input(Speakers spk);
+  // Filter state
+  virtual bool     is_open() const;
+  virtual bool     is_ofdd() const;
   virtual Speakers get_input() const;
-  virtual bool process(const Chunk *chunk);
-
   virtual Speakers get_output() const;
-  virtual bool is_empty() const;
-  virtual bool get_chunk(Chunk *chunk);
 
   /////////////////////////////////////////////////////////
   // Options
