@@ -20,6 +20,8 @@ FilterGraph2::FilterGraph2()
   end.filter = &pass_end;
   end.state = state_init;
   end.flushing = false;
+
+  is_new_stream = false;
 }
 
 FilterGraph2::~FilterGraph2()
@@ -29,12 +31,6 @@ FilterGraph2::~FilterGraph2()
 
 ///////////////////////////////////////////////////////////
 // SimpleFilter overrides
-
-bool
-FilterGraph2::can_open(Speakers spk)
-{
-  return next_id(node_start, spk) != node_err;
-}
 
 bool
 FilterGraph2::init(Speakers spk)
@@ -128,6 +124,9 @@ FilterGraph2::process_chain(Chunk2 &out)
   // When chain is empty we should start processing from
   // the beginning of the chain and from the end otherwise.
   Node *node = chain_is_empty()? &start: &end;
+
+  // Drop new stream state when we already sent it.
+  if (!chain_is_empty()) is_new_stream = false;
 
   while (node)
   {
@@ -248,6 +247,7 @@ FilterGraph2::process_chain(Chunk2 &out)
       if (!build_chain(node))
         throw FilterError(this, 0, "Error: cannot rebuild the chain");
 
+      is_new_stream = true;
       node->state = state_processing;
       node->next->input = node->output;
       node = node->next;
@@ -292,16 +292,14 @@ FilterGraph2::flush(Chunk2 &out)
 void
 FilterGraph2::reset()
 {
-  Node *node = &start;
-  while (node)
+  is_new_stream = false;
+  for (Node *node = &start; node; node = node->next)
   {
     node->filter->reset();
     node->state = state_init;
     node->flushing = false;
-    node = node->next;
   }
 }
-
 
 ///////////////////////////////////////////////////////////
 // Truncate the chain
