@@ -155,7 +155,7 @@ protected:
     Filter2 *filter;
     std::string name;
 
-    Node(int id_, Filter2 *filter_, std::string name_):
+    Node(int id_, Filter2 *filter_, const std::string &name_ = std::string()):
     id(id_), filter(filter_), name(name_) {}
 
     bool operator ==(int id_)          const { return id == id_;         }
@@ -213,8 +213,8 @@ public:
   //   Destroy the chain and release all filters
   //   immediately. Current processing is interrupted.
 
-  bool add_front(Filter2 *filter, std::string name = std::string());
-  bool add_back(Filter2 *filter, std::string name = std::string());
+  bool add_front(Filter2 *filter, const std::string &name = std::string());
+  bool add_back(Filter2 *filter, const std::string &name = std::string());
 
   void remove(Filter2 *filter);
   void clear();

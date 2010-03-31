@@ -430,15 +430,15 @@ FilterGraph2::destroy()
 FilterChain2::FilterChain2()
 {
   id = 1;
-  nodes.push_back(Node(node_start, 0, std::string()));
-  nodes.push_back(Node(node_end, 0, std::string()));
+  nodes.push_back(Node(node_start, 0));
+  nodes.push_back(Node(node_end, 0));
 }
 
 FilterChain2::~FilterChain2()
 {}
 
 bool
-FilterChain2::add_front(Filter2 *filter, std::string name)
+FilterChain2::add_front(Filter2 *filter, const std::string &name)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
@@ -449,7 +449,7 @@ FilterChain2::add_front(Filter2 *filter, std::string name)
 }
 
 bool
-FilterChain2::add_back(Filter2 *filter, std::string name)
+FilterChain2::add_back(Filter2 *filter, const std::string &name)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
@@ -471,8 +471,8 @@ void
 FilterChain2::clear()
 {
   nodes.clear();
-  nodes.push_back(Node(node_start, 0, std::string()));
-  nodes.push_back(Node(node_end, 0, std::string()));
+  nodes.push_back(Node(node_start, 0));
+  nodes.push_back(Node(node_end, 0));
   invalidate();
 }
 
@@ -480,8 +480,8 @@ void
 FilterChain2::destroy()
 {
   nodes.clear();
-  nodes.push_back(Node(node_start, 0, std::string()));
-  nodes.push_back(Node(node_end, 0, std::string()));
+  nodes.push_back(Node(node_start, 0));
+  nodes.push_back(Node(node_end, 0));
   FilterGraph2::destroy();
 }
 
