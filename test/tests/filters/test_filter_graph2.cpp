@@ -150,18 +150,18 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-// OfddSim
+// OfddMock
 // Simulates ofdd filter behavior: output format is unknown after open, and
 // changes after the first process() call.
 
-class OfddSim : public Passthrough
+class OfddMock : public Passthrough
 {
 protected:
   bool format_change;
   Speakers out_spk;
 
 public:
-  OfddSim() {};
+  OfddMock() {};
 
   virtual bool init(Speakers new_spk)
   {
@@ -368,7 +368,7 @@ TEST(filter_graph2, "FilterGraph2")
   // * Gain filter does not require flushing
   // * StepGain has a transition at the beginning
   // * LinearBuffer does nothing, but requires flushing
-  // * OfddSim simulates ofdd behavior
+  // * OfddMock simulates ofdd behavior
 
   {
     double gain = 0.5;
@@ -382,14 +382,14 @@ TEST(filter_graph2, "FilterGraph2")
     Gain         ref_gain(gain);
     StepGain     ref_step_gain(gain, step_samples);
     LinearBuffer ref_linear_buffer(buf_size);
-    OfddSim      ref_ofdd;
+    OfddMock      ref_ofdd;
 
     // Filters to include into the chain
     Passthrough  tst_pass;
     Gain         tst_gain(gain);
     StepGain     tst_step_gain(gain, step_samples);
     LinearBuffer tst_linear_buffer(buf_size);
-    OfddSim      tst_ofdd;
+    OfddMock      tst_ofdd;
 
     Filter2 *ref[] = { &ref_pass, &ref_gain, &ref_step_gain, &ref_linear_buffer, &ref_ofdd };
     Filter2 *tst[] = { &tst_pass, &tst_gain, &tst_step_gain, &tst_linear_buffer, &tst_ofdd };
@@ -413,7 +413,7 @@ TEST(filter_graph2, "FilterGraph2")
   // * Gain filter does not require flushing
   // * StepGain has a transition at the beginning
   // * LinearBufferFilter requires flushing
-  // * OfddSim simulates ofdd behavior
+  // * OfddMock simulates ofdd behavior
   // Any combination of these filters equals to StepGain
   // with different parameters. So we need only one
   // reference filter
@@ -430,7 +430,7 @@ TEST(filter_graph2, "FilterGraph2")
     Gain         tst_gain(gain);
     StepGain     tst_step_gain(gain, step_samples);
     LinearBuffer tst_linear_buffer(buf_size);
-    OfddSim      tst_ofdd;
+    OfddMock     tst_ofdd;
 
     struct {
       Filter2 *f;
@@ -596,8 +596,6 @@ TEST(filter_graph2, "FilterGraph2")
 
       CHECK(n_new_stream == format_changes);
     }
-
   }
 
-  TEST_END(filter_graph2);
-
+TEST_END(filter_graph2);
