@@ -396,7 +396,6 @@ FilterGraph2::build_chain(Node *node)
     next_node->id     = next_node_id;
     next_node->next   = &end;
     next_node->prev   = node;
-    next_node->name   = get_name(next_node_id);
     next_node->filter = filter;
     next_node->state  = state_init;
     next_node->flushing = false;
@@ -501,7 +500,7 @@ FilterChain2::init_filter(int id_, Speakers spk_)
   return it->filter;
 }
 
-const char *
+std::string
 FilterChain2::get_name(int id_) const
 {
   const_list_iter it = find(nodes.begin(), nodes.end(), id_);
