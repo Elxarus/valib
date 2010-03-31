@@ -559,7 +559,7 @@ TEST(filter_graph2, "FilterGraph2")
   {
     // Count new_stream()'s
     int format_change_pos[][2] = {
-      { 0, -1 }, { 1, -1 },
+      { -1, -1 }, { 0, -1 }, { 1, -1 },
       { 0,  1 }, { 0,  2 }, { 1,  2 }, { 1,  3 }
     };
 

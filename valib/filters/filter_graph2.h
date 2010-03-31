@@ -50,6 +50,8 @@ private:
   Passthrough pass_start;
   Passthrough pass_end;
 
+  bool is_new_stream;
+
   void truncate(Node *node);
   bool build_chain(Node *node);
 
@@ -119,7 +121,6 @@ public:
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
 
-  virtual bool can_open(Speakers spk);
   virtual bool init(Speakers spk);
   virtual void uninit();
 
@@ -127,8 +128,11 @@ public:
   virtual bool flush(Chunk2 &out);
   virtual void reset();
 
-  virtual bool can_open(Speakers spk) const
-  { return next_id(node_start, spk) != node_err; }
+  virtual bool can_open(Speakers new_spk) const
+  { return next_id(node_start, new_spk) != node_err; }
+
+  virtual bool new_stream() const
+  { return is_new_stream; }
 
   virtual Speakers get_input() const
   { return start.filter->get_input(); }
