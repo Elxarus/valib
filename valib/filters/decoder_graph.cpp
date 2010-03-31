@@ -143,7 +143,7 @@ DecoderGraph::init_filter(int node, Speakers spk)
       if (!proc.set_user(user_spk))
         return 0;
 
-      return &proc;
+      return proc;
     }
   }
   return 0;
@@ -166,7 +166,7 @@ DecoderGraph::get_next(int node, Speakers spk) const
       if (dec->query_input(spk))
         return state_decode;
 
-      if (proc.query_input(spk))
+      if (proc->query_input(spk))
         return state_proc;
 
       return node_err;
@@ -184,7 +184,7 @@ DecoderGraph::get_next(int node, Speakers spk) const
     // state_decode -> state_proc
 
     case state_decode:
-      if (proc.query_input(spk))
+      if (proc->query_input(spk))
         return state_proc;
 
       return node_err;

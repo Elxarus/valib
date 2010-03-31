@@ -524,7 +524,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       if (!proc.set_user(agreed_spk))
         return 0;
 
-      return &proc;
+      return proc;
     }
 
     case state_proc_enc:
@@ -537,7 +537,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       if (!proc.set_user(proc_user))
         return 0;
 
-      return &proc;
+      return proc;
     }
 
     case state_encode:
@@ -597,7 +597,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (dec->query_input(spk))
         return state_decode;
 
-      if (proc.query_input(spk))
+      if (proc->query_input(spk))
       {
         spdif_err = check_spdif_encode(spk);
         if (spdif_err == SPDIF_MODE_ENCODE)
@@ -626,7 +626,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (dec->query_input(spk))
         return state_decode;
 
-      if (proc.query_input(spk))
+      if (proc->query_input(spk))
       {
         spdif_err = check_spdif_encode(spk);
         if (spdif_err == SPDIF_MODE_ENCODE)
@@ -665,7 +665,7 @@ DVDGraph::get_next(int node, Speakers spk) const
       if (dec->query_input(spk))
         return state_decode;
 
-      if (proc.query_input(spk))
+      if (proc->query_input(spk))
       {
         spdif_err = check_spdif_encode(spk);
         if (spdif_err == SPDIF_MODE_ENCODE)
@@ -696,7 +696,7 @@ DVDGraph::get_next(int node, Speakers spk) const
     // state_decode -> state_proc_enc
 
     case state_decode:
-      if (proc.query_input(spk))
+      if (proc->query_input(spk))
       {
         spdif_err = check_spdif_encode(spk);
         if (spdif_err == SPDIF_MODE_ENCODE)

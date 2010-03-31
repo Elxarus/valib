@@ -367,7 +367,7 @@ int test_rules(Log *log)
 
   // Aggregate filters
 
-  test_rules_filter(log, &proc, "Processor",
+  test_rules_filter(log, proc, "Processor",
     Speakers(FORMAT_PCM16, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_AC3, MODE_STEREO, 48000));
