@@ -34,7 +34,6 @@ private:
     int id;
     Node *next;
     Node *prev;
-    const char *name;
 
     Filter2 *filter;
     Chunk2   input;
@@ -107,7 +106,7 @@ protected:
   virtual void uninit_filter(int id)
   {}
 
-  virtual const char *get_name(int id) const
+  virtual std::string get_name(int id) const
   { return 0; }
 
 public:
@@ -171,7 +170,7 @@ protected:
 
   virtual int next_id(int id, Speakers spk) const;
   virtual Filter2 *init_filter(int id, Speakers spk);
-  virtual const char *get_name(int id) const;
+  virtual std::string get_name(int id) const;
 
 public:
   FilterChain2();
