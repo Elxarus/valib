@@ -110,9 +110,9 @@ protected:
   { return 0; }
 
 public:
-  static const int node_start;
-  static const int node_end;
-  static const int node_err;
+  static const int node_start = -1;
+  static const int node_end   = -2;
+  static const int node_err   = -3;
 
   FilterGraph2();
   virtual ~FilterGraph2();
