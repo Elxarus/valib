@@ -10,6 +10,9 @@ static const int format_mask =
 AudioProcessor::AudioProcessor(size_t _nsamples)
 :in_conv(_nsamples), mixer(_nsamples), agc(_nsamples), out_conv(_nsamples)
 {
+  rebuild = false;
+  new_stream_state = no_new_stream;
+
   dithering = DITHER_AUTO;
   user_spk = spk_unknown;
   rebuild_chain();
@@ -24,27 +27,22 @@ AudioProcessor::get_info(char *_buf, size_t _len) const
 
 
 bool 
-AudioProcessor::query_user(Speakers _user_spk) const
+AudioProcessor::query_user(Speakers new_user_spk) const
 {
-  return user_spk.is_unknown() || (FORMAT_MASK(_user_spk.format) & format_mask) != 0;
+  return new_user_spk.is_unknown() || (FORMAT_MASK(new_user_spk.format) & format_mask) != 0;
 }
 
 bool 
-AudioProcessor::set_user(Speakers _user_spk)
+AudioProcessor::set_user(Speakers new_user_spk)
 {
-  if (user_spk != _user_spk)
-  {
-    if (!query_user(_user_spk))
-      return false;
+  if (user_spk == new_user_spk)
+    return true;
 
-    user_spk = _user_spk;
-    if (!rebuild_chain())
-    {
-      in_spk = spk_unknown;
-      out_spk = spk_unknown;
-      return false;
-    }
-  }
+  if (!query_user(new_user_spk))
+    return false;
+
+  user_spk = new_user_spk;
+  rebuild = true;
   return true;
 }
 
@@ -55,25 +53,25 @@ AudioProcessor::get_user() const
 }
 
 Speakers 
-AudioProcessor::user2output(Speakers _in_spk, Speakers _user_spk) const
+AudioProcessor::user2output(Speakers in_spk_, Speakers user_spk_) const
 {
-  if (!can_open(_in_spk) || !query_user(_user_spk))
+  if (!can_open(in_spk_) || !query_user(user_spk_))
     return spk_unknown;
 
-  Speakers result = _in_spk;
-  if (_user_spk.format != FORMAT_UNKNOWN)
+  Speakers result = in_spk_;
+  if (user_spk_.format != FORMAT_UNKNOWN)
   {
-    result.format = _user_spk.format;
-    result.level = _user_spk.level;
+    result.format = user_spk_.format;
+    result.level = user_spk_.level;
   }
 
-  if (_user_spk.mask)
-    result.mask = _user_spk.mask;
+  if (user_spk_.mask)
+    result.mask = user_spk_.mask;
 
-  if (_user_spk.sample_rate)
-    result.sample_rate = _user_spk.sample_rate;
+  if (user_spk_.sample_rate)
+    result.sample_rate = user_spk_.sample_rate;
 
-  result.relation = _user_spk.relation;
+  result.relation = user_spk_.relation;
 
   return result;
 }
@@ -194,31 +192,68 @@ AudioProcessor::can_open(Speakers new_spk) const
 bool
 AudioProcessor::open(Speakers new_spk)
 {
-  reset();
   if (!can_open(new_spk)) 
+  {
+    close();
     return false;
+  }
 
   in_spk = new_spk;
   if (!rebuild_chain())
   {
-    in_spk = spk_unknown;
-    out_spk = spk_unknown;
+    close();
     return false;
   }
+
+  rebuild = false;
+  new_stream_state = no_new_stream;
   return true;
 }
 
 void
 AudioProcessor::close()
-{ chain.close(); }
+{
+  in_spk = spk_unknown;
+  out_spk = spk_unknown;
+  chain.close();
+}
 
 void
 AudioProcessor::reset()
-{ chain.reset(); }
+{
+  if (rebuild)
+    rebuild_chain();
+
+  rebuild = false;
+  new_stream_state = no_new_stream;
+
+  chain.reset();
+}
 
 bool
 AudioProcessor::process(Chunk2 &in, Chunk2 &out)
-{ return chain.process(in, out); }
+{
+  if (new_stream_state == show_new_stream)
+    new_stream_state = no_new_stream;
+
+  if (rebuild)
+  {
+    if (flush(out))
+      return true;
+
+    rebuild_chain();
+    rebuild = false;
+    new_stream_state = init_new_stream;
+  }
+
+  if (!chain.process(in, out))
+    return false;
+
+  if (new_stream_state == init_new_stream)
+    new_stream_state = show_new_stream;
+
+  return true;
+}
 
 bool
 AudioProcessor::flush(Chunk2 &out)
@@ -226,7 +261,7 @@ AudioProcessor::flush(Chunk2 &out)
 
 bool
 AudioProcessor::new_stream() const
-{ return chain.new_stream(); }
+{ return (new_stream_state == show_new_stream) || chain.new_stream(); }
 
 bool
 AudioProcessor::is_open() const

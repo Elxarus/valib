@@ -92,6 +92,9 @@
 class AudioProcessor : public Filter2
 {
 protected:
+  bool rebuild;
+  enum { no_new_stream, init_new_stream, show_new_stream } new_stream_state;
+
   Speakers in_spk;   // actual input format
   Speakers user_spk; // user-specified format (may be partially-specified)
   Speakers out_spk;  // actual output format
