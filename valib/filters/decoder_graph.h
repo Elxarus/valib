@@ -8,12 +8,12 @@
 #ifndef VALIB_DECODER_GRAPH_H
 #define VALIB_DECODER_GRAPH_H
 
-#include "../filter_graph.h"
+#include "filter_graph2.h"
 #include "decoder.h"
 #include "spdifer.h"
 #include "proc.h"
 
-class DecoderGraph : public FilterGraph
+class DecoderGraph : public FilterGraph2
 {
 public:
   Despdifer      despdifer;
@@ -26,11 +26,6 @@ public:
   /////////////////////////////////////////////////////////////////////////////
   // DecoderGraph interface
 
-  // User format
-  bool query_user(Speakers user_spk) const;
-  bool set_user(Speakers user_spk);
-  Speakers get_user() const;
-
   // Summary information
   size_t get_info(char *_buf, size_t _len) const;
 
@@ -40,21 +35,19 @@ public:
   virtual void reset();
 
 protected:
-  Speakers user_spk;
-
   enum state_t 
   { 
-    state_despdif,
-    state_decode,
-    state_proc,
+    node_despdif,
+    node_decode,
+    node_proc
   };            
 
   /////////////////////////////////////////////////////////////////////////////
   // FilterGraph overrides
 
-  virtual const char *get_name(int node) const;
-  virtual Filter *init_filter(int node, Speakers spk);
-  virtual int get_next(int node, Speakers spk) const;
+  virtual int next_id(int id, Speakers spk) const;
+  virtual Filter2 *init_filter(int id, Speakers spk);
+  virtual std::string get_name(int id) const;
 };
 
 #endif
