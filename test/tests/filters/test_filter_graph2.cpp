@@ -33,7 +33,6 @@ protected:
 
 public:
   GainGraph(double gain_): gain(gain_) {};
-  ~GainGraph() { destroy(); }
 
   void set_gain(double gain_) { gain.gain = gain_; }
 };
