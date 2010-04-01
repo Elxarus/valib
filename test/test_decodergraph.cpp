@@ -23,8 +23,8 @@ public:
   DecoderGraph_test(Log *_log)
   {
     log = _log;
-    t.link(&dec, log);
-    f = &dec; // do not use FilterTester
+    t.link(dec, log);
+    f = dec; // do not use FilterTester
   }
 
   int test()
@@ -86,7 +86,7 @@ public:
 
     for (int i = 0; i < array_size(formats); i++)
     {
-      dec.set_user(formats[i]);
+      dec.proc.set_user(formats[i]);
 
       Speakers test_spk = spk;
       if (formats[i].format)
@@ -97,6 +97,9 @@ public:
 
       if (formats[i].mask)
         test_spk.mask = formats[i].mask;
+
+      if (formats[i].sample_rate)
+        test_spk.sample_rate = formats[i].sample_rate;
 
       while (!src.is_empty() && f->get_output() != test_spk)
         if (f->is_empty())
