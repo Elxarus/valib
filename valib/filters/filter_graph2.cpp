@@ -1,10 +1,6 @@
 #include <algorithm>
 #include "filter_graph2.h"
 
-const int FilterGraph2::node_start = -1;
-const int FilterGraph2::node_end = -2;
-const int FilterGraph2::node_err = -3;
-
 FilterGraph2::FilterGraph2()
 {
   start.id = node_start;
@@ -26,7 +22,15 @@ FilterGraph2::FilterGraph2()
 
 FilterGraph2::~FilterGraph2()
 {
-  truncate(&start);
+  Node *node = start.next;
+  while (node->id != node_end)
+  {
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+    Node *next_node = node->next;
+    delete node;
+    node = next_node;
+  }
 }
 
 ///////////////////////////////////////////////////////////
