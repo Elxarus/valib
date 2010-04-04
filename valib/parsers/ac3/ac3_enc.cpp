@@ -91,8 +91,7 @@ const uint16_t fgain_tbl[8]  = { 0x0080, 0x0100, 0x0180, 0x0200, 0x0280, 0x0300,
 
 
 AC3Enc::AC3Enc()
-:NullFilter(0), // use own query_input()
- mdct(7)
+:mdct(7)
 {
   frames = 0;
   bitrate = 640000;
@@ -126,29 +125,25 @@ AC3Enc::set_bitrate(int _bitrate)
 
 
 bool 
-AC3Enc::fill_buffer()
+AC3Enc::fill_buffer(Chunk2 &in)
 {
   size_t n = AC3_FRAME_SAMPLES - sample;
-  if (size < n)
+  if (in.size < n)
   {
     for (int ch = 0; ch < spk.nch(); ch++)
-      memcpy(frame_samples[ch] + sample, samples[ch], size * sizeof(sample_t));
+      memcpy(frame_samples[ch] + sample, in.samples[ch], in.size * sizeof(sample_t));
 
-    sample += size;
-    time += vtime_t(size) / spk.sample_rate;
-    drop_samples(size);
-
+    sample += in.size;
+    in.drop_samples(in.size);
     return false;
   }
   else
   {
     for (int ch = 0; ch < spk.nch(); ch++)
-      memcpy(frame_samples[ch] + sample, samples[ch], n * sizeof(sample_t));
+      memcpy(frame_samples[ch] + sample, in.samples[ch], n * sizeof(sample_t));
 
     sample = 0;
-    time += vtime_t(n) / spk.sample_rate;
-    drop_samples(n);
-
+    in.drop_samples(n);
     return true;
   }
 }
@@ -172,10 +167,13 @@ AC3Enc::reset()
 
   csnroffst = 0;
   fsnroffst = 0;
+
+  sync = false;
+  time = 0.0;
 }
 
 bool 
-AC3Enc::query_input(Speakers _spk) const
+AC3Enc::can_open(Speakers _spk) const
 {
   if (_spk.format != FORMAT_LINEAR)
     return false;
@@ -208,11 +206,8 @@ AC3Enc::query_input(Speakers _spk) const
 }
 
 bool 
-AC3Enc::set_input(Speakers _spk)
+AC3Enc::init(Speakers _spk)
 {
-  if (!NullFilter::set_input(_spk))
-    return false;
-
   // sample rate
   fscod = 0;
   for (fscod = 0; fscod < sizeof(freq_tbl) / sizeof(freq_tbl[0]); fscod++)
@@ -265,51 +260,30 @@ AC3Enc::set_input(Speakers _spk)
 }
 
 bool
-AC3Enc::get_chunk(Chunk *_chunk)
+AC3Enc::process(Chunk2 &in, Chunk2 &out)
 {
+  if (in.sync)
+  {
+    sync = true;
+    time = in.time - (vtime_t(sample) / spk.sample_rate);
+  }
+
   // todo: output partially filled frame on flushing
 
-  if (fill_buffer())
+  if (fill_buffer(in))
   {
     // encode frame
     if (!encode_frame())
-      return false;
+      throw FilterError(this, -1, "Encoding error");
 
-    // fill chunk
-    _chunk->set_rawdata
-    (
-      get_output(),
-      frame_buf, frame_size,
-      sync, time,
-      flushing && !size
-    );
+    out.set_rawdata(frame_buf, frame_size);
+    out.set_sync(sync, time);
+    sync = false;
+    time = 0.0;
+    return true;
   }
-  else
-  {
-    // dummy chunk
-    _chunk->set_dummy();
-  }
-
-  // reset after flushing
-  if (flushing && !size)
-  {
-    flushing = false;
-    reset();
-  }
-
-  return true;
+  return false;
 }
-
-Speakers 
-AC3Enc::get_output() const
-{
-  return Speakers(FORMAT_AC3, spk.mask, spk.sample_rate, 1.0, spk.relation);
-}
-
-
-
-
-
 
 int 
 AC3Enc::encode_frame()
