@@ -542,7 +542,7 @@ DVDGraph::init_filter(int node, Speakers spk)
 
     case state_encode:
       if (enc.set_bitrate(spdif_bitrate))
-        return &enc;
+        return enc;
       else
         return 0;
 
@@ -810,7 +810,7 @@ DVDGraph::check_spdif_encode(Speakers _spk) const
       return SPDIF_ERR_SAMPLE_RATE;
 
   // check encoder
-  if (!enc.query_input(enc_spk))
+  if (!enc.can_open(enc_spk))
     return SPDIF_ERR_ENCODER;
 
   // check sink

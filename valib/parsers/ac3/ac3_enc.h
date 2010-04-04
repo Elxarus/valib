@@ -1,7 +1,7 @@
 #ifndef VALIB_AC3_ENC_H
 #define VALIB_AC3_ENC_H
 
-#include "../../filter.h"
+#include "../../filter2.h"
 #include "../../bitstream.h"
 #include "../../buffer.h"
 #include "ac3_defs.h"
@@ -10,7 +10,7 @@
 inline int sym_quant(int m, int levels);
 inline int asym_quant(int m, int bits);
 
-class AC3Enc : public NullFilter
+class AC3Enc : public SimpleFilter
 {
 public:
   // filter data
@@ -18,6 +18,9 @@ public:
   SampleBuf frame_samples;
   Rawdata   frame_buf;
   SampleBuf window;
+
+  bool    sync;
+  vtime_t time;
 
   // decoder mode
   int sample_rate;
@@ -67,7 +70,7 @@ public:
   inline void restrict_exp(int8_t expcod[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int ngrps[AC3_NBLOCKS], int8_t exp[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int expstr[AC3_NBLOCKS], int endmant) const;
   inline int  encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLES], int expstr, int endmant) const;
 
-  bool fill_buffer();
+  bool fill_buffer(Chunk2 &in);
   int  encode_frame();
 
 public:
@@ -77,15 +80,16 @@ public:
   bool set_bitrate(int bitrate);
 
   /////////////////////////////////////////////////////////
-  // Filter interface
+  // Filter2 interface
+
+  virtual bool can_open(Speakers spk) const;
+  virtual bool init(Speakers spk);
 
   virtual void reset();
+  virtual bool process(Chunk2 &in, Chunk2 &out);
 
-  virtual bool query_input(Speakers spk) const;
-  virtual bool set_input(Speakers spk);
-
-  virtual Speakers get_output() const;
-  virtual bool get_chunk(Chunk *chunk);
+  virtual Speakers get_output() const
+  { return Speakers(FORMAT_AC3, spk.mask, spk.sample_rate, 1.0, spk.relation); }
 };
 
 
