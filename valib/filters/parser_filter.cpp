@@ -101,12 +101,12 @@ ParserFilter::process(Chunk2 &in, Chunk2 &out)
   is_new_stream = false;
   while (load_frame(in))
   {
-    if (!out_spk.is_unknown() && stream.is_new_stream())
+    if (stream.is_new_stream())
       is_new_stream = true;
 
     if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
     {
-      if (!out_spk.is_unknown() && out_spk != parser->get_spk())
+      if (out_spk != parser->get_spk())
         is_new_stream = true;
       out_spk = parser->get_spk();
 

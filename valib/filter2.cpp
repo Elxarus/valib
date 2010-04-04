@@ -157,7 +157,7 @@ FilterThunk::make_output()
         out_chunk2.sync, out_chunk2.time);
 
       new_stream = f->new_stream();
-      if (!new_stream)
+      if (!new_stream || out_spk.is_unknown())
         out_spk = f->get_output();
 
       return true;
@@ -180,7 +180,7 @@ FilterThunk::make_output()
         out_chunk2.sync, out_chunk2.time);
 
       new_stream = f->new_stream();
-      if (!new_stream)
+      if (!new_stream || out_spk.is_unknown())
         out_spk = f->get_output();
 
       return true;
