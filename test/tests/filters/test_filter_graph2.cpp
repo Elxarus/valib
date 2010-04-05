@@ -342,7 +342,7 @@ TEST(filter_graph2, "FilterGraph")
   // FilterChain without filters = passthrough filter
 
   {
-    FilterChain2 graph_filter;
+    FilterChain graph_filter;
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
     CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
@@ -395,7 +395,7 @@ TEST(filter_graph2, "FilterGraph")
 
     for (int i = 0; i < array_size(tst); i++)
     {
-      FilterChain2 graph_filter;
+      FilterChain graph_filter;
       graph_filter.add_back(tst[i]);
       graph_filter.reset();
 
@@ -448,7 +448,7 @@ TEST(filter_graph2, "FilterGraph")
         if (i != j)
         {
           // filter chain
-          FilterChain2 graph_filter;
+          FilterChain graph_filter;
           graph_filter.add_back(tests[i].f);
           graph_filter.add_back(tests[j].f);
 
@@ -479,7 +479,7 @@ TEST(filter_graph2, "FilterGraph")
     Gain         tst_gain1(gain);
     Gain         tst_gain2(gain);
 
-    FilterChain2 graph_filter;
+    FilterChain graph_filter;
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
     CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
@@ -510,7 +510,7 @@ TEST(filter_graph2, "FilterGraph")
     CallCounter counter;
     FormatChangeMock format_change;
 
-    FilterChain2 graph_filter;
+    FilterChain graph_filter;
     graph_filter.add_back(&counter);
 
     // One open() and one flush() during regular processing
@@ -531,7 +531,7 @@ TEST(filter_graph2, "FilterGraph")
       CallCounter counter;
       FormatChangeMock format_change(format_change_pos[i][0], format_change_pos[i][1]);
 
-      FilterChain2 graph_filter;
+      FilterChain graph_filter;
       graph_filter.add_back(&format_change);
       graph_filter.add_back(&counter);
 
@@ -571,7 +571,7 @@ TEST(filter_graph2, "FilterGraph")
 
       FormatChangeMock format_change(format_change_pos[i][0], format_change_pos[i][1]);
 
-      FilterChain2 graph_filter;
+      FilterChain graph_filter;
       graph_filter.add_back(&format_change);
       graph_filter.open(spk);
       CHECK(graph_filter.is_open());

@@ -155,7 +155,7 @@ public:
 // Connects filters one after another
 ///////////////////////////////////////////////////////////////////////////////
 
-class FilterChain2 : public FilterGraph
+class FilterChain : public FilterGraph
 {
 protected:
   struct Node
@@ -183,8 +183,8 @@ protected:
   virtual std::string get_name(int id) const;
 
 public:
-  FilterChain2();
-  virtual ~FilterChain2();
+  FilterChain();
+  virtual ~FilterChain();
 
   /////////////////////////////////////////////////////////
   // FilterChain interface
