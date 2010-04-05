@@ -342,10 +342,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\test_filtergraph.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\test_old_style.cpp"
 				>
 			</File>
