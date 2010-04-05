@@ -86,8 +86,8 @@ public:
   DVDGraph_test(Log *_log)
   {
     log = _log;
-    t.link(&dvd, log);
-    f = &dvd; // do not use FilterTester
+    t.link(dvd, log);
+    f = dvd; // do not use FilterTester
   }
 
   int test()
@@ -397,7 +397,7 @@ public:
     // process until status change
     // (filter may be either full or empty)
 
-    while (!src->is_empty() && dvd.get_spdif_status() != status)
+    while (!src->is_empty() && (dvd.get_spdif_status() != status || dvd->get_output().format != out_format))
       if (f->is_empty())
       {
         if (!src->get_chunk(&chunk))
@@ -416,13 +416,6 @@ public:
 
     if (dvd.get_spdif_status() != status)
       return log->err("%s: cannot switch to %s state", caller, status_text);
-
-    if (!chunk.is_dummy())
-    {
-      if (chunk.spk.format != out_format)
-        return log->err("%s: incorrect output format", caller);
-    }
-
 
     // ensure correct data generation in new state
     // (filter may be either full or empty)
@@ -485,13 +478,10 @@ public:
 
     int masks[] = 
     { 
-       0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 
-      10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-      20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-      30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
-      40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-      50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
-      60, 61, 62, 63
+      MODE_UNDEFINED,
+      MODE_1_0, MODE_2_0, MODE_3_0, MODE_2_1, MODE_3_1, MODE_2_2, MODE_3_2,
+      MODE_1_0_LFE, MODE_2_0_LFE, MODE_3_0_LFE, MODE_2_1_LFE, MODE_3_1_LFE, MODE_2_2_LFE, MODE_3_2_LFE,
+      MODE_3_2_1, MODE_3_2_2, MODE_5_2, MODE_3_2_1_LFE, MODE_3_2_2_LFE, MODE_5_2_LFE,
     };
 
     int sample_rates[] = 
@@ -563,7 +553,7 @@ public:
         {
           // Set input format
           Speakers in_spk = Speakers(formats[iformat], masks[imask], sample_rates[isample_rate]);
-          if (!dvd.set_input(in_spk))
+          if (!dvd->set_input(in_spk))
           {
             log->err_close("Cannot set input format %s %s %i", 
               in_spk.format_text(), in_spk.mode_text(), in_spk.sample_rate);
