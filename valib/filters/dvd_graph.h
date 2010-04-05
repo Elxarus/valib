@@ -12,7 +12,8 @@
 #ifndef VALIB_DVD_GRAPH_H
 #define VALIB_DVD_GRAPH_H
 
-#include "../filter_graph.h"
+#include "filter_graph2.h"
+#include "passthrough.h"
 #include "../parsers/ac3/ac3_enc.h"
 #include "demux.h"
 #include "detector.h"
@@ -38,15 +39,22 @@
 #define SPDIF_ERR_ENCODER           10 // encoder cannot encode given format
 
 
-class Spdif2PCM : public NullFilter
+class Spdif2PCM : public Passthrough
 {
 public:
-  Spdif2PCM();
-  virtual Speakers get_output() const;
-  virtual bool get_chunk(Chunk *_chunk);
+  Spdif2PCM()
+  {}
+
+  virtual Speakers get_output() const
+  {
+    if (spk.format == FORMAT_SPDIF)
+      return Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
+    else
+      return spk;
+  }
 };
 
-class DVDGraph : public FilterGraph
+class DVDGraph : public FilterGraph2
 {
 public:
   Demux          demux;
@@ -176,11 +184,11 @@ protected:
 
 
   /////////////////////////////////////////////////////////////////////////////
-  // FilterGraph overrides
+  // FilterGraph2 overrides
 
-  virtual const char *get_name(int node) const;
-  virtual Filter *init_filter(int node, Speakers spk);
-  virtual int get_next(int node, Speakers spk) const;
+  virtual std::string get_name(int id) const;
+  virtual Filter2 *init_filter(int id, Speakers spk);
+  virtual int next_id(int is, Speakers spk) const;
 
   // helper functions
   int check_spdif_passthrough(Speakers spk) const;

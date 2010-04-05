@@ -2,7 +2,7 @@
 #include "dvd_graph.h"
 
 DVDGraph::DVDGraph(int _nsamples, const Sink *_sink)
-:FilterGraph(-1), proc(_nsamples)
+:proc(_nsamples)
 {
   user_spk = Speakers(FORMAT_PCM16, 0, 0);
 
@@ -86,7 +86,7 @@ void
 DVDGraph::set_query_sink(bool _query_sink)
 {
   query_sink = _query_sink;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -104,7 +104,7 @@ void
 DVDGraph::set_use_detector(bool _use_detector)
 {
   use_detector = _use_detector;
-  invalidate_chain();
+  invalidate();
 }
 
 ///////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ DVDGraph::set_spdif(bool _use_spdif, int _spdif_pt, bool _spdif_as_pcm, bool _sp
   spdif_as_pcm = _spdif_as_pcm;
   spdif_encode = _spdif_encode;
   spdif_stereo_pt = _spdif_stereo_pt;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -132,7 +132,7 @@ void
 DVDGraph::set_use_spdif(bool _use_spdif)
 {
   use_spdif = _use_spdif;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -146,7 +146,7 @@ void
 DVDGraph::set_spdif_pt(int _spdif_pt)
 {
   spdif_pt = _spdif_pt;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -160,7 +160,7 @@ void
 DVDGraph::set_spdif_as_pcm(bool _spdif_as_pcm)
 {
   spdif_as_pcm = _spdif_as_pcm;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -174,7 +174,7 @@ void
 DVDGraph::set_spdif_encode(bool _spdif_encode)
 {
   spdif_encode = _spdif_encode;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -188,7 +188,7 @@ void
 DVDGraph::set_spdif_stereo_pt(bool _spdif_stereo_pt)
 {
   spdif_stereo_pt = _spdif_stereo_pt;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -202,7 +202,7 @@ void
 DVDGraph::set_spdif_bitrate(int _spdif_bitrate)
 {
   spdif_bitrate = _spdif_bitrate;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_encode);
 }
 
@@ -216,7 +216,7 @@ DVDGraph::set_spdif_sr(bool _spdif_check_sr, bool _spdif_allow_48, bool _spdif_a
   spdif_allow_48 = _spdif_allow_48;
   spdif_allow_44 = _spdif_allow_44;
   spdif_allow_32 = _spdif_allow_32;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -229,7 +229,7 @@ void
 DVDGraph::set_spdif_check_sr(bool _spdif_check_sr)
 {
   spdif_check_sr = _spdif_check_sr;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -242,7 +242,7 @@ void
 DVDGraph::set_spdif_allow_48(bool _spdif_allow_48)
 {
   spdif_allow_48 = _spdif_allow_48;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -255,7 +255,7 @@ void
 DVDGraph::set_spdif_allow_44(bool _spdif_allow_44)
 {
   spdif_allow_44 = _spdif_allow_44;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -268,7 +268,7 @@ void
 DVDGraph::set_spdif_allow_32(bool _spdif_allow_32)
 {
   spdif_allow_32 = _spdif_allow_32;
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -285,7 +285,7 @@ DVDGraph::set_dts_mode(int _dts_mode)
 {
   spdifer_pt.set_dts_mode(_dts_mode);
   spdifer_enc.set_dts_mode(_dts_mode);
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -299,7 +299,7 @@ DVDGraph::set_dts_conv(int _dts_conv)
 {
   spdifer_pt.set_dts_conv(_dts_conv);
   spdifer_enc.set_dts_conv(_dts_conv);
-  invalidate_chain();
+  invalidate();
   rebuild_node(state_detector);
 }
 
@@ -394,7 +394,7 @@ DVDGraph::get_info(char *_buf, size_t _len) const
     else
       pos += sprintf(buf + pos, "  Do not query for SPDIF output support\n");
   }
-
+/*
   if (chain_next(node_start) != node_end)
   {
     pos += sprintf(buf + pos, "\nDecoding chain:\n");
@@ -436,7 +436,7 @@ DVDGraph::get_info(char *_buf, size_t _len) const
       node = chain_next(node);
     }
   }
-
+*/
   if (pos + 1 > _len) pos = _len - 1;
   memcpy(_buf, buf, pos + 1);
   _buf[pos] = 0;
@@ -453,23 +453,13 @@ DVDGraph::reset()
   spdif_status = use_spdif? SPDIF_MODE_NONE: SPDIF_MODE_DISABLED;
   spdif_err = use_spdif? SPDIF_MODE_NONE: SPDIF_MODE_DISABLED;
 
-  demux.reset();
-  detector.reset();
-  despdifer.reset();
-  spdifer_pt.reset();
-  dec.reset();
-  proc.reset();
-  enc.reset();
-  spdifer_enc.reset();
-  spdif2pcm.reset();
-
-  FilterGraph::reset();
+  FilterGraph2::reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // FilterGraph overrides
 
-const char *
+std::string
 DVDGraph::get_name(int node) const
 {
   switch (node)
@@ -490,19 +480,19 @@ DVDGraph::get_name(int node) const
   return 0;
 }
 
-Filter *
+Filter2 *
 DVDGraph::init_filter(int node, Speakers spk)
 {
   switch (node)
   {
     case state_demux:
-      return demux;
+      return &demux;
 
     case state_detector:
-      return detector;
+      return &detector;
 
     case state_despdif:
-      return despdifer;
+      return &despdifer;
 
     case state_spdif_pt:    
       // reset AudioProcessor to indicate no processing 
@@ -510,10 +500,10 @@ DVDGraph::init_filter(int node, Speakers spk)
       proc.reset();
 
       spdif_status = SPDIF_MODE_PASSTHROUGH;
-      return spdifer_pt;
+      return &spdifer_pt;
 
     case state_decode:
-      return dec;
+      return &dec;
 
     case state_proc:
     {
@@ -524,7 +514,7 @@ DVDGraph::init_filter(int node, Speakers spk)
       if (!proc.set_user(agreed_spk))
         return 0;
 
-      return proc;
+      return &proc;
     }
 
     case state_proc_enc:
@@ -537,29 +527,29 @@ DVDGraph::init_filter(int node, Speakers spk)
       if (!proc.set_user(proc_user))
         return 0;
 
-      return proc;
+      return &proc;
     }
 
     case state_encode:
       if (enc.set_bitrate(spdif_bitrate))
-        return enc;
+        return &enc;
       else
         return 0;
 
     case state_spdif_enc:
-      return spdifer_enc;
+      return &spdifer_enc;
 
     case state_spdif2pcm:
       return &spdif2pcm;
 
     case state_dejitter:
-      return syncer;
+      return &syncer;
   }
   return 0;
 }
 
 int 
-DVDGraph::get_next(int node, Speakers spk) const
+DVDGraph::next_id(int node, Speakers spk) const
 {
   ///////////////////////////////////////////////////////
   // When get_next() is called graph must guarantee
@@ -888,29 +878,4 @@ DVDGraph::agree_output_pcm(Speakers _spk, Speakers _user_spk) const
 
   // Everything failed. Use user_spk in the hope that it still may work...
   return _user_spk;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Spdif2PCM class
-///////////////////////////////////////////////////////////////////////////////
-
-Spdif2PCM::Spdif2PCM(): NullFilter(-1) 
-{};
-
-Speakers
-Spdif2PCM::get_output() const
-{
-  if (spk.format == FORMAT_SPDIF)
-    return Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
-  else
-    return spk;
-}
-bool
-Spdif2PCM::get_chunk(Chunk *_chunk)
-{ 
-  send_chunk_inplace(_chunk, size);
-  if (_chunk->spk.format == FORMAT_SPDIF)
-    _chunk->spk = Speakers(FORMAT_PCM16, MODE_STEREO, spk.sample_rate);
-  return true;
 }
