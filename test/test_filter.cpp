@@ -116,7 +116,6 @@ Format change
 #include "test_source.h"
 #include "all_filters.h"
 
-#include "filter_graph.h"
 #include "fir/param_fir.h"
 
 static const int formats[] = 
@@ -169,7 +168,6 @@ int test_rules(Log *log)
 {
   // Base filters
   NullFilter     null(FORMAT_MASK_LINEAR);
-  FilterGraph    filter_graph(FORMAT_MASK_LINEAR);
 
   // Rawdata filters
   Converter      conv_ll(2048);
@@ -206,7 +204,6 @@ int test_rules(Log *log)
   DVDGraph       dvd;
   DVDGraph       dvd_spdif;
 
-  FilterChain    chain;
   AudioProcessor proc(2048);
 
   // Setup filters
@@ -230,11 +227,6 @@ int test_rules(Log *log)
   // Base filters
 
   test_rules_filter(log, &null,    "NullFilter", 
-    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
-    Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
-    Speakers(FORMAT_RAWDATA, MODE_STEREO, 48000));
-
-  test_rules_filter(log, &filter_graph, "FilterGraph", 
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), 0,
     Speakers(FORMAT_LINEAR, MODE_5_1, 96000), 0,
     Speakers(FORMAT_RAWDATA, MODE_STEREO, 48000));

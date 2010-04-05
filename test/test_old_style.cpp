@@ -16,7 +16,6 @@ int test_spdifer(Log *log);
 int test_despdifer(Log *log);
 int test_detector(Log *log);
 
-int test_filtergraph(Log *log);
 int test_decodergraph(Log *log);
 int test_dvdgraph(Log *log);
 
@@ -37,7 +36,6 @@ TEST(old_style, "Old-stlye tests")
   test_despdifer(log);
   test_detector(log);
 
-  test_filtergraph(log);
   test_decodergraph(log);
   test_dvdgraph(log);
 TEST_END(old_style);

@@ -7,7 +7,7 @@
 #include "filters/resample.h"
 #include "filters/convolver.h"
 #include "filters/slice.h"
-#include "filter_graph.h"
+#include "filters/filter_graph2.h"
 #include "fir/param_fir.h"
 #include "../../suite.h"
 
@@ -123,19 +123,19 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
   SliceFilter tst_slice(trans_len, block_size - trans_len);
   SliceFilter ref_slice(trans_len, block_size - trans_len);
 
-  FilterChain tst_chain;
-  tst_chain.add_back(tst_conv, "Bandlimit");
-  tst_chain.add_back(res1, "Upsample");
-  tst_chain.add_back(res2, "Downsample");
-  tst_chain.add_back(tst_slice, "Slice");
+  FilterChain2 tst_chain;
+  tst_chain.add_back(&tst_conv, "Bandlimit");
+  tst_chain.add_back(&res1, "Upsample");
+  tst_chain.add_back(&res2, "Downsample");
+  tst_chain.add_back(&tst_slice, "Slice");
 
-  FilterChain ref_chain;
-  ref_chain.add_back(ref_conv, "Bandlimit");
-  ref_chain.add_back(ref_slice, "Slice");
+  FilterChain2 ref_chain;
+  ref_chain.add_back(&ref_conv, "Bandlimit");
+  ref_chain.add_back(&ref_slice, "Slice");
 
   // Resample introduces not more than -A dB of noise.
   // 2 resamples introduces twice more noise, -A + 6dB
-  double diff = calc_diff(&tst_noise, &tst_chain, &ref_noise, &ref_chain);
+  double diff = calc_diff(&tst_noise, tst_chain, &ref_noise, ref_chain);
   log->msg("Transform: %5iHz -> %6iHz -> %5iHz Diff: %.0fdB", rate1, rate2, rate1, log10(diff) * 20);
   CHECK(diff > 0);
   CHECK(log10(diff) * 20 <= -a + 7);

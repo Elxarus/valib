@@ -45,6 +45,5 @@
 #include "filters\convolver.h"
 
 // Aggregates
-#include "filter_graph.h"
 #include "filters\dvd_graph.h"
 #include "filters\proc.h"
