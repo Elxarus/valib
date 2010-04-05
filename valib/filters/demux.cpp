@@ -27,8 +27,7 @@ Demux::process(Chunk2 &in, Chunk2 &out)
   if ((stream && stream != ps.stream) ||
       (stream && substream && substream != ps.substream))
   {
-    if (!out_spk.is_unknown())
-      is_new_stream = true;
+    is_new_stream = true;
     stream     = ps.stream;
     substream  = ps.substream;
     out_spk    = spk_unknown;
@@ -52,6 +51,9 @@ Demux::process(Chunk2 &in, Chunk2 &out)
       if ((stream && stream != ps.stream) ||
           (stream && substream && substream != ps.substream))
         break;
+
+      if (!stream)
+        is_new_stream = true;
 
       stream     = ps.stream;
       substream  = ps.substream;
