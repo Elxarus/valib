@@ -28,6 +28,7 @@ class FilterGraph2 : public SimpleFilter
 {
 private:
   enum state_t { state_init, state_empty, state_processing, state_rebuild, state_done_flushing };
+  enum rebuild_t { no_rebuild, check_rebuild, do_rebuild };
 
   struct Node
   {
@@ -39,8 +40,9 @@ private:
     Chunk2   input;
     Chunk2   output;
 
-    state_t  state;
-    bool     flushing;
+    state_t   state;
+    rebuild_t rebuild;
+    bool      flushing;
   };
 
   Node start;
@@ -59,6 +61,13 @@ private:
 
 protected:
   /////////////////////////////////////////////////////////
+  // rebuild_node(int id)
+  //   Sometimes it is nessesary to reinit a node (call
+  //   init_filter()). To do this without interrrupting
+  //   the data flow we have to flush the downsrteam after
+  //   this node then rebuild the chain starting from this
+  //   node. Call this function to initiate this process.
+  //
   // invalidate()
   //   Rebuild the chain if nessesary. Call this when
   //   filter chain is suspected to change. For example
@@ -79,6 +88,7 @@ protected:
   //   the chain duriong the data flow because all filters
   //   are removed with all the data buffered.
 
+  void rebuild_node(int id);
   void invalidate();
   void destroy();
 

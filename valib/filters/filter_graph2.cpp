@@ -8,6 +8,7 @@ FilterGraph2::FilterGraph2()
   start.prev = 0;
   start.filter = &pass_start;
   start.state = state_init;
+  start.rebuild = no_rebuild;
   start.flushing = false;
 
   end.id = node_end;
@@ -15,6 +16,7 @@ FilterGraph2::FilterGraph2()
   end.prev = &start;
   end.filter = &pass_end;
   end.state = state_init;
+  end.rebuild = no_rebuild;
   end.flushing = false;
 
   is_new_stream = false;
@@ -123,7 +125,6 @@ bool
 FilterGraph2::process_chain(Chunk2 &out)
 {
   bool allow_chain_rebuild = false;
-  bool rebuild_chain;
 
   // When chain is empty we should start processing from
   // the beginning of the chain and from the end otherwise.
@@ -178,7 +179,6 @@ FilterGraph2::process_chain(Chunk2 &out)
       /////////////////////////////////////////////////////
       // Process data
 
-      rebuild_chain = false;
       if (node->flushing)
       {
         if (!node->filter->flush(node->output))
@@ -212,16 +212,20 @@ FilterGraph2::process_chain(Chunk2 &out)
           continue;
         }
 
-        // verify the chain
-        if (allow_chain_rebuild)
+        // check the chain
+        if (allow_chain_rebuild && node->rebuild == check_rebuild)
+        {
           if (node->next->id != next_id(node->id, node->filter->get_output()))
-            rebuild_chain = true;
+            node->rebuild = do_rebuild;
+          else
+            node->rebuild = no_rebuild;
+        }
       }
 
       /////////////////////////////////////////////////////
       // Rebuild the chain if nessesary
 
-      if (rebuild_chain || node->filter->new_stream())
+      if (node->rebuild == do_rebuild || node->filter->new_stream())
       {
         node->state = state_rebuild;
 
@@ -253,6 +257,7 @@ FilterGraph2::process_chain(Chunk2 &out)
 
       is_new_stream = true;
       node->state = state_processing;
+      node->rebuild = no_rebuild;
       node->next->input = node->output;
       node = node->next;
       continue;
@@ -355,18 +360,6 @@ FilterGraph2::build_chain(Node *node)
     if (next_node_id == node_err)
       return false;
 
-    if (next_node_id == node->next->id)
-    {
-      // node does not change: we have no need to build
-      // a new node, just reopen the next one and go down.
-      if (!node->next->filter->open(next_spk))
-        return false;
-      node->next->state = state_init;
-      node->next->flushing = false;
-      node = node->next;
-      continue;
-    }
-
     // truncate the chain if nessesary
     if (node->next->id != node_end)
       truncate(node);
@@ -376,6 +369,7 @@ FilterGraph2::build_chain(Node *node)
       // end of the chain
       node->next->filter->open(next_spk);
       node->next->state = state_init;
+      node->next->rebuild = no_rebuild;
       node->next->flushing = false;
       return true;
     }
@@ -402,6 +396,7 @@ FilterGraph2::build_chain(Node *node)
     next_node->prev   = node;
     next_node->filter = filter;
     next_node->state  = state_init;
+    next_node->rebuild = no_rebuild;
     next_node->flushing = false;
 
     // update the list
@@ -416,8 +411,23 @@ FilterGraph2::build_chain(Node *node)
 }
 
 void
+FilterGraph2::rebuild_node(int id)
+{
+  for (Node *node = &start; node->next; node = node->next)
+    if (node->next->id == id)
+    {
+      node->rebuild = do_rebuild;
+      return;
+    }
+}
+
+void
 FilterGraph2::invalidate()
-{}
+{
+  for (Node *node = &start; node; node = node->next)
+    if (node->rebuild == no_rebuild)
+      node->rebuild = check_rebuild;
+}
 
 void
 FilterGraph2::destroy()
