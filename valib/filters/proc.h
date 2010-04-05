@@ -121,7 +121,7 @@ protected:
   CacheFilter  out_cache;
   Converter    out_conv;
 
-  FilterChain2 chain;
+  FilterChain  chain;
   bool rebuild_chain();
 
 public:

@@ -440,18 +440,18 @@ FilterGraph::destroy()
 // FilterChain
 ///////////////////////////////////////////////////////////////////////////////
 
-FilterChain2::FilterChain2()
+FilterChain::FilterChain()
 {
   id = 1;
   nodes.push_back(Node(node_start, 0));
   nodes.push_back(Node(node_end, 0));
 }
 
-FilterChain2::~FilterChain2()
+FilterChain::~FilterChain()
 {}
 
 bool
-FilterChain2::add_front(Filter2 *filter, const std::string &name)
+FilterChain::add_front(Filter2 *filter, const std::string &name)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
@@ -462,7 +462,7 @@ FilterChain2::add_front(Filter2 *filter, const std::string &name)
 }
 
 bool
-FilterChain2::add_back(Filter2 *filter, const std::string &name)
+FilterChain::add_back(Filter2 *filter, const std::string &name)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
@@ -473,7 +473,7 @@ FilterChain2::add_back(Filter2 *filter, const std::string &name)
 }
 
 void
-FilterChain2::remove(Filter2 *filter)
+FilterChain::remove(Filter2 *filter)
 {
   if (!filter) false;
   nodes.erase(find(nodes.begin(), nodes.end(), filter));
@@ -481,7 +481,7 @@ FilterChain2::remove(Filter2 *filter)
 }
 
 void
-FilterChain2::clear()
+FilterChain::clear()
 {
   nodes.clear();
   nodes.push_back(Node(node_start, 0));
@@ -490,7 +490,7 @@ FilterChain2::clear()
 }
 
 void
-FilterChain2::destroy()
+FilterChain::destroy()
 {
   nodes.clear();
   nodes.push_back(Node(node_start, 0));
@@ -499,7 +499,7 @@ FilterChain2::destroy()
 }
 
 int
-FilterChain2::next_id(int id_, Speakers spk_) const
+FilterChain::next_id(int id_, Speakers spk_) const
 {
   const_list_iter it = ++find(nodes.begin(), nodes.end(), id_);
   if (it == nodes.end()) return node_err;
@@ -507,7 +507,7 @@ FilterChain2::next_id(int id_, Speakers spk_) const
 }
 
 Filter2 *
-FilterChain2::init_filter(int id_, Speakers spk_)
+FilterChain::init_filter(int id_, Speakers spk_)
 {
   const_list_iter it = find(nodes.begin(), nodes.end(), id_);
   if (it == nodes.end()) return 0;
@@ -515,7 +515,7 @@ FilterChain2::init_filter(int id_, Speakers spk_)
 }
 
 std::string
-FilterChain2::get_name(int id_) const
+FilterChain::get_name(int id_) const
 {
   const_list_iter it = find(nodes.begin(), nodes.end(), id_);
   if (it == nodes.end()) return 0;

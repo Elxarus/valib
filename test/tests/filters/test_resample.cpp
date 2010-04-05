@@ -123,13 +123,13 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
   SliceFilter tst_slice(trans_len, block_size - trans_len);
   SliceFilter ref_slice(trans_len, block_size - trans_len);
 
-  FilterChain2 tst_chain;
+  FilterChain tst_chain;
   tst_chain.add_back(&tst_conv, "Bandlimit");
   tst_chain.add_back(&res1, "Upsample");
   tst_chain.add_back(&res2, "Downsample");
   tst_chain.add_back(&tst_slice, "Slice");
 
-  FilterChain2 ref_chain;
+  FilterChain ref_chain;
   ref_chain.add_back(&ref_conv, "Bandlimit");
   ref_chain.add_back(&ref_slice, "Slice");
 
