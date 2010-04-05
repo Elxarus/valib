@@ -1,7 +1,7 @@
 #include <algorithm>
-#include "filter_graph2.h"
+#include "filter_graph.h"
 
-FilterGraph2::FilterGraph2()
+FilterGraph::FilterGraph()
 {
   start.id = node_start;
   start.next = &end;
@@ -22,7 +22,7 @@ FilterGraph2::FilterGraph2()
   is_new_stream = false;
 }
 
-FilterGraph2::~FilterGraph2()
+FilterGraph::~FilterGraph()
 {
   Node *node = start.next;
   while (node->id != node_end)
@@ -39,7 +39,7 @@ FilterGraph2::~FilterGraph2()
 // SimpleFilter overrides
 
 bool
-FilterGraph2::init(Speakers spk)
+FilterGraph::init(Speakers spk)
 {
   destroy();
   start.filter->open(spk);
@@ -47,7 +47,7 @@ FilterGraph2::init(Speakers spk)
 }
 
 void
-FilterGraph2::uninit()
+FilterGraph::uninit()
 {
   destroy();
 }
@@ -116,13 +116,13 @@ FilterGraph2::uninit()
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
-FilterGraph2::chain_is_empty() const
+FilterGraph::chain_is_empty() const
 {
   return start.state == state_init || start.state == state_empty;
 }
 
 bool
-FilterGraph2::process_chain(Chunk2 &out)
+FilterGraph::process_chain(Chunk2 &out)
 {
   bool allow_chain_rebuild = false;
 
@@ -277,7 +277,7 @@ FilterGraph2::process_chain(Chunk2 &out)
 }
 
 bool
-FilterGraph2::process(Chunk2 &in, Chunk2 &out)
+FilterGraph::process(Chunk2 &in, Chunk2 &out)
 {
   if (!chain_is_empty())
     if (process_chain(out))
@@ -292,14 +292,14 @@ FilterGraph2::process(Chunk2 &in, Chunk2 &out)
 }
 
 bool
-FilterGraph2::flush(Chunk2 &out)
+FilterGraph::flush(Chunk2 &out)
 {
   start.flushing = true;
   return process_chain(out);
 }
 
 void
-FilterGraph2::reset()
+FilterGraph::reset()
 {
   is_new_stream = false;
   for (Node *node = &start; node; node = node->next)
@@ -316,7 +316,7 @@ FilterGraph2::reset()
 // truncate(start) - delete the whole chain
 
 void
-FilterGraph2::truncate(Node *node)
+FilterGraph::truncate(Node *node)
 {
   node = node->next;
   while (node->id != node_end)
@@ -337,7 +337,7 @@ FilterGraph2::truncate(Node *node)
 // Returns true on success and false otherwise.
 
 bool
-FilterGraph2::build_chain(Node *node)
+FilterGraph::build_chain(Node *node)
 {
   while (node->id != node_end)
   {
@@ -411,7 +411,7 @@ FilterGraph2::build_chain(Node *node)
 }
 
 void
-FilterGraph2::rebuild_node(int id)
+FilterGraph::rebuild_node(int id)
 {
   for (Node *node = &start; node->next; node = node->next)
     if (node->next->id == id)
@@ -422,7 +422,7 @@ FilterGraph2::rebuild_node(int id)
 }
 
 void
-FilterGraph2::invalidate()
+FilterGraph::invalidate()
 {
   for (Node *node = &start; node; node = node->next)
     if (node->rebuild == no_rebuild)
@@ -430,7 +430,7 @@ FilterGraph2::invalidate()
 }
 
 void
-FilterGraph2::destroy()
+FilterGraph::destroy()
 {
   truncate(&start);
   reset();
@@ -495,7 +495,7 @@ FilterChain2::destroy()
   nodes.clear();
   nodes.push_back(Node(node_start, 0));
   nodes.push_back(Node(node_end, 0));
-  FilterGraph2::destroy();
+  FilterGraph::destroy();
 }
 
 int

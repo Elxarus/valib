@@ -593,11 +593,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\valib\filters\filter_graph2.cpp"
+				RelativePath="..\valib\filters\filter_graph.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\filters\filter_graph2.h"
+				RelativePath="..\valib\filters\filter_graph.h"
 				>
 			</File>
 			<File

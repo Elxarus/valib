@@ -3,7 +3,7 @@
 #include "buffer.h"
 #include "source/generator.h"
 #include "filters/gain.h"
-#include "filters/filter_graph2.h"
+#include "filters/filter_graph.h"
 
 static const Speakers spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000);
 static const size_t noise_size = 64 * 1024;
@@ -13,7 +13,7 @@ static const int seed = 123123;
 // GainGraph owns a filter
 // Test correct construction and destruction
 
-class GainGraph : public FilterGraph2
+class GainGraph : public FilterGraph
 {
 protected:
   Gain gain;
@@ -326,13 +326,13 @@ public:
 };
 
 
-TEST(filter_graph2, "FilterGraph2")
+TEST(filter_graph2, "FilterGraph")
 
   /////////////////////////////////////////////////////////
-  // Default FilterGraph2 must act as passthrough filter
+  // Default FilterGraph must act as passthrough filter
 
   {
-    FilterGraph2 graph_filter;
+    FilterGraph graph_filter;
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
     CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
