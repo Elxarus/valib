@@ -453,7 +453,7 @@ DVDGraph::reset()
   spdif_status = use_spdif? SPDIF_MODE_NONE: SPDIF_MODE_DISABLED;
   spdif_err = use_spdif? SPDIF_MODE_NONE: SPDIF_MODE_DISABLED;
 
-  FilterGraph2::reset();
+  FilterGraph::reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////

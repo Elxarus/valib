@@ -15,8 +15,8 @@
   may buffer significant amount of data (several seconds for instance).
 */
 
-#ifndef VALIB_FILTER_GRAPH2_H
-#define VALIB_FILTER_GRAPH2_H
+#ifndef VALIB_FILTER_GRAPH_H
+#define VALIB_FILTER_GRAPH_H
 
 #include <list>
 #include <string>
@@ -24,7 +24,7 @@
 #include "../filter2.h"
 #include "passthrough.h"
 
-class FilterGraph2 : public SimpleFilter
+class FilterGraph : public SimpleFilter
 {
 private:
   enum state_t { state_init, state_empty, state_processing, state_rebuild, state_done_flushing };
@@ -124,8 +124,8 @@ public:
   static const int node_end   = -2;
   static const int node_err   = -3;
 
-  FilterGraph2();
-  virtual ~FilterGraph2();
+  FilterGraph();
+  virtual ~FilterGraph();
 
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
@@ -155,7 +155,7 @@ public:
 // Connects filters one after another
 ///////////////////////////////////////////////////////////////////////////////
 
-class FilterChain2 : public FilterGraph2
+class FilterChain2 : public FilterGraph
 {
 protected:
   struct Node

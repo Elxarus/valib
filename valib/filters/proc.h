@@ -74,7 +74,7 @@
 #ifndef VALIB_PROC_H
 #define VALIB_PROC_H
 
-#include "filter_graph2.h"
+#include "filter_graph.h"
 #include "cache.h"
 #include "equalizer_mch.h"
 #include "levels.h"

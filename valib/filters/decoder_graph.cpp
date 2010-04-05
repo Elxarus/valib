@@ -71,7 +71,7 @@ DecoderGraph::get_info(char *_buf, size_t _len) const
 void 
 DecoderGraph::reset()
 {
-  FilterGraph2::reset();
+  FilterGraph::reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////

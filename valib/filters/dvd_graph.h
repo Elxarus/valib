@@ -12,7 +12,7 @@
 #ifndef VALIB_DVD_GRAPH_H
 #define VALIB_DVD_GRAPH_H
 
-#include "filter_graph2.h"
+#include "filter_graph.h"
 #include "passthrough.h"
 #include "../parsers/ac3/ac3_enc.h"
 #include "demux.h"
@@ -54,7 +54,7 @@ public:
   }
 };
 
-class DVDGraph : public FilterGraph2
+class DVDGraph : public FilterGraph
 {
 public:
   Demux          demux;

@@ -8,12 +8,12 @@
 #ifndef VALIB_DECODER_GRAPH_H
 #define VALIB_DECODER_GRAPH_H
 
-#include "filter_graph2.h"
+#include "filter_graph.h"
 #include "decoder.h"
 #include "spdifer.h"
 #include "proc.h"
 
-class DecoderGraph : public FilterGraph2
+class DecoderGraph : public FilterGraph
 {
 public:
   Despdifer      despdifer;

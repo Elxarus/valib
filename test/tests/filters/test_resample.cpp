@@ -7,7 +7,7 @@
 #include "filters/resample.h"
 #include "filters/convolver.h"
 #include "filters/slice.h"
-#include "filters/filter_graph2.h"
+#include "filters/filter_graph.h"
 #include "fir/param_fir.h"
 #include "../../suite.h"
 
