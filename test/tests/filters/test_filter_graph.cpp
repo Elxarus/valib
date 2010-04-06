@@ -326,7 +326,7 @@ public:
 };
 
 
-TEST(filter_graph2, "FilterGraph")
+TEST(filter_graph, "FilterGraph")
 
   /////////////////////////////////////////////////////////
   // Default FilterGraph must act as passthrough filter
@@ -397,7 +397,8 @@ TEST(filter_graph2, "FilterGraph")
     {
       FilterChain graph_filter;
       graph_filter.add_back(tst[i]);
-      graph_filter.reset();
+      graph_filter.open(spk);
+      log->msg("Testing chain: %s", graph_filter.print_chain().c_str());
 
       NoiseGen noise1(spk, seed, noise_size);
       NoiseGen noise2(spk, seed, noise_size);
@@ -451,6 +452,8 @@ TEST(filter_graph2, "FilterGraph")
           FilterChain graph_filter;
           graph_filter.add_back(tests[i].f);
           graph_filter.add_back(tests[j].f);
+          graph_filter.open(spk);
+          log->msg("Testing chain: %s", graph_filter.print_chain().c_str());
 
           StepGain ref(
             tests[i].gain * tests[j].gain,
@@ -597,4 +600,4 @@ TEST(filter_graph2, "FilterGraph")
     }
   }
 
-TEST_END(filter_graph2);
+TEST_END(filter_graph);

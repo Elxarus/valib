@@ -405,7 +405,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\tests\filters\test_filter_graph2.cpp"
+					RelativePath=".\tests\filters\test_filter_graph.cpp"
 					>
 				</File>
 				<File
