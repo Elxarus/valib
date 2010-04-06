@@ -253,7 +253,7 @@ FilterGraph::process_chain(Chunk2 &out)
       // the processing state) down.
 
       if (!build_chain(node))
-        throw FilterError(this, 0, "Error: cannot rebuild the chain");
+        throw FilterError(this, -1, "process() error: cannot rebuild the chain");
 
       is_new_stream = true;
       node->state = state_processing;
@@ -302,11 +302,24 @@ void
 FilterGraph::reset()
 {
   is_new_stream = false;
-  for (Node *node = &start; node; node = node->next)
+
+  // Reset filters and
+  // rebuild the chain if nessesary
+  for (Node *node = &start; node->next; node = node->next)
   {
     node->filter->reset();
     node->state = state_init;
     node->flushing = false;
+
+    if (node->rebuild != no_rebuild)
+      if (node->next->id != next_id(node->id, node->filter->get_output()))
+      {
+        if (!build_chain(node))
+          throw FilterError(this, -1, "reset() error: cannot rebuild the chain");
+        break;
+      }
+      else
+        node->rebuild = no_rebuild;
   }
 }
 
@@ -347,7 +360,7 @@ FilterGraph::build_chain(Node *node)
     // if ofdd filter is in transition state then set output
     // format to spk_unknown
 
-    if (next_spk == spk_unknown)
+    if (next_spk.is_unknown())
     {
       // ofdd = true;
       return true;
@@ -433,7 +446,23 @@ void
 FilterGraph::destroy()
 {
   truncate(&start);
-  reset();
+
+  // Cannot call reset because it will build the chain
+  // again. We don't want this because it may be used
+  // before making changes in the chain. So we have
+  // to manually reset tails.
+
+  is_new_stream = false;
+
+  start.filter->reset();
+  start.state = state_init;
+  start.rebuild = check_rebuild;
+  start.flushing = false;
+
+  end.filter->reset();
+  end.state = state_init;
+  end.rebuild = no_rebuild;
+  end.flushing = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
