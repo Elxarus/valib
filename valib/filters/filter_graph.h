@@ -19,8 +19,6 @@
 #define VALIB_FILTER_GRAPH_H
 
 #include <list>
-#include <string>
-
 #include "../filter2.h"
 #include "passthrough.h"
 
@@ -116,7 +114,7 @@ protected:
   virtual void uninit_filter(int id)
   {}
 
-  virtual std::string get_name(int id) const
+  virtual string get_name(int id) const
   { return 0; }
 
 public:
@@ -126,6 +124,11 @@ public:
 
   FilterGraph();
   virtual ~FilterGraph();
+
+  /////////////////////////////////////////////////////////
+  // Own functions
+
+  string print_chain() const;
 
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
@@ -154,6 +157,8 @@ public:
 
   virtual Speakers get_output() const
   { return end.filter->get_output(); }
+
+  virtual string info() const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -168,9 +173,9 @@ protected:
   {
     int id;
     Filter2 *filter;
-    std::string name;
+    string name;
 
-    Node(int id_, Filter2 *filter_, const std::string &name_ = std::string()):
+    Node(int id_, Filter2 *filter_, const string &name_ = string()):
     id(id_), filter(filter_), name(name_) {}
 
     bool operator ==(int id_)          const { return id == id_;         }
@@ -186,7 +191,7 @@ protected:
 
   virtual int next_id(int id, Speakers spk) const;
   virtual Filter2 *init_filter(int id, Speakers spk);
-  virtual std::string get_name(int id) const;
+  virtual string get_name(int id) const;
 
 public:
   FilterChain();
@@ -228,8 +233,8 @@ public:
   //   Destroy the chain and release all filters
   //   immediately. Current processing is interrupted.
 
-  bool add_front(Filter2 *filter, const std::string &name = std::string());
-  bool add_back(Filter2 *filter, const std::string &name = std::string());
+  bool add_front(Filter2 *filter, const string &name = string());
+  bool add_back(Filter2 *filter, const string &name = string());
 
   void remove(Filter2 *filter);
   void clear();
