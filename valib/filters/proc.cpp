@@ -215,7 +215,8 @@ AudioProcessor::close()
 {
   in_spk = spk_unknown;
   out_spk = spk_unknown;
-  chain.close();
+  if (chain.is_open())
+    chain.close();
 }
 
 void
