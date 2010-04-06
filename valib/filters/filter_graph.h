@@ -24,7 +24,7 @@
 #include "../filter2.h"
 #include "passthrough.h"
 
-class FilterGraph : public SimpleFilter
+class FilterGraph : public Filter2
 {
 private:
   enum state_t { state_init, state_empty, state_processing, state_rebuild, state_done_flushing };
@@ -130,8 +130,8 @@ public:
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
 
-  virtual bool init(Speakers spk);
-  virtual void uninit();
+  virtual bool open(Speakers spk);
+  virtual void close();
 
   virtual bool process(Chunk2 &in, Chunk2 &out);
   virtual bool flush(Chunk2 &out);
@@ -142,6 +142,12 @@ public:
 
   virtual bool new_stream() const
   { return is_new_stream; }
+
+  virtual bool is_open() const
+  { return start.filter->is_open(); }
+
+  virtual bool is_ofdd() const
+  { return false; }
 
   virtual Speakers get_input() const
   { return start.filter->get_input(); }
