@@ -269,3 +269,12 @@ Filter2::operator const Filter *() const
 
 const Filter *Filter2::operator ->() const
 { return thunk; }
+
+string
+Filter2::name() const
+{
+  string type_name = typeid(*this).name();
+  if (type_name.compare(0, 6, "class ") == 0)
+    type_name.replace(0, 6, "");
+  return type_name;
+}

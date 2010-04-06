@@ -171,6 +171,11 @@
     process(chunk2) true    true          out_spk       ouput format is determined
     process(chunk2) true    false         out_spk       new stream continues
 
+  Speakers get_input()
+    Returns input format of the filter. It must be the same format as passed
+    to open() call. This function should be used only when the filter is open,
+    otherwise the result is undefined.
+
   Speakers get_output()
     Returns output format of the filter.
 
@@ -184,13 +189,24 @@
     Most filters do not change output format during the processing, but some
     can. To change output format filter must explicitly indicate this with
     help of new_stream() call (it should return true when format changes).
+
+  std::string name() const
+    Returns the name of the filter (class name by default).
+
+  std::string info() const
+    Print the filter configuration. Only static parameters should be printed,
+    i.e. at the DRC filter we should print the drc factor, but not the current
+    gain (that is constantly changing).
 */
 
 #ifndef VALIB_FILTER2_H
 #define VALIB_FILTER2_H
 
+#include <string>
 #include "filter.h"
 #include "buffer.h"
+
+using std::string;
 
 class Chunk2;
 class Filter2;
@@ -399,6 +415,10 @@ public:
   virtual bool     is_ofdd() const = 0;
   virtual Speakers get_input() const = 0;
   virtual Speakers get_output() const = 0;
+
+  // Filter info
+  virtual string name() const;
+  virtual string info() const { return string(); }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
