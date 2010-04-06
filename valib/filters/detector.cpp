@@ -59,9 +59,9 @@ Detector::can_open(Speakers new_spk) const
 }
 
 bool
-Detector::init(Speakers new_spk)
+Detector::init()
 {
-  const HeaderParser *hparser = find_parser(new_spk);
+  const HeaderParser *hparser = find_parser(spk);
   if (!hparser)
     return false;
 

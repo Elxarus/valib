@@ -53,10 +53,10 @@ public:
   LinearBuffer(size_t buf_size): buf_size(buf_size)
   {}
 
-  virtual bool init(Speakers new_spk)
+  virtual bool init()
   {
     buf_pos = 0;
-    return buf.allocate(new_spk.nch(), buf_size);
+    return buf.allocate(spk.nch(), buf_size);
   }
 
   virtual void reset()
@@ -162,7 +162,7 @@ protected:
 public:
   OfddMock() {};
 
-  virtual bool init(Speakers new_spk)
+  virtual bool init()
   {
     reset();
     return true;

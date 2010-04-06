@@ -198,7 +198,7 @@ Converter::can_open(Speakers new_spk) const
 }
 
 bool 
-Converter::init(Speakers new_spk)
+Converter::init()
 {
   /////////////////////////////////////////////////////////
   // Initialize convertor:
@@ -206,22 +206,22 @@ Converter::init(Speakers new_spk)
   // * allocate buffer
   // * reset filter state
 
-  if (new_spk.format == format)
+  if (spk.format == format)
     // no conversion required; no buffer required
     return true; 
   
-  convert = find_conversion(format, new_spk);
+  convert = find_conversion(format, spk);
   if (convert == 0)
     return false;
 
-  if (!buf.allocate(new_spk.nch() * nsamples * sample_size(format)))
+  if (!buf.allocate(spk.nch() * nsamples * sample_size(format)))
     return false;
 
   if (format == FORMAT_LINEAR)
   {
     // set channel pointers
     out_samples[0] = (sample_t *)buf.data();
-    for (int ch = 1; ch < new_spk.nch(); ch++)
+    for (int ch = 1; ch < spk.nch(); ch++)
       out_samples[ch] = out_samples[ch-1] + nsamples;
     out_rawdata = 0;
   }

@@ -58,7 +58,7 @@ public:
   // SamplesFilter overrides
 
   virtual void reset();
-  virtual bool init(Speakers spk);
+  virtual bool init();
   virtual bool process(Chunk2 &in, Chunk2 &out);
 };
 

@@ -206,12 +206,12 @@ AC3Enc::can_open(Speakers _spk) const
 }
 
 bool 
-AC3Enc::init(Speakers _spk)
+AC3Enc::init()
 {
   // sample rate
   fscod = 0;
   for (fscod = 0; fscod < sizeof(freq_tbl) / sizeof(freq_tbl[0]); fscod++)
-    if (freq_tbl[fscod] == _spk.sample_rate)
+    if (freq_tbl[fscod] == spk.sample_rate)
       break;
 
   if (fscod == sizeof(freq_tbl) / sizeof(freq_tbl[0])) 
@@ -230,8 +230,7 @@ AC3Enc::init(Speakers _spk)
   fscod %= 3;
   bsid = 8 + halfratecod;
 
-  spk         = _spk;
-  sample_rate = _spk.sample_rate;
+  sample_rate = spk.sample_rate;
   frame_size  = (bitrate * AC3_BLOCK_SAMPLES * AC3_NBLOCKS) / sample_rate / 8;
 
   switch (spk.mask)

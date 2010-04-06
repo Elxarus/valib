@@ -442,7 +442,7 @@ public:
   /////////////////////////////////////////////////////////
   // Init/Uninit placeholders
 
-  virtual bool init(Speakers spk) { return true; }
+  virtual bool init() { return true; }
   virtual void uninit() {}
 
   /////////////////////////////////////////////////////////
@@ -455,11 +455,14 @@ public:
     if (!can_open(new_spk))
       return false;
 
-    if (!init(new_spk))
+    spk = new_spk;
+    if (!init())
+    {
+      spk = spk_unknown;
       return false;
+    }
 
     f_open = true;
-    spk = new_spk;
     return true;
   }
 

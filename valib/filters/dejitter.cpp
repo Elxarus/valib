@@ -82,44 +82,44 @@ Syncer::can_open(Speakers new_spk) const
 }
 
 bool
-Syncer::init(Speakers new_spk)
+Syncer::init()
 {
   reset();
 
-  if (!new_spk.sample_rate)
+  if (!spk.sample_rate)
     return false;
 
-  switch (new_spk.format)
+  switch (spk.format)
   {
     case FORMAT_LINEAR:
-      size2time = 1.0 / new_spk.sample_rate;
+      size2time = 1.0 / spk.sample_rate;
       break;
 
     case FORMAT_PCM16:
     case FORMAT_PCM16_BE:
-      size2time = 1.0 / 2.0 / new_spk.nch() / new_spk.sample_rate;
+      size2time = 1.0 / 2.0 / spk.nch() / spk.sample_rate;
       break;
 
     case FORMAT_PCM24:
     case FORMAT_PCM24_BE:
-      size2time = 1.0 / 3.0 / new_spk.nch() / new_spk.sample_rate; 
+      size2time = 1.0 / 3.0 / spk.nch() / spk.sample_rate; 
       break;
 
     case FORMAT_PCM32:
     case FORMAT_PCM32_BE:
-      size2time = 1.0 / 4.0 / new_spk.nch() / new_spk.sample_rate;
+      size2time = 1.0 / 4.0 / spk.nch() / spk.sample_rate;
       break;
 
     case FORMAT_PCMFLOAT:
-      size2time = 1.0 / sizeof(float)  / new_spk.nch() / new_spk.sample_rate;
+      size2time = 1.0 / sizeof(float)  / spk.nch() / spk.sample_rate;
       break;
 
     case FORMAT_PCMDOUBLE:
-      size2time = 1.0 / sizeof(double) / new_spk.nch() / new_spk.sample_rate;
+      size2time = 1.0 / sizeof(double) / spk.nch() / spk.sample_rate;
       break;
 
     case FORMAT_SPDIF:
-      size2time = 1.0 / 4.0 / new_spk.sample_rate;
+      size2time = 1.0 / 4.0 / spk.sample_rate;
       break;
 
     default:

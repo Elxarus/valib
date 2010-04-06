@@ -61,18 +61,18 @@ void
 Delay::set_delays(const float _delays[CH_NAMES])
 {
   memcpy(delays, _delays, sizeof(delays));
-  init(spk);
+  init();
 }
 
 bool
-Delay::init(Speakers new_spk)
+Delay::init()
 {
   int ch;
-  const int nch = new_spk.nch();
+  const int nch = spk.nch();
   const double factor = units2samples(units);
 
   order_t order;
-  new_spk.get_order(order);
+  spk.get_order(order);
 
   memset(ch_delays, 0, sizeof(ch_delays));
   for (ch = 0; ch < nch; ch++)

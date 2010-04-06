@@ -80,14 +80,14 @@ Convolver::convolve()
     }
 }
 
-bool Convolver::init(Speakers new_spk)
+bool Convolver::init()
 {
   int i;
-  int nch = new_spk.nch();
+  int nch = spk.nch();
 
   uninit();
   ver = gen.version();
-  fir = gen.make(new_spk.sample_rate);
+  fir = gen.make(spk.sample_rate);
 
   if (!fir)
   {
