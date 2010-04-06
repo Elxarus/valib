@@ -1,5 +1,8 @@
 #include <algorithm>
+#include <boost/lexical_cast.hpp>
 #include "filter_graph.h"
+
+using boost::lexical_cast;
 
 FilterGraph::FilterGraph()
 {
@@ -36,7 +39,35 @@ FilterGraph::~FilterGraph()
 }
 
 ///////////////////////////////////////////////////////////
-// SimpleFilter overrides
+// Own functions
+
+string
+FilterGraph::print_chain() const
+{
+  string text;
+  Speakers spk;
+
+  for (Node *node = start.next; node->id != node_end; node = node->next)
+  {
+    // print input format
+    spk = node->filter->get_input();
+    text += string() + '(' + spk.format_text() + ' ' + spk.mode_text() + ' ' +
+            lexical_cast<string>(spk.sample_rate) + ')';
+
+    // print filter name
+    text += std::string() + " -> " + node->filter->name() + " -> ";
+  }
+
+  // Output format
+  spk = get_output();
+  text += string() + '(' + spk.format_text() + ' ' + spk.mode_text() + ' ' +
+          lexical_cast<string>(spk.sample_rate) + ')';
+
+  return text;
+}
+
+///////////////////////////////////////////////////////////
+// Filter overrides
 
 bool
 FilterGraph::open(Speakers new_spk)
@@ -329,6 +360,18 @@ FilterGraph::reset()
       else
         node->rebuild = no_rebuild;
   }
+}
+
+string
+FilterGraph::info() const
+{
+  string text = print_chain();
+  text += "\n";
+  for (Node *node = start.next; node->id != node_end; node = node->next)
+    text += string() + node->filter->name() + "\n"
+                     + node->filter->info() + "\n";
+
+  return text;
 }
 
 ///////////////////////////////////////////////////////////
