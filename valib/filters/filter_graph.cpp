@@ -39,17 +39,25 @@ FilterGraph::~FilterGraph()
 // SimpleFilter overrides
 
 bool
-FilterGraph::init(Speakers spk)
+FilterGraph::open(Speakers new_spk)
 {
+  if (!can_open(new_spk))
+    return false;
+
   destroy();
-  start.filter->open(spk);
+  start.filter->open(new_spk);
   return build_chain(&start);
 }
 
 void
-FilterGraph::uninit()
+FilterGraph::close()
 {
-  destroy();
+  if (is_open())
+  {
+    destroy();
+    start.filter->close();
+    end.filter->close();
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
