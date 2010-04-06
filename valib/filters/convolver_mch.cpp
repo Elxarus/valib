@@ -154,10 +154,10 @@ ConvolverMch::process_convolve()
       }
 }
 
-bool ConvolverMch::init(Speakers new_spk)
+bool ConvolverMch::init()
 {
   int i, ch, ch_name;
-  int nch = new_spk.nch();
+  int nch = spk.nch();
 
   trivial = true;
   int min_point = 0;
@@ -168,11 +168,11 @@ bool ConvolverMch::init(Speakers new_spk)
     ver[ch_name] = gen[ch_name].version();
 
   order_t order;
-  new_spk.get_order(order);
+  spk.get_order(order);
   for (ch = 0; ch < nch; ch++)
   {
     ch_name = order[ch];
-    fir[ch] = gen[ch_name].make(new_spk.sample_rate);
+    fir[ch] = gen[ch_name].make(spk.sample_rate);
 
     // fir generation error
     if (!fir[ch])

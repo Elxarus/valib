@@ -83,7 +83,7 @@ public:
   // Filter2 interface
 
   virtual bool can_open(Speakers spk) const;
-  virtual bool init(Speakers spk);
+  virtual bool init();
 
   virtual void reset();
   virtual bool process(Chunk2 &in, Chunk2 &out);

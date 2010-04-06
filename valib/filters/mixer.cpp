@@ -118,10 +118,9 @@ Mixer::set_output(Speakers new_spk)
 // Filter interface
 
 bool 
-Mixer::init(Speakers new_spk)
+Mixer::init()
 {
-  spk = new_spk;
-  out_spk.sample_rate = new_spk.sample_rate;
+  out_spk.sample_rate = spk.sample_rate;
 
   if (is_buffered())
     buf.allocate(out_spk.nch(), nsamples);

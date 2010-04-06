@@ -60,9 +60,9 @@ BassRedir::reset()
 }
 
 bool
-BassRedir::init(Speakers new_spk)
+BassRedir::init()
 {
-  update_filters(new_spk);
+  update_filters(spk);
   return true;
 }
 

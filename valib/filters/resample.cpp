@@ -102,7 +102,7 @@ Resample::set(int _sample_rate, double _a, double _q)
   {
     out_spk.sample_rate = sample_rate;
     if (spk.sample_rate != sample_rate)
-      init(spk);
+      init();
   }
 
   return true;
@@ -121,11 +121,11 @@ Resample::get(int *_sample_rate, double *_a, double *_q)
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
-Resample::init(Speakers new_spk)
+Resample::init()
 {
   uninit();
 
-  out_spk = new_spk;
+  out_spk = spk;
   if (sample_rate)
     out_spk.sample_rate = sample_rate;
 
@@ -133,9 +133,9 @@ Resample::init(Speakers new_spk)
     return true;
 
   int i;
-  fs = new_spk.sample_rate; // source sample rate
+  fs = spk.sample_rate;     // source sample rate
   fd = sample_rate;         // destinationsample rate
-  nch = new_spk.nch();      // number fo channels
+  nch = spk.nch();          // number fo channels
   rate = double(fd) / double(fs);
 
   g = gcd(fs, fd);
