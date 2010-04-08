@@ -1,9 +1,11 @@
 #include "cache.h"
 
-CacheFilter::CacheFilter(): stream_time(0), buf_size(0), buf_samples(0), cached_samples(0), pos(0)
+CacheFilter::CacheFilter():
+stream_time(0), buf_size(0), buf_samples(0), cached_samples(0), pos(0)
 {}
 
-CacheFilter::CacheFilter(vtime_t size): stream_time(0), buf_size(0), buf_samples(0), cached_samples(0), pos(0)
+CacheFilter::CacheFilter(vtime_t size):
+stream_time(0), buf_size(0), buf_samples(0), cached_samples(0), pos(0)
 { set_size(size); }
 
 vtime_t
@@ -18,7 +20,6 @@ void
 CacheFilter::set_size(vtime_t new_size)
 {
   const int nch = spk.nch();
-  int ch;
 
   if (new_size < 0) new_size = 0;
 
@@ -38,12 +39,10 @@ CacheFilter::set_size(vtime_t new_size)
   if (new_buf_samples < buf_samples)
   {
     if (new_buf_samples < pos)
-      for (ch = 0; ch < nch; ch++)
-        memmove(buf[ch], buf[ch] + (pos - new_buf_samples), new_buf_samples * sizeof(sample_t));
+      move_samples(buf, 0, buf, pos - new_buf_samples, nch, new_buf_samples);
 
     if (new_buf_samples > pos)
-      for (ch = 0; ch < nch; ch++)
-        memmove(buf[ch] + pos, buf[ch] + pos + (buf_samples - new_buf_samples), (new_buf_samples - pos) * sizeof(sample_t));
+      move_samples(buf, pos, buf, pos + buf_samples - new_buf_samples, nch, new_buf_samples - pos);
   }
 
   buf.reallocate(nch, new_buf_samples);
@@ -59,11 +58,10 @@ CacheFilter::set_size(vtime_t new_size)
   // Move data after reallocation
   // Zero the tail
   if (new_buf_samples > buf_samples)
-    for (ch = 0; ch < nch; ch++)
-    {
-      memmove(buf[ch] + pos, buf[ch] + pos, (buf_samples - pos) * sizeof(sample_t));
-      memset(buf[ch] + pos, 0, (new_pos - pos) * sizeof(sample_t));
-    }
+  {
+    move_samples(buf, pos + new_buf_samples - buf_samples, buf, pos, nch, buf_samples - pos);
+    zero_samples(buf, pos, new_buf_samples - buf_samples);
+  }
 
   buf_size = new_size;
   buf_samples = new_buf_samples;
@@ -74,7 +72,6 @@ CacheFilter::set_size(vtime_t new_size)
 size_t
 CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t size)
 {
-  int i;
   const int nch = spk.nch();
 
   if (!samples) return 0;
@@ -110,22 +107,20 @@ CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t si
     for (int ch = 0; ch < nch; ch++)
       if (order[ch] == ch_name)
       {
-        memcpy(samples, buf[ch] + start_pos, size1 * sizeof(sample_t));
-        memcpy(samples + size1, buf[ch], size2 * sizeof(sample_t));
+        copy_samples(samples, buf[ch] + start_pos, size1);
+        copy_samples(samples + size1, buf[ch], size1);
         break;
       }
   }
   else
   {
     // Sum channels
-    memcpy(samples, buf[0] + start_pos, size1 * sizeof(sample_t));
-    memcpy(samples + size1, buf[0], size2 * sizeof(sample_t));
+    copy_samples(samples, buf[0] + start_pos, size1);
+    copy_samples(samples + size1, buf[0], size2);
     for (int ch = 1; ch < nch; ch++)
     {
-      for (i = 0; i < size1; i++)
-        samples[i] += buf[ch][i + start_pos];
-      for (i = 0; i < size2; i++)
-        samples[i + size1] += buf[ch][i];
+      sum_samples(samples, buf[ch] + start_pos, size1);
+      sum_samples(samples + size1, buf[ch], size2);
     }
   }
 
@@ -163,7 +158,6 @@ CacheFilter::reset()
 bool
 CacheFilter::process(Chunk2 &in, Chunk2 &out)
 {
-  int ch;
   const int nch = spk.nch();
   const samples_t samples = in.samples;
   const size_t size = in.size;
@@ -190,8 +184,7 @@ CacheFilter::process(Chunk2 &in, Chunk2 &out)
   if (size > (size_t)buf_samples)
   {
     size_t start = size - buf_samples;
-    for (ch = 0; ch < nch; ch++)
-      memcpy(buf[ch], samples[ch] + start, buf_samples * sizeof(sample_t));
+    copy_samples(buf, 0, samples, start, nch, buf_samples);
     pos = 0;
     return true;
   }
@@ -200,18 +193,13 @@ CacheFilter::process(Chunk2 &in, Chunk2 &out)
   {
     int size1 = buf_samples - pos;
     int size2 = pos + (int)size - buf_samples;
-    for (ch = 0; ch < nch; ch++)
-    {
-      memcpy(buf[ch] + pos, samples[ch], size1 * sizeof(sample_t));
-      memcpy(buf[ch], samples[ch] + size1, size2 * sizeof(sample_t));
-    }
+    copy_samples(buf, pos, samples, 0, nch, size1);
+    copy_samples(buf, 0, samples, size1, nch, size2);
     pos = size2;
     return true;
   }
 
-  for (ch = 0; ch < nch; ch++)
-    memcpy(buf[ch] + pos, samples[ch], size * sizeof(sample_t));
-
+  copy_samples(buf, pos, samples, 0, nch, size);
   pos += (int)size;
   if (pos >= buf_samples)
     pos = 0;

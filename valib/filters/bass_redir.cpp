@@ -86,8 +86,7 @@ BassRedir::process(Chunk2 &in, Chunk2 &out)
   if ((spk.mask & ~ch_mask) == 0)
     return true;
 
-  int ch;
-  int nch = spk.nch();
+  int ch, nch = spk.nch();
   order_t order;
   spk.get_order(order);
   samples_t samples = out.samples;
@@ -105,11 +104,7 @@ BassRedir::process(Chunk2 &in, Chunk2 &out)
     buf.zero();
     for (ch = 0; ch < nch; ch++)
       if ((CH_MASK(order[ch]) & ch_mask) == 0)
-      {
-        sample_t *sptr = samples[ch] + pos;
-        for (size_t i = 0; i < block_size; i++)
-          buf[i] += sptr[i];
-      }
+        sum_samples(buf, samples[ch] + pos, block_size);
 
     // Filter bass channel
     lpf.process(buf, block_size);
@@ -117,17 +112,11 @@ BassRedir::process(Chunk2 &in, Chunk2 &out)
     // Mix bass and do high-pass filtering
     for (ch = 0; ch < nch; ch++)
       if ((CH_MASK(order[ch]) & ch_mask) == 0)
-      {
         // High-pass filter
         hpf[ch].process(samples[ch] + pos, block_size);
-      }
       else
-      {
         // Mix bass
-        sample_t *sptr = samples[ch] + pos;
-        for (size_t i = 0; i < block_size; i++)
-          sptr[i] += buf[i];
-      }
+        sum_samples(samples[ch] + pos, buf, block_size);
 
     // Next block
     pos += block_size;
