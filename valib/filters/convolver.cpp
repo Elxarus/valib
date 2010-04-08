@@ -54,8 +54,8 @@ Convolver::convolve()
       buf_ch = buf[ch] + fft_pos;
       delay_ch = buf[ch] + buf_size;
 
-      memcpy(fft_buf, buf_ch, n * sizeof(sample_t));
-      memset(fft_buf + n, 0, n * sizeof(sample_t));
+      copy_samples(fft_buf, buf_ch, n);
+      zero_samples(fft_buf, n, n);
 
       fft.rdft(fft_buf);
 
@@ -76,7 +76,7 @@ Convolver::convolve()
       for (i = 0; i < n; i++)
         buf_ch[i] = fft_buf[i] + delay_ch[i];
 
-      memcpy(delay_ch, fft_buf + n, n * sizeof(sample_t));
+      copy_samples(delay_ch, 0, fft_buf, n, n);
     }
 }
 
@@ -190,7 +190,6 @@ Convolver::reset()
 bool
 Convolver::process(Chunk2 &in, Chunk2 &out)
 {
-  int ch;
   int nch = spk.nch();
 
   /////////////////////////////////////////////////////////
@@ -212,22 +211,11 @@ Convolver::process(Chunk2 &in, Chunk2 &out)
 
   if (state != state_filter)
   {
-    size_t s;
-    sample_t gain;
-    switch (state)
-    {
-      case state_zero:
-        for (ch = 0; ch < nch; ch++)
-          memset(in.samples[ch], 0, in.size * sizeof(sample_t));
-        break;
+    if (state == state_zero)
+      zero_samples(in.samples, nch, in.size);
 
-      case state_gain:
-        gain = fir->data[0];
-        for (ch = 0; ch < nch; ch++)
-          for (s = 0; s < in.size; s++)
-            in.samples[ch][s] *= gain;
-        break;
-    }
+    if (state == state_gain)
+      gain_samples(fir->data[0], in.samples, nch, in.size);
 
     out = in;
     in.set_empty();
@@ -241,8 +229,8 @@ Convolver::process(Chunk2 &in, Chunk2 &out)
   if (pos < buf_size)
   {
     size_t gone = MIN(in.size, size_t(buf_size - pos));
-    for (ch = 0; ch < nch; ch++)
-      memcpy(buf[ch] + pos, in.samples[ch], sizeof(sample_t) * gone);
+    copy_samples(buf, pos, in.samples, 0, nch, gone);
+
     pos += (int)gone;
     in.drop_samples(gone);
 
@@ -269,9 +257,7 @@ Convolver::flush(Chunk2 &out)
   if (!need_flushing())
     return false;
 
-  for (int ch = 0; ch < spk.nch(); ch++)
-    memset(buf[ch] + pos, 0, (buf_size - pos) * sizeof(sample_t));
-
+  zero_samples(buf, pos, spk.nch(), buf_size - pos);
   convolve();
 
   post_samples = 0;
