@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 #include "spk.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -257,4 +258,54 @@ void move_samples(samples_t dst, size_t dst_offset, samples_t src, size_t src_of
 {
   for (int ch = 0; ch < nch; ch++)
     move_samples(dst[ch] + dst_offset, src[ch] + src_offset, size);
+}
+
+void gain_samples(sample_t gain, sample_t *s, size_t size)
+{
+  for (size_t i = 0; i < size; i++)
+    s[i] *= gain;
+}
+void gain_samples(sample_t gain, samples_t s, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+  {
+    sample_t *sch = s[ch];
+    for (size_t i = 0; i < size; i++)
+      sch[i] *= gain;
+  }
+}
+
+void gain_samples(sample_t gain, sample_t *s, size_t offset, size_t size)
+{
+  for (size_t i = offset; i < offset + size; i++)
+    s[i] *= gain;
+}
+void gain_samples(sample_t gain, samples_t s, size_t offset, int nch, size_t size)
+{
+  for (int ch = 0; ch < nch; ch++)
+  {
+    sample_t *sch = s[ch];
+    for (size_t i = offset; i < offset + size; i++)
+      sch[i] *= gain;
+  }
+}
+
+void sum_samples(sample_t *dst, sample_t *src, size_t size)
+{
+  for (size_t i = 0; i < size; i++)
+    dst[i] += src[i];
+}
+
+void mul_samples(sample_t *dst, sample_t *src, size_t size)
+{
+  for (size_t i = 0; i < size; i++)
+    dst[i] *= src[i];
+}
+
+sample_t max_samples(sample_t max, sample_t *s, size_t size)
+{
+  for (size_t i = 0; i < size; i++)
+    if (fabs(s[i]) > max)
+      max = fabs(s[i]);
+  return max;
 }
