@@ -91,46 +91,8 @@ void
 AGC::process()
 {
   size_t s;
-  int ch;
-  int nch = spk.nch();
+  int ch, nch = spk.nch();
   sample_t spk_level = spk.level;
-
-  sample_t max;
-  sample_t *sptr;
-  sample_t *send;
-
-  sample_t levels_loc[NCHANNELS];
-  memset(levels_loc, 0, sizeof(levels_loc));
-
-  ///////////////////////////////////////
-  // Channel levels
-
-  for (ch = 0; ch < nch; ch++)
-  {
-    max = 0;
-    sptr = buf[block][ch];
-    send = sptr + nsamples - 7;
-    while (sptr < send)
-    {
-      if (fabs(sptr[0]) > max) max = fabs(sptr[0]);
-      if (fabs(sptr[1]) > max) max = fabs(sptr[1]);
-      if (fabs(sptr[2]) > max) max = fabs(sptr[2]);
-      if (fabs(sptr[3]) > max) max = fabs(sptr[3]);
-      if (fabs(sptr[4]) > max) max = fabs(sptr[4]);
-      if (fabs(sptr[5]) > max) max = fabs(sptr[5]);
-      if (fabs(sptr[6]) > max) max = fabs(sptr[6]);
-      if (fabs(sptr[7]) > max) max = fabs(sptr[7]);
-      sptr += 8;
-    }
-    send += 7;
-    while (sptr < send)
-    {
-      if (fabs(sptr[0]) > max) max = fabs(sptr[0]);
-      sptr++;
-    }
-
-    levels_loc[ch] = max / spk_level;
-  }
 
   ///////////////////////////////////////
   // Gain, Limiter, DRC
@@ -149,10 +111,10 @@ AGC::process()
 
   // block level
 
-  level = levels_loc[0];
-  for (ch = 1; ch < nch; ch++)
-    if (level < levels_loc[ch]) 
-      level = levels_loc[ch];
+  level = 0;
+  for (ch = 0; ch < nch; ch++)
+    level = max_samples(level, buf[block][ch], nsamples);
+  level = level / spk_level;
 
   // Here 'level' is block peak-level. Normally, this level should not be 
   // greater than 1.0 (0dB) but it is possible that some post-processing made
@@ -198,7 +160,7 @@ AGC::process()
 
   // adjust gain on overflow
 
-  max = MAX(level, old_level) * factor;
+  sample_t max = MAX(level, old_level) * factor;
   if (auto_gain && max > 1.0)
     if (max < attack_factor)
     {
@@ -225,29 +187,20 @@ AGC::process()
   //
   // * full windowing on gain change
   // * simple gain when gain is applied
-  // * no windowing if it is no gain applied
+  // * no windowing when no gain is applied
 
   if (!EQUAL_SAMPLES(old_factor, factor))
   {
     // windowing
     for (ch = 0; ch < nch; ch++)
     {
-      sptr = buf[block][ch];
+      sample_t *sptr = buf[block][ch];
       for (s = 0; s < nsamples; s++, sptr++)
-        *sptr = *sptr * old_factor * w[1][s] + 
-                *sptr * factor * w[0][s];
+        *sptr = *sptr * (old_factor * w[1][s] + factor * w[0][s]);
     }
   }
   else if (!EQUAL_SAMPLES(factor, 1.0))
-  {
-    // simple gain
-    for (ch = 0; ch < nch; ch++)
-    {
-      sptr = buf[block][ch];
-      for (s = 0; s < nsamples; s++, sptr++)
-        *sptr *= factor;
-    }
-  }
+    gain_samples(factor, buf[block], nch, nsamples);
 
   ///////////////////////////////////////
   // Clipping
@@ -257,7 +210,7 @@ AGC::process()
   if (level * factor > 1.0 || old_level * old_factor > 1.0)
     for (ch = 0; ch < nch; ch++)
     {
-      sptr = buf[block][ch];
+      sample_t *sptr = buf[block][ch];
       for (s = 0; s < nsamples; s++, sptr++)
         if (*sptr > +spk_level) 
           *sptr = +spk_level;
