@@ -95,22 +95,14 @@ ConvolverMch::release_all_firs()
 void
 ConvolverMch::process_trivial(samples_t samples, size_t size)
 {
-  size_t s;
-  sample_t gain;
-
   for (int ch = 0; ch < spk.nch(); ch++)
-    switch (type[ch])
-    {
-      case type_zero:
-        memset(samples[ch], 0, size * sizeof(sample_t));
-        break;
+  {
+    if (type[ch] == type_zero)
+      zero_samples(samples[ch], size);
 
-      case type_gain:
-        gain = fir[ch]->data[0];
-        for (s = 0; s < size; s++)
-          samples[ch][s] *= gain;
-        break;
-    }
+    if (type[ch] == type_gain)
+      gain_samples(fir[ch]->data[0], samples[ch], size);
+  }
 }
 
 void
@@ -128,8 +120,8 @@ ConvolverMch::process_convolve()
         delay_ch = buf[ch] + buf_size;
         filter_ch = filter[ch];
 
-        memcpy(fft_buf, buf_ch, n * sizeof(sample_t));
-        memset(fft_buf + n, 0, n * sizeof(sample_t));
+        copy_samples(fft_buf, buf_ch, n);
+        zero_samples(fft_buf, n, n);
 
         fft.rdft(fft_buf);
 
@@ -150,7 +142,7 @@ ConvolverMch::process_convolve()
         for (i = 0; i < n; i++)
           buf_ch[i] = fft_buf[i] + delay_ch[i];
 
-        memcpy(delay_ch, fft_buf + n, n * sizeof(sample_t));
+        copy_samples(delay_ch, 0, fft_buf, n, n);
       }
 }
 
@@ -329,7 +321,7 @@ ConvolverMch::process(Chunk2 &in, Chunk2 &out)
   if (pos == 0)
     for (ch = 0; ch < nch; ch++)
       if (type[ch] != type_conv)
-        memcpy(buf[ch], buf[ch] + buf_size, c * sizeof(sample_t));
+        copy_samples(buf[ch], 0, buf[ch], buf_size, c);
 
   // Accumulate the buffer
   if (pos < buf_size)
@@ -337,10 +329,10 @@ ConvolverMch::process(Chunk2 &in, Chunk2 &out)
     size_t gone = MIN(in.size, size_t(buf_size - pos));
     for (ch = 0; ch < nch; ch++)
       if (type[ch] == type_conv)
-        memcpy(buf[ch] + pos, in.samples[ch], gone * sizeof(sample_t));
+        copy_samples(buf[ch], pos, in.samples[ch], 0, gone);
       else
         // Trivial cases are shifted
-        memcpy(buf[ch] + c + pos, in.samples[ch], gone * sizeof(sample_t));
+        copy_samples(buf[ch], c + pos, in.samples[ch], 0, gone);
     pos += (int)gone;
     in.drop_samples(gone);
 
@@ -373,11 +365,11 @@ ConvolverMch::flush(Chunk2 &out)
   if (pos == 0)
     for (ch = 0; ch < nch; ch++)
       if (type[ch] != type_conv)
-        memcpy(buf[ch], buf[ch] + buf_size, c * sizeof(sample_t));
+        copy_samples(buf[ch], 0, buf[ch], buf_size, c);
 
   for (ch = 0; ch < nch; ch++)
     if (type[ch] == type_conv)
-      memset(buf[ch] + pos, 0, (buf_size - pos) * sizeof(sample_t));
+      zero_samples(buf[ch], pos, buf_size - pos);
 
   process_trivial(buf, buf_size);
   process_convolve();
