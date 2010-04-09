@@ -98,8 +98,7 @@ FilterThunk::process(const Chunk *chunk)
 
   // remember data
   processing = true;
-  in_chunk.set(chunk->rawdata, chunk->samples, chunk->size,
-    chunk->sync, chunk->time);
+  in_chunk = *chunk;
 
   // format change
   if (spk != chunk->spk)
