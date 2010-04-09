@@ -70,7 +70,6 @@
     // Handle filtering errors
   }
 
-
   /////////////////////////////////////////////////////////
 
   bool can_open(Speakers spk) const
@@ -81,7 +80,7 @@
       to open the stream even when the stream format is supported because
       of resource allocation errors. Also filter may change its mind when
       you change parameters of the filter.
-    * false: filter cannot open with the format given.
+    * false: filter cannot be open with the format given.
 
   bool open(Speakers spk)
     Open the filter and allocate resources.
@@ -203,6 +202,7 @@
 #define VALIB_FILTER2_H
 
 #include <string>
+#include <boost/utility.hpp>
 #include "filter.h"
 #include "buffer.h"
 
@@ -210,8 +210,7 @@ using std::string;
 
 class Chunk2;
 class Filter2;
-class Stream;
-class FilterThunk;
+class FilterError;
 
 
 class Chunk2
@@ -354,33 +353,13 @@ public:
   }
 };
 
-
-///////////////////////////////////////////////////////////////////////////////
-// FilterError exception
-
-class FilterError
-{
-public:
-  Filter2 *filter;
-  const char *name;
-
-  int     error_code;
-  const   char *desc;
-
-  FilterError(Filter2 *filter, int error_code, const char *desc);
-  virtual ~FilterError();
-};
-
 ///////////////////////////////////////////////////////////////////////////////
 // Filter2
 // Base interface for all filters
 
-class Filter2
+class Filter2 : boost::noncopyable
 {
-protected:
-  // Prohibit assignment
-  Filter2(const Filter2 &);
-  Filter2 &operator =(const Filter2 &);
+private:
   Filter *thunk;
 
 public:
@@ -419,6 +398,25 @@ public:
   // Filter info
   virtual string name() const;
   virtual string info() const { return string(); }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// FilterError exception
+
+class FilterError
+{
+public:
+  string name;
+  string info;
+  string text;
+  int error_code;
+
+  FilterError(Filter2 *filter_, int error_code_, string text_):
+  name(filter_->name()), info(filter_->info()), error_code(error_code_), text(text_)
+  {}
+
+  virtual ~FilterError()
+  {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////
