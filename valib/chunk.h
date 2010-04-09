@@ -30,6 +30,7 @@ public:
   /////////////////////////////////////////////////////////
   // Utilities
 
+  // Default constructor (dummy chunk)
   Chunk2():
     rawdata(0),
     size(0),
@@ -37,7 +38,8 @@ public:
     time(0)
   {}
 
-  Chunk2(Chunk &chunk):
+  // Copy constructors
+  Chunk2(const Chunk2 &chunk):
     rawdata(chunk.rawdata),
     samples(chunk.samples),
     size(chunk.size),
@@ -45,29 +47,40 @@ public:
     time(chunk.time)
   {}
 
-  Chunk2(bool _sync, vtime_t _time)
-  {
-    set_empty();
-    set_sync(_sync, _time);
-  }
+  Chunk2(const Chunk &chunk):
+    rawdata(chunk.rawdata),
+    samples(chunk.samples),
+    size(chunk.size),
+    sync(chunk.sync),
+    time(chunk.time)
+  {}
 
-  Chunk2(samples_t _samples, size_t _size,
-    bool _sync = false, vtime_t _time = 0)
-  {
-    set_linear(_samples, _size, _sync, _time);
-  }
+  // Empty chunk with a timestamp
+  Chunk2(bool sync_, vtime_t time_):
+    rawdata(0),
+    size(0),
+    sync(sync_),
+    time(time_)
+  {}
 
-  Chunk2(uint8_t *_rawdata, size_t _size,
-    bool _sync = false, vtime_t _time = 0)
-  {
-    set_rawdata(_rawdata, _size, _sync, _time);
-  }
+  // Linear format constructor
+  Chunk2(samples_t samples_, size_t size_,
+    bool sync_ = false, vtime_t time_ = 0):
+    rawdata(0),
+    samples(samples_),
+    size(size_),
+    sync(sync_),
+    time(time_)
+  {}
 
-  Chunk2(uint8_t *_rawdata, samples_t _samples, size_t _size,
-    bool _sync = false, vtime_t _time = 0)
-  {
-    set(_rawdata, _samples, _size, _sync, _time);
-  }
+  // Rawdata format constructor
+  Chunk2(uint8_t *rawdata_, size_t size_,
+    bool sync_ = false, vtime_t time_ = 0):
+    rawdata(rawdata_),
+    size(size_),
+    sync(sync_),
+    time(time_)
+  {}
 
   inline void set_empty()
   {
@@ -78,40 +91,30 @@ public:
     time = 0;
   }
 
-  inline void set_linear(samples_t _samples, size_t _size,
-    bool _sync = false, vtime_t _time = 0)
+  inline void set_linear(samples_t samples_, size_t size_,
+    bool sync_ = false, vtime_t time_ = 0)
   {
     rawdata = 0;
-    samples = _samples;
-    size = _size;
-    sync = _sync;
-    time = _time;
+    samples = samples_;
+    size = size_;
+    sync = sync_;
+    time = time_;
   }
 
-  inline void set_rawdata(uint8_t *_rawdata, size_t _size,
-    bool _sync = false, vtime_t _time = 0)
+  inline void set_rawdata(uint8_t *rawdata_, size_t size_,
+    bool sync_ = false, vtime_t time_ = 0)
   {
-    rawdata = _rawdata;
     samples.zero();
-    size = _size;
-    sync = _sync;
-    time = _time;
+    rawdata = rawdata_;
+    size = size_;
+    sync = sync_;
+    time = time_;
   }
 
-  inline void set(uint8_t *_rawdata, samples_t _samples, size_t _size,
-    bool _sync = false, vtime_t _time = 0)
+  inline void set_sync(bool sync_, vtime_t time_)
   {
-    rawdata = _rawdata;
-    samples = _samples;
-    size = _size;
-    sync = _sync;
-    time = _time;
-  }
-
-  inline void set_sync(bool _sync, vtime_t _time)
-  {
-    sync = _sync;
-    time = _time;
+    sync = sync_;
+    time = time_;
   }
 
   inline bool is_dummy() const
@@ -124,33 +127,34 @@ public:
     return size == 0; 
   }
 
-  inline void drop_rawdata(size_t _size)
+  inline void drop_rawdata(size_t drop_size)
   {
-    if (_size > size)
-      _size = size;
+    if (drop_size > size)
+      drop_size = size;
 
-    rawdata += _size;
-    size -= _size;
+    rawdata += drop_size;
+    size -= drop_size;
     sync = false;
   };
 
-  inline void drop_samples(size_t _size)
+  inline void drop_samples(size_t drop_size)
   {
-    if (_size > size)
-      _size = size;
+    if (drop_size > size)
+      drop_size = size;
 
-    samples += _size;
-    size -= _size;
+    samples += drop_size;
+    size -= drop_size;
     sync = false;
   };
 
-  Chunk2 &operator =(Chunk &chunk)
+  Chunk2 &operator =(const Chunk &chunk)
   {
     rawdata = chunk.rawdata;
     samples = chunk.samples;
     size = chunk.size;
     sync = chunk.sync;
     time = chunk.time;
+    return *this;
   }
 };
 
