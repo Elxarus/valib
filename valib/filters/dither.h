@@ -31,7 +31,7 @@ public:
   virtual bool process(Chunk2 &in, Chunk2 &out)
   {
     out = in;
-    in.set_empty();
+    in.clear();
     if (out.is_dummy())
       return false;
 

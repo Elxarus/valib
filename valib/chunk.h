@@ -82,7 +82,7 @@ public:
     time(time_)
   {}
 
-  inline void set_empty()
+  inline void clear()
   {
     rawdata = 0;
     samples.zero();

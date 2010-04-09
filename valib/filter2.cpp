@@ -41,7 +41,7 @@ FilterThunk::reset()
   f->reset();
   out_spk = f->get_output();
 
-  in_chunk.set_empty();
+  in_chunk.clear();
   out_chunk.set_dummy();
 
   processing = false;;

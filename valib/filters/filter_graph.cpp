@@ -326,7 +326,7 @@ FilterGraph::process(Chunk2 &in, Chunk2 &out)
     return false;
 
   start.input = in;
-  in.set_empty();
+  in.clear();
   return process_chain(out);
 }
 

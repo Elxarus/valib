@@ -70,7 +70,7 @@ public:
       copy_samples(buf, buf_pos, in.samples, 0, spk.nch(), in.size);
       buf_pos += in.size;
 
-      in.set_empty();
+      in.clear();
       return false;
     }
 
@@ -233,7 +233,7 @@ public:
     chunk_count++;
 
     out = in;
-    in.set_empty();
+    in.clear();
     return true;
   }
 
@@ -299,7 +299,7 @@ public:
   {
     n_process++;
     out = in;
-    in.set_empty();
+    in.clear();
     return !out.is_dummy();
   }
 
