@@ -237,17 +237,6 @@ FilterThunk::get_chunk(Chunk *chunk)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-FilterError::FilterError(Filter2 *filter_, int error_code_, const char *desc_):
-filter(filter_), error_code(error_code), desc(strdup(desc_))
-{}
-
-FilterError::~FilterError()
-{
-  safe_delete(desc);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 Filter2::Filter2()
 {
   thunk = new FilterThunk(this);
