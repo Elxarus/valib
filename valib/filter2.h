@@ -76,10 +76,9 @@
     Check format support.
 
     Return value:
-    * true: filter supports the format given. Note that filter may fail to
-      to open the stream even when the stream format is supported because
-      of resource allocation errors. Also filter may change its mind when
-      you change parameters of the filter.
+    * true: filter supports the format given. Note that filter may fail
+      to open even when the format is supported because of resource allocation
+      errors. Also filter may change its mind when you change its parameters.
     * false: filter cannot be open with the format given.
 
   bool open(Speakers spk)
@@ -105,6 +104,8 @@
     do not need to allocate resources once again, just set the internal state
     to initial values.
 
+    reset() must not throw.
+
   bool process(Chunk &in, Chunk &out)
     Process input data and make one output chunk.
 
@@ -125,8 +126,8 @@
     output. After this, process() call on the first filter will corrupt data
     at the output of the second filter.
 
-    When filter finds an error and cannot proceed, it must throw FilterError
-    exception.
+    When sink finds an error and cannot proceed, it must throw SinkError
+    exception. reset() must be called on the filter after an error occurs.
 
     Return value:
     * true: filter made an output chunk successfully
@@ -278,10 +279,11 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SimpleFilter
-// Default implementation for the most of the Filter2 interface.
+// Default implementation for the most of the Filter2 interface. Following
+// functions left unimplemented: can_open() and process()
 //
-// Only 2 funtions left unimplemented: can_open() and is_inplace() becaluse
-// both stongly depends on the filter.
+// When filter requires initialization, it should override init()/uninit()
+// placeholders, instead of open()/close().
 
 
 class SimpleFilter : public Filter2
