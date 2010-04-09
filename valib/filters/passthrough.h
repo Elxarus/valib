@@ -23,7 +23,7 @@ public:
   virtual bool process(Chunk2 &in, Chunk2 &out)
   {
     out = in;
-    in.set_empty();
+    in.clear();
     return !out.is_dummy();
   }
 };

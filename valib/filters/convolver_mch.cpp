@@ -307,7 +307,7 @@ ConvolverMch::process(Chunk2 &in, Chunk2 &out)
   {
     process_trivial(in.samples, in.size);
     out = in;
-    in.set_empty();
+    in.clear();
     return !out.is_dummy();
   }
 

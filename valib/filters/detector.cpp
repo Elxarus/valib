@@ -160,7 +160,7 @@ Detector::flush(Chunk2 &out)
       if (stream.is_debris_exists())
         out.set_rawdata(stream.get_debris(), stream.get_debris_size());
       else
-        out.set_empty();
+        out.clear();
 
       do_flush = false;
       is_new_stream = false;

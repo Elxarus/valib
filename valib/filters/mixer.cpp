@@ -154,7 +154,7 @@ Mixer::process(Chunk2 &in, Chunk2 &out)
     (this->*mixfunc)(in.samples, in.size);
 
     out = in;
-    in.set_empty();
+    in.clear();
     return !out.is_dummy();
   }
 }

@@ -45,7 +45,7 @@ Converter::convert_pcm2linear(Chunk2 &in, Chunk2 &out)
       // not enough data to fill sample buffer
       memcpy(part_buf + part_size, rawdata, size);
       part_size += size;
-      in.set_empty();
+      in.clear();
       return false;
     }
     else
@@ -256,7 +256,7 @@ Converter::process(Chunk2 &in, Chunk2 &out)
   if (spk.format == format)
   {
     out = in;
-    in.set_empty();
+    in.clear();
     return !out.is_dummy();
   }
 

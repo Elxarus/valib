@@ -218,7 +218,7 @@ Convolver::process(Chunk2 &in, Chunk2 &out)
       gain_samples(fir->data[0], in.samples, nch, in.size);
 
     out = in;
-    in.set_empty();
+    in.clear();
     return !out.is_dummy();
   }
 

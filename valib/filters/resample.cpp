@@ -517,7 +517,7 @@ Resample::process(Chunk2 &in, Chunk2 &out)
   if (passthrough())
   {
     out = in;
-    in.set_empty();
+    in.clear();
     return !out.is_dummy();
   }
 
@@ -547,8 +547,8 @@ Resample::process(Chunk2 &in, Chunk2 &out)
       memcpy(buf1[ch] + pos1, in.samples[ch], in.size * sizeof(sample_t));
     pos1 += (int)in.size;
 
-    in.set_empty();
-    out.set_empty();
+    in.clear();
+    out.clear();
     return false;
   }
 

@@ -164,7 +164,7 @@ CacheFilter::process(Chunk2 &in, Chunk2 &out)
 
   // Passthrough
   out = in;
-  in.set_empty();
+  in.clear();
   if (out.is_dummy())
     return false;
 
