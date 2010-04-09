@@ -381,6 +381,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\sink.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\sink.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\spk.cpp"
 				>
 			</File>
