@@ -86,10 +86,10 @@ public:
   /////////////////////////////////////////////////////////
   // Old Sink interface compatibility
 
-  Sink *operator->();
-  const Sink *operator->() const;
-  operator Sink *();
-  operator const Sink *() const;
+  Sink *operator->() { return thunk; }
+  const Sink *operator->() const { return thunk; }
+  operator Sink *() { return thunk; }
+  operator const Sink *() const { return thunk; }
 
   /////////////////////////////////////////////////////////
   // Open/close the filter
