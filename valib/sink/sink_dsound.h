@@ -24,11 +24,11 @@
 #include <mmreg.h>
 #include <ks.h>
 #include <ksmedia.h>
-#include "../filter.h"
+#include "../sink.h"
 #include "../renderer.h"
 #include "../win32/thread.h"
 
-class DSoundSink : public Sink, public PlaybackControl
+class DSoundSink : public SimpleSink, public PlaybackControl
 {
 protected:
   /////////////////////////////////////////////////////////
@@ -40,10 +40,8 @@ protected:
   int      preload_ms;    // preload size in ms
 
   /////////////////////////////////////////////////////////
-  // Parameters that depend on initialization
-  // (do not change on processing)
+  // Parameters that do not change on processing
 
-  Speakers spk;           // playback format
   DWORD    buf_size;      // buffer size in bytes
   DWORD    preload_size;  // preload size in bytes
   double   bytes2time;    // factor to convert bytes to seconds
@@ -86,9 +84,6 @@ public:
   bool open_dsound(HWND _hwnd, int buf_size_ms = 2000, int preload_ms = 500, LPCGUID device = 0);
   void close_dsound();
 
-  bool open(Speakers spk);
-  void close();
-
   /////////////////////////////////////////////////////////
   // Playback control
 
@@ -97,7 +92,6 @@ public:
   virtual bool is_paused() const;
 
   virtual void stop();
-  virtual void flush();
 
   virtual vtime_t get_playback_time() const;
 
@@ -115,10 +109,12 @@ public:
   /////////////////////////////////////////////////////////
   // Sink interface
 
-  virtual bool query_input(Speakers _spk) const;
-  virtual bool set_input(Speakers _spk);
-  virtual Speakers get_input() const;
-  virtual bool process(const Chunk *_chunk);
+  virtual bool can_open(Speakers new_spk) const;
+  virtual bool init();
+  virtual void uninit();
+
+  virtual void process(const Chunk2 &chunk);
+  virtual void flush();
 };
 
 #endif

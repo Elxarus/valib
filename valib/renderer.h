@@ -38,28 +38,6 @@
 //   Report about current pause status. If pausing is not supported it must
 //   report unpaused state after pause().
 //
-// stop() [non-blocking]
-//   Immediately stop playback and drop buffered data. Primary purpose of this
-//   function is to drop buffered data and prepare to continue playback of a
-//   new stream and/or from a new position. This function shuold not actually
-//   close audio output, just stop playback.
-//
-//   All functions blocked on plyback (flush(), Sink::process()) must unblock
-//   and return normally (it is not an error condition) without processing of
-//   data remaining to process.
-//
-//   Sink::set_input() may use this function to stop current playback before
-//   opening of a new stream.
-//
-// flush() [blocking]
-//   Wait until all buffered data is played and stop playback. Purpose of this
-//   function is to finish playback correctly without loosing buffered tail.
-//   This function blocks until the end of playback. This function may use
-//   stop() to finish audio playback. Sink::process() may use this function
-//   after receiving eos-chunk.
-//
-//   This function must exit immediately on stop() call.
-//
 // Timing and buffering
 // ====================
 //
@@ -111,9 +89,6 @@ public:
   virtual void pause()     {};
   virtual void unpause()   {};
   virtual bool is_paused() const { return false; };
-
-  virtual void stop()  {};
-  virtual void flush() {};
 
   virtual vtime_t get_playback_time() const { return 0; };
 

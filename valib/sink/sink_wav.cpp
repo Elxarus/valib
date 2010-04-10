@@ -22,12 +22,12 @@ WAVSink::WAVSink(const char *_file_name)
   file_format = (uint8_t*) new WAVEFORMATEXTENSIBLE;
   memset(file_format, 0, sizeof(WAVEFORMATEXTENSIBLE));
 
-  open(_file_name);
+  open_file(_file_name);
 }
 
 WAVSink::~WAVSink()
 {
-  close();
+  close_file();
   safe_delete(file_format);
 }
 
@@ -107,35 +107,34 @@ WAVSink::close_riff()
 }
 
 bool
-WAVSink::open(const char *_file_name)
+WAVSink::open_file(const char *_file_name)
 {
-  close();
+  close_file();
   if (!f.open(_file_name, "wb"))
     return false;
 
-  spk = spk_unknown;
   data_size = 0;
   memset(file_format, 0, sizeof(WAVEFORMATEXTENSIBLE));
   return true;
 }
 
 void
-WAVSink::close()
+WAVSink::close_file()
 {
   if (!f.is_open())
     return;
 
   close_riff();
   f.close();
+  close();
 
-  spk = spk_unknown;
   header_size = 0;
   data_size = 0;
   memset(file_format, 0, sizeof(WAVEFORMATEXTENSIBLE));
 }
 
 bool
-WAVSink::is_open() const
+WAVSink::is_file_open() const
 {
   return f.is_open();
 }
@@ -145,46 +144,37 @@ WAVSink::is_open() const
 // Sink interface
 
 bool
-WAVSink::query_input(Speakers _spk) const
+WAVSink::can_open(Speakers new_spk) const
 {
   WAVEFORMATEXTENSIBLE wfx;
   bool use_wfx = false;
 
-  if (_spk.format == FORMAT_LINEAR)
-    return false;
-
-  if (_spk.format & FORMAT_CLASS_PCM)
-    if (_spk.mask != MODE_MONO && _spk.mask != MODE_STEREO)
+  if (new_spk.format & FORMAT_CLASS_PCM)
+    if (new_spk.mask != MODE_MONO && new_spk.mask != MODE_STEREO)
       use_wfx = true;
 
-  if (!spk2wfx(_spk, (WAVEFORMATEX *)&wfx, use_wfx))
+  if (!spk2wfx(new_spk, (WAVEFORMATEX *)&wfx, use_wfx))
     return false;
 
   return true;
 }
 
 bool
-WAVSink::set_input(Speakers _spk)
+WAVSink::init()
 {
-  // Determine file format
-
   WAVEFORMATEXTENSIBLE wfx;
   bool use_wfx = false;
 
-  if (_spk.format == FORMAT_LINEAR)
-    return false;
-
-  if (FORMAT_MASK(_spk.format) & FORMAT_CLASS_PCM)
-    if (_spk.mask != MODE_MONO && _spk.mask != MODE_STEREO)
+  if (FORMAT_MASK(spk.format) & FORMAT_CLASS_PCM)
+    if (spk.mask != MODE_MONO && spk.mask != MODE_STEREO)
       use_wfx = true;
 
-  if (!spk2wfx(_spk, (WAVEFORMATEX *)&wfx, use_wfx))
+  if (!spk2wfx(spk, (WAVEFORMATEX *)&wfx, use_wfx))
     return false;
 
   // Reset the file only in case when formats are not compatible
   if (memcmp(&wfx, file_format, sizeof(WAVEFORMATEX) + wfx.Format.cbSize))
   {
-    spk = _spk;
     data_size = 0;
     memcpy(file_format, &wfx, sizeof(WAVEFORMATEX) + wfx.Format.cbSize);
     init_riff();
@@ -193,23 +183,9 @@ WAVSink::set_input(Speakers _spk)
   return true;
 }
 
-Speakers
-WAVSink::get_input() const
+void
+WAVSink::process(const Chunk2 &chunk)
 {
-  return spk;
-}
-
-bool
-WAVSink::process(const Chunk *_chunk)
-{
-  if (_chunk->is_dummy())
-    return true;
-
-  if (_chunk->spk != spk)
-    if (!set_input(_chunk->spk))
-      return false;
-
-  f.write(_chunk->rawdata, _chunk->size);
-  data_size += _chunk->size;
-  return true;
+  f.write(chunk.rawdata, chunk.size);
+  data_size += chunk.size;
 }

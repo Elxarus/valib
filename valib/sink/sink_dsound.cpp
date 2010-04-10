@@ -12,7 +12,6 @@ DSoundSink::DSoundSink()
   buf_size_ms  = 0;
   preload_ms   = 0;
 
-  spk          = spk_unknown;
   buf_size     = 0;
   preload_size = 0;
   bytes2time   = 0.0;
@@ -70,30 +69,6 @@ DSoundSink::close_dsound()
   close();
   if (ds)
     SAFE_RELEASE(ds);
-}
-
-bool
-DSoundSink::open(Speakers _spk)
-{
-  if (!ds) return false;
-  AutoLock autolock(&dsound_lock);
-
-  WAVEFORMATEXTENSIBLE wfx;
-  memset(&wfx, 0, sizeof(wfx));
-
-  close();
-  spk = _spk;
-
-  if (spk2wfx(_spk, (WAVEFORMATEX*)(&wfx), true))
-    if (open((WAVEFORMATEX*)(&wfx)))
-      return true;
-
-  if (spk2wfx(_spk, (WAVEFORMATEX*)&wfx, false))
-    if (open((WAVEFORMATEX*)(&wfx)))
-      return true;
-
-  close();
-  return false;
 }
 
 bool
@@ -157,7 +132,7 @@ DSoundSink::open(WAVEFORMATEX *wf)
 }
 
 bool 
-DSoundSink::try_open(Speakers _spk) const
+DSoundSink::try_open(Speakers new_spk) const
 {
   if (!ds) return false;
 
@@ -167,11 +142,11 @@ DSoundSink::try_open(Speakers _spk) const
   WAVEFORMATEXTENSIBLE wfx;
   memset(&wfx, 0, sizeof(wfx));
 
-  if (spk2wfx(_spk, (WAVEFORMATEX*)(&wfx), true))
+  if (spk2wfx(new_spk, (WAVEFORMATEX*)(&wfx), true))
     if (try_open((WAVEFORMATEX*)(&wfx)))
       return true;
 
-  if (spk2wfx(_spk, (WAVEFORMATEX*)&wfx, false))
+  if (spk2wfx(new_spk, (WAVEFORMATEX*)&wfx, false))
     if (try_open((WAVEFORMATEX*)(&wfx)))
       return true;
 
@@ -214,43 +189,6 @@ DSoundSink::try_open(WAVEFORMATEX *wf) const
   SAFE_RELEASE(test_ds_buf);
   return true;
 }
-
-void
-DSoundSink::close()
-{
-  AutoLock autolock(&dsound_lock);
-
-  /////////////////////////////////////////////////////////
-  // Unblock playback and take playback lock. It is safe
-  // because ev_stop remains signaled (manual-reset event)
-  // and playback functions cannot block anymore.
-
-  SetEvent(ev_stop);
-  AutoLock playback(&playback_lock);
-
-  /////////////////////////////////////////////////////////
-  // Close everything
-
-  spk          = spk_unknown;
-  buf_size     = 0;
-  preload_size = 0;
-  bytes2time   = 0.0;
-
-  SAFE_RELEASE(ds_buf);
-
-  cur     = 0;
-  time    = 0;
-  playing = false;
-  paused  = false;
-
-  /////////////////////////////////////////////////////////
-  // Reset ev_stop
-
-  ResetEvent(ev_stop);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Own interface
 
 ///////////////////////////////////////////////////////////////////////////////
 // Playback control
@@ -355,6 +293,225 @@ DSoundSink::stop()
   ResetEvent(ev_stop);
 }
 
+double 
+DSoundSink::get_vol() const
+{
+  if (!ds_buf) return 0;
+  AutoLock autolock(&dsound_lock);
+
+  LONG vol;
+  if SUCCEEDED(ds_buf->GetVolume(&vol))
+    return (double)(vol / 100);
+  return 0;
+}
+
+void 
+DSoundSink::set_vol(double vol)
+{
+  if (!ds_buf) return;
+  AutoLock autolock(&dsound_lock);
+  ds_buf->SetVolume((LONG)(vol * 100));
+}
+
+double 
+DSoundSink::get_pan() const
+{
+  if (!ds_buf) return 0;
+  AutoLock autolock(&dsound_lock);
+
+  LONG pan;
+  if SUCCEEDED(ds_buf->GetPan(&pan))
+    return (double)(pan / 100);
+  return 0;
+}
+
+void 
+DSoundSink::set_pan(double pan)
+{
+  if (!ds_buf) return;
+  AutoLock autolock(&dsound_lock);
+  ds_buf->SetPan((LONG)(pan * 100));
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Sink interface
+
+bool 
+DSoundSink::can_open(Speakers new_spk) const
+{
+  return try_open(new_spk);
+}
+
+bool
+DSoundSink::init()
+{
+  if (!ds) return false;
+  AutoLock autolock(&dsound_lock);
+
+  WAVEFORMATEXTENSIBLE wfx;
+  memset(&wfx, 0, sizeof(wfx));
+
+  if (spk2wfx(spk, (WAVEFORMATEX*)(&wfx), true))
+    if (open((WAVEFORMATEX*)(&wfx)))
+      return true;
+
+  if (spk2wfx(spk, (WAVEFORMATEX*)&wfx, false))
+    if (open((WAVEFORMATEX*)(&wfx)))
+      return true;
+
+  close();
+  return false;
+}
+
+void
+DSoundSink::uninit()
+{
+  AutoLock autolock(&dsound_lock);
+
+  /////////////////////////////////////////////////////////
+  // Unblock playback and take playback lock. It is safe
+  // because ev_stop remains signaled (manual-reset event)
+  // and playback functions cannot block anymore.
+
+  SetEvent(ev_stop);
+  AutoLock playback(&playback_lock);
+
+  /////////////////////////////////////////////////////////
+  // Close everything
+
+  buf_size     = 0;
+  preload_size = 0;
+  bytes2time   = 0.0;
+
+  SAFE_RELEASE(ds_buf);
+
+  cur     = 0;
+  time    = 0;
+  playing = false;
+  paused  = false;
+
+  /////////////////////////////////////////////////////////
+  // Reset ev_stop
+
+  ResetEvent(ev_stop);
+}
+
+void
+DSoundSink::process(const Chunk2 &chunk)
+{
+  /////////////////////////////////////////////////////////
+  // We may not take output lock here because close() tries
+  // to take playback lock before closing audio output.
+
+  AutoLock autolock(&playback_lock);
+
+  void *data1, *data2;
+  DWORD data1_bytes, data2_bytes;
+  DWORD play_cur;
+  DWORD data_size;
+
+  size_t  size = chunk.size;
+  uint8_t *buf = chunk.rawdata;
+
+  while (size)
+  {
+    ///////////////////////////////////////////////////////
+    // Here we put chunk data to DirectSound buffer. If 
+    // it is too much of chunk data we have to put it by
+    // parts. When we put part of data we wait until some
+    // data is played and part of buffer frees so we can
+    // put next part. 
+
+    ///////////////////////////////////////////////////////
+    // Determine how much data to output (data_size)
+    // (check free space in playback buffer and size of 
+    // remaining input data)
+
+    if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
+      throw SinkError(this, 0, "ds_buf->GetCurrentPosition()");
+
+    if (play_cur > cur)
+      data_size = play_cur - cur;
+    else if (play_cur < cur)
+      data_size = buf_size + play_cur - cur;
+    else
+      // if playback cursor is equal to buffer write position it may mean:
+      // * playback is stopped/paused so both pointers are equal (free buffer = buf_size)
+      // * buffer is full so both pointers are equal (free buffer = 0)
+      // * buffer underrun (we do not take this in account because in either case
+      //   it produces playback glitch)
+      data_size = playing? 0: buf_size;
+
+    if (data_size > size)
+      data_size = (DWORD)size;
+
+    ///////////////////////////////////////////////////////
+    // Put data to playback buffer
+
+    if (data_size)
+    {
+      if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
+        throw SinkError(this, 0, "ds_buf->Lock()");
+
+      memcpy(data1, buf, data1_bytes);
+      buf += data1_bytes;
+      size -= data1_bytes;
+      cur += data1_bytes;
+
+      if (data2_bytes)
+      {
+        memcpy(data2, buf, data2_bytes);
+        buf += data2_bytes;
+        size -= data2_bytes;
+        cur += data2_bytes;
+      }
+
+      if FAILED(ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
+        throw SinkError(this, 0, "ds_buf->Unlock()");
+    }
+
+    ///////////////////////////////////////////////////////
+    // Start playback after prebuffering
+
+    if (!playing && cur > preload_size)
+    {
+      if (!paused)
+        ds_buf->Play(0, 0, DSBPLAY_LOOPING);
+      playing = true;
+    }
+
+    if (cur >= buf_size)
+      cur -= buf_size;
+
+    ///////////////////////////////////////////////////////
+    // Now we have either:
+    // * some more data to output & full playback buffer
+    // * no more data to output
+    //
+    // If we have some input data remaining to output we 
+    // need to wait until some data is played back to continue
+
+    if (size)
+    {
+      // Sleep until we can put all remaining data or 
+      // we have free at least half of playback buffer
+      // Note that we must finish immediately on ev_stop
+
+      data_size = (DWORD)min(size, buf_size / 2);
+      if (WaitForSingleObject(ev_stop, DWORD(data_size * bytes2time * 1000 + 1)) == WAIT_OBJECT_0)
+        return;
+
+      continue;
+    }
+  }
+
+  if (chunk.sync)
+    time = chunk.time + chunk.size * bytes2time;
+  else
+    time += chunk.size * bytes2time;
+}
+
 void 
 DSoundSink::flush()
 {
@@ -443,199 +600,3 @@ DSoundSink::flush()
 
   stop();
 }
-
-double 
-DSoundSink::get_vol() const
-{
-  if (!ds_buf) return 0;
-  AutoLock autolock(&dsound_lock);
-
-  LONG vol;
-  if SUCCEEDED(ds_buf->GetVolume(&vol))
-    return (double)(vol / 100);
-  return 0;
-}
-
-void 
-DSoundSink::set_vol(double vol)
-{
-  if (!ds_buf) return;
-  AutoLock autolock(&dsound_lock);
-  ds_buf->SetVolume((LONG)(vol * 100));
-}
-
-double 
-DSoundSink::get_pan() const
-{
-  if (!ds_buf) return 0;
-  AutoLock autolock(&dsound_lock);
-
-  LONG pan;
-  if SUCCEEDED(ds_buf->GetPan(&pan))
-    return (double)(pan / 100);
-  return 0;
-}
-
-void 
-DSoundSink::set_pan(double pan)
-{
-  if (!ds_buf) return;
-  AutoLock autolock(&dsound_lock);
-  ds_buf->SetPan((LONG)(pan * 100));
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Sink interface
-
-bool 
-DSoundSink::query_input(Speakers _spk) const
-{
-  return try_open(_spk);
-}
-
-bool 
-DSoundSink::set_input(Speakers _spk)
-{
-  AutoLock autolock(&dsound_lock);
-
-  close();
-  return open(_spk);
-}
-
-Speakers
-DSoundSink::get_input() const
-{
-  return spk;
-}
-
-bool DSoundSink::process(const Chunk *_chunk)
-{
-  /////////////////////////////////////////////////////////
-  // We may not take output lock here because close() tries
-  // to take playback lock before closing audio output.
-
-  AutoLock autolock(&playback_lock);
-
-  if (_chunk->is_dummy())
-    return true;
-
-  /////////////////////////////////////////////////////////
-  // process() automatically opens audio output if it is
-  // not open. It is because input format in uninitialized
-  // state = spk_unknown. It is exactly what we want.
-
-  if (_chunk->spk != spk)
-    if (!set_input(_chunk->spk))
-      return false;
-
-  void *data1, *data2;
-  DWORD data1_bytes, data2_bytes;
-  DWORD play_cur;
-  DWORD data_size;
-
-  size_t  size = _chunk->size;
-  uint8_t *buf = _chunk->rawdata;
-
-  while (size)
-  {
-    ///////////////////////////////////////////////////////
-    // Here we put chunk data to DirectSound buffer. If 
-    // it is too much of chunk data we have to put it by
-    // parts. When we put part of data we wait until some
-    // data is played and part of buffer frees so we can
-    // put next part. 
-
-    ///////////////////////////////////////////////////////
-    // Determine how much data to output (data_size)
-    // (check free space in playback buffer and size of 
-    // remaining input data)
-
-    if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
-      return false;
-
-    if (play_cur > cur)
-      data_size = play_cur - cur;
-    else if (play_cur < cur)
-      data_size = buf_size + play_cur - cur;
-    else
-      // if playback cursor is equal to buffer write position it may mean:
-      // * playback is stopped/paused so both pointers are equal (free buffer = buf_size)
-      // * buffer is full so both pointers are equal (free buffer = 0)
-      // * buffer underrun (we do not take this in account because in either case
-      //   it produces playback glitch)
-      data_size = playing? 0: buf_size;
-
-    if (data_size > size)
-      data_size = (DWORD)size;
-
-    ///////////////////////////////////////////////////////
-    // Put data to playback buffer
-
-    if (data_size)
-    {
-      if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
-        return false;
-
-      memcpy(data1, buf, data1_bytes);
-      buf += data1_bytes;
-      size -= data1_bytes;
-      cur += data1_bytes;
-
-      if (data2_bytes)
-      {
-        memcpy(data2, buf, data2_bytes);
-        buf += data2_bytes;
-        size -= data2_bytes;
-        cur += data2_bytes;
-      }
-
-      if FAILED(ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
-        return false;
-    }
-
-    ///////////////////////////////////////////////////////
-    // Start playback after prebuffering
-
-    if (!playing && cur > preload_size)
-    {
-      if (!paused)
-        ds_buf->Play(0, 0, DSBPLAY_LOOPING);
-      playing = true;
-    }
-
-    if (cur >= buf_size)
-      cur -= buf_size;
-
-    ///////////////////////////////////////////////////////
-    // Now we have either:
-    // * some more data to output & full playback buffer
-    // * no more data to output
-    //
-    // If we have some input data remaining to output we 
-    // need to wait until some data is played back to continue
-
-    if (size)
-    {
-      // Sleep until we can put all remaining data or 
-      // we have free at least half of playback buffer
-      // Note that we must finish immediately on ev_stop
-
-      data_size = (DWORD)min(size, buf_size / 2);
-      if (WaitForSingleObject(ev_stop, DWORD(data_size * bytes2time * 1000 + 1)) == WAIT_OBJECT_0)
-        return true;
-      continue;
-    }
-  }
-
-  if (_chunk->sync)
-    time = _chunk->time + _chunk->size * bytes2time;
-  else
-    time += _chunk->size * bytes2time;
-
-  if (_chunk->eos)
-    flush();
-
-  return true;
-}
-

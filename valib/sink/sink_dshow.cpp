@@ -163,7 +163,6 @@ DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
 {
   DbgLog((LOG_TRACE, 3, "DShowSink(%x)::DShowSink()", this));
 
-  spk = spk_unknown;
   send_mt = false;
   send_dc = false;
   hr = S_OK;
@@ -184,8 +183,6 @@ DShowSink::CheckMediaType(const CMediaType *_mt)
 HRESULT 
 DShowSink::SetMediaType(const CMediaType *_mt)
 {
-  spk = spk_unknown; // sink must be reinitialized
-
   return CTransformOutputPin::SetMediaType(_mt);
 }
 
@@ -269,7 +266,7 @@ DShowSink::set_downstream(const CMediaType *_mt)
 
 // Sink interface
 bool 
-DShowSink::query_input(Speakers _spk) const
+DShowSink::can_open(Speakers _spk) const
 {
   if (*m_mt.FormatType() == FORMAT_WaveFormatEx)
     if (is_compatible(_spk, (WAVEFORMATEX *)m_mt.Format()))
@@ -294,81 +291,49 @@ DShowSink::query_input(Speakers _spk) const
 }
 
 bool 
-DShowSink::set_input(Speakers _spk)
+DShowSink::init()
 {
   if (*m_mt.FormatType() == FORMAT_WaveFormatEx)
-    if (is_compatible(_spk, (WAVEFORMATEX *)m_mt.Format()))
-    {
-      spk = _spk;
+    if (is_compatible(spk, (WAVEFORMATEX *)m_mt.Format()))
       return true;
-    }
 
   CMediaType mt;
-  if (spk2mt(_spk, mt, true) && set_downstream(&mt))
+  if (spk2mt(spk, mt, true) && set_downstream(&mt))
   {
-    spk = _spk;
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz extensible): Ok %s", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate, send_mt? "(send mediatype)": ""));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz extensible): Ok %s", this, spk.mode_text(), spk.format_text(), spk.sample_rate, send_mt? "(send mediatype)": ""));
     return true;
   } 
-  else if (spk2mt(_spk, mt, false) && set_downstream(&mt))
+  else if (spk2mt(spk, mt, false) && set_downstream(&mt))
   {
-    spk = _spk;
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Ok %s", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate, send_mt? "(send mediatype)": ""));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Ok %s", this, spk.mode_text(), spk.format_text(), spk.sample_rate, send_mt? "(send mediatype)": ""));
     return true;
   }
   else
   {
-    spk = spk_unknown;
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Failed", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Failed", this, spk.mode_text(), spk.format_text(), spk.sample_rate));
     return false;
   }
 };
 
-Speakers
-DShowSink::get_input() const
+void 
+DShowSink::process(const Chunk2 &chunk)
 {
-  return spk;
-};
-
-bool 
-DShowSink::process(const Chunk *chunk)
-{
-  if (chunk->is_dummy())
-    return true;
-
-  // Process speaker configuraion changes
-  if (spk != chunk->spk)
-  {
-    if (set_input(chunk->spk))
-    {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz) OK", this, chunk->spk.mode_text(), chunk->spk.format_text(), chunk->spk.sample_rate));
-    }
-    else
-    {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Speakers change (%s %s %iHz) FAILAED!", this, chunk->spk.mode_text(), chunk->spk.format_text(), chunk->spk.sample_rate));
-      return false;
-    }
-  }
-
   if (!m_Connected)
-    return true;
+    return;
 
   IMediaSample *sample;
 
   uint8_t *sample_buf;
   long sample_size;
 
-  uint8_t *chunk_buf = chunk->rawdata;
-  size_t chunk_size = chunk->size;
+  uint8_t *chunk_buf = chunk.rawdata;
+  size_t chunk_size = chunk.size;
 
   while (chunk_size)
   {
     // Allocate output sample
     if FAILED(GetDeliveryBuffer(&sample, 0, 0, 0))
-    {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): GetDeliveryBuffer failed!", this));
-      return false;
-    }
+      throw SinkError(this, 0, "GetDeliveryBuffer() failed");
 
     // Dynamic format change
     if (send_mt)
@@ -397,7 +362,7 @@ DShowSink::process(const Chunk *chunk)
     if FAILED(sample->SetActualDataLength(sample_size))
     {
       sample->Release();
-      return false;
+      throw SinkError(this, 0, "SetActualDataLength() failed");
     }
     memcpy(sample_buf, chunk_buf, sample_size);
     chunk_buf  += sample_size;
@@ -405,15 +370,15 @@ DShowSink::process(const Chunk *chunk)
 
     // Timestamp
     // (uses sample_size determined before)
-    if (chunk->sync)
+    if (chunk.sync)
     {
-      REFERENCE_TIME begin = __int64(chunk->time * 10000000);
+      REFERENCE_TIME begin = __int64(chunk.time * 10000000);
 
       WAVEFORMATEX *wfx = (WAVEFORMATEX *)m_mt.Format();
       if (wfx->nAvgBytesPerSec)
       {
         vtime_t len = vtime_t(sample_size) / wfx->nAvgBytesPerSec;
-        REFERENCE_TIME end   = __int64(chunk->time * 10000000) + __int64(len * 10000000);
+        REFERENCE_TIME end   = __int64(chunk.time * 10000000) + __int64(len * 10000000);
         sample->SetTime(&begin, &end);
       }
       else
@@ -426,10 +391,6 @@ DShowSink::process(const Chunk *chunk)
     hr = Deliver(sample);
     sample->Release();
     if FAILED(hr)
-    {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Deliver() FAILED! (0x%x)", this, hr));
-      return false;
-    }
+      throw SinkError(this, 0, "Deliver() failed");
   }
-  return true;
 }
