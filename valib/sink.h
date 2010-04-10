@@ -74,6 +74,12 @@
 
 using std::string;
 
+class Sink2;
+class SinkError;
+class SimpleSink;
+
+
+
 class Sink2 : boost::noncopyable
 {
 protected:
