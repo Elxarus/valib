@@ -7,15 +7,14 @@
 
 #include <windows.h>
 #include <streams.h>
-#include "../filter.h"
+#include "../sink.h"
 
 bool mt2spk(CMediaType mt, Speakers &spk);
 bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx);
 
-class DShowSink : public CTransformOutputPin, public Sink
+class DShowSink : public CTransformOutputPin, public SimpleSink
 {
 protected:
-  Speakers spk;             // output configuration
   bool send_mt;             // send media type with next sample
   bool send_dc;             // send discontinuity with next sample
   HRESULT hr;               // result of sending sample
@@ -36,10 +35,9 @@ public:
   HRESULT get_hresult()              { return hr;      }
 
   // Sink interface
-  virtual bool query_input(Speakers spk) const;
-  virtual bool set_input(Speakers spk);
-  virtual Speakers get_input() const;
-  virtual bool process(const Chunk *chunk);
+  virtual bool can_open(Speakers spk) const;
+  virtual bool init();
+  virtual void process(const Chunk2 &chunk);
 };
 
 #endif
