@@ -115,6 +115,17 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+// FilterError exception
+
+class SinkError : public ProcError
+{
+public:
+  SinkError(Sink2 *sink_, int error_code_, string text_):
+  ProcError(sink_->name(), sink_->info(), error_code_, text_)
+  {}
+};
+
+///////////////////////////////////////////////////////////////////////////////
 // SimpleSink
 // Default implementation for the most of the Sink interface. Following
 // functions left unimplemented: can_open() and process()

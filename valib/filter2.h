@@ -261,19 +261,11 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // FilterError exception
 
-class FilterError
+class FilterError : public ProcError
 {
 public:
-  string name;
-  string info;
-  string text;
-  int error_code;
-
   FilterError(Filter2 *filter_, int error_code_, string text_):
-  name(filter_->name()), info(filter_->info()), error_code(error_code_), text(text_)
-  {}
-
-  virtual ~FilterError()
+  ProcError(filter_->name(), filter_->info(), error_code_, text_)
   {}
 };
 
