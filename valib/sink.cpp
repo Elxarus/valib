@@ -4,20 +4,16 @@ class SinkThunk : public Sink
 {
 protected:
   Sink2 *s;
-  Chunk2 in_chunk;
   Speakers spk;
 
 public:
-  SinkThunk(Sink2 *f);
+  SinkThunk(Sink2 *sink): s(sink) {};
 
   virtual bool query_input(Speakers new_spk) const
   { return s->can_open(new_spk); }
 
   virtual bool set_input(Speakers new_spk)
-  {
-    if (s->open(new_spk))
-      spk = new_spk;
-  }
+  { return s->open(new_spk); }
 
   virtual Speakers get_input() const
   { return spk; }
@@ -48,4 +44,13 @@ Sink2::Sink2()
 Sink2::~Sink2()
 {
   safe_delete(thunk);
+}
+
+string
+Sink2::name() const
+{
+  string type_name = typeid(*this).name();
+  if (type_name.compare(0, 6, "class ") == 0)
+    type_name.replace(0, 6, "");
+  return type_name;
 }
