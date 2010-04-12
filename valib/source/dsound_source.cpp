@@ -168,28 +168,14 @@ DSoundSource::captured_time() const
   return captured_size() * bytes2time;
 }
 
-Speakers
-DSoundSource::get_output() const
-{
-  return spk;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Source interface
 
-bool
-DSoundSource::is_empty() const
-{
-  if (chunk_size_ms)
-    return captured_time() * 1000 < chunk_size_ms;
-  else
-    return ds_buf != 0;
-}
-
 bool 
-DSoundSource::get_chunk(Chunk *_chunk)
+DSoundSource::get_chunk(Chunk2 &chunk)
 {
-  if (!ds_buf) return false;
+  if (!ds_buf)
+    return false;
 
   DWORD read_cur;
   DWORD data_size;
@@ -199,7 +185,7 @@ DSoundSource::get_chunk(Chunk *_chunk)
   DWORD len2;
 
   if FAILED(ds_buf->GetCurrentPosition(0, &read_cur)) 
-    return false;
+    throw SourceError(this, 0, "ds_buf->GetCurrentPosition()");
 
   data_size = buf_size + read_cur - cur;
   if (data_size >= buf_size)
@@ -207,12 +193,12 @@ DSoundSource::get_chunk(Chunk *_chunk)
 
   if (!data_size)
   {
-    _chunk->set_empty(spk);
+    chunk.clear();
     return true;
   }
 
   if FAILED(ds_buf->Lock(cur, data_size, &data1, &len1, &data2, &len2, 0))
-    return false;
+    throw SourceError(this, 0, "ds_buf->Lock()");
 
   memcpy(out_buf.data(), data1, len1);
   memcpy(out_buf.data() + len1, data2, len2);
@@ -222,9 +208,9 @@ DSoundSource::get_chunk(Chunk *_chunk)
     cur -= buf_size;
 
   if FAILED(ds_buf->Unlock(data1, len1, data2, len2))
-    return false;
+    throw SourceError(this, 0, "ds_buf->Unlock()");
 
-  _chunk->set_rawdata(spk, out_buf.data(), len1 + len2, true, time);
+  chunk.set_rawdata(out_buf.data(), len1 + len2, true, time);
   time += (len1 + len2) * bytes2time;
   return true;
 };
