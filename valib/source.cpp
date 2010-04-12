@@ -70,8 +70,9 @@ public:
     }
     else
     {
-      out_chunk.set_empty(spk);
-      out_chunk.set_eos();
+      out_chunk.set_dummy();
+      chunk->set_empty(spk);
+      chunk->set_eos();
       return true;
     }
   }
