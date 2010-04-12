@@ -41,16 +41,14 @@ struct FMTChunk
 
 WAVSource::WAVSource()
 {
-  spk = spk_unknown;
   block_size = 0;
   data_start = 0;
   data_size  = 0;
   data_remains = 0;
 }
 
-WAVSource::WAVSource(const char *_filename, size_t _block_size)
+WAVSource::WAVSource(const char *filename_, size_t block_size_)
 {
-  spk = spk_unknown;
   block_size = 0;
   data_start = 0;
   data_size  = 0;
@@ -59,14 +57,14 @@ WAVSource::WAVSource(const char *_filename, size_t _block_size)
   format.allocate(sizeof(WAVEFORMATEX));
   format.zero();
 
-  open(_filename, _block_size);
+  open(filename_, block_size_);
 }
 
 bool 
-WAVSource::open(const char *_filename, size_t _block_size)
+WAVSource::open(const char *filename_, size_t block_size_)
 {
   close();
-  f.open(_filename);
+  f.open(filename_);
   if (!f.is_open())
     return false;
 
@@ -76,7 +74,7 @@ WAVSource::open(const char *_filename, size_t _block_size)
     return false;
   }
 
-  block_size = _block_size;
+  block_size = block_size_;
   if (!buf.allocate(block_size))
   {
     close();
@@ -235,21 +233,12 @@ WAVSource::wave_format() const
 ///////////////////////////////////////////////////////////
 // Source interface
 
-Speakers 
-WAVSource::get_output() const
-{
-  return spk;
-}
-
-bool 
-WAVSource::is_empty() const
-{
-  return data_remains == 0;
-}
-
 bool
-WAVSource::get_chunk(Chunk *_chunk)
+WAVSource::get_chunk(Chunk2 &chunk)
 {
+  if (!data_remains || f.eof() || !f.is_open() )
+    return false;
+
   size_t len = block_size;
   if (data_remains < block_size)
     len = f.size_cast(data_remains);
@@ -261,6 +250,6 @@ WAVSource::get_chunk(Chunk *_chunk)
   else
     data_remains -= len;
 
-  _chunk->set_rawdata(spk, buf, data_read, false, 0, data_remains <= 0);
+  chunk.set_rawdata(buf, data_read);
   return true;
 }
