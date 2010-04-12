@@ -5,10 +5,9 @@ class SourceThunk : public Source
 protected:
   Source2 *s;
   Speakers spk;
-  Chunk out_chunk;
-
-  bool processing;
-  bool new_stream;
+  mutable Chunk out_chunk;
+  mutable bool processing;
+  mutable bool new_stream;
 
 public:
   SourceThunk(Source2 *source):
@@ -19,7 +18,21 @@ public:
   { return spk; }
 
   virtual bool is_empty() const
-  { return !processing && !new_stream && out_chunk.is_dummy(); }
+  {
+    if (processing || new_stream || !out_chunk.is_dummy())
+      return false;
+
+    Chunk2 out_chunk2;
+    processing = s->get_chunk(out_chunk2);
+    if (processing)
+    {
+      out_chunk.set(s->get_output(),
+        out_chunk2.rawdata, out_chunk2.samples, out_chunk2.size,
+        out_chunk2.sync, out_chunk2.time);
+      return false;
+    }
+    return true;
+  }
 
   virtual bool get_chunk(Chunk *chunk)
   {
@@ -57,7 +70,8 @@ public:
     }
     else
     {
-      out_chunk.set_dummy();
+      out_chunk.set_empty(spk);
+      out_chunk.set_eos();
       return true;
     }
   }
