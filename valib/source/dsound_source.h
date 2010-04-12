@@ -7,10 +7,10 @@
 
 #include <dsound.h>
 #include "../buffer.h"
-#include "../filter.h"
+#include "../source.h"
 #include "../vtime.h"
 
-class DSoundSource : public Source
+class DSoundSource : public Source2
 {
 protected:
   /////////////////////////////////////////////////////////
@@ -60,9 +60,13 @@ public:
   /////////////////////////////////////////////////////////
   // Source interface
 
-  virtual Speakers get_output() const;
-  virtual bool is_empty() const;
-  virtual bool get_chunk(Chunk *chunk);
+  virtual bool get_chunk(Chunk2 &out);
+
+  virtual bool new_stream() const
+  { return false; }
+
+  virtual Speakers get_output() const
+  { return spk; }
 };
 
 #endif
