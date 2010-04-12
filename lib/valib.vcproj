@@ -389,6 +389,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\source.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\source.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\spk.cpp"
 				>
 			</File>
