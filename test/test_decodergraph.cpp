@@ -101,10 +101,10 @@ public:
       if (formats[i].sample_rate)
         test_spk.sample_rate = formats[i].sample_rate;
 
-      while (!src.is_empty() && f->get_output() != test_spk)
+      while (!src->is_empty() && f->get_output() != test_spk)
         if (f->is_empty())
         {
-          if (!src.get_chunk(&chunk))
+          if (!src->get_chunk(&chunk))
             return log->err_close("src->get_chunk() failed");
 
           if (!f->process(&chunk))
