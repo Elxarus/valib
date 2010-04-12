@@ -492,9 +492,9 @@ int test_rules_filter_int(Log *log, Filter *filter,
   #define FILL_FILTER                   \
     while (f.is_empty())                \
     {                                   \
-      if (src.is_empty())               \
+      if (src->is_empty())              \
         return log->err("Cannot fill a filter"); \
-      src.get_chunk(&chunk);            \
+      src->get_chunk(&chunk);            \
       PROCESS_OK(chunk, "process(%s %s %i) failed"); \
     }
 
@@ -538,10 +538,10 @@ int test_rules_filter_int(Log *log, Filter *filter,
   if (!src.is_open())
     return log->err("Cannot open file %s", filename);
 
-  if (src.is_empty())
+  if (src->is_empty())
     return log->err("Source is empty");
 
-  if (!src.get_chunk(&chunk))
+  if (!src->get_chunk(&chunk))
     return log->err("Cannot get chunk from source");
 
   if (chunk.spk != spk_supported)
@@ -554,10 +554,10 @@ int test_rules_filter_int(Log *log, Filter *filter,
   if (!src.is_open())
     return log->err("Cannot open file %s", filename2);
 
-  if (src.is_empty())
+  if (src->is_empty())
     return log->err("Source2 is empty");
 
-  if (!src.get_chunk(&chunk))
+  if (!src->get_chunk(&chunk))
     return log->err("Cannot get chunk from source2");
 
   if (chunk.spk != spk_supported2)
@@ -574,7 +574,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
     bool empty_chunks = false;
 
     src.open(spk_supported, filename, 1);
-    src.get_chunk(&chunk);
+    src->get_chunk(&chunk);
     SET_INPUT_OK(spk_supported, "Set format: %s %s %i failed");
     PROCESS_OK(chunk, "process(%s %s %i) failed");
 
@@ -674,27 +674,27 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 3.1 - format change to the same format
   INIT_EMPTY(spk_supported);
   src.open(spk_supported, filename, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   PROCESS_OK(chunk,               "process(same format: %s %s %i) failed");
 
   // 3.2 - format change to the new format
   INIT_EMPTY(spk_supported);
   src.open(spk_supported2, filename2, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
 
   // 3.3 - format change to the unsupported format
   // (use noise source for unsupported format)
   INIT_EMPTY(spk_supported);
   src.open(spk_unsupported, 0, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
 
   // 3.4 - dummy processing
   // (use noise source for unknown format)
   INIT_EMPTY(spk_supported);
   src.open(spk_unknown, 0, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   PROCESS_OK(chunk,               "process(dummy) failed");
 
   /////////////////////////////////////////////////////////
@@ -769,7 +769,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 7.1 - format change to the new format
   INIT_CYCLED(spk_supported, filename);
   src.open(spk_supported2, filename2, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   PROCESS_OK(chunk,               "process(new format: %s %s %i) failed");
   POST_CYCLE;
 
@@ -777,7 +777,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // (use noise source for unsupported format)
   INIT_CYCLED(spk_supported, filename);
   src.open(spk_unsupported, 0, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   PROCESS_FAIL(chunk,             "process(wrong format: %s %s %i) succeeded");
   POST_NEW_CYCLE(spk_supported, filename);
 
@@ -892,7 +892,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 2.1 same format
   INIT_EMPTY(spk_supported);
   src.open(spk_supported, filename, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
 //  if (f.is_empty())
@@ -903,7 +903,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 2.2 new format (forced format change and then flush new stream)
   INIT_EMPTY(spk_supported);
   src.open(spk_supported2, filename2, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
 //  if (f.is_empty())
@@ -914,7 +914,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 2.3 unsupported format
   INIT_EMPTY(spk_supported);
   src.open(spk_unsupported, 0, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
 
@@ -953,7 +953,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
 
   // 4.1 same format (just flush the stream)
   INIT_CYCLED(spk_supported, filename);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
   // filter cannot be empty here (check is done by FilterTester)
@@ -962,7 +962,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 4.2 new format (forced format change and then flush new stream)
   INIT_CYCLED(spk_supported, filename);
   src.open(spk_supported2, filename2, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_OK(chunk,               "process(%s %s %i) failed");
 //  if (f.is_empty())
@@ -973,7 +973,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   // 4.3 unsupported format
   INIT_CYCLED(spk_supported, filename);
   src.open(spk_unsupported, 0, data_size);
-  src.get_chunk(&chunk);
+  src->get_chunk(&chunk);
   chunk.eos = true;
   PROCESS_FAIL(chunk,             "process(%s %s %i) succeeded");
 
@@ -985,7 +985,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   f.reset_streams();
   INIT_EMPTY(spk_supported);
   src.open(spk_supported, filename, data_size);
-  while (!src.is_empty())
+  while (!src->is_empty())
   {
     FILL_FILTER;
     EMPTY_FILTER;
