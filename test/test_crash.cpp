@@ -72,7 +72,7 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
   if (!noise.init(spk, seed, noise_size))
     return log->err("noise.set_output() failed!");
 
-  while (!noise.is_empty())
+  while (!noise->is_empty())
   {
     if (isize < 10000)
       log->status("Pos: %u    ", isize);
@@ -81,7 +81,7 @@ int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter
     else
       log->status("Pos: %uM    ", isize/1000000);
 
-    if (!noise.get_chunk(&ichunk))
+    if (!noise->get_chunk(&ichunk))
       return log->err("noise.get_chunk() failed!");
     isize += ichunk.size;
 

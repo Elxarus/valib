@@ -78,7 +78,7 @@ public:
     Chunk ichunk;
     Chunk ochunk;
     NoiseGen noise(Speakers(FORMAT_SPDIF, 0, 0), seed, noise_size, noise_size);
-    noise.get_chunk(&ichunk);
+    noise->get_chunk(&ichunk);
 
     CPUMeter cpu;
     cpu.reset();

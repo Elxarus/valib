@@ -5,150 +5,63 @@
 // Generator
 // Base class for signal generation
 
-Generator::Generator()
-:spk(spk_unknown), stream_len(0), chunk_size(0)
-{
-}
-
-Generator::Generator(Speakers _spk, uint64_t _stream_len, size_t _chunk_size)
-:spk(spk_unknown), stream_len(0), chunk_size(0)
-{
-  init(_spk, _stream_len, _chunk_size);
-}
-
 bool 
-Generator::init(Speakers _spk, uint64_t _stream_len, size_t _chunk_size)
+Generator::init(Speakers spk_, uint64_t stream_len_, size_t chunk_size_)
 {
-  spk = spk_unknown;
   stream_len = 0;
   chunk_size = 0;
 
-  if (!_chunk_size)
+  if (!chunk_size_ || !query_spk(spk_))
     return false;
 
-  if (!query_spk(_spk))
-    return false;
-
-  if (_spk.format == FORMAT_LINEAR)
+  if (spk_.format == FORMAT_LINEAR)
   {
     rawdata.free();
-    if (!samples.allocate(_spk.nch(), _chunk_size))
+    if (!samples.allocate(spk_.nch(), chunk_size_))
       return false;
   }
   else
   {
     samples.free();
-    if (!rawdata.allocate(_chunk_size))
+    if (!rawdata.allocate(chunk_size_))
       return false;
   }
 
-  spk = _spk;
-  chunk_size = _chunk_size;
-  stream_len = _stream_len;
+  spk = spk_;
+  chunk_size = chunk_size_;
+  stream_len = stream_len_;
   return true;
 }
 
-// Source interface
-
-Speakers 
-Generator::get_output() const
-{
-  return spk;
-}
-
 bool 
-Generator::is_empty() const
+Generator::get_chunk(Chunk2 &chunk)
 {
-  return stream_len <= 0;
-}
+  if (!stream_len)
+    return false;
 
-bool 
-Generator::get_chunk(Chunk *_chunk)
-{
-  bool eos = false;
   size_t n = chunk_size;
-
   if (n >= stream_len)
-  {
     n = (size_t)stream_len;
-    stream_len = 0;
-    eos = true;
-  }
-  else
-    stream_len -= n;
+  stream_len -= n;
 
   if (spk.format == FORMAT_LINEAR)
   {
     gen_samples(samples, n);
-    _chunk->set_linear(spk, samples, n, false, 0, eos);
+    chunk.set_linear(samples, n);
     return true;
   }
   else
   {
     gen_rawdata(rawdata, n);
-    _chunk->set_rawdata(spk, rawdata, n, false, 0, eos);
+    chunk.set_rawdata(rawdata, n);
     return true;
   }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// ZeroGen
-// Silence generator
-
-void
-ZeroGen::gen_samples(samples_t samples, size_t n)
-{
-  for (int ch = 0; ch < spk.nch(); ch++)
-    memset(samples[ch], 0, n * sizeof(sample_t));
-}
-
-void
-ZeroGen::gen_rawdata(uint8_t *rawdata, size_t n)
-{
-  memset(rawdata, 0, n);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// NoiseGen
-// Noise generator
-
-bool
-NoiseGen::init(Speakers _spk, int _seed, uint64_t _stream_len, size_t _chunk_size)
-{
-  rng.seed(_seed);
-  return Generator::init(_spk, _stream_len, _chunk_size);
-}
-void
-NoiseGen::gen_samples(samples_t samples, size_t n)
-{
-  for (size_t i = 0; i < n; i++)
-    for (int ch = 0; ch < spk.nch(); ch++)
-      samples[ch][i] = rng.get_sample();
-}
-
-void
-NoiseGen::gen_rawdata(uint8_t *rawdata, size_t n)
-{
-  rng.fill_raw(rawdata, n);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // ToneGen
 // Tone generator
 
-bool
-ToneGen::query_spk(Speakers _spk) const
-{
-  return _spk.format == FORMAT_LINEAR;
-}
-
-bool
-ToneGen::init(Speakers _spk, int _freq, double _phase, uint64_t _stream_len, size_t _chunk_size)
-{
-  phase = _phase;
-  freq = _freq;
-  return Generator::init(_spk, _stream_len, _chunk_size);
-}
 void
 ToneGen::gen_samples(samples_t samples, size_t n)
 {
@@ -158,33 +71,13 @@ ToneGen::gen_samples(samples_t samples, size_t n)
   phase += n*w;
 
   for (int ch = 1; ch < spk.nch(); ch++)
-    memcpy(samples[ch], samples[0], n * sizeof(sample_t));
-}
-
-void
-ToneGen::gen_rawdata(uint8_t *rawdata, size_t n)
-{
-  // never be here
-  assert(false);
+    copy_samples(samples[ch], samples[0], n);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // LineGen
 // Line generator
 
-bool
-LineGen::query_spk(Speakers _spk) const
-{
-  return _spk.format == FORMAT_LINEAR;
-}
-
-bool
-LineGen::init(Speakers _spk, double _start, double _k, uint64_t _stream_len, size_t _chunk_size)
-{
-  phase = _start;
-  k = _k;
-  return Generator::init(_spk, _stream_len, _chunk_size);
-}
 void
 LineGen::gen_samples(samples_t samples, size_t n)
 {
@@ -193,12 +86,5 @@ LineGen::gen_samples(samples_t samples, size_t n)
   phase += n*k;
 
   for (int ch = 1; ch < spk.nch(); ch++)
-    memcpy(samples[ch], samples[0], n * sizeof(sample_t));
-}
-
-void
-LineGen::gen_rawdata(uint8_t *rawdata, size_t n)
-{
-  // never be here
-  assert(false);
+    copy_samples(samples[ch], samples[0], n);
 }

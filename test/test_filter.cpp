@@ -786,7 +786,7 @@ int test_rules_filter_int(Log *log, Filter *filter,
   INIT_CYCLED(spk_supported, filename);
   {
     NoiseGen noise(spk_unknown, 1, data_size, data_size);
-    noise.get_chunk(&chunk);
+    noise->get_chunk(&chunk);
     PROCESS_OK(chunk,               "process(dummy) failed");
   }
   POST_CYCLE;

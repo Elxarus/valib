@@ -10,11 +10,19 @@
 #ifndef VALIB_GENERATOR_H
 #define VALIB_GENERATOR_H
 
-#include "../filter.h"
+#include "../source.h"
 #include "../buffer.h"
 #include "../rng.h"
 
-class Generator : public Source
+class Generator;
+class ZeroGen;
+class NoiseGen;
+class ToneGen;
+class LineGen;
+
+
+
+class Generator : public Source2
 {
 protected:
   Speakers  spk;
@@ -23,54 +31,101 @@ protected:
   size_t    chunk_size;
   uint64_t  stream_len;
 
-  virtual bool query_spk(Speakers spk) const { return true; }
-  virtual void gen_samples(samples_t samples, size_t n) { assert(false); }
-  virtual void gen_rawdata(uint8_t *rawdata, size_t n) { assert(false); }
+  Generator::Generator():
+  stream_len(0), chunk_size(0)
+  {}
+
+  Generator::Generator(Speakers spk_, uint64_t stream_len_, size_t chunk_size_):
+  stream_len(0), chunk_size(0)
+  { init(spk_, stream_len_, chunk_size_); }
 
   bool init(Speakers spk, uint64_t stream_len, size_t chunk_size = 4096);
 
-  Generator();
-  Generator(Speakers spk, uint64_t stream_len, size_t chunk_size = 4096);
+  /////////////////////////////////////////////////////////
+  // Interface to override
+
+  virtual bool query_spk(Speakers spk) const { return true; }
+  virtual void gen_samples(samples_t samples, size_t n) { assert(false); }
+  virtual void gen_rawdata(uint8_t *rawdata, size_t n) { assert(false); }
 
 public:
   size_t   get_chunk_size() const { return chunk_size; }
   uint64_t get_stream_len() const { return stream_len; }
 
+  /////////////////////////////////////////////////////////
   // Source interface
-  virtual Speakers get_output() const;
-  virtual bool is_empty() const;
-  virtual bool get_chunk(Chunk *chunk);
+
+  virtual bool get_chunk(Chunk2 &out);
+
+  virtual bool new_stream() const
+  { return false; }
+
+  virtual Speakers get_output() const
+  { return spk; }
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// ZeroGen
+// Silence generator
 
 class ZeroGen : public Generator
 {
 protected:
-  virtual void gen_samples(samples_t samples, size_t n);
-  virtual void gen_rawdata(uint8_t *rawdata, size_t n);
+  virtual void gen_samples(samples_t samples, size_t n)
+  { zero_samples(samples, spk.nch(), n); }
+
+  virtual void gen_rawdata(uint8_t *rawdata, size_t n)
+  { memset(rawdata, 0, n); }
 
 public:
-  ZeroGen() {};
-  ZeroGen(Speakers _spk, size_t _stream_len, size_t _chunk_size = 4096)
-  :Generator(_spk, _stream_len, _chunk_size) {}
+  ZeroGen()
+  {}
 
-  bool init(Speakers _spk, uint64_t _stream_len, size_t _chunk_size = 4096)
-  { return Generator::init(_spk, _stream_len, _chunk_size); }
+  ZeroGen(Speakers spk_, size_t stream_len_, size_t chunk_size_ = 4096):
+  Generator(spk_, stream_len_, chunk_size_)
+  {}
+
+  bool init(Speakers spk_, uint64_t stream_len_, size_t chunk_size_ = 4096)
+  { return Generator::init(spk_, stream_len_, chunk_size_); }
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// NoiseGen
+// Noise generator
 
 class NoiseGen : public Generator
 {
 protected:
   RNG rng;
-  virtual void gen_samples(samples_t samples, size_t n);
-  virtual void gen_rawdata(uint8_t *rawdata, size_t n);
+
+  virtual void gen_samples(samples_t samples, size_t n)
+  {
+    for (size_t i = 0; i < n; i++)
+      for (int ch = 0; ch < spk.nch(); ch++)
+        samples[ch][i] = rng.get_sample();
+  }
+
+  virtual void gen_rawdata(uint8_t *rawdata, size_t n)
+  { rng.fill_raw(rawdata, n); }
 
 public:
-  NoiseGen() {};
-  NoiseGen(Speakers _spk, int _seed, uint64_t _stream_len, size_t _chunk_size = 4096)
-  :Generator(_spk, _stream_len, _chunk_size), rng(_seed) {}
+  NoiseGen()
+  {}
 
-  bool init(Speakers spk, int seed, uint64_t stream_len, size_t chunk_size = 4096);
+  NoiseGen(Speakers spk_, int seed_, uint64_t stream_len_, size_t chunk_size_ = 4096):
+  Generator(spk_, stream_len_, chunk_size_), rng(seed_)
+  {}
+
+  bool init(Speakers spk_, int seed_, uint64_t stream_len_, size_t chunk_size_ = 4096)
+  {
+    rng.seed(seed_);
+    return Generator::init(spk_, stream_len_, chunk_size_);
+  }
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// ToneGen
+// Tone generator
 
 class ToneGen : public Generator
 {
@@ -78,18 +133,30 @@ protected:
   double phase;
   double freq;
 
-  virtual bool query_spk(Speakers spk) const;
+  virtual bool query_spk(Speakers spk_) const
+  { return spk_.format == FORMAT_LINEAR; }
+
   virtual void gen_samples(samples_t samples, size_t n);
-  virtual void gen_rawdata(uint8_t *rawdata, size_t n);
 
 public:
-  ToneGen(): phase(0), freq(0) {};
-  ToneGen(Speakers _spk, int _freq, double _phase, uint64_t _stream_len, size_t _chunk_size = 4096):
-  Generator(_spk, _stream_len, _chunk_size), phase(0), freq(0)
-  { init(_spk, _freq, _phase, _stream_len, _chunk_size); }
+  ToneGen(): phase(0), freq(0)
+  {}
 
-  bool init(Speakers spk, int freq, double phase, uint64_t stream_len, size_t chunk_size = 4096);
+  ToneGen(Speakers spk_, int _freq, double _phase, uint64_t stream_len_, size_t chunk_size_ = 4096):
+  Generator(spk_, stream_len_, chunk_size_), phase(0), freq(0)
+  { init(spk_, _freq, _phase, stream_len_, chunk_size_); }
+
+  bool init(Speakers spk_, int freq_, double phase_, uint64_t stream_len_, size_t chunk_size_ = 4096)
+  {
+    phase = phase_;
+    freq = freq_;
+    return Generator::init(spk_, stream_len_, chunk_size_);
+  }
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// LineGen
+// Line generator
 
 class LineGen : public Generator
 {
@@ -97,17 +164,25 @@ protected:
   double phase;
   double k;
 
-  virtual bool query_spk(Speakers spk) const;
+  virtual bool query_spk(Speakers spk_) const
+  { return spk_.format == FORMAT_LINEAR; }
+
   virtual void gen_samples(samples_t samples, size_t n);
-  virtual void gen_rawdata(uint8_t *rawdata, size_t n);
 
 public:
-  LineGen(): phase(0), k(1.0) {};
-  LineGen(Speakers _spk, double _start, double _k, uint64_t _stream_len, size_t _chunk_size = 4096):
-  Generator(_spk, _stream_len, _chunk_size), phase(0), k(1.0)
-  { init(_spk, _start, _k, _stream_len, _chunk_size); }
+  LineGen(): phase(0), k(1.0)
+  {}
 
-  bool init(Speakers spk, double _start, double _k, uint64_t stream_len, size_t chunk_size = 4096);
+  LineGen(Speakers spk_, double start_, double k_, uint64_t stream_len_, size_t chunk_size_ = 4096):
+  Generator(spk_, stream_len_, chunk_size_), phase(0), k(1.0)
+  { init(spk_, start_, k_, stream_len_, chunk_size_); }
+
+  bool init(Speakers spk_, double start_, double k_, uint64_t stream_len_, size_t chunk_size_ = 4096)
+  {
+    phase = start_;
+    k = k_;
+    return Generator::init(spk_, stream_len_, chunk_size_);
+  }
 };
 
 #endif

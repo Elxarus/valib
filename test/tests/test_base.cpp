@@ -86,7 +86,7 @@ TEST(base_null_filter, "NullFilter")
   ref_noise.init(spk, seed, noise_size);
   null_filter.reset();
 
-  CHECK(compare(log, &src_noise, &null_filter, &ref_noise, 0) == 0);
+  CHECK(compare(log, src_noise, &null_filter, ref_noise, 0) == 0);
 
   // Rawdata format test
 
@@ -95,7 +95,7 @@ TEST(base_null_filter, "NullFilter")
   ref_noise.init(spk, seed, noise_size);
   null_filter.reset();
 
-  CHECK(compare(log, &src_noise, &null_filter, &ref_noise, 0) == 0);
+  CHECK(compare(log, src_noise, &null_filter, ref_noise, 0) == 0);
 
 TEST_END(base_null_filter);
 
@@ -117,14 +117,14 @@ TEST(base_source_filter, "SourceFilter")
 
   // Init constructor test
 
-  SourceFilter src_filter(&src_noise, &null_filter);
-  CHECK(src_filter.get_source() == &src_noise);
+  SourceFilter src_filter(src_noise, &null_filter);
+  CHECK(src_filter.get_source() == src_noise);
   CHECK(src_filter.get_filter() == &null_filter);
 
   // Init test
 
-  src_filter.set(&ref_zero, &zero_filter);
-  CHECK(src_filter.get_source() == &ref_zero);
+  src_filter.set(ref_zero, &zero_filter);
+  CHECK(src_filter.get_source() == ref_zero);
   CHECK(src_filter.get_filter() == &zero_filter);
 
   // Fail without a source
@@ -136,8 +136,8 @@ TEST(base_source_filter, "SourceFilter")
   src_noise.init(spk, seed, noise_size);
   ref_noise.init(spk, seed, noise_size);
 
-  CHECK(src_filter.set(&src_noise, 0) == true);
-  CHECK(compare(log, &src_filter, &ref_noise) == 0);
+  CHECK(src_filter.set(src_noise, 0) == true);
+  CHECK(compare(log, &src_filter, ref_noise) == 0);
 
   // Noise source + NullFilter == Noise source
 
@@ -145,8 +145,8 @@ TEST(base_source_filter, "SourceFilter")
   ref_noise.init(spk, seed, noise_size);
   null_filter.reset();
 
-  CHECK(src_filter.set(&src_noise, &null_filter) == true);
-  CHECK(compare(log, &src_filter, &ref_noise) == 0);
+  CHECK(src_filter.set(src_noise, &null_filter) == true);
+  CHECK(compare(log, &src_filter, ref_noise) == 0);
 
   // Noise source + ZeroFilter == Zero source
 
@@ -154,8 +154,8 @@ TEST(base_source_filter, "SourceFilter")
   ref_zero.init(spk, noise_size);
   zero_filter.reset();
 
-  CHECK(src_filter.set(&src_noise, &zero_filter) == true);
-  CHECK(compare(log, &src_filter, &ref_zero) == 0);
+  CHECK(src_filter.set(src_noise, &zero_filter) == true);
+  CHECK(compare(log, &src_filter, ref_zero) == 0);
   
 TEST_END(base_source_filter);
 
@@ -197,8 +197,8 @@ TEST(base_sink_filter, "SinkFilter")
   // Zero source == zero (no filter)
   // Noise source != zero (no filter)
 
-  src_zero.get_chunk(&zero_chunk);
-  src_noise.get_chunk(&noise_chunk);
+  src_zero->get_chunk(&zero_chunk);
+  src_noise->get_chunk(&noise_chunk);
 
   CHECK(sink_filter.set(&zero_sink, 0) == true);
   CHECK(sink_filter.process(&zero_chunk) == true);
@@ -207,8 +207,8 @@ TEST(base_sink_filter, "SinkFilter")
   // Zero source + NullFilter == zero
   // Noise source + NullFilter != zero
 
-  src_zero.get_chunk(&zero_chunk);
-  src_noise.get_chunk(&noise_chunk);
+  src_zero->get_chunk(&zero_chunk);
+  src_noise->get_chunk(&noise_chunk);
 
   CHECK(sink_filter.set(&zero_sink, &null_filter) == true);
   CHECK(sink_filter.process(&zero_chunk) == true);
@@ -217,8 +217,8 @@ TEST(base_sink_filter, "SinkFilter")
   // Zero source + ZeroFilter == zero
   // Noise source + ZeroFilter == zero
 
-  src_zero.get_chunk(&zero_chunk);
-  src_noise.get_chunk(&noise_chunk);
+  src_zero->get_chunk(&zero_chunk);
+  src_noise->get_chunk(&noise_chunk);
 
   CHECK(sink_filter.set(&zero_sink, &zero_filter) == true);
   CHECK(sink_filter.process(&zero_chunk) == true);
