@@ -335,7 +335,7 @@ TEST(filter_graph, "FilterGraph")
     FilterGraph graph_filter;
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+    CHECK(compare(log, noise1, graph_filter, noise2, 0) == 0);
   }
 
   /////////////////////////////////////////////////////////
@@ -345,7 +345,7 @@ TEST(filter_graph, "FilterGraph")
     FilterChain graph_filter;
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+    CHECK(compare(log, noise1, graph_filter, noise2, 0) == 0);
   }
 
   /////////////////////////////////////////////////////////
@@ -358,7 +358,7 @@ TEST(filter_graph, "FilterGraph")
 
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, ref_filter) == 0);
+    CHECK(compare(log, noise1, graph_filter, noise2, ref_filter) == 0);
   }
 
   /////////////////////////////////////////////////////////
@@ -402,7 +402,7 @@ TEST(filter_graph, "FilterGraph")
 
       NoiseGen noise1(spk, seed, noise_size);
       NoiseGen noise2(spk, seed, noise_size);
-      CHECKT(compare(log, &noise1, graph_filter, &noise2, *ref[i]) == 0, 
+      CHECKT(compare(log, noise1, graph_filter, noise2, *ref[i]) == 0, 
         ("Chain with one filter (%s) fails with", typeid(*ref[i]).name()));
     }
   }
@@ -462,7 +462,7 @@ TEST(filter_graph, "FilterGraph")
           // source and compare
           NoiseGen noise1(spk, seed, noise_size);
           NoiseGen noise2(spk, seed, noise_size);
-          CHECKT(compare(log, &noise1, graph_filter, &noise2, ref) == 0,
+          CHECKT(compare(log, noise1, graph_filter, noise2, ref) == 0,
             ("Chain with 2 filters fails: %s -> %s", typeid(*tests[i].f).name(), typeid(*tests[j].f).name()));
         }
   }
@@ -485,22 +485,22 @@ TEST(filter_graph, "FilterGraph")
     FilterChain graph_filter;
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+    CHECK(compare(log, noise1, graph_filter, noise2, 0) == 0);
 
     graph_filter.add_back(&tst_gain1);
     noise1.init(spk, seed, noise_size);
     noise2.init(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, ref_gain1) == 0);
+    CHECK(compare(log, noise1, graph_filter, noise2, ref_gain1) == 0);
 
     graph_filter.add_back(&tst_gain2);
     noise1.init(spk, seed, noise_size);
     noise2.init(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, ref_gain2) == 0);
+    CHECK(compare(log, noise1, graph_filter, noise2, ref_gain2) == 0);
 
     graph_filter.clear();
     noise1.init(spk, seed, noise_size);
     noise2.init(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+    CHECK(compare(log, noise1, graph_filter, noise2, 0) == 0);
   }
 
   /////////////////////////////////////////////////////////
@@ -519,7 +519,7 @@ TEST(filter_graph, "FilterGraph")
     // One open() and one flush() during regular processing
     NoiseGen noise1(spk, seed, noise_size);
     NoiseGen noise2(spk, seed, noise_size);
-    CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+    CHECK(compare(log, noise1, graph_filter, noise2, 0) == 0);
     CHECK(counter.n_open == 1 && counter.n_flush == 1);
   }
 
@@ -553,7 +553,7 @@ TEST(filter_graph, "FilterGraph")
 
       NoiseGen noise1(spk, seed, noise_size);
       NoiseGen noise2(spk, seed, noise_size);
-      CHECK(compare(log, &noise1, graph_filter, &noise2, 0) == 0);
+      CHECK(compare(log, noise1, graph_filter, noise2, 0) == 0);
       CHECK(counter.n_open == n_open && counter.n_flush == n_flush);
     }
   }
@@ -580,10 +580,10 @@ TEST(filter_graph, "FilterGraph")
       CHECK(graph_filter.is_open());
 
       NoiseGen noise(spk, seed, noise_size);
-      while (!noise.is_empty())
+      while (!noise->is_empty())
       {
         Chunk src_chunk;
-        noise.get_chunk(&src_chunk);
+        noise->get_chunk(&src_chunk);
 
         Chunk2 in(src_chunk), out;
         while (graph_filter.process(in, out))

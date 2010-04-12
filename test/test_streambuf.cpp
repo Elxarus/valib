@@ -262,7 +262,7 @@ public:
     CPUMeter cpu;
     Chunk chunk;
     NoiseGen noise(spk_unknown, seed, noise_size, noise_size);
-    noise.get_chunk(&chunk);
+    noise->get_chunk(&chunk);
 
     cpu.reset();
     cpu.start();

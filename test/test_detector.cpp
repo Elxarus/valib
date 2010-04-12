@@ -84,7 +84,7 @@ public:
     NoiseGen noise_ref(spk, seed, noise_size);
 
     f->set_input(spk);
-    compare(log, &noise_src, f, &noise_ref);
+    compare(log, noise_src, f, noise_ref);
   }
 
   void speed_noise()
@@ -96,7 +96,7 @@ public:
     Chunk ichunk;
     Chunk ochunk;
     NoiseGen noise(spk, seed, noise_size, noise_size);
-    noise.get_chunk(&ichunk);
+    noise->get_chunk(&ichunk);
 
     f->set_input(spk);
 

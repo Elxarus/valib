@@ -27,9 +27,9 @@ TEST(cache, "Cache filter")
       gen.init(spk, 0, 1, data_size, chunk_size);
       buf.allocate(cache_samples);
       f.set_size(cache_time);
-      while (!gen.is_empty())
+      while (!gen->is_empty())
       {
-        gen.get_chunk(&chunk);
+        gen->get_chunk(&chunk);
 
         Chunk2 in(chunk), out;
         while (!in.is_dummy())

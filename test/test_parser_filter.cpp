@@ -88,7 +88,7 @@ public:
     // Prepare noise buffer
     NoiseGen noise(spk_rawdata, seed, int(max_frame_size * 2.5), int(max_frame_size * 2.5));
     Chunk noise_chunk;
-    noise.get_chunk(&noise_chunk);
+    noise->get_chunk(&noise_chunk);
 
     uint8_t *noise_buf  = noise_chunk.rawdata;
     size_t noise_size = noise_chunk.size;
