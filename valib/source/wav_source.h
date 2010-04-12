@@ -7,7 +7,7 @@
 
 #include "../buffer.h"
 #include "../auto_file.h"
-#include "../filter.h"
+#include "../source.h"
 #include "../win32/winspk.h"
 
 class WAVSource : public Source
@@ -42,9 +42,13 @@ public:
   /////////////////////////////////////////////////////////
   // Source interface
 
-  Speakers get_output() const;
-  bool is_empty() const;
-  bool get_chunk(Chunk *chunk);
+  virtual bool get_chunk(Chunk2 &out);
+
+  virtual bool new_stream() const
+  { return false; }
+
+  virtual Speakers get_output() const
+  { return spk; }
 };
 
 #endif
