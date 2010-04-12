@@ -31,7 +31,7 @@ public:
     filename = _filename;
     if (_filename)
     {
-      source = &file;
+      source = file;
       return file.open(_spk, _filename, _block_size);
     }
     else

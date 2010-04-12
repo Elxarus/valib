@@ -163,7 +163,7 @@ public:
       t.reset();
       while (!f.eof())
       {
-        f.get_chunk(&ichunk);
+        f->get_chunk(&ichunk);
         t.process(&ichunk);
         while (!t.is_empty())
         {

@@ -128,7 +128,7 @@ int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter,
   if (!filter->set_input(spk_src))
     return log->err("cannot set filter input format to %s %s %ikHz", spk_src.format_text(), spk_src.mode_text(), spk_src.sample_rate);
 
-  int result = compare(log, &src, filter, &ref);
+  int result = compare(log, src, filter, ref);
 
   // Now we MUST reset the filter to drop 
   // possible dependency on our private source.

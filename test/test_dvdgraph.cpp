@@ -206,10 +206,10 @@ public:
         test_spk.level = 1.0;
       }
 
-      while (!src.is_empty() && f->get_output() != test_spk)
+      while (!src->is_empty() && f->get_output() != test_spk)
         if (f->is_empty())
         {
-          if (!src.get_chunk(&chunk))
+          if (!src->get_chunk(&chunk))
             return log->err_close("src->get_chunk() failed");
 
           if (!f->process(&chunk))
@@ -300,43 +300,43 @@ public:
 
       if (is_spdifable)
       {
-        test_decode(&src);
-        test_passthrough(&src, spdif_allowed[isink]);
-        test_encode(&src, spdif_allowed[isink], can_encode);
-        test_stereo_passthrough(&src);
+        test_decode(src);
+        test_passthrough(src, spdif_allowed[isink]);
+        test_encode(src, spdif_allowed[isink], can_encode);
+        test_stereo_passthrough(src);
 
-        test_decode(&src);
-        test_encode(&src, spdif_allowed[isink], can_encode);
-        test_decode(&src);
+        test_decode(src);
+        test_encode(src, spdif_allowed[isink], can_encode);
+        test_decode(src);
 
-        test_stereo_passthrough(&src);
-        test_passthrough(&src, spdif_allowed[isink]);
-        test_stereo_passthrough(&src);
+        test_stereo_passthrough(src);
+        test_passthrough(src, spdif_allowed[isink]);
+        test_stereo_passthrough(src);
 
-        test_encode(&src, spdif_allowed[isink], can_encode);
-        test_passthrough(&src, spdif_allowed[isink]);
-        test_decode(&src);
+        test_encode(src, spdif_allowed[isink], can_encode);
+        test_passthrough(src, spdif_allowed[isink]);
+        test_decode(src);
       }
       else
       {
-        test_decode(&src);
-        test_encode(&src, spdif_allowed[isink], can_encode);
-        test_stereo_passthrough(&src);
-        test_decode(&src);
-        test_stereo_passthrough(&src);
-        test_encode(&src, spdif_allowed[isink], can_encode);
-        test_decode(&src);
+        test_decode(src);
+        test_encode(src, spdif_allowed[isink], can_encode);
+        test_stereo_passthrough(src);
+        test_decode(src);
+        test_stereo_passthrough(src);
+        test_encode(src, spdif_allowed[isink], can_encode);
+        test_decode(src);
       }
       // have to drop sink because it will be deleted...
       dvd.set_sink(0);
     }
 
     Chunk chunk;
-    while (!src.is_empty() || !f->is_empty())
+    while (!src->is_empty() || !f->is_empty())
     {
       if (f->is_empty())
       {
-        if (!src.get_chunk(&chunk))
+        if (!src->get_chunk(&chunk))
           return log->err_close("src.get_chunk() failed");
         if (!f->process(&chunk))
           return log->err_close("dvd.process() failed");
