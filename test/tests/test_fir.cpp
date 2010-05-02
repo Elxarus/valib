@@ -7,6 +7,7 @@
 */
 
 #include "source/generator.h"
+#include "source/source_filter.h"
 #include "filters/convolver.h"
 #include "filters/gain.h"
 #include "filters/slice.h"
@@ -226,14 +227,14 @@ TEST(param_fir, "ParamFIR")
   ToneGen tone;
   SliceFilter slice;
   Convolver conv;
-  SourceFilter conv_src(tone, conv);
-  SourceFilter test_src(&conv_src, slice);
+  SourceFilter2 conv_src(&tone, &conv);
+  SourceFilter2 test_src(&conv_src, &slice);
 
   // Reference source ref_src (tone -> slice)
 
   ToneGen ref_tone;
   SliceFilter ref_slice;
-  SourceFilter ref_src(ref_tone, ref_slice);
+  SourceFilter2 ref_src(&ref_tone, &ref_slice);
 
   /////////////////////////////////////////////////////////
   // Low pass
@@ -253,9 +254,10 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   ref_tone.init(spk, freq - trans, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
-  conv.reset();
+  test_src.reset();
+  ref_src.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(test_src, ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -264,9 +266,9 @@ TEST(param_fir, "ParamFIR")
 
   tone.init(spk, freq + trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  conv.reset();
+  test_src.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
@@ -288,9 +290,10 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   ref_tone.init(spk, freq + trans, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
-  conv.reset();
+  test_src.reset();
+  ref_src.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(test_src, ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -299,9 +302,9 @@ TEST(param_fir, "ParamFIR")
 
   tone.init(spk, freq - trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  conv.reset();
+  test_src.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
@@ -323,9 +326,10 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   ref_tone.init(spk, freq, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
-  conv.reset();
+  test_src.reset();
+  ref_src.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(test_src, ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -334,17 +338,17 @@ TEST(param_fir, "ParamFIR")
 
   tone.init(spk, freq - 2 * trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  conv.reset();
+  test_src.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
   tone.init(spk, freq + 2 * trans, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  conv.reset();
+  test_src.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
@@ -366,9 +370,10 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   ref_tone.init(spk, freq - 2 * trans, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
-  conv.reset();
+  test_src.reset();
+  ref_src.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(test_src, ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -376,9 +381,10 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   ref_tone.init(spk, freq + 2 * trans, 0, noise_size + 2 * len);
   ref_slice.init(len, len + noise_size);
-  conv.reset();
+  test_src.reset();
+  ref_src.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(test_src, ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -387,9 +393,9 @@ TEST(param_fir, "ParamFIR")
 
   tone.init(spk, freq, 0, noise_size + 2 * len);
   slice.init(len, noise_size + len);
-  conv.reset();
+  test_src.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
