@@ -30,6 +30,7 @@ protected:
   Rawdata   rawdata;
   size_t    chunk_size;
   uint64_t  stream_len;
+  uint64_t  stream_pos;
 
   Generator::Generator():
   stream_len(0), chunk_size(0)
@@ -56,6 +57,12 @@ public:
   // Source interface
 
   virtual bool get_chunk(Chunk2 &out);
+
+  virtual void reset()
+  {
+    stream_pos = 0;
+    reset_thunk();
+  }
 
   virtual bool new_stream() const
   { return false; }
@@ -87,6 +94,7 @@ public:
 
   bool init(Speakers spk_, uint64_t stream_len_, size_t chunk_size_ = 4096)
   { return Generator::init(spk_, stream_len_, chunk_size_); }
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -96,6 +104,7 @@ public:
 class NoiseGen : public Generator
 {
 protected:
+  int seed;
   RNG rng;
 
   virtual void gen_samples(samples_t samples, size_t n)
@@ -118,8 +127,15 @@ public:
 
   bool init(Speakers spk_, int seed_, uint64_t stream_len_, size_t chunk_size_ = 4096)
   {
-    rng.seed(seed_);
+    seed = seed_;
+    rng.seed(seed);
     return Generator::init(spk_, stream_len_, chunk_size_);
+  }
+
+  void reset()
+  {
+    rng.seed(seed);
+    Generator::reset();
   }
 };
 
@@ -132,6 +148,7 @@ class ToneGen : public Generator
 protected:
   double phase;
   double freq;
+  double t;
 
   virtual bool query_spk(Speakers spk_) const
   { return spk_.format == FORMAT_LINEAR; }
@@ -150,7 +167,14 @@ public:
   {
     phase = phase_;
     freq = freq_;
+    t = phase;
     return Generator::init(spk_, stream_len_, chunk_size_);
+  }
+
+  void reset()
+  {
+    t = phase;
+    Generator::reset();
   }
 };
 
@@ -163,6 +187,7 @@ class LineGen : public Generator
 protected:
   double phase;
   double k;
+  double t;
 
   virtual bool query_spk(Speakers spk_) const
   { return spk_.format == FORMAT_LINEAR; }
@@ -181,7 +206,14 @@ public:
   {
     phase = start_;
     k = k_;
+    t = phase;
     return Generator::init(spk_, stream_len_, chunk_size_);
+  }
+
+  void reset()
+  {
+    t = phase;
+    Generator::reset();
   }
 };
 

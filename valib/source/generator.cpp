@@ -30,19 +30,20 @@ Generator::init(Speakers spk_, uint64_t stream_len_, size_t chunk_size_)
   spk = spk_;
   chunk_size = chunk_size_;
   stream_len = stream_len_;
+  stream_pos = 0;
   return true;
 }
 
 bool 
 Generator::get_chunk(Chunk2 &chunk)
 {
-  if (!stream_len)
+  if (stream_pos >= stream_len)
     return false;
 
   size_t n = chunk_size;
-  if (n >= stream_len)
-    n = (size_t)stream_len;
-  stream_len -= n;
+  if (n >= stream_len - stream_pos)
+    n = (size_t)(stream_len - stream_pos);
+  stream_pos += n;
 
   if (spk.format == FORMAT_LINEAR)
   {
@@ -67,8 +68,8 @@ ToneGen::gen_samples(samples_t samples, size_t n)
 {
   double w = 2 * M_PI * double(freq) / double(spk.sample_rate);
   for (size_t i = 0; i < n; i++)
-    samples[0][i] = sin(phase + i*w);
-  phase += n*w;
+    samples[0][i] = sin(t + i*w);
+  t += n*w;
 
   for (int ch = 1; ch < spk.nch(); ch++)
     copy_samples(samples[ch], samples[0], n);
@@ -82,8 +83,8 @@ void
 LineGen::gen_samples(samples_t samples, size_t n)
 {
   for (size_t i = 0; i < n; i++)
-    samples[0][i] = phase + i*k;
-  phase += n*k;
+    samples[0][i] = t + i*k;
+  t += n*k;
 
   for (int ch = 1; ch < spk.nch(); ch++)
     copy_samples(samples[ch], samples[0], n);

@@ -29,6 +29,22 @@ SourceFilter2::release()
   filter = 0;
 }
 
+void
+SourceFilter2::reset()
+{
+  if (!source) return;
+
+  source->reset();
+  if (filter)
+    filter->reset();
+
+  is_new_stream = false;
+  format_change = false;
+  state = state_empty;
+
+  reset_thunk();
+}
+
 /////////////////////////////////////////////////////////
 // Source interface
 
@@ -38,7 +54,6 @@ SourceFilter2::get_chunk(Chunk2 &out)
   if (!source) return false;
   if (!filter) return source->get_chunk(out);
 
-  Chunk2 chunk;
   bool processing;
 
   while (true)
@@ -69,6 +84,10 @@ SourceFilter2::get_chunk(Chunk2 &out)
 
       case state_filter:
       {
+        if (!filter->is_open())
+          if (!filter->open(source->get_output()))
+            throw SourceError(this, 0, "Cannot open the filter");
+
         if (filter->process(chunk, out))
         {
           is_new_stream = filter->new_stream();
