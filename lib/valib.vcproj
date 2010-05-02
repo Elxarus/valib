@@ -1025,6 +1025,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\source\source_filter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\source\source_filter.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\source\wav_source.cpp"
 				>
 			</File>
