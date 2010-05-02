@@ -392,7 +392,10 @@
 #define MODE_MONO    MODE_1_0
 #define MODE_STEREO  MODE_2_0
 #define MODE_QUADRO  MODE_2_2
+#define MODE_4_1     MODE_2_2_LFE
 #define MODE_5_1     MODE_3_2_LFE
+#define MODE_6_1     MODE_3_2_1_LFE
+#define MODE_7_1     MODE_3_2_2_LFE
 
 
 ///////////////////////////////////////////////////////////////////////////////
