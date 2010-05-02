@@ -111,7 +111,7 @@ TEST(base_passthrough, "Passthrough")
   ref_noise.init(spk, seed, noise_size);
   pass_filter.reset();
 
-  CHECK(compare(log, src_noise, pass_filter, ref_noise, 0) == 0);
+  CHECK(compare(log, &src_noise, &pass_filter, &ref_noise, 0) == 0);
 
   // Rawdata format test
 
@@ -120,7 +120,7 @@ TEST(base_passthrough, "Passthrough")
   ref_noise.init(spk, seed, noise_size);
   pass_filter.reset();
 
-  CHECK(compare(log, src_noise, pass_filter, ref_noise, 0) == 0);
+  CHECK(compare(log, &src_noise, &pass_filter, &ref_noise, 0) == 0);
 
 TEST_END(base_passthrough);
 
@@ -162,7 +162,7 @@ TEST(base_source_filter, "SourceFilter")
   ref_noise.init(spk, seed, noise_size);
 
   CHECK(src_filter.set(&src_noise, 0) == true);
-  CHECK(compare(log, src_filter, ref_noise) == 0);
+  CHECK(compare(log, &src_filter, &ref_noise) == 0);
 
   // Noise source + Passthrough == Noise source
 
@@ -171,7 +171,7 @@ TEST(base_source_filter, "SourceFilter")
   pass_filter.reset();
 
   CHECK(src_filter.set(&src_noise, &pass_filter) == true);
-  CHECK(compare(log, src_filter, ref_noise) == 0);
+  CHECK(compare(log, &src_filter, &ref_noise) == 0);
 
   // Noise source + ZeroFilter == Zero source
 
@@ -180,7 +180,7 @@ TEST(base_source_filter, "SourceFilter")
   zero_filter.reset();
 
   CHECK(src_filter.set(&src_noise, &zero_filter) == true);
-  CHECK(compare(log, src_filter, ref_zero) == 0);
+  CHECK(compare(log, &src_filter, &ref_zero) == 0);
   
 TEST_END(base_source_filter);
 

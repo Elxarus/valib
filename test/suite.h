@@ -18,9 +18,9 @@
 // Second form of compare() uses filters to process streams.
 // Third form of compare() uses files instead of sources.
 
-int compare(Log *log, Source *src, Source *ref);
-int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter = 0);
-int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *src_filter, const char *fn_ref);
+int compare(Log *log, Source2 *src, Source2 *ref);
+int compare(Log *log, Source2 *src, Filter2 *src_filter, Source2 *ref, Filter2 *ref_filter = 0);
+int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter2 *src_filter, const char *fn_ref);
 
 sample_t calc_peak(Source2 *s);
 sample_t calc_peak(Source2 *s, Filter2 *f);

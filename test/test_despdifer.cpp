@@ -36,7 +36,6 @@ static const char *file_spdif = "a.mad.mix.spdif";
 class Despdifer_test
 {
 protected:
-  FilterTester t;
   Despdifer despdifer;
   Log *log;
 
@@ -44,7 +43,6 @@ public:
   Despdifer_test(Log *_log)
   {
     log = _log;
-    t.link(despdifer, log);
   }
 
   int test()
@@ -62,12 +60,12 @@ public:
     // Transform test
 
     // spdif stream -> raw stream
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.mp2.005.spdif", &t, "a.mp2.005.mp2");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.mp2.002.spdif", &t, "a.mp2.002.mp2");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.ac3.03f.spdif", &t, "a.ac3.03f.ac3");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.ac3.005.spdif", &t, "a.ac3.005.ac3");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.dts.03f.spdif", &t, "a.dts.03f.dts");
-    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.spdif", &t, "a.mad.mix.mad");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.mp2.005.spdif", &despdifer, "a.mp2.005.mp2");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.mp2.002.spdif", &despdifer, "a.mp2.002.mp2");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.ac3.03f.spdif", &despdifer, "a.ac3.03f.ac3");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.ac3.005.spdif", &despdifer, "a.ac3.005.ac3");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0),   "a.dts.03f.spdif", &despdifer, "a.dts.03f.dts");
+    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.spdif", &despdifer, "a.mad.mix.mad");
   }
 
   void speed_noise()
@@ -75,10 +73,9 @@ public:
     /////////////////////////////////////////////////////////
     // Noise speed test
 
-    Chunk ichunk;
-    Chunk ochunk;
+    Chunk2 in, out;
     NoiseGen noise(Speakers(FORMAT_SPDIF, 0, 0), seed, noise_size, noise_size);
-    noise->get_chunk(&ichunk);
+    noise.get_chunk(in);
 
     CPUMeter cpu;
     cpu.reset();
@@ -90,22 +87,14 @@ public:
     while (cpu.get_thread_time() < time_per_test)
     {
       runs++;
-      t.reset();
-      t.process(&ichunk);
-      while (!t.is_empty())
-      {
-        t.get_chunk(&ochunk);
-        if (ochunk.size)
-          data_chunks++;
-        else
-          empty_chunks++;
-      }
+      despdifer.reset();
+      while (despdifer.process(in, out))
+        /*do nothing*/;
     }
     cpu.stop();
 
-    log->msg("Despdifer speed on noise: %iMB/s, Data: %i, Empty: %i", 
-      int(double(noise_size) * runs / cpu.get_thread_time() / 1000000), 
-      data_chunks / runs, empty_chunks / runs);
+    log->msg("Despdifer speed on noise: %iMB/s", 
+      int(double(noise_size) * runs / cpu.get_thread_time() / 1000000));
   }
 
   void speed_file(const char *file_name)
@@ -113,16 +102,13 @@ public:
     /////////////////////////////////////////////////////////
     // File speed test
 
-    Chunk ichunk;
-    Chunk ochunk;
+    Chunk2 in, out;
     RAWSource f(Speakers(FORMAT_RAWDATA, 0, 0), file_name);
     if (!f.is_open())
     {
       log->err("Cannot open file %s", file_name);
       return;
     }
-
-    t.reset();
 
     CPUMeter cpu;
     cpu.reset();
@@ -134,27 +120,16 @@ public:
     while (cpu.get_thread_time() < time_per_test)
     {
       runs++;
-      f.seek(0);
-      t.reset();
-      while (!f.eof())
-      {
-        f->get_chunk(&ichunk);
-        t.process(&ichunk);
-        while (!t.is_empty())
-        {
-          t.get_chunk(&ochunk);
-          if (ochunk.size)
-            data_chunks++;
-          else
-            empty_chunks++;
-        }
-      }
+      f.reset();
+      despdifer.reset();
+      while (f.get_chunk(in))
+        while (despdifer.process(in, out))
+          /*do nothing*/;
     }
     cpu.stop();
 
-    log->msg("Despdifer speed on file %s: %iMB/s, Data: %i, Empty: %i", file_name, 
-      int(double(f.size()) * runs / cpu.get_thread_time() / 1000000), 
-      data_chunks / runs, empty_chunks / runs);
+    log->msg("Despdifer speed on file %s: %iMB/s", file_name, 
+      int(double(f.size()) * runs / cpu.get_thread_time() / 1000000));
   }
 
 };

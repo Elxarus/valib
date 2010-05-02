@@ -28,8 +28,6 @@ static const vtime_t time_per_test = 1.0;  // 1 sec for each speed test
 class Detector_test
 {
 protected:
-  Filter *f;
-  FilterTester t;
   Detector detector;
   Log *log;
 
@@ -37,8 +35,6 @@ public:
   Detector_test(Log *_log)
   {
     log = _log;
-    t.link(detector, log);
-    f = detector; // do not use FilterTester
   }
 
   int test()
@@ -57,25 +53,25 @@ public:
   {
     log->open_group("File passthrogh test");
 
-    compare_file(log, Speakers(FORMAT_MPA, 0, 0), "a.mp2.mix.mp2", f, "a.mp2.mix.mp2");
-    compare_file(log, Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3", f, "a.ac3.mix.ac3");
-    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "a.dts.03f.dts", f, "a.dts.03f.dts");
+    compare_file(log, Speakers(FORMAT_MPA, 0, 0), "a.mp2.mix.mp2", &detector, "a.mp2.mix.mp2");
+    compare_file(log, Speakers(FORMAT_AC3, 0, 0), "a.ac3.mix.ac3", &detector, "a.ac3.mix.ac3");
+    compare_file(log, Speakers(FORMAT_DTS, 0, 0), "a.dts.03f.dts", &detector, "a.dts.03f.dts");
 
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.madp.mix.spdif", f, "a.madp.mix.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif",  &detector, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.madp.mix.spdif", &detector, "a.madp.mix.spdif");
 
-    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
-    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.madp.mix.spdif", f, "a.madp.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.mad.mix.spdif",  &detector, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.madp.mix.spdif", &detector, "a.madp.mix.spdif");
 
-    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
-    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.madp.mix.spdif", f, "a.madp.mix.spdif");
-    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad",    f, "a.mad.mix.mad");
-    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.madp.mix.madp",  f, "a.madp.mix.madp");
+    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.spdif",  &detector, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.madp.mix.spdif", &detector, "a.madp.mix.spdif");
+    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad",    &detector, "a.mad.mix.mad");
+    compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.madp.mix.madp",  &detector, "a.madp.mix.madp");
 
     log->close_group();
   }
 
-  void passthrough_noise()
+  int passthrough_noise()
   {
     log->msg("Noise passthrogh test");
 
@@ -83,22 +79,25 @@ public:
     NoiseGen noise_src(spk, seed, noise_size);
     NoiseGen noise_ref(spk, seed, noise_size);
 
-    f->set_input(spk);
-    compare(log, noise_src, f, noise_ref);
+    if (!detector.open(spk))
+      return log->err("detector.open(spk) failed");
+
+    return compare(log, &noise_src, &detector, &noise_ref);
   }
 
-  void speed_noise()
+  int speed_noise()
   {
+    Speakers spk = Speakers(FORMAT_PCM16, 0, 0);
+
     /////////////////////////////////////////////////////////
     // Noise speed test
 
-    Speakers spk = Speakers(FORMAT_PCM16, 0, 0);
-    Chunk ichunk;
-    Chunk ochunk;
+    Chunk2 in, out;
     NoiseGen noise(spk, seed, noise_size, noise_size);
-    noise->get_chunk(&ichunk);
+    noise.get_chunk(in);
 
-    f->set_input(spk);
+    if (!detector.open(spk))
+      return log->err("detector.open(spk) failed");
 
     CPUMeter cpu;
     cpu.reset();
@@ -110,22 +109,16 @@ public:
     while (cpu.get_thread_time() < time_per_test)
     {
       runs++;
-      f->reset();
-      f->process(&ichunk);
-      while (!f->is_empty())
-      {
-        f->get_chunk(&ochunk);
-        if (ochunk.size)
-          data_chunks++;
-        else
-          empty_chunks++;
-      }
+      detector.reset();
+      while (detector.process(in, out))
+        /*do nothing*/;
     }
     cpu.stop();
 
-    log->msg("Detector speed on noise: %iMB/s, Data: %i, Empty: %i", 
-      int(double(noise_size) * runs / cpu.get_thread_time() / 1000000), 
-      data_chunks / runs, empty_chunks / runs);
+    log->msg("Detector speed on noise: %iMB/s", 
+      int(double(noise_size) * runs / cpu.get_thread_time() / 1000000));
+
+    return 0;
   }
 
 };

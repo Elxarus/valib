@@ -56,7 +56,7 @@ TEST(proc_pass, "AudioProcessor noise passthrough test")
         continue;
       }
 
-      compare(log, src, proc, ref);
+      compare(log, &src, &proc, &ref);
     }
 
 TEST_END(proc_pass);
