@@ -257,7 +257,7 @@ TEST(param_fir, "ParamFIR")
   test_src.reset();
   ref_src.reset();
 
-  diff = calc_diff(test_src, ref_src);
+  diff = calc_diff(&test_src, &ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -268,7 +268,7 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   test_src.reset();
 
-  level = calc_peak(test_src);
+  level = calc_peak(&test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
@@ -293,7 +293,7 @@ TEST(param_fir, "ParamFIR")
   test_src.reset();
   ref_src.reset();
 
-  diff = calc_diff(test_src, ref_src);
+  diff = calc_diff(&test_src, &ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -304,7 +304,7 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   test_src.reset();
 
-  level = calc_peak(test_src);
+  level = calc_peak(&test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
@@ -329,7 +329,7 @@ TEST(param_fir, "ParamFIR")
   test_src.reset();
   ref_src.reset();
 
-  diff = calc_diff(test_src, ref_src);
+  diff = calc_diff(&test_src, &ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -340,7 +340,7 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   test_src.reset();
 
-  level = calc_peak(test_src);
+  level = calc_peak(&test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
@@ -348,7 +348,7 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   test_src.reset();
 
-  level = calc_peak(test_src);
+  level = calc_peak(&test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
@@ -373,7 +373,7 @@ TEST(param_fir, "ParamFIR")
   test_src.reset();
   ref_src.reset();
 
-  diff = calc_diff(test_src, ref_src);
+  diff = calc_diff(&test_src, &ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -384,7 +384,7 @@ TEST(param_fir, "ParamFIR")
   test_src.reset();
   ref_src.reset();
 
-  diff = calc_diff(test_src, ref_src);
+  diff = calc_diff(&test_src, &ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -395,7 +395,7 @@ TEST(param_fir, "ParamFIR")
   slice.init(len, noise_size + len);
   test_src.reset();
 
-  level = calc_peak(test_src);
+  level = calc_peak(&test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 

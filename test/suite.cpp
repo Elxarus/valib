@@ -1,5 +1,6 @@
 #include <math.h>
 #include "source/raw_source.h"
+#include "source/source_filter.h"
 #include "suite.h"
 
 const TestResult test_passed(true);
@@ -143,19 +144,19 @@ int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sample_t calc_peak(Source *source)
+sample_t calc_peak(Source2 *source)
 {
   assert(source != 0);
 
-  Chunk chunk;
+  Chunk2 chunk;
   sample_t peak = 0.0;
-  while (!source->is_empty())
+  while (source->get_chunk(chunk))
   {
-    if (!source->get_chunk(&chunk)) return -1.0;
-    if (chunk.is_dummy()) continue;
-    if (!chunk.spk.is_linear()) return -1.0;
+    Speakers spk = source->get_output();
+    if (!spk.is_linear())
+      return -1;
 
-    for (int ch = 0; ch < chunk.spk.nch(); ch++)
+    for (int ch = 0; ch < spk.nch(); ch++)
       for (size_t i = 0; i < chunk.size; i++)
         if (peak < fabs(chunk.samples[ch][i]))
           peak = fabs(chunk.samples[ch][i]);
@@ -164,145 +165,141 @@ sample_t calc_peak(Source *source)
   return peak;
 }
 
-sample_t calc_peak(Source *source, Filter *filter)
+sample_t calc_peak(Source2 *source, Filter2 *filter)
 {
   assert(source != 0);
-  SourceFilter source_filter(source, filter);
+  SourceFilter2 source_filter(source, filter);
   return calc_peak(&source_filter);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-double calc_rms(Source *source)
+double calc_rms(Source2 *source)
 {
   assert(source != 0);
 
-  Chunk chunk;
-
   size_t n = 0;
   double sum = 0.0;
-  while (!source->is_empty())
-  {
-    if (!source->get_chunk(&chunk)) return -1.0;
-    if (chunk.is_dummy()) continue;
-    if (!chunk.spk.is_linear()) return -1.0;
 
-    for (int ch = 0; ch < chunk.spk.nch(); ch++)
+  Chunk2 chunk;
+  while (source->get_chunk(chunk))
+  {
+    Speakers spk = source->get_output();
+    if (!spk.is_linear())
+      return -1;
+
+    for (int ch = 0; ch < spk.nch(); ch++)
       for (size_t i = 0; i < chunk.size; i++)
         sum += chunk.samples[ch][i] * chunk.samples[ch][i];
 
-    n += chunk.size * chunk.spk.nch();
+    n += chunk.size * spk.nch();
   }
 
   return n? sqrt(sum / n): 0.0;
 }
 
-double calc_rms(Source *source, Filter *filter)
+double calc_rms(Source2 *source, Filter2 *filter)
 {
   assert(source != 0);
-  SourceFilter source_filter(source, filter);
+  SourceFilter2 source_filter(source, filter);
   return calc_rms(&source_filter);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sample_t calc_diff(Source *s1, Source *s2)
+sample_t calc_diff(Source2 *s1, Source2 *s2)
 {
   assert(s1 != 0 && s2 != 0);
 
-  Chunk chunk1;
-  Chunk chunk2;
-
   size_t len;
   sample_t diff = 0.0;
-  while (1)
+
+  Chunk2 chunk1, chunk2;
+  while (true)
   {
-    if (chunk1.size == 0)
-    {
-      if (s1->is_empty()) break;
-      if (!s1->get_chunk(&chunk1)) return -1.0;
-      if (chunk1.is_dummy()) continue;
-      if (!chunk1.spk.is_linear()) return -1.0;
-    }
-    if (chunk2.size == 0)
-    {
-      if (s2->is_empty()) break;
-      if (!s2->get_chunk(&chunk2)) return -1.0;
-      if (chunk2.is_dummy()) continue;
-      if (!chunk2.spk.is_linear()) return -1.0;
-    }
-    if (chunk1.spk != chunk2.spk)
+    if (chunk1.is_empty())
+      if (!s1->get_chunk(chunk1))
+        break;
+
+    if (chunk2.is_empty())
+      if (!s2->get_chunk(chunk2))
+        break;
+
+    if (chunk1.is_empty() || chunk2.is_empty())
+      continue;
+
+    Speakers spk1 = s1->get_output();
+    Speakers spk2 = s2->get_output();
+    if (spk1 != spk2 || spk1.is_unknown())
       return -1.0;
 
     len = MIN(chunk1.size, chunk2.size);
-    for (int ch = 0; ch < chunk1.spk.nch(); ch++)
+    for (int ch = 0; ch < spk1.nch(); ch++)
       for (size_t i = 0; i < len; i++)
         if (diff < fabs(chunk1.samples[ch][i] - chunk2.samples[ch][i]))
           diff = fabs(chunk1.samples[ch][i] - chunk2.samples[ch][i]);
 
-    chunk1.drop(len);
-    chunk2.drop(len);
+    chunk1.drop_samples(len);
+    chunk2.drop_samples(len);
   }
 
   return diff;
 }
 
-sample_t calc_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)
+sample_t calc_diff(Source2 *s1, Filter2 *f1, Source2 *s2, Filter2 *f2)
 {
   assert(s1 != 0 && s2 != 0);
-  SourceFilter sf1(s1, f1);
-  SourceFilter sf2(s2, f2);
+  SourceFilter2 sf1(s1, f1);
+  SourceFilter2 sf2(s2, f2);
   return calc_diff(&sf1, &sf2);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-double calc_rms_diff(Source *s1, Source *s2)
+double calc_rms_diff(Source2 *s1, Source2 *s2)
 {
   assert(s1 != 0 && s2 != 0);
-
-  Chunk chunk1;
-  Chunk chunk2;
 
   size_t len;
   size_t n = 0;
   double sum = 0.0;
-  while (1)
+
+  Chunk2 chunk1, chunk2;
+  while (true)
   {
-    if (chunk1.size == 0)
-    {
-      if (s1->is_empty()) break;
-      if (!s1->get_chunk(&chunk1)) return -1.0;
-      if (chunk1.is_dummy()) continue;
-      if (!chunk1.spk.is_linear()) return -1.0;
-    }
-    if (chunk2.size == 0)
-    {
-      if (s2->is_empty()) break;
-      if (!s2->get_chunk(&chunk2)) return -1.0;
-      if (chunk2.is_dummy()) continue;
-      if (!chunk2.spk.is_linear()) return -1.0;
-    }
-    if (chunk1.spk != chunk2.spk)
+    if (chunk1.is_empty())
+      if (!s1->get_chunk(chunk1))
+        break;
+
+    if (chunk2.is_empty())
+      if (!s2->get_chunk(chunk2))
+        break;
+
+    if (chunk1.is_empty() || chunk2.is_empty())
+      continue;
+
+    Speakers spk1 = s1->get_output();
+    Speakers spk2 = s2->get_output();
+    if (spk1 != spk2 || spk1.is_unknown())
       return -1.0;
 
     len = MIN(chunk1.size, chunk2.size);
-    for (int ch = 0; ch < chunk1.spk.nch(); ch++)
+    for (int ch = 0; ch < spk1.nch(); ch++)
       for (size_t i = 0; i < len; i++)
         sum += (chunk1.samples[ch][i] - chunk2.samples[ch][i]) * (chunk1.samples[ch][i] - chunk2.samples[ch][i]);
 
-    n += len * chunk1.spk.nch();
-    chunk1.drop(len);
-    chunk2.drop(len);
+    n += len * spk1.nch();
+    chunk1.drop_samples(len);
+    chunk2.drop_samples(len);
   }
 
   return n? sqrt(sum / n): 0.0;
 }
 
-double calc_rms_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)
+double calc_rms_diff(Source2 *s1, Filter2 *f1, Source2 *s2, Filter2 *f2)
 {
   assert(s1 != 0 && s2 != 0);
-  SourceFilter sf1(s1, f1);
-  SourceFilter sf2(s2, f2);
+  SourceFilter2 sf1(s1, f1);
+  SourceFilter2 sf2(s2, f2);
   return calc_rms_diff(&sf1, &sf2);
 }
