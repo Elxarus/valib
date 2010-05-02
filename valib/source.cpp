@@ -14,6 +14,13 @@ public:
   s(source), processing(true), new_stream(false)
   {}
 
+  void reset()
+  {
+    processing = false;
+    new_stream = false;
+    out_chunk.set_dummy();
+  }
+
   virtual Speakers get_output() const
   { return spk; }
 
@@ -87,6 +94,13 @@ Source2::Source2()
 Source2::~Source2()
 {
   safe_delete(thunk);
+}
+
+void
+Source2::reset_thunk()
+{
+  if (thunk)
+    dynamic_cast<SourceThunk*>(thunk)->reset();
 }
 
 string

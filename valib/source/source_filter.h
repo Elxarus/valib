@@ -14,6 +14,7 @@ class SourceFilter2 : public Source2
 protected:
   Source2 *source;
   Filter2 *filter;
+  Chunk2 chunk;
 
   bool is_new_stream;
   bool format_change;
@@ -37,6 +38,7 @@ public:
   /////////////////////////////////////////////////////////
   // Source interface
 
+  virtual void reset();
   virtual bool get_chunk(Chunk2 &out);
   virtual bool new_stream() const;
   virtual Speakers get_output() const;

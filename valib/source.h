@@ -1,6 +1,10 @@
 /*
   Source
 
+  void reset()
+    Reset the source into initial state and set stream position to the start of
+    the stream.
+
   bool get_chunk(Chunk2 &out);
     Get a new chunk from the source. Returns true when the chunk made
     successfully, and false when it is no more data to return (end of the
@@ -51,6 +55,7 @@ class Source2 : boost::noncopyable
 {
 protected:
   Source *thunk;
+  void reset_thunk();
 
 public:
   Source2();
@@ -67,6 +72,7 @@ public:
   /////////////////////////////////////////////////////////
   // Processing
 
+  virtual void reset() = 0;
   virtual bool get_chunk(Chunk2 &out) = 0;
   virtual bool new_stream() const = 0;
   virtual Speakers get_output() const = 0;

@@ -49,6 +49,12 @@ public:
 
   virtual bool get_chunk(Chunk2 &out);
 
+  virtual void reset()
+  {
+    seek(0);
+    reset_thunk();
+  }
+
   virtual bool new_stream() const
   { return false; }
 
