@@ -12,6 +12,8 @@
 #include "source/source_filter.h"
 #include "source/generator.h"
 #include "filters/passthrough.h"
+#include "sink/sink_filter.h"
+#include "sink/sink_null.h"
 #include "../suite.h"
 
 static const int seed = 4796;
@@ -92,35 +94,35 @@ public:
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// NullFilter test
-// Null filter must pass all data through
+// Passthrough test
+// Passthrough filter must pass all data through
 ///////////////////////////////////////////////////////////////////////////////
 
-TEST(base_null_filter, "NullFilter")
+TEST(base_passthrough, "Passthrough")
   Speakers spk;
   NoiseGen src_noise;
   NoiseGen ref_noise;
-  NullFilter null_filter(-1);
+  Passthrough pass_filter;
 
   // Linear format test
 
   spk = Speakers(FORMAT_LINEAR, MODE_STEREO, 48000);
   src_noise.init(spk, seed, noise_size);
   ref_noise.init(spk, seed, noise_size);
-  null_filter.reset();
+  pass_filter.reset();
 
-  CHECK(compare(log, src_noise, &null_filter, ref_noise, 0) == 0);
+  CHECK(compare(log, src_noise, pass_filter, ref_noise, 0) == 0);
 
   // Rawdata format test
 
   spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000);
   src_noise.init(spk, seed, noise_size);
   ref_noise.init(spk, seed, noise_size);
-  null_filter.reset();
+  pass_filter.reset();
 
-  CHECK(compare(log, src_noise, &null_filter, ref_noise, 0) == 0);
+  CHECK(compare(log, src_noise, pass_filter, ref_noise, 0) == 0);
 
-TEST_END(base_null_filter);
+TEST_END(base_passthrough);
 
 ///////////////////////////////////////////////////////////////////////////////
 // SourceFilter test
@@ -190,28 +192,28 @@ TEST_END(base_source_filter);
 TEST(base_sink_filter, "SinkFilter")
   Speakers spk(FORMAT_LINEAR, MODE_STEREO, 48000);
   
-  NullFilter null_filter(-1);
-  ZeroFilter zero_filter;
-  NullSink   null_sink;
-  ZeroSink   zero_sink;
+  Passthrough pass_filter;
+  ZeroFilter  zero_filter;
+  NullSink2   null_sink;
+  ZeroSink    zero_sink;
 
   NoiseGen src_noise(spk, seed, noise_size);
   ZeroGen  src_zero(spk, noise_size);
 
-  Chunk zero_chunk;
-  Chunk noise_chunk;
+  Chunk2 zero_chunk;
+  Chunk2 noise_chunk;
 
   // Init constructor test
 
-  SinkFilter sink_filter(&null_sink, &null_filter);
+  SinkFilter2 sink_filter(&null_sink, &pass_filter);
   CHECK(sink_filter.get_sink() == &null_sink);
-  CHECK(sink_filter.get_filter() == &null_filter);
+  CHECK(sink_filter.get_filter() == &pass_filter);
 
   // Init test
 
-  sink_filter.set(zero_sink, zero_filter);
-  CHECK(sink_filter.get_sink() == zero_sink);
-  CHECK(sink_filter.get_filter() == zero_filter);
+  sink_filter.set(&zero_sink, &zero_filter);
+  CHECK(sink_filter.get_sink() == &zero_sink);
+  CHECK(sink_filter.get_filter() == &zero_filter);
 
   // Fail without a sink
 
@@ -220,46 +222,49 @@ TEST(base_sink_filter, "SinkFilter")
   // Zero source == zero (no filter)
   // Noise source != zero (no filter)
 
-  src_zero->get_chunk(&zero_chunk);
-  src_noise->get_chunk(&noise_chunk);
+  src_zero.get_chunk(zero_chunk);
+  src_noise.get_chunk(noise_chunk);
   zero_sink.reset();
 
-  CHECK(sink_filter.set(zero_sink, 0));
+  CHECK(sink_filter.set(&zero_sink, 0));
+  CHECK(sink_filter.open(spk));
 
-  sink_filter.process(&zero_chunk);
+  sink_filter.process(zero_chunk);
   CHECK(zero_sink.is_zero());
 
-  sink_filter.process(&noise_chunk);
+  sink_filter.process(noise_chunk);
   CHECK(!zero_sink.is_zero());
 
   // Zero source + NullFilter == zero
   // Noise source + NullFilter != zero
 
-  src_zero->get_chunk(&zero_chunk);
-  src_noise->get_chunk(&noise_chunk);
+  src_zero.get_chunk(zero_chunk);
+  src_noise.get_chunk(noise_chunk);
   zero_sink.reset();
 
-  CHECK(sink_filter.set(zero_sink, &null_filter));
+  CHECK(sink_filter.set(&zero_sink, &pass_filter));
+  CHECK(sink_filter.open(spk));
 
-  sink_filter.process(&zero_chunk);
+  sink_filter.process(zero_chunk);
   CHECK(zero_sink.is_zero());
 
-  sink_filter.process(&noise_chunk);
+  sink_filter.process(noise_chunk);
   CHECK(!zero_sink.is_zero());
 
   // Zero source + ZeroFilter == zero
   // Noise source + ZeroFilter == zero
 
-  src_zero->get_chunk(&zero_chunk);
-  src_noise->get_chunk(&noise_chunk);
+  src_zero.get_chunk(zero_chunk);
+  src_noise.get_chunk(noise_chunk);
   zero_sink.reset();
 
-  CHECK(sink_filter.set(zero_sink, zero_filter));
+  CHECK(sink_filter.set(&zero_sink, &zero_filter));
+  CHECK(sink_filter.open(spk));
 
-  sink_filter.process(&zero_chunk);
+  sink_filter.process(zero_chunk);
   CHECK(zero_sink.is_zero());
 
-  sink_filter.process(&noise_chunk);
+  sink_filter.process(noise_chunk);
   CHECK(zero_sink.is_zero());
 
 TEST_END(base_sink_filter);
@@ -269,7 +274,7 @@ TEST_END(base_sink_filter);
 ///////////////////////////////////////////////////////////////////////////////
 
 SUITE(base, "Base filter classes test")
-  TEST_FACTORY(base_null_filter),
+  TEST_FACTORY(base_passthrough),
   TEST_FACTORY(base_source_filter),
   TEST_FACTORY(base_sink_filter),
 SUITE_END;
