@@ -179,33 +179,33 @@ TEST(suite_compare, "compare() test")
 
   src_noise.init(linear_spk, seed, noise_size);
   ref_noise.init(linear_spk, seed, noise_size);
-  CHECK(compare(&dummy_log, src_noise, ref_noise) == 0);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) == 0);
 
   src_noise.init(linear_spk, seed, noise_size);
   ref_noise.init(linear_spk, seed + 1, noise_size);
-  CHECK(compare(&dummy_log, src_noise, ref_noise) > 0);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
   /////////////////////////////////////////////////////////
   // Rawdata format test
 
   src_noise.init(rawdata_spk, seed, noise_size);
   ref_noise.init(rawdata_spk, seed, noise_size);
-  CHECK(compare(&dummy_log, src_noise, ref_noise) == 0);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) == 0);
 
   src_noise.init(rawdata_spk, seed, noise_size);
   ref_noise.init(rawdata_spk, seed + 1, noise_size);
-  CHECK(compare(&dummy_log, src_noise, ref_noise) > 0);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
   /////////////////////////////////////////////////////////
   // Length test
 
   src_noise.init(rawdata_spk, seed, noise_size * 2);
   ref_noise.init(rawdata_spk, seed, noise_size);
-  CHECK(compare(&dummy_log, src_noise, ref_noise) > 0);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
   src_noise.init(rawdata_spk, seed, noise_size);
   ref_noise.init(rawdata_spk, seed, noise_size * 2);
-  CHECK(compare(&dummy_log, src_noise, ref_noise) > 0);
+  CHECK(compare(&dummy_log, &src_noise, &ref_noise) > 0);
 
 TEST_END(suite_compare);
 

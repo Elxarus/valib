@@ -101,7 +101,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(null_all);
   conv.reset();
 
-  CHECK(compare(log, noise1, conv, noise2, 0) == 0);
+  CHECK(compare(log, &noise1, &conv, &noise2, 0) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with zero response
@@ -112,7 +112,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(zero_all);
   conv.reset();
 
-  CHECK(compare(log, noise1, conv, zero, 0) == 0);
+  CHECK(compare(log, &noise1, &conv, &zero, 0) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with identity response
@@ -123,7 +123,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(pass_all);
   conv.reset();
 
-  CHECK(compare(log, noise1, conv, noise2, 0) == 0);
+  CHECK(compare(log, &noise1, &conv, &noise2, 0) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with gain response
@@ -134,7 +134,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(gain_all);
   conv.reset();
 
-  CHECK(compare(log, noise1, conv, noise2, gain_filter) == 0);
+  CHECK(compare(log, &noise1, &conv, &noise2, &gain_filter) == 0);
 
   /////////////////////////////////////////////////////////
   // Convolve with low-pass filter

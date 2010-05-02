@@ -20,62 +20,73 @@ size_t compact_size(size_t size)
   return size;
 }
 
-int compare(Log *log, Source *src, Source *ref)
+int compare(Log *log, Source2 *src, Source2 *ref)
 {
   // if reference format is FORMAT_RAWDATA then filter output
   // format is supposed to be raw format (not FORMAT_LINEAR)
 
   // todo: add couters to prevent infinite loop
 
-  Chunk src_chunk;
-  Chunk ref_chunk;
   size_t pos = 0;
-
-  Speakers spk;
   size_t len;
-  int ch;
 
-  while ((!src->is_empty() || src_chunk.size) && (!ref->is_empty() || ref_chunk.size))
+  Speakers src_spk, ref_spk;
+  Chunk2 src_chunk, ref_chunk;
+  while (true)
   {
-    while (!src->is_empty() && !src_chunk.size)
-      if (!src->get_chunk(&src_chunk))
-        return log->err("src->get_chunk() fails");
+    if (src_chunk.is_empty())
+      if (!src->get_chunk(src_chunk))
+      {
+        src_chunk.clear();
+        break;
+      }
 
-    while (!ref->is_empty() && !ref_chunk.size)
-      if (!ref->get_chunk(&ref_chunk))
-        return log->err("ref->get_chunk() fails");
+    if (ref_chunk.is_empty())
+      if (!ref->get_chunk(ref_chunk))
+      {
+        ref_chunk.clear();
+        break;
+      }
+
+    if (src_chunk.is_empty() || ref_chunk.is_empty())
+      continue;
 
     ///////////////////////////////////////////////////////
-    // Check that stream configurstions are equal
+    // Check that stream configurations are equal
     // Do not check if output is raw and reference format is FORMAT_RAWDATA 
     // (reference format is unspecified)
 
-    if (ref_chunk.spk != src_chunk.spk)
-      if (src_chunk.spk.format == FORMAT_LINEAR || ref_chunk.spk.format != FORMAT_RAWDATA)
+    src_spk = src->get_output();
+    ref_spk = ref->get_output();
+    if (ref_spk != src_spk)
+      if (src_spk.is_linear() || ref_spk.format != FORMAT_RAWDATA)
         return log->err("Different speaker configurations");
 
     ///////////////////////////////////////////////////////
     // Compare data
 
-    spk = src_chunk.spk;
     len = MIN(ref_chunk.size, src_chunk.size);
-    if (spk.format == FORMAT_LINEAR)
+    if (src_spk.is_linear())
     {
-      // compare linear
-      for (ch = 0; ch < spk.nch(); ch++)
+      // compare linear format
+      for (int ch = 0; ch < src_spk.nch(); ch++)
         for (size_t i = 0; i < len; i++)
           if (src_chunk.samples[ch][i] != ref_chunk.samples[ch][i])
             return log->err("Data differs at channel %i, pos %i (0x%x), chunk pos %i (0x%x)", ch, pos + i, pos + i, i, i);
+
+      src_chunk.drop_samples(len);
+      ref_chunk.drop_samples(len);
     }
     else
     {
       for (size_t i = 0; i < len; i++)
         if (src_chunk.rawdata[i] != ref_chunk.rawdata[i])
           return log->err("Data differs at pos %i (0x%x), chunk pos %i (0x%x)", pos + i, pos + i, i, i);
+
+      src_chunk.drop_rawdata(len);
+      ref_chunk.drop_rawdata(len);
     }
     pos += len;
-    src_chunk.drop(len);
-    ref_chunk.drop(len);
 
     ///////////////////////////////////////////////////////
     // Statistics
@@ -87,31 +98,31 @@ int compare(Log *log, Source *src, Source *ref)
   /////////////////////////////////////////////////////////
   // Verify stream lengths
 
-  while (!src->is_empty() && !src_chunk.size)
-    if (!src->get_chunk(&src_chunk))
-      return log->err("src->get_chunk() fails");
+  if (src_chunk.is_empty())
+    if (!src->get_chunk(src_chunk))
+      src_chunk.clear();
 
-  while (!ref->is_empty() && !ref_chunk.size)
-    if (!ref->get_chunk(&ref_chunk))
-      return log->err("ref->get_chunk() fails");
+  if (ref_chunk.is_empty())
+    if (!ref->get_chunk(ref_chunk))
+      ref_chunk.clear();
 
-  if (!src->is_empty() || src_chunk.size)
+  if (src_chunk.size)
     return log->err("output is longer than reference");
 
-  if (!ref->is_empty() || ref_chunk.size)
+  if (ref_chunk.size)
     return log->err("reference is longer than output");
 
   return 0;
 }
 
-int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter)
+int compare(Log *log, Source2 *src, Filter2 *src_filter, Source2 *ref, Filter2 *ref_filter)
 {
-  SourceFilter sf(src, src_filter);
-  SourceFilter rf(ref, ref_filter);
+  SourceFilter2 sf(src, src_filter);
+  SourceFilter2 rf(ref, ref_filter);
   return compare(log, &sf, &rf);
 }
 
-int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter, const char *fn_ref)
+int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter2 *filter, const char *fn_ref)
 {
   RAWSource src;
   RAWSource ref;
@@ -126,10 +137,10 @@ int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter,
   if (!ref.open(spk_ref, fn_ref))
     return log->err("cannot open reference file '%s'", fn_ref);
 
-  if (!filter->set_input(spk_src))
-    return log->err("cannot set filter input format to %s %s %ikHz", spk_src.format_text(), spk_src.mode_text(), spk_src.sample_rate);
+  if (!filter->open(spk_src))
+    return log->err("cannot open the filter: %s %s %ikHz", spk_src.format_text(), spk_src.mode_text(), spk_src.sample_rate);
 
-  int result = compare(log, src, filter, ref);
+  int result = compare(log, &src, filter, &ref);
 
   // Now we MUST reset the filter to drop 
   // possible dependency on our private source.

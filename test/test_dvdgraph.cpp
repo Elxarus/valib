@@ -77,8 +77,6 @@ public:
 class DVDGraph_test
 {
 protected:
-  Filter *f;
-  FilterTester t;
   DVDGraph dvd;
   Log *log;
 
@@ -86,8 +84,6 @@ public:
   DVDGraph_test(Log *_log)
   {
     log = _log;
-    t.link(dvd, log);
-    f = dvd; // do not use FilterTester
   }
 
   int test()
@@ -113,25 +109,25 @@ public:
 
     log->open_group("Test PES->SPDIF transform");
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes",  f, "a.mad.mix.spdif");
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", f, "a.madp.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes",  &dvd, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", &dvd, "a.madp.mix.spdif");
     log->close_group();
 
     log->open_group("Test PES->SPDIF transform with SPDIF as PCM output");
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, true, true, true);
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes",  f, "a.mad.mix.spdif");
-    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", f, "a.madp.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.mad.mix.pes",  &dvd, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PES, 0, 0), "a.madp.mix.pes", &dvd, "a.madp.mix.spdif");
     log->close_group();
 
     log->open_group("Test SPDIF->SPDIF transform");
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif",  f, "a.mad.mix.spdif");
+    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif",  &dvd, "a.mad.mix.spdif");
     log->close_group();
 
     log->open_group("Test PCM->SPDIF transform (using detector)");
     dvd.set_use_detector(true);
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, true, true);
-    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.madp.mix.spdif",  f, "a.madp.mix.spdif");
+    compare_file(log, Speakers(FORMAT_PCM16, MODE_STEREO, 48000), "a.madp.mix.spdif",  &dvd, "a.madp.mix.spdif");
     log->close_group();
 
     log->close_group();
@@ -175,14 +171,13 @@ public:
     log->open_group("Testing %s (%s %s %i)", file_name, 
       spk.format_text(), spk.mode_text(), spk.sample_rate);
 
-    Chunk chunk;
     RAWSource src(spk, file_name, 2048);
 
     if (!src.is_open())
       return log->err_close("Cannot open file %s", file_name);
 
-    if (!f->set_input(spk))
-      return log->err_close("dvd.set_input(%s %s %iHz) failed", 
+    if (!dvd.open(spk))
+      return log->err_close("dvd.open(%s %s %iHz) failed", 
         spk.format_text(), spk.mode_text(), spk.sample_rate);
 
     for (int i = 0; i < array_size(formats); i++)
@@ -206,22 +201,13 @@ public:
         test_spk.level = 1.0;
       }
 
-      while (!src->is_empty() && f->get_output() != test_spk)
-        if (f->is_empty())
-        {
-          if (!src->get_chunk(&chunk))
-            return log->err_close("src->get_chunk() failed");
+      Chunk2 in, out;
+      while (dvd.get_output() != test_spk)
+        if (!dvd.process(in, out))
+          if (!src.get_chunk(in))
+            break;
 
-          if (!f->process(&chunk))
-            return log->err_close("dvd.process() failed");
-        }
-        else
-        {
-          if (!f->get_chunk(&chunk))
-            return log->err_close("dvd.get_chunk() failed");
-        }
-
-      if (f->get_output() != test_spk)
+      if (dvd.get_output() != test_spk)
         return log->err_close("cannot change format: %s%s %s -> %s %s",
           spdif_stereo_pt[i]? "(SPDIF/stereo passthrough) ": "",
           formats[i].format? formats[i].format_text(): "as-is",
@@ -277,8 +263,8 @@ public:
     if (!src.is_open())
       return log->err_close("Cannot open file %s", file_name);
 
-    if (!f->set_input(spk))
-      return log->err_close("dvd.set_input(%s %s %iHz) failed", 
+    if (!dvd.open(spk))
+      return log->err_close("dvd.open(%s %s %iHz) failed", 
         spk.format_text(), spk.mode_text(), spk.sample_rate);
 
     // Check all sink modes
@@ -300,66 +286,54 @@ public:
 
       if (is_spdifable)
       {
-        test_decode(src);
-        test_passthrough(src, spdif_allowed[isink]);
-        test_encode(src, spdif_allowed[isink], can_encode);
-        test_stereo_passthrough(src);
+        test_decode(&src);
+        test_passthrough(&src, spdif_allowed[isink]);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_stereo_passthrough(&src);
 
-        test_decode(src);
-        test_encode(src, spdif_allowed[isink], can_encode);
-        test_decode(src);
+        test_decode(&src);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_decode(&src);
 
-        test_stereo_passthrough(src);
-        test_passthrough(src, spdif_allowed[isink]);
-        test_stereo_passthrough(src);
+        test_stereo_passthrough(&src);
+        test_passthrough(&src, spdif_allowed[isink]);
+        test_stereo_passthrough(&src);
 
-        test_encode(src, spdif_allowed[isink], can_encode);
-        test_passthrough(src, spdif_allowed[isink]);
-        test_decode(src);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_passthrough(&src, spdif_allowed[isink]);
+        test_decode(&src);
       }
       else
       {
-        test_decode(src);
-        test_encode(src, spdif_allowed[isink], can_encode);
-        test_stereo_passthrough(src);
-        test_decode(src);
-        test_stereo_passthrough(src);
-        test_encode(src, spdif_allowed[isink], can_encode);
-        test_decode(src);
+        test_decode(&src);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_stereo_passthrough(&src);
+        test_decode(&src);
+        test_stereo_passthrough(&src);
+        test_encode(&src, spdif_allowed[isink], can_encode);
+        test_decode(&src);
       }
       // have to drop sink because it will be deleted...
       dvd.set_sink(0);
     }
 
-    Chunk chunk;
-    while (!src->is_empty() || !f->is_empty())
-    {
-      if (f->is_empty())
-      {
-        if (!src->get_chunk(&chunk))
-          return log->err_close("src.get_chunk() failed");
-        if (!f->process(&chunk))
-          return log->err_close("dvd.process() failed");
-      }
-      else
-      {
-        if (!f->get_chunk(&chunk))
-          return log->err_close("dvd.get_chunk() failed");
-      }
-    }
+    Chunk2 in, out;
+    while (src.get_chunk(in))
+      while (dvd.process(in, out))
+        /*do nothing*/;
 
     // todo: check number of output streams
     return log->close_group();
   }
 
-  int test_decode(Source *src)
+  int test_decode(Source2 *src)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(false, 0, false, false, false);
     return test_cycle("test_decode()", src, SPDIF_MODE_DISABLED, "decode", FORMAT_PCM16);
   }
 
-  int test_passthrough(Source *src, bool spdif_allowed)
+  int test_passthrough(Source2 *src, bool spdif_allowed)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, false, false);
@@ -369,7 +343,7 @@ public:
       return test_cycle("test_passthrough()", src, SPDIF_MODE_DISABLED, "sink refused", FORMAT_PCM16);
   }
 
-  int test_encode(Source *src, bool spdif_allowed, bool can_encode)
+  int test_encode(Source2 *src, bool spdif_allowed, bool can_encode)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(true, 0, false, true, false);
@@ -383,36 +357,27 @@ public:
       return test_cycle("test_encode()", src, SPDIF_MODE_DISABLED, "sink refused", FORMAT_PCM16);
   }
 
-  int test_stereo_passthrough(Source *src)
+  int test_stereo_passthrough(Source2 *src)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, MODE_STEREO, 0));
     dvd.set_spdif(true, 0, false, true, true);
     return test_cycle("test_stereo_passthrough()", src, SPDIF_MODE_DISABLED, "stereo pcm passthrough", FORMAT_PCM16);
   }
 
-  int test_cycle(const char *caller, Source *src, int status, const char *status_text, int out_format)
+  int test_cycle(const char *caller, Source2 *src, int status, const char *status_text, int out_format)
   {
-    Chunk chunk;
+    Chunk2 in, out;
 
     // process until status change
     // (filter may be either full or empty)
 
-    while (!src->is_empty() && (dvd.get_spdif_status() != status || dvd->get_output().format != out_format))
-      if (f->is_empty())
-      {
-        if (!src->get_chunk(&chunk))
-          return log->err("%s: src->get_chunk() failed before status change", caller);
-
-        if (!f->process(&chunk))
-          return log->err("%s: dvd.process() failed before status change", caller);
-
-        chunk.set_dummy();
-      }
-      else
-      {
-        if (!f->get_chunk(&chunk))
-          return log->err("%s: dvd.get_chunk() failed before status change", caller);
-      }
+    while (dvd.get_spdif_status() != status || dvd.get_output().format != out_format)
+    {
+      if (in.is_dummy())
+        if (!src->get_chunk(in))
+          break;
+      dvd.process(in, out);
+    }
 
     if (dvd.get_spdif_status() != status)
       return log->err("%s: cannot switch to %s state", caller, status_text);
@@ -421,27 +386,19 @@ public:
     // (filter may be either full or empty)
 
     size_t data_size = 0;
-    while (!src->is_empty() && data_size < min_data_size)
-      if (f->is_empty())
-      {
-        if (!src->get_chunk(&chunk))
-          return log->err("%s: src->get_chunk() failed after status change", caller);
+    while (data_size < min_data_size)
+    {
+      if (in.is_dummy())
+        if (!src->get_chunk(in))
+          break;
 
-        if (!f->process(&chunk))
-          return log->err("%s: dvd.process() failed after status change", caller);
-      }
-      else
+      if (dvd.process(in, out))
       {
-        if (!f->get_chunk(&chunk))
-          return log->err("%s: dvd.get_chunk() failed after status change", caller);
-
-        if (!chunk.is_dummy())
-        {
-          if (chunk.spk.format != out_format)
-            return log->err("%s: incorrect output format", caller);
-          data_size += chunk.size;
-        }
+        if (dvd.get_output().format != out_format)
+          return log->err("%s: incorrect output format", caller);
+        data_size += out.size;
       }
+    }
 
     if (data_size < min_data_size)
       return log->err("Filter does not gernerate data!");
@@ -553,7 +510,7 @@ public:
         {
           // Set input format
           Speakers in_spk = Speakers(formats[iformat], masks[imask], sample_rates[isample_rate]);
-          if (!dvd->set_input(in_spk))
+          if (!dvd.open(in_spk))
           {
             log->err_close("Cannot set input format %s %s %i", 
               in_spk.format_text(), in_spk.mode_text(), in_spk.sample_rate);
