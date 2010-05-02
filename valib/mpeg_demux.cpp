@@ -354,8 +354,10 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
               pos += 5;
             else if ((header[pos] & 0xf0) == 0x30)
               pos += 10;
-            else // if (header[pos] == 0x0f)
+            else if (header[pos] == 0x0f)
               pos++;
+            else
+              RESYNC(1);
 
             REQUIRE(pos);
           }
@@ -389,6 +391,10 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
         ///////////////////////////////////////////////
         // FINAL
         ///////////////////////////////////////////////
+
+        if (6 + (header[4] << 8) + header[5] < data_size)
+          // Incorrect data size
+          RESYNC(1);
 
         packets++;
         header_size = data_size;
