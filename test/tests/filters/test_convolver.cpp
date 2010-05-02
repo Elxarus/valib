@@ -122,7 +122,7 @@ TEST(convolver, "Convolver test")
   conv.set_fir(&low_pass);
   conv.reset();
 
-  diff = calc_diff(test_src, ref_src);
+  diff = calc_diff(&test_src, &ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -132,7 +132,7 @@ TEST(convolver, "Convolver test")
   slice.init(filter_len, noise_size + filter_len);
   conv.reset();
 
-  level = calc_peak(test_src);
+  level = calc_peak(&test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 

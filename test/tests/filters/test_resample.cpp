@@ -135,7 +135,7 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
 
   // Resample introduces not more than -A dB of noise.
   // 2 resamples introduces twice more noise, -A + 6dB
-  double diff = calc_diff(tst_noise, tst_chain, ref_noise, ref_chain);
+  double diff = calc_diff(&tst_noise, &tst_chain, &ref_noise, &ref_chain);
   log->msg("Transform: %5iHz -> %6iHz -> %5iHz Diff: %.0fdB", rate1, rate2, rate1, log10(diff) * 20);
   CHECK(diff > 0);
   CHECK(log10(diff) * 20 <= -a + 7);

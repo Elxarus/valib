@@ -221,22 +221,22 @@ TEST(suite_level, "Peak and RMS functions test")
 
   // Noise level
   noise.init(spk, seed, noise_size);
-  level = calc_peak(noise);
+  level = calc_peak(&noise);
   CHECK(level > 0.9);
 
   // Zero level
   zero.init(spk, noise_size);
-  level = calc_peak(zero);
+  level = calc_peak(&zero);
   CHECK(level == 0.0);
 
   // Noise RMS ~= -4.77dB +- 1dB
   noise.init(spk, seed, noise_size);
-  level = calc_rms(noise);
+  level = calc_rms(&noise);
   CHECK(level > 0.5146 && level < 0.6479);
 
   // Zero RMS
   zero.init(spk, noise_size);
-  level = calc_rms(zero);
+  level = calc_rms(&zero);
   CHECK(level == 0.0);
 
 TEST_END(suite_level);
@@ -257,41 +257,41 @@ TEST(suite_diff, "Difference functions test")
   // diff(noise, noise) == 0
   noise1.init(spk, seed, noise_size);
   noise2.init(spk, seed, noise_size);
-  diff = calc_diff(noise1, noise2);
+  diff = calc_diff(&noise1, &noise2);
   CHECK(diff == 0.0);
 
   // diff(noise1, noise2) != 0
   noise1.init(spk, seed, noise_size);
   noise2.init(spk, seed + 100, noise_size);
-  diff = calc_diff(noise1, noise2);
+  diff = calc_diff(&noise1, &noise2);
   CHECK(diff > 1.8);
 
   // diff(noise, zero) == level(noise)
   noise1.init(spk, seed, noise_size);
   noise2.init(spk, seed, noise_size);
   zero.init(spk, noise_size);
-  diff = calc_diff(noise1, zero);
-  level = calc_peak(noise2);
+  diff = calc_diff(&noise1, &zero);
+  level = calc_peak(&noise2);
   CHECK(diff == level);
 
   // rms_diff(noise, noise) == 0
   noise1.init(spk, seed, noise_size);
   noise2.init(spk, seed, noise_size);
-  diff = calc_rms_diff(noise1, noise2);
+  diff = calc_rms_diff(&noise1, &noise2);
   CHECK(diff == 0.0);
 
   // rms_diff(noise1, noise2) == -1.77dB +- 1dB
   noise1.init(spk, seed, noise_size);
   noise2.init(spk, seed + 100, noise_size);
-  diff = calc_rms_diff(noise1, noise2);
+  diff = calc_rms_diff(&noise1, &noise2);
   CHECK(diff > 0.7269 && diff < 0.9151);
 
   // rms_diff(noise, zero) = rms(noise)
   noise1.init(spk, seed, noise_size);
   noise2.init(spk, seed, noise_size);
   zero.init(spk, noise_size);
-  diff = calc_rms_diff(noise1, zero);
-  level = calc_rms(noise2);
+  diff = calc_rms_diff(&noise1, &zero);
+  level = calc_rms(&noise2);
   CHECK(diff == level);
 
 TEST_END(suite_diff);
