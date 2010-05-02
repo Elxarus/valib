@@ -1,5 +1,6 @@
 #include <math.h>
 #include "source/generator.h"
+#include "source/source_filter.h"
 #include "filters/convolver_mch.h"
 #include "filters/gain.h"
 #include "filters/slice.h"
@@ -40,12 +41,12 @@ TEST(convolver_mch, "ConvolverMch test")
 
   ToneGen tone;
   SliceFilter slice;
-  SourceFilter conv_src(tone, conv);
-  SourceFilter test_src(&conv_src, slice);
+  SourceFilter2 conv_src(&tone, &conv);
+  SourceFilter2 test_src(&conv_src, &slice);
 
   ToneGen ref_tone;
   SliceFilter ref_slice;
-  SourceFilter ref_src(ref_tone, ref_slice);
+  SourceFilter2 ref_src(&ref_tone, &ref_slice);
 
   // multichannel generators
 
@@ -147,7 +148,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(lpf_all);
   conv.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(test_src, ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -158,7 +159,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(lpf_all);
   conv.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
@@ -184,7 +185,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(mix_pass);
   conv.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(test_src, ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -205,7 +206,7 @@ TEST(convolver_mch, "ConvolverMch test")
   conv.set_all_firs(mix_zero);
   conv.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 

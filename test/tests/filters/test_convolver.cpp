@@ -1,5 +1,6 @@
 #include <math.h>
 #include "source/generator.h"
+#include "source/source_filter.h"
 #include "filters/convolver.h"
 #include "filters/gain.h"
 #include "filters/slice.h"
@@ -105,12 +106,12 @@ TEST(convolver, "Convolver test")
 
   ToneGen tone;
   SliceFilter slice;
-  SourceFilter conv_src(tone, conv);
-  SourceFilter test_src(&conv_src, slice);
+  SourceFilter2 conv_src(&tone, &conv);
+  SourceFilter2 test_src(&conv_src, &slice);
 
   ToneGen ref_tone;
   SliceFilter ref_slice;
-  SourceFilter ref_src(ref_tone, ref_slice);
+  SourceFilter2 ref_src(&ref_tone, &ref_slice);
 
   // Tone in the pass band must remain unchanged
 
@@ -121,7 +122,7 @@ TEST(convolver, "Convolver test")
   conv.set_fir(&low_pass);
   conv.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(test_src, ref_src);
   CHECK(diff > 0);
   CHECK(value2db(diff) < -att);
 
@@ -131,7 +132,7 @@ TEST(convolver, "Convolver test")
   slice.init(filter_len, noise_size + filter_len);
   conv.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(test_src);
   CHECK(level > 0);
   CHECK(value2db(level) < -att);
 
