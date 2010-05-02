@@ -182,7 +182,7 @@ Convolver::reset()
   {
     pos = 0;
     pre_samples = c;
-    post_samples = n - c;
+    post_samples = fir->length - c;
     buf.zero();
   }
 }
@@ -203,7 +203,7 @@ Convolver::process(Chunk2 &in, Chunk2 &out)
       return true;
     }
     if (!open(spk))
-      return false;
+      throw FilterError(this, 0, "Cannot handle fir change");
   }
 
   /////////////////////////////////////////////////////////
