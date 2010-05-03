@@ -10,7 +10,7 @@
 #include "../source.h"
 #include "../win32/winspk.h"
 
-class WAVSource : public Source
+class WAVSource : public Source2
 {
 protected:
   AutoFile f;
