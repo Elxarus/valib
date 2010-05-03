@@ -392,7 +392,10 @@ public:
         if (!src->get_chunk(in))
           break;
 
-      if (dvd.process(in, out))
+      // we have to porcess the whole input chunk
+      // to correctly continue the processing of the same
+      // source on the next call
+      while (dvd.process(in, out))
       {
         if (dvd.get_output().format != out_format)
           return log->err("%s: incorrect output format", caller);
