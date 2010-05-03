@@ -4,7 +4,6 @@
 */
 
 #include "log.h"
-#include "filter_tester.h"
 #include "filters\decoder_graph.h"
 #include <source\raw_source.h>
 
@@ -14,8 +13,6 @@
 class DecoderGraph_test
 {
 protected:
-  Filter *f;
-  FilterTester t;
   DecoderGraph dec;
   Log *log;
 
@@ -23,8 +20,6 @@ public:
   DecoderGraph_test(Log *_log)
   {
     log = _log;
-    t.link(dec, log);
-    f = dec; // do not use FilterTester
   }
 
   int test()
@@ -74,14 +69,14 @@ public:
     log->open_group("Testing %s (%s %s %i)", file_name, 
       spk.format_text(), spk.mode_text(), spk.sample_rate);
 
-    Chunk chunk;
+    Chunk2 in, out;
     RAWSource src(spk, file_name, 2048);
 
     if (!src.is_open())
       return log->err_close("Cannot open file %s", file_name);
 
-    if (!f->set_input(spk))
-      return log->err_close("dec.set_input(%s %s %iHz) failed", 
+    if (!dec.open(spk))
+      return log->err_close("dec.open(%s %s %iHz) failed", 
         spk.format_text(), spk.mode_text(), spk.sample_rate);
 
     for (int i = 0; i < array_size(formats); i++)
@@ -101,22 +96,16 @@ public:
       if (formats[i].sample_rate)
         test_spk.sample_rate = formats[i].sample_rate;
 
-      while (!src->is_empty() && f->get_output() != test_spk)
-        if (f->is_empty())
-        {
-          if (!src->get_chunk(&chunk))
-            return log->err_close("src->get_chunk() failed");
+      while (dec.get_output() != test_spk)
+      {
+        if (in.is_dummy())
+          if (!src.get_chunk(in))
+            break;
 
-          if (!f->process(&chunk))
-            return log->err_close("dec.process() failed");
-        }
-        else
-        {
-          if (!f->get_chunk(&chunk))
-            return log->err_close("dec.get_chunk() failed");
-        }
+        dec.process(in, out);
+      }
 
-      if (f->get_output() != test_spk)
+      if (dec.get_output() != test_spk)
         return log->err_close("cannot change format: %s %s -> %s %s",
           formats[i].format? formats[i].format_text(): "as-is",
           formats[i].mask? formats[i].mode_text(): "as-is",

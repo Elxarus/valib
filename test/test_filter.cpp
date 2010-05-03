@@ -399,27 +399,25 @@ We need 2 data sources to verify correctness of switching between streams.
   const size_t small_data_size = 5;
   const size_t large_data_size = 32768;
 
-  FilterTester f(filter, log);
-
   log->open_group("Testing %s", filter_name);
 
   /////////////////////////////////////////////////////////
   // Filter should be created in uninitialized state
 
-  if (f.get_input() != spk_unknown)
+  if (filter->get_input() != spk_unknown)
     log->msg("Filter was created in initialized state");
 
   /////////////////////////////////////////////////////////
   // Check output format dependency
 
-  if (!f.set_input(spk_supported))
+  if (!filter->set_input(spk_supported))
   {
     log->err("Set format: %s %s %i failed", 
       spk_supported.format_text(), spk_supported.mode_text(), spk_supported.sample_rate);
     return log->close_group();
   }
 
-  if (f.is_ofdd())
+  if (filter->is_ofdd())
     log->msg("Output format is data-dependent");
 
   /////////////////////////////////////////////////////////
@@ -430,7 +428,7 @@ We need 2 data sources to verify correctness of switching between streams.
   for (int i_format = 0; i_format < n_formats; i_format++)
     for (int i_mode = 0; i_mode < n_modes; i_mode++)
       for (int i_sample_rate = 0; i_sample_rate < n_sample_rates; i_sample_rate++)
-        f.set_input(Speakers(formats[i_format], modes[i_mode], sample_rates[i_sample_rate]));
+        filter->set_input(Speakers(formats[i_format], modes[i_mode], sample_rates[i_sample_rate]));
 
   /////////////////////////////////////////////////////////
   // Main tests
