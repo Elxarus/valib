@@ -392,7 +392,7 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
         // FINAL
         ///////////////////////////////////////////////
 
-        if (6 + (header[4] << 8) + header[5] < data_size)
+        if ((size_t)(6 + (header[4] << 8) + header[5]) < data_size)
           // Incorrect data size
           RESYNC(1);
 
