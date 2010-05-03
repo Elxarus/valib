@@ -7,7 +7,6 @@
 */
 
 #include "suite.h"
-#include "filter_tester.h"
 #include "filters\dvd_graph.h"
 #include <source\raw_source.h>
 #include <win32\cpu.h>

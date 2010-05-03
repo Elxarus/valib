@@ -43,7 +43,6 @@
 
 #include "log.h"
 #include "auto_file.h"
-#include "filter_tester.h"
 
 #include "source\generator.h"
 #include "source\raw_source.h"
