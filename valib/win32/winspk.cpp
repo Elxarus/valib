@@ -320,10 +320,12 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
       {
         case 1: mask = MODE_MONO;   break;
         case 2: mask = MODE_STEREO; break;
-        case 3: mask = MODE_3_0;    break;
+        case 3: mask = MODE_2_0_LFE;break;
         case 4: mask = MODE_QUADRO; break;
         case 5: mask = MODE_3_2;    break;
         case 6: mask = MODE_5_1;    break;
+        case 7: mask = MODE_6_1;    break;
+        case 8: mask = MODE_7_1;    break;
         default: return false;
       }
   }
