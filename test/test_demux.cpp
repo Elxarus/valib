@@ -10,7 +10,6 @@
 */
 
 #include "suite.h"
-#include "filter_tester.h"
 #include "filters\spdifer.h"
 #include "filters\demux.h"
 #include <source\generator.h>

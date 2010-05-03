@@ -8,7 +8,6 @@
 */
 
 #include "suite.h"
-#include "filter_tester.h"
 #include "filters\detector.h"
 #include <source\generator.h>
 #include <source\raw_source.h>
