@@ -10,7 +10,7 @@ const int seed = 349087593;
 
 TEST(cache, "Cache filter")
   RNG rng(seed);
-  Chunk chunk;
+  Chunk2 in, out;
   LineGen gen;
   CacheFilter f;
   Samples buf;
@@ -27,13 +27,11 @@ TEST(cache, "Cache filter")
       gen.init(spk, 0, 1, data_size, chunk_size);
       buf.allocate(cache_samples);
       f.set_size(cache_time);
-      while (!gen->is_empty())
-      {
-        gen->get_chunk(&chunk);
 
-        Chunk2 in(chunk), out;
-        while (!in.is_dummy())
-          f.process(in, out);
+      while (gen.get_chunk(in))
+      {
+        while (f.process(in, out))
+          /*do nothing*/;
 
         size_t size = rng.get_range((uint32_t)cache_samples);
         vtime_t time = f.get_time() - vtime_t(size + rng.get_range((uint32_t)(cache_samples - size))) / spk.sample_rate;

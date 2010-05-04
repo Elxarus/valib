@@ -579,19 +579,13 @@ TEST(filter_graph, "FilterGraph")
       graph_filter.open(spk);
       CHECK(graph_filter.is_open());
 
+      Chunk2 in, out;
       NoiseGen noise(spk, seed, noise_size);
-      while (!noise->is_empty())
-      {
-        Chunk src_chunk;
-        noise->get_chunk(&src_chunk);
-
-        Chunk2 in(src_chunk), out;
+      while (noise.get_chunk(in))
         while (graph_filter.process(in, out))
           if (graph_filter.new_stream())
             n_new_stream++;
-      }
 
-      Chunk2 out;
       while (graph_filter.flush(out))
         if (graph_filter.new_stream())
           n_new_stream++;

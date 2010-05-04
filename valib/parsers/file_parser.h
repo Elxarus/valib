@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include "../auto_file.h"
-#include "../filter.h"
 #include "../parser.h"
 #include "../mpeg_demux.h"
 

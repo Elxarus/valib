@@ -13,6 +13,8 @@
 #define VALIB_DVD_GRAPH_H
 
 #include "filter_graph.h"
+#include "../sink.h"
+
 #include "passthrough.h"
 #include "../parsers/ac3/ac3_enc.h"
 #include "demux.h"
@@ -69,7 +71,7 @@ public:
   Syncer         syncer;
 
 public:
-  DVDGraph(int nsamples = 4096, const Sink *sink = 0);
+  DVDGraph(int nsamples = 4096, const Sink2 *sink = 0);
 
   /////////////////////////////////////////////////////////////////////////////
   // DVDGraph interface
@@ -80,8 +82,8 @@ public:
   Speakers get_user() const;
 
   // Sink
-  void set_sink(const Sink *sink);
-  const Sink *get_sink() const;
+  void set_sink(const Sink2 *sink);
+  const Sink2 *get_sink() const;
 
   bool get_query_sink() const;
   void set_query_sink(bool query_sink);
@@ -164,7 +166,7 @@ protected:
   int      spdif_status;
   mutable int spdif_err;
 
-  const Sink *sink;
+  const Sink2 *sink;
   bool query_sink;
 
   enum state_t 

@@ -9,72 +9,6 @@
 #include "filter2.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Obsolete, will be removed
-// Use SyncHelper instead (below)
-
-
-class Sync
-{
-protected:
-  bool    syncing; // syncing state
-  bool    sync[2]; // timestamp exists
-  vtime_t time[2]; // timestamp
-
-public:
-  Sync()
-  {
-    reset();
-  }
-
-  inline void receive_sync(bool _sync, vtime_t _time)
-  {
-    if (_sync)
-      if (syncing)
-      {
-        sync[0] = true;
-        time[0] = _time;
-        sync[1] = false;
-        time[1] = _time;
-      }
-      else
-      {
-        sync[1] = true;
-        time[1] = _time;
-      }
-  }
-  inline void receive_sync(const Chunk *chunk)
-  {
-    receive_sync(chunk->sync, chunk->time);
-  }
-
-  inline void send_sync(Chunk *_chunk)
-  {
-    _chunk->sync = sync[0];
-    _chunk->time = time[0];
-    sync[0] = sync[1];
-    time[0] = time[1];
-    sync[1] = false;
-  }
-
-  inline bool is_syncing()
-  {
-    return syncing;
-  }
-
-  inline void set_syncing(bool _syncing)
-  {
-    syncing = _syncing;
-  }
-
-  inline void reset()
-  {
-    syncing = true;
-    sync[0] = false;
-    sync[1] = false;
-  }
-};
-
-///////////////////////////////////////////////////////////////////////////////
 // SyncHelper
 // Helper class that holds sync information and makes correct timestamps for
 // output chunks.
@@ -168,9 +102,6 @@ public:
   inline void send_frame_sync(Chunk2 &chunk);
   inline void send_sync(Chunk2 &chunk, double size_to_time);
 
-  inline void receive_sync(const Chunk *chunk, pos_t pos);
-  inline void send_frame_sync(Chunk *chunk);
-  inline void send_sync(Chunk *chunk, double size_to_time);
   inline void drop(size_t size);
   inline void reset();
 };
@@ -264,49 +195,6 @@ SyncHelper::send_sync(Chunk2 &chunk, double size_to_time)
   {
     chunk.sync = sync[0];
     chunk.time = time[0] - pos[0] * size_to_time;
-    shift();
-  }
-}
-
-inline void
-SyncHelper::receive_sync(const Chunk *chunk, pos_t _pos)
-{
-  if (chunk->sync)
-  {
-    if (sync[0] && pos[0] != _pos)
-    {
-      assert(pos[0] < _pos);
-      sync[1] = true;
-      time[1] = chunk->time;
-      pos[1]  = _pos;
-    }
-    else
-    {
-      sync[0] = true;
-      time[0] = chunk->time;
-      pos[0]  = _pos;
-    }
-  }
-}
-
-inline void
-SyncHelper::send_frame_sync(Chunk *chunk)
-{
-  if (pos[0] <= 0)
-  {
-    chunk->sync = sync[0];
-    chunk->time = time[0];
-    shift();
-  }
-}
-
-inline void
-SyncHelper::send_sync(Chunk *chunk, double size_to_time)
-{
-  if (pos[0] <= 0)
-  {
-    chunk->sync = sync[0];
-    chunk->time = time[0] - pos[0] * size_to_time;
     shift();
   }
 }

@@ -51,7 +51,7 @@ public:
   }
 
   virtual void reset()
-  { reset_thunk(); }
+  {}
 
   virtual bool get_chunk(Chunk2 &out)
   { return source? source->get_chunk(out): false; }

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "dvd_graph.h"
 
-DVDGraph::DVDGraph(int _nsamples, const Sink *_sink)
+DVDGraph::DVDGraph(int _nsamples, const Sink2 *_sink)
 :proc(_nsamples)
 {
   user_spk = Speakers(FORMAT_PCM16, 0, 0);
@@ -65,12 +65,12 @@ DVDGraph::get_user() const
 // Sink to query
 
 void 
-DVDGraph::set_sink(const Sink *_sink)
+DVDGraph::set_sink(const Sink2 *_sink)
 {
   sink = _sink;
 }
 
-const Sink *
+const Sink2 *
 DVDGraph::get_sink() const
 {
   return sink;
@@ -571,7 +571,7 @@ DVDGraph::next_id(int node, Speakers spk) const
     // input -> state_proc_enc
 
     case node_start:
-      if (demux->query_input(spk)) 
+      if (demux.can_open(spk)) 
         return state_demux;
 
       if (use_detector && spk.format == FORMAT_PCM16 && spk.mask == MODE_STEREO)
@@ -584,10 +584,10 @@ DVDGraph::next_id(int node, Speakers spk) const
       if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
-      if (dec->query_input(spk))
+      if (dec.can_open(spk))
         return state_decode;
 
-      if (proc->query_input(spk))
+      if (proc.can_open(spk))
       {
         spdif_err = check_spdif_encode(spk);
         if (spdif_err == SPDIF_MODE_ENCODE)
@@ -613,10 +613,10 @@ DVDGraph::next_id(int node, Speakers spk) const
       if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
-      if (dec->query_input(spk))
+      if (dec.can_open(spk))
         return state_decode;
 
-      if (proc->query_input(spk))
+      if (proc.can_open(spk))
       {
         spdif_err = check_spdif_encode(spk);
         if (spdif_err == SPDIF_MODE_ENCODE)
@@ -636,7 +636,7 @@ DVDGraph::next_id(int node, Speakers spk) const
       if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
-      if (dec->query_input(spk))
+      if (dec.can_open(spk))
         return state_decode;
 
       return node_err;
@@ -652,10 +652,10 @@ DVDGraph::next_id(int node, Speakers spk) const
       if (spdif_err == SPDIF_MODE_PASSTHROUGH)
         return state_spdif_pt;
 
-      if (dec->query_input(spk))
+      if (dec.can_open(spk))
         return state_decode;
 
-      if (proc->query_input(spk))
+      if (proc.can_open(spk))
       {
         spdif_err = check_spdif_encode(spk);
         if (spdif_err == SPDIF_MODE_ENCODE)
@@ -686,7 +686,7 @@ DVDGraph::next_id(int node, Speakers spk) const
     // state_decode -> state_proc_enc
 
     case state_decode:
-      if (proc->query_input(spk))
+      if (proc.can_open(spk))
       {
         spdif_err = check_spdif_encode(spk);
         if (spdif_err == SPDIF_MODE_ENCODE)
@@ -764,7 +764,7 @@ DVDGraph::check_spdif_passthrough(Speakers _spk) const
 
   // check sink
   if (sink && query_sink && !spdif_as_pcm)
-    if (!sink->query_input(Speakers(FORMAT_SPDIF, _spk.mask, _spk.sample_rate)))
+    if (!sink->can_open(Speakers(FORMAT_SPDIF, _spk.mask, _spk.sample_rate)))
       return SPDIF_ERR_SINK;
 
   return SPDIF_MODE_PASSTHROUGH;
@@ -805,7 +805,7 @@ DVDGraph::check_spdif_encode(Speakers _spk) const
 
   // check sink
   if (sink && query_sink && !spdif_as_pcm)
-    if (!sink->query_input(Speakers(FORMAT_SPDIF, enc_spk.mask, enc_spk.sample_rate)))
+    if (!sink->can_open(Speakers(FORMAT_SPDIF, enc_spk.mask, enc_spk.sample_rate)))
       return SPDIF_ERR_SINK;
 
   return SPDIF_MODE_ENCODE;
@@ -835,7 +835,7 @@ DVDGraph::agree_output_pcm(Speakers _spk, Speakers _user_spk) const
 
   // Query direct user format
 
-  if (sink->query_input(_spk) && proc.query_user(_spk))
+  if (sink->can_open(_spk) && proc.query_user(_spk))
     return _spk;
 
   // We're failed. 
@@ -849,7 +849,7 @@ DVDGraph::agree_output_pcm(Speakers _spk, Speakers _user_spk) const
 
     while (!enum_spk.is_unknown())
     {
-      if (sink->query_input(enum_spk) && proc.query_user(enum_spk))
+      if (sink->can_open(enum_spk) && proc.query_user(enum_spk))
         return enum_spk;
 
       switch (enum_spk.format)

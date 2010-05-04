@@ -53,21 +53,9 @@ class SourceError;
 
 class Source2 : boost::noncopyable
 {
-protected:
-  Source *thunk;
-  void reset_thunk();
-
 public:
-  Source2();
-  virtual ~Source2();
-
-  /////////////////////////////////////////////////////////
-  // Old Source interface compatibility
-
-  Source *operator->() { return thunk; }
-  const Source *operator->() const { return thunk; }
-  operator Source *() { return thunk; }
-  operator const Source *() const { return thunk; }
+  Source2() {}
+  virtual ~Source2() {}
 
   /////////////////////////////////////////////////////////
   // Processing

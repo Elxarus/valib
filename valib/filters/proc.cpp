@@ -132,30 +132,30 @@ AudioProcessor::rebuild_chain()
     return false;
 
   // processing chain
-  FILTER_SAFE(chain.add_back(&in_levels,  "Input levels"));
-  FILTER_SAFE(chain.add_back(&in_cache,   "Input cache"));
+  chain.add_back(&in_levels,  "Input levels");
+  chain.add_back(&in_cache,   "Input cache");
   if (out_spk.nch() < in_spk.nch())
   {
-    FILTER_SAFE(chain.add_back(&mixer,      "Mixer"));
-    FILTER_SAFE(chain.add_back(&resample,   "SRC"));
+    chain.add_back(&mixer,      "Mixer");
+    chain.add_back(&resample,   "SRC");
   }
   else
   {
-    FILTER_SAFE(chain.add_back(&resample,   "SRC"));
-    FILTER_SAFE(chain.add_back(&mixer,      "Mixer"));
+    chain.add_back(&resample,   "SRC");
+    chain.add_back(&mixer,      "Mixer");
   }
-  FILTER_SAFE(chain.add_back(&bass_redir, "Bass redirection"));
-  FILTER_SAFE(chain.add_back(&equalizer,  "Equalizer"));
-  FILTER_SAFE(chain.add_back(&dither,     "Dither"));
-  FILTER_SAFE(chain.add_back(&agc,        "AGC"));
-  FILTER_SAFE(chain.add_back(&delay,      "Delay"));
-  FILTER_SAFE(chain.add_back(&out_cache,  "Output cache"));
-  FILTER_SAFE(chain.add_back(&out_levels, "Output levels"));
+  chain.add_back(&bass_redir, "Bass redirection");
+  chain.add_back(&equalizer,  "Equalizer");
+  chain.add_back(&dither,     "Dither");
+  chain.add_back(&agc,        "AGC");
+  chain.add_back(&delay,      "Delay");
+  chain.add_back(&out_cache,  "Output cache");
+  chain.add_back(&out_levels, "Output levels");
 
   // setup mixer
   Speakers mixer_spk = out_spk;
   mixer_spk.format = FORMAT_LINEAR;
-  FILTER_SAFE(mixer.set_output(mixer_spk));
+  mixer.set_output(mixer_spk);
 
   // setup src
   resample.set_sample_rate(user_spk.sample_rate);
@@ -163,19 +163,19 @@ AudioProcessor::rebuild_chain()
   // format conversion
   if (in_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_front(&in_conv, "PCM->Linear converter"));
-    FILTER_SAFE(in_conv.set_format(FORMAT_LINEAR));
+    chain.add_front(&in_conv, "PCM->Linear converter");
+    in_conv.set_format(FORMAT_LINEAR);
   }
 
   if (out_spk.format != FORMAT_LINEAR)
   {
-    FILTER_SAFE(chain.add_back(&out_conv, "Linear->PCM converter"));
-    FILTER_SAFE(out_conv.set_format(out_spk.format));
+    chain.add_back(&out_conv, "Linear->PCM converter");
+    out_conv.set_format(out_spk.format);
   }
 
   dither.level = dithering_level();
 
-  FILTER_SAFE(chain.open(in_spk));
+  chain.open(in_spk);
   return true;
 }
 

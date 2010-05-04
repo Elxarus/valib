@@ -259,9 +259,9 @@ public:
     streambuf.set_parser(hparser);
 
     CPUMeter cpu;
-    Chunk chunk;
+    Chunk2 chunk;
     NoiseGen noise(spk_unknown, seed, noise_size, noise_size);
-    noise->get_chunk(&chunk);
+    noise.get_chunk(chunk);
 
     cpu.reset();
     cpu.start();

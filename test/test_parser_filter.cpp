@@ -86,9 +86,9 @@ public:
     const size_t max_frame_size = frame_parser->header_parser()->max_frame_size();
 
     // Prepare noise buffer
+    Chunk2 noise_chunk;
     NoiseGen noise(spk_rawdata, seed, int(max_frame_size * 2.5), int(max_frame_size * 2.5));
-    Chunk noise_chunk;
-    noise->get_chunk(&noise_chunk);
+    noise.get_chunk(noise_chunk);
 
     uint8_t *noise_buf  = noise_chunk.rawdata;
     size_t noise_size = noise_chunk.size;
@@ -138,23 +138,21 @@ public:
 
     int noise_pos = 0;
     int frame_pos = 0;
-    Chunk chunk;
     int i = 0; // input chunk index
     int o = 0; // output chunk index
- 
+
+    Chunk2 in, out;
     for (i = 0; i < array_size(input_chunks); i++)
     {
-
       // Fill the chunk
-
       switch (input_chunks[i].type)
       {
         case InChunkDef::chunk_frame:
         {
           int new_frame_pos = (int)(input_chunks[i].end_pos * frame_interval);
           assert(new_frame_pos - frame_pos > 0);
-          chunk.set_rawdata(
-            spk_rawdata, f + frame_pos, new_frame_pos - frame_pos, 
+          in.set_rawdata(
+            f + frame_pos, new_frame_pos - frame_pos, 
             input_chunks[i].sync, input_chunks[i].time);
           frame_pos = new_frame_pos;
           break;
@@ -164,8 +162,8 @@ public:
         {
           int new_noise_pos = (int)(input_chunks[i].end_pos * max_frame_size);
           assert(new_noise_pos - noise_pos > 0);
-          chunk.set_rawdata(
-            spk_rawdata, noise_buf + noise_pos, new_noise_pos - noise_pos, 
+          in.set_rawdata(
+            noise_buf + noise_pos, new_noise_pos - noise_pos, 
             input_chunks[i].sync, input_chunks[i].time);
           noise_pos = new_noise_pos;
           break;
@@ -175,32 +173,18 @@ public:
           assert(false);
       }
 
-      // Process the chunk
-
-      if (!parser->process(&chunk))
+      // Process
+      while (parser.process(in, out))
       {
-        log->err("Processing error");
-        return;
-      }
-
-      // Verify output
-
-      while (!parser->is_empty())
-      {
-        parser->get_chunk(&chunk);
-
-        if (chunk.is_dummy())
+        if (out.size == 0)
           continue;
 
-        if (chunk.size == 0)
-          continue;
-
-        if (chunk.sync != output_chunks[o].sync || 
-            chunk.time != output_chunks[o].time)
+        if (out.sync != output_chunks[o].sync || 
+            out.time != output_chunks[o].time)
         {
           log->err("Timing error. Must be (sync: %s, time: %i), but got (sync: %s, time: %i)",
             (output_chunks[o].sync? "true": "false"), (int)output_chunks[o].time,
-            (chunk.sync? "true": "false"), (int)chunk.time);
+            (out.sync? "true": "false"), (int)out.time);
           return;
         }
         o++;

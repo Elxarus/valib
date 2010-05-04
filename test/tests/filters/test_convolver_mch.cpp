@@ -32,7 +32,6 @@ TEST(convolver_mch, "ConvolverMch test")
   NoiseGen noise2;
   ZeroGen zero;
 
-  Chunk chunk;
   ConvolverMch conv;
   Gain gain_filter(gain);
 

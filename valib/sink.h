@@ -82,20 +82,9 @@ class SimpleSink;
 
 class Sink2 : boost::noncopyable
 {
-protected:
-  Sink *thunk;
-
 public:
-  Sink2();
-  virtual ~Sink2();
-
-  /////////////////////////////////////////////////////////
-  // Old Sink interface compatibility
-
-  Sink *operator->() { return thunk; }
-  const Sink *operator->() const { return thunk; }
-  operator Sink *() { return thunk; }
-  operator const Sink *() const { return thunk; }
+  Sink2() {}
+  virtual ~Sink2() {}
 
   /////////////////////////////////////////////////////////
   // Open/close the filter
