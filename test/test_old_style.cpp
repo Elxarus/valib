@@ -8,7 +8,7 @@ int test_parser_filter(Log *log);
 
 //int test_ac3(Log *log);
 
-int test_rules(Log *log);
+int test_all_filters(Log *log);
 
 int test_crash(Log *log);
 int test_demux(Log *log);
@@ -20,7 +20,7 @@ int test_decodergraph(Log *log);
 int test_dvdgraph(Log *log);
 
 TEST(old_style, "Old-stlye tests")
-  test_rules(log);
+  test_all_filters(log);
 
   test_crc(log);
   test_syncer(log);
