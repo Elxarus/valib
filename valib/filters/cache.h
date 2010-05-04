@@ -10,7 +10,7 @@
 #ifndef VALIB_CACHE_H
 #define VALIB_CACHE_H
 
-#include "../filter2.h"
+#include "../filter.h"
 #include "../buffer.h"
 
 class CacheFilter : public SamplesFilter

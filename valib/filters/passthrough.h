@@ -6,7 +6,7 @@
 #ifndef VALIB_PASSTHROUGH_H
 #define VALIB_PASSTHROUGH_H
 
-#include "../filter2.h"
+#include "../filter.h"
 
 class Passthrough : public SimpleFilter
 {

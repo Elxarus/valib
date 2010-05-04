@@ -25,7 +25,7 @@
 #define VALIB_AGC_H
 
 #include "../buffer.h"
-#include "../filter2.h"
+#include "../filter.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // AGC class

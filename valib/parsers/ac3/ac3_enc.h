@@ -1,7 +1,7 @@
 #ifndef VALIB_AC3_ENC_H
 #define VALIB_AC3_ENC_H
 
-#include "../../filter2.h"
+#include "../../filter.h"
 #include "../../bitstream.h"
 #include "../../buffer.h"
 #include "ac3_defs.h"

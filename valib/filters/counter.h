@@ -6,7 +6,7 @@
 #ifndef VALIB_COUNTER_H
 #define VALIB_COUNTER_H
 
-#include "../filter2.h"
+#include "../filter.h"
 
 class Counter : public SimpleFilter
 {

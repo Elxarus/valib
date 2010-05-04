@@ -5,7 +5,7 @@
 #ifndef VALIB_SPECTRUM_H
 #define VALIB_SPECTRUM_H
 
-#include "../filter2.h"
+#include "../filter.h"
 #include "../buffer.h"
 #include "../dsp/fft.h"
 

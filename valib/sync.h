@@ -6,7 +6,7 @@
 #ifndef VALIB_SYNC_H
 #define VALIB_SYNC_H
 
-#include "filter2.h"
+#include "filter.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // SyncHelper

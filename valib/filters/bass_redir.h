@@ -6,7 +6,7 @@
 #define VALIB_BASS_REDIR_H
 
 #include "../buffer.h"
-#include "../filter2.h"
+#include "../filter.h"
 #include "../iir.h"
 
 ///////////////////////////////////////////////////////////////////////////////

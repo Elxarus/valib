@@ -6,7 +6,7 @@
 #ifndef VALIB_DEJITTER_H
 #define VALIB_DEJITTER_H
 
-#include "../filter2.h"
+#include "../filter.h"
 
 #define STAT_SIZE 64
 

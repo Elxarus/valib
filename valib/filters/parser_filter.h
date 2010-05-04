@@ -6,7 +6,7 @@
 #ifndef VALIB_PARSER_FILTER_H
 #define VALIB_PARSER_FILTER_H
 
-#include "../filter2.h"
+#include "../filter.h"
 #include "../parser.h"
 #include "../sync.h"
 

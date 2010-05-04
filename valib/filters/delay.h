@@ -18,7 +18,7 @@
 #define VALIB_DELAY_H
 
 #include "../buffer.h"
-#include "../filter2.h"
+#include "../filter.h"
 
 
 #define DELAY_SP 0 // samples

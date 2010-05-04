@@ -6,7 +6,7 @@
 #ifndef VALIB_SOURCE_FILTER_H
 #define VALIB_SOURCE_FILTER_H
 
-#include "../filter2.h"
+#include "../filter.h"
 #include "../source.h"
 
 class SourceFilter2 : public Source2
