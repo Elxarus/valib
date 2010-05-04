@@ -20,7 +20,7 @@ size_t compact_size(size_t size)
   return size;
 }
 
-int compare(Log *log, Source2 *src, Source2 *ref)
+int compare(Log *log, Source *src, Source *ref)
 {
   // if reference format is FORMAT_RAWDATA then filter output
   // format is supposed to be raw format (not FORMAT_LINEAR)
@@ -31,7 +31,7 @@ int compare(Log *log, Source2 *src, Source2 *ref)
   size_t len;
 
   Speakers src_spk, ref_spk;
-  Chunk2 src_chunk, ref_chunk;
+  Chunk src_chunk, ref_chunk;
   while (true)
   {
     if (src_chunk.is_empty())
@@ -115,14 +115,14 @@ int compare(Log *log, Source2 *src, Source2 *ref)
   return 0;
 }
 
-int compare(Log *log, Source2 *src, Filter2 *src_filter, Source2 *ref, Filter2 *ref_filter)
+int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter)
 {
   SourceFilter2 sf(src, src_filter);
   SourceFilter2 rf(ref, ref_filter);
   return compare(log, &sf, &rf);
 }
 
-int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter2 *filter, const char *fn_ref)
+int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter *filter, const char *fn_ref)
 {
   RAWSource src;
   RAWSource ref;
@@ -155,11 +155,11 @@ int compare_file(Log *log, Speakers spk_src, const char *fn_src, Filter2 *filter
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sample_t calc_peak(Source2 *source)
+sample_t calc_peak(Source *source)
 {
   assert(source != 0);
 
-  Chunk2 chunk;
+  Chunk chunk;
   sample_t peak = 0.0;
   while (source->get_chunk(chunk))
   {
@@ -176,7 +176,7 @@ sample_t calc_peak(Source2 *source)
   return peak;
 }
 
-sample_t calc_peak(Source2 *source, Filter2 *filter)
+sample_t calc_peak(Source *source, Filter *filter)
 {
   assert(source != 0);
   SourceFilter2 source_filter(source, filter);
@@ -185,14 +185,14 @@ sample_t calc_peak(Source2 *source, Filter2 *filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-double calc_rms(Source2 *source)
+double calc_rms(Source *source)
 {
   assert(source != 0);
 
   size_t n = 0;
   double sum = 0.0;
 
-  Chunk2 chunk;
+  Chunk chunk;
   while (source->get_chunk(chunk))
   {
     Speakers spk = source->get_output();
@@ -209,7 +209,7 @@ double calc_rms(Source2 *source)
   return n? sqrt(sum / n): 0.0;
 }
 
-double calc_rms(Source2 *source, Filter2 *filter)
+double calc_rms(Source *source, Filter *filter)
 {
   assert(source != 0);
   SourceFilter2 source_filter(source, filter);
@@ -218,14 +218,14 @@ double calc_rms(Source2 *source, Filter2 *filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sample_t calc_diff(Source2 *s1, Source2 *s2)
+sample_t calc_diff(Source *s1, Source *s2)
 {
   assert(s1 != 0 && s2 != 0);
 
   size_t len;
   sample_t diff = 0.0;
 
-  Chunk2 chunk1, chunk2;
+  Chunk chunk1, chunk2;
   while (true)
   {
     if (chunk1.is_empty())
@@ -257,7 +257,7 @@ sample_t calc_diff(Source2 *s1, Source2 *s2)
   return diff;
 }
 
-sample_t calc_diff(Source2 *s1, Filter2 *f1, Source2 *s2, Filter2 *f2)
+sample_t calc_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)
 {
   assert(s1 != 0 && s2 != 0);
   SourceFilter2 sf1(s1, f1);
@@ -267,7 +267,7 @@ sample_t calc_diff(Source2 *s1, Filter2 *f1, Source2 *s2, Filter2 *f2)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-double calc_rms_diff(Source2 *s1, Source2 *s2)
+double calc_rms_diff(Source *s1, Source *s2)
 {
   assert(s1 != 0 && s2 != 0);
 
@@ -275,7 +275,7 @@ double calc_rms_diff(Source2 *s1, Source2 *s2)
   size_t n = 0;
   double sum = 0.0;
 
-  Chunk2 chunk1, chunk2;
+  Chunk chunk1, chunk2;
   while (true)
   {
     if (chunk1.is_empty())
@@ -307,7 +307,7 @@ double calc_rms_diff(Source2 *s1, Source2 *s2)
   return n? sqrt(sum / n): 0.0;
 }
 
-double calc_rms_diff(Source2 *s1, Filter2 *f1, Source2 *s2, Filter2 *f2)
+double calc_rms_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)
 {
   assert(s1 != 0 && s2 != 0);
   SourceFilter2 sf1(s1, f1);

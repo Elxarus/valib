@@ -35,7 +35,7 @@ Generator::init(Speakers spk_, uint64_t stream_len_, size_t chunk_size_)
 }
 
 bool 
-Generator::get_chunk(Chunk2 &chunk)
+Generator::get_chunk(Chunk &chunk)
 {
   if (stream_pos >= stream_len)
     return false;

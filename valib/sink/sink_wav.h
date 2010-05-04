@@ -29,7 +29,7 @@ public:
 
   virtual bool can_open(Speakers new_spk) const;
   virtual bool init();
-  virtual void process(const Chunk2 &chunk); 
+  virtual void process(const Chunk &chunk); 
 };
 
 #endif

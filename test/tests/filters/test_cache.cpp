@@ -10,7 +10,7 @@ const int seed = 349087593;
 
 TEST(cache, "Cache filter")
   RNG rng(seed);
-  Chunk2 in, out;
+  Chunk in, out;
   LineGen gen;
   CacheFilter f;
   Samples buf;

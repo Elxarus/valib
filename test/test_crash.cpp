@@ -16,7 +16,7 @@ static const int seed = 9374;
 static const int noise_size = 1024 * 1024;
 
 int test_crash(Log *log);
-int test_crash_filter(Log *log, Speakers spk, Filter2 *filter, const char *filter_name);
+int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter_name);
 
 
 int test_crash(Log *log)
@@ -54,11 +54,11 @@ int test_crash(Log *log)
 }
 
 
-int test_crash_filter(Log *log, Speakers spk, Filter2 *filter, const char *filter_name)
+int test_crash_filter(Log *log, Speakers spk, Filter *filter, const char *filter_name)
 {
   log->msg("Testing filter %s with format %s %s", filter_name, spk.format_text(), spk.mode_text());
 
-  Chunk2 in, out;
+  Chunk in, out;
   size_t isize = 0;
   size_t osize = 0;
 

@@ -1,7 +1,7 @@
 #include "source_filter.h"
 
 bool
-SourceFilter2::set(Source2 *source_, Filter2 *filter_)
+SourceFilter2::set(Source *source_, Filter *filter_)
 {
   if (!source_)
     return false;
@@ -47,7 +47,7 @@ SourceFilter2::reset()
 // Source interface
 
 bool
-SourceFilter2::get_chunk(Chunk2 &out)
+SourceFilter2::get_chunk(Chunk &out)
 {
   if (!source) return false;
   if (!filter) return source->get_chunk(out);

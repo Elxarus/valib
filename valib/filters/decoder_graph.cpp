@@ -89,7 +89,7 @@ DecoderGraph::get_name(int node) const
   return 0;
 }
 
-Filter2 *
+Filter *
 DecoderGraph::init_filter(int node, Speakers spk)
 {
   switch (node)

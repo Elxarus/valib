@@ -113,7 +113,7 @@ public:
   virtual bool init();
   virtual void uninit();
 
-  virtual void process(const Chunk2 &chunk);
+  virtual void process(const Chunk &chunk);
   virtual void flush();
 };
 

@@ -85,7 +85,7 @@ Detector::reset()
 }
 
 bool
-Detector::process(Chunk2 &in, Chunk2 &out)
+Detector::process(Chunk &in, Chunk &out)
 {
   if (in.sync)
   {
@@ -148,7 +148,7 @@ Detector::process(Chunk2 &in, Chunk2 &out)
 }
 
 bool
-Detector::flush(Chunk2 &out)
+Detector::flush(Chunk &out)
 {
   if (!do_flush)
     return false;
@@ -169,7 +169,7 @@ Detector::flush(Chunk2 &out)
     case state_frame:
       // We have data in the buffer
       // Do dummy processing
-      Chunk2 dummy;
+      Chunk dummy;
       return process(dummy, out);
   }
   assert(false);
@@ -177,7 +177,7 @@ Detector::flush(Chunk2 &out)
 }
 
 void
-Detector::load(Chunk2 &in)
+Detector::load(Chunk &in)
 {
   size_t old_data_size = stream.get_buffer_size() + in.size;
 

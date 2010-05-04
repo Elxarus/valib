@@ -89,7 +89,7 @@
 
 
 
-class AudioProcessor : public Filter2
+class AudioProcessor : public Filter
 {
 protected:
   bool rebuild;
@@ -138,7 +138,7 @@ public:
   Speakers user2output(Speakers in_spk, Speakers user_spk) const;
 
   /////////////////////////////////////////////////////////
-  // Filter2 interface
+  // Filter interface
 
   virtual bool can_open(Speakers spk) const;
   virtual bool open(Speakers spk);
@@ -146,8 +146,8 @@ public:
 
   // Processing
   virtual void reset();
-  virtual bool process(Chunk2 &in, Chunk2 &out);
-  virtual bool flush(Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
+  virtual bool flush(Chunk &out);
   virtual bool new_stream() const;
 
   // Filter state

@@ -11,7 +11,7 @@ static const int seed = 945098;
 TEST(slice, "SliceFilter test")
 
   int chunk_size = noise_size / 11;
-  Chunk2 chunk;
+  Chunk chunk;
   NoiseGen noise1;
   NoiseGen noise2;
   SliceFilter slice;

@@ -48,8 +48,8 @@ protected:
   size_t    part_size;     // partial sample size in bytes
 
   convert_t find_conversion(int _format, Speakers _spk) const;
-  bool convert_pcm2linear(Chunk2 &in, Chunk2 &out);
-  bool convert_linear2pcm(Chunk2 &in, Chunk2 &out);
+  bool convert_pcm2linear(Chunk &in, Chunk &out);
+  bool convert_linear2pcm(Chunk &in, Chunk &out);
   bool is_lpcm(int format) { return format == FORMAT_LPCM20 || format == FORMAT_LPCM24; }
 
 public:
@@ -74,7 +74,7 @@ public:
   virtual bool can_open(Speakers spk) const;
   virtual bool init();
 
-  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
   virtual void reset();
 
   virtual Speakers get_output() const;

@@ -316,7 +316,7 @@ DShowSink::init()
 };
 
 void 
-DShowSink::process(const Chunk2 &chunk)
+DShowSink::process(const Chunk &chunk)
 {
   if (!m_Connected)
     return;

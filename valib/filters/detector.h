@@ -32,7 +32,7 @@ protected:
   bool     is_new_stream;
 
   const HeaderParser *find_parser(Speakers spk) const;
-  void load(Chunk2 &in);
+  void load(Chunk &in);
 
 public:
   Detector();
@@ -52,8 +52,8 @@ public:
   virtual bool init();
   virtual void reset();
 
-  virtual bool process(Chunk2 &in, Chunk2 &out);
-  virtual bool flush(Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
+  virtual bool flush(Chunk &out);
 
   virtual bool new_stream() const
   { return is_new_stream; }

@@ -77,7 +77,7 @@ public:
   // SamplesFilter overrides
 
   virtual bool init();
-  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
 
   virtual Speakers get_output() const
   { return out_spk; }

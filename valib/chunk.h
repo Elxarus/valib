@@ -30,7 +30,7 @@ public:
   {}
 };
 
-class Chunk2
+class Chunk
 {
 public:
   /////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ public:
   // Utilities
 
   // Default constructor (dummy chunk)
-  Chunk2():
+  Chunk():
     rawdata(0),
     size(0),
     sync(false),
@@ -55,7 +55,7 @@ public:
   {}
 
   // Copy constructors
-  Chunk2(const Chunk2 &chunk):
+  Chunk(const Chunk &chunk):
     rawdata(chunk.rawdata),
     samples(chunk.samples),
     size(chunk.size),
@@ -64,7 +64,7 @@ public:
   {}
 
   // Empty chunk with a timestamp
-  Chunk2(bool sync_, vtime_t time_):
+  Chunk(bool sync_, vtime_t time_):
     rawdata(0),
     size(0),
     sync(sync_),
@@ -72,7 +72,7 @@ public:
   {}
 
   // Linear format constructor
-  Chunk2(samples_t samples_, size_t size_,
+  Chunk(samples_t samples_, size_t size_,
     bool sync_ = false, vtime_t time_ = 0):
     rawdata(0),
     samples(samples_),
@@ -82,7 +82,7 @@ public:
   {}
 
   // Rawdata format constructor
-  Chunk2(uint8_t *rawdata_, size_t size_,
+  Chunk(uint8_t *rawdata_, size_t size_,
     bool sync_ = false, vtime_t time_ = 0):
     rawdata(rawdata_),
     size(size_),

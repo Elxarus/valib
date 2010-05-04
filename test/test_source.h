@@ -10,14 +10,14 @@
 #include "source\raw_source.h"
 #include "source\generator.h"
 
-class TestSource: public Source2
+class TestSource: public Source
 {
 protected:
   const char *filename;
 
   RAWSource   file;   // file source
   NoiseGen    noise;  // noise source
-  Source2    *source; // current source
+  Source    *source; // current source
 
 public:
   TestSource()
@@ -53,7 +53,7 @@ public:
   virtual void reset()
   {}
 
-  virtual bool get_chunk(Chunk2 &out)
+  virtual bool get_chunk(Chunk &out)
   { return source? source->get_chunk(out): false; }
 
   virtual bool new_stream() const

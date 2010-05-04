@@ -58,7 +58,7 @@ public:
 
   virtual void reset();
   virtual bool init();
-  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
 };
 
 #endif

@@ -156,7 +156,7 @@ CacheFilter::reset()
 }
 
 bool
-CacheFilter::process(Chunk2 &in, Chunk2 &out)
+CacheFilter::process(Chunk &in, Chunk &out)
 {
   const int nch = spk.nch();
   const samples_t samples = in.samples;

@@ -10,7 +10,7 @@
 #include "../source.h"
 #include "../win32/winspk.h"
 
-class WAVSource : public Source2
+class WAVSource : public Source
 {
 protected:
   AutoFile f;
@@ -42,7 +42,7 @@ public:
   /////////////////////////////////////////////////////////
   // Source interface
 
-  virtual bool get_chunk(Chunk2 &out);
+  virtual bool get_chunk(Chunk &out);
 
   virtual bool new_stream() const
   { return false; }

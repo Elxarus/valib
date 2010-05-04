@@ -34,7 +34,7 @@ public:
   virtual bool can_open(Speakers spk) const
   { return true; }
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     if (spk.is_linear())
       zero_samples(in.samples, spk.nch(), in.size);
@@ -71,7 +71,7 @@ public:
   virtual bool can_open(Speakers new_spk) const
   { return true; }
 
-  virtual void process(const Chunk2 &chunk)
+  virtual void process(const Chunk &chunk)
   {
     if (!zero)
       return;
@@ -194,14 +194,14 @@ TEST(base_sink_filter, "SinkFilter")
   
   Passthrough pass_filter;
   ZeroFilter  zero_filter;
-  NullSink2   null_sink;
+  NullSink    null_sink;
   ZeroSink    zero_sink;
 
   NoiseGen src_noise(spk, seed, noise_size);
   ZeroGen  src_zero(spk, noise_size);
 
-  Chunk2 zero_chunk;
-  Chunk2 noise_chunk;
+  Chunk zero_chunk;
+  Chunk noise_chunk;
 
   // Init constructor test
 

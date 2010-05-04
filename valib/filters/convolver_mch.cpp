@@ -281,7 +281,7 @@ ConvolverMch::reset()
 }
 
 bool
-ConvolverMch::process(Chunk2 &in, Chunk2 &out)
+ConvolverMch::process(Chunk &in, Chunk &out)
 {
   int ch;
   int nch = spk.nch();
@@ -355,7 +355,7 @@ ConvolverMch::process(Chunk2 &in, Chunk2 &out)
 }
 
 bool
-ConvolverMch::flush(Chunk2 &out)
+ConvolverMch::flush(Chunk &out)
 {
   int ch, nch = spk.nch();
 

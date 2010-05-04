@@ -69,7 +69,7 @@ AGC::get_buffer() const
 }
 
 bool 
-AGC::fill_buffer(Chunk2 &chunk)
+AGC::fill_buffer(Chunk &chunk)
 {
   if (chunk.sync && sample[block] == 0)
   {
@@ -243,7 +243,7 @@ AGC::reset()
 }
 
 bool 
-AGC::process(Chunk2 &in, Chunk2 &out)
+AGC::process(Chunk &in, Chunk &out)
 {
   while (fill_buffer(in))
   {
@@ -266,7 +266,7 @@ AGC::process(Chunk2 &in, Chunk2 &out)
 }
 
 bool 
-AGC::flush(Chunk2 &out)
+AGC::flush(Chunk &out)
 {
   if (!sample[0] && !sample[1])
     return false;

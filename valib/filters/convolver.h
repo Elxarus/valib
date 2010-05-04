@@ -59,8 +59,8 @@ public:
   virtual bool init();
   virtual void uninit();
 
-  virtual bool process(Chunk2 &in, Chunk2 &out);
-  virtual bool flush(Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
+  virtual bool flush(Chunk &out);
   virtual void reset();
 };
 

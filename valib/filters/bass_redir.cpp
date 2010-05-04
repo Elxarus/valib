@@ -67,7 +67,7 @@ BassRedir::init()
 }
 
 bool 
-BassRedir::process(Chunk2 &in, Chunk2 &out)
+BassRedir::process(Chunk &in, Chunk &out)
 {
   // Passthrough (process inplace later)
   out = in;

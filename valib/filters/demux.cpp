@@ -13,7 +13,7 @@ Demux::can_open(Speakers new_spk) const
 }
 
 bool 
-Demux::process(Chunk2 &in, Chunk2 &out)
+Demux::process(Chunk &in, Chunk &out)
 {
   if (in.is_dummy())
     return false;

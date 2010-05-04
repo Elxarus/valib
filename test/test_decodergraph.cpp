@@ -69,7 +69,7 @@ public:
     log->open_group("Testing %s (%s %s %i)", file_name, 
       spk.format_text(), spk.mode_text(), spk.sample_rate);
 
-    Chunk2 in, out;
+    Chunk in, out;
     RAWSource src(spk, file_name, 2048);
 
     if (!src.is_open())

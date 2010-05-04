@@ -22,7 +22,7 @@
 #include "../filter.h"
 #include "passthrough.h"
 
-class FilterGraph : public Filter2
+class FilterGraph : public Filter
 {
 private:
   enum state_t { state_init, state_empty, state_processing, state_rebuild, state_done_flushing };
@@ -34,9 +34,9 @@ private:
     Node *next;
     Node *prev;
 
-    Filter2 *filter;
-    Chunk2   input;
-    Chunk2   output;
+    Filter *filter;
+    Chunk   input;
+    Chunk   output;
 
     state_t   state;
     rebuild_t rebuild;
@@ -55,7 +55,7 @@ private:
   bool build_chain(Node *node);
 
   bool chain_is_empty() const;
-  bool process_chain(Chunk2 &out);
+  bool process_chain(Chunk &out);
 
 protected:
   /////////////////////////////////////////////////////////
@@ -96,7 +96,7 @@ protected:
   // int next_id(int id, Speakers spk)
   //   Return id of the next node in the chain
   //
-  // Filter2 *init_filter(int id, Speakers spk)
+  // Filter *init_filter(int id, Speakers spk)
   //   Prepare the filter to be included into the chain.
   //
   // void uninit_filter(int id)
@@ -108,7 +108,7 @@ protected:
   virtual int next_id(int id, Speakers spk) const
   { return id == node_start? node_end: node_err; }
 
-  virtual Filter2 *init_filter(int id, Speakers spk)
+  virtual Filter *init_filter(int id, Speakers spk)
   { return 0; }
 
   virtual void uninit_filter(int id)
@@ -136,8 +136,8 @@ public:
   virtual bool open(Speakers spk);
   virtual void close();
 
-  virtual bool process(Chunk2 &in, Chunk2 &out);
-  virtual bool flush(Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
+  virtual bool flush(Chunk &out);
   virtual void reset();
 
   virtual bool can_open(Speakers new_spk) const
@@ -172,14 +172,14 @@ protected:
   struct Node
   {
     int id;
-    Filter2 *filter;
+    Filter *filter;
     string name;
 
-    Node(int id_, Filter2 *filter_, const string &name_ = string()):
+    Node(int id_, Filter *filter_, const string &name_ = string()):
     id(id_), filter(filter_), name(name_) {}
 
     bool operator ==(int id_)          const { return id == id_;         }
-    bool operator ==(Filter2 *filter_) const { return filter == filter_; }
+    bool operator ==(Filter *filter_) const { return filter == filter_; }
   };
 
   int id;
@@ -190,7 +190,7 @@ protected:
   // FilterGraph overrides
 
   virtual int next_id(int id, Speakers spk) const;
-  virtual Filter2 *init_filter(int id, Speakers spk);
+  virtual Filter *init_filter(int id, Speakers spk);
   virtual string get_name(int id) const;
 
 public:
@@ -233,10 +233,10 @@ public:
   //   Destroy the chain and release all filters
   //   immediately. Current processing is interrupted.
 
-  bool add_front(Filter2 *filter, const string &name = string());
-  bool add_back(Filter2 *filter, const string &name = string());
+  bool add_front(Filter *filter, const string &name = string());
+  bool add_back(Filter *filter, const string &name = string());
 
-  void remove(Filter2 *filter);
+  void remove(Filter *filter);
   void clear();
 
   void destroy();

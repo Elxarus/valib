@@ -10,7 +10,7 @@
 // Just a wrapper for Convolver and EqFIR
 ///////////////////////////////////////////////////////////////////////////////
 
-class Equalizer : public Filter2
+class Equalizer : public Filter
 {
 protected:
   EqFIR eq;
@@ -58,8 +58,8 @@ public:
   /////////////////////////////////////////////////////////
   // Processing
 
-  virtual bool process(Chunk2 &in, Chunk2 &out) { return conv.process(in, out); }
-  virtual bool flush(Chunk2 &out)           { return conv.flush(out);           }
+  virtual bool process(Chunk &in, Chunk &out) { return conv.process(in, out); }
+  virtual bool flush(Chunk &out)           { return conv.flush(out);           }
   virtual void reset()                      { conv.reset();                     }
   virtual bool new_stream() const           { return conv.new_stream();         }
 

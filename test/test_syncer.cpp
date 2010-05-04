@@ -325,7 +325,7 @@ test_syncer(Log *log)
   int sync_count;
   int runs;
 
-  Chunk2 chunk;
+  Chunk chunk;
   NoiseGen noise(spk_unknown, seed, noise_size, noise_size);
   noise.get_chunk(chunk);
 

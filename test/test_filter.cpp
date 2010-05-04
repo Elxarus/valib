@@ -6,14 +6,14 @@
 
 int test_all_filters(Log *log);
 
-int test_filter(Log *log, Filter2 *filter, const char *filter_name, 
+int test_filter(Log *log, Filter *filter, const char *filter_name, 
   Speakers spk_supported1, const char *file_name1, 
   Speakers spk_supported2, const char *file_name2, 
   Speakers spk_unsupported);
 
-int test_filter_format_change(Log *log, Filter2 *filter);
+int test_filter_format_change(Log *log, Filter *filter);
 
-int test_filter_process(Log *log, Filter2 *filter,
+int test_filter_process(Log *log, Filter *filter,
   Speakers spk_supported, const char *filename, 
   size_t block_size);
 
@@ -232,7 +232,7 @@ int test_all_filters(Log *log)
 
 
 
-int test_filter(Log *log, Filter2 *filter, const char *filter_name, 
+int test_filter(Log *log, Filter *filter, const char *filter_name, 
   Speakers spk_supported, const char *filename, 
   Speakers spk_supported2, const char *filename2, 
   Speakers spk_unsupported)
@@ -259,7 +259,7 @@ int test_filter(Log *log, Filter2 *filter, const char *filter_name,
 }
 
 
-int test_filter_format_change(Log *log, Filter2 *filter)
+int test_filter_format_change(Log *log, Filter *filter)
 {
   /////////////////////////////////////////////////////////
   // Format change crash test.
@@ -300,11 +300,11 @@ int test_filter_format_change(Log *log, Filter2 *filter)
   return 0;
 }
 
-int test_filter_process(Log *log, Filter2 *filter,
+int test_filter_process(Log *log, Filter *filter,
   Speakers spk_supported, const char *filename,
   size_t block_size)
 {
-  Chunk2 in, out;
+  Chunk in, out;
   TestSource src;
 
   if (!src.open(spk_supported, filename, block_size))

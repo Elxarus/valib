@@ -9,22 +9,22 @@
 #include "../filter.h"
 #include "../sink.h"
 
-class SinkFilter2 : public Sink2
+class SinkFilter2 : public Sink
 {
 protected:
-  Sink2   *sink;
-  Filter2 *filter;
+  Sink   *sink;
+  Filter *filter;
 
 public:
   SinkFilter2():
   sink(0), filter(0)
   {}
 
-  SinkFilter2(Sink2 *sink_, Filter2 *filter_):
+  SinkFilter2(Sink *sink_, Filter *filter_):
   sink(0), filter(0)
   { set(sink_, filter_); }
 
-  bool set(Sink2 *sink_, Filter2 *filter_)
+  bool set(Sink *sink_, Filter *filter_)
   {
     if (!sink_)
       return false;
@@ -39,8 +39,8 @@ public:
     filter = 0;
   }
 
-  Sink2   *get_sink()   const { return sink;   }
-  Filter2 *get_filter() const { return filter; }
+  Sink   *get_sink()   const { return sink;   }
+  Filter *get_filter() const { return filter; }
 
   /////////////////////////////////////////////////////////
   // Open/close the filter
@@ -87,7 +87,7 @@ public:
       filter->reset();
   }
 
-  virtual void process(const Chunk2 &in)
+  virtual void process(const Chunk &in)
   {
     if (!sink) return;
     if (!filter)
@@ -96,8 +96,8 @@ public:
       return;
     }
 
-    Chunk2 non_const_in = in;
-    Chunk2 out;
+    Chunk non_const_in = in;
+    Chunk out;
     while (filter->process(non_const_in, out))
     {
       if (filter->new_stream())
@@ -119,7 +119,7 @@ public:
       return;
     }
 
-    Chunk2 out;
+    Chunk out;
     while (filter->flush(out))
     {
       if (filter->new_stream())

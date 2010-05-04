@@ -141,7 +141,7 @@ Syncer::reset()
 }
 
 bool 
-Syncer::process(Chunk2 &in, Chunk2 &out)
+Syncer::process(Chunk &in, Chunk &out)
 {
   // passthrough
   out = in;

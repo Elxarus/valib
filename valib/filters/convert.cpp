@@ -26,7 +26,7 @@ Converter::find_conversion(int _format, Speakers _spk) const
 }
 
 bool
-Converter::convert_pcm2linear(Chunk2 &in, Chunk2 &out)
+Converter::convert_pcm2linear(Chunk &in, Chunk &out)
 {
   const size_t sample_size = spk.sample_size() * spk.nch();
   uint8_t *rawdata  = in.rawdata;
@@ -113,7 +113,7 @@ Converter::convert_pcm2linear(Chunk2 &in, Chunk2 &out)
 }
 
 bool
-Converter::convert_linear2pcm(Chunk2 &in, Chunk2 &out)
+Converter::convert_linear2pcm(Chunk &in, Chunk &out)
 {
   size_t n = MIN(in.size, nsamples);
   size_t out_size = n * sample_size(format) * spk.nch();
@@ -251,7 +251,7 @@ Converter::get_output() const
 }
 
 bool 
-Converter::process(Chunk2 &in, Chunk2 &out)
+Converter::process(Chunk &in, Chunk &out)
 {
   if (spk.format == format)
   {

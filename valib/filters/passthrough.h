@@ -20,7 +20,7 @@ public:
   virtual bool can_open(Speakers spk) const
   { return true; }
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     out = in;
     in.clear();

@@ -70,7 +70,7 @@ public:
   inline void restrict_exp(int8_t expcod[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int ngrps[AC3_NBLOCKS], int8_t exp[AC3_NBLOCKS][AC3_BLOCK_SAMPLES], int expstr[AC3_NBLOCKS], int endmant) const;
   inline int  encode_exp(int8_t expcod[AC3_BLOCK_SAMPLES], int8_t exp[AC3_BLOCK_SAMPLES], int expstr, int endmant) const;
 
-  bool fill_buffer(Chunk2 &in);
+  bool fill_buffer(Chunk &in);
   int  encode_frame();
 
 public:
@@ -80,13 +80,13 @@ public:
   bool set_bitrate(int bitrate);
 
   /////////////////////////////////////////////////////////
-  // Filter2 interface
+  // Filter interface
 
   virtual bool can_open(Speakers spk) const;
   virtual bool init();
 
   virtual void reset();
-  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
 
   virtual Speakers get_output() const
   { return Speakers(FORMAT_AC3, spk.mask, spk.sample_rate, 1.0, spk.relation); }
