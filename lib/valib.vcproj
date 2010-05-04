@@ -981,6 +981,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\sink\sink_null.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\sink\sink_raw.h"
 				>
 			</File>
