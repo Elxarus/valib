@@ -217,20 +217,9 @@ class FilterError;
 
 class Filter2 : boost::noncopyable
 {
-private:
-  Filter *thunk;
-
 public:
-  Filter2();
-  virtual ~Filter2();
-
-  /////////////////////////////////////////////////////////
-  // Old filter interface compatibility
-
-  Filter *operator->();
-  const Filter *operator->() const;
-  operator Filter *();
-  operator const Filter *() const;
+  Filter2() {};
+  virtual ~Filter2() {};
 
   /////////////////////////////////////////////////////////
   // Open/close the filter

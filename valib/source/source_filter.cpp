@@ -41,8 +41,6 @@ SourceFilter2::reset()
   is_new_stream = false;
   format_change = false;
   state = state_empty;
-
-  reset_thunk();
 }
 
 /////////////////////////////////////////////////////////

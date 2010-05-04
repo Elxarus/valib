@@ -11,7 +11,7 @@ static const int seed = 945098;
 TEST(slice, "SliceFilter test")
 
   int chunk_size = noise_size / 11;
-  Chunk chunk;
+  Chunk2 chunk;
   NoiseGen noise1;
   NoiseGen noise2;
   SliceFilter slice;
@@ -48,7 +48,7 @@ TEST(slice, "SliceFilter test")
 
   noise1.init(spk, seed, noise_size, chunk_size);
   noise2.init(spk, seed, noise_size, chunk_size);
-  noise2->get_chunk(&chunk);
+  noise2.get_chunk(chunk);
   slice.init(chunk_size, noise_size);
 
   CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
@@ -58,7 +58,7 @@ TEST(slice, "SliceFilter test")
 
   noise1.init(spk, seed, noise_size, chunk_size);
   noise2.init(spk, seed, noise_size / 2, chunk_size);
-  noise2->get_chunk(&chunk);
+  noise2.get_chunk(chunk);
   slice.init(chunk_size, noise_size / 2);
 
   CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);
@@ -68,7 +68,7 @@ TEST(slice, "SliceFilter test")
 
   noise1.init(spk, seed, noise_size, chunk_size);
   noise2.init(spk, seed, noise_size, chunk_size);
-  noise2->get_chunk(&chunk);
+  noise2.get_chunk(chunk);
   slice.init(chunk_size, 2 * noise_size);
 
   CHECK(compare(log, &noise1, &slice, &noise2, 0) == 0);

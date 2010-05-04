@@ -325,9 +325,9 @@ test_syncer(Log *log)
   int sync_count;
   int runs;
 
-  Chunk chunk;
+  Chunk2 chunk;
   NoiseGen noise(spk_unknown, seed, noise_size, noise_size);
-  noise->get_chunk(&chunk);
+  noise.get_chunk(chunk);
 
   CPUMeter cpu;
 

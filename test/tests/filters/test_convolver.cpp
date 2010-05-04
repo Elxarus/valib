@@ -24,8 +24,6 @@ TEST(convolver, "Convolver test")
   NoiseGen noise2;
   ZeroGen zero;
 
-  Chunk chunk;
-
   // Default constructor
 
   Convolver conv;

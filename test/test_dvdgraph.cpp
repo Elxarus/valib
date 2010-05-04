@@ -18,22 +18,29 @@ static const vtime_t time_per_test = 1.0;    // 1 sec for each speed test
 static const size_t min_data_size = 2048*12; // minimum data size to generate after state change:
                                              // size of 6-channel pcm16 data with more than maximum number of samples per frame
 
-class SinkAcceptSpdif : public NullSink
+class SinkAcceptSpdif : public SimpleSink
 {
 public:
-  SinkAcceptSpdif() {};
+  SinkAcceptSpdif() {}
+
+  virtual bool can_open(Speakers spk) const
+  { return true; }
+
+  virtual void process(const Chunk2 &) {}
 };
 
-class SinkRefuseSpdif : public NullSink
+class SinkRefuseSpdif : public SimpleSink
 {
 public:
-  SinkRefuseSpdif() {};
+  SinkRefuseSpdif() {}
 
-  bool query_input(Speakers _spk) const
+  virtual bool can_open(Speakers _spk) const
   { return _spk.format != FORMAT_SPDIF; }
+
+  virtual void process(const Chunk2 &) {}
 };
 
-class SinkAllow : public NullSink
+class SinkAllow : public SimpleSink
 {
 protected:
   Speakers allow;
@@ -42,7 +49,7 @@ public:
   SinkAllow(Speakers _allow)
   { allow = _allow; }
 
-  bool query_input(Speakers _spk) const
+  virtual bool can_open(Speakers _spk) const
   {
     // Check correctness of the proposed format
 
@@ -68,6 +75,8 @@ public:
 
     return true;
   }
+
+  virtual void process(const Chunk2 &) {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -271,7 +280,7 @@ public:
 
     SinkAcceptSpdif sink_accept_spdif;
     SinkRefuseSpdif sink_refuse_spdif;
-    const Sink *sink[] = { 0, &sink_accept_spdif, &sink_refuse_spdif };
+    const Sink2 *sink[] = { 0, &sink_accept_spdif, &sink_refuse_spdif };
     const bool spdif_allowed[] = { true, true, false };
     const char *sink_name[] = { "no sink", "sink that accepts spdif", "sink that refuses spdif" };
 
@@ -471,7 +480,7 @@ public:
     for (int isink_format = 0; isink_format < array_size(sink_allow); isink_format++)
     {
       SinkAllow sink(sink_allow[isink_format]);
-      sink.set_input(sink_state[isink_format]);
+      sink.open(sink_state[isink_format]);
       log->msg("Trying sink with allowed format: %s %s %i", 
         sink_allow[isink_format].format_text(), 
         sink_allow[isink_format].mode_text(),
@@ -522,7 +531,7 @@ public:
           }
 
           // Check sink compatibility
-          if (!sink.query_input(dvd.get_output()))
+          if (!sink.can_open(dvd.get_output()))
           {
             log->err_close("Input format: %s %s %i; User format: %s %s %i; Output format set to %s %s %i (incompatible with the sink format)", 
               in_spk.format_text(), in_spk.mode_text(), in_spk.sample_rate,

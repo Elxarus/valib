@@ -12,7 +12,6 @@
 #define VALIB_CHUNK_H
 
 #include "spk.h"
-#include "filter.h"
 #include <string>
 
 class ProcError
@@ -57,14 +56,6 @@ public:
 
   // Copy constructors
   Chunk2(const Chunk2 &chunk):
-    rawdata(chunk.rawdata),
-    samples(chunk.samples),
-    size(chunk.size),
-    sync(chunk.sync),
-    time(chunk.time)
-  {}
-
-  Chunk2(const Chunk &chunk):
     rawdata(chunk.rawdata),
     samples(chunk.samples),
     size(chunk.size),
@@ -164,15 +155,6 @@ public:
     sync = false;
   };
 
-  Chunk2 &operator =(const Chunk &chunk)
-  {
-    rawdata = chunk.rawdata;
-    samples = chunk.samples;
-    size = chunk.size;
-    sync = chunk.sync;
-    time = chunk.time;
-    return *this;
-  }
 };
 
 #endif
