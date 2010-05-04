@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "log.h"
-#include "filter2.h"
+#include "filter.h"
 #include "source.h"
 #include "vtime.h"
 

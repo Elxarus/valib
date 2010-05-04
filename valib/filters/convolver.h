@@ -2,7 +2,7 @@
 #define VALIB_CONVOLVER_H
 
 #include <math.h>
-#include "../filter2.h"
+#include "../filter.h"
 #include "../fir.h"
 #include "../sync.h"
 #include "../buffer.h"

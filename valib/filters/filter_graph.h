@@ -19,7 +19,7 @@
 #define VALIB_FILTER_GRAPH_H
 
 #include <list>
-#include "../filter2.h"
+#include "../filter.h"
 #include "passthrough.h"
 
 class FilterGraph : public Filter2

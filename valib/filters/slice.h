@@ -6,7 +6,7 @@
 #ifndef VALIB_SLICE_H
 #define VALIB_SLICE_H
 
-#include "../filter2.h"
+#include "../filter.h"
 
 class SliceFilter : public SimpleFilter
 {

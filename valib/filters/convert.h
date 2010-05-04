@@ -16,7 +16,7 @@
 #define VALIB_CONVERT_H
 
 #include "../buffer.h"
-#include "../filter2.h"
+#include "../filter.h"
 #include "convert_func.h"
 
 ///////////////////////////////////////////////////////////////////////////////

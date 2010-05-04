@@ -6,7 +6,7 @@
 #ifndef VALIB_SINK_FILTER_H
 #define VALIB_SINK_FILTER_H
 
-#include "../filter2.h"
+#include "../filter.h"
 #include "../sink.h"
 
 class SinkFilter2 : public Sink2

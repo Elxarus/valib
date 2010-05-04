@@ -313,11 +313,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\valib\filter2.cpp"
+				RelativePath="..\valib\filter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\filter2.h"
+				RelativePath="..\valib\filter.h"
 				>
 			</File>
 			<File

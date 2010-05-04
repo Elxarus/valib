@@ -5,7 +5,7 @@
 #ifndef VALIB_GAIN_H
 #define VALIB_GAIN_H
 
-#include "../filter2.h"
+#include "../filter.h"
 
 class Gain : public SamplesFilter
 {

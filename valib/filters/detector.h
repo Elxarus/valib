@@ -8,7 +8,7 @@
 #ifndef VALIB_DETECTOR_H
 #define VALIB_DETECTOR_H
 
-#include "../filter2.h"
+#include "../filter.h"
 #include "../parser.h"
 #include "../sync.h"
 #include "../parsers/multi_header.h"

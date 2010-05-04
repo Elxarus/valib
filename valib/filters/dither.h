@@ -13,7 +13,7 @@
 #define VALIB_DITHER_H
 
 #include <math.h>
-#include "../filter2.h"
+#include "../filter.h"
 #include "../rng.h"
 
 class Dither : public SamplesFilter

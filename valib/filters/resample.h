@@ -1,7 +1,7 @@
 #ifndef VALIB_RESAMPLE_H
 #define VALIB_RESAMPLE_H
 
-#include "../filter2.h"
+#include "../filter.h"
 #if RESAMPLE_PERF
 #include "../win32\cpu.h"
 #endif

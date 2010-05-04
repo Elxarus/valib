@@ -1,4 +1,4 @@
-#include "filter2.h"
+#include "filter.h"
 
 string
 Filter2::name() const

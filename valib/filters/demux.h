@@ -16,7 +16,7 @@
 #ifndef VALIB_DEMUX_H
 #define VALIB_DEMUX_H
 
-#include "../filter2.h"
+#include "../filter.h"
 #include "../mpeg_demux.h"
 
 class Demux : public SimpleFilter
