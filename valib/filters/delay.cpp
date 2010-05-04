@@ -105,7 +105,7 @@ Delay::reset()
 }
 
 bool 
-Delay::process(Chunk2 &in, Chunk2 &out)
+Delay::process(Chunk &in, Chunk &out)
 {
   // Passthrough
   out = in;

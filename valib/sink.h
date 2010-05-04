@@ -32,7 +32,7 @@
     Terminate the current stream and prepare to receive a new one.
     Audio renderer should immediately stop playback and drop buffered data.
 
-  void process(const Chunk2 &in);
+  void process(const Chunk &in);
     Put data into the sink. In contrast to Filter class, we do not need to
     call process() several times for the same chunk, and it does not change
     the data in the chunk.
@@ -74,17 +74,17 @@
 
 using std::string;
 
-class Sink2;
+class Sink;
 class SinkError;
 class SimpleSink;
 
 
 
-class Sink2 : boost::noncopyable
+class Sink : boost::noncopyable
 {
 public:
-  Sink2() {}
-  virtual ~Sink2() {}
+  Sink() {}
+  virtual ~Sink() {}
 
   /////////////////////////////////////////////////////////
   // Open/close the filter
@@ -97,7 +97,7 @@ public:
   // Processing
 
   virtual void reset() = 0;
-  virtual void process(const Chunk2 &in) = 0;
+  virtual void process(const Chunk &in) = 0;
   virtual void flush() = 0;
 
   // Sink state
@@ -115,7 +115,7 @@ public:
 class SinkError : public ProcError
 {
 public:
-  SinkError(Sink2 *sink_, int error_code_, string text_):
+  SinkError(Sink *sink_, int error_code_, string text_):
   ProcError(sink_->name(), sink_->info(), error_code_, text_)
   {}
 };
@@ -128,7 +128,7 @@ public:
 // When filter sink initialization, it should override init()/uninit()
 // placeholders, instead of open()/close().
 
-class SimpleSink : public Sink2
+class SimpleSink : public Sink
 {
 protected:
   bool f_open;

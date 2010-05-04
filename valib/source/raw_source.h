@@ -9,7 +9,7 @@
 #include "../auto_file.h"
 #include "../source.h"
 
-class RAWSource: public Source2
+class RAWSource: public Source
 {
 protected:
   AutoFile f;
@@ -47,7 +47,7 @@ public:
   /////////////////////////////////////////////////////////
   // Source interface
 
-  virtual bool get_chunk(Chunk2 &out);
+  virtual bool get_chunk(Chunk &out);
 
   virtual void reset()
   { seek(0); }

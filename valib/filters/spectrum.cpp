@@ -120,7 +120,7 @@ Spectrum::init()
 }
 
 bool
-Spectrum::process(Chunk2 &in, Chunk2 &out)
+Spectrum::process(Chunk &in, Chunk &out)
 {
   out = in;
   in.clear();

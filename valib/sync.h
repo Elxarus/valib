@@ -94,13 +94,13 @@ public:
   { reset(); }
 
   // Track timestamps automatically by counting samples
-  inline void receive_linear(Chunk2 &chunk);
-  inline void send_linear(Chunk2 &chunk, int sample_rate);
+  inline void receive_linear(Chunk &chunk);
+  inline void send_linear(Chunk &chunk, int sample_rate);
 
   // Track timestamps manually
-  inline void receive_sync(const Chunk2 &chunk, pos_t pos);
-  inline void send_frame_sync(Chunk2 &chunk);
-  inline void send_sync(Chunk2 &chunk, double size_to_time);
+  inline void receive_sync(const Chunk &chunk, pos_t pos);
+  inline void send_frame_sync(Chunk &chunk);
+  inline void send_sync(Chunk &chunk, double size_to_time);
 
   inline void drop(size_t size);
   inline void reset();
@@ -109,7 +109,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 inline void
-SyncHelper::receive_linear(Chunk2 &chunk)
+SyncHelper::receive_linear(Chunk &chunk)
 {
   if (chunk.sync)
   {
@@ -131,7 +131,7 @@ SyncHelper::receive_linear(Chunk2 &chunk)
 }
 
 inline void
-SyncHelper::send_linear(Chunk2 &chunk, int sample_rate)
+SyncHelper::send_linear(Chunk &chunk, int sample_rate)
 {
   assert((size_t)nsamples >= chunk.size);
   nsamples -= chunk.size;
@@ -157,7 +157,7 @@ SyncHelper::shift()
 }
 
 inline void
-SyncHelper::receive_sync(const Chunk2 &chunk, pos_t _pos)
+SyncHelper::receive_sync(const Chunk &chunk, pos_t _pos)
 {
   if (chunk.sync)
   {
@@ -178,7 +178,7 @@ SyncHelper::receive_sync(const Chunk2 &chunk, pos_t _pos)
 }
 
 inline void
-SyncHelper::send_frame_sync(Chunk2 &chunk)
+SyncHelper::send_frame_sync(Chunk &chunk)
 {
   if (pos[0] <= 0)
   {
@@ -189,7 +189,7 @@ SyncHelper::send_frame_sync(Chunk2 &chunk)
 }
 
 inline void
-SyncHelper::send_sync(Chunk2 &chunk, double size_to_time)
+SyncHelper::send_sync(Chunk &chunk, double size_to_time)
 {
   if (pos[0] <= 0)
   {

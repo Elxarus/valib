@@ -125,7 +125,7 @@ AC3Enc::set_bitrate(int _bitrate)
 
 
 bool 
-AC3Enc::fill_buffer(Chunk2 &in)
+AC3Enc::fill_buffer(Chunk &in)
 {
   size_t n = AC3_FRAME_SAMPLES - sample;
   if (in.size < n)
@@ -259,7 +259,7 @@ AC3Enc::init()
 }
 
 bool
-AC3Enc::process(Chunk2 &in, Chunk2 &out)
+AC3Enc::process(Chunk &in, Chunk &out)
 {
   if (in.sync)
   {

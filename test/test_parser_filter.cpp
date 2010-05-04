@@ -86,7 +86,7 @@ public:
     const size_t max_frame_size = frame_parser->header_parser()->max_frame_size();
 
     // Prepare noise buffer
-    Chunk2 noise_chunk;
+    Chunk noise_chunk;
     NoiseGen noise(spk_rawdata, seed, int(max_frame_size * 2.5), int(max_frame_size * 2.5));
     noise.get_chunk(noise_chunk);
 
@@ -141,7 +141,7 @@ public:
     int i = 0; // input chunk index
     int o = 0; // output chunk index
 
-    Chunk2 in, out;
+    Chunk in, out;
     for (i = 0; i < array_size(input_chunks); i++)
     {
       // Fill the chunk

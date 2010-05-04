@@ -21,7 +21,7 @@ protected:
   bool     is_new_stream;    // new stream found
   int      errors;           // number of parsing errors
 
-  bool load_frame(Chunk2 &in);
+  bool load_frame(Chunk &in);
 
 public:
   ParserFilter();
@@ -46,7 +46,7 @@ public:
   virtual bool can_open(Speakers spk) const;
   virtual void reset();
 
-  virtual bool process(Chunk2 &in, Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
 
   virtual bool new_stream() const
   { return is_new_stream; }

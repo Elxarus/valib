@@ -8,16 +8,16 @@
 
 #include "../sink.h"
 
-class NullSink2 : public SimpleSink
+class NullSink : public SimpleSink
 {
 public:
-  NullSink2()
+  NullSink()
   {}
 
   virtual bool can_open(Speakers spk) const
   { return true; }
 
-  virtual void process(const Chunk2 &in)
+  virtual void process(const Chunk &in)
   {}
 };
 

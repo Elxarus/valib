@@ -398,7 +398,7 @@ DSoundSink::uninit()
 }
 
 void
-DSoundSink::process(const Chunk2 &chunk)
+DSoundSink::process(const Chunk &chunk)
 {
   /////////////////////////////////////////////////////////
   // We may not take output lock here because close() tries

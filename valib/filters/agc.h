@@ -49,7 +49,7 @@ protected:
 
   inline size_t next_block();
 
-  bool fill_buffer(Chunk2 &chunk);
+  bool fill_buffer(Chunk &chunk);
   void process();
 
 public:
@@ -79,10 +79,10 @@ public:
   void   set_buffer(size_t nsamples);
 
   /////////////////////////////////////////////////////////
-  // Filter2 interface
+  // Filter interface
 
-  virtual bool process(Chunk2 &in, Chunk2 &out);
-  virtual bool flush(Chunk2 &out);
+  virtual bool process(Chunk &in, Chunk &out);
+  virtual bool flush(Chunk &out);
   virtual void reset();
 };
 

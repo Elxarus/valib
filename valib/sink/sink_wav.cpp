@@ -184,7 +184,7 @@ WAVSink::init()
 }
 
 void
-WAVSink::process(const Chunk2 &chunk)
+WAVSink::process(const Chunk &chunk)
 {
   f.write(chunk.rawdata, chunk.size);
   data_size += chunk.size;

@@ -28,7 +28,7 @@ public:
   /////////////////////////////////////////////////////////
   // SamplesFilter overrides
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     out = in;
     in.clear();

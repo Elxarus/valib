@@ -89,7 +89,7 @@ ParserFilter::can_open(Speakers spk) const
 }
 
 bool
-ParserFilter::process(Chunk2 &in, Chunk2 &out)
+ParserFilter::process(Chunk &in, Chunk &out)
 {
   if (in.sync)
   {
@@ -126,7 +126,7 @@ ParserFilter::process(Chunk2 &in, Chunk2 &out)
 }
 
 bool
-ParserFilter::load_frame(Chunk2 &in)
+ParserFilter::load_frame(Chunk &in)
 {
   size_t old_data_size = stream.get_buffer_size() + in.size;
 

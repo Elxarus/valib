@@ -25,7 +25,7 @@ protected:
     if (id == node_gain) return node_end;
     return node_err;
   }
-  virtual Filter2 *init_filter(int id, Speakers spk)
+  virtual Filter *init_filter(int id, Speakers spk)
   {
     if (id == node_gain) return &gain;
     return 0;
@@ -62,7 +62,7 @@ public:
   virtual void reset()
   { buf_pos = 0; }
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     size_t buf_remains = buf_size - buf_pos;
     if (in.size < buf_remains)
@@ -82,7 +82,7 @@ public:
     return true;
   }
 
-  virtual bool flush(Chunk2 &out)
+  virtual bool flush(Chunk &out)
   {
     if (buf_pos <= 0)
       return false;
@@ -123,7 +123,7 @@ public:
   /////////////////////////////////////////////////////////
   // SamplesFilter overrides
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     if (!Gain::process(in, out))
       return false;
@@ -141,7 +141,7 @@ public:
   virtual void reset()
   { sample = 0; }
 
-  virtual bool flush(Chunk2 &out)
+  virtual bool flush(Chunk &out)
   {
     sample = 0;
     return false;
@@ -174,7 +174,7 @@ public:
     out_spk = spk_unknown;
   }
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     format_change = out_spk.is_unknown();
     if (out_spk.is_unknown())
@@ -224,7 +224,7 @@ public:
   virtual void reset()
   { chunk_count = 0; }
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     if (in.is_dummy())
       return false;
@@ -243,9 +243,9 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // CallCounter
-// Counts calls to Filter2 interface functions.
+// Counts calls to Filter interface functions.
 
-class CallCounter : public Filter2
+class CallCounter : public Filter
 {
 protected:
   Speakers spk;
@@ -295,7 +295,7 @@ public:
   virtual void reset()
   { n_reset++; }
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     n_process++;
     out = in;
@@ -303,7 +303,7 @@ public:
     return !out.is_dummy();
   }
 
-  virtual bool flush(Chunk2 &out)
+  virtual bool flush(Chunk &out)
   {
     n_flush++;
     return false;
@@ -390,8 +390,8 @@ TEST(filter_graph, "FilterGraph")
     LinearBuffer tst_linear_buffer(buf_size);
     OfddMock      tst_ofdd;
 
-    Filter2 *ref[] = { &ref_pass, &ref_gain, &ref_step_gain, &ref_linear_buffer, &ref_ofdd };
-    Filter2 *tst[] = { &tst_pass, &tst_gain, &tst_step_gain, &tst_linear_buffer, &tst_ofdd };
+    Filter *ref[] = { &ref_pass, &ref_gain, &ref_step_gain, &ref_linear_buffer, &ref_ofdd };
+    Filter *tst[] = { &tst_pass, &tst_gain, &tst_step_gain, &tst_linear_buffer, &tst_ofdd };
 
     for (int i = 0; i < array_size(tst); i++)
     {
@@ -433,7 +433,7 @@ TEST(filter_graph, "FilterGraph")
     OfddMock     tst_ofdd;
 
     struct {
-      Filter2 *f;
+      Filter *f;
       double gain;
       int step_samples;
     } tests[] = {
@@ -579,7 +579,7 @@ TEST(filter_graph, "FilterGraph")
       graph_filter.open(spk);
       CHECK(graph_filter.is_open());
 
-      Chunk2 in, out;
+      Chunk in, out;
       NoiseGen noise(spk, seed, noise_size);
       while (noise.get_chunk(in))
         while (graph_filter.process(in, out))

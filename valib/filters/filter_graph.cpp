@@ -161,7 +161,7 @@ FilterGraph::chain_is_empty() const
 }
 
 bool
-FilterGraph::process_chain(Chunk2 &out)
+FilterGraph::process_chain(Chunk &out)
 {
   bool allow_chain_rebuild = false;
 
@@ -316,7 +316,7 @@ FilterGraph::process_chain(Chunk2 &out)
 }
 
 bool
-FilterGraph::process(Chunk2 &in, Chunk2 &out)
+FilterGraph::process(Chunk &in, Chunk &out)
 {
   if (!chain_is_empty())
     if (process_chain(out))
@@ -331,7 +331,7 @@ FilterGraph::process(Chunk2 &in, Chunk2 &out)
 }
 
 bool
-FilterGraph::flush(Chunk2 &out)
+FilterGraph::flush(Chunk &out)
 {
   start.flushing = true;
   return process_chain(out);
@@ -442,7 +442,7 @@ FilterGraph::build_chain(Node *node)
     // Build a new node
 
     // create & init the filter
-    Filter2 *filter = init_filter(next_node_id, next_spk);
+    Filter *filter = init_filter(next_node_id, next_spk);
     if (!filter)
       return false;
 
@@ -531,7 +531,7 @@ FilterChain::~FilterChain()
 {}
 
 bool
-FilterChain::add_front(Filter2 *filter, const std::string &name)
+FilterChain::add_front(Filter *filter, const std::string &name)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
@@ -542,7 +542,7 @@ FilterChain::add_front(Filter2 *filter, const std::string &name)
 }
 
 bool
-FilterChain::add_back(Filter2 *filter, const std::string &name)
+FilterChain::add_back(Filter *filter, const std::string &name)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
@@ -553,7 +553,7 @@ FilterChain::add_back(Filter2 *filter, const std::string &name)
 }
 
 void
-FilterChain::remove(Filter2 *filter)
+FilterChain::remove(Filter *filter)
 {
   if (!filter) false;
   nodes.erase(find(nodes.begin(), nodes.end(), filter));
@@ -586,7 +586,7 @@ FilterChain::next_id(int id_, Speakers spk_) const
   return it->id;
 }
 
-Filter2 *
+Filter *
 FilterChain::init_filter(int id_, Speakers spk_)
 {
   const_list_iter it = find(nodes.begin(), nodes.end(), id_);

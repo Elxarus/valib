@@ -26,7 +26,7 @@ public:
   virtual bool can_open(Speakers spk) const
   { return true; }
 
-  virtual void process(const Chunk2 &) {}
+  virtual void process(const Chunk &) {}
 };
 
 class SinkRefuseSpdif : public SimpleSink
@@ -37,7 +37,7 @@ public:
   virtual bool can_open(Speakers _spk) const
   { return _spk.format != FORMAT_SPDIF; }
 
-  virtual void process(const Chunk2 &) {}
+  virtual void process(const Chunk &) {}
 };
 
 class SinkAllow : public SimpleSink
@@ -76,7 +76,7 @@ public:
     return true;
   }
 
-  virtual void process(const Chunk2 &) {}
+  virtual void process(const Chunk &) {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -209,7 +209,7 @@ public:
         test_spk.level = 1.0;
       }
 
-      Chunk2 in, out;
+      Chunk in, out;
       while (dvd.get_output() != test_spk)
         if (!dvd.process(in, out))
           if (!src.get_chunk(in))
@@ -280,7 +280,7 @@ public:
 
     SinkAcceptSpdif sink_accept_spdif;
     SinkRefuseSpdif sink_refuse_spdif;
-    const Sink2 *sink[] = { 0, &sink_accept_spdif, &sink_refuse_spdif };
+    const Sink *sink[] = { 0, &sink_accept_spdif, &sink_refuse_spdif };
     const bool spdif_allowed[] = { true, true, false };
     const char *sink_name[] = { "no sink", "sink that accepts spdif", "sink that refuses spdif" };
 
@@ -325,7 +325,7 @@ public:
       dvd.set_sink(0);
     }
 
-    Chunk2 in, out;
+    Chunk in, out;
     while (src.get_chunk(in))
       while (dvd.process(in, out))
         /*do nothing*/;
@@ -334,14 +334,14 @@ public:
     return log->close_group();
   }
 
-  int test_decode(Source2 *src)
+  int test_decode(Source *src)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(false, 0, false, false, false);
     return test_cycle("test_decode()", src, SPDIF_MODE_DISABLED, "decode", FORMAT_PCM16);
   }
 
-  int test_passthrough(Source2 *src, bool spdif_allowed)
+  int test_passthrough(Source *src, bool spdif_allowed)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(true, FORMAT_CLASS_SPDIFABLE, false, false, false);
@@ -351,7 +351,7 @@ public:
       return test_cycle("test_passthrough()", src, SPDIF_MODE_DISABLED, "sink refused", FORMAT_PCM16);
   }
 
-  int test_encode(Source2 *src, bool spdif_allowed, bool can_encode)
+  int test_encode(Source *src, bool spdif_allowed, bool can_encode)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, 0, 0));
     dvd.set_spdif(true, 0, false, true, false);
@@ -365,16 +365,16 @@ public:
       return test_cycle("test_encode()", src, SPDIF_MODE_DISABLED, "sink refused", FORMAT_PCM16);
   }
 
-  int test_stereo_passthrough(Source2 *src)
+  int test_stereo_passthrough(Source *src)
   {
     dvd.set_user(Speakers(FORMAT_PCM16, MODE_STEREO, 0));
     dvd.set_spdif(true, 0, false, true, true);
     return test_cycle("test_stereo_passthrough()", src, SPDIF_MODE_DISABLED, "stereo pcm passthrough", FORMAT_PCM16);
   }
 
-  int test_cycle(const char *caller, Source2 *src, int status, const char *status_text, int out_format)
+  int test_cycle(const char *caller, Source *src, int status, const char *status_text, int out_format)
   {
-    Chunk2 in, out;
+    Chunk in, out;
 
     // process until status change
     // (filter may be either full or empty)

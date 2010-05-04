@@ -13,7 +13,7 @@
 #include "../parsers/multi_frame.h"
 
 
-class AudioDecoder : public Filter2
+class AudioDecoder : public Filter
 {
 protected:
   ParserFilter parser;
@@ -51,8 +51,8 @@ public:
   /////////////////////////////////////////////////////////
   // Processing
 
-  virtual bool process(Chunk2 &in, Chunk2 &out) { return parser.process(in, out); }
-  virtual bool flush(Chunk2 &out)           { return parser.flush(out);           }
+  virtual bool process(Chunk &in, Chunk &out) { return parser.process(in, out); }
+  virtual bool flush(Chunk &out)           { return parser.flush(out);           }
   virtual void reset()                      { parser.reset();                     }
 
   virtual bool new_stream() const           { return parser.new_stream();    }

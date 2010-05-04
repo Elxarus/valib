@@ -1,7 +1,7 @@
 #include "sink.h"
 
 string
-Sink2::name() const
+Sink::name() const
 {
   string type_name = typeid(*this).name();
   if (type_name.compare(0, 6, "class ") == 0)

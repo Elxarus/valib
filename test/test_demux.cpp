@@ -74,7 +74,7 @@ public:
     /////////////////////////////////////////////////////////
     // Noise speed test
 
-    Chunk2 in, out;
+    Chunk in, out;
     NoiseGen noise(Speakers(FORMAT_PES, 0, 0), seed, noise_size, noise_size);
     noise.get_chunk(in);
 
@@ -103,7 +103,7 @@ public:
     /////////////////////////////////////////////////////////
     // File speed test
 
-    Chunk2 in, out;
+    Chunk in, out;
     RAWSource f(Speakers(FORMAT_PES, 0, 0), file_name);
 
     CPUMeter cpu;

@@ -91,7 +91,7 @@ public:
     /////////////////////////////////////////////////////////
     // Noise speed test
 
-    Chunk2 in, out;
+    Chunk in, out;
     NoiseGen noise(spk, seed, noise_size, noise_size);
     noise.get_chunk(in);
 

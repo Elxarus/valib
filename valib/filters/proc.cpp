@@ -180,7 +180,7 @@ AudioProcessor::rebuild_chain()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Filter2 interface
+// Filter interface
 
 bool
 AudioProcessor::can_open(Speakers new_spk) const
@@ -232,7 +232,7 @@ AudioProcessor::reset()
 }
 
 bool
-AudioProcessor::process(Chunk2 &in, Chunk2 &out)
+AudioProcessor::process(Chunk &in, Chunk &out)
 {
   if (new_stream_state == show_new_stream)
     new_stream_state = no_new_stream;
@@ -257,7 +257,7 @@ AudioProcessor::process(Chunk2 &in, Chunk2 &out)
 }
 
 bool
-AudioProcessor::flush(Chunk2 &out)
+AudioProcessor::flush(Chunk &out)
 { return chain.flush(out); }
 
 bool

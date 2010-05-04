@@ -22,7 +22,7 @@ class LineGen;
 
 
 
-class Generator : public Source2
+class Generator : public Source
 {
 protected:
   Speakers  spk;
@@ -56,7 +56,7 @@ public:
   /////////////////////////////////////////////////////////
   // Source interface
 
-  virtual bool get_chunk(Chunk2 &out);
+  virtual bool get_chunk(Chunk &out);
 
   virtual void reset()
   { stream_pos = 0; }

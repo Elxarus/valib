@@ -71,7 +71,7 @@ public:
   Syncer         syncer;
 
 public:
-  DVDGraph(int nsamples = 4096, const Sink2 *sink = 0);
+  DVDGraph(int nsamples = 4096, const Sink *sink = 0);
 
   /////////////////////////////////////////////////////////////////////////////
   // DVDGraph interface
@@ -82,8 +82,8 @@ public:
   Speakers get_user() const;
 
   // Sink
-  void set_sink(const Sink2 *sink);
-  const Sink2 *get_sink() const;
+  void set_sink(const Sink *sink);
+  const Sink *get_sink() const;
 
   bool get_query_sink() const;
   void set_query_sink(bool query_sink);
@@ -166,7 +166,7 @@ protected:
   int      spdif_status;
   mutable int spdif_err;
 
-  const Sink2 *sink;
+  const Sink *sink;
   bool query_sink;
 
   enum state_t 
@@ -189,7 +189,7 @@ protected:
   // FilterGraph2 overrides
 
   virtual std::string get_name(int id) const;
-  virtual Filter2 *init_filter(int id, Speakers spk);
+  virtual Filter *init_filter(int id, Speakers spk);
   virtual int next_id(int is, Speakers spk) const;
 
   // helper functions

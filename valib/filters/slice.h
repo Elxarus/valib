@@ -23,7 +23,7 @@ public:
   // SimpleFilter overrides
 
   void reset();
-  bool process(Chunk2 &in, Chunk2 &out);
+  bool process(Chunk &in, Chunk &out);
 
   virtual bool can_open(Speakers spk) const
   { return true; }

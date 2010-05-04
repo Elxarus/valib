@@ -1,7 +1,7 @@
 #include "source.h"
 
 string
-Source2::name() const
+Source::name() const
 {
   string type_name = typeid(*this).name();
   if (type_name.compare(0, 6, "class ") == 0)

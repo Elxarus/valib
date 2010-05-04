@@ -134,7 +134,7 @@ Mixer::init()
 }
 
 bool 
-Mixer::process(Chunk2 &in, Chunk2 &out)
+Mixer::process(Chunk &in, Chunk &out)
 {
   if (is_buffered())
   {

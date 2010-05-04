@@ -172,7 +172,7 @@ DSoundSource::captured_time() const
 // Source interface
 
 bool 
-DSoundSource::get_chunk(Chunk2 &chunk)
+DSoundSource::get_chunk(Chunk &chunk)
 {
   if (!ds_buf)
     return false;

@@ -5,7 +5,7 @@
     Reset the source into initial state and set stream position to the start of
     the stream.
 
-  bool get_chunk(Chunk2 &out);
+  bool get_chunk(Chunk &out);
     Get a new chunk from the source. Returns true when the chunk made
     successfully, and false when it is no more data to return (end of the
     stream). Throws SourceError when some error occurs and source cannot
@@ -46,22 +46,22 @@
 
 using std::string;
 
-class Source2;
+class Source;
 class SourceError;
 
 
 
-class Source2 : boost::noncopyable
+class Source : boost::noncopyable
 {
 public:
-  Source2() {}
-  virtual ~Source2() {}
+  Source() {}
+  virtual ~Source() {}
 
   /////////////////////////////////////////////////////////
   // Processing
 
   virtual void reset() = 0;
-  virtual bool get_chunk(Chunk2 &out) = 0;
+  virtual bool get_chunk(Chunk &out) = 0;
   virtual bool new_stream() const = 0;
   virtual Speakers get_output() const = 0;
 
@@ -76,7 +76,7 @@ public:
 class SourceError : public ProcError
 {
 public:
-  SourceError(Source2 *source_, int error_code_, string text_):
+  SourceError(Source *source_, int error_code_, string text_):
   ProcError(source_->name(), source_->info(), error_code_, text_)
   {}
 };

@@ -22,7 +22,7 @@ SliceFilter::reset()
 }
 
 bool
-SliceFilter::process(Chunk2 &in, Chunk2 &out)
+SliceFilter::process(Chunk &in, Chunk &out)
 {
   out = in;
   in.clear();

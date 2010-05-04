@@ -42,7 +42,7 @@ RAWSource::close()
 }
 
 bool
-RAWSource::get_chunk(Chunk2 &chunk)
+RAWSource::get_chunk(Chunk &chunk)
 {
   if (!f.is_open() || f.eof())
     return false;

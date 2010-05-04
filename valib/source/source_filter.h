@@ -9,12 +9,12 @@
 #include "../filter.h"
 #include "../source.h"
 
-class SourceFilter2 : public Source2
+class SourceFilter2 : public Source
 {
 protected:
-  Source2 *source;
-  Filter2 *filter;
-  Chunk2 chunk;
+  Source *source;
+  Filter *filter;
+  Chunk chunk;
 
   bool is_new_stream;
   bool format_change;
@@ -25,21 +25,21 @@ public:
   source(0), filter(0)
   {}
 
-  SourceFilter2(Source2 *source_, Filter2 *filter_):
+  SourceFilter2(Source *source_, Filter *filter_):
   source(0), filter(0)
   { set(source_, filter_); }
 
-  bool set(Source2 *source_, Filter2 *filter_);
+  bool set(Source *source_, Filter *filter_);
   void release();
 
-  Source2 *get_source() const { return source; }
-  Filter2 *get_filter() const { return filter; }
+  Source *get_source() const { return source; }
+  Filter *get_filter() const { return filter; }
 
   /////////////////////////////////////////////////////////
   // Source interface
 
   virtual void reset();
-  virtual bool get_chunk(Chunk2 &out);
+  virtual bool get_chunk(Chunk &out);
   virtual bool new_stream() const;
   virtual Speakers get_output() const;
 };

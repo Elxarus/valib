@@ -190,7 +190,7 @@ Levels::reset()
 }
 
 bool
-Levels::process(Chunk2 &in, Chunk2 &out)
+Levels::process(Chunk &in, Chunk &out)
 {
   out = in;
   in.clear();

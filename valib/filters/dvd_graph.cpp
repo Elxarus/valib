@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "dvd_graph.h"
 
-DVDGraph::DVDGraph(int _nsamples, const Sink2 *_sink)
+DVDGraph::DVDGraph(int _nsamples, const Sink *_sink)
 :proc(_nsamples)
 {
   user_spk = Speakers(FORMAT_PCM16, 0, 0);
@@ -65,12 +65,12 @@ DVDGraph::get_user() const
 // Sink to query
 
 void 
-DVDGraph::set_sink(const Sink2 *_sink)
+DVDGraph::set_sink(const Sink *_sink)
 {
   sink = _sink;
 }
 
-const Sink2 *
+const Sink *
 DVDGraph::get_sink() const
 {
   return sink;
@@ -480,7 +480,7 @@ DVDGraph::get_name(int node) const
   return 0;
 }
 
-Filter2 *
+Filter *
 DVDGraph::init_filter(int node, Speakers spk)
 {
   switch (node)

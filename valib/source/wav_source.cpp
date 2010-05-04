@@ -234,7 +234,7 @@ WAVSource::wave_format() const
 // Source interface
 
 bool
-WAVSource::get_chunk(Chunk2 &chunk)
+WAVSource::get_chunk(Chunk &chunk)
 {
   if (!data_remains || f.eof() || !f.is_open() )
     return false;

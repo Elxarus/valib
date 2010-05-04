@@ -29,7 +29,7 @@ public:
   virtual void reset()
   { counter = 0; }
 
-  virtual bool process(Chunk2 &in, Chunk2 &out)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     out = in;
     in.clear();

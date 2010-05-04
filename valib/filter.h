@@ -1,5 +1,5 @@
 /*
-  Filter2
+  Filter
   Base interface for all filters
 
   /////////////////////////////////////////////////////////
@@ -10,7 +10,7 @@
   // Simple case: no format changes
 
   Filter *filter;
-  Chunk2 in, out;
+  Chunk in, out;
   ...
 
   try
@@ -46,8 +46,8 @@
     ...
     while (has_more_data())
     {
-      Chunk2 in = get_more_data();
-      Chunk2 out;
+      Chunk in = get_more_data();
+      Chunk out;
 
       if (new_stream())
       {
@@ -208,18 +208,18 @@
 
 using std::string;
 
-class Filter2;
+class Filter;
 class FilterError;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Filter2
+// Filter
 // Base interface for all filters
 
-class Filter2 : boost::noncopyable
+class Filter : boost::noncopyable
 {
 public:
-  Filter2() {};
-  virtual ~Filter2() {};
+  Filter() {};
+  virtual ~Filter() {};
 
   /////////////////////////////////////////////////////////
   // Open/close the filter
@@ -232,8 +232,8 @@ public:
   // Processing
 
   virtual void reset() = 0;
-  virtual bool process(Chunk2 &in, Chunk2 &out) = 0;
-  virtual bool flush(Chunk2 &out) = 0;
+  virtual bool process(Chunk &in, Chunk &out) = 0;
+  virtual bool flush(Chunk &out) = 0;
   virtual bool new_stream() const = 0;
 
   // Filter state
@@ -253,21 +253,21 @@ public:
 class FilterError : public ProcError
 {
 public:
-  FilterError(Filter2 *filter_, int error_code_, string text_):
+  FilterError(Filter *filter_, int error_code_, string text_):
   ProcError(filter_->name(), filter_->info(), error_code_, text_)
   {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // SimpleFilter
-// Default implementation for the most of the Filter2 interface. Following
+// Default implementation for the most of the Filter interface. Following
 // functions left unimplemented: can_open() and process()
 //
 // When filter requires initialization, it should override init()/uninit()
 // placeholders, instead of open()/close().
 
 
-class SimpleFilter : public Filter2
+class SimpleFilter : public Filter
 {
 protected:
   bool f_open;
@@ -316,7 +316,7 @@ public:
   virtual void reset()
   {}
 
-  virtual bool flush(Chunk2 &out)
+  virtual bool flush(Chunk &out)
   { return false; }
 
   virtual bool new_stream() const

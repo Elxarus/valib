@@ -58,7 +58,7 @@ public:
     return f.is_open() && new_spk.format != FORMAT_LINEAR;
   }
 
-  virtual void process(const Chunk2 &chunk)               
+  virtual void process(const Chunk &chunk)               
   {
     f.write(chunk.rawdata, chunk.size);
   }

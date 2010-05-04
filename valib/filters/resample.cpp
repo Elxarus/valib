@@ -509,7 +509,7 @@ Resample::reset()
 }
 
 bool
-Resample::process(Chunk2 &in, Chunk2 &out)
+Resample::process(Chunk &in, Chunk &out)
 {
   ///////////////////////////////////////////////////////
   // Passthrough
@@ -570,7 +570,7 @@ Resample::process(Chunk2 &in, Chunk2 &out)
 }
 
 bool
-Resample::flush(Chunk2 &out)
+Resample::flush(Chunk &out)
 {
   if (!need_flushing())
     return false;

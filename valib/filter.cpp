@@ -1,7 +1,7 @@
 #include "filter.h"
 
 string
-Filter2::name() const
+Filter::name() const
 {
   string type_name = typeid(*this).name();
   if (type_name.compare(0, 6, "class ") == 0)

@@ -97,7 +97,7 @@ public:
     /////////////////////////////////////////////////////////
     // Noise speed test
 
-    Chunk2 in, out;
+    Chunk in, out;
     NoiseGen noise(Speakers(FORMAT_AC3, 0, 0), seed, noise_size, noise_size);
     noise.get_chunk(in);
 
@@ -126,7 +126,7 @@ public:
     /////////////////////////////////////////////////////////
     // File speed test
 
-    Chunk2 in, out;
+    Chunk in, out;
     RAWSource f(Speakers(FORMAT_RAWDATA, 0, 0), file_name);
     if (!f.is_open())
     {

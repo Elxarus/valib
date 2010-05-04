@@ -10,7 +10,7 @@
 #include "../source.h"
 #include "../vtime.h"
 
-class DSoundSource : public Source2
+class DSoundSource : public Source
 {
 protected:
   /////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ public:
   /////////////////////////////////////////////////////////
   // Source interface
 
-  virtual bool get_chunk(Chunk2 &out);
+  virtual bool get_chunk(Chunk &out);
 
   virtual void reset()
   {}
