@@ -355,4 +355,77 @@ public:
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// FilterWrapper
+// A filter that delegates all Filter interface to another filter. Useful to
+// make 'customized' filters that are special cases for more general filters.
+// For example, Equalizer class is a specialization for Convolver filter.
+//
+// If no delegate was set, wrapper just does not work (you cannot open the
+// filter).
+//
+// Filter name is not delegated. So the default behaviour is preserved, and
+// you will get wrapper's class name, not the delegate's name.
+
+class FilterWrapper : public Filter
+{
+private:
+  Filter *f;
+
+protected:
+  void wrap(Filter *)
+  { f = f; }
+
+  void unwrap()
+  { f = 0; }
+
+public:
+  FilterWrapper(): f(0) {}
+  FilterWrapper(Filter *f_): f(f_) {}
+
+  /////////////////////////////////////////////////////////
+  // Open/close the filter
+
+  virtual bool can_open(Speakers spk) const
+  { return f? f->can_open(spk): false; }
+
+  virtual bool open(Speakers spk)
+  { return f? f->open(spk): false; }
+
+  virtual void close()
+  { if (f) f->close(); }
+
+  /////////////////////////////////////////////////////////
+  // Processing
+
+  virtual void reset()
+  { if (f) f->reset(); }
+
+  virtual bool process(Chunk &in, Chunk &out)
+  { return f? f->process(in, out): false; }
+
+  virtual bool flush(Chunk &out)
+  { return f? f->flush(out): false; }
+
+  virtual bool new_stream() const
+  { return f? f->new_stream(): false; }
+
+  // Filter state
+  virtual bool is_open() const
+  { return f? f->is_open(): false; }
+
+  virtual bool is_ofdd() const
+  { return f? f->is_ofdd(): false; }
+
+  virtual Speakers get_input() const
+  { return f? f->get_input(): spk_unknown; }
+
+  virtual Speakers get_output() const
+  { return f? f->get_output(): spk_unknown; }
+
+  // Filter info
+  virtual string info() const
+  { return f? f->info(): string(); }
+};
+
 #endif

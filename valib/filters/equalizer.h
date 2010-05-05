@@ -10,7 +10,7 @@
 // Just a wrapper for Convolver and EqFIR
 ///////////////////////////////////////////////////////////////////////////////
 
-class Equalizer : public Filter
+class Equalizer : public FilterWrapper
 {
 protected:
   EqFIR eq;
@@ -18,7 +18,7 @@ protected:
   bool enabled;
 
 public:
-  Equalizer(): enabled(false)
+  Equalizer(): FilterWrapper(&conv), enabled(false)
   {}
 
   Equalizer(const EqBand *bands, size_t nbands): eq(bands, nbands), enabled(true)
@@ -47,27 +47,6 @@ public:
   size_t set_bands(const EqBand *bands, size_t nbands) { return eq.set_bands(bands, nbands); }
   size_t get_bands(EqBand *bands, size_t first_band, size_t nbands) const { return eq.get_bands(bands, first_band, nbands); }
   void reset_eq() { eq.reset(); }
-
-  /////////////////////////////////////////////////////////
-  // Open/close the filter
-
-  virtual bool can_open(Speakers spk) const { return conv.can_open(spk); }
-  virtual bool open(Speakers spk)           { return conv.open(spk);     }
-  virtual void close()                      { conv.close();              }
-
-  /////////////////////////////////////////////////////////
-  // Processing
-
-  virtual bool process(Chunk &in, Chunk &out) { return conv.process(in, out); }
-  virtual bool flush(Chunk &out)           { return conv.flush(out);           }
-  virtual void reset()                      { conv.reset();                     }
-  virtual bool new_stream() const           { return conv.new_stream();         }
-
-  // Filter state
-  virtual bool is_open() const              { return conv.is_open();     }
-  virtual bool is_ofdd() const              { return conv.is_ofdd();     }
-  virtual Speakers get_input() const        { return conv.get_input();   }
-  virtual Speakers get_output() const       { return conv.get_output();  }
 };
 
 #endif
