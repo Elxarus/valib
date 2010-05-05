@@ -19,14 +19,14 @@
 
 
 
-class Spdifer : public Filter
+class Spdifer : public FilterWrapper
 {
 protected:
   ParserFilter parser;
   SPDIFWrapper spdif_wrapper;
 
 public:
-  Spdifer()
+  Spdifer(): FilterWrapper(&parser)
   {
     parser.set_parser(&spdif_wrapper);
   }
@@ -45,37 +45,16 @@ public:
 
   size_t     get_info(char *buf, size_t len) const { return parser.get_info(buf, len); }
   HeaderInfo header_info()                   const { return parser.header_info();      }
-
-  /////////////////////////////////////////////////////////
-  // Open/close the filter
-
-  virtual bool can_open(Speakers spk) const { return parser.can_open(spk); }
-  virtual bool open(Speakers spk)           { return parser.open(spk);     }
-  virtual void close()                      { parser.close();              }
-
-  /////////////////////////////////////////////////////////
-  // Processing
-
-  virtual bool process(Chunk &in, Chunk &out) { return parser.process(in, out); }
-  virtual bool flush(Chunk &out)           { return parser.flush(out);           }
-  virtual void reset()                      { parser.reset();                     }
-  virtual bool new_stream() const           { return parser.new_stream();         }
-
-  // Filter state
-  virtual bool is_open() const              { return parser.is_open();     }
-  virtual bool is_ofdd() const              { return parser.is_ofdd();     }
-  virtual Speakers get_input() const        { return parser.get_input();   }
-  virtual Speakers get_output() const       { return parser.get_output();  }
 };
 
-class Despdifer : public Filter
+class Despdifer : public FilterWrapper
 {
 protected:
   ParserFilter parser;
   SPDIFParser  spdif_parser;
 
 public:
-  Despdifer(): spdif_parser(true)
+  Despdifer(): FilterWrapper(&parser), spdif_parser(true)
   {
     parser.set_parser(&spdif_parser);
   }
@@ -88,27 +67,6 @@ public:
 
   size_t     get_info(char *buf, size_t len) const { return parser.get_info(buf, len); }
   HeaderInfo header_info()                   const { return parser.header_info();      }
-
-  /////////////////////////////////////////////////////////
-  // Open/close the filter
-
-  virtual bool can_open(Speakers spk) const { return parser.can_open(spk); }
-  virtual bool open(Speakers spk)           { return parser.open(spk);     }
-  virtual void close()                      { parser.close();              }
-
-  /////////////////////////////////////////////////////////
-  // Processing
-
-  virtual bool process(Chunk &in, Chunk &out) { return parser.process(in, out); }
-  virtual bool flush(Chunk &out)           { return parser.flush(out);           }
-  virtual void reset()                      { parser.reset();                     }
-  virtual bool new_stream() const           { return parser.new_stream();         }
-
-  // Filter state
-  virtual bool is_open() const              { return parser.is_open();     }
-  virtual bool is_ofdd() const              { return parser.is_ofdd();     }
-  virtual Speakers get_input() const        { return parser.get_input();   }
-  virtual Speakers get_output() const       { return parser.get_output();  }
 };
 
 #endif
