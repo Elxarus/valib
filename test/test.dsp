@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /G6 /MDd /W3 /GX /ZI /Od /I "..\valib" /I "..\liba52" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "LIBA52_DOUBLE" /D "AC3_DEBUG" /D "AC3_DEBUG_NODITHER" /D "AC3_DEBUG_NOIMDCT" /D "TIME_WIN32" /FAs /FR /YX /FD /GZ /c
+# ADD CPP /nologo /G6 /MDd /W3 /GR /GX /ZI /Od /I "..\valib" /I "..\liba52" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "LIBA52_DOUBLE" /D "AC3_DEBUG" /D "AC3_DEBUG_NODITHER" /D "AC3_DEBUG_NOIMDCT" /D "TIME_WIN32" /FAs /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x419 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -115,6 +115,10 @@ SOURCE=.\tests\test_bitstream.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\tests\filters\test_cache.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\tests\filters\test_convolver.cpp
 # End Source File
 # Begin Source File
@@ -123,7 +127,7 @@ SOURCE=.\tests\filters\test_convolver_mch.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\tests\filters\test_linear_filter.cpp
+SOURCE=.\tests\filters\test_filter_graph.cpp
 # End Source File
 # Begin Source File
 
@@ -173,10 +177,6 @@ SOURCE=.\test_dvdgraph.cpp
 # Begin Source File
 
 SOURCE=.\test_filter.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\test_filtergraph.cpp
 # End Source File
 # Begin Source File
 

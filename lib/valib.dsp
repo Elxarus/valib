@@ -67,7 +67,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /G6 /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG.DEBUG" /D "_MBCS" /D "_LIB" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /G6 /MDd /W3 /Gm /GR /GX /Zi /Od /D "WIN32" /D "_DEBUG.DEBUG" /D "_MBCS" /D "_LIB" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
 # ADD RSC /l 0x417 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -160,6 +160,10 @@ LIB32=link.exe -lib
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\valib\auto_buf.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\auto_file.cpp
 # End Source File
 # Begin Source File
@@ -173,6 +177,14 @@ SOURCE=..\valib\bitstream.cpp
 # Begin Source File
 
 SOURCE=..\valib\bitstream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\buffer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\chunk.h
 # End Source File
 # Begin Source File
 
@@ -196,19 +208,11 @@ SOURCE=..\valib\defs.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filter.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filter_graph.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filter_graph.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filter_tester.h
 # End Source File
 # Begin Source File
 
@@ -217,6 +221,14 @@ SOURCE=..\valib\fir.cpp
 # Begin Source File
 
 SOURCE=..\valib\fir.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\iir.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\iir.h
 # End Source File
 # Begin Source File
 
@@ -253,6 +265,22 @@ SOURCE=..\valib\rng.cpp
 # Begin Source File
 
 SOURCE=..\valib\rng.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source.h
 # End Source File
 # Begin Source File
 
@@ -444,6 +472,14 @@ SOURCE=..\valib\filters\equalizer_mch.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\filters\filter_graph.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\filter_graph.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\filters\gain.cpp
 # End Source File
 # Begin Source File
@@ -460,14 +496,6 @@ SOURCE=..\valib\filters\levels.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\valib\filters\linear_filter.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\valib\filters\linear_filter.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\valib\filters\mixer.cpp
 # End Source File
 # Begin Source File
@@ -481,6 +509,10 @@ SOURCE=..\valib\filters\parser_filter.cpp
 # Begin Source File
 
 SOURCE=..\valib\filters\parser_filter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\filters\passthrough.h
 # End Source File
 # Begin Source File
 
@@ -760,6 +792,14 @@ SOURCE=..\valib\sink\sink_dsound.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\valib\sink\sink_filter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\sink\sink_null.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\valib\sink\sink_raw.h
 # End Source File
 # Begin Source File
@@ -825,6 +865,14 @@ SOURCE=..\valib\source\raw_source.cpp
 # Begin Source File
 
 SOURCE=..\valib\source\raw_source.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\source_filter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\source\source_filter.h
 # End Source File
 # Begin Source File
 
@@ -921,6 +969,26 @@ SOURCE=..\valib\fir\param_fir.cpp
 # Begin Source File
 
 SOURCE=..\valib\fir\param_fir.h
+# End Source File
+# End Group
+# Begin Group "iir"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\valib\iir\butterworth.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\iir\butterworth.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\iir\linkwitz_riley.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\valib\iir\linkwitz_riley.h
 # End Source File
 # End Group
 # End Target

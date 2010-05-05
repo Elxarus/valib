@@ -2,7 +2,7 @@
 #include <boost/lexical_cast.hpp>
 #include "filter_graph.h"
 
-using boost::lexical_cast;
+using std::find;
 
 FilterGraph::FilterGraph()
 {
@@ -52,7 +52,7 @@ FilterGraph::print_chain() const
     // print input format
     spk = node->filter->get_input();
     text += string() + '(' + spk.format_text() + ' ' + spk.mode_text() + ' ' +
-            lexical_cast<string>(spk.sample_rate) + ')';
+            boost::lexical_cast<string>(spk.sample_rate) + ')';
 
     // print filter name
     text += std::string() + " -> " + node->filter->name() + " -> ";
@@ -61,7 +61,7 @@ FilterGraph::print_chain() const
   // Output format
   spk = get_output();
   text += string() + '(' + spk.format_text() + ' ' + spk.mode_text() + ' ' +
-          lexical_cast<string>(spk.sample_rate) + ')';
+          boost::lexical_cast<string>(spk.sample_rate) + ')';
 
   return text;
 }

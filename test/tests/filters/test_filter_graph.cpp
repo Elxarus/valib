@@ -17,7 +17,7 @@ class GainGraph : public FilterGraph
 {
 protected:
   Gain gain;
-  static const int node_gain = 1;
+  enum { node_gain = 1 };
 
   virtual int next_id(int id, Speakers spk) const
   {
