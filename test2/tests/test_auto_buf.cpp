@@ -13,23 +13,31 @@ static const size_t bad_size = std::numeric_limits<size_t>::max() / 2 - 1;
 static const size_t data_size  = 100;
 static const size_t data_size2 = 200;
 
-
-
 #define BOOST_TEST_MODULE auto_buf
 #include <boost/test/included/unit_test.hpp>
 
-BOOST_AUTO_TEST_CASE(default_constructor)
+template <class T>
+static void test_deallocated(AutoBuf<T> &buf)
 {
-  AutoBuf<uint8_t> buf;
-
-  // Default constructed buffer is not allocatted
   BOOST_CHECK( !buf.is_allocated() );
   BOOST_CHECK( buf.size() == 0 );
   BOOST_CHECK( buf.allocated() == 0 );
   BOOST_CHECK( buf.begin() == 0 );
+}
 
-  // Test automatic cast to T*
-  uint8_t *ptr = buf;
+template <class T>
+static void test_allocated(AutoBuf<T> &buf)
+{
+  BOOST_CHECK( buf.is_allocated() );
+  BOOST_CHECK( buf.size() > 0 );
+  BOOST_CHECK( buf.allocated() >= buf.size() );
+  BOOST_CHECK( buf.begin() != 0 );
+}
+
+BOOST_AUTO_TEST_CASE(default_constructor)
+{
+  AutoBuf<uint8_t> buf;
+  test_deallocated(buf);
 
   // Destructor of an default constructed buffer
   // should not fail after leaving of this block
@@ -38,16 +46,14 @@ BOOST_AUTO_TEST_CASE(default_constructor)
 BOOST_AUTO_TEST_CASE(init_constructor)
 {
   AutoBuf<uint8_t> buf(data_size);
+  test_allocated(buf);
 
-  BOOST_CHECK( buf.is_allocated() );
-  BOOST_CHECK( buf.size() == data_size );
-  BOOST_CHECK( buf.allocated() == data_size );
-  BOOST_CHECK( buf.begin() != 0 );
+  // Test automatic cast to T*
+  uint8_t *ptr = buf;
 
   // Destructor of an init constructed buffer
   // should not fail after leaving of this block
 }
-
 
 BOOST_AUTO_TEST_CASE(init_constructor_failure)
 {
@@ -60,33 +66,21 @@ BOOST_AUTO_TEST_CASE(allocate)
 
   // Just allocate a buffer
   buf.allocate(data_size);
-  BOOST_CHECK( buf.is_allocated() );
-  BOOST_CHECK( buf.size() == data_size );
-  BOOST_CHECK( buf.allocated() == data_size );
-  BOOST_CHECK( buf.begin() != 0 );
+  test_allocated(buf);
 
   // Allocate more data
   buf.allocate(data_size2);
-  BOOST_CHECK( buf.is_allocated() );
-  BOOST_CHECK( buf.size() == data_size2 );
-  BOOST_CHECK( buf.allocated() == data_size2 );
-  BOOST_CHECK( buf.begin() != 0 );
+  test_allocated(buf);
 
   // Allocate less data
   // (buffer should not be reallocated)
   uint8_t *old_data = buf;
   buf.allocate(data_size);
-  BOOST_CHECK( buf.is_allocated() );
-  BOOST_CHECK( buf.size() == data_size );
-  BOOST_CHECK( buf.allocated() == data_size2 );
-  BOOST_CHECK( buf.begin() == old_data );
+  test_allocated(buf);
 
   // Free buffer
   buf.free();
-  BOOST_CHECK( !buf.is_allocated() );
-  BOOST_CHECK( buf.size() == 0 );
-  BOOST_CHECK( buf.allocated() == 0 );
-  BOOST_CHECK( buf.begin() == 0 );
+  test_deallocated(buf);
 }
 
 BOOST_AUTO_TEST_CASE(allocate_failure)
@@ -95,7 +89,6 @@ BOOST_AUTO_TEST_CASE(allocate_failure)
 
   // Allocate too much (fail allocation)
   // when buffer is not allocated
-
   BOOST_CHECK_THROW( buf.allocate(bad_size), std::bad_alloc);
 
   // Allocate too much (fail allocation)
@@ -110,10 +103,7 @@ BOOST_AUTO_TEST_CASE(reallocate)
 
   // Allocate the buffer with reallocate()
   buf.reallocate(data_size);
-  BOOST_CHECK( buf.is_allocated() );
-  BOOST_CHECK( buf.size() == data_size );
-  BOOST_CHECK( buf.allocated() == data_size );
-  BOOST_CHECK( buf.begin() != 0 );
+  test_allocated(buf);
 
   // Fill some data
   buf.zero();
@@ -124,10 +114,7 @@ BOOST_AUTO_TEST_CASE(reallocate)
   // (Must keep the data at the buffer)
 
   buf.reallocate(data_size2);
-  BOOST_CHECK( buf.is_allocated() );
-  BOOST_CHECK( buf.size() == data_size2 );
-  BOOST_CHECK( buf.allocated() == data_size2 );
-  BOOST_CHECK( buf.begin() != 0 );
+  test_allocated(buf);
 
   BOOST_CHECK( buf[0] == 1 );
   BOOST_CHECK( buf[data_size-1] == 2 );
@@ -136,7 +123,7 @@ BOOST_AUTO_TEST_CASE(reallocate)
 BOOST_AUTO_TEST_CASE(zero)
 {
   AutoBuf<uint8_t> buf(data_size);
-  BOOST_CHECK( buf.is_allocated() );
+  test_allocated(buf);
 
   buf[0] = 1;
   buf[data_size-1] = 1;
