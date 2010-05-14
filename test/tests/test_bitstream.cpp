@@ -100,7 +100,7 @@ TEST(bitstream_read, "ReadBS")
     result = bs.get(0);
     CHECKT(result == 0, ("bs.get(%i) fails", 0));
 
-    test = be2uint32(*(uint32_t*)buf.data());
+    test = be2uint32(*(uint32_t*)buf.begin());
     for (unsigned num_bits = 1; num_bits <= 32; num_bits++)
     {
       bs.set(buf, 0, 32);
@@ -142,8 +142,8 @@ TEST(bitstream_read, "ReadBS")
 
     for (int sign = 0; sign <= 1; sign++)
     {
-      *(uint32_t *)buf.data() = ~*(uint32_t *)buf.data();
-      int32_t test = be2uint32(*(uint32_t*)buf.data());
+      *(uint32_t *)buf.begin() = ~*(uint32_t *)buf.begin();
+      int32_t test = be2uint32(*(uint32_t*)buf.begin());
       for (unsigned num_bits = 1; num_bits <= 32; num_bits++)
       {
         bs.set(buf, 0, 32);
@@ -160,7 +160,7 @@ TEST(bitstream_read, "ReadBS")
   {
     for (int sign = 0; sign <= 1; sign++)
     {
-      *(uint32_t *)buf.data() = ~*(uint32_t *)buf.data();
+      *(uint32_t *)buf.begin() = ~*(uint32_t *)buf.begin();
       for (unsigned i = 0; i <= 32; i++)
       {
         int32_t test_signed = get_uint32(buf, i);
@@ -263,7 +263,7 @@ TEST(bitstream_write, "WriteBS")
   {
     for (unsigned num_bits = 1; num_bits <= 32; num_bits++)
     {
-      *(uint32_t *)buf.data() = rng.next();
+      *(uint32_t *)buf.begin() = rng.next();
       test = rng.next() >> (32 - num_bits);
 
       bs.set(buf, 0, 32);
@@ -283,7 +283,7 @@ TEST(bitstream_write, "WriteBS")
     for (unsigned i = 1; i <= 32; i++)
       for (unsigned j = 1; j <= 32; j++)
       {
-        *(uint32_t *)buf.data() = rng.next();
+        *(uint32_t *)buf.begin() = rng.next();
         uint32_t test1 = rng.next() >> (32 - i);
         uint32_t test2 = rng.next() >> (32 - j);
 
@@ -347,7 +347,7 @@ TEST(bitstream_write, "WriteBS")
   // set_pos_bits() must flush at old position
 
   {
-    *(uint32_t *)buf.data() = rng.next();
+    *(uint32_t *)buf.begin() = rng.next();
     test = rng.next();
 
     bs.set(buf, 0, 64);

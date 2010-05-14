@@ -139,7 +139,7 @@ WAVSource::open_riff()
         return false;
 
       // Determine output format
-      if (!wfx2spk((WAVEFORMATEX *)format.data(), spk))
+      if (!wfx2spk((WAVEFORMATEX *)format.begin(), spk))
         spk = Speakers(FORMAT_RAWDATA, 0, 0);
 
       have_fmt = true;
@@ -228,7 +228,7 @@ WAVSource::seek(AutoFile::fsize_t _pos)
 
 const WAVEFORMATEX *
 WAVSource::wave_format() const
-{ return (WAVEFORMATEX *)format.data(); }
+{ return (WAVEFORMATEX *)format.begin(); }
 
 ///////////////////////////////////////////////////////////
 // Source interface
