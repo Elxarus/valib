@@ -44,7 +44,7 @@ public:
     f_nsamples = nsamples;
     f_samples.zero();
     for (unsigned ch = 0; ch < nch; ch++)
-      f_samples[ch] = f_buf.data() + ch * nsamples;
+      f_samples[ch] = f_buf.begin() + ch * nsamples;
     return true;
   }
 
@@ -76,13 +76,13 @@ public:
 
     // Zero new channels
     if (nch > f_nch)
-      memset(f_buf.data() + f_nch * nsamples, 0, (nch - f_nch) * nsamples * sizeof(sample_t));
+      memset(f_buf.begin() + f_nch * nsamples, 0, (nch - f_nch) * nsamples * sizeof(sample_t));
 
     // Update state
     f_nch = nch;
     f_nsamples = nsamples;
     for (ch = 0; ch < nch; ch++)
-      f_samples[ch] = f_buf.data() + ch * nsamples;
+      f_samples[ch] = f_buf.begin() + ch * nsamples;
 
     return true;
   }
