@@ -51,8 +51,7 @@ FilterGraph::print_chain() const
   {
     // print input format
     spk = node->filter->get_input();
-    text += string() + '(' + spk.format_text() + ' ' + spk.mode_text() + ' ' +
-            boost::lexical_cast<string>(spk.sample_rate) + ')';
+    text += string() + '(' + spk.print() + ')';
 
     // print filter name
     text += std::string() + " -> " + node->filter->name() + " -> ";
@@ -60,8 +59,7 @@ FilterGraph::print_chain() const
 
   // Output format
   spk = get_output();
-  text += string() + '(' + spk.format_text() + ' ' + spk.mode_text() + ' ' +
-          boost::lexical_cast<string>(spk.sample_rate) + ')';
+  text += string() + '(' + spk.print() + ')';
 
   return text;
 }
