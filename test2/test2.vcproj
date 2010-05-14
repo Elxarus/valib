@@ -46,7 +46,7 @@
 				MinimalRebuild="true"
 				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -119,7 +119,7 @@
 				AdditionalIncludeDirectories="../valib"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				ExceptionHandling="2"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -169,6 +169,10 @@
 	<References>
 	</References>
 	<Files>
+		<File
+			RelativePath=".\main.cpp"
+			>
+		</File>
 		<File
 			RelativePath=".\tests\test_auto_buf.cpp"
 			>
