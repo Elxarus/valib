@@ -4,6 +4,7 @@
 
 
 #include <limits>
+#include <boost/test/unit_test.hpp>
 #include "auto_buf.h"
 
 // bad_size must be less than a half of address space
@@ -12,9 +13,6 @@
 static const size_t bad_size = std::numeric_limits<size_t>::max() / 2 - 1;
 static const size_t data_size  = 100;
 static const size_t data_size2 = 200;
-
-#define BOOST_TEST_MODULE auto_buf
-#include <boost/test/included/unit_test.hpp>
 
 template <class T>
 static void test_deallocated(AutoBuf<T> &buf)
@@ -33,6 +31,8 @@ static void test_allocated(AutoBuf<T> &buf)
   BOOST_CHECK( buf.allocated() >= buf.size() );
   BOOST_CHECK( buf.begin() != 0 );
 }
+
+BOOST_AUTO_TEST_SUITE(auto_buf)
 
 BOOST_AUTO_TEST_CASE(default_constructor)
 {
@@ -132,3 +132,5 @@ BOOST_AUTO_TEST_CASE(zero)
   BOOST_CHECK( buf[0] == 0 );
   BOOST_CHECK( buf[data_size-1] == 0 );
 }
+
+BOOST_AUTO_TEST_SUITE_END()
