@@ -1,4 +1,4 @@
-#include <string.h>
+#include <boost/lexical_cast.hpp>
 #include <math.h>
 #include "spk.h"
 
@@ -130,6 +130,15 @@ Speakers::mode_text() const
     return custom_modes[nch];
 
   return "Custom";
+}
+
+string
+Speakers::print() const
+{
+  static const string space = " ";
+  return string(format_text()) + space +
+         string(mode_text()) + space +
+         boost::lexical_cast<string>(sample_rate);
 }
 
 

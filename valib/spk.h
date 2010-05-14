@@ -221,6 +221,9 @@
 #define VALIB_SPK_H
 
 #include "defs.h"
+#include <string>
+
+using std::string;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Formats
@@ -454,7 +457,7 @@ public:
 
   const char *format_text() const;
   const char *mode_text() const;
-
+  string print() const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
