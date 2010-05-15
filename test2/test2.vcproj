@@ -177,6 +177,10 @@
 			RelativePath=".\tests\test_auto_buf.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\tests\test_auto_file.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

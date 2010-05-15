@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test2", "test2.vcproj", "{376EAACF-58E1-4C4F-B8C3-D3AC33B40D9A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{30FCD216-1CAD-48FD-BF4B-337572F7EC9C} = {30FCD216-1CAD-48FD-BF4B-337572F7EC9C}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "valib", "..\lib\valib.vcproj", "{30FCD216-1CAD-48FD-BF4B-337572F7EC9C}"
 EndProject
