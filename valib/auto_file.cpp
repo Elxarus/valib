@@ -6,7 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Vistual C implementation
 
-const AutoFile::fsize_t AutoFile::max_size = (AutoFile::fsize_t)-1;
+const AutoFile::fsize_t AutoFile::bad_size = (AutoFile::fsize_t)-1;
 
 static int portable_seek(FILE *f, AutoFile::fsize_t pos, int origin)
 { return _fseeki64(f, pos, origin); }
@@ -39,10 +39,10 @@ bool
 AutoFile::open(const char *filename, const char *mode)
 {
   if (f) close();
-  filesize = max_size;
   f = fopen(filename, mode);
   if (f)
   {
+    filesize = bad_size;
     if (portable_seek(f, 0, SEEK_END) == 0)
       filesize = portable_tell(f);
     portable_seek(f, 0, SEEK_SET);
@@ -55,11 +55,11 @@ bool
 AutoFile::open(FILE *_f, bool _take_ownership)
 {
   if (f) close();
-  filesize = max_size;
   f = _f;
   if (f)
   {
     fsize_t old_pos = pos();
+    filesize = bad_size;
     if (portable_seek(f, 0, SEEK_END) == 0)
       filesize = portable_tell(f);
     portable_seek(f, old_pos, SEEK_SET);
@@ -73,7 +73,9 @@ AutoFile::close()
 {
   if (f && own_file)
     fclose(f);
+
   f = 0;
+  filesize = 0;
 }
 
 int
@@ -93,7 +95,7 @@ AutoFile::pos() const
 MemFile::MemFile(const char *filename): data(0), file_size(0)
 {
   AutoFile f(filename, "rb");
-  if (!f.is_open() || f.size() == f.max_size || f.is_large(f.size()))
+  if (!f.is_open() || f.size() == f.bad_size || f.is_large(f.size()))
     return;
 
   file_size = f.size_cast(f.size());
