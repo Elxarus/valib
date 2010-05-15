@@ -204,8 +204,8 @@ WAVSource::is_open() const
 AutoFile::fsize_t
 WAVSource::size() const
 {
-  if (data_size > (uint64_t)AutoFile::max_size)
-    return AutoFile::max_size;
+  if (data_size > (uint64_t)AutoFile::bad_size)
+    return AutoFile::bad_size;
   return (AutoFile::fsize_t) data_size;
 }
 
