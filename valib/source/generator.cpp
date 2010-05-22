@@ -17,14 +17,12 @@ Generator::init(Speakers spk_, uint64_t stream_len_, size_t chunk_size_)
   if (spk_.format == FORMAT_LINEAR)
   {
     rawdata.free();
-    if (!samples.allocate(spk_.nch(), chunk_size_))
-      return false;
+    samples.allocate(spk_.nch(), chunk_size_);
   }
   else
   {
     samples.free();
-    if (!rawdata.allocate(chunk_size_))
-      return false;
+    rawdata.allocate(chunk_size_);
   }
 
   spk = spk_;
