@@ -24,10 +24,10 @@ static void test_deallocated(AutoBuf<T> &buf)
 }
 
 template <class T>
-static void test_allocated(AutoBuf<T> &buf)
+static void test_allocated(AutoBuf<T> &buf, size_t size)
 {
   BOOST_CHECK( buf.is_allocated() );
-  BOOST_CHECK( buf.size() > 0 );
+  BOOST_CHECK( buf.size() >= size );
   BOOST_CHECK( buf.allocated() >= buf.size() );
   BOOST_CHECK( buf.begin() != 0 );
 }
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(default_constructor)
 BOOST_AUTO_TEST_CASE(init_constructor)
 {
   AutoBuf<uint8_t> buf(data_size);
-  test_allocated(buf);
+  test_allocated(buf, data_size);
 
   // Test automatic cast to T*
   uint8_t *ptr = buf;
@@ -66,17 +66,17 @@ BOOST_AUTO_TEST_CASE(allocate)
 
   // Just allocate a buffer
   buf.allocate(data_size);
-  test_allocated(buf);
+  test_allocated(buf, data_size);
 
   // Allocate more data
   buf.allocate(data_size2);
-  test_allocated(buf);
+  test_allocated(buf, data_size2);
 
   // Allocate less data
   // (buffer should not be reallocated)
   uint8_t *old_data = buf;
   buf.allocate(data_size);
-  test_allocated(buf);
+  test_allocated(buf, data_size);
 
   // Free buffer
   buf.free();
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(reallocate)
 
   // Allocate the buffer with reallocate()
   buf.reallocate(data_size);
-  test_allocated(buf);
+  test_allocated(buf, data_size);
 
   // Fill some data
   buf.zero();
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(reallocate)
   // (Must keep the data at the buffer)
 
   buf.reallocate(data_size2);
-  test_allocated(buf);
+  test_allocated(buf, data_size2);
 
   BOOST_CHECK( buf[0] == 1 );
   BOOST_CHECK( buf[data_size-1] == 2 );
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(reallocate)
 BOOST_AUTO_TEST_CASE(zero)
 {
   AutoBuf<uint8_t> buf(data_size);
-  test_allocated(buf);
+  test_allocated(buf, data_size);
 
   buf[0] = 1;
   buf[data_size-1] = 1;
