@@ -8,6 +8,13 @@ ReadBS::ReadBS():
   pos(0), current_word(0), bits_left(0)
 {}
 
+ReadBS::ReadBS(const uint8_t *buf_, size_t start_bit_, size_t size_bits_): 
+  start(0), start_bit(0), size_bits(0),
+  pos(0), current_word(0), bits_left(0)
+{
+  set(buf_, start_bit_, size_bits_);
+}
+
 void 
 ReadBS::set(const uint8_t *buf_, size_t start_bit_, size_t size_bits_)
 {
@@ -75,6 +82,13 @@ WriteBS::WriteBS():
   start(0), start_bit(0), size_bits(0),
   pos(0), current_word(0), bits_left(0)
 {}
+
+WriteBS::WriteBS(uint8_t *buf_, size_t start_bit_, size_t size_bits_): 
+  start(0), start_bit(0), size_bits(0),
+  pos(0), current_word(0), bits_left(0)
+{
+  set(buf_, start_bit_, size_bits_);
+}
 
 void 
 WriteBS::set(uint8_t *buf_, size_t start_bit_, size_t size_bits_)
