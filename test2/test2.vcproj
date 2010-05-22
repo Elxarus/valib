@@ -185,6 +185,10 @@
 			RelativePath=".\tests\test_bitstream.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\tests\test_buffer.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
