@@ -2,8 +2,9 @@
   AutoFile class test
 */
 
+#include "rng.h"
+#include "buffer.h"
 #include "auto_file.h"
-#include "source/generator.h"
 #include <boost/test/unit_test.hpp>
 
 static const int seed = 687474;
@@ -82,27 +83,27 @@ BOOST_AUTO_TEST_CASE(read_write)
   AutoFile f(temp_file, "wb");
   BOOST_REQUIRE( f.is_open() );
 
-  Chunk chunk;
-  NoiseGen noise(Speakers(FORMAT_RAWDATA, 0, 0), seed, temp_file_size, temp_file_size);
-  noise.get_chunk(chunk);
-
-  size_t write_size = f.write(chunk.rawdata, chunk.size);
-  BOOST_CHECK_EQUAL(write_size, chunk.size);
+  RNG rng(seed);
+  Rawdata write_data(temp_file_size);
+  rng.fill_raw(write_data, temp_file_size);
+  
+  size_t write_size = f.write(write_data, temp_file_size);
+  BOOST_CHECK_EQUAL(write_size, temp_file_size);
   f.close();
 
   f.open(temp_file, "rb");
   BOOST_REQUIRE( f.is_open() );
 
-  Rawdata read_data(chunk.size);
-  size_t read_size = f.read(read_data, chunk.size);
+  Rawdata read_data(temp_file_size);
+  size_t read_size = f.read(read_data, temp_file_size);
 
-  BOOST_REQUIRE_EQUAL(read_size, chunk.size);
-  BOOST_CHECK(memcmp(read_data, chunk.rawdata, chunk.size) == 0);
+  BOOST_REQUIRE_EQUAL(read_size, temp_file_size);
+  BOOST_CHECK(memcmp(read_data, write_data, temp_file_size) == 0);
   f.close();
 
   MemFile memfile(temp_file);
-  BOOST_REQUIRE_EQUAL(memfile.size(), chunk.size);
-  BOOST_CHECK(memcmp(memfile, chunk.rawdata, chunk.size) == 0);
+  BOOST_REQUIRE_EQUAL(memfile.size(), temp_file_size);
+  BOOST_CHECK(memcmp(memfile, write_data, temp_file_size) == 0);
 
   remove(temp_file);
 }
