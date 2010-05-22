@@ -56,7 +56,8 @@ public:
   virtual bool init()
   {
     buf_pos = 0;
-    return buf.allocate(spk.nch(), buf_size);
+    buf.allocate(spk.nch(), buf_size);
+    return true;
   }
 
   virtual void reset()
