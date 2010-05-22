@@ -3,11 +3,15 @@
 */
 
 #include "auto_file.h"
+#include "source/generator.h"
 #include <boost/test/unit_test.hpp>
-#include "auto_file.h"
+
+static const int seed = 687474;
 
 static const char *good_file = "test.vob";
 static const char *bad_file = "it-is-no-such-file";
+static const char *temp_file = "temp.tmp";
+static const size_t temp_file_size = 1000;
 
 static void test_open(AutoFile &f)
 {
@@ -71,6 +75,36 @@ BOOST_AUTO_TEST_CASE(open_fail)
 
   BOOST_CHECK( !f.open(bad_file) );
   test_closed(f);
+}
+
+BOOST_AUTO_TEST_CASE(read_write)
+{
+  AutoFile f(temp_file, "wb");
+  BOOST_REQUIRE( f.is_open() );
+
+  Chunk chunk;
+  NoiseGen noise(Speakers(FORMAT_RAWDATA, 0, 0), seed, temp_file_size, temp_file_size);
+  noise.get_chunk(chunk);
+
+  size_t write_size = f.write(chunk.rawdata, chunk.size);
+  BOOST_CHECK_EQUAL(write_size, chunk.size);
+  f.close();
+
+  f.open(temp_file, "rb");
+  BOOST_REQUIRE( f.is_open() );
+
+  Rawdata read_data(chunk.size);
+  size_t read_size = f.read(read_data, chunk.size);
+
+  BOOST_REQUIRE_EQUAL(read_size, chunk.size);
+  BOOST_CHECK(memcmp(read_data, chunk.rawdata, chunk.size) == 0);
+  f.close();
+
+  MemFile memfile(temp_file);
+  BOOST_REQUIRE_EQUAL(memfile.size(), chunk.size);
+  BOOST_CHECK(memcmp(memfile, chunk.rawdata, chunk.size) == 0);
+
+  remove(temp_file);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
