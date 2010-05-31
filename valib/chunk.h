@@ -6,6 +6,77 @@
 
   Format of the data is determined by output format of a Source or Filter.
   (see Filter::get_output() and Source::get_output())
+
+  /////////////////////////////////////////////////////////
+  // Data
+
+  uint8_t *rawdata;
+    Pointer to raw data buffer.
+
+  samples_t samples;
+    Pointer to samples buffer.
+
+  size_t size;
+    Size of the buffer. When raw data buffer is given, it means size fo the
+    buffer in bytes. When samples buffer is given it means number of samples
+    per channel.
+
+  bool sync;
+    When this flag is set, time stamp is set. Otherwise time should be ignored.
+
+  vtime_t time;
+    Time associated with the begnning of the data in the chunk.
+
+    More specifically, this time should be applied to the first sync point in
+    the chunk. For linear format this means the beginning of the first sample.
+    For compressed formats such as AC3 or DTS first syncpoint is the beginning
+    of the frame. I.e. if chunk contains the tail of a previous frame and a
+    head of a next frame, time should be applied to the first sample of the new
+    frame.
+
+  /////////////////////////////////////////////////////////
+  // Utilities
+
+  Chunk()
+    Constructs dummy chunk with no data and no timestamp.
+
+  Chunk(bool sync, vtime_t time):
+    Empty chunk with time stamp.
+
+  Chunk(samples_t samples, size_t size,
+        bool sync = false, vtime_t time = 0)
+    Linear format chunk constructor.
+
+  Chunk(uint8_t *rawdata, size_t size,
+        bool sync = false, vtime_t time = 0)
+    Raw data format chunk constructor.
+
+  void clear()
+    Drop data and time stamp. Chunk becomes dummy.
+
+  void set_linear(samples_t samples, size_t size,
+    bool sync = false, vtime_t time = 0)
+    Make linear format chunk.
+
+  void set_rawdata(uint8_t *rawdata, size_t size,
+    bool sync = false, vtime_t time = 0)
+    Make raw data chunk.
+
+  void set_sync(bool sync, vtime_t time)
+    Set time stamp for the chunk.
+
+  bool is_dummy() const
+    Check for dummy chunk (chunk that does not contain data or time stamp).
+
+  bool is_empty() const
+    Check for empty chunk (chunk that does not contain data).
+
+  void drop_rawdata(size_t drop_size)
+    Move raw data pointer ahead by drop_size bytes.
+
+  void drop_samples(size_t drop_size)
+    Move raw sample pointers ahead by drop_size samples.
+
 */
 
 #ifndef VALIB_CHUNK_H
@@ -52,15 +123,6 @@ public:
     size(0),
     sync(false),
     time(0)
-  {}
-
-  // Copy constructors
-  Chunk(const Chunk &chunk):
-    rawdata(chunk.rawdata),
-    samples(chunk.samples),
-    size(chunk.size),
-    sync(chunk.sync),
-    time(chunk.time)
   {}
 
   // Empty chunk with a timestamp
@@ -137,6 +199,8 @@ public:
 
   inline void drop_rawdata(size_t drop_size)
   {
+    assert(rawdata);
+
     if (drop_size > size)
       drop_size = size;
 
@@ -154,7 +218,6 @@ public:
     size -= drop_size;
     sync = false;
   };
-
 };
 
 #endif
