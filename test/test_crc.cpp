@@ -69,7 +69,7 @@ public:
 
     log->open_group("CRC speed test");
     speed_test_table(data, size, 0xc30d);
-    speed_test(data, size, 0xc30d0000);
+    speed_test(data, size, 0xc30d);
     log->close_group();
 
     delete data;
