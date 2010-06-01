@@ -16,7 +16,7 @@
   RawNoise noise(size, seed);
   for (int i = 0; i < ntests; i++)
   {
-    noise.fill_raw();
+    noise.fill_noise();
     do_test(noise);
   }
   ----------
@@ -39,15 +39,15 @@ public:
   RawNoise(size_t size, int seed):
   rng(seed), Rawdata(size)
   {
-    fill_raw();
+    fill_noise();
   }
 
-  inline void fill_raw()
+  inline void fill_noise()
   {
     rng.fill_raw(begin(), size());
   }
 
-  inline void fill_raw(int seed)
+  inline void fill_noise(int seed)
   {
     rng.seed(seed);
     rng.fill_raw(begin(), size());
@@ -56,13 +56,13 @@ public:
   inline void allocate_noise(size_t size)
   {
     allocate(size);
-    fill_raw();
+    fill_noise();
   }
 
   inline void allocate_noise(size_t size, int seed)
   {
     allocate(size);
-    fill_raw(seed);
+    fill_noise(seed);
   }
 
 };

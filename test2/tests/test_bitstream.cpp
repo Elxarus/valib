@@ -4,9 +4,8 @@
   stream conversion functions test
 */
 
-#include "rng.h"
-#include "buffer.h"
 #include "bitstream.h"
+#include "../noise_buf.h"
 #include <boost/test/unit_test.hpp>
 
 static const int seed = 4967205;
@@ -68,11 +67,9 @@ BOOST_AUTO_TEST_SUITE(read_bs)
 
 BOOST_AUTO_TEST_CASE(set)
 {
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-  rng.fill_raw(buf, buf.size());
-
   ReadBS bs;
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
+
   for (uint8_t *pos = buf; pos < buf + max_align; pos++)
     for (size_t start_bit = 0; start_bit < max_start_bit; start_bit++)
     {
@@ -88,11 +85,9 @@ BOOST_AUTO_TEST_CASE(set)
 
 BOOST_AUTO_TEST_CASE(set_bit_pos)
 {
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-  rng.fill_raw(buf, buf.size());
-
   ReadBS bs;
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
+
   for (size_t pos_bits = 0; pos_bits < max_start_bit; pos_bits++)
   {
     bs.set(buf, 0, max_start_bit + 32);
@@ -111,11 +106,9 @@ BOOST_AUTO_TEST_CASE(set_bit_pos)
 
 BOOST_AUTO_TEST_CASE(get_bit_pos)
 {
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-  rng.fill_raw(buf, buf.size());
-
   ReadBS bs;
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
+
   for (uint8_t *pos = buf; pos < buf + max_align; pos++)
     for (size_t start_bit = 0; start_bit < max_start_bit; start_bit++)
       for (size_t pos_bits = 0; pos_bits <= 32; pos_bits++)
@@ -136,9 +129,7 @@ BOOST_AUTO_TEST_CASE(get_bit_pos)
 
 BOOST_AUTO_TEST_CASE(get)
 {
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-  rng.fill_raw(buf, buf.size());
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
 
   // Read zero bits, should return zero
   ReadBS bs(buf, 0, 32);
@@ -176,9 +167,7 @@ BOOST_AUTO_TEST_CASE(get)
 
 BOOST_AUTO_TEST_CASE(get_signed)
 {
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-  rng.fill_raw(buf, buf.size());
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
 
   // Read zero bits, should return zero
   ReadBS bs(buf, 0, 64);
@@ -238,16 +227,15 @@ BOOST_AUTO_TEST_SUITE(write_bs)
 
 BOOST_AUTO_TEST_CASE(set)
 {
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-
   WriteBS bs;
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
+
   for (uint8_t *pos = buf; pos < buf + max_align; pos++)
   {
-    rng.fill_raw(buf, buf.size());
+    buf.fill_noise();
     for (size_t start_bit = 0; start_bit < max_start_bit; start_bit++)
     {
-      uint32_t test = rng.next();
+      uint32_t test = buf.rng.next();
 
       bs.set(pos, start_bit, 32);
       bs.put(32, test);
@@ -264,14 +252,12 @@ BOOST_AUTO_TEST_CASE(set)
 
 BOOST_AUTO_TEST_CASE(set_bit_pos)
 {
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-  rng.fill_raw(buf, buf.size());
-
   WriteBS bs;
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
+
   for (size_t pos_bits = 0; pos_bits < max_start_bit; pos_bits++)
   {
-    uint32_t test = rng.next();
+    uint32_t test = buf.rng.next();
 
     bs.set(buf, 0, max_start_bit + 32);
     bs.set_pos_bits(pos_bits);
@@ -291,11 +277,9 @@ BOOST_AUTO_TEST_CASE(set_bit_pos)
 
 BOOST_AUTO_TEST_CASE(get_bit_pos)
 {
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-  rng.fill_raw(buf, buf.size());
-
   WriteBS bs;
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
+
   for (uint8_t *pos = buf; pos < buf + max_align; pos++)
     for (size_t start_bit = 0; start_bit < max_start_bit; start_bit++)
       for (unsigned pos_bits = 0; pos_bits <= 32; pos_bits++)
@@ -317,15 +301,13 @@ BOOST_AUTO_TEST_CASE(get_bit_pos)
 BOOST_AUTO_TEST_CASE(put)
 {
   WriteBS bs;
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
-  rng.fill_raw(buf, buf.size());
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
 
   // Test all number of bits
   for (unsigned num_bits = 1; num_bits <= 32; num_bits++)
   {
-    *(uint32_t *)buf.begin() = rng.next();
-    uint32_t test = rng.next() >> (32 - num_bits);
+    *(uint32_t *)buf.begin() = buf.rng.next();
+    uint32_t test = buf.rng.next() >> (32 - num_bits);
 
     bs.set(buf, 0, 32);
     bs.put(num_bits, test);
@@ -339,9 +321,9 @@ BOOST_AUTO_TEST_CASE(put)
   for (unsigned i = 1; i <= 32; i++)
     for (unsigned j = 1; j <= 32; j++)
     {
-      *(uint32_t *)buf.begin() = rng.next();
-      uint32_t test1 = rng.next() >> (32 - i);
-      uint32_t test2 = rng.next() >> (32 - j);
+      *(uint32_t *)buf.begin() = buf.rng.next();
+      uint32_t test1 = buf.rng.next() >> (32 - i);
+      uint32_t test2 = buf.rng.next() >> (32 - j);
 
       bs.set(buf, 0, 64);
       bs.put(i, test1);
@@ -359,19 +341,18 @@ BOOST_AUTO_TEST_CASE(put)
 BOOST_AUTO_TEST_CASE(flush)
 {
   WriteBS bs;
-  RNG rng(seed);
-  Rawdata buf(max_align + max_start_bit / 8 + 4);
+  RawNoise buf(max_align + max_start_bit / 8 + 4, seed);
 
   // Data before start_bit must remain unchanged
   // Test different start positions
   for (uint8_t *pos = buf + 4; pos < buf + max_align; pos++)
     for (size_t start_bit = 0; start_bit < max_start_bit; start_bit++)
     {
-      rng.fill_raw(buf, buf.size());
+      buf.fill_noise();
       uint32_t test = get_uint32(pos - 4, start_bit);
 
       bs.set(pos, start_bit, 32);
-      bs.put(32, rng.next());
+      bs.put(32, buf.rng.next());
       bs.flush();
 
       uint32_t result = get_uint32(pos - 4, start_bit);
@@ -383,10 +364,10 @@ BOOST_AUTO_TEST_CASE(flush)
   for (unsigned i = 0; i <= 32; i++)
     for (unsigned j = 0; j <= 32; j++)
     {
-      rng.fill_raw(buf, buf.size());
+      buf.fill_noise();
       uint32_t test = get_uint32(buf, i + j);
-      uint32_t v1 = (i == 0)? 0: rng.next() >> (32 - i);
-      uint32_t v2 = (j == 0)? 0: rng.next() >> (32 - j);
+      uint32_t v1 = (i == 0)? 0: buf.rng.next() >> (32 - i);
+      uint32_t v2 = (j == 0)? 0: buf.rng.next() >> (32 - j);
 
       bs.set(buf, 0, 64);
       bs.put(i, v1);
@@ -398,8 +379,8 @@ BOOST_AUTO_TEST_CASE(flush)
     }
 
   // set_pos_bits() must flush at old position
-  *(uint32_t *)buf.begin() = rng.next();
-  uint32_t test = rng.next();
+  *(uint32_t *)buf.begin() = buf.rng.next();
+  uint32_t test = buf.rng.next();
 
   bs.set(buf, 0, 64);
   bs.put(32, test);
