@@ -5,6 +5,7 @@
     sequence with reference Park-Miller implementation
 */
 
+#include <math.h>
 #include "rng.h"
 #include "buffer.h"
 #include <boost/test/unit_test.hpp>
@@ -96,6 +97,69 @@ BOOST_AUTO_TEST_CASE(randomize)
       equal = false;
   }
   BOOST_CHECK(!equal);
+}
+
+BOOST_AUTO_TEST_CASE(get_range)
+{
+  int i;
+  const int range = 10;
+  const int nvalues = 1000;
+
+  // Clear distribution
+  int distr[range];
+  for (int i = 0; i < range; i++)
+    distr[i] = 0;
+
+  // Build distribution
+  RNG rng;
+  for (i = 0; i < range * nvalues; i++)
+  {
+    int value = rng.get_range(range);
+    if (value < 0 || value >= range)
+      BOOST_REQUIRE(value >= 0 && value < range);
+    distr[value]++;
+  }
+
+  // Find the deviation form the normal distribution
+  double stddev = 0;
+  for (i = 0; i < range; i++)
+    stddev += (distr[i] - nvalues)*(distr[i] - nvalues);
+  stddev = sqrt(stddev / range) / nvalues;
+
+  BOOST_CHECK(stddev < 0.03);
+}
+
+BOOST_AUTO_TEST_CASE(get_sample)
+{
+  int i;
+  const int range = 10;
+  const int nvalues = 1000;
+
+  // Clear distribution
+  int distr[range];
+  for (int i = 0; i < range; i++)
+    distr[i] = 0;
+
+  // Build distribution
+  RNG rng;
+  for (i = 0; i < range * nvalues; i++)
+  {
+    sample_t sample = rng.get_sample();
+    if (sample <= -1.0 || sample >= 1.0)
+      BOOST_REQUIRE(sample > -1.0 && sample < 1.0);
+
+    int value = int((sample + 1.0) / 2.0 * range);
+    assert(value < range);
+    distr[value]++;
+  }
+
+  // Find the deviation form the normal distribution
+  double stddev = 0;
+  for (i = 0; i < range; i++)
+    stddev += (distr[i] - nvalues)*(distr[i] - nvalues);
+  stddev = sqrt(stddev / range) / nvalues;
+
+  BOOST_CHECK(stddev < 0.03);
 }
 
 BOOST_AUTO_TEST_CASE(fill_raw)
