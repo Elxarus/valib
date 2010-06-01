@@ -2,9 +2,8 @@
   AutoFile class test
 */
 
-#include "rng.h"
-#include "buffer.h"
 #include "auto_file.h"
+#include "../noise_buf.h"
 #include <boost/test/unit_test.hpp>
 
 static const int seed = 687474;
@@ -83,12 +82,10 @@ BOOST_AUTO_TEST_CASE(read_write)
   AutoFile f(temp_file, "wb");
   BOOST_REQUIRE( f.is_open() );
 
-  RNG rng(seed);
-  Rawdata write_data(temp_file_size);
-  rng.fill_raw(write_data, temp_file_size);
+  RawNoise write_data(temp_file_size, seed);
   
-  size_t write_size = f.write(write_data, temp_file_size);
-  BOOST_CHECK_EQUAL(write_size, temp_file_size);
+  size_t write_size = f.write(write_data, write_data.size());
+  BOOST_CHECK_EQUAL(write_size, write_data.size());
   f.close();
 
   f.open(temp_file, "rb");
