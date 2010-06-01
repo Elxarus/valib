@@ -201,6 +201,10 @@
 			RelativePath=".\tests\test_crc.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\tests\test_rng.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
