@@ -34,7 +34,8 @@ static void bytestream_test(int poly, int power, const char *poly_name)
       // Test crc using byte stream interface
       uint32_t test_crc = crc.calc(0, buf + shift, size);
 
-      BOOST_CHECK_EQUAL(test_crc, ref_crc);
+      if (test_crc != ref_crc)
+        BOOST_FAIL("Fail at size = " << size << " shift = " << shift);
     }
 }
 
@@ -63,7 +64,6 @@ void bitstream_test(int poly, int power, const char *poly_name)
       int end_bit    = (shift + size) % 8;
 
       // Reference crc
-
       uint32_t ref_crc = 0;
       if (start_byte == end_byte)
         ref_crc = crc.calc(ref_crc, buf[start_byte] >> (8 - end_bit), size);
@@ -76,10 +76,10 @@ void bitstream_test(int poly, int power, const char *poly_name)
       }
 
       // Test crc
-
       uint32_t test_crc = crc.calc(0, buf, shift, size);
 
-      BOOST_CHECK_EQUAL(test_crc, ref_crc);
+      if (test_crc != ref_crc)
+        BOOST_FAIL("Fail at size = " << size << " shift = " << shift);
     }
 }
 

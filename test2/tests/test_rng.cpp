@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(fill_raw)
 
       rng.fill_raw(data, size);
 
-      BOOST_CHECK_EQUAL(*guard1, guard);
-      BOOST_CHECK_EQUAL(*guard2, guard);
+      if (*guard1 != guard || *guard2 != guard)
+        BOOST_FAIL("Out of bounds at offset = " << offset << " size = " << size);
     }
 }
 
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(full_proof)
   {
     seed = park_miller(seed);
     if (seed != rng.next())
-      BOOST_REQUIRE(false);
+      BOOST_FAIL("Sequence fails at element " << i);
   }
 }
 */
