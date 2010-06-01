@@ -197,6 +197,10 @@
 			RelativePath=".\tests\test_buffer.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\tests\test_crc.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
