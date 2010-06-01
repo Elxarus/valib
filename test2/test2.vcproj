@@ -205,6 +205,10 @@
 			RelativePath=".\tests\test_rng.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\tests\test_streambuf.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
