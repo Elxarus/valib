@@ -19,3 +19,6 @@ syntax:glob
 # Test
 test\*.exe
 test\*.log
+
+# cmd
+cmd\config.cmd
