@@ -169,6 +169,14 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="suite"
+			>
+			<File
+				RelativePath=".\noise_buf.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\main.cpp"
 			>
