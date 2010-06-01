@@ -48,9 +48,39 @@
   * Dithering noise
   * Random integers in a given range
 
+  Usage
+  =====
+
+  RNG()
+    Construct rng object using a default seed
+
+  RNG(int seed)
+    Construct rng object using the given seed
+
+  RNG &seed(int seed)
+    Seed the generator with a new value
+
+  RNG &randomize()
+    Seed the generator with a random value
+
+  uint32_t next()
+    Get a new random value in a native generator's range
+
+  uint32_t get_range(uint32_t range)
+    Get a new integer random value in a range [0..range]
+
+  sample_t get_sample()
+    Get a new sample value in a range (-1..1)
+
+  void fill_raw(void *data, size_t size)
+    Fill the memory with random values
+
+  void fill_samples(sample_t *sample, size_t size)
+    Fill the memory with random samples
+
   Plans
   =====
-  Switch to Mersenne twister?
+  Use Mersenne twister?
 */
 
 class RNG
@@ -61,8 +91,6 @@ protected:
 public:
   RNG();
   RNG(int seed);
-  RNG(const RNG &rng);
-  RNG &operator =(const RNG &rng);
   
   RNG &seed(int seed);
   RNG &randomize();

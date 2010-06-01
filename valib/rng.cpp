@@ -14,18 +14,6 @@ RNG::RNG(int _seed)
   seed(_seed);
 }
 
-RNG::RNG(const RNG &rng)
-{
-  z = rng.z;
-}
-
-RNG &
-RNG::operator =(const RNG &rng)
-{
-  z = rng.z;
-  return *this;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Seeding
 
@@ -42,7 +30,8 @@ RNG &
 RNG::randomize()
 {
   // todo: use more than just a time to randomize?
-  z = (uint32_t)(local_time() * 1000) & 0x7fffffff;
+  uint32_t time = (uint32_t)(local_time() * 1000) & 0x7fffffff;
+  seed(time ^ z);
   next();
   return *this;
 }
