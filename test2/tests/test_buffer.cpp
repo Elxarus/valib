@@ -16,26 +16,18 @@ static const size_t size2 = 200;
 static const size_t nch1 = 2;
 static const size_t nch2 = NCHANNELS;
 
-static void test_deallocated(SampleBuf &buf)
-{
-  BOOST_CHECK( !buf.is_allocated() );
-  BOOST_CHECK( buf.nch() == 0 );
-  BOOST_CHECK( buf.nsamples() == 0 );
-}
+static bool is_deallocated(SampleBuf &buf)
+{ return !buf.is_allocated() && buf.nch() == 0 && buf.nsamples() == 0; }
 
-static void test_allocated(SampleBuf &buf, unsigned nch, unsigned nsamples)
-{
-  BOOST_CHECK( buf.is_allocated() );
-  BOOST_CHECK( buf.nch() == nch );
-  BOOST_CHECK( buf.nsamples() == nsamples );
-}
+static bool is_allocated(SampleBuf &buf, unsigned nch, unsigned nsamples)
+{ return buf.is_allocated() && buf.nch() == nch && buf.nsamples() == nsamples; }
 
 BOOST_AUTO_TEST_SUITE(sample_buf)
 
 BOOST_AUTO_TEST_CASE(default_constructor)
 {
   SampleBuf buf;
-  test_deallocated(buf);
+  BOOST_CHECK(is_deallocated(buf));
 
   // Destructor of an default constructed buffer
   // should not fail after leaving of this block
@@ -44,7 +36,7 @@ BOOST_AUTO_TEST_CASE(default_constructor)
 BOOST_AUTO_TEST_CASE(init_constructor)
 {
   SampleBuf buf(nch1, size1);
-  test_allocated(buf, nch1, size1);
+  BOOST_CHECK(is_allocated(buf, nch1, size1));
 
   // Test automatic cast to samples_t and sample_t *
   samples_t s = buf;
@@ -65,19 +57,19 @@ BOOST_AUTO_TEST_CASE(allocate)
 
   // Just allocate a buffer
   buf.allocate(nch2, size1);
-  test_allocated(buf, nch2, size1);
+  BOOST_CHECK(is_allocated(buf, nch2, size1));
 
   // Allocate more data
   buf.allocate(nch2, size2);
-  test_allocated(buf, nch2, size2);
+  BOOST_CHECK(is_allocated(buf, nch2, size2));
 
   // Allocate less data
   buf.allocate(nch1, size1);
-  test_allocated(buf, nch1, size1);
+  BOOST_CHECK(is_allocated(buf, nch1, size1));
 
   // Free buffer
   buf.free();
-  test_deallocated(buf);
+  BOOST_CHECK(is_deallocated(buf));
 }
 
 BOOST_AUTO_TEST_CASE(allocate_failure)

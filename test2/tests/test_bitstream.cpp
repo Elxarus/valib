@@ -76,7 +76,8 @@ BOOST_AUTO_TEST_CASE(set)
       bs.set(pos, start_bit, 32);
       uint32_t result = bs.get(32);
       uint32_t test = get_uint32(pos, start_bit);
-      BOOST_CHECK_EQUAL(result, test);
+      if (result != test)
+        BOOST_FAIL("Fail at pos = " << pos << " start_bit = " << start_bit);
     }
 }
 
@@ -94,7 +95,8 @@ BOOST_AUTO_TEST_CASE(set_bit_pos)
     bs.set_pos_bits(pos_bits);
     uint32_t result = bs.get(32);
     uint32_t test = get_uint32(buf, pos_bits);
-    BOOST_CHECK_EQUAL(result, test);
+    if (result != test)
+      BOOST_FAIL("Fail at pos_bits = " << pos_bits);
   }
 }
 
@@ -117,10 +119,8 @@ BOOST_AUTO_TEST_CASE(get_bit_pos)
         bs.set_pos_bits(pos_bits);
         size_t test_pos_bits = bs.get_pos_bits();
 
-        // ~100K variants enumerated.
-        // BOOST_CHECK_EQUAL's logging is too slow for this.
         if (test_pos_bits != pos_bits)
-          BOOST_CHECK_EQUAL(test_pos_bits, pos_bits);
+          BOOST_FAIL("Fail at pos = " << pos << " start_bit = " << start_bit << " pos_bits = " << pos_bits);
       }
 }
 
@@ -138,11 +138,16 @@ BOOST_AUTO_TEST_CASE(get)
 
   // Test all number of bits
   uint32_t test = be2uint32(*(uint32_t*)buf.begin());
-  for (unsigned num_bits = 1; num_bits <= 32; num_bits++)
+  for (unsigned num_bits = 0; num_bits <= 32; num_bits++)
   {
     bs.set(buf, 0, 32);
     result = bs.get(num_bits);
-    BOOST_CHECK_EQUAL(result, test >> (32 - num_bits));
+
+    uint32_t test_value = test >> (32 - num_bits);
+    if (num_bits == 0) test_value = 0;
+
+    if (result != test_value)
+      BOOST_FAIL("Fail at num_bits = " << num_bits);
   }
 
   // Test all combinations of num_bits and bits_left
@@ -154,10 +159,12 @@ BOOST_AUTO_TEST_CASE(get)
       bs.set(buf, 0, 64);
       result = bs.get(i);
       result = bs.get(j);
-      if (j == 0)
-        BOOST_CHECK(result == 0);
-      else
-        BOOST_CHECK_EQUAL(result, test >> (32 - j));
+
+      uint32_t test_value = test >> (32 - j);
+      if (j == 0) test_value = 0;
+
+      if (result != test_value)
+        BOOST_FAIL("Fail at bs.get(" << i << "); bs.get(" << j << ");");
     }
   }
 }
@@ -180,11 +187,16 @@ BOOST_AUTO_TEST_CASE(get_signed)
   {
     *(uint32_t *)buf.begin() = ~*(uint32_t *)buf.begin();
     int32_t test = be2uint32(*(uint32_t*)buf.begin());
-    for (unsigned num_bits = 1; num_bits <= 32; num_bits++)
+    for (unsigned num_bits = 0; num_bits <= 32; num_bits++)
     {
       bs.set(buf, 0, 32);
       result = bs.get_signed(num_bits);
-      BOOST_CHECK_EQUAL(result, test >> (32 - num_bits));
+
+      uint32_t test_value = test >> (32 - num_bits);
+      if (num_bits == 0) test_value = 0;
+
+      if (result != test_value)
+        BOOST_FAIL("Fail at sign = " << sign << " num_bits = " << num_bits);
     }
   }
 
@@ -200,10 +212,12 @@ BOOST_AUTO_TEST_CASE(get_signed)
         bs.set(buf, 0, 64);
         result = bs.get_signed(i);
         result = bs.get_signed(j);
-        if (j == 0)
-          BOOST_CHECK(result == 0);
-        else
-          BOOST_CHECK_EQUAL(result, test_signed >> (32 - j));
+
+        uint32_t test_value = test_signed >> (32 - j);
+        if (j == 0) test_value = 0;
+
+        if (result != test_value)
+          BOOST_FAIL("Fail at sign = " << sign << " bs.get_signed(" << i << "); bs.get_signed(" << j << ");");
       }
     }
   }
@@ -242,7 +256,8 @@ BOOST_AUTO_TEST_CASE(set)
       bs.flush();
 
       uint32_t result = get_uint32(pos, start_bit);
-      BOOST_CHECK_EQUAL(result, test);
+      if (result != test)
+        BOOST_FAIL("Fail at pos = " << pos << " start_bit = " << start_bit);
     }
   }
 }
@@ -265,7 +280,8 @@ BOOST_AUTO_TEST_CASE(set_bit_pos)
     bs.flush();
 
     uint32_t result = get_uint32(buf, pos_bits);
-    BOOST_CHECK_EQUAL(result, test);
+    if (result != test)
+      BOOST_FAIL("Fail at pos_bits = " << pos_bits);
   }
 }
 
@@ -288,10 +304,8 @@ BOOST_AUTO_TEST_CASE(get_bit_pos)
         bs.set_pos_bits(pos_bits);
         size_t test_pos_bits = bs.get_pos_bits();
 
-        // ~100K variants enumerated.
-        // BOOST_CHECK_EQUAL's logging is too slow for this.
         if (test_pos_bits != pos_bits)
-          BOOST_CHECK_EQUAL(test_pos_bits, pos_bits);
+          BOOST_FAIL("Fail at pos = " << pos << " start_bit = " << start_bit << " pos_bits = " << pos_bits);
       }
 }
 
@@ -314,7 +328,8 @@ BOOST_AUTO_TEST_CASE(put)
     bs.flush();
 
     uint32_t result = get_uint32(buf, 0) >> (32 - num_bits);
-    BOOST_CHECK_EQUAL(result, test);
+    if (test != result)
+      BOOST_FAIL("Fail at num_bits = " << num_bits);
   }
 
   // Test all combinations of num_bits and bits_left
@@ -331,7 +346,8 @@ BOOST_AUTO_TEST_CASE(put)
       bs.flush();
 
       uint32_t result = get_uint32(buf, i) >> (32 - j);
-      BOOST_CHECK_EQUAL(result, test2);
+      if (test2 != result)
+        BOOST_FAIL("Fail at bs.put(" << i << "); bs.put(" << j << ");");
     }
 }
 
@@ -356,7 +372,8 @@ BOOST_AUTO_TEST_CASE(flush)
       bs.flush();
 
       uint32_t result = get_uint32(pos - 4, start_bit);
-      BOOST_CHECK_EQUAL(result, test);
+      if (test != result)
+        BOOST_FAIL("Fail at pos = " << pos << " start_bit = " << start_bit);
     }
 
   // Data after the last bit changed must remain unchanged
@@ -375,7 +392,8 @@ BOOST_AUTO_TEST_CASE(flush)
       bs.flush();
 
       uint32_t result = get_uint32(buf, i + j);
-      BOOST_CHECK_EQUAL(result, test);
+      if (test != result)
+        BOOST_FAIL("Fail at bs.put(" << i << "); bs.put(" << j << "); flush(); ");
     }
 
   // set_pos_bits() must flush at old position
