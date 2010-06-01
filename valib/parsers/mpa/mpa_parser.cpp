@@ -88,10 +88,10 @@ MPAParser::crc_check(const uint8_t *frame, size_t protected_data_bits) const
   // protected data. Due to CRC properties we must get
   // zero result in case of no errors.
 
-  uint32_t crc = crc16.crc_init(0xffff);
-  crc = crc16.calc_bits(crc, frame + 2, 0, 16); // header
-  crc = crc16.calc_bits(crc, frame + 6, 0, protected_data_bits); // frame data
-  crc = crc16.calc_bits(crc, frame + 4, 0, 16); // crc
+  uint32_t crc = 0xffff;
+  crc = crc16.calc(crc, frame + 2, 0, 16); // header
+  crc = crc16.calc(crc, frame + 6, 0, protected_data_bits); // frame data
+  crc = crc16.calc(crc, frame + 4, 0, 16); // crc
   return crc == 0;
 }
 

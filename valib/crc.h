@@ -2,10 +2,31 @@
   CRC calculation class
   =====================
 
-  This class provides following functionality:
-  * Can work with any given polinomial up to 32 bit width
-  * Can work with byte streams and bit streams
+  CRC(uint32_t poly, unsigned power);
+    Construct crc class for the polynomial given.
 
+  void init(uint32_t poly, unsigned power)
+    Initialize crc class with the polynomial given.
+
+  uint32_t calc(uint32_t crc, const uint8_t *data, size_t size) const
+    Find crc for the given message.
+    crc  - starting crc value
+    data - pointer to the start of the message
+    size - number of bytes in the message
+
+  uint32_t calc(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const
+    Find crc for the given message (bit precise).
+    crc  - starting crc value
+    data - pointer to the bit stream
+    start_bit - number of the first bit of the message relative to data pointer
+    bits - number of bits in the message
+
+  uint32_t calc(uint32_t crc, uint32_t data, size_t bits) const
+    Find crc for the given message (bit precise).
+    crc  - starting crc value
+    data - message value (right-aligned)
+    bits - number of bits in the message
+    
   This module provides 2 predefined constant classes for standard
   CRC16 and CRC32 polinomials
 */
@@ -38,27 +59,22 @@ protected:
 
   __forceinline uint32_t add_8    (uint32_t crc, uint32_t data) const;
   __forceinline uint32_t add_32   (uint32_t crc, uint32_t data) const;
-
-public:
-  CRC() {};
-  CRC(uint32_t _poly, unsigned _power)
-  { init(_poly, _power); };
-
-  void init(uint32_t poly, unsigned power);
+  __forceinline uint32_t add_bits (uint32_t crc, uint32_t data, size_t bits) const;
+  uint32_t add_bytes(uint32_t crc, const uint8_t *data, size_t size) const;
 
   /////////////////////////////////////////////////////////////////////////////
   // Pre- and post- CRC shift
   // Required because 32bit left-aligned CRC value is used internally.
 
-  inline uint32_t crc_init(uint32_t crc) const { return crc << (32 - power); }
-  inline uint32_t crc_get(uint32_t crc)  const { return crc >> (32 - power); }
+  inline uint32_t pre_shift(uint32_t crc)  const { return crc << (32 - power); }
+  inline uint32_t post_shift(uint32_t crc) const { return crc >> (32 - power); }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // CRC calculations
+public:
+  CRC(uint32_t poly_, unsigned power_);
 
   uint32_t calc(uint32_t crc, const uint8_t *data, size_t size) const;
-  uint32_t calc_bits(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const;
-  uint32_t add_bits (uint32_t crc, uint32_t data, size_t bits) const;
+  uint32_t calc(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const;
+  uint32_t calc(uint32_t crc, uint32_t data, size_t bits) const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

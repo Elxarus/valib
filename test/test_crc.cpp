@@ -28,7 +28,6 @@ class CRCTest
 {
 protected:
   Log *log;
-  CRC crc;
 
 public:
   CRCTest(Log *_log)
@@ -66,7 +65,7 @@ public:
     uint8_t *data = new uint8_t[size];
     rng.fill_raw(data, size);
 
-    crc.init(POLY_CRC16, 16);
+    CRC crc(POLY_CRC16, 16);
 
     log->open_group("CRC speed test");
     speed_test_table(data, size, 0xc30d);
@@ -94,7 +93,7 @@ public:
 
     log->msg("Bytestream test with %s polinomial", poly_name);
 
-    crc.init(poly, power);
+    CRC crc(poly, power);
     for (int size = 0; size < max_size; size++)
       for (int shift = 0; shift < max_shift; shift++)
       {
@@ -103,7 +102,7 @@ public:
         // calc message reference crc
         crc_msg = 0;
         for (i = 0; i < size; i++)
-          crc_msg = crc.add_bits(crc_msg, buf[shift + i], 8);
+          crc_msg = crc.calc(crc_msg, buf[shift + i], 8);
 
         // calc message test crc
         crc_test = crc.calc(0, buf + shift, size);
@@ -135,7 +134,7 @@ public:
 
     log->msg("Bitstream test with %s polinomial", poly_name);
 
-    crc.init(poly, power);
+    CRC crc(poly, power);
     for (int size = 0; size < max_size; size++)
       for (int shift = 0; shift < max_shift; shift++)
       {
@@ -149,18 +148,18 @@ public:
         // calc message reference crc
         crc_msg = 0;
         if (start_byte == end_byte)
-          crc_msg = crc.add_bits(crc_msg, buf[start_byte] >> (8 - end_bit), size);
+          crc_msg = crc.calc(crc_msg, buf[start_byte] >> (8 - end_bit), size);
         else
         {
-          crc_msg = crc.add_bits(crc_msg, buf[start_byte], 8 - start_bit);
+          crc_msg = crc.calc(crc_msg, buf[start_byte], 8 - start_bit);
           for (i = start_byte + 1; i < end_byte; i++)
-            crc_msg = crc.add_bits(crc_msg, buf[i], 8);
-          crc_msg = crc.add_bits(crc_msg, buf[end_byte] >> (8 - end_bit), end_bit);
+            crc_msg = crc.calc(crc_msg, buf[i], 8);
+          crc_msg = crc.calc(crc_msg, buf[end_byte] >> (8 - end_bit), end_bit);
         }
 
         // calc message test crc
         crc_test = 0;
-        crc_test = crc.calc_bits(crc_test, buf, shift, size);
+        crc_test = crc.calc(crc_test, buf, shift, size);
 
         // test it
         if (crc_test != crc_msg)
@@ -211,7 +210,7 @@ public:
     while (cpu.get_thread_time() < time_per_test)
     {
       runs++;
-      result = crc.calc(0, data, size);
+      result = crc16.calc(0, data, size);
     }
     cpu.stop();
 

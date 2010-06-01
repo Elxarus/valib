@@ -24,22 +24,19 @@ const CRC crc16(POLY_CRC16, 16);
 const CRC crc32(POLY_CRC32, 32);
 
 ///////////////////////////////////////////////////////////////////////////////
-// CRC primitives
+// Init
 
-uint32_t 
-CRC::add_bits(uint32_t crc, uint32_t data, size_t bits) const
+CRC::CRC(uint32_t poly_, unsigned power_)
 {
-  if (bits)
-  {
-    crc ^= (data << (32 - bits));
-    while (bits--)
-      if (crc & 0x80000000)
-        crc = (crc << 1) ^ poly;
-      else
-        crc <<= 1;
-  }
-  return crc;
+  assert(power_ <= 32);
+  poly = poly_ << (32 - power_);
+  power = power_;
+  for (unsigned byte = 0; byte < 256; byte++)
+    tbl[byte] = add_bits(0, byte, 8);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// CRC primitives
 
 uint32_t
 CRC::add_8(uint32_t crc, uint32_t data) const
@@ -58,27 +55,23 @@ CRC::add_32(uint32_t crc, uint32_t data) const
   return crc;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Init CRC table
-
-void
-CRC::init(uint32_t _poly, unsigned _power)
+uint32_t 
+CRC::add_bits(uint32_t crc, uint32_t data, size_t bits) const
 {
-  unsigned byte;
-  assert(_power <= 32);
-
-  poly = _poly << (32 - _power);
-  power = _power;
-
-  for (byte = 0; byte < 256; byte++)
-    tbl[byte] = add_bits(0, byte, 8);
+  if (bits)
+  {
+    crc ^= (data << (32 - bits));
+    while (bits--)
+      if (crc & 0x80000000)
+        crc = (crc << 1) ^ poly;
+      else
+        crc <<= 1;
+  }
+  return crc;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Calc CRC
-
 uint32_t 
-CRC::calc(uint32_t crc, const uint8_t *data, size_t size) const
+CRC::add_bytes(uint32_t crc, const uint8_t *data, size_t size) const
 {
   const uint8_t *end = data + size;
 
@@ -113,16 +106,30 @@ CRC::calc(uint32_t crc, const uint8_t *data, size_t size) const
   return crc;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Calc CRC
+
 uint32_t 
-CRC::calc_bits(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const
+CRC::calc(uint32_t crc, const uint8_t *data, size_t size) const
 {
+  crc = pre_shift(crc);
+  crc = add_bytes(crc, data, size);
+  return post_shift(crc);
+}
+
+uint32_t 
+CRC::calc(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const
+{
+  // Move pointer to the first byte
   data += start_bit >> 3;
   start_bit &= 7;
 
+  // Count bytes
   size_t end_bit = start_bit + bits;
   size_t size = end_bit >> 3;
   end_bit &= 7;
 
+  crc = pre_shift(crc);
   if (size)
   {
     // prolog
@@ -130,7 +137,7 @@ CRC::calc_bits(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits)
     data++;
 
     // body
-    crc = calc(crc, data, size-1);
+    crc = add_bytes(crc, data, size-1);
     data += size-1;
 
     // epilog
@@ -142,5 +149,14 @@ CRC::calc_bits(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits)
     crc = add_bits(crc, (*data) >> (8 - end_bit), bits);
   }
 
-  return crc;
+  return post_shift(crc);
+}
+
+uint32_t 
+CRC::calc(uint32_t crc, const uint32_t data, size_t bits) const
+{
+  assert(bits <= 32);
+  crc = pre_shift(crc);
+  crc = add_bits(crc, data, bits);
+  return post_shift(crc);
 }
