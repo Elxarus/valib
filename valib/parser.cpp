@@ -409,7 +409,7 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
   /////////////////////////////////////////////////////////////////////////////
   // Drop old debris and frame data
 
-  if (is_frame_loaded())
+  if (frame_size || debris_size)
   {
     DROP(debris_size + frame_size);
     debris_size = 0;
