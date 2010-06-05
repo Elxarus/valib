@@ -66,31 +66,36 @@ void passthrough_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size
       // process data
       streambuf.load(&ptr, end);
 
-      // count frames and streams
-      if (streambuf.is_new_stream())   streams++;
-      if (streambuf.is_frame_loaded()) frames++;
-
-      // get data
-      debris      = streambuf.get_debris();
-      debris_size = streambuf.get_debris_size();
-      frame       = streambuf.get_frame();
-      frame_size  = streambuf.get_frame_size();
-
-      if (ref_ptr + debris_size + frame_size > end)
-        BOOST_FAIL("Frame ends after the end of the reference file");
+      // count streams
+      if (streambuf.is_new_stream())
+        streams++;
 
       // Check debris
-      if (memcmp(debris, ref_ptr, debris_size))
-        BOOST_FAIL("Debris check failed at pos = " << ref_ptr - buf);
-      ref_ptr += debris_size;
+      if (streambuf.is_debris_exists())
+      {
+        debris      = streambuf.get_debris();
+        debris_size = streambuf.get_debris_size();
+        if (memcmp(debris, ref_ptr, debris_size))
+          BOOST_FAIL("Debris check failed at pos = " << ref_ptr - buf << " frame = " << frames);
+        ref_ptr += debris_size;
+      }
 
       // Check frame
-      if (memcmp(frame, ref_ptr, frame_size))
-        BOOST_FAIL("Frame check failed at pos = " << ref_ptr - buf);
-      ref_ptr += frame_size;
+      if (streambuf.is_frame_loaded())
+      {
+        frame       = streambuf.get_frame();
+        frame_size  = streambuf.get_frame_size();
+        if (memcmp(frame, ref_ptr, frame_size))
+          BOOST_FAIL("Frame check failed at pos = " << ref_ptr - buf << " frame = " << frames);
+        frames++;
+        ref_ptr += frame_size;
 
-      // zap the frame buffer to simulate in-place processing
-      memset(frame, 0, frame_size);
+        // zap the frame buffer to simulate in-place processing
+        memset(frame, 0, frame_size);
+      }
+
+      if (ref_ptr > end)
+        BOOST_FAIL("Frame ends after the end of the reference file");
     }
   }
 
@@ -162,9 +167,8 @@ BOOST_AUTO_TEST_CASE(set_parser)
   BOOST_CHECK(buf.get_parser() == 0);
 }
 
-BOOST_AUTO_TEST_CASE(passthrough)
+BOOST_AUTO_TEST_CASE(file_passthrough)
 {
-  RawNoise noise(noise_size, seed);
   const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
   MultiHeader multi_header(headers, array_size(headers));
 
@@ -172,20 +176,17 @@ BOOST_AUTO_TEST_CASE(passthrough)
   passthrough_test("a.mp2.002.mp2",   &mpa_header, 1, 500);
   passthrough_test("a.mp2.005.mp2",   &mpa_header, 1, 500);
   passthrough_test("a.mp2.mix.mp2",   &mpa_header, 3, 1500);
-  passthrough_test(&mpa_header, noise, noise.size(), 0, 0, 0);
                                  
   BOOST_MESSAGE("AC3Header");
   passthrough_test("a.ac3.005.ac3",   &ac3_header, 1, 375);
   passthrough_test("a.ac3.03f.ac3",   &ac3_header, 1, 375);
   passthrough_test("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
-  passthrough_test(&ac3_header, noise, noise.size(), 0, 0, 0);
                                  
   // We cannot load the last frame of SPDIF/DTS stream.
   // See note at StreamBuffer class comments.
   BOOST_MESSAGE("DTSHeader");
   passthrough_test("a.dts.03f.dts",   &dts_header, 1, 1125);
   passthrough_test("a.dts.03f.spdif", &dts_header, 1, 1124);
-  passthrough_test(&dts_header, noise, noise.size(), 0, 0, 0);
                                  
   // SPDIFHeader must work with SPDIF/DTS stream correctly
   BOOST_MESSAGE("SPDIFHeader");
@@ -193,11 +194,22 @@ BOOST_AUTO_TEST_CASE(passthrough)
   passthrough_test("a.ac3.03f.spdif", &spdif_header, 1, 375);
   passthrough_test("a.dts.03f.spdif", &spdif_header, 1, 1125);
   passthrough_test("a.mad.mix.spdif", &spdif_header, 7, 4375);
-  passthrough_test(&spdif_header, noise, noise.size(), 0, 0, 0);
                                  
   BOOST_MESSAGE("MultiHeader");
   passthrough_test("a.mad.mix.mad",   &multi_header, 7, 4375);
   passthrough_test("a.mad.mix.spdif", &multi_header, 7, 4375);
+}
+
+BOOST_AUTO_TEST_CASE(noise_passthrough)
+{
+  const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
+  MultiHeader multi_header(headers, array_size(headers));
+
+  RawNoise noise(noise_size, seed);
+  passthrough_test(&mpa_header, noise, noise.size(), 0, 0, 0);
+  passthrough_test(&ac3_header, noise, noise.size(), 0, 0, 0);
+  passthrough_test(&dts_header, noise, noise.size(), 0, 0, 0);
+  passthrough_test(&spdif_header, noise, noise.size(), 0, 0, 0);
   passthrough_test(&multi_header, noise, noise.size(), 0, 0, 0);
 }
 
