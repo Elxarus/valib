@@ -1,19 +1,18 @@
 @echo off
 
-set TEST=test2.exe
+set DIR=%CD%
+set TEST=%CD%\%1\test2.exe
 
 if "%1" == "" goto usage
 if not exist "..\..\samples\test" goto err_no_samples
-if not exist "%1\%TEST%" goto err_config
+if not exist "%TEST%" goto err_config
 
-set CONFIG=%1
 shift
 shift
-set TESTS=%*
 
 cd ..\..\samples\test
-..\..\valib\test2\%CONFIG%\%TEST% %TESTS%
-cd ..\..\valib\test2
+%TEST% %*
+cd %DIR%
 goto end
 
 
@@ -33,7 +32,7 @@ echo ..\valib\text\%%config%%
 goto fail
 
 :err_config
-echo Cannot find %1\%TEST%
+echo Cannot find %TEST%
 goto fail
 
 :err_no_samples
