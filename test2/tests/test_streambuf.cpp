@@ -141,15 +141,6 @@ void passthrough_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size
   if (file_frames)  BOOST_CHECK_EQUAL(frames, file_frames);
 }
 
-void passthrough_test(const char *filename, const HeaderParser *hparser, int file_streams, int file_frames)
-{
-  BOOST_MESSAGE("Passthrough test " << filename);
-
-  MemFile f(filename);
-  BOOST_REQUIRE(f);
-  passthrough_test(hparser, f, f.size(), file_streams, file_frames);
-}
-
 BOOST_AUTO_TEST_SUITE(streambuf)
 
 BOOST_AUTO_TEST_CASE(constructor)
@@ -256,32 +247,39 @@ BOOST_AUTO_TEST_CASE(file_passthrough)
   const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
   const MultiHeader multi_header(headers, array_size(headers));
 
-  BOOST_MESSAGE("MPAHeader");
-  passthrough_test("a.mp2.002.mp2",   &mpa_header, 1, 500);
-  passthrough_test("a.mp2.005.mp2",   &mpa_header, 1, 500);
-  passthrough_test("a.mp2.mix.mp2",   &mpa_header, 3, 1500);
+  struct {
+    const char *filename;
+    const char *parser_name;
+    const HeaderParser *hparser;
+    int streams;
+    int frames;
+  } parsers[] = {
+    { "a.mp2.002.mp2",   "MPAHeader", &mpa_header, 1, 500 },
+    { "a.mp2.005.mp2",   "MPAHeader", &mpa_header, 1, 500 },
+    { "a.mp2.mix.mp2",   "MPAHeader", &mpa_header, 3, 1500 },
+    { "a.ac3.005.ac3",   "AC3Header", &ac3_header, 1, 375 },
+    { "a.ac3.03f.ac3",   "AC3Header", &ac3_header, 1, 375 },
+    { "a.ac3.mix.ac3",   "AC3Header", &ac3_header, 3, 1500 },
+    { "a.dts.03f.dts",   "DTSHeader", &dts_header, 1, 1125 },
+    // We cannot load the last frame of SPDIF/DTS stream.
+    // See note at StreamBuffer class comments.
+    { "a.dts.03f.spdif", "DTSHeader", &dts_header, 1, 1124 },
+    { "a.mp2.005.spdif", "SPDIFHeader", &spdif_header, 1, 500 },
+    { "a.ac3.03f.spdif", "SPDIFHeader", &spdif_header, 1, 375 },
+    { "a.dts.03f.spdif", "SPDIFHeader", &spdif_header, 1, 1125 },
+    { "a.mad.mix.spdif", "SPDIFHeader", &spdif_header, 7, 4375 },
+    { "a.mad.mix.mad",   "SPDIFHeader", &multi_header, 7, 4375 },
+    { "a.mad.mix.spdif", "SPDIFHeader", &multi_header, 7, 4375 },
+  };
 
-  BOOST_MESSAGE("AC3Header");
-  passthrough_test("a.ac3.005.ac3",   &ac3_header, 1, 375);
-  passthrough_test("a.ac3.03f.ac3",   &ac3_header, 1, 375);
-  passthrough_test("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
+  for (size_t iparser = 0; iparser < array_size(parsers); iparser++)
+  {
+    BOOST_MESSAGE("Passthrough test " << parsers[iparser].parser_name << " " << parsers[iparser].filename);
 
-  // We cannot load the last frame of SPDIF/DTS stream.
-  // See note at StreamBuffer class comments.
-  BOOST_MESSAGE("DTSHeader");
-  passthrough_test("a.dts.03f.dts",   &dts_header, 1, 1125);
-  passthrough_test("a.dts.03f.spdif", &dts_header, 1, 1124);
-
-  // SPDIFHeader must work with SPDIF/DTS stream correctly
-  BOOST_MESSAGE("SPDIFHeader");
-  passthrough_test("a.mp2.005.spdif", &spdif_header, 1, 500);
-  passthrough_test("a.ac3.03f.spdif", &spdif_header, 1, 375);
-  passthrough_test("a.dts.03f.spdif", &spdif_header, 1, 1125);
-  passthrough_test("a.mad.mix.spdif", &spdif_header, 7, 4375);
-
-  BOOST_MESSAGE("MultiHeader");
-  passthrough_test("a.mad.mix.mad",   &multi_header, 7, 4375);
-  passthrough_test("a.mad.mix.spdif", &multi_header, 7, 4375);
+    MemFile f(parsers[iparser].filename);
+    BOOST_REQUIRE(f);
+    passthrough_test(parsers[iparser].hparser, f, f.size(), parsers[iparser].streams, parsers[iparser].frames);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(noise_passthrough)
