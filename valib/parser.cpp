@@ -375,7 +375,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
   // Try to locate next syncpoint and return data up to the poistion found
   // as debris.
 
-  uint8_t *pos = frame1 + 1;
+  uint8_t *pos = frame1;
   uint8_t *pos_max = sync_buf + sync_data - header_size;
   while (pos <= pos_max)
   {
