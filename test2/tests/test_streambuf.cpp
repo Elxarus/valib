@@ -35,7 +35,13 @@
 static const int seed = 958745023;
 static const int noise_size = 1*1024*1024;
 
-void sync_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size, size_t junk_size, size_t chunk_size)
+///////////////////////////////////////////////////////////////////////////////
+// Sync test
+// Sync on a stream starting at some distance from the start of the buffer.
+// The size of the junk before the stream equals to junk_size. Feed the parser
+// with chunks of size chunk_size.
+
+static void sync_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size, size_t junk_size, size_t chunk_size)
 {
   // setup pointers
   uint8_t *ptr = buf;
@@ -91,7 +97,7 @@ void sync_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size, size_
     BOOST_FAIL("Frame ends after the end of the reference file");
 }
 
-void passthrough_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size, int file_streams, int file_frames)
+static void passthrough_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size, int file_streams, int file_frames)
 {
   // setup pointers
   uint8_t *ptr = buf;
@@ -233,7 +239,8 @@ BOOST_AUTO_TEST_CASE(sync)
     for (size_t ijunk_size = 0; ijunk_size < array_size(junk_size); ijunk_size++)
       for (size_t ichunk = 0; ichunk < array_size(chunk_size); ichunk++)
       {
-        data.allocate_noise(junk_size[ijunk_size] + file.size());
+        data.allocate(junk_size[ijunk_size] + file.size());
+        data.rng.fill_raw(data, junk_size[ijunk_size]);
         memcpy(data + junk_size[ijunk_size], file, file.size());
         sync_test(parsers[iparser].parser, 
           data, junk_size[ijunk_size] + file.size(),
