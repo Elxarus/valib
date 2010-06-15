@@ -202,6 +202,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\tests\test_mpeg_demux.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\tests\test_rng.cpp"
 			>
 		</File>
