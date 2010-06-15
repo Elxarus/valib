@@ -4,6 +4,50 @@
   //////////////////////////////////////////////////////////////////////////////
   // PSParser - a simple MPEG1/2 Program Stream parser.
 
+  uint8_t header[268];
+    Packet header (including the substream header)
+
+  uint8_t *subheader;
+    Pointer to the beginning of the subheader (0 for no subheader)
+
+  size_t header_size;
+    The size of the header (amount of the data at the header buffer).
+
+  size_t payload_size;
+    Packet payload size.
+
+  int stream;
+    Program stream number (stream_id).
+
+  int substream;
+    Substream number (0 for no substream)
+
+  int packets;
+    Number of packets processed.
+
+  int errors;
+    Number of parser errors.
+
+  void reset();
+    Drop the parser state to initial (except frame and error counters).
+
+  size_t parse(uint8_t **buf, uint8_t *end);
+    Parse data buffer.
+
+    When packet is found it sets buf to the start of the payload and returns
+    the size of the payload. header, subheader, header_size, payload_size, 
+    stream, substream contain current frame info.
+
+    When no packet is found, it returns zero. header_size and payload_size are
+    set to zero.
+
+  bool is_audio();
+    Returns true when the packed loaded is an audio packet.
+
+  Speakers spk();
+    Returns the format of an audio packed loaded. spk_unknown when no packet is
+    loaded, not an audio packet or unknown format of the packet.
+
   //////////////////////////////////////////////////////////////////////////////
   // PSDemux - a simple MPEG1/2 Program Stream demuxer.
 
