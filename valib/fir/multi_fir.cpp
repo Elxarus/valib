@@ -76,7 +76,7 @@ MultiFIR::make(int sample_rate) const
     {
       length += fir[fir_count]->length - 1;
       center += fir[fir_count]->center;
-      if (fir[fir_count]->type == firt_zero)
+      if (fir[fir_count]->type() == firt_zero)
       {
         // no need to think more
         // cleanup and return zero FIR
@@ -130,7 +130,7 @@ MultiFIR::make(int sample_rate) const
         }
         current_length += n - 1;
       }
-      result = new DynamicFIRInstance(sample_rate, firt_custom, length, center, data);
+      result = new DynamicFIRInstance(sample_rate, length, center, data);
     }
   }
 

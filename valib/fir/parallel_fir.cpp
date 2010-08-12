@@ -115,7 +115,7 @@ ParallelFIR::make(int sample_rate) const
         for (int j = 0; j < fir[i]->length; j++)
           data[j + center - fir[i]->center] += fir[i]->data[j];
 
-      result = new DynamicFIRInstance(sample_rate, firt_custom, length, center, data);
+      result = new DynamicFIRInstance(sample_rate, length, center, data);
     }
   }
 

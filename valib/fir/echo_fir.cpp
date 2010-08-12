@@ -67,5 +67,5 @@ EchoFIR::make(int sample_rate) const
   for (int i = 1; i < samples; i++)
     data[i] = 0;
 
-  return new DynamicFIRInstance(sample_rate, firt_custom, samples+1, 0, data);
+  return new DynamicFIRInstance(sample_rate, samples+1, 0, data);
 }

@@ -75,24 +75,32 @@ public:
 class FIRInstance
 {
 protected:
-  FIRInstance(int sample_rate_, fir_t type_, int length_, int center_, const double *data_ = 0):
-  sample_rate(sample_rate_), type(type_), length(length_), center(center_), data(data_) {}
+  FIRInstance(int sample_rate_, int length_, int center_, const double *data_ = 0):
+  sample_rate(sample_rate_), length(length_), center(center_), data(data_) {}
 
 public:
   int sample_rate;
-  fir_t type;
   int length;
   int center;
   const double *data;
 
   virtual ~FIRInstance() {}
+
+  fir_t type() const
+  {
+    assert(length > 0);
+    if (length > 1)     return firt_custom;
+    if (data[0] == 0.0) return firt_zero;
+    if (data[0] == 1.0) return firt_identity;
+    return firt_gain;
+  };
 };
 
 class StaticFIRInstance : public FIRInstance
 {
 public:
-  StaticFIRInstance(int sample_rate_, fir_t type_, int length_, int center_, const double *data_ = 0):
-  FIRInstance(sample_rate_, type_, length_, center_, data_) {}
+  StaticFIRInstance(int sample_rate_, int length_, int center_, const double *data_ = 0):
+  FIRInstance(sample_rate_, length_, center_, data_) {}
 };
 
 class DynamicFIRInstance : public FIRInstance
@@ -101,8 +109,8 @@ protected:
   double *buf;
 
 public:
-  DynamicFIRInstance(int sample_rate_, fir_t type_, int length_, int center_, double *data_ = 0):
-  FIRInstance(sample_rate_, type_, length_, center_, data_), buf(data_) {}
+  DynamicFIRInstance(int sample_rate_, int length_, int center_, double *data_ = 0):
+  FIRInstance(sample_rate_, length_, center_, data_), buf(data_) {}
   virtual ~DynamicFIRInstance() { safe_delete(buf); }
 };
 
