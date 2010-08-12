@@ -181,7 +181,7 @@ bool ConvolverMch::init()
       continue;
     }
 
-    switch (fir[ch]->type)
+    switch (fir[ch]->type())
     {
       case firt_identity: type[ch] = type_pass; break;
       case firt_zero:     type[ch] = type_zero; break;

@@ -13,18 +13,16 @@ FIRIdentity fir_identity;
 // Special instance classes
 
 ZeroFIRInstance::ZeroFIRInstance(int sample_rate_):
-FIRInstance(sample_rate_, firt_zero, 1, 0, &zero)
+FIRInstance(sample_rate_, 1, 0, &zero)
 {}
 
 IdentityFIRInstance::IdentityFIRInstance(int sample_rate_):
-FIRInstance(sample_rate_, firt_identity, 1, 0, &one)
+FIRInstance(sample_rate_, 1, 0, &one)
 {}
 
 GainFIRInstance::GainFIRInstance(int sample_rate_, double gain_):
-FIRInstance(sample_rate_, firt_gain, 1, 0, 0), gain(gain_)
+FIRInstance(sample_rate_, 1, 0, 0), gain(gain_)
 {
-  if (gain == 0.0) type = firt_zero;
-  if (gain == 1.0) type = firt_identity;
   data = &gain;
 }
 

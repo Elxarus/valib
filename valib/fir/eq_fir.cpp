@@ -204,5 +204,5 @@ EqFIR::make(int sample_rate) const
         data[max_c + j] += step.dg * lpf(j, step.cf) * kaiser_window(j, step.n, alpha);
     }
 
-  return new DynamicFIRInstance(sample_rate, firt_custom, max_n, max_c, data);
+  return new DynamicFIRInstance(sample_rate, max_n, max_c, data);
 }

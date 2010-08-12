@@ -95,7 +95,7 @@ bool Convolver::init()
     return true;
   }
 
-  switch (fir->type)
+  switch (fir->type())
   {
     case firt_identity: state = state_pass; return true; // passthrough
     case firt_zero:     state = state_zero; return true; // zero filter
