@@ -2,7 +2,7 @@
 #include "fft.h"
 #include "fftsg.h"
 
-FFT::FFT()
+FFT::FFT(): len(0)
 {}
 
 FFT::FFT(unsigned length)
@@ -10,30 +10,29 @@ FFT::FFT(unsigned length)
   set_length(length);
 }
 
-bool
+void
 FFT::set_length(unsigned length)
 {
-  if (len == length && is_ok())
-    return true;
+  if (len == length)
+    return;
 
-  len = length;
+  len = 0;
   fft_ip.allocate((int)(2 + sqrt(double(length * 2))));
   fft_w.allocate(length/2+1);
-
-  if (fft_ip.is_allocated())
-    fft_ip[0] = 0;
-
-  return is_ok();
+  fft_ip[0] = 0;
+  len = length;
 }
 
 void
 FFT::rdft(sample_t *samples)
 {
+  assert(is_ok());
   ::rdft(len, 1, samples, fft_ip, fft_w);
 }
 
 void
 FFT::inv_rdft(sample_t *samples)
 {
+  assert(is_ok());
   ::rdft(len, -1, samples, fft_ip, fft_w);
 }

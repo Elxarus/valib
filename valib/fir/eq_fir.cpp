@@ -63,8 +63,6 @@ EqFIR::set_bands(const EqBand *new_bands, size_t new_nbands)
     return 0;
 
   bands.allocate(new_nbands);
-  if (!bands.is_allocated())
-    return 0;
 
   nbands = 0;
   for (i = 0; i < new_nbands; i++)
