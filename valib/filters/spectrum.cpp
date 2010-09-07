@@ -91,17 +91,17 @@ Spectrum::init()
   int nch = spk.nch();
   length = clp2(length);
 
-  data.allocate(nch, length * 2);
-  data.zero();
+  // allocate resources
+  try
+  {
+    data.allocate(nch, length * 2);
+    data.zero();
 
-  spectrum.allocate(length * 2);
-  win.allocate(length * 2);
-  fft.set_length(length * 2);
-
-  if (!data.is_allocated() ||
-      !spectrum.is_allocated() ||
-      !win.is_allocated() ||
-      !fft.is_ok())
+    spectrum.allocate(length * 2);
+    win.allocate(length * 2);
+    fft.set_length(length * 2);
+  }
+  catch (...)
   {
     is_ok = false;
     return false;

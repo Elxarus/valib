@@ -45,8 +45,11 @@ CacheFilter::set_size(vtime_t new_size)
       move_samples(buf, pos, buf, pos + buf_samples - new_buf_samples, nch, new_buf_samples - pos);
   }
 
-  buf.reallocate(nch, new_buf_samples);
-  if (!buf.is_allocated())
+  try
+  {
+    buf.reallocate(nch, new_buf_samples);
+  }
+  catch (...)
   {
     buf_size = 0;
     buf_samples = 0;

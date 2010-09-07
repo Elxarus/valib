@@ -214,16 +214,14 @@ bool ConvolverMch::init()
   if (buf_size < min_chunk_size)
     buf_size = clp2(min_chunk_size);
 
-  fft.set_length(n * 2);
-  filter.allocate(nch, n * 2);
-  buf.allocate(nch, buf_size + n);
-  fft_buf.allocate(n * 2);
-
-  // handle buffer allocation error
-  if (!filter.is_allocated() ||
-      !buf.is_allocated() ||
-      !fft_buf.is_allocated() ||
-      !fft.is_ok())
+  try
+  {
+    fft.set_length(n * 2);
+    filter.allocate(nch, n * 2);
+    buf.allocate(nch, buf_size + n);
+    fft_buf.allocate(n * 2);
+  }
+  catch (...)
   {
     uninit();
     return false;
