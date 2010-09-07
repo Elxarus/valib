@@ -1,5 +1,6 @@
-/*
-  Simple buffer helper class
+/**************************************************************************//**
+  \class AutoBuf
+  \brief Simple buffer helper class
 
   Implements a "rubber" buffer. We can increase and decrease the size of
   the buffer without excessive memory allocations. Buffer grows only when
@@ -8,23 +9,29 @@
   Does not allow assignment and ownership transfers.
   Strictly exception-safe.
 
-  AutoBuf()
+  \fn AutoBuf::AutoBuf()
     Creates an empty buffer with no data.
     Does not throw.
 
-  AutoBuf(size_t size)
+  \fn AutoBuf::AutoBuf(size_t size)
+    \param size The size of the buffer to allocate
+
     Creates and allocates a buffer.
     Can throw std::bad_alloc.
 
-  ~AutoBuf()
+  \fn AutoBuf::~AutoBuf()
     Frees the memory allocated.
 
-  T *allocate(size_t size)
+  \fn T *AutoBuf::allocate(size_t size)
+    \param size The size of the buffer to allocate
+
     Allocate at least 'size' elements of type T. Previous content of the buffer
     may be lost.
     Can throw std::bad_alloc.
 
-  T *reallocate(size_t size)
+  \fn T *AutoBuf::reallocate(size_t size)
+    \param size The new size of the buffer
+
     Allocate at least 'size' elements of type T. Previous content of the buffer
     is preserved.
 
@@ -38,33 +45,33 @@
 
     Can throw std::bad_alloc.
 
-  void free()
+  \fn void AutoBuf::free()
     Release the memory allocated.
     Does not throw.
 
-  void zero()
+  \fn void AutoBuf::zero()
     Fill the memory allocated with zeros.
 
-  size_t size()
+  \fn size_t AutoBuf::size() const
     Returns the size of the buffer (number of elements of type T).
 
-  size_t allocated()
+  \fn size_t AutoBuf::allocated() const
     Returns the size of actually allocated memory (number of elements of
-    type T).
+    type T). May be more than size().
 
-  bool is_allocated()
+  \fn bool AutoBuf::is_allocated() const
     Returns true when buffer is allocated.
 
-  T *begin()
+  \fn T *AutoBuf::begin() const
     Pointer to the beginning of the buffer
 
-  T *end()
+  \fn T *AutoBuf::end() const
     Pointer to an element just after the end of the buffer.
 
-  operator T*()
+  \fn AutoBuf::operator T*() const
     Cast to pointer to the first element of the buffer. So we can
     use the buffer everywhere instead of T* pointer.
-*/
+******************************************************************************/
 
 #ifndef VALIB_AUTO_BUF_H
 #define VALIB_AUTO_BUF_H
