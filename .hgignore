@@ -22,3 +22,6 @@ test\*.log
 
 # cmd
 cmd\config.cmd
+
+# Generated docs
+doc/valib/*
