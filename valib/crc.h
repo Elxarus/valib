@@ -1,35 +1,45 @@
-/*
-  CRC calculation class
-  =====================
+/**************************************************************************//**
+  \class CRC
+  \brief CRC calculation class
 
-  CRC(uint32_t poly, unsigned power);
-    Construct crc class for the polynomial given.
+  \fn CRC::CRC(uint32_t poly, unsigned power);
+    \param poly CRC polynomial
+    \param power Polynomial power
 
-  void init(uint32_t poly, unsigned power)
-    Initialize crc class with the polynomial given.
+    Constructs crc class for the polynomial given.
 
-  uint32_t calc(uint32_t crc, const uint8_t *data, size_t size) const
+  \fn uint32_t CRC::calc(uint32_t crc, const uint8_t *data, size_t size) const
+    \param crc  Initial CRC value
+    \param data Pointer to the message to find CRC for
+    \param size Size fo the message in bytes
+    \return     CRC for the message
+
     Find crc for the given message.
-    crc  - starting crc value
-    data - pointer to the start of the message
-    size - number of bytes in the message
 
-  uint32_t calc(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const
-    Find crc for the given message (bit precise).
-    crc  - starting crc value
-    data - pointer to the bit stream
-    start_bit - number of the first bit of the message relative to data pointer
-    bits - number of bits in the message
+  \fn uint32_t CRC::calc(uint32_t crc, const uint8_t *data, size_t start_bit, size_t bits) const
+    \param crc       Initial CRC value
+    \param data      Pointer to the message to find CRC for
+    \param start_bit Number of the first bit of the message
+    \param bits      Size fo the message in bits
+    \return          CRC for the message
 
-  uint32_t calc(uint32_t crc, uint32_t data, size_t bits) const
     Find crc for the given message (bit precise).
-    crc  - starting crc value
-    data - message value (right-aligned)
-    bits - number of bits in the message
-    
-  This module provides 2 predefined constant classes for standard
-  CRC16 and CRC32 polinomials
-*/
+
+  \fn uint32_t CRC::calc(uint32_t crc, uint32_t data, size_t bits) const
+    \param crc       Initial CRC value
+    \param data      Pointer to the message to find CRC for
+    \param bits      Size fo the message in bits
+    \return          CRC for the message
+
+    Find crc for the given message (bit precise).
+
+  \var   crc16
+  \brief CRC16 calculator
+
+  \var   crc32
+  \brief CRC32 calculator
+ 
+******************************************************************************/
 
 #ifndef VALIB_CRC_H
 #define VALIB_CRC_H
