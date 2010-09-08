@@ -1,4 +1,15 @@
 /**************************************************************************//**
+  \file chunk.h
+  \brief Chunk class
+******************************************************************************/
+
+#ifndef VALIB_CHUNK_H
+#define VALIB_CHUNK_H
+
+#include "spk.h"
+#include <string>
+
+/**************************************************************************//**
   \class Chunk
   \brief A part of audio data
 
@@ -101,12 +112,6 @@
     Drops some data from the beginning of the chunk.
     Move raw sample pointers ahead by drop_size samples.
 ******************************************************************************/
-
-#ifndef VALIB_CHUNK_H
-#define VALIB_CHUNK_H
-
-#include "spk.h"
-#include <string>
 
 class ProcError
 {
