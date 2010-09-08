@@ -1,4 +1,16 @@
 /**************************************************************************//**
+  \file auto_buf.h
+  \brief AutoBuf class
+******************************************************************************/
+
+
+#ifndef VALIB_AUTO_BUF_H
+#define VALIB_AUTO_BUF_H
+
+#include <string.h>
+#include "defs.h"
+
+/**************************************************************************//**
   \class AutoBuf
   \brief Simple buffer helper class
 
@@ -72,12 +84,6 @@
     Cast to pointer to the first element of the buffer. So we can
     use the buffer everywhere instead of T* pointer.
 ******************************************************************************/
-
-#ifndef VALIB_AUTO_BUF_H
-#define VALIB_AUTO_BUF_H
-
-#include <string.h>
-#include "defs.h"
 
 template <class T> class AutoBuf
 {

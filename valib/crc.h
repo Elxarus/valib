@@ -1,4 +1,14 @@
 /**************************************************************************//**
+  \file crc.h
+  \brief CRC calculations
+******************************************************************************/
+
+#ifndef VALIB_CRC_H
+#define VALIB_CRC_H
+
+#include "defs.h"
+
+/**************************************************************************//**
   \class CRC
   \brief CRC calculation class
 
@@ -33,27 +43,15 @@
 
     Find crc for the given message (bit precise).
 
-  \var   crc16
-  \brief CRC16 calculator
-
-  \var   crc32
-  \brief CRC32 calculator
- 
 ******************************************************************************/
-
-#ifndef VALIB_CRC_H
-#define VALIB_CRC_H
-
-#include "defs.h"
-
-#define POLY_CRC16 0x8005
-#define POLY_CRC32 0x04C11DB7
-
 
 class CRC;
 
-extern const CRC crc16;
-extern const CRC crc32;
+#define POLY_CRC16 0x8005     ///< Standard CRC16 polynomial
+#define POLY_CRC32 0x04C11DB7 ///< Standard CRC32 polynomial
+
+extern const CRC crc16; ///< CRC16 calculator
+extern const CRC crc32; ///< CRC32 calculator
 
 class CRC
 {

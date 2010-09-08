@@ -1,4 +1,15 @@
 /**************************************************************************//**
+  \file auto_file.h
+  \brief File helper classes
+******************************************************************************/
+
+#ifndef VALIB_AUTO_FILE_H
+#define VALIB_AUTO_FILE_H
+
+#include "defs.h"
+#include <stdio.h>
+
+/**************************************************************************//**
   \class AutoFile
   \brief Simple file helper class. Supports large files >2G.
 
@@ -131,12 +142,6 @@
   \fn fsize_t AutoFile::pos() const;
     \return Returns current file position.
 ******************************************************************************/
-
-#ifndef VALIB_AUTO_FILE_H
-#define VALIB_AUTO_FILE_H
-
-#include "defs.h"
-#include <stdio.h>
 
 class AutoFile
 {

@@ -1,4 +1,15 @@
 /**************************************************************************//**
+  \file buffer.h
+  \brief Buffer classes
+******************************************************************************/
+
+#ifndef VALIB_BUFFER_H
+#define VALIB_BUFFER_H
+
+#include "auto_buf.h"
+#include "spk.h"
+
+/**************************************************************************//**
   \class Rawdata
   \brief Raw data buffer
 
@@ -9,6 +20,12 @@
 
   Specification of AutoBuf class.
 
+******************************************************************************/
+
+typedef AutoBuf<uint8_t> Rawdata;
+typedef AutoBuf<sample_t> Samples;
+
+/**************************************************************************//**
   \class SampleBuf
   \brief Multichannel sample buffer
 
@@ -80,23 +97,14 @@
     \return Returns the pointer to the beginning of the channel 'ch'.
 */
 
-#ifndef VALIB_BUFFER_H
-#define VALIB_BUFFER_H
-
-#include "auto_buf.h"
-#include "spk.h"
-
-typedef AutoBuf<uint8_t> Rawdata;
-typedef AutoBuf<sample_t> Samples;
-
 class SampleBuf
 {
 protected:
-  unsigned  f_nch;
-  size_t    f_nsamples;
-  samples_t f_samples;
+  unsigned  f_nch;      ///< Number of channels
+  size_t    f_nsamples; ///< Number of samples per channel
+  samples_t f_samples;  ///< Channel buffers pointers
 
-  Samples   f_buf;
+  Samples   f_buf;      ///< Data buffer
 
 public:
   SampleBuf(): f_nch(0), f_nsamples(0)
