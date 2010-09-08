@@ -371,8 +371,8 @@ public:
 
   virtual int version() const
   {
-    new_fir_ver = fir->version();
-    if (fir && fir_ver != new_for_ver)
+    int new_fir_ver = fir->version();
+    if (fir && fir_ver != new_fir_ver)
     {
       fir_ver = new_fir_ver;
       ver++;
