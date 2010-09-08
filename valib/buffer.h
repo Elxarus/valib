@@ -1,56 +1,83 @@
-/*
-  Buffer allocation
-  * Rawdata   - raw data buffer
-  * Samples   - array of samples
-  * SampleBuf - multichannel sample buffer
+/**************************************************************************//**
+  \class Rawdata
+  \brief Raw data buffer
 
-  SampleBuf
-  =========
+  Specification of AutoBuf class.
+
+  \class Samples
+  \brief Buffer of samples
+
+  Specification of AutoBuf class.
+
+  \class SampleBuf
+  \brief Multichannel sample buffer
+
   This class is exception safe. But not strictly safe, because reallocate()
   does not preserve the content on exception.
 
-
-  SampleBuf()
+  \fn SampleBuf::SampleBuf()
     Default constructor. Does not allocate the buffer.
+
     Can throw std::bad_alloc.
 
-  SampleBuf(unsigned nch, size_t nsamples)
-    Init constructor. Allocates the buffer for 'nch' channels, 'nsamples'
-    samples each. Can throw std::bad_alloc.
+  \fn SampleBuf::SampleBuf(unsigned nch, size_t nsamples)
+    \param nch      Number of channels to allocate
+    \param nsamples Number of samples per channel
 
-  void allocate(unsigned nch, size_t nsamples)
+    Init constructor. Allocates the buffer for 'nch' channels, 'nsamples'
+    samples each.
+
+    Can throw std::bad_alloc.
+
+  \fn void SampleBuf::allocate(unsigned nch, size_t nsamples)
+    \param nch      Number of channels to allocate
+    \param nsamples Number of samples per channel
+
     Allocate the buffer for 'nch' channels, 'nsamples' samples each. Preserves
     the data at the buffer if possible. When buffer grows, new space is
-    initialized with zeros. Can throw std::bad_alloc.
+    initialized with zeros.
 
-  void reallocate(unsigned nch, size_t nsamples)
-    Reallocate the buffer for 'nch' channels, 'nsamples' samples each.
     Can throw std::bad_alloc.
 
-  void free()
+  \fn void SampleBuf::reallocate(unsigned nch, size_t nsamples)
+    \param nch      New number of channels
+    \param nsamples New number of samples per channel
+
+    Reallocate the buffer for 'nch' channels, 'nsamples' samples each.
+    Preserves the previous content of the buffer.
+
+    Can throw std::bad_alloc.
+
+  \fn void SampleBuf::free()
     Release the memory allocated.
+
     Does not throw.
     
-  void zero()
+  \fn void SampleBuf::zero()
     Fill the memory allocated with zeros.
 
-  unsigned nch() const
-    Returns the number of channels allocated.
+  \fn unsigned SampleBuf::nch() const
+    \return Returns the number of channels allocated.
 
-  size_t nsamples() const
-    Returns the number of samples allocated for each channel.
+  \fn size_t SampleBuf::nsamples() const
+    \return Returns the number of samples allocated for each channel.
 
-  samples_t samples() const
-    Returns channel pointers.
+  \fn samples_t SampleBuf::samples() const
+    \return Returns sample_t structure that points inside the buffer.
 
-  bool is_allocated() const
-    Returns true when buffer is allocated.
+    Explicit cast to samples_t.
 
-  operator samples_t() const
+  \fn bool SampleBuf::is_allocated() const
+    \return Returns true when buffer is allocated and false otherwise.
+
+  \fn SampleBuf::operator samples_t() const
+    \return Returns sample_t structure that points inside the buffer.
+
     Automatic cast to samples_t
 
-  sample_t *operator [](unsigned ch) const
-    Returns the pointer to the channel 'ch'.
+  \fn sample_t *SampleBuf::operator [](unsigned ch) const
+    \param ch Channel to return
+    \return Returns the pointer to the beginning of the channel 'ch'.
 */
 
 #ifndef VALIB_BUFFER_H
