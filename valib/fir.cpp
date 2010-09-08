@@ -59,6 +59,6 @@ FIRGain::set_gain(double gain_)
 
 double
 FIRGain::get_gain() const
-{ 
+{
   return gain;
 }
