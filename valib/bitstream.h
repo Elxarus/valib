@@ -1,115 +1,57 @@
-/*
-  Bitstream operations
-  Read & Write classes
-
-  Important note!!!
-  -----------------
-  Low endian streams MUST be aligned to stream word boundary
-  (16 bit for 14 and 16 bit stream and 32 bit for 32 bit stream)
-
-  ReadBS
-  ======
-  Bitstream reader class.
-
-  void set(const uint8_t *buf, size_t start_bit, size_t size_bits)
-    Attach the bitstream to the buffer given. Start of the stream is set to the
-    start_bit after the pointer given, so you can start reading form any point
-    of the bit stream, not only from the byte boundary.
-
-  void set_pos_bits(size_t pos_bits);
-    Set position in the bit stream, counting from the starting bit specified at
-    set().
-
-  size_t get_pos_bits() const
-    Return the current position in the bit stream relative to the position
-    specified at set().
-
-  uint32_t get(unsigned num_bits)
-    Read 'num_bits' bits from the bit stream and move the current position
-    ahead. get(0) returns 0.
-
-  int32_t get_signed(unsigned num_bits);
-    Read 'num_bits' bits from the bitstream and move the current position ahead.
-    Value is considered to be signed, i.e. the first bit contains the sign.
-    get_signed(0) returns 0.
-
-  bool get_bool()
-    Read one bit and interpret it as boolean value.
-
-
-
-  WriteBS
-  =======
-  Bitstream writer class.
-
-  void set(uint8_t *buf, size_t start_bit, size_t size_bits)
-    Attach the bitstream to the buffer given. Start of the stream is set to the
-    start_bit after the pointer given, so you can start reading form any point
-    of the bit stream, not only from the byte boundary.
-
-  void set_pos_bits(size_t pos_bits);
-    Set position in the bit stream, counting from the starting bit specified at
-    set().
-
-  size_t get_pos_bits() const
-    Return the current position in the bit stream relative to the position
-    specified at set().
-
-  void put(unsigned num_bits, uint32_t value)
-    Write 'num_bits' bits from 'value' into bitstream.
-    Note, that memory may not be immediately updated. To be sure that you have
-    all changes written, call flush().
-
-  void put_bool(bool value)
-    Write a boolean value as one bit into the bit stream.
-    Note, that memory may not be immediately updated. To be sure that you have
-    all changes written, call flush().
-
-  void flush()
-    Write uncommited changes into the memory.
-
-
-
-  Bitstream conversion functions
-  ==============================
-
-  All conversion functions take input buffer, process it to output and return
-  number of output bytes. Note that only 2 conversion functions change data
-  size: conversion from and to 14bit stream.
-
-  All conversion functions can work in-place. I.e. you can specify the same
-  buffer as input and output. But you cannot use overlapped buffers.
-
-  typedef bs_conv_t;
-    Type definition for the conversion function.
-
-  size_t bs_convert(const uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs);
-    Converts the stream from one bitstream type to another.
-
-  bs_conv_t bs_conversion(int bs_from, int bs_to);
-    Tries to find a conversion function between 2 stream types.
-    Returns the conversion function pointer, or null if it is no direct
-    conversion function between the stream types. If no conversion required,
-    bs_conv_copy is returned.
-
-  bs_conv_copy
-    No conversion. Just copies input buffer to output.
-    Output size is equal to input size.
-
-  bs_conv_swab16()
-    Swaps bytes in 16bit words.
-    If input size is off it adds a zero byte to the end of the stream.
-    Output size is equal to input size.
-*/
+/**************************************************************************//**
+  \file bitstream.h
+  \brief Bitstream operations
+******************************************************************************/
 
 #ifndef VALIB_BITSTREAM_H              
 #define VALIB_BITSTREAM_H
 
 #include "defs.h"
 
-///////////////////////////////////////////////////////////////////////////////
-// ReadBS - bitstream reader
-///////////////////////////////////////////////////////////////////////////////
+/**************************************************************************//**
+  \class ReadBS
+  \brief Bitstream reader
+
+  \fn void ReadBS::set(const uint8_t *buf, size_t start_bit, size_t size_bits)
+    \param buf       Input buffer
+    \param start_bit Start position in bits
+    \param size_bits Size of the buffer in bits
+
+    Attach the bitstream to the buffer given. Start of the stream is set to the
+    start_bit after the pointer given, so you can start reading form any point
+    of the bit stream, not only from the byte boundary.
+
+  \fn void ReadBS::set_pos_bits(size_t pos_bits);
+    \param pos_bits Position in bits
+
+    Set position in the bit stream, counting from the starting bit specified at
+    set().
+
+  \fn size_t ReadBS::get_pos_bits() const
+    \return Return the current position in the bit stream, relative to the
+    position specified at set().
+
+  \fn uint32_t ReadBS::get(unsigned num_bits)
+    \param num_bits Number of bits to read
+    \return         Value from the bitstream
+
+    Read 'num_bits' bits from the bit stream and move the current position
+    ahead. get(0) returns 0.
+
+  \fn int32_t ReadBS::get_signed(unsigned num_bits);
+    \param num_bits Number of bits to read
+    \return         Value from the bitstream
+
+    Read 'num_bits' bits from the bitstream and move the current position ahead.
+    Value is considered to be signed, i.e. the first bit contains the sign.
+    get_signed(0) returns 0.
+
+  \fn bool ReadBS::get_bool()
+    \return Value from the bitstream
+
+    Read one bit and interpret it as boolean value.
+
+******************************************************************************/
 
 class ReadBS
 {
@@ -153,6 +95,53 @@ public:
   inline int32_t  get_signed(unsigned num_bits);
   inline bool     get_bool();
 };
+
+
+/**************************************************************************//**
+  \class WriteBS
+  \brief Bitstream writer
+
+  \fn void WriteBS::set(uint8_t *buf, size_t start_bit, size_t size_bits)
+    \param buf       Output buffer
+    \param start_bit Start position in bits
+    \param size_bits Size of the buffer in bits
+
+    Attach the bitstream to the buffer given. Start of the stream is set to
+    'start_bit' after the pointer given, so you can start reading form any
+    point of the bit stream, not only from the byte boundary.
+
+  \fn void WriteBS::set_pos_bits(size_t pos_bits);
+    \param pos_bits Position in bits
+
+    Set position in the bit stream, counting from the starting bit specified at
+    set().
+
+  \fn size_t WriteBS::get_pos_bits() const
+    \return Return the current position in the bit stream relative to the
+    position specified at set().
+
+  \fn void WriteBS::put(unsigned num_bits, uint32_t value)
+    \param num_bits Number of bits to write
+    \param value    Value to write
+
+    Write 'num_bits' bits from 'value' into bitstream.
+
+    Note, that memory may not be immediately updated. To be sure that you have
+    all changes written, call flush().
+
+  \fn void WriteBS::put_bool(bool value)
+    \param value Value to write
+
+    Write a boolean value as one bit into the bit stream.
+
+    Note, that memory may not be immediately updated. To be sure that you have
+    all changes written, call flush().
+
+  \fn void WriteBS::flush()
+    Write uncommited changes into the memory.
+
+******************************************************************************/
+
 
 class WriteBS
 {
@@ -275,11 +264,79 @@ WriteBS::put_bool(bool value)
   put(1, value);
 }
 
-///////////////////////////////////////////////////////////////////////////////
+
+/**************************************************************************//**
+  \defgroup bs_convert Bitstream conversion functions
+
+  All conversion functions take input buffer, process it to output and return
+  number of output bytes. Note that only 2 conversion functions change data
+  size: conversion from and to 14bit stream.
+
+  All conversion functions can work in-place. I.e. you can specify the same
+  buffer as input and output. But you cannot use overlapped buffers.
+
+  <b>Important note!!!</b>
+
+  Low endian streams MUST be aligned to stream word boundary
+  (16 bit for 14 and 16 bit stream and 32 bit for 32 bit stream)
+
+  @{
+
+  \typedef bs_conv_t;
+    Type definition for the conversion function.
+
+  \fn size_t bs_convert(const uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs)
+    \param in_buf  Pointer to the input buffer
+    \param size    Size of the input buffer
+    \param in_bs   Input bitstream type
+    \param out_buf Pointer to the output buffer
+    \param out_bs  Output bitstream type
+    \return        Size of the converted data
+
+    Converts the stream from one bitstream type to another.
+
+    Returns 0 when conversion is not possible.
+
+  \fn bs_conv_t bs_conversion(int bs_from, int bs_to)
+    \param bs_from Bitstream type to convert from
+    \param bs_to   Bitstream type to convert to
+    \return        Conversion function
+
+    Tries to find a conversion function between 2 stream types.
+
+    Returns the conversion function pointer, or null if it is no direct
+    conversion function between the stream types. If no conversion required,
+    bs_conv_copy is returned.
+
+  \fn size_t bs_conv_copy(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
+    \param in_buf  Pointer to the input buffer
+    \param size    Size of the input buffer
+    \param out_buf Pointer to the output buffer
+    \return        Size of the converted data (equals to input size).
+
+    No conversion. Just copies input buffer to output.
+
+    Output size is equal to the input size.
+
+  \fn size_t bs_conv_swab16(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+    \param in_buf  Pointer to the input buffer
+    \param size    Size of the input buffer
+    \param out_buf Pointer to the output buffer
+    \return        Size of the converted data (equals to input size).
+
+    Swaps bytes in 16bit words.
+
+    If input size is odd, it adds a zero byte to the end of the stream.
+
+    Output size is equal to the input size.
+
+  @}
+
+******************************************************************************/
 
 size_t bs_convert(const uint8_t *in_buf, size_t size, int in_bs, uint8_t *out_buf, int out_bs);
 
-typedef size_t (*bs_conv_t)(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
+typedef size_t bs_conv_t(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
 bs_conv_t bs_conversion(int bs_from, int bs_to);
 
 size_t bs_conv_copy(const uint8_t *in_buf, size_t size, uint8_t *out_buf);
