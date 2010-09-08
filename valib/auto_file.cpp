@@ -19,11 +19,11 @@ static AutoFile::fsize_t portable_tell(FILE *f)
 ///////////////////////////////////////////////////////////////////////////////
 // Standard Library implementation
 
-const AutoFile::fsize_t AutoFile::max_size = LONG_MAX;
+const AutoFile::fsize_t AutoFile::bad_size = LONG_MAX;
 
 static int portable_seek(FILE *f, AutoFile::fsize_t pos, int origin)
 {
-  assert(pos < AutoFile::max_size);
+  assert(pos < AutoFile::bad_size);
   return fseek(f, (long)pos, origin);
 }
 
@@ -100,8 +100,6 @@ MemFile::MemFile(const char *filename): data(0), file_size(0)
 
   file_size = f.size_cast(f.size());
   data = new uint8_t[file_size];
-  if (!data)
-    return;
 
   size_t read_size = f.read(data, file_size);
   if (read_size != file_size)

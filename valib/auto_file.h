@@ -1,6 +1,6 @@
-/*
-  AutoFile - Simple file helper class. Supports large files >2G.
-  MemFile - Load the whole file into memory.
+/**************************************************************************//**
+  \class AutoFile
+  \brief Simple file helper class. Supports large files >2G.
 
   AutoFile may support large files >2G (currently only in Visual C++). If you
   open a large file without large file support, file size is set to
@@ -17,80 +17,120 @@
   Therefore we cannot safely cast fsize_t to size_t and have to check the
   range before casting.
 
-///////////////////////////////////////////////////////////////////////////////
-
-  AutoFile::fsize_t
+  \typedef AutoFile::fsize_t
     Type to represent the file size. It is unsafe to store the size using
     other types (int, size_t, etc).
 
-  static const fsize_t AutoFile::bad_size
+  \var static const fsize_t AutoFile::bad_size
     Constant to represent an incorrect file size.
 
-  static bool is_large(fsize_t value)
+  \fn static bool AutoFile::is_large(fsize_t value)
+    \param value File size to check
+
     Returns false when file size cannot be cast to size_t and true otherwise.
 
-  static size_t size_cast(fsize_t value)
+  \fn static size_t AutoFile::size_cast(fsize_t value)
+    \param value File size to cast
+
     Cast fsize_t to size_t. You should use this function only when it is safe
     to cast (is_large() returns false). Otherwise, it returns size_t max value.
 
-  AutoFile()
+  \fn AutoFile::AutoFile()
     Create file object without opening a file.
 
-  AutoFile(const char *filename, const char *mode = "rb")
+  \fn AutoFile::AutoFile(const char *filename, const char *mode = "rb")
+    \param filename File name to open
+    \param mode Open mode (equivalent to the mode at fopen()).
+
     Create and open a file. In case of failure, is_open() reports false.
 
-  AutoFile(FILE *_f, bool take_ownership = false)
+  \fn AutoFile::AutoFile(FILE *f, bool take_ownership = false)
+    \param f File to connect to
+    \param take_ownership Take ownership of the file
+
     Connect to an already open file. When take_ownership is true, file will
     be closed on destruction of an object or close() call.
 
-  ~AutoFile()
+  \fn AutoFile::~AutoFile()
     Automatically closes the file.
 
-  bool open(const char *filename, const char *mode = "rb")
-    Open the file. Returns false on failure.
+  \fn bool AutoFile::open(const char *filename, const char *mode = "rb")
+    \param filename File name to open
+    \param mode Open mode (equivalent to the mode at fopen()).
+    \return Returns true on success and false otherwise.
 
-  bool open(FILE *_f, bool _take_ownership = false)
+    Open the file.
+
+  \fn bool AutoFile::open(FILE *f, bool take_ownership = false)
+    \param f File to connect to
+    \param take_ownership Take ownership of the file
+    \return Returns true on success and false otherwise.
+
     Connect to an already open file. When take_ownership is true, file will
     be closed on destruction of an object or close() call.
 
-  void close()
+  \fn void AutoFile::close()
     Close the file.
 
-  size_t read(void *buf, size_t size)
-    Read 'size' bytes to the buffer 'buf'.
-    Returns number of bytes it actually read.
+  \fn size_t AutoFile::read(void *buf, size_t size)
+    \param buf  Buffer to read to.
+    \param size Size fo data to read.
+    \return     Number of bytes  actually read.
 
-  size_t write(const void *buf, size_t size)
+    Read 'size' bytes into the buffer 'buf'.
+
+    Returns number of bytes it actually read that may be less than 'size' at
+    the end of the file.
+
+  \fn size_t AutoFile::write(const void *buf, size_t size)
+    \param buf  Buffer to write data from.
+    \param size Size of the data at the buffer.
+    \return     Number of actually written bytes.
+
     Write 'size' bytes from buffer 'buf'.
+
     Returns number of bytes it actually wrote.
 
-  bool is_open() const
-    Returns true when file is open.
+  \fn bool AutoFile::is_open() const
+    \return Returns true when file is open and false otherwise.
 
-  bool eof() const
-    Returns true when we reach the end of the file.
+  \fn bool AutoFile::eof() const
+    \return Returns true when we reach the end of the file and false otherwise.
 
-  fsize_t size() const
-    Returns size of the file. When the size cannot be determined,
-    the result is AutoFile::bad_size value.
+  \fn fsize_t AutoFile::size() const
+    \return Returns size of the file.
 
-  bool is_large() const
-    File is large, i.e. it does not fit an address space and file size
-    cannot be safely cast to size_t.
+    When the size cannot be determined, the result is AutoFile::bad_size value.
 
-  FILE *fh() const
+  \fn bool AutoFile::is_large() const
+    \return Returns true when file is large and false otherwise.
+
+    File is large when it does not fit an address space and file size cannot
+    be safely cast to size_t.
+
+  \fn FILE *AutoFile::fh() const
+    \return File handle.
+
     Returns file handle value explicitly.
 
-  operator FILE *() const
+    Returns 0 when file was not open.
+
+  \fn AutoFile::operator FILE *() const
+    \return File handle.
+
     Automatic cast to FILE *.
 
-  int seek(fsize_t pos);
-    Move to the file position 'pos'.
-    Returns 0 on success and non-zero otherwise (same as fseek command).
+    Returns 0 when file was not open.
 
-  fsize_t pos() const;
-    Returns current file position.
-*/
+  \fn int AutoFile::seek(fsize_t pos);
+    \param pos File position to move to.
+    \return Returns 0 on success and non-zero otherwise (same as fseek command).
+
+    Move to the file position 'pos'.
+
+  \fn fsize_t AutoFile::pos() const;
+    \return Returns current file position.
+******************************************************************************/
 
 #ifndef VALIB_AUTO_FILE_H
 #define VALIB_AUTO_FILE_H
@@ -147,6 +187,30 @@ public:
   int seek(fsize_t pos);
   fsize_t pos() const;
 };
+
+
+/**************************************************************************//**
+  \class MemFile
+  \brief Load the whole file into memory.
+
+  \fn MemFile::MemFile(const char *filename)
+    \param filename File name to load.
+    Allocate a buffer and load the whole file into memory.
+
+    Can throw std::bad_alloc.
+
+  \fn MemFile::~MemFile()
+    Free the memory allocated.
+
+  \fn size_t MemFile::size() const
+    \return The size of the buffer (size of the file loaded).
+    Returns 0 when file was not loaded.
+
+  \fn MemFile::operator uint8_t *() const
+    \return Pointer to the start of the buffer.
+    Returns 0 when file was not loaded.
+
+******************************************************************************/
 
 
 class MemFile
