@@ -1,6 +1,7 @@
-/*
-  Finite impulse response generator and instance classes
-*/
+/**************************************************************************//**
+  \file fir.h
+  \brief Finite impulse response generator and instance classes
+******************************************************************************/
 
 #ifndef VALIB_FIR_H
 #define VALIB_FIR_H
@@ -16,37 +17,40 @@ class FIRZero;
 class FIRIdentity;
 class FIRGain;
 
-///////////////////////////////////////////////////////////////////////////////
-// FIRGen - Finite impulse response function generator
-//
-// Interface for impulse response generator. It is used to generate an impulse
-// response from a set of user-controllable parameters (if any) and a given
-// sample rate.
-//
-// So FIRGen descendant may act as parameters container and these parameters
-// may change, resulting in change of the impulse response. For class clients
-// to notice these changes version is used. When version changes this means
-// that we have to regenerate the response.
-//
-// Sample rate may change during normal data flow and therefore we need to
-// regenerate the response for a new sample rate. Sample rate change does not
-// change the version because it is not a contained parameter, but an external
-// one.
-//
-// Depending on user parameters impulse response may degenerate into identity,
-// gain or even zero response. Obviously, these cases require less computation
-// and may be implemented more effective.
-//
-// version()
-//   Returns the impulse response version. If the response function changes,
-//   the version must also change so users of the generator can be notified
-//   about this change and rebuild the response. Constant responses like zero
-//   or identity never change the version (may return zero or any other const).
-//
-// make()
-//   Builds response function instance for the sample rate given.
-//
-///////////////////////////////////////////////////////////////////////////////
+/**************************************************************************//**
+  \class FIRGen
+  \brief Finite impulse response function generator
+
+  Interface for impulse response generator. It is used to generate an impulse
+  response from a set of user-controllable parameters (if any) and a given
+  sample rate.
+
+  So FIRGen descendant may act as parameters container and these parameters
+  may change, resulting in change of the impulse response. For class clients
+  to notice these changes version is used. When version changes this means
+  that we have to regenerate the response.
+
+  Sample rate may change during normal data flow and therefore we need to
+  regenerate the response for a new sample rate. Sample rate change does not
+  change the version because it is not a contained parameter, but an external
+  one.
+
+  Depending on user parameters impulse response may degenerate into identity,
+  gain or even zero response. Obviously, these cases require less computation
+  and may be implemented more effective.
+
+  \fn int FIRGen::version() const
+    Returns the impulse response version. If the response function changes,
+    the version must also change so users of the generator can be notified
+    about this change and rebuild the response. Constant responses like zero
+    or identity never change the version (may return zero or any other const).
+
+  \fn const FIRInstance *FIRGen::make(int sample_rate) const
+    \param sample_rate Sample rate to build the FIR for
+    \return Returns the pointer to the instance built.
+    Builds response function instance for the sample rate given.
+
+******************************************************************************/
 
 class FIRGen
 {
@@ -58,19 +62,44 @@ public:
   virtual const FIRInstance *make(int sample_rate) const = 0;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// FIRInstance - Impulse response function instance.
-// Simple container for instance data.
-//
-// StaticFIRInstance
-//   Container for statically allocated instance data, so it does not delete
-//   data on instance destruction.
-//
-// DynamicFIRInstance
-//   Container for dynamically allocated instance data. Destroys instance data
-//   on instance destruction.
-//
-///////////////////////////////////////////////////////////////////////////////
+/**************************************************************************//**
+  \class FIRInstance
+  \brief Impulse response function instance.
+
+  Simple container for instance data.
+
+  \fn FIRInstance::FIRInstance(int sample_rate, int length, int center, const double *data = 0)
+  \param sample_rate Sample rate this function was made for
+  \param length      Length of the function
+  \param center      Position of the center of the function
+  \param data        Pointer to the function buffer
+
+  Constructs an instance for the data given.
+
+  Protected to prevent direct construction (only descendants can construct it).
+
+  \fn FIRInstance::~FIRInstance()
+  Virtual desctructor is nessesary because the class will be overloaded and
+  destructed using FIRInstance pointer.
+
+  \fn fir_t FIRInstance::type() const
+  \return The type of the instance
+
+  Determined the type of the instance based on instance data.
+
+  \var FIRInstance::sample_rate
+    Sample rate this instance was constructed for.
+
+  \var FIRInstance::length
+    Length of the function.
+
+  \var FIRInstance::center
+    Position of the center of the function.
+
+  \var FIRInstance::data
+    Pointer to the function buffer.
+
+******************************************************************************/
 
 class FIRInstance
 {
@@ -96,6 +125,21 @@ public:
   };
 };
 
+/**************************************************************************//**
+  \class StaticFIRInstance
+  \brief Instance for statically allocated data.
+
+  Does not free the buffer allocated for function data on destruction.
+
+  \fn StaticFIRInstance::StaticFIRInstance(int sample_rate, int length, int center, const double *data = 0)
+  \param sample_rate Sample rate this function was made for
+  \param length      Length of the function
+  \param center      Position of the center of the function
+  \param data        Pointer to the function buffer
+
+  Constructs an instance for the data given.
+******************************************************************************/
+
 class StaticFIRInstance : public FIRInstance
 {
 public:
@@ -103,10 +147,29 @@ public:
   FIRInstance(sample_rate_, length_, center_, data_) {}
 };
 
+/**************************************************************************//**
+  \class DynamicFIRInstance
+  \brief Instance for dynamically allocated data.
+
+  Frees the memory allocated for function data on destruction.
+
+  \fn DynamicFIRInstance::DynamicFIRInstance(int sample_rate, int length, int center, double *data = 0)
+  \param sample_rate Sample rate this function was made for
+  \param length      Length of the function
+  \param center      Position of the center of the function
+  \param data        Pointer to the function buffer
+
+  Constructs an instance for the data given.
+
+  \fn DynamicFIRInstance::~DynamicFIRInstance()
+  Frees the memory allocated for function data.
+
+******************************************************************************/
+
 class DynamicFIRInstance : public FIRInstance
 {
 protected:
-  double *buf;
+  double *buf; ///< Non-const pointer to delete the buffer
 
 public:
   DynamicFIRInstance(int sample_rate_, int length_, int center_, double *data_ = 0):
@@ -121,22 +184,25 @@ public:
 // importance this types are made as special classes.
 ///////////////////////////////////////////////////////////////////////////////
 
+/// \brief Zero impulse response
 class ZeroFIRInstance : public FIRInstance
 { 
 public:
   ZeroFIRInstance(int sample_rate);
 };
 
+/// \brief Identity impulse response
 class IdentityFIRInstance : public FIRInstance
 {
 public:
   IdentityFIRInstance(int sample_rate);
 };
 
+/// \brief Gain impulse response
 class GainFIRInstance : public FIRInstance
 {
 public:
-  double gain;
+  double gain; ///< FIR gain
   GainFIRInstance(int sample_rate, double gain);
 };
 
@@ -144,6 +210,7 @@ public:
 // General FIR generators
 ///////////////////////////////////////////////////////////////////////////////
 
+/// \brief Generator that retruns zero FIR
 class FIRZero : public FIRGen
 {
 public:
@@ -152,6 +219,7 @@ public:
   virtual int version() const { return 0; }
 };
 
+/// \brief Generator that retruns identity FIR
 class FIRIdentity : public FIRGen
 {
 public:
@@ -160,11 +228,23 @@ public:
   virtual int version() const { return 0; }
 };
 
+/**
+  \class FIRGain
+  \brief Generator that retruns gain FIR
+
+  \fn void FIRGain::set_gain(double gain)
+  \param gain FIR gain
+  Sets FIR gain.
+
+  \fn double FIRGain::get_gain() const
+  \return Returns FIR gain
+*/
+
 class FIRGain : public FIRGen
 {
 protected:
-  int ver;
-  double gain;
+  int ver;      ///< Current version
+  double gain;  ///< FIR gain
 
 public:
   FIRGain();
@@ -177,29 +257,64 @@ public:
   double get_gain() const;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// Constant generators
-//
-// These generators do no have any parameters and never change. So we can
-// make it global and use everywhere.
-///////////////////////////////////////////////////////////////////////////////
 
-extern FIRZero fir_zero;
-extern FIRIdentity fir_identity;
+/******************************************************************************
+  These generators do no have any parameters and never change. So we can
+  make it global and use everywhere.
+******************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////////
-// Generator reference.
-//
-// Sometimes it is convinient to treat change of FIR generator like generator's
-// version change, so we can handle this change in a general way.
-///////////////////////////////////////////////////////////////////////////////
+extern FIRZero fir_zero;         ///< Zero FIR generator.
+extern FIRIdentity fir_identity; ///< Identity FIR generator.
+
+/**************************************************************************//**
+  \class FIRRef
+  \brief Generator reference
+
+  Sometimes it is convinient to treat change of FIR generator like generator's
+  version change, so we can handle this change in a generalized way.
+
+  The generator the reference points to must live all the time the reference
+  points to this gererator.
+
+  \fn FIRRef::FIRRef()
+    Constructs an reference that does not point to any generator (unassigned
+    reference).
+
+  \fn FIRRef::FIRRef(const FIRGen *fir)
+    \param fir Generator the reference will point to
+    Constructs an reference that does not point to generator 'fir'.
+
+  \fn FIRRef::FIRRef(const FIRRef &ref)
+    \param ref Object to copy from
+    Constructs a copy of another reference.
+
+  \fn FIRRef &FIRRef::operator =(const FIRRef &ref)
+    \param ref Object to assign from
+    Assign a generator from another reference.
+
+  \fn FIRRef &FIRRef::operator =(const FIRGen *new_fir)
+    \param new_fir New generator
+    Assigns the new gereator 'fir' to the reference.
+
+  \fn void FIRRef::set(const FIRGen *new_fir)
+    \param new_fir New generator
+    Assigns the new gereator 'fir' to the reference.
+
+  \fn const FIRGen *FIRRef::get() const
+    \return Returns the generator the reference points to.
+
+  \fn void FIRRef::release()
+    Forget the gererator the reference points to. Reference becomes unassigned.
+
+******************************************************************************/
+
 
 class FIRRef : public FIRGen
 {
 protected:
-  mutable int ver;
-  mutable int fir_ver;
-  const FIRGen *fir;
+  mutable int ver;     ///< Current version
+  mutable int fir_ver; ///< Version of the referenced generator
+  const FIRGen *fir;   ///< Referenced generator
 
 public:
   FIRRef(): ver(0), fir_ver(0), fir(0)
@@ -207,36 +322,35 @@ public:
 
   FIRRef(const FIRGen *fir_): ver(0), fir_ver(0), fir(fir_)
   {
-    if (fir_)
-      fir_ver = fir->version();
+    fir_ver = fir? fir->version(): 0;
   };
 
   FIRRef(const FIRRef &ref): ver(0), fir_ver(0), fir(0)
   {
     fir = ref.fir;
-    if (fir)
-      fir_ver = fir->version();
+    fir_ver = fir? fir->version(): 0;
   }
 
   FIRRef &operator =(const FIRRef &ref)
   {
-    if (fir != ref.fir)
-    {
-      fir = ref.fir;
-      fir_ver = fir? fir->version(): 0;
-      ver++;
-    }
+    set(ref.fir);
+    return *this;
+  }
+
+  FIRRef &operator =(const FIRGen *new_fir)
+  {
+    set(new_fir);
     return *this;
   }
 
   /////////////////////////////////////////////////////////
   // Handle generator changes
 
-  void set(const FIRGen *fir_)
+  void set(const FIRGen *new_fir)
   {
-    if (fir == fir_) return;
+    if (fir == new_fir) return;
 
-    fir = fir_;
+    fir = new_fir;
     fir_ver = fir? fir->version(): 0;
     ver++;
   }
@@ -257,9 +371,12 @@ public:
 
   virtual int version() const
   {
-    if (fir)
-      if (fir_ver != fir->version())
-        ver++, fir_ver = fir->version();
+    new_fir_ver = fir->version();
+    if (fir && fir_ver != new_for_ver)
+    {
+      fir_ver = new_fir_ver;
+      ver++;
+    }
     return ver; 
   }
 
