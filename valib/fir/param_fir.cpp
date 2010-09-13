@@ -10,20 +10,20 @@ ParamFIR::ParamFIR():
 ver(0), type(0), f1(0.0), f2(0.0), df(0.0), a(0.0), norm(false)
 {}
 
-ParamFIR::ParamFIR(int _type, double _f1, double _f2, double _df, double _a, bool _norm):
-ver(0), type(_type), f1(_f1), f2(_f2), df(_df), a(_a), norm(_norm)
+ParamFIR::ParamFIR(int type_, double f1_, double f2_, double df_, double a_, bool norm_):
+ver(0), type(type_), f1(f1_), f2(f2_), df(df_), a(a_), norm(norm_)
 {}
 
 void
-ParamFIR::set(int _type, double _f1, double _f2, double _df, double _a, bool _norm)
+ParamFIR::set(int type_, double f1_, double f2_, double df_, double a_, bool norm_)
 {
   ver++;
-  type = _type;
-  f1 = _f1;
-  f2 = _f2;
-  df = _df;
-  a  = _a;
-  norm = _norm;
+  type = type_;
+  f1 = f1_;
+  f2 = f2_;
+  df = df_;
+  a  = a_;
+  norm = norm_;
 
   if (type == FIR_BAND_PASS || type == FIR_BAND_STOP)
     if (f1 > f2)
@@ -34,14 +34,14 @@ ParamFIR::set(int _type, double _f1, double _f2, double _df, double _a, bool _no
 }
 
 void
-ParamFIR::get(int *_type, double *_f1, double *_f2, double *_df, double *_a, bool *_norm)
+ParamFIR::get(int *type_, double *f1_, double *f2_, double *df_, double *a_, bool *norm_)
 {
-  if (_type) *_type = type;
-  if (_f1)   *_f1 = f1;
-  if (_f2)   *_f2 = f2;
-  if (_df)   *_df = df;
-  if (_a)    *_a  = a;
-  if (_norm) *_norm = norm;
+  if (type_) *type_ = type;
+  if (f1_)   *f1_ = f1;
+  if (f2_)   *f2_ = f2;
+  if (df_)   *df_ = df;
+  if (a_)    *a_  = a;
+  if (norm_) *norm_ = norm;
 }
 
 int
@@ -103,37 +103,34 @@ ParamFIR::make(int sample_rate) const
   int n = kaiser_n(a, df_) | 1; // make odd (type 1 filter)
   int c = n / 2;
 
-  double *filter = new double[n];
-  if (!filter)
-    return 0;
+  DynamicFIRInstance *fir = new DynamicFIRInstance(sample_rate, n, c);
+  double *filter = fir->buf;
 
-  memset(filter, 0, n * sizeof(double));
   filter[0] = 1.0;
-
   double alpha = kaiser_alpha(a);
   switch (type)
   {
     case FIR_LOW_PASS:
       for (i = 0; i < n; i++)
         filter[i] = (sample_t) (2 * f1_ * sinc((i - c) * 2 * M_PI * f1_) * kaiser_window(i - c, n, alpha));
-      return new DynamicFIRInstance(sample_rate, n, c, filter);
+      return fir;
 
     case FIR_HIGH_PASS:
       for (i = 0; i < n; i++)
         filter[i] = (sample_t) (-2 * f1_ * sinc((i - c) * 2 * M_PI * f1_) * kaiser_window(i - c, n, alpha));
       filter[c] = (sample_t) ((1 - 2 * f1_) * kaiser_window(0, n, alpha));
-      return new DynamicFIRInstance(sample_rate, n, c, filter);
+      return fir;
 
     case FIR_BAND_PASS:
       for (i = 0; i < n; i++)
         filter[i] = (sample_t) ((2 * f2_ * sinc((i - c) * 2 * M_PI * f2_) - 2 * f1_ * sinc((i - c) * 2 * M_PI * f1_)) * kaiser_window(i - c, n, alpha));
-      return new DynamicFIRInstance(sample_rate, n, c, filter);
+      return fir;
 
     case FIR_BAND_STOP:
       for (i = 0; i < n; i++)
         filter[i] = (sample_t) ((2 * f1_ * sinc((i - c) * 2 * M_PI * f1_) - 2 * f2_ * sinc((i - c) * 2 * M_PI * f2_)) * kaiser_window(i - c, n, alpha));
       filter[c] = (sample_t) ((2 * f1_ + 1 - 2 * f2_) * kaiser_window(0, n, alpha));
-      return new DynamicFIRInstance(sample_rate, n, c, filter);
+      return fir;
   };
 
   // never be here

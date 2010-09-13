@@ -44,9 +44,9 @@ TEST(fir_base, "Base FIR classes test")
   CHECK(identity_inst.sample_rate == sample_rate);
   CHECK(gain_inst.sample_rate == sample_rate);
 
-  CHECK(zero_inst.type == firt_zero);
-  CHECK(identity_inst.type == firt_identity);
-  CHECK(gain_inst.type == firt_gain);
+  CHECK(zero_inst.type() == firt_zero);
+  CHECK(identity_inst.type() == firt_identity);
+  CHECK(gain_inst.type() == firt_gain);
 
   CHECK(zero_inst.length == 1);
   CHECK(identity_inst.length == 1);
@@ -67,7 +67,7 @@ TEST(fir_base, "Base FIR classes test")
   fir_ptr = zero_gen.make(sample_rate);
   CHECK(fir_ptr != 0);
   CHECK(fir_ptr->sample_rate == sample_rate);
-  CHECK(fir_ptr->type == firt_zero);
+  CHECK(fir_ptr->type() == firt_zero);
   CHECK(fir_ptr->length == 1);
   CHECK(fir_ptr->data[0] == 0.0);
   safe_delete(fir_ptr);
@@ -75,7 +75,7 @@ TEST(fir_base, "Base FIR classes test")
   fir_ptr = identity_gen.make(sample_rate);
   CHECK(fir_ptr != 0);
   CHECK(fir_ptr->sample_rate == sample_rate);
-  CHECK(fir_ptr->type == firt_identity);
+  CHECK(fir_ptr->type() == firt_identity);
   CHECK(fir_ptr->length == 1);
   CHECK(fir_ptr->data[0] == 1.0);
   safe_delete(fir_ptr);
@@ -83,7 +83,7 @@ TEST(fir_base, "Base FIR classes test")
   fir_ptr = gain_gen.make(sample_rate);
   CHECK(fir_ptr != 0);
   CHECK(fir_ptr->sample_rate == sample_rate);
-  CHECK(fir_ptr->type == firt_gain);
+  CHECK(fir_ptr->type() == firt_gain);
   CHECK(fir_ptr->length == 1);
   CHECK(fir_ptr->data[0] == gain);
   safe_delete(fir_ptr);
@@ -98,7 +98,7 @@ TEST(fir_base, "Base FIR classes test")
   CHECK(gain_gen.get_gain() == 0.0);
 
   fir_ptr = gain_gen.make(sample_rate);
-  CHECK(fir_ptr->type == firt_zero);
+  CHECK(fir_ptr->type() == firt_zero);
   CHECK(fir_ptr->sample_rate == sample_rate);
   CHECK(fir_ptr->data[0] == 0.0);
   safe_delete(fir_ptr);
@@ -109,7 +109,7 @@ TEST(fir_base, "Base FIR classes test")
   CHECK(gain_gen.get_gain() == 1.0);
 
   fir_ptr = gain_gen.make(sample_rate);
-  CHECK(fir_ptr->type == firt_identity);
+  CHECK(fir_ptr->type() == firt_identity);
   CHECK(fir_ptr->sample_rate == sample_rate);
   CHECK(fir_ptr->data[0] == 1.0);
   safe_delete(fir_ptr);
@@ -120,7 +120,7 @@ TEST(fir_base, "Base FIR classes test")
   CHECK(gain_gen.get_gain() == gain);
 
   fir_ptr = gain_gen.make(sample_rate);
-  CHECK(fir_ptr->type == firt_gain);
+  CHECK(fir_ptr->type() == firt_gain);
   CHECK(fir_ptr->sample_rate == sample_rate);
   CHECK(fir_ptr->data[0] == gain);
   safe_delete(fir_ptr);
@@ -184,7 +184,7 @@ TEST(fir_ref, "FIRRef class test")
 
   fir_ptr = ref.make(sample_rate);
   CHECK(fir_ptr != 0);
-  CHECK(fir_ptr->type == firt_zero);
+  CHECK(fir_ptr->type() == firt_zero);
   safe_delete(fir_ptr);
 
   // Release test
@@ -442,7 +442,7 @@ TEST(multi_fir, "MultiFIR test")
   MultiFIR f2(list_zero, array_size(list_zero));
   fir = f2.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_zero);
+  CHECK(fir->type() == firt_zero);
   safe_delete(fir);
 
   /////////////////////////////////////////////////////////
@@ -459,7 +459,7 @@ TEST(multi_fir, "MultiFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_gain);
+  CHECK(fir->type() == firt_gain);
   CHECK(fir->data[0] == 2.0);
   safe_delete(fir);
 
@@ -468,7 +468,7 @@ TEST(multi_fir, "MultiFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_identity);
+  CHECK(fir->type() == firt_identity);
   safe_delete(fir);
 
   gain1.set_gain(2.0);
@@ -476,7 +476,7 @@ TEST(multi_fir, "MultiFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_zero);
+  CHECK(fir->type() == firt_zero);
   safe_delete(fir);
 
   /////////////////////////////////////////////////////////
@@ -488,7 +488,7 @@ TEST(multi_fir, "MultiFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_zero);
+  CHECK(fir->type() == firt_zero);
   safe_delete(fir);
 
   ver = f.version();
@@ -497,7 +497,7 @@ TEST(multi_fir, "MultiFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_identity);
+  CHECK(fir->type() == firt_identity);
   safe_delete(fir);
 
   /////////////////////////////////////////////////////////
@@ -558,7 +558,7 @@ TEST(parallel_fir, "ParallelFIR test")
   ParallelFIR f2(list_zero, array_size(list_zero));
   fir = f2.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_zero);
+  CHECK(fir->type() == firt_zero);
   safe_delete(fir);
 
   /////////////////////////////////////////////////////////
@@ -570,7 +570,7 @@ TEST(parallel_fir, "ParallelFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_zero);
+  CHECK(fir->type() == firt_zero);
   safe_delete(fir);
 
   ver = f.version();
@@ -579,7 +579,7 @@ TEST(parallel_fir, "ParallelFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_identity);
+  CHECK(fir->type() == firt_identity);
   safe_delete(fir);
 
   /////////////////////////////////////////////////////////
@@ -596,7 +596,7 @@ TEST(parallel_fir, "ParallelFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_gain);
+  CHECK(fir->type() == firt_gain);
   CHECK(fir->data[0] == 3.0);
   safe_delete(fir);
 
@@ -605,7 +605,7 @@ TEST(parallel_fir, "ParallelFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_identity);
+  CHECK(fir->type() == firt_identity);
   safe_delete(fir);
 
   gain1.set_gain(0.0);
@@ -613,7 +613,7 @@ TEST(parallel_fir, "ParallelFIR test")
 
   fir = f.make(sample_rate);
   CHECK(fir != 0);
-  CHECK(fir->type == firt_zero);
+  CHECK(fir->type() == firt_zero);
   safe_delete(fir);
 
   /////////////////////////////////////////////////////////

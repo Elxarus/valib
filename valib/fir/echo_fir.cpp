@@ -1,11 +1,11 @@
 #include "echo_fir.h"
 
 EchoFIR::EchoFIR()
-:ver(0), delay(0), gain(0)
+:ver(0), delay(0), gain(1.0)
 {}
 
 EchoFIR::EchoFIR(vtime_t delay_, double gain_)
-:ver(0), delay(0), gain(0)
+:ver(0), delay(0), gain(1.0)
 {
   set(delay_, gain_);
 }
@@ -53,19 +53,12 @@ EchoFIR::make(int sample_rate) const
 {
   int samples = int(delay * sample_rate);
 
-  if (samples == 0.0)
-    if (gain == 1.0)
-      return new IdentityFIRInstance(sample_rate);
-    else
-      return new GainFIRInstance(sample_rate, 1.0 + gain);
+  if (samples == 0)
+    return new GainFIRInstance(sample_rate, gain);
 
-  double *data = new double[samples + 1];
-  if (!data) return 0;
+  DynamicFIRInstance *fir = new DynamicFIRInstance(sample_rate, samples+1, 0);
 
-  data[0] = 1.0;
-  data[samples] = gain;
-  for (int i = 1; i < samples; i++)
-    data[i] = 0;
-
-  return new DynamicFIRInstance(sample_rate, samples+1, 0, data);
+  fir->buf[0] = 1.0;
+  fir->buf[samples] = gain;
+  return fir;
 }

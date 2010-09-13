@@ -37,12 +37,7 @@ DelayFIR::make(int sample_rate) const
   if (samples == 0)
     return new IdentityFIRInstance(sample_rate);
 
-  double *data = new double[samples+1];
-  if (!data) return 0;
-
-  data[samples] = 1.0;
-  for (int i = 0; i < samples; i++)
-    data[i] = 0;
-
-  return new DynamicFIRInstance(sample_rate, samples+1, 0, data);
+  DynamicFIRInstance *fir = new DynamicFIRInstance(sample_rate, samples+1, 0);
+  fir->buf[samples] = 1.0;
+  return fir;
 }

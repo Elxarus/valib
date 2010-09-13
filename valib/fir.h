@@ -7,6 +7,7 @@
 #define VALIB_FIR_H
 
 #include "defs.h"
+#include "auto_buf.h"
 
 enum fir_t { firt_zero, firt_identity, firt_gain, firt_custom };
 
@@ -40,14 +41,17 @@ class FIRGain;
   and may be implemented more effective.
 
   \fn int FIRGen::version() const
-    Returns the impulse response version. If the response function changes,
-    the version must also change so users of the generator can be notified
-    about this change and rebuild the response. Constant responses like zero
-    or identity never change the version (may return zero or any other const).
+    \return Returns the response version.
+  
+    When the response function changes, the version must also change so
+    clients of the generator can be notified about this change and rebuild
+    the response. Constant generators like FIRZero or FIRIdentity never change
+    the version (may return zero or any other constant).
 
   \fn const FIRInstance *FIRGen::make(int sample_rate) const
     \param sample_rate Sample rate to build the FIR for
     \return Returns the pointer to the instance built.
+
     Builds response function instance for the sample rate given.
 
 ******************************************************************************/
@@ -66,7 +70,26 @@ public:
   \class FIRInstance
   \brief Impulse response function instance.
 
-  Simple container for instance data.
+  Simple container for FIR data.
+
+  FIR instance is a const object. We should never change an instance after it
+  was built. When we need to modify the response, we should build a new
+  instance.
+
+  For this reason FIRGen always returns a const pointer, that we cannot modify.
+
+  'data' is const pointer to allow an instance to contain statically allocated
+  function (see StaticFIRInstance).
+
+  Normally you should never create an instance directly. Only FIRGen
+  descendants should make responses. However, generator should use one of the
+  following classes:
+  \li StaticFIRInstance when it needs to return a statically allocated response
+  function.
+  \li DynamicFIRInstance when response function has to be built dynamically.
+  \li ZeroFIRInstance to return a zero response.
+  \li IdentityFIRInstance to return an identity response.
+  \li GainFIRInstance to return a gain response.
 
   \fn FIRInstance::FIRInstance(int sample_rate, int length, int center, const double *data = 0)
   \param sample_rate Sample rate this function was made for
@@ -127,9 +150,10 @@ public:
 
 /**************************************************************************//**
   \class StaticFIRInstance
-  \brief Instance for statically allocated data.
+  \brief Instance for statically allocated response function.
 
-  Does not free the buffer allocated for function data on destruction.
+  This class should be instantiated by a generator when it builds a response
+  from a statically allocated data.
 
   \fn StaticFIRInstance::StaticFIRInstance(int sample_rate, int length, int center, const double *data = 0)
   \param sample_rate Sample rate this function was made for
@@ -144,44 +168,56 @@ class StaticFIRInstance : public FIRInstance
 {
 public:
   StaticFIRInstance(int sample_rate_, int length_, int center_, const double *data_ = 0):
-  FIRInstance(sample_rate_, length_, center_, data_) {}
+  FIRInstance(sample_rate_, length_, center_, data_)
+  {}
 };
 
 /**************************************************************************//**
   \class DynamicFIRInstance
-  \brief Instance for dynamically allocated data.
+  \brief Instance for dynamically allocated response function.
 
-  Frees the memory allocated for function data on destruction.
+  This class should be instantiated by generator when it builds a response and
+  needs memory for the resulting function. The memory is allocated dynamically
+  and it is deleted on instance destruction.
 
-  \fn DynamicFIRInstance::DynamicFIRInstance(int sample_rate, int length, int center, double *data = 0)
+  Memory is initialized with zeros.
+
+  Generator has write access to the memory allocated through 'buf' pointer.
+  However, when generator returns the result as const FIRInstance pointer,
+  the client of the generator looses this right, so constant property of
+  FIRInstance is preserved.
+
+  \fn DynamicFIRInstance::DynamicFIRInstance(int sample_rate, int length, int center)
   \param sample_rate Sample rate this function was made for
   \param length      Length of the function
   \param center      Position of the center of the function
-  \param data        Pointer to the function buffer
 
-  Constructs an instance for the data given.
-
-  \fn DynamicFIRInstance::~DynamicFIRInstance()
-  Frees the memory allocated for function data.
+  Constructs an instance for the data given and allocates the memory for
+  the response function.
 
 ******************************************************************************/
 
 class DynamicFIRInstance : public FIRInstance
 {
 protected:
-  double *buf; ///< Non-const pointer to delete the buffer
+  AutoBuf<double> autobuf; ///< Buffer for the response function
 
 public:
-  DynamicFIRInstance(int sample_rate_, int length_, int center_, double *data_ = 0):
-  FIRInstance(sample_rate_, length_, center_, data_), buf(data_) {}
-  virtual ~DynamicFIRInstance() { safe_delete(buf); }
+  double *buf; ///< Pointer to the memory allocated
+
+  DynamicFIRInstance(int sample_rate_, int length_, int center_):
+  FIRInstance(sample_rate_, length_, center_, 0), autobuf(length_)
+  {
+    autobuf.zero();
+    data = buf = autobuf;
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // General FIR instance classes
 //
 // Several response types may be generated by any generator. And because of its
-// importance this types are made as special classes.
+// importance these types are made as special classes.
 ///////////////////////////////////////////////////////////////////////////////
 
 /// \brief Zero impulse response
@@ -371,11 +407,14 @@ public:
 
   virtual int version() const
   {
-    int new_fir_ver = fir->version();
-    if (fir && fir_ver != new_fir_ver)
-    {
-      fir_ver = new_fir_ver;
-      ver++;
+    if (fir)
+    { 
+      int new_fir_ver = fir? fir->version(): 0;
+      if (fir_ver != new_fir_ver)
+      {
+        fir_ver = new_fir_ver;
+        ver++;
+      }
     }
     return ver; 
   }
