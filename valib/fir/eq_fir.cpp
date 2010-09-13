@@ -145,7 +145,7 @@ EqFIR::version() const
 const FIRInstance *
 EqFIR::make(int sample_rate) const
 {
-  size_t i; int j;
+  size_t i;
   double q = db2value(ripple) - 1;
   StepFilter step;
 
@@ -186,12 +186,9 @@ EqFIR::make(int sample_rate) const
   // Build the filter
   // Change at one band does not affect other bands
 
-  double *data = new double[max_n];
-  if (!data)
-    return 0;
+  DynamicFIRInstance *fir = new DynamicFIRInstance(sample_rate, max_n, max_c);
 
-  for (j = 0; j < max_n; j++) data[j] = 0;
-
+  double *data = fir->buf;
   data[max_c] += bands[max_band-1].gain;
   for (i = 0; i < max_band - 1; i++)
     if (bands[i].gain != bands[i+1].gain)
@@ -202,5 +199,5 @@ EqFIR::make(int sample_rate) const
         data[max_c + j] += step.dg * lpf(j, step.cf) * kaiser_window(j, step.n, alpha);
     }
 
-  return new DynamicFIRInstance(sample_rate, max_n, max_c, data);
+  return fir;
 }

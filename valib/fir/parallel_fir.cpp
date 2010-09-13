@@ -107,16 +107,13 @@ ParallelFIR::make(int sample_rate) const
   else
   {
     // Custom response response
-    double *data = new double[length];
-    if (data)
-    {
-      memset(data, 0, length * sizeof(double));
-      for (i = 0; i < fir_count; i++)
-        for (int j = 0; j < fir[i]->length; j++)
-          data[j + center - fir[i]->center] += fir[i]->data[j];
+    DynamicFIRInstance *sum_fir = new DynamicFIRInstance(sample_rate, length, center);
+    result = sum_fir;
 
-      result = new DynamicFIRInstance(sample_rate, length, center, data);
-    }
+    double *data = sum_fir->buf;
+    for (i = 0; i < fir_count; i++)
+      for (int j = 0; j < fir[i]->length; j++)
+        data[j + center - fir[i]->center] += fir[i]->data[j];
   }
 
   /////////////////////////////////////////////////////////

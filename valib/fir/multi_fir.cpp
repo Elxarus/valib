@@ -107,30 +107,29 @@ MultiFIR::make(int sample_rate) const
   else
   {
     // Custom response
-    double *data = new double[length];
-    if (data)
-    {
-      int current_length = fir[0]->length;
-      memset(data, 0, length * sizeof(double));
-      memcpy(data, fir[0]->data, fir[0]->length * sizeof(fir[0]->data[0]));
+    DynamicFIRInstance *sum_fir = new DynamicFIRInstance(sample_rate, length, center);
+    result = sum_fir;
 
-      for (i = 1; i < fir_count; i++)
+    double *data = sum_fir->buf;
+
+    int current_length = fir[0]->length;
+    memcpy(data, fir[0]->data, fir[0]->length * sizeof(fir[0]->data[0]));
+
+    for (i = 1; i < fir_count; i++)
+    {
+      int n = fir[i]->length - 1;
+      for (int j = current_length + n - 1; j >= 0; j--)
       {
-        int n = fir[i]->length - 1;
-        for (int j = current_length + n - 1; j >= 0; j--)
-        {
-          double sum = 0;
-          if (j >= n)
-            for (int k = 0; k <= n; k++)
-              sum += data[j - n + k] * fir[i]->data[n - k];
-          else
-            for (int k = n - j; k <= n; k++)
-              sum += data[j - n + k] * fir[i]->data[n - k];
-          data[j] = sum;
-        }
-        current_length += n - 1;
+        double sum = 0;
+        if (j >= n)
+          for (int k = 0; k <= n; k++)
+            sum += data[j - n + k] * fir[i]->data[n - k];
+        else
+          for (int k = n - j; k <= n; k++)
+            sum += data[j - n + k] * fir[i]->data[n - k];
+        data[j] = sum;
       }
-      result = new DynamicFIRInstance(sample_rate, length, center, data);
+      current_length += n - 1;
     }
   }
 
