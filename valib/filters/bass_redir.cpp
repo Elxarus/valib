@@ -44,9 +44,9 @@ BassRedir::update_filters(Speakers _spk)
   }
   else
   {
-    lpf.uninit();
+    lpf.drop();
     for (int i = 0; i < nch; i++)
-      hpf[i].uninit();
+      hpf[i].drop();
   }
 }
 
