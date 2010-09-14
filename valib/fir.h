@@ -40,6 +40,11 @@ class FIRGain;
   gain or even zero response. Obviously, these cases require less computation
   and may be implemented more effective.
 
+  Several common generators available:
+  \li FIRZero - Constant generator that always returns zero response.
+  \li FIRIdentity - Constant generator that always returns identity response.
+  \li FIRGain - Gain response generator.
+
   \fn int FIRGen::version() const
     \return Returns the response version.
   
