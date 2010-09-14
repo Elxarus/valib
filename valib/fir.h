@@ -22,9 +22,9 @@ class FIRGain;
   \class FIRGen
   \brief Finite impulse response function generator
 
-  Interface for impulse response generator. It is used to generate an impulse
-  response from a set of user-controllable parameters (if any) and a given
-  sample rate.
+  Interface for finite impulse response generator. It is used to generate an
+  impulse response from a set of user-controllable parameters (if any) and a
+  given sample rate.
 
   So FIRGen descendant may act as parameters container and these parameters
   may change, resulting in change of the impulse response. For class clients
@@ -57,7 +57,8 @@ class FIRGain;
     \param sample_rate Sample rate to build the FIR for
     \return Returns the pointer to the instance built.
 
-    Builds response function instance for the sample rate given.
+    Builds response function instance for the sample rate given. Class client is
+    responsible for instance deletition.
 
 ******************************************************************************/
 
@@ -225,21 +226,21 @@ public:
 // importance these types are made as special classes.
 ///////////////////////////////////////////////////////////////////////////////
 
-/// \brief Zero impulse response
+//! Zero impulse response
 class ZeroFIRInstance : public FIRInstance
 { 
 public:
   ZeroFIRInstance(int sample_rate);
 };
 
-/// \brief Identity impulse response
+//! Identity impulse response
 class IdentityFIRInstance : public FIRInstance
 {
 public:
   IdentityFIRInstance(int sample_rate);
 };
 
-/// \brief Gain impulse response
+//! Gain impulse response
 class GainFIRInstance : public FIRInstance
 {
 public:
@@ -251,7 +252,7 @@ public:
 // General FIR generators
 ///////////////////////////////////////////////////////////////////////////////
 
-/// \brief Generator that retruns zero FIR
+//! Generator that retruns zero FIR
 class FIRZero : public FIRGen
 {
 public:
@@ -260,7 +261,7 @@ public:
   virtual int version() const { return 0; }
 };
 
-/// \brief Generator that retruns identity FIR
+//! Generator that retruns identity FIR
 class FIRIdentity : public FIRGen
 {
 public:
