@@ -67,4 +67,43 @@ public:
 
 };
 
+class SamplesNoise : public Samples
+{
+public:
+  RNG rng;
+
+  SamplesNoise()
+  {}
+
+  SamplesNoise(size_t size, int seed):
+  rng(seed), Samples(size)
+  {
+    fill_noise();
+  }
+
+  inline void fill_noise()
+  {
+    rng.fill_samples(begin(), size());
+  }
+
+  inline void fill_noise(int seed)
+  {
+    rng.seed(seed);
+    rng.fill_samples(begin(), size());
+  }
+
+  inline void allocate_noise(size_t size)
+  {
+    allocate(size);
+    fill_noise();
+  }
+
+  inline void allocate_noise(size_t size, int seed)
+  {
+    allocate(size);
+    fill_noise(seed);
+  }
+
+};
+
 #endif
