@@ -86,6 +86,12 @@ public:
     Constructs an identity biquad where b0 = 1, a0 = 1 and other coeffitients are
     zero.
 
+  \fn Biquad::Biquad(double gain)
+    \param gain Gain for the biquad
+
+    Constructs a gain biquad where b0 = gain, a0 = 1 and other coeffitients are
+    zero.
+
   \fn Biquad::Biquad(sample_t a0, sample_t a1, sample_t a2, sample_t b0, sample_t b1, sample_t b2)
     Constructs a biquad with the coeffitients given.
 
@@ -144,6 +150,11 @@ public:
   { 
     // default biquad is identity
     set(1.0, 0, 0, 1.0, 0, 0);
+  }
+
+  Biquad(double gain)
+  { 
+    set(1.0, 0, 0, gain, 0, 0);
   }
 
   Biquad(sample_t a0, sample_t a1, sample_t a2, sample_t b0, sample_t b1, sample_t b2)
