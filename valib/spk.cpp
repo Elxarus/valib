@@ -318,3 +318,21 @@ sample_t max_samples(sample_t max, sample_t *s, size_t size)
       max = fabs(s[i]);
   return max;
 }
+
+sample_t peak_diff(sample_t *s1, sample_t *s2, size_t size)
+{
+  sample_t diff = 0;
+  for (size_t i = 0; i < size; i++)
+    if (fabs(s1[i] - s2[i]) > diff)
+      diff = fabs(s1[i] - s2[i]);
+  return diff;
+}
+
+sample_t rms_diff(sample_t *s1, sample_t *s2, size_t size)
+{
+  sample_t sum = 0;
+  for (size_t i = 0; i < size; i++)
+    sum += (s1[i] - s2[i]) * (s1[i] - s2[i]);
+
+  return size? sqrt(sum / size): 0.0;
+}
