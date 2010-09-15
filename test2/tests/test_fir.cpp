@@ -122,8 +122,6 @@ BOOST_AUTO_TEST_CASE(fir_gain)
 {
   static const double gain1 = 0.5;
   static const double gain2 = 1.0 / 3.0;
-  const FIRInstance *fir;
-  int ver;
 
   // Ensure that default constructor makes a generator with no gain (1.0)
   FIRGain default_fir_gain;
@@ -134,12 +132,12 @@ BOOST_AUTO_TEST_CASE(fir_gain)
   BOOST_CHECK_EQUAL(fir_gain.get_gain(), gain1);
 
   // set_gain() function must change version.
-  ver = fir_gain.version();
+  int ver = fir_gain.version();
   fir_gain.set_gain(gain2);
   BOOST_CHECK_NE(ver, fir_gain.version());
 
   // Check fir building
-  fir = fir_gain.make(sample_rate);
+  const FIRInstance *fir = fir_gain.make(sample_rate);
   BOOST_CHECK_EQUAL(fir->sample_rate, sample_rate);
   BOOST_CHECK_EQUAL(fir->length, 1);
   BOOST_CHECK_EQUAL(fir->center, 0);
