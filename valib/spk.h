@@ -531,6 +531,8 @@ void sum_samples(sample_t *dst, sample_t *src, size_t size);
 void mul_samples(sample_t *dst, sample_t *src, size_t size);
 
 sample_t max_samples(sample_t max, sample_t *s, size_t size);
+sample_t peak_diff(sample_t *s1, sample_t *s2, size_t size);
+sample_t rms_diff(sample_t *s1, sample_t *s2, size_t size);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class inlines
