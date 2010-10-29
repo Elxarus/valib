@@ -14,7 +14,8 @@ void
 DelayFIR::set_delay(vtime_t delay_)
 {
   delay = delay_;
-  if (delay < 0) delay = 0;
+  if (delay < 0)
+    delay = 0;
   ver++;
 }
 
@@ -33,10 +34,6 @@ const FIRInstance *
 DelayFIR::make(int sample_rate) const
 {
   int samples = int(delay * sample_rate);
-
-  if (samples == 0)
-    return new IdentityFIRInstance(sample_rate);
-
   DynamicFIRInstance *fir = new DynamicFIRInstance(sample_rate, samples+1, 0);
   fir->buf[samples] = 1.0;
   return fir;
