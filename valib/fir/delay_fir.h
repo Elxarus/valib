@@ -1,11 +1,37 @@
-/*
-  Simple delay filter (only integer number of samples delay)
-*/
+/**************************************************************************//**
+  \file delay_fir.h
+  \brief DelayFIR class
+******************************************************************************/
 
 #ifndef VALIB_DELAY_FIR
 #define VALIB_DELAY_FIR
 
 #include "../fir.h"
+
+/**************************************************************************//**
+  \class DelayFIR
+  \brief Delay filter
+
+  Delays the signal by an integer number of samples.
+
+  When delay iz zero filter degrades to passthrough filter.
+
+  \fn DelayFIR::DelayFIR()
+    Construct the filter with zero delay (passthrough filter).
+
+  \fn DelayFIR::DelayFIR(vtime_t delay)
+    \param delay Delay value
+
+    Construct the filter with the delay specified.
+
+  \fn void DelayFIR::set_delay(vtime_t delay)
+    \param delay Delay value
+
+    Set the delay.
+
+  \fn vtime_t DelayFIR::get_delay() const
+    Returns the current delay.
+******************************************************************************/
 
 class DelayFIR : public FIRGen
 {
@@ -18,7 +44,7 @@ public:
   DelayFIR(vtime_t delay);
 
   /////////////////////////////////////////////////////////
-  // Own interface
+  // Parameters
 
   void set_delay(vtime_t delay);
   vtime_t get_delay() const;
