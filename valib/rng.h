@@ -40,7 +40,7 @@
   To avoid 'if' statement we can just add the most significant bit to the
   resulting value, so last 'if' statement turns into:
 
-  z = clear_MSB(z + MSB(z));
+  z = clear_MSB(z) + MSB(z);
 
   Most common tasks
   =================
