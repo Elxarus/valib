@@ -46,14 +46,27 @@
 
 using std::string;
 
-class Source;
-class SourceError;
-
-
-
 class Source : boost::noncopyable
 {
 public:
+  // Processing error exception
+  // Do not throw this exception from the constructor!
+  class Error
+  {
+  public:
+    Source *source;
+    int code;
+    string text;
+
+    Error(Source *source_, int code_, string text_):
+    source(source_), code(code_), text(text_)
+    {}
+
+    Error(Source *source_, string text_):
+    source(source_), code(-1), text(text_)
+    {}
+  };
+
   Source() {}
   virtual ~Source() {}
 
@@ -68,17 +81,6 @@ public:
   // Source info
   virtual string name() const;
   virtual string info() const { return string(); }
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// SourceError exception
-
-class SourceError : public ProcError
-{
-public:
-  SourceError(Source *source_, int error_code_, string text_):
-  ProcError(source_->name(), source_->info(), error_code_, text_)
-  {}
 };
 
 #endif

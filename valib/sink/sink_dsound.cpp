@@ -429,7 +429,7 @@ DSoundSink::process(const Chunk &chunk)
     // remaining input data)
 
     if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
-      throw SinkError(this, 0, "ds_buf->GetCurrentPosition()");
+      throw Error(this, "ds_buf->GetCurrentPosition()");
 
     if (play_cur > cur)
       data_size = play_cur - cur;
@@ -452,7 +452,7 @@ DSoundSink::process(const Chunk &chunk)
     if (data_size)
     {
       if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
-        throw SinkError(this, 0, "ds_buf->Lock()");
+        throw Error(this, "ds_buf->Lock()");
 
       memcpy(data1, buf, data1_bytes);
       buf += data1_bytes;
@@ -468,7 +468,7 @@ DSoundSink::process(const Chunk &chunk)
       }
 
       if FAILED(ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
-        throw SinkError(this, 0, "ds_buf->Unlock()");
+        throw Error(this, "ds_buf->Unlock()");
     }
 
     ///////////////////////////////////////////////////////

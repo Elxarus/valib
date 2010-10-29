@@ -333,7 +333,7 @@ DShowSink::process(const Chunk &chunk)
   {
     // Allocate output sample
     if FAILED(GetDeliveryBuffer(&sample, 0, 0, 0))
-      throw SinkError(this, 0, "GetDeliveryBuffer() failed");
+      throw Error(this, "GetDeliveryBuffer() failed");
 
     // Dynamic format change
     if (send_mt)
@@ -362,7 +362,7 @@ DShowSink::process(const Chunk &chunk)
     if FAILED(sample->SetActualDataLength(sample_size))
     {
       sample->Release();
-      throw SinkError(this, 0, "SetActualDataLength() failed");
+      throw Error(this, "SetActualDataLength() failed");
     }
     memcpy(sample_buf, chunk_buf, sample_size);
     chunk_buf  += sample_size;
@@ -391,6 +391,6 @@ DShowSink::process(const Chunk &chunk)
     hr = Deliver(sample);
     sample->Release();
     if FAILED(hr)
-      throw SinkError(this, 0, "Deliver() failed");
+      throw Error(this, "Deliver() failed");
   }
 }
