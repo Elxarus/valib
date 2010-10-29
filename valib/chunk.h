@@ -113,22 +113,6 @@
     Move raw sample pointers ahead by drop_size samples.
 ******************************************************************************/
 
-class ProcError
-{
-public:
-  std::string name;
-  std::string info;
-  std::string text;
-  int error_code;
-
-  ProcError(std::string name_, std::string info_, int error_code_, std::string text_):
-  name(name_), info(info_), error_code(error_code_), text(text_)
-  {}
-
-  virtual ~ProcError()
-  {}
-};
-
 class Chunk
 {
 public:

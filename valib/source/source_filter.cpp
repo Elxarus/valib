@@ -84,7 +84,7 @@ SourceFilter2::get_chunk(Chunk &out)
       {
         if (!filter->is_open())
           if (!filter->open(source->get_output()))
-            throw SourceError(this, 0, "Cannot open the filter");
+            throw Error(this, "Cannot open the filter");
 
         if (filter->process(chunk, out))
         {
@@ -110,7 +110,7 @@ SourceFilter2::get_chunk(Chunk &out)
         }
 
         if (!filter->open(source->get_output()))
-          throw SourceError(this, 0, "Cannot reopen the filter");
+          throw Error(this, "Cannot reopen the filter");
 
         filter->reset();
 

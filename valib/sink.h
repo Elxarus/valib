@@ -75,7 +75,6 @@
 using std::string;
 
 class Sink;
-class SinkError;
 class SimpleSink;
 
 
@@ -83,6 +82,24 @@ class SimpleSink;
 class Sink : boost::noncopyable
 {
 public:
+  // Processing error exception
+  // Do not throw this exception from the constructor!
+  class Error
+  {
+  public:
+    Sink *sink;
+    int code;
+    string text;
+
+    Error(Sink *sink_, int code_, string text_):
+    sink(sink_), code(code_), text(text_)
+    {}
+
+    Error(Sink *sink_, string text_):
+    sink(sink_), code(-1), text(text_)
+    {}
+  };
+
   Sink() {}
   virtual ~Sink() {}
 
@@ -107,17 +124,6 @@ public:
   // Sink info
   virtual string name() const;
   virtual string info() const { return string(); }
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// FilterError exception
-
-class SinkError : public ProcError
-{
-public:
-  SinkError(Sink *sink_, int error_code_, string text_):
-  ProcError(sink_->name(), sink_->info(), error_code_, text_)
-  {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////

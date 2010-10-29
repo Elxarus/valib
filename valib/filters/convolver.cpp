@@ -201,7 +201,7 @@ Convolver::process(Chunk &in, Chunk &out)
       return true;
     }
     if (!open(spk))
-      throw FilterError(this, 0, "Cannot handle fir change");
+      throw Error(this, "Cannot handle fir change");
   }
 
   /////////////////////////////////////////////////////////

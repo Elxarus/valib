@@ -261,7 +261,7 @@ Converter::process(Chunk &in, Chunk &out)
   }
 
   if (convert == 0)
-    throw new FilterError(this, 0, "Cannot convert: no conversion function");
+    throw Error(this, "Cannot convert: no conversion function");
 
   if (format == FORMAT_LINEAR)
     return convert_pcm2linear(in, out);

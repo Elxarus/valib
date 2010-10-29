@@ -1,14 +1,28 @@
-/*
-  Filter
-  Base interface for all filters
+/**************************************************************************//**
+  \file filter.h
+  \brief Filter: base interface for filters
+******************************************************************************/
 
-  /////////////////////////////////////////////////////////
-  // Filter usage
-  /////////////////////////////////////////////////////////
+#ifndef VALIB_FILTER2_H
+#define VALIB_FILTER2_H
 
-  /////////////////////////////////////////////////////////
-  // Simple case: no format changes
+#include <string>
+#include <boost/utility.hpp>
+#include "chunk.h"
 
+using std::string;
+
+class Filter;
+
+/**************************************************************************//**
+  \class Filter
+  \brief Base interface for all filters
+
+  \section Filter usage
+
+  \subsection No format changes
+
+  \code
   Filter *filter;
   Chunk in, out;
   ...
@@ -28,15 +42,18 @@
 
     filter->close();
   }
-  catch (FilterError)
+  catch (Filter::Error)
   {
     // Handle filtering errors
   }
+  \endcode
 
-  /////////////////////////////////////////////////////////
-  // Change input format of the filter without interruption
-  // of the data flow.
 
+  \subsection Format change
+
+  Change input format of the filter without interruption of the data flow.
+
+  \code
   Filter *filter;
   ...
 
@@ -65,48 +82,54 @@
 
     filter->close();
   }
-  catch (FilterError)
+  catch (Filter::Error)
   {
     // Handle filtering errors
   }
+  \endcode
 
-  /////////////////////////////////////////////////////////
 
-  bool can_open(Speakers spk) const
-    Check format support.
+  \fn bool Filter::can_open(Speakers spk) const
+    \param spk Format to test
+    \return Returns true when format is supported and false otherwise.
 
-    Return value:
-    * true: filter supports the format given. Note that filter may fail
-      to open even when the format is supported because of resource allocation
-      errors. Also filter may change its mind when you change its parameters.
-    * false: filter cannot be open with the format given.
+    Check format support. Returns true when the filter supports the format
+    given. Note that filter may fail to open even when the format is supported
+    because of resource allocation errors.
 
-  bool open(Speakers spk)
-    Open the filter and allocate resources.
+    An ability to open the filter with a certain format also depends on filter
+    parameters. When parameters change filter can_open() result may also
+    change.
 
-    Return value:
-    * true: success
-    * false: fail
+    This function should not throw because of resource allocation errors or
+    other reasons. I.e. it should catch all exceptions during the test and
+    return false in such case.
 
-  void close()
+  \fn bool Filter::open(Speakers spk)
+    \param spk Input format for the filter
+    \return Returns true on success and false otherwise.
+
+    Open the filter with the input format provided and allocate resources.
+
+  \fn void Filter::close()
     Close the filter and deallocate resources.
 
-  bool is_open() const
+  \fn bool Filter::is_open() const
     Return true when filter is open and can process data.
 
   /////////////////////////////////////////////////////////
   // Processing
 
-  void reset()
+  \fn void Filter::reset()
     Reset the filter state, zero all internal buffers and prepare to a new
     stream. Do not deallocate resources, because we're awaiting new data.
     This call should be equivalent to filter.open(filter.get_input()), but we
     do not need to allocate resources once again, just set the internal state
     to initial values.
 
-    reset() must not throw.
+    reset() should not throw.
 
-  bool process(Chunk &in, Chunk &out)
+  \fn bool Filter::process(Chunk &in, Chunk &out)
     Process input data and make one output chunk.
 
     Filter may process only part of the data. In this case it may change input
@@ -126,14 +149,14 @@
     output. After this, process() call on the first filter will corrupt data
     at the output of the second filter.
 
-    When sink finds an error and cannot proceed, it must throw SinkError
+    When filter finds an error and cannot proceed, it must throw FilterError
     exception. reset() must be called on the filter after an error occurs.
 
     Return value:
     * true: filter made an output chunk successfully
     * false: filter needs more input data
 
-  bool flush(Chunk &out)
+  \fn bool Filter::flush(Chunk &out)
     Flush buffered data. When filter does not require flushing it should just
     return false from this call.
 
@@ -147,7 +170,7 @@
     * true: filter made an output chunk successfully
     * false: filter has done flushing
 
-  bool new_stream() const
+  \fn bool Filter::new_stream() const
     Filter returns a new stream. It may do this for the following reasons:
     * It want the downstream to flush and prepare to receive a new stream.
     * It wants to change the output format
@@ -171,12 +194,12 @@
     process(chunk2) true    true          out_spk       ouput format is determined
     process(chunk2) true    false         out_spk       new stream continues
 
-  Speakers get_input()
+  \fn Speakers Filter::get_input() const
     Returns input format of the filter. It must be the same format as passed
     to open() call. This function should be used only when the filter is open,
     otherwise the result is undefined.
 
-  Speakers get_output()
+  \fn Speakers Filter::get_output() const
     Returns output format of the filter.
 
     Generally, output format is known immediately after open() call, so you can
@@ -190,34 +213,36 @@
     can. To change output format filter must explicitly indicate this with
     help of new_stream() call (it should return true when format changes).
 
-  std::string name() const
+  \fn std::string Filter::name() const
     Returns the name of the filter (class name by default).
 
-  std::string info() const
+  \fn std::string Filter::info() const
     Print the filter configuration. Only static parameters should be printed,
     i.e. at the DRC filter we should print the drc factor, but not the current
     gain (that is constantly changing).
 */
 
-#ifndef VALIB_FILTER2_H
-#define VALIB_FILTER2_H
-
-#include <string>
-#include <boost/utility.hpp>
-#include "chunk.h"
-
-using std::string;
-
-class Filter;
-class FilterError;
-
-///////////////////////////////////////////////////////////////////////////////
-// Filter
-// Base interface for all filters
-
 class Filter : boost::noncopyable
 {
 public:
+  // Processing error exception
+  // Do not throw this exception from the constructor!
+  class Error
+  {
+  public:
+    Filter *filter;
+    int code;
+    string text;
+
+    Error(Filter *filter_, int code_, string text_):
+    filter(filter_), code(code_), text(text_)
+    {}
+
+    Error(Filter *filter_, string text_):
+    filter(filter_), code(-1), text(text_)
+    {}
+  };
+
   Filter() {};
   virtual ~Filter() {};
 
@@ -245,17 +270,6 @@ public:
   // Filter info
   virtual string name() const;
   virtual string info() const { return string(); }
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// FilterError exception
-
-class FilterError : public ProcError
-{
-public:
-  FilterError(Filter *filter_, int error_code_, string text_):
-  ProcError(filter_->name(), filter_->info(), error_code_, text_)
-  {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////
