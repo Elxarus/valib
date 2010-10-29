@@ -372,7 +372,10 @@ protected:
   bool f_open;
   Speakers spk;
 
-private:
+public:
+  SimpleFilter(): f_open(false)
+  {}
+
   /////////////////////////////////////////////////////////
   // Open & close the filter implementation
 
@@ -401,10 +404,6 @@ private:
 
   virtual bool is_open() const
   { return f_open; }
-
-public:
-  SimpleFilter(): f_open(false)
-  {}
 
   /////////////////////////////////////////////////////////
   // Init/Uninit placeholders
