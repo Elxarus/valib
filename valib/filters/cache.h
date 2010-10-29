@@ -40,7 +40,7 @@ public:
   /////////////////////////////////////////////////////////
   // SamplesFilter overrides
 
-  virtual bool open(Speakers spk);
+  virtual bool init();
   virtual void reset();
   virtual bool process(Chunk &in, Chunk &out);
 };

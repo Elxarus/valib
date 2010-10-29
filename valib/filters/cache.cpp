@@ -131,15 +131,12 @@ CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t si
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// LinearFilter
+// SamplesFilter
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
-CacheFilter::open(Speakers new_spk)
+CacheFilter::init()
 {
-  if (!SamplesFilter::open(new_spk))
-    return false;
-
   stream_time = 0;
   buf_samples = (int)(buf_size * spk.sample_rate + 0.5);
   buf.allocate(spk.nch(), buf_samples);
