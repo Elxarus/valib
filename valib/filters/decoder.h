@@ -13,7 +13,7 @@
 #include "../parsers/multi_frame.h"
 
 
-class AudioDecoder : public Filter
+class AudioDecoder : public FilterWrapper
 {
 protected:
   ParserFilter parser;
@@ -24,7 +24,7 @@ protected:
   MultiFrame multi_parser;
 
 public:
-  AudioDecoder()
+  AudioDecoder(): FilterWrapper(&parser)
   {
     FrameParser *parsers[] = { &ac3, &dts, &mpa };
     multi_parser.set_parsers(parsers, array_size(parsers));
@@ -36,26 +36,6 @@ public:
 
   size_t     get_info(char *buf, size_t len) const { return parser.get_info(buf, len); }
   HeaderInfo header_info()                   const { return parser.header_info();      }
-
-  /////////////////////////////////////////////////////////
-  // Open/close the filter
-
-  virtual bool can_open(Speakers spk) const { return parser.can_open(spk); }
-  virtual bool open(Speakers spk)           { return parser.open(spk);     }
-  virtual void close()                      { parser.close();              }
-  virtual bool is_open() const              { return parser.is_open();     }
-
-  /////////////////////////////////////////////////////////
-  // Processing
-
-  virtual bool process(Chunk &in, Chunk &out) { return parser.process(in, out); }
-  virtual bool flush(Chunk &out)           { return parser.flush(out);           }
-  virtual void reset()                      { parser.reset();                     }
-
-  virtual bool new_stream() const           { return parser.new_stream();    }
-
-  virtual Speakers get_input() const        { return parser.get_input();   }
-  virtual Speakers get_output() const       { return parser.get_output();    }
 };
 
 #endif
