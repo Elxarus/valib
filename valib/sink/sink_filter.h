@@ -104,7 +104,7 @@ public:
       {
         sink->flush();
         if (!sink->open(filter->get_output()))
-          throw SinkError(this, 0, "Cannot reopen sink");
+          throw Sink::Error(this, 0, "Cannot reopen sink");
       }
       sink->process(out);
     }
@@ -126,7 +126,7 @@ public:
       {
         sink->flush();
         if (!sink->open(filter->get_output()))
-          throw SinkError(this, 0, "Cannot reopen sink");
+          throw Sink::Error(this, 0, "Cannot reopen sink");
       }
       sink->process(out);
     }
