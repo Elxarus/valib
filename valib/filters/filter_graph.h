@@ -147,9 +147,6 @@ public:
   virtual bool is_open() const
   { return start.filter->is_open(); }
 
-  virtual bool is_ofdd() const
-  { return false; }
-
   virtual Speakers get_input() const
   { return start.filter->get_input(); }
 

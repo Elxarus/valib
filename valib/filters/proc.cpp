@@ -268,10 +268,6 @@ bool
 AudioProcessor::is_open() const
 { return chain.is_open(); }
 
-bool
-AudioProcessor::is_ofdd() const
-{ return false; }
-
 Speakers
 AudioProcessor::get_input() const
 { return in_spk; }

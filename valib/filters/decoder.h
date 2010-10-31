@@ -43,10 +43,7 @@ public:
   virtual bool can_open(Speakers spk) const { return parser.can_open(spk); }
   virtual bool open(Speakers spk)           { return parser.open(spk);     }
   virtual void close()                      { parser.close();              }
-
   virtual bool is_open() const              { return parser.is_open();     }
-  virtual bool is_ofdd() const              { return parser.is_ofdd();     }
-  virtual Speakers get_input() const        { return parser.get_input();   }
 
   /////////////////////////////////////////////////////////
   // Processing
@@ -56,6 +53,8 @@ public:
   virtual void reset()                      { parser.reset();                     }
 
   virtual bool new_stream() const           { return parser.new_stream();    }
+
+  virtual Speakers get_input() const        { return parser.get_input();   }
   virtual Speakers get_output() const       { return parser.get_output();    }
 };
 
