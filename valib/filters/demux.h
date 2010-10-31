@@ -44,9 +44,6 @@ public:
   virtual Speakers get_output() const
   { return out_spk; }
 
-  virtual bool is_ofdd() const
-  { return true; }
-
   virtual bool new_stream() const
   { return is_new_stream; }
 };

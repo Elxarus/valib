@@ -422,14 +422,6 @@ class Filter;
 
   \name Filter state
 
-  \fn bool Filter::is_ofdd() const
-    In some cases filter cannot determine the output format after open() and
-    have to receive some data to say what the output format is. In this case
-    format is set to FORMAT_UNKNOWN after open(), and the real format is known
-    with the first output chunk.
-
-    Filter must report such behaviour with this function.
-
   \fn Speakers Filter::get_input() const
     Returns input format of the filter. It must be the same format as passed
     to open() call. This function should be used only when the filter is open,
@@ -503,7 +495,6 @@ public:
   /////////////////////////////////////////////////////////
   // Filter state
 
-  virtual bool     is_ofdd() const = 0;
   virtual Speakers get_input() const = 0;
   virtual Speakers get_output() const = 0;
 
@@ -571,10 +562,6 @@ public:
     Default implementation returns false (no format changes).
 
   \name Filter state
-
-  \fn bool SimpleFilter::is_ofdd() const
-    Default implementation returns false (format is known immediately after
-    open() call).
 
   \fn Speakers SimpleFilter::get_input() const
     Default implementation returns the format passed to open() call.
@@ -644,9 +631,6 @@ public:
 
   /////////////////////////////////////////////////////////
   // Filter state implementaion
-
-  virtual bool is_ofdd() const
-  { return false; }
 
   virtual Speakers get_input() const
   { return spk; }
@@ -737,6 +721,9 @@ public:
   virtual void close()
   { if (f) f->close(); }
 
+  virtual bool is_open() const
+  { return f? f->is_open(): false; }
+
   /////////////////////////////////////////////////////////
   // Processing
 
@@ -754,12 +741,6 @@ public:
 
   /////////////////////////////////////////////////////////
   // Filter state
-
-  virtual bool is_open() const
-  { return f? f->is_open(): false; }
-
-  virtual bool is_ofdd() const
-  { return f? f->is_ofdd(): false; }
 
   virtual Speakers get_input() const
   { return f? f->get_input(): spk_unknown; }

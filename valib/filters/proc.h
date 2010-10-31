@@ -143,6 +143,7 @@ public:
   virtual bool can_open(Speakers spk) const;
   virtual bool open(Speakers spk);
   virtual void close();
+  virtual bool is_open() const;
 
   // Processing
   virtual void reset();
@@ -151,8 +152,6 @@ public:
   virtual bool new_stream() const;
 
   // Filter state
-  virtual bool     is_open() const;
-  virtual bool     is_ofdd() const;
   virtual Speakers get_input() const;
   virtual Speakers get_output() const;
 
