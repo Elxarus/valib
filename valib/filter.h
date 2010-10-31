@@ -18,18 +18,37 @@ class Filter;
   \class Filter
   \brief Base interface for all filters
 
-  \section filter_usage Filter usage
+  \section filter_usage Filter usage patterns
 
   \subsection no_format_change No format changes
+
+  When input format does not change during the data flow and filter does not
+  change its output format we can use the following filter usage pattern.
 
   \code
   Filter *filter;
   Chunk in, out;
   ...
 
+  // Here we should set filter's parameters, including parameters that may
+  // affect the output format. For example, set the channel configuration
+  // for Mixer filter, or sample format for Converter filter.
+
+  if (!filter->open(input_format))
+  {
+    // Cannot open the filter.
+    // Do something and exit because we cannot continue the processing.
+  }
+
+  // Now filter->get_output() indicates filter's output format, so we can
+  // use it to decide what to do with the filtered output and do some
+  // preparations.
+
   try
   {
-    filter->open(format);
+    // Data processing cycle.
+    // May throw Filter::Error exception.
+
     while (has_more_data())
     {
       in = get_more_data();
@@ -37,55 +56,254 @@ class Filter;
         do_something(out);
     }
 
+    // Flush the filter.
+    // Also may throw Filter::Error exception
+
     while (filter->flush(out);)
       do_something(out);
-
-    filter->close();
   }
   catch (Filter::Error)
   {
     // Handle filtering errors
   }
+
+  filter->close();
+
   \endcode
 
+  \subsection input_stream_chagne Input stream change
 
-  \subsection format_chagne Format change
+  When we expect the change of the input format during the streaming, we must
+  call Filter::open() each time the format changes.
 
-  Change input format of the filter without interruption of the data flow.
+  To avoid gaps in the stream because of the buffering Filter::flush() must
+  be used before opening the filter with the new format.
+
+  This pattern should also be used when stream changes to another stream with
+  the \b same format. For example the change of the movie language by switching
+  tracks should be handled in this way. So it is more correctly to tell about
+  \b stream change, not a \b format change.
+
+  Note, that in this example we do not expect that filter itself changes its
+  output format, so we don't use Filter::new_stream().
+
+  Also note, that we call Filter::open() without closing the filter before.
+  It is because Filter::open() may reuse the resources allocated. In other
+  words, the use of Filter::close() is optional. Once open filter may reuse
+  the resources during the whole lifetime and free it only at the destructor.
 
   \code
   Filter *filter;
+  Chunk in, out;
   ...
+
+  // Here we should set filter's parameters.
+
+  while (has_more_data())
+  {
+    if (!filter->open(input_format))
+    {
+      // Cannot open the filter
+      // Do something to fix this or break the processing
+    }
+
+    // Now filter->get_output() indicates filter's output format, so we can
+    // use it to decide what to do with the filtered output and do some
+    // preparations.
+
+    try
+    {
+      while (has_more_data() && !new_stream_begins())
+      {
+        in = get_more_data();
+        while (filter->process(in, out))
+          do_something(out);
+      }
+
+      // End of the stream because of:
+      // * No more data, flush the filter at the end of the stream.
+      // * New stream begins, flush the filter to finish the current stream.
+
+      while (filter->flush(out))
+        do_something(out);
+    }
+    catch (Filter::Error)
+    {
+      // Handle filtering errors
+    }
+  }
+
+  filter->close();
+
+  \endcode
+
+  \subsection output_stream_chagne Output stream change
+
+  Sometimes filter may change its output format during the processing. This may
+  happen because of number of reasons: client of the filter may change its
+  parameters, input data may indicate the change of its format, user chooses
+  another language, etc.
+
+  As before, it is more correctly to say about \b stream change, not a \b format
+  change because the new stream may have the same format.
+
+  Filter indicates such condition with Filter::new_stream() flag. This flag may
+  change after successful Filter::process() or Filter::flush() call. When flag
+  is set, filter starts a new stream, output chunk made belongs to the new
+  stream and Filter::get_output() indicates the new format.
+
+  Note that previous stream must be finished correctly, i.e. downstream filters
+  must be flushed before processing of the new stream.
+
+  \code
+  Filter *filter;
+  Chunk in, out;
+  ...
+
+  // Here we should set filter's parameters.
+
+  if (!filter->open(input_format))
+  {
+    // Cannot open the filter.
+    // Do something and exit because we cannot continue the processing.
+  }
+
+  // Now filter->get_output() indicates filter's output format, so we can
+  // use it to decide what to do with the filtered output and do some
+  // preparations.
 
   try
   {
-    filter->open(format);
-    ...
+    // Data processing cycle
+
     while (has_more_data())
     {
-      Chunk in = get_more_data();
-      Chunk out;
+      in = get_more_data();
 
-      if (new_stream())
-      {
-        while (filter->flush(out))
-          do_something(out);
-        filter->open(new_format());
-      }
+      // We may change filter parameters,
+      // that may affect filter's output format.
 
       while (filter->process(in, out))
-        filter->process(in, out);
+      {
+        if (filter->new_stream())
+        {
+          // Flush downstream
+          // Setup using the new output format Filter::get_output()
+        }
+        do_something(out);
+      }
     }
 
-    while (filter->flush(out))
-      do_something(out);
+    // Flusing cycle
 
-    filter->close();
+    while (filter->flush(out))
+    {
+      if (filter->new_stream())
+      {
+        // Flush downstream
+        // Setup using the new output format Filter::get_output()
+      }
+      do_something(out);
+    }
   }
   catch (Filter::Error)
   {
     // Handle filtering errors
   }
+
+  filter->close();
+
+  \endcode
+
+  \subsection ddof Data-driven output format
+
+  In some cases the format of the output is encoded at the input data. For
+  example, SPDIF decoder knows that input format is IEC 61937 but does not know
+  at advance what the format of the contained stream is. To know this it must
+  receive and decode at least one frame.
+
+  In such case filter does not set the output format after Filter::open() call
+  immediately, but only after it receives enough data with (a number of)
+  Filter::process() call(s).
+
+  In such case Filter::get_output() returns FORMAT_UNKNOWN after Filter::open().
+  Also, filter must start an output stream explicitly by setting
+  Filter::new_stream() flag when it determines the output format. (Regular
+  filters start the output stream after Filter::open() call indirectly, just by
+  indicating the output format).
+
+  Note, that Filter::reset() also must change the output format to
+  FORMAT_UNKNOWN because it prepares the filter to receive a new stream and we
+  don't know the output format for this stream.
+
+  The pattern differs from the regual output format change pattern only in that
+  it checks the format after open() call and does not do the downstream setup
+  in case of data-driven output format.
+
+  \code
+  Filter *filter;
+  Chunk in, out;
+  ...
+
+  // Here we should set filter's parameters
+
+  if (!filter->open(input_format))
+  {
+    // Cannot open the filter.
+    // Do something and exit because we cannot continue the processing.
+  }
+
+  if (filter->get_output().is_unknown())
+  {
+    // Data-driven output format mode.
+    // We cannot determine the output format of the filter and cannot do any
+    // setup.
+  }
+  else
+  {
+    // Regular filtering.
+    // Now filter->get_output() indicates filter's output format, so we can
+    // use it to decide what to do with the filtered output and do some
+    // preparations.
+  }
+
+  try
+  {
+    // Data processing cycle
+
+    while (has_more_data())
+    {
+      in = get_more_data();
+      while (filter->process(in, out);)
+      {
+        if (filter->new_stream())
+        {
+          // Flush downstream
+          // Setup using the new output format Filter::get_output()
+        }
+        do_something(out);
+      }
+    }
+
+    // Flusing cycle
+
+    while (filter->flush(out);)
+    {
+      if (filter->new_stream())
+      {
+        // Flush downstream
+        // Setup using the new output format Filter::get_output()
+      }
+      do_something(out);
+    }
+  }
+  catch (Filter::Error)
+  {
+    // Handle filtering errors
+  }
+
+  filter->close();
+
   \endcode
 
   \name Open & close the filter
