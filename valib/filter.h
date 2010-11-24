@@ -330,8 +330,25 @@ class Filter;
 
     Open the filter with the input format provided and allocate resources.
 
+    It is not nessesary to call close() on already open filter because open()
+    may reuse previously allocated resources.
+
+    After a successful call to open() get_input() must return the format
+    passed to open(), and do this all the time until close() call.
+
+    get_output() must return either:
+    \li Correct format for the next output chunk.
+    \li FORMAT_UNKNOWN when filer requires to receive some data to decide its
+    output format.
+
   \fn void Filter::close()
     Close the filter and deallocate resources.
+
+    The use of close() is totally optional. Moreover, use of close() before
+    open() is not recommended because open() may reuse previously allocated
+    resources.
+
+    The main reason for close() is an explicit resource deallocation.
 
     This function should not throw.
 
@@ -398,6 +415,7 @@ class Filter;
     Filter returns a new stream. It may do this for the following reasons:
     \li It want the downstream to flush and prepare to receive a new stream.
     \li It wants to change the output format
+
     Both process() and flush() calls may affect this flag
 
     This flag should appear only for the first chunk in the stream. An example:
