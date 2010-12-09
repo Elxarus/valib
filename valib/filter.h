@@ -408,6 +408,9 @@ class Filter;
     Note, that filter may produce several chunks when flushing, so several
     flush() calls may be required.
 
+    In data-driven output format mode filter may change output format to
+    FORMAT_UNKNOWN after flushing complete.
+
     When filter finds an error and cannot proceed, it must throw Filter::Error
     exception. reset() must be called on the filter after an error occurs.
 
@@ -436,6 +439,13 @@ class Filter;
     process(chunk1) false   false         spk_unknown   Buffering, need more data
     process(chunk2) true    true          out_spk       Ouput format is determined, 1st chunk of format out_spk
     process(chunk2) true    false         out_spk       Stream continues, 2nd chunk of format out_spk
+    format change                                       An event that forces the filter to change its output format
+    process(chunk2) true    false         out_spk       Flushing
+    process(chunk2) false   false         spk_unknown   Flushing is done, buffering starts,
+                                                        filter needs more data to determine a new output format
+    process(chunk3) false   false         spk_unknown   Need more data
+    process(chunk4) true    true          new_out_spk   New stream starts
+    
     \endverbatim
 
   \name Filter state
@@ -454,6 +464,9 @@ class Filter;
     some data to say what the output format is. In this case output format must
     be set to FORMAT_UNKNOWN after open(), and to the real format on the first
     output chunk.
+
+    Output format may change to FORMAT_UNKNOWN after flushing (see flush()) or
+    when filter changes its output format (see new_stream()).
 
     Most filters do not change output format during the processing, but some
     can. To change output format filter must explicitly indicate this with
