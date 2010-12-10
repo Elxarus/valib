@@ -202,6 +202,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\tests\test_filter_stress.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\tests\test_fir.cpp"
 			>
 		</File>
