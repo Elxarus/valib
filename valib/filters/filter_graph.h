@@ -151,7 +151,7 @@ public:
   { return start.filter->get_input(); }
 
   virtual Speakers get_output() const
-  { return end.filter->get_output(); }
+  { return end.prev->filter->get_output(); }
 
   virtual string info() const;
 };
