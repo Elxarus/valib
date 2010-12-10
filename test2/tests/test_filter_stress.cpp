@@ -58,13 +58,10 @@ public:
     {
       if (new_stream())
         out_spk = get_output();
+      else if (out_spk.is_unknown())
+        out_spk = get_output();
       else if (get_output() != out_spk)
         BOOST_REQUIRE_EQUAL(get_output(), out_spk);
-    }
-    else
-    {
-      if (get_output() != out_spk && !get_output().is_unknown())
-        BOOST_FAIL("process(): incorrect output format change");
     }
     if (get_input() != in_spk)
       BOOST_REQUIRE_EQUAL(get_input(), in_spk);
@@ -78,13 +75,10 @@ public:
     {
       if (new_stream())
         out_spk = get_output();
+      else if (out_spk.is_unknown())
+        out_spk = get_output();
       else if (get_output() != out_spk)
         BOOST_REQUIRE_EQUAL(get_output(), out_spk);
-    }
-    else
-    {
-      if (get_output() != out_spk && !get_output().is_unknown())
-        BOOST_FAIL("flush(): incorrect output format change");
     }
     if (get_input() != in_spk)
       BOOST_REQUIRE_EQUAL(get_input(), in_spk);
@@ -98,6 +92,7 @@ public:
       BOOST_REQUIRE_EQUAL(get_input(), in_spk);
     if (get_output() != out_spk && !get_output().is_unknown())
       BOOST_FAIL("reset(): incorrect output format change");
+    out_spk = get_output();
   }
 };
 
@@ -228,9 +223,9 @@ void filter_stress_test(Filter *f, Source *src)
   filter_stress_test(f, src, chunk, ops, array_size(ops));
 }
 
-void filter_stress_test(Speakers spk, Filter *f, const char *filename = 0)
+void filter_stress_test(Speakers spk, Filter *f, const char *filename = 0, size_t data_size = 65536)
 {
-  static const size_t chunk_size[] = { 1, 2, 1024, 65536 };
+  static const size_t chunk_size[] = { 1, 2, 1024, 32768 };
 
   FilterTester t(f);
   for (int i = 0; i < array_size(chunk_size); i++)
@@ -244,7 +239,7 @@ void filter_stress_test(Speakers spk, Filter *f, const char *filename = 0)
     }
     else
     {
-      NoiseGen noise(spk, seed, 15*chunk_size[i] + 65536, chunk_size[i]);
+      NoiseGen noise(spk, seed, 15*chunk_size[i] + data_size, chunk_size[i]);
       filter_stress_test(&t, &noise);
     }
   }
@@ -422,7 +417,7 @@ BOOST_AUTO_TEST_CASE(audio_processor)
   filter.set_user(Speakers(FORMAT_PCM16, 0, 0));
 
   open_stress_test(&filter);
-  filter_stress_test(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter);
+  filter_stress_test(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter, 0, 131072);
 }
 
 BOOST_AUTO_TEST_CASE(resample_up)
