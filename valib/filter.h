@@ -366,6 +366,11 @@ class Filter;
     do not need to allocate resources once again, just set the internal state
     to initial values.
 
+    In data-driven output format mode filter may change output format to
+    FORMAT_UNKNOWN.
+
+    Otherwise, output format must remain unchanged.
+
     This function should not throw.
 
   \fn bool Filter::process(Chunk &in, Chunk &out)
@@ -440,7 +445,7 @@ class Filter;
     process(chunk2) true    true          out_spk       Ouput format is determined, 1st chunk of format out_spk
     process(chunk2) true    false         out_spk       Stream continues, 2nd chunk of format out_spk
     format change                                       An event that forces the filter to change its output format
-    process(chunk2) true    false         out_spk       Flushing
+    process(chunk2) true    false         out_spk       Flushing started
     process(chunk2) false   false         spk_unknown   Flushing is done, buffering starts,
                                                         filter needs more data to determine a new output format
     process(chunk3) false   false         spk_unknown   Need more data
@@ -465,8 +470,10 @@ class Filter;
     be set to FORMAT_UNKNOWN after open(), and to the real format on the first
     output chunk.
 
-    Output format may change to FORMAT_UNKNOWN after flushing (see flush()) or
-    when filter changes its output format (see new_stream()).
+    Output format may change to FORMAT_UNKNOWN:
+    \li After flushing (see flush())
+    \li When filter changes its output format (see new_stream())
+    \li After reset() call
 
     Most filters do not change output format during the processing, but some
     can. To change output format filter must explicitly indicate this with
