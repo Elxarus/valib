@@ -90,6 +90,8 @@ Spectrum::init()
 {
   int nch = spk.nch();
   length = clp2(length);
+  if (length == 0)
+    return true;
 
   // allocate resources
   try
