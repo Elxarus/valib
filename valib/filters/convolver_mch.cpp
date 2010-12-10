@@ -164,6 +164,8 @@ bool ConvolverMch::init()
   for (ch = 0; ch < nch; ch++)
   {
     ch_name = order[ch];
+
+    safe_delete(fir[ch]);
     fir[ch] = gen[ch_name].make(spk.sample_rate);
 
     // fir generation error
