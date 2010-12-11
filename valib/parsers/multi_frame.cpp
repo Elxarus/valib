@@ -116,22 +116,14 @@ MultiFrame::switch_parser(uint8_t *frame, size_t size)
   return parser != 0;
 }
 
-size_t
-MultiFrame::stream_info(char *buf, size_t size) const
+string
+MultiFrame::stream_info() const
 {
-  if (parser)
-    return parser->stream_info(buf, size);
-
-  if (buf && size) buf[0] = 0;
-  return 0;
+  return parser? parser->stream_info(): string();
 }
 
-size_t
-MultiFrame::frame_info(char *buf, size_t size) const
+string
+MultiFrame::frame_info() const
 {
-  if (parser)
-    return parser->frame_info(buf, size);
-
-  if (buf && size) buf[0] = 0;
-  return 0;
+  return parser? parser->frame_info(): string();
 }

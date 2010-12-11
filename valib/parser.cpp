@@ -1,55 +1,50 @@
-#include <stdio.h>
+#include <sstream>
 #include "parser.h"
+
+using std::stringstream;
+using std::endl;
 
 ///////////////////////////////////////////////////////////////////////////////
 // HeaderParser
 ///////////////////////////////////////////////////////////////////////////////
 
-size_t
-HeaderParser::header_info(const uint8_t *hdr, char *buf, size_t size) const
+string
+HeaderParser::header_info(const uint8_t *hdr) const
 {
-  char info[1024];
   HeaderInfo h;
-  size_t info_size = 0;
+  if (!parse_header(hdr, &h))
+    return string("No header found\n");
 
-  if (parse_header(hdr, &h))
+  std::stringstream result;
+
+  result << "Stream format: " << h.spk.print() << endl;
+
+  switch (h.bs_type)
   {
-    info_size += sprintf(info + info_size, "Stream format: %s %s %iHz\n", h.spk.format_text(), h.spk.mode_text(), h.spk.sample_rate);
-
-    switch (h.bs_type)
-    {
-      case BITSTREAM_8:    info_size += sprintf(info + info_size, "Bitstream type: byte stream\n"); break;
-      case BITSTREAM_16BE: info_size += sprintf(info + info_size, "Bitstream type: 16bit big endian\n"); break;
-      case BITSTREAM_16LE: info_size += sprintf(info + info_size, "Bitstream type: 16bit low endian\n"); break;
-      case BITSTREAM_14BE: info_size += sprintf(info + info_size, "Bitstream type: 14bit big endian\n"); break;
-      case BITSTREAM_14LE: info_size += sprintf(info + info_size, "Bitstream type: 14bit low endian\n"); break;
-      default:        info_size += sprintf(info + info_size, "Bitstream type: unknown\n"); break;
-    }
-
-    if (h.frame_size)
-      info_size += sprintf(info + info_size, "Frame size: %i\n", h.frame_size);
-    else
-      info_size += sprintf(info + info_size, "Frame size: free format\n");
-
-    info_size += sprintf(info + info_size, "Samples: %i\n", h.nsamples);
-
-    if (h.frame_size > 0 && h.nsamples > 0)
-      info_size += sprintf(info + info_size, "Bitrate: %ikbps\n", h.frame_size * h.spk.sample_rate * 8 / h.nsamples / 1000);
-    else
-      info_size += sprintf(info + info_size, "Bitrate: unknown\n");
-
-    if (h.spdif_type)
-      info_size += sprintf(info + info_size, "SPDIF stream type: 0x%x\n", h.spdif_type);
+    case BITSTREAM_8:    result << "Bitstream type: byte stream" << endl; break;
+    case BITSTREAM_16BE: result << "Bitstream type: 16bit big endian" << endl; break;
+    case BITSTREAM_16LE: result << "Bitstream type: 16bit low endian" << endl; break;
+    case BITSTREAM_14BE: result << "Bitstream type: 14bit big endian" << endl; break;
+    case BITSTREAM_14LE: result << "Bitstream type: 14bit low endian" << endl; break;
+    default:             result << "Bitstream type: unknown" << endl; break;
   }
+
+  if (h.frame_size)
+    result << "Frame size: " << h.frame_size << endl;
   else
-  {
-    info_size += sprintf(info + info_size, "No header found\n");
-  }
+    result << "Frame size: free format" << endl;
 
-  if (info_size > size) info_size = size;
-  memcpy(buf, info, info_size);
-  buf[info_size] = 0;
-  return info_size;
+  result << "Samples: " << h.nsamples << endl;
+
+  if (h.frame_size > 0 && h.nsamples > 0)
+    result << "Bitrate: " << int(h.frame_size * h.spk.sample_rate * 8 / h.nsamples / 1000) << "kbps" << endl;
+  else
+    result << "Bitrate: unknown" << endl;
+
+  if (h.spdif_type)
+    result << "SPDIF stream type: 0x" << std::hex << h.spdif_type << endl;
+
+  return result.str();
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -509,29 +504,20 @@ StreamBuffer::flush()
 }
 
 
-size_t
-StreamBuffer::stream_info(char *buf, size_t size) const
+string
+StreamBuffer::stream_info() const
 {
-  char info[1024];
-  size_t info_size = 0;
+  if (!parser)
+    return "No parser set";
 
-  if (parser)
-  {
-    if (in_sync)
-    {
-      info_size += parser->header_info(frame, info, sizeof(info));
-      info_size += sprintf(info + info_size, "Frame interval: %i\n", frame_interval);
-      if (frame_interval > 0 && hinfo.nsamples > 0)
-        info_size += sprintf(info + info_size, "Actual bitrate: %ikbps\n", frame_interval * hinfo.spk.sample_rate * 8 / hinfo.nsamples / 1000);
-    }
-    else
-      info_size += sprintf(info + info_size, "Out of sync");
-  }
-  else
-    info_size += sprintf(info + info_size, "No parser set");
+  if (!in_sync)
+    return "No sync";
 
-  if (info_size > size) info_size = size;
-  memcpy(buf, info, info_size);
-  buf[info_size] = 0;
-  return info_size;
+  stringstream result;
+  result << parser->header_info(frame);
+  result << "Frame interval: " << frame_interval << endl;
+  if (frame_interval > 0 && hinfo.nsamples > 0)
+    result << "Actual bitrate: " << int(frame_interval * hinfo.spk.sample_rate * 8 / hinfo.nsamples / 1000) << "kbps" << endl;
+
+  return result.str();
 };

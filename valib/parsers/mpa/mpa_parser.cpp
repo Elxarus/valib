@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <string.h>
+#include <sstream>
 #include "../../crc.h"
 #include "mpa_parser.h"
 #include "mpa_header.h"
@@ -96,40 +95,24 @@ MPAParser::crc_check(const uint8_t *frame, size_t protected_data_bits) const
 }
 
 
-size_t
-MPAParser::stream_info(char *buf, size_t size) const 
+string
+MPAParser::stream_info() const 
 {
-  char info[1024];
-
-  size_t len = sprintf(info, 
-    "MPEG Audio\n"
-    "speakers: %s\n"
-    "ver: %s\n"
-    "frame size: %i bytes\n"
-    "stream: %s\n"
-    "bitrate: %ikbps\n"
-    "sample rate: %iHz\n"
-    "bandwidth: %ikHz/%ikHz\n\0",
-    spk.mode_text(),
-    bsi.ver? "MPEG2 LSF": "MPEG1", 
-    bsi.frame_size,
-    (bsi.bs_type == BITSTREAM_8? "8 bit": "16bit low endian"), 
-    bsi.bitrate / 1000,
-    bsi.freq,
-    bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2,
-    bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2);
-
-  if (len + 1 > size) len = size - 1;
-  memcpy(buf, info, len + 1);
-  buf[len] = 0;
-  return len;
+  using std::endl;
+  std::stringstream result;
+  result << "Format: " << spk.print() << endl;
+  result << "Ver: " << (bsi.ver? "MPEG2 LSF": "MPEG1") << endl;
+  result << "Frame size: " << bsi.frame_size << endl;
+  result << "Stream: " << (bsi.bs_type == BITSTREAM_8? "8 bit": "16bit low endian") << endl;
+  result << "Bitrate: " << bsi.bitrate / 1000 << endl;
+  result << "Bandwidth: " << bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2 << "kHz/" << bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2 << "kHz" << endl;
+  return result.str();
 }
 
-size_t
-MPAParser::frame_info(char *buf, size_t size) const 
+string
+MPAParser::frame_info() const 
 {
-  if (buf && size) buf[0] = 0;
-  return 0;
+  return string();
 }
 
 //////////////////////////////////////////////////////////////////////

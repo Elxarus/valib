@@ -48,8 +48,8 @@ public:
   virtual uint8_t  *get_rawdata()  const { return spdif_frame;  }
   virtual size_t    get_rawsize()  const { return spdif_size;   }
 
-  virtual size_t stream_info(char *buf, size_t size) const;
-  virtual size_t frame_info(char *buf, size_t size) const;
+  virtual string stream_info() const;
+  virtual string frame_info() const;
 
 protected:
   uint8_t    *buf;          // output frame buffer

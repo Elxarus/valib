@@ -1,5 +1,5 @@
+#include <sstream>
 #include <math.h>
-#include <stdio.h>
 #include "dts_parser.h"
 #include "dts_header.h"
 
@@ -223,10 +223,10 @@ DTSParser::parse_frame(uint8_t *frame, size_t size)
   return true;
 }
 
-size_t
-DTSParser::stream_info(char *buf, size_t size) const
+string
+DTSParser::stream_info() const
 {
-  char info[1024];
+  using std::endl;
 
   char *stream = "???";
   switch (bs_type)
@@ -237,38 +237,21 @@ DTSParser::stream_info(char *buf, size_t size) const
     case BITSTREAM_14LE: stream = "14bit LE"; break;
   }
 
-  size_t len = sprintf(info,
-    "DTS\n"
-    "speakers:  %s\n"
-    "sample rate: %iHz\n"
-    "bitrate: %ikbps\n"
-    "stream: %s\n"
-    "frame size: %i bytes\n"
-    "nsamples: %i\n"
-    "amode: %i\n"
-    "%s"
-    "\0",
-    spk.mode_text(),
-    spk.sample_rate,
-    dts_bit_rates[bit_rate] / 1000,
-    stream, 
-    frame_size,
-    nsamples,
-    amode,
-    crc_present? "CRC protected\n": "No CRC"
-    );
-
-  if (len + 1 > size) len = size - 1;
-  memcpy(buf, info, len + 1);
-  buf[len] = 0;
-  return len;
+  std::stringstream result;
+  result << "Format: " << spk.print() << endl;
+  result << "Bitrate: " << dts_bit_rates[bit_rate] / 1000 << endl;
+  result << "Stream: " << stream << endl;
+  result << "Frame size: " << frame_size << endl;
+  result << "NSamples: " << nsamples << endl;
+  result << "amode: " << amode << endl;
+  result << (crc_present? "CRC protected\n": "No CRC") << endl;
+  return result.str();
 }
 
-size_t
-DTSParser::frame_info(char *buf, size_t size) const 
+string
+DTSParser::frame_info() const 
 {
-  if (buf && size) buf[0] = 0;
-  return 0;
+  return string();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1163,9 +1146,3 @@ DTSParser::lfe_interpolation_fir(int nDecimationSelect, int nNumDeciSample,
     }
   }
 }
-
-
-
-
-
-

@@ -155,11 +155,11 @@ MultiHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
   return false;
 }
 
-size_t
-MultiHeader::header_info(const uint8_t *hdr, char *buf, size_t size) const
+string
+MultiHeader::header_info(const uint8_t *hdr) const
 {
   for (size_t i = 0; i < nparsers; i++)
     if (parsers[i]->parse_header(hdr))
-      return parsers[i]->header_info(hdr, buf, size);
-  return 0;
+      return parsers[i]->header_info(hdr);
+  return string();
 }
