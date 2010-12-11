@@ -1,5 +1,12 @@
 /*
   Filter stress test
+  * Call open() with numerous formats
+  * Call filter functions in different combinations
+  * Feed rawdata filters with noise data:
+  ** Demux
+  ** Detector
+  ** Spdifer/Despdifer
+  ** AudioDecoder
 */
 
 #include "filter.h"
@@ -10,6 +17,7 @@
 #include <boost/test/unit_test.hpp>
 
 static const int seed = 457934875;
+static const size_t noise_size = 1024*1024; // for noise stress test
 
 enum filter_op
 {
@@ -246,6 +254,21 @@ void filter_stress_test(Speakers spk, Filter *f, const char *filename = 0, size_
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Noise stress test
+// Feed the filter with noise data
+
+void noise_stress_test(Speakers spk, Filter *filter)
+{
+  Chunk in, out;
+  NoiseGen noise(spk, seed, noise_size);
+
+  BOOST_REQUIRE(filter->open(spk));
+  while (noise.get_chunk(in))
+    while (filter->process(in, out))
+    {} // Do nothing
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Speakers);
 
@@ -315,6 +338,7 @@ BOOST_AUTO_TEST_CASE(audio_decoder_ac3)
   AudioDecoder filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3");
+  noise_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(audio_decoder_dts)
@@ -322,6 +346,7 @@ BOOST_AUTO_TEST_CASE(audio_decoder_dts)
   AudioDecoder filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts");
+  noise_stress_test(Speakers(FORMAT_DTS, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(audio_decoder_mpa)
@@ -329,6 +354,7 @@ BOOST_AUTO_TEST_CASE(audio_decoder_mpa)
   AudioDecoder filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2");
+  noise_stress_test(Speakers(FORMAT_MPA, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(decoder_graph)
@@ -361,6 +387,7 @@ BOOST_AUTO_TEST_CASE(demux)
   Demux filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_PES, 0, 0), &filter, "a.ac3.03f.pes");
+  noise_stress_test(Speakers(FORMAT_PES, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(detector)
@@ -368,6 +395,7 @@ BOOST_AUTO_TEST_CASE(detector)
   Detector filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif");
+  noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(dvd_graph)
@@ -436,6 +464,27 @@ BOOST_AUTO_TEST_CASE(resample_down)
 
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
+}
+
+BOOST_AUTO_TEST_CASE(spdifer)
+{
+  Spdifer filter;
+  open_stress_test(&filter);
+  filter_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter, "a.ac3.03f.ac3");
+
+  noise_stress_test(Speakers(FORMAT_AC3,     0, 0), &filter);
+  noise_stress_test(Speakers(FORMAT_MPA,     0, 0), &filter);
+  noise_stress_test(Speakers(FORMAT_DTS,     0, 0), &filter);
+  noise_stress_test(Speakers(FORMAT_SPDIF,   0, 0), &filter);
+  noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
+}
+
+BOOST_AUTO_TEST_CASE(despdifer)
+{
+  Despdifer filter;
+  open_stress_test(&filter);
+  filter_stress_test(Speakers(FORMAT_SPDIF, 0, 0), &filter, "a.ac3.03f.spdif");
+  noise_stress_test(Speakers(FORMAT_SPDIF, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(spectrum)
