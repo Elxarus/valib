@@ -529,7 +529,7 @@ FilterChain::~FilterChain()
 {}
 
 bool
-FilterChain::add_front(Filter *filter, const std::string &name)
+FilterChain::add_front(Filter *filter, const string &name)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
@@ -540,7 +540,7 @@ FilterChain::add_front(Filter *filter, const std::string &name)
 }
 
 bool
-FilterChain::add_back(Filter *filter, const std::string &name)
+FilterChain::add_back(Filter *filter, const string &name)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
