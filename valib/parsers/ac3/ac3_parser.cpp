@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <string.h>
+#include <sstream>
+#include <iomanip>
 #include "../../crc.h"
 #include "ac3_header.h"
 #include "ac3_parser.h"
@@ -119,49 +119,31 @@ AC3Parser::parse_frame(uint8_t *frame, size_t size)
   return true;
 }
 
-size_t
-AC3Parser::stream_info(char *buf, size_t size) const 
+string
+AC3Parser::stream_info() const 
 {
-  char info[1024];
+  using std::endl;
   int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * spk.sample_rate / 512000;
   int cpl_freq = cplinu? cplstrtmant * spk.sample_rate / 512000: max_freq;
 
-  size_t len = sprintf(info,
-    "AC3\n"
-    "speakers: %s\n"
-    "sample rate: %iHz\n"
-    "bitrate: %ikbps\n"
-    "stream: %s\n"
-    "frame size: %i bytes\n"
-    "nsamples: %i\n"
-    "bsid: %i\n"
-    "clev: %.1fdB (%.4f)\n"
-    "slev: %.1fdB (%.4f)\n"
-    "dialnorm: -%idB\n"
-    "bandwidth: %ikHz/%ikHz\n\0",
-    spk.mode_text(),
-    spk.sample_rate,
-    bitrate,
-    (bs_type == BITSTREAM_8? "8 bit": "16bit low endian"), 
-    frame_size,
-    AC3_FRAME_SAMPLES,
-    bsid, 
-    value2db(clev), clev,
-    value2db(slev), slev,
-    dialnorm,
-    cpl_freq, max_freq);
-
-  if (len + 1 > size) len = size - 1;
-  memcpy(buf, info, len + 1);
-  buf[len] = 0;
-  return len;
+  std::stringstream result;
+  result << "Format: " << spk.print() << endl;
+  result << "Bitrate: " << bitrate << endl;
+  result << "Stream: " << (bs_type == BITSTREAM_8? "8 bit": "16bit low endian") << endl;
+  result << "Frame size: " << frame_size << endl;
+  result << "NSamples: " << AC3_FRAME_SAMPLES << endl;
+  result << "bsid: " << bsid << endl;
+  result << "clev: " << std::setprecision(1) << value2db(clev) << "dB (" << std::setprecision(4) << clev << ")" << endl;
+  result << "slev: " << std::setprecision(1) << value2db(slev) << "dB (" << std::setprecision(4) << slev << ")" << endl;
+  result << "dialnorm: " << -dialnorm << "dB" << endl;
+  result << "bandwidth: " << cpl_freq << "kHz/" << max_freq << "kHz" << endl;
+  return result.str();
 }
 
-size_t
-AC3Parser::frame_info(char *buf, size_t size) const 
+string
+AC3Parser::frame_info() const 
 {
-  if (buf && size) buf[0] = 0;
-  return 0;
+  return string();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

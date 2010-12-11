@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <sstream>
 #include "spdif_header.h"
 #include "spdif_wrapper.h"
 
@@ -262,12 +262,9 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
   return true;
 }
 
-size_t
-SPDIFWrapper::stream_info(char *buf, size_t size) const 
+string
+SPDIFWrapper::stream_info() const 
 {
-  char info[1024];
-  size_t len = 0;
-
   char *bitstream = "???";
   switch (spdif_bs)
   {
@@ -277,28 +274,17 @@ SPDIFWrapper::stream_info(char *buf, size_t size) const
     case BITSTREAM_14LE: bitstream = "14bit LE"; break;
   }
 
-  if (!spk.is_unknown())
-  {
-    len += sprintf(info,
-      "Output format: %s %s %iHz\n"
-      "SPDIF format: %s\n"
-      "Bitstream: %s\n"
-      "Frame size: %i\n",
-      spk.format_text(), spk.mode_text(), spk.sample_rate,
-      use_header? "wrapped": "padded",
-      bitstream,
-      spdif_size);
-  }
-
-  if (len + 1 > size) len = size - 1;
-  memcpy(buf, info, len + 1);
-  buf[len] = 0;
-  return len;
+  using std::endl;
+  std::stringstream result;
+  result << "Output format: " << spk.print() << endl;
+  result << "SPDIF format: " << (use_header? "wrapped": "padded") << endl;
+  result << "Bitstream: " << bitstream << endl;
+  result << "Frame size: " << spdif_size << endl;
+  return result.str();
 }
 
-size_t
-SPDIFWrapper::frame_info(char *buf, size_t size) const 
+string
+SPDIFWrapper::frame_info() const 
 {
-  if (buf && size) buf[0] = 0;
-  return 0;
+  return string();
 }

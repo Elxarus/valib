@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "spdif_header.h"
 #include "../mpa/mpa_header.h"
 #include "../ac3/ac3_header.h"
@@ -84,12 +82,9 @@ SPDIFHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
     return false;
 }
 
-size_t
-SPDIFHeader::header_info(const uint8_t *hdr, char *buf, size_t size) const
+string
+SPDIFHeader::header_info(const uint8_t *hdr) const
 {
-  char info[1024];
-  size_t info_size = 0;
-
   if ((hdr[0] == 0x00) && (hdr[1] == 0x00) && (hdr[2]  == 0x00) && (hdr[3]  == 0x00) &&
       (hdr[4] == 0x00) && (hdr[5] == 0x00) && (hdr[6]  == 0x00) && (hdr[7]  == 0x00) &&
       (hdr[8] == 0x72) && (hdr[9] == 0xf8) && (hdr[10] == 0x1f) && (hdr[11] == 0x4e))
@@ -99,24 +94,17 @@ SPDIFHeader::header_info(const uint8_t *hdr, char *buf, size_t size) const
     HeaderInfo subinfo;
 
     const HeaderParser *parser = find_parser(header->type);
-    if (parser)
-    {
-      if (parser->parse_header(subheader, &subinfo))
-      {
-        info_size += sprintf(info + info_size, "Stream format: SPDIF/%s %s %iHz\n", subinfo.spk.format_text(), subinfo.spk.mode_text(), subinfo.spk.sample_rate);
-        info_size += parser->header_info(subheader, info + info_size, sizeof(info) - info_size);
-      }
-      else
-        info_size += sprintf(info + info_size, "Cannot parse substream header\n");
-    }
-    else
-      info_size += sprintf(info + info_size, "Unknown substream\n");
+    if (!parser)
+      return "Unknown stream type\n";
+
+    if (!parser->parse_header(subheader, &subinfo))
+      return "Cannot parse substream header\n";
+
+    string result;
+    result += string("Stream format: SPDIF/") + subinfo.spk.print() + string("\n");
+    result += parser->header_info(subheader);
+    return result;
   }
   else
-    info_size += sprintf(info + info_size, "No SPDIF header found\n");
-
-  if (info_size > size) info_size = size;
-  memcpy(buf, info, info_size);
-  buf[info_size] = 0;
-  return info_size;
+    return "No SPDIF header found";
 };

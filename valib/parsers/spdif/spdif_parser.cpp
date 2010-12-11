@@ -95,21 +95,14 @@ SPDIFParser::parse_frame(uint8_t *frame, size_t size)
   return false;
 }
 
-size_t
-SPDIFParser::stream_info(char *buf, size_t size) const 
+string
+SPDIFParser::stream_info() const 
 {
-  char info[1024];
-  size_t len = 0;
-
-  if (len + 1 > size) len = size - 1;
-  memcpy(buf, info, len + 1);
-  buf[len] = 0;
-  return len;
+  return string();
 }
 
-size_t
-SPDIFParser::frame_info(char *buf, size_t size) const 
+string
+SPDIFParser::frame_info() const 
 {
-  if (buf && size) buf[0] = 0;
-  return 0;
+  return string();
 }

@@ -1,6 +1,8 @@
-/*
-  Abstract parser interface
-*/
+/**************************************************************************//**
+  \file parser.h
+  \brief Abstract parser interface
+******************************************************************************/
+
 
 #ifndef VALIB_PARSER_H
 #define VALIB_PARSER_H
@@ -14,143 +16,65 @@ class FrameParser;
 
 class StreamBuffer;
 
-///////////////////////////////////////////////////////////////////////////////
-// HeaderParser
-// HeaderInfo
-//
-// Abstract interface for scanning and detecting compressed stream.
-// Header information structure.
-//
-// Sometimes we need to scan the stream without actual decoding. Of course, 
-// parser can do this, but we don't need most of its features, buffers, tables,
-// etc in this case. For example, application that just detects format of a
-// compressed stream will contain all the code required to decode it and create
-// unneeded memory buffers. To avoid this we need a lightweight interface to
-// work only with frame headers.
-//
-// Therefore implementation of HeaderParser should be separated from other
-// parser parts so we can use it alone. Ideally it should be 2 files (.h and
-// .cpp) without other files required.
-//
-// Header parser is a class without internal state, just a set of functoins.
-// So we may create one constant class and use it everywhere. Therefore all
-// pointers to HeaderParser objects are const.
-//
-// Frame parser should return a pointer to a header parser that corresponds
-// to the given frame parser.
-//
-// HeaderParser interface allows nesting, so several header parsers may be
-// represented as one parser (see MultiHeader class). Threrfore  instead of 
-// list of parsers we can use only one parser pointer everywhere.
-//
-///////////////////////////////////////////////////////////////////////////////
-// HeaderInfo
-//
-// Syncronization
-// ==============
-//
-// We distinguish 2 stream types:
-// * Stream with known frame size. For this strean kind we can determine the
-//   frame size by parsing the header. It may be variable bitrate stream with
-//   different frame sizes.
-// * Stream with unknown frame size (free-format). For this type of stream
-//   frame size is unknown from the header. So we must determine inter-frame
-//   distance. After that we suppose that frame size is constant and expect
-//   next header right after the end of the frame. Threfore, free-format stream
-//   is always constant-bitrate.
-//
-// Sparse stream is the stream where some gap (or padding) is present in 
-// between of two frames. To locate next syncpoint we should scan input data
-// after the end of the first frame to locate the next. To limit such scanning
-// we should know how much data to scan. Parser can specify the exact amount
-// of data to scan after the current frame.
-//
-// Only known frame size stream is allowed to be sparse (because free-format
-// stream is known to have the same frame size). But free-format stream can
-// specify scan_size to limit scanning during inter-frame interval detection.
-// If scan_size for free-format stream is unspecified we should scan up to 
-// max_frame_size.
-//
-// spk
-//   Format of the stream. FORMAT_UNKNOWN indicates a parsing error.
-//
-// frame_size
-//   Frame size (including the header):
-//   0  - frame size is unknown (free-format stream)
-//   >0 - known frame size
-//
-// scan_size
-//   Use scanning to locate next syncpoint
-//   0  - do not use scanning
-//   >0 - maximum distance between syncpoints
-//
-// nsamples
-//   Number of samples at the given frame.
-//
-//   We can derive current bitrate for known frame size stream as follows:
-//   (*) bitrate = spk.sample_rate * frame_size * 8 / nsamples;
-//   But note actual bitrate may be larger for sparce stream.
-//
-// bs_type
-//   Bitstream type. BITSTREAM_XXXX constants.
-//
-// spdif_type
-//   If given format is spdifable it defines spdif packet type (Pc burst-info).
-//   Zero otherwise. This field may be used to determine spdifable format.
-//
-///////////////////////////////////////////////////////////////////////////////
-// HeaderParser
-//
-// header_size()
-//   Minimum number of bytes required to parse header.
-//
-// min_frame_size()
-//   Minimum frame size possible. Must be >= header size.
-//
-// max_frame_size()
-//   Maximum frame size possible. Must be >= minimum frame size.
-//   Note that for spdifable formats we must take in account maximum spdif
-//   frame size to be able to parse spdif-padded format.
-//
-// can_parse()
-//   Determine that we can parse the format given. (Or, that parser can detect
-//   this format). For example if some_parser.can_parse(FORMAT_AC3) == true
-//   this parser can parse ac3 format, or can detect in in raw data.
-//   
-// parse_header()
-//   Parse header and write header information.
-//
-//   Size of header buffer given must be >= header_size() (it is not verified
-//   and may lead to memory fault).
-//
-// compare_headers()
-//   Check that both headers belong to the same stream. Some compressed formats
-//   may determine stream changes with some additional header info (not only
-//   frame size and stream format). Headers given must be correct headers
-//   checked with parse() call, so this call may not do all headers checks.
-//   Note that when headers are equal, format of both headers must be same:
-//
-//   parse_header(phdr1, hdr1);
-//   parse_header(phdr2, hdr2);
-//   if (compare_headers(phdr1, phdr2))
-//   {
-//     assert(hdr1.spk == hdr2.spk);
-//     assert(hdr1.bs_type == hdr2.bs_type);
-//     assert(hdr1.spdif_type == hdr2.spdif_type);
-//     // frame size may differ for variable bitrate
-//     // nsamples may differ
-//   }
-//
-//   Size of header buffers given must be >= header_size() (it is not verified
-//   and may lead to memory fault).
-//
-// header_info()
-//   Dump stream information that may be useful to track problems. Default
-//   implementation shows HeaderInfo parameters.
-//
-//   Size of header buffer given must be >= header_size() (it is not verified
-//   and may lead to memory fault).
+/**************************************************************************//**
+  \struct HeaderInfo
+  \brief Header information structure.
 
+  We distinguish 2 stream types:
+  \li Stream with known frame size. For this kind of strean we can determine
+    the frame size by parsing the header. Variable bitrate stream with
+    different frame sizes is also possible, because size of each frame is known
+    form the frame itself.
+  \li Stream with unknown frame size (free-format). For this type of stream
+    frame size is unknown from the header. So we must determine inter-frame
+    distance. After that we suppose that frame size is constant and expect
+    next header right after the end of the frame. Threfore, free-format stream
+    is always constant-bitrate.
+
+  Sparse stream is the stream where some gap (or padding) is present in 
+  between of two frames. To locate next syncpoint we should scan input data
+  after the end of the first frame to locate the next. To limit such scanning
+  we should know how much data to scan. Parser can specify the exact amount
+  of data to scan after the current frame.
+
+  Only known frame size stream is allowed to be sparse (because free-format
+  stream is known to have the same frame size). But free-format stream can
+  specify scan_size to limit scanning during inter-frame interval detection.
+  If scan_size for free-format stream is unspecified we should scan up to 
+  max_frame_size.
+
+  \sa HeaderParser
+
+  \var spk
+    Format of the stream. FORMAT_UNKNOWN indicates a parsing error.
+
+  \var frame_size
+    Frame size (including the header):
+    \li \b 0   frame size is unknown (free-format stream)
+    \li \b >0  known frame size
+
+  \var scan_size
+    Use scanning to locate next syncpoint
+    \li \b 0   do not use scanning
+    \li \b >0  maximum distance between syncpoints
+
+  \var nsamples
+    Number of samples at the given frame.
+
+    We can derive current bitrate for known frame size stream as follows:
+
+    bitrate = spk.sample_rate * frame_size * 8 / nsamples;
+
+    But note that actual bitrate may be larger for sparce stream.
+
+  \var bs_type
+    Bitstream type. BITSTREAM_XXXX constants.
+
+  \var spdif_type
+    If given format is spdifable it defines spdif packet type (Pc burst-info).
+    Zero otherwise. This field may be used to determine spdifable format.
+******************************************************************************/
+ 
 struct HeaderInfo
 {
   Speakers spk;
@@ -180,6 +104,115 @@ struct HeaderInfo
   }
 };
 
+
+
+/**************************************************************************//**
+  \class HeaderParser
+  \brief Abstract interface for scanning and detecting compressed stream.
+
+  Sometimes we need to scan the stream without actual decoding. Of course, 
+  parser can do this, but we don't need most of its features, buffers, tables,
+  etc in this case. For example, application that just detects format of a
+  compressed stream will contain all the code required to decode it and create
+  unneeded memory buffers. To avoid this we need a lightweight interface to
+  work only with frame headers.
+
+  Therefore implementation of HeaderParser should be separated from other
+  parser parts so we can use it alone. Ideally it should be 2 files (.h and
+  .cpp) without other files required.
+
+  Header parser is a class without internal state, just a set of functoins.
+  So we may create one constant class and use it everywhere. Therefore all
+  pointers to HeaderParser objects must be const.
+
+  Frame parser should return a pointer to a header parser that corresponds
+  to the given frame parser.
+
+  HeaderParser interface allows nesting, so several header parsers may be
+  represented as one parser (see MultiHeader class). Threrfore  instead of 
+  list of parsers we can use only one parser pointer everywhere.
+
+  \sa HeaderInfo
+
+  \fn size_t header_size() const
+    Minimum number of bytes required to parse header.
+
+  \fn size_t min_frame_size() const
+    Minimum frame size possible. Must be >= header size.
+
+  \fn size_t max_frame_size() const
+    Maximum frame size possible. Must be >= minimum frame size.
+    Note that for spdifable formats we must take in account maximum spdif
+    frame size to be able to parse spdif-padded format.
+
+  \fn bool can_parse(int format) const
+    \param format Format to test
+
+    Determine that we can parse the format given, or parser can detect
+    this format. Example:
+
+    \verbatim
+    if (parser.can_parse(FORMAT_AC3))
+    {
+      // Parser accepts AC3
+    }
+    \endverbatim
+
+  \fn bool parse_header(const uint8_t *hdr, HeaderInfo *info = 0) const = 0;
+    \param hdr Pointer to the start of the header
+    \param info Optional pointer to HeaderInfo structure that receives info
+      about the header given
+    \return True when header is successfully parsed and false otherwise.
+
+    Parse header and (optionally) write header information.
+
+    Size of header buffer given must be >= header_size() (it is not verified
+    and may lead to memory fault).
+
+    Note, that this method does not provide reliable synchronization, only the
+    fast check.
+
+  \fn bool compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
+    \param hdr1 First header
+    \param hdr2 Second header
+    \return True when both headers belong to the same stream and false
+      otherwise.
+
+    Check that both headers belong to the same stream.
+
+    Some compressed formats may determine stream changes with some additional
+    header info (not only frame size and stream format). Headers given must be
+    correct headers checked with parse() call, so this call may not perform all
+    headers checks.
+
+    Note that when headers are equal, format of both headers must be same:
+
+    \verbatim
+    parse_header(phdr1, hdr1);
+    parse_header(phdr2, hdr2);
+    if (compare_headers(phdr1, phdr2))
+    {
+      assert(hdr1.spk == hdr2.spk);
+      assert(hdr1.bs_type == hdr2.bs_type);
+      assert(hdr1.spdif_type == hdr2.spdif_type);
+      // frame size may differ for variable bitrate
+      // nsamples may differ
+    }
+    \endverbatim
+
+    Size of header buffers given must be >= header_size() (it is not verified
+    and may lead to memory fault).
+
+  \fn string header_info(const uint8_t *hdr) const
+    \param hdr Header to dump info for.
+
+    Dump stream information that may be useful to track problems. Default
+    implementation shows HeaderInfo parameters.
+
+    Size of header buffer given must be >= header_size() (it is not verified
+    and may lead to memory fault).
+******************************************************************************/
+
 class HeaderParser
 {
 public:
@@ -191,9 +224,9 @@ public:
   virtual size_t   max_frame_size() const = 0;
   virtual bool     can_parse(int format) const = 0;
 
-  virtual bool     parse_header(const uint8_t *hdr, HeaderInfo *h = 0) const = 0;
+  virtual bool     parse_header(const uint8_t *hdr, HeaderInfo *info = 0) const = 0;
   virtual bool     compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
-  virtual size_t   header_info(const uint8_t *hdr, char *buf, size_t size) const;
+  virtual string   header_info(const uint8_t *hdr) const;
 };
 
 
@@ -298,8 +331,8 @@ public:
   /////////////////////////////////////////////////////////
   // Stream information
 
-  virtual size_t stream_info(char *buf, size_t size) const = 0;
-  virtual size_t frame_info(char *buf, size_t size) const = 0;
+  virtual string stream_info() const = 0;
+  virtual string frame_info() const = 0;
 };
 
 
@@ -534,7 +567,7 @@ public:
   size_t   get_frame_interval() const { return frame_interval; }
 
   int get_frames() const { return frames; }
-  size_t stream_info(char *buf, size_t size) const;
+  string stream_info() const;
   HeaderInfo header_info() const { return hinfo; }
 };
 

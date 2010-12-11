@@ -42,7 +42,7 @@ public:
   // Own interface
 
   int  get_frames() const { return stream.get_frames(); }
-  size_t get_info(char *buf, size_t len) const { return stream.stream_info(buf, len); }
+  string get_info() const { return stream.stream_info(); }
   HeaderInfo header_info() const { return stream.header_info(); }
 
   /////////////////////////////////////////////////////////

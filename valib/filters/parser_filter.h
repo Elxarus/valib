@@ -37,7 +37,7 @@ public:
   int  get_frames() const { return stream.get_frames(); }
   int  get_errors() const { return errors; }
 
-  size_t get_info(char *buf, size_t size) const;
+  string get_info() const;
   HeaderInfo header_info() const { return stream.header_info(); }
 
   /////////////////////////////////////////////////////////

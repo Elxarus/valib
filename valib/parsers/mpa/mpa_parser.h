@@ -78,8 +78,8 @@ public:
   virtual uint8_t  *get_rawdata()  const { return 0;            }
   virtual size_t    get_rawsize()  const { return 0;            }
 
-  virtual size_t stream_info(char *buf, size_t size) const;
-  virtual size_t frame_info(char *buf, size_t size) const;
+  virtual string stream_info() const;
+  virtual string frame_info() const;
 
 private:
   Speakers  spk;        // output format

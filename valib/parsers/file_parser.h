@@ -83,7 +83,7 @@ public:
   size_t   get_frame_interval() const { return stream.get_frame_interval(); }
 
   int        get_frames()       const { return stream.get_frames();         }
-  size_t     stream_info(char *buf, size_t size) const { return stream.stream_info(buf, size); }
+  string     stream_info()      const { return stream.stream_info();        }
   HeaderInfo header_info()      const { return stream.header_info();        }
 
   /////////////////////////////////////////////////////////////////////////////

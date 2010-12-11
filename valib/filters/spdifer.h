@@ -43,7 +43,7 @@ public:
   int        get_frames()                    const { return parser.get_frames();       }
   int        get_errors()                    const { return parser.get_errors();       }
 
-  size_t     get_info(char *buf, size_t len) const { return parser.get_info(buf, len); }
+  string     get_info()                      const { return parser.get_info();         }
   HeaderInfo header_info()                   const { return parser.header_info();      }
 };
 
@@ -62,11 +62,10 @@ public:
   bool get_big_endian() const           { return spdif_parser.get_big_endian();     }
   void set_big_endian(bool _big_endian) { spdif_parser.set_big_endian(_big_endian); }
 
-  int        get_frames()                    const { return parser.get_frames();       }
-  int        get_errors()                    const { return parser.get_errors();       }
-
-  size_t     get_info(char *buf, size_t len) const { return parser.get_info(buf, len); }
-  HeaderInfo header_info()                   const { return parser.header_info();      }
+  int        get_frames()  const { return parser.get_frames();  }
+  int        get_errors()  const { return parser.get_errors();  }
+  string     get_info()    const { return parser.get_info();    }
+  HeaderInfo header_info() const { return parser.header_info(); }
 };
 
 #endif
