@@ -277,7 +277,7 @@ public:
 //   parse_frame() call should not fail if error detected is handled with some
 //   kind of restoration procedure that produces some output.
 //
-// get_spk()
+// get_output()
 //   Format of a transformed data. FORMAT_UNKNOWN may indicate an error.
 //
 // get_samples()
@@ -319,12 +319,12 @@ public:
   // Frame transformation
 
   virtual void reset() = 0;
-  virtual bool parse_frame(uint8_t *frame, size_t size) = 0;
+  virtual bool process(uint8_t *frame, size_t size) = 0;
 
   /////////////////////////////////////////////////////////
   // Transformed data access
 
-  virtual Speakers  get_spk() const = 0;
+  virtual Speakers  get_output() const = 0;
 
   virtual samples_t get_samples() const = 0;
   virtual size_t    get_nsamples() const = 0;

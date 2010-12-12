@@ -76,7 +76,7 @@ MultiFrame::reset()
 }
 
 bool
-MultiFrame::parse_frame(uint8_t *frame, size_t size)
+MultiFrame::process(uint8_t *frame, size_t size)
 {
   if (!parser)
     if (!switch_parser(frame, size))
@@ -87,9 +87,9 @@ MultiFrame::parse_frame(uint8_t *frame, size_t size)
     if (!switch_parser(frame, size))
       return false;
 
-  if (parser->parse_frame(frame, size))
+  if (parser->process(frame, size))
   {
-    spk = parser->get_spk();
+    spk = parser->get_output();
     samples = parser->get_samples();
     nsamples = parser->get_nsamples();
     rawdata = parser->get_rawdata();

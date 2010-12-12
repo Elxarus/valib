@@ -46,7 +46,7 @@ MPAParser::reset()
 }
 
 bool
-MPAParser::parse_frame(uint8_t *frame, size_t size)
+MPAParser::process(uint8_t *frame, size_t size)
 {
   if (!parse_header(frame, size))
     return false;

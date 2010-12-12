@@ -50,7 +50,7 @@ SPDIFWrapper::reset()
 }
 
 bool
-SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
+SPDIFWrapper::process(uint8_t *frame, size_t size)
 {
   spdif_frame = 0;
   spdif_size = 0;
@@ -79,7 +79,7 @@ SPDIFWrapper::parse_frame(uint8_t *frame, size_t size)
 
   if (hdr.spk.format == FORMAT_SPDIF)
   {
-    if (!spdif_parser.parse_frame(frame, size))
+    if (!spdif_parser.process(frame, size))
       // cannot parse spdif frame
       return false;
 
