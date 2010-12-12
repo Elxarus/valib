@@ -76,11 +76,11 @@ public:
   \brief A basic building block of an IIR filter
 
   Biquad represents the following form:
-  \code
+  \verbatim
   b0 + b1*z^-1 + b2*z^-2
   ----------------------
   a0 + a1*z^-1 + a2*z^-2
-  \endcode
+  \endverbatim
 
   \fn Biquad::Biquad()
     Constructs an identity biquad where b0 = 1, a0 = 1 and other coeffitients are
@@ -107,11 +107,11 @@ public:
     Normalizes the biquad: b_i = b_i / a0; a_i = a_i / a0
 
     So producing the following biquad:
-    \code
+    \verbatim
     (b0/a0) + (b1/a0)*z^-1 + (b2/a0)*z^-2
     -------------------------------------
        1 + (a1/a0)*z^-1 + (a2/a0)*z^-2
-    \endcode
+    \endverbatim
 
   \fn void Biquad::apply_gain(double gain)
     \param gain Gain to be applied
