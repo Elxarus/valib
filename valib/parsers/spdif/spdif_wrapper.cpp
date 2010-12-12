@@ -41,7 +41,7 @@ SPDIFWrapper::header_parser() const
 void 
 SPDIFWrapper::reset()
 {
-  hdr.drop();
+  hdr.clear();
   spdif_parser.reset();
 
   spk = spk_unknown;

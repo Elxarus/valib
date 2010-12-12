@@ -59,7 +59,7 @@ StreamBuffer::StreamBuffer()
   max_frame_size = 0;
 
   header_buf = 0;
-  hinfo.drop();
+  hinfo.clear();
 
   sync_buf = 0;
   sync_size = 0;
@@ -86,7 +86,7 @@ StreamBuffer::StreamBuffer(const HeaderParser *_parser)
   max_frame_size = 0;
 
   header_buf = 0;
-  hinfo.drop();
+  hinfo.clear();
 
   sync_buf = 0;
   sync_size = 0;
@@ -153,7 +153,7 @@ StreamBuffer::release_parser()
 void 
 StreamBuffer::reset()
 {
-  hinfo.drop();
+  hinfo.clear();
   sync_data = 0;
   pre_frame = max_frame_size;
 
