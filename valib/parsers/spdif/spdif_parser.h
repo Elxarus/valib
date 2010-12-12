@@ -30,9 +30,9 @@ public:
   virtual const HeaderParser *header_parser() const;
 
   virtual void reset();
-  virtual bool parse_frame(uint8_t *frame, size_t size);
+  virtual bool process(uint8_t *frame, size_t size);
 
-  virtual Speakers  get_spk()      const { return hdr.spk;      }
+  virtual Speakers  get_output()   const { return hdr.spk;      }
   virtual samples_t get_samples()  const { samples_t samples; samples.zero(); return samples; }
   virtual size_t    get_nsamples() const { return hdr.nsamples; }
   virtual uint8_t  *get_rawdata()  const { return data;         }

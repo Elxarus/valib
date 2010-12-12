@@ -142,7 +142,7 @@ DTSParser::reset()
 }
 
 bool
-DTSParser::parse_frame(uint8_t *frame, size_t size)
+DTSParser::process(uint8_t *frame, size_t size)
 {
   HeaderInfo hinfo;
 

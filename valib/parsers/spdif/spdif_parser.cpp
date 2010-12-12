@@ -66,7 +66,7 @@ SPDIFParser::reset()
 }
 
 bool
-SPDIFParser::parse_frame(uint8_t *frame, size_t size)
+SPDIFParser::process(uint8_t *frame, size_t size)
 {
   if ((frame[0] != 0x00) || (frame[1] != 0x00) || (frame[2]  != 0x00) || (frame[3]  != 0x00) ||
       (frame[4] != 0x00) || (frame[5] != 0x00) || (frame[6]  != 0x00) || (frame[7]  != 0x00) ||

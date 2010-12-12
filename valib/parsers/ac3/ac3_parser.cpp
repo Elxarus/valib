@@ -93,7 +93,7 @@ AC3Parser::reset()
 }
 
 bool
-AC3Parser::parse_frame(uint8_t *frame, size_t size)
+AC3Parser::process(uint8_t *frame, size_t size)
 {
   if (!start_parse(frame, size))
   {

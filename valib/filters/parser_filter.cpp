@@ -98,11 +98,11 @@ ParserFilter::process(Chunk &in, Chunk &out)
     if (stream.is_new_stream())
       is_new_stream = true;
 
-    if (parser->parse_frame(stream.get_frame(), stream.get_frame_size()))
+    if (parser->process(stream.get_frame(), stream.get_frame_size()))
     {
-      if (out_spk != parser->get_spk())
+      if (out_spk != parser->get_output())
         is_new_stream = true;
-      out_spk = parser->get_spk();
+      out_spk = parser->get_output();
 
       if (out_spk.is_linear())
         out.set_linear(parser->get_samples(), parser->get_nsamples());
