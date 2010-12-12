@@ -45,21 +45,21 @@ class StreamBuffer;
 
   \sa HeaderParser
 
-  \var spk
+  \var Speakers HeaderInfo::spk;
     Format of the stream. FORMAT_UNKNOWN indicates a parsing error.
 
-  \var frame_size
+  \var size_t HeaderInfo::frame_size;
     Frame size (including the header):
     \li \b 0   frame size is unknown (free-format stream)
     \li \b >0  known frame size
 
-  \var scan_size
+  \var size_t HeaderInfo::scan_size;
     Use scanning to locate next syncpoint
     \li \b 0   do not use scanning
     \li \b >0  maximum distance between syncpoints
 
-  \var nsamples
-    Number of samples at the given frame.
+  \var size_t HeaderInfo::nsamples;
+    Number of samples at the frame.
 
     We can derive current bitrate for known frame size stream as follows:
 
@@ -67,12 +67,15 @@ class StreamBuffer;
 
     But note that actual bitrate may be larger for sparce stream.
 
-  \var bs_type
+  \var int HeaderInfo::bs_type;
     Bitstream type. BITSTREAM_XXXX constants.
 
-  \var spdif_type
+  \var uint16_t HeaderInfo::spdif_type;
     If given format is spdifable it defines spdif packet type (Pc burst-info).
     Zero otherwise. This field may be used to determine spdifable format.
+
+  \fn void HeaderInfo::clear();
+    Clear header information.
 ******************************************************************************/
  
 struct HeaderInfo
@@ -89,11 +92,11 @@ struct HeaderInfo
     frame_size(0),
     scan_size(0),
     nsamples(0),
-    bs_type(0),
+    bs_type(BITSTREAM_NONE),
     spdif_type(0)
-    {};
+  {}
 
-  inline void drop()
+  inline void clear()
   {
     spk        = spk_unknown;
     frame_size = 0;
@@ -134,31 +137,31 @@ struct HeaderInfo
 
   \sa HeaderInfo
 
-  \fn size_t header_size() const
+  \fn size_t HeaderParser::header_size() const;
     Minimum number of bytes required to parse header.
 
-  \fn size_t min_frame_size() const
+  \fn size_t HeaderParser::min_frame_size() const;
     Minimum frame size possible. Must be >= header size.
 
-  \fn size_t max_frame_size() const
+  \fn size_t HeaderParser::max_frame_size() const;
     Maximum frame size possible. Must be >= minimum frame size.
     Note that for spdifable formats we must take in account maximum spdif
     frame size to be able to parse spdif-padded format.
 
-  \fn bool can_parse(int format) const
+  \fn bool HeaderParser::can_parse(int format) const;
     \param format Format to test
 
     Determine that we can parse the format given, or parser can detect
     this format. Example:
 
-    \verbatim
+    \code
     if (parser.can_parse(FORMAT_AC3))
     {
       // Parser accepts AC3
     }
-    \endverbatim
+    \endcode
 
-  \fn bool parse_header(const uint8_t *hdr, HeaderInfo *info = 0) const = 0;
+  \fn bool HeaderParser::parse_header(const uint8_t *hdr, HeaderInfo *info = 0) const = 0;
     \param hdr Pointer to the start of the header
     \param info Optional pointer to HeaderInfo structure that receives info
       about the header given
@@ -172,7 +175,7 @@ struct HeaderInfo
     Note, that this method does not provide reliable synchronization, only the
     fast check.
 
-  \fn bool compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
+  \fn bool HeaderParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const;
     \param hdr1 First header
     \param hdr2 Second header
     \return True when both headers belong to the same stream and false
@@ -187,7 +190,7 @@ struct HeaderInfo
 
     Note that when headers are equal, format of both headers must be same:
 
-    \verbatim
+    \code
     parse_header(phdr1, hdr1);
     parse_header(phdr2, hdr2);
     if (compare_headers(phdr1, phdr2))
@@ -198,12 +201,12 @@ struct HeaderInfo
       // frame size may differ for variable bitrate
       // nsamples may differ
     }
-    \endverbatim
+    \endcode
 
     Size of header buffers given must be >= header_size() (it is not verified
     and may lead to memory fault).
 
-  \fn string header_info(const uint8_t *hdr) const
+  \fn string HeaderParser::header_info(const uint8_t *hdr) const;
     \param hdr Header to dump info for.
 
     Dump stream information that may be useful to track problems. Default
@@ -228,6 +231,7 @@ public:
   virtual bool     compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
   virtual string   header_info(const uint8_t *hdr) const;
 };
+
 
 
 ///////////////////////////////////////////////////////////////////////////////

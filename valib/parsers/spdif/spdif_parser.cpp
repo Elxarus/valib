@@ -62,8 +62,7 @@ SPDIFParser::reset()
 {
   data = 0;
   data_size = 0;
-
-  hdr.drop();
+  hdr.clear();
 }
 
 bool
@@ -91,7 +90,7 @@ SPDIFParser::parse_frame(uint8_t *frame, size_t size)
       return true;
     }
 
-  hdr.drop();
+  hdr.clear();
   return false;
 }
 
