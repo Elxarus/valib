@@ -95,13 +95,7 @@ SPDIFParser::process(uint8_t *frame, size_t size)
 }
 
 string
-SPDIFParser::stream_info() const 
-{
-  return string();
-}
-
-string
-SPDIFParser::frame_info() const 
+SPDIFParser::info() const 
 {
   return string();
 }

@@ -37,7 +37,6 @@ public:
   int  get_frames() const { return stream.get_frames(); }
   int  get_errors() const { return errors; }
 
-  string get_info() const;
   HeaderInfo header_info() const { return stream.header_info(); }
 
   /////////////////////////////////////////////////////////
@@ -53,6 +52,8 @@ public:
 
   virtual Speakers get_output() const
   { return out_spk; }
+
+  virtual string info() const;
 };
 
 #endif

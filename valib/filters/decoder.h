@@ -33,7 +33,7 @@ public:
 
   int        get_frames()  const { return parser.get_frames();  }
   int        get_errors()  const { return parser.get_errors();  }
-  string     get_info()    const { return parser.get_info();    }
+  string     info()        const { return parser.info();        }
   HeaderInfo header_info() const { return parser.header_info(); }
 };
 
