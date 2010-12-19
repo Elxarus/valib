@@ -96,7 +96,7 @@ MPAParser::crc_check(const uint8_t *frame, size_t protected_data_bits) const
 
 
 string
-MPAParser::stream_info() const 
+MPAParser::info() const 
 {
   using std::endl;
   std::stringstream result;
@@ -107,12 +107,6 @@ MPAParser::stream_info() const
   result << "Bitrate: " << bsi.bitrate / 1000 << endl;
   result << "Bandwidth: " << bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2 << "kHz/" << bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2 << "kHz" << endl;
   return result.str();
-}
-
-string
-MPAParser::frame_info() const 
-{
-  return string();
 }
 
 //////////////////////////////////////////////////////////////////////

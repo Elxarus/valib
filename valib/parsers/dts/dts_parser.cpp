@@ -224,7 +224,7 @@ DTSParser::process(uint8_t *frame, size_t size)
 }
 
 string
-DTSParser::stream_info() const
+DTSParser::info() const
 {
   using std::endl;
 
@@ -246,12 +246,6 @@ DTSParser::stream_info() const
   result << "amode: " << amode << endl;
   result << (crc_present? "CRC protected\n": "No CRC") << endl;
   return result.str();
-}
-
-string
-DTSParser::frame_info() const 
-{
-  return string();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

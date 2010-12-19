@@ -120,7 +120,7 @@ AC3Parser::process(uint8_t *frame, size_t size)
 }
 
 string
-AC3Parser::stream_info() const 
+AC3Parser::info() const 
 {
   using std::endl;
   int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * spk.sample_rate / 512000;
@@ -138,12 +138,6 @@ AC3Parser::stream_info() const
   result << "dialnorm: " << -dialnorm << "dB" << endl;
   result << "bandwidth: " << cpl_freq << "kHz/" << max_freq << "kHz" << endl;
   return result.str();
-}
-
-string
-AC3Parser::frame_info() const 
-{
-  return string();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

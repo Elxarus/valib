@@ -263,7 +263,7 @@ SPDIFWrapper::process(uint8_t *frame, size_t size)
 }
 
 string
-SPDIFWrapper::stream_info() const 
+SPDIFWrapper::info() const 
 {
   char *bitstream = "???";
   switch (spdif_bs)
@@ -281,10 +281,4 @@ SPDIFWrapper::stream_info() const
   result << "Bitstream: " << bitstream << endl;
   result << "Frame size: " << spdif_size << endl;
   return result.str();
-}
-
-string
-SPDIFWrapper::frame_info() const 
-{
-  return string();
 }

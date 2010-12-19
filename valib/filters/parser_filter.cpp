@@ -48,16 +48,14 @@ ParserFilter::get_parser() const
 }
 
 string
-ParserFilter::get_info() const
+ParserFilter::info() const
 {
   string result;
   result += stream.stream_info();
   if (parser)
-    result += parser->stream_info();
+    result += parser->info();
   return result;
 }
-
-
 
 void
 ParserFilter::reset()

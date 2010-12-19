@@ -34,8 +34,7 @@ public:
   virtual uint8_t  *get_rawdata()  const { return rawdata;  }
   virtual size_t    get_rawsize()  const { return rawsize;  }
 
-  virtual string stream_info() const;
-  virtual string frame_info() const;
+  virtual string info() const;
 
 protected:
   bool switch_parser(uint8_t *frame, size_t size);

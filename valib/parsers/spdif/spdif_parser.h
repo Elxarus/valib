@@ -38,8 +38,7 @@ public:
   virtual uint8_t  *get_rawdata()  const { return data;         }
   virtual size_t    get_rawsize()  const { return data_size;    }
 
-  virtual string stream_info() const;
-  virtual string frame_info() const;
+  virtual string info() const;
 
 protected:
   uint8_t    *data;

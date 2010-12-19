@@ -117,13 +117,7 @@ MultiFrame::switch_parser(uint8_t *frame, size_t size)
 }
 
 string
-MultiFrame::stream_info() const
+MultiFrame::info() const
 {
-  return parser? parser->stream_info(): string();
-}
-
-string
-MultiFrame::frame_info() const
-{
-  return parser? parser->frame_info(): string();
+  return parser? parser->info(): string();
 }

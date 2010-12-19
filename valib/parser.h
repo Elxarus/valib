@@ -232,8 +232,6 @@ public:
   virtual string   header_info(const uint8_t *hdr) const;
 };
 
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // FrameParser
 //
@@ -335,8 +333,7 @@ public:
   /////////////////////////////////////////////////////////
   // Stream information
 
-  virtual string stream_info() const = 0;
-  virtual string frame_info() const = 0;
+  virtual string info() const = 0;
 };
 
 
