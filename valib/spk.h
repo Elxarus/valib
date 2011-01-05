@@ -12,7 +12,7 @@
     zero-padded format (IEC 61937 aka SPDIF/AC3 aka AC3/AudioCD). But AC3 
     parser can work properly with all this formats so we may not distinguish 
     them and it is only one FORMAT_AC3 format. 
-    
+
     Format is applied to audio data but not to file format. It means that 
     stereo 16bit PCM .WAV and .RAW files will be characterized with the same 
     format.
@@ -60,7 +60,7 @@
     For compressed formats that contain channel configuration in the bitstream
     so parser may always know it, it is acceptable not to specify mask field at
     the input of parser. But at output parser must specify correct mask.
-    
+
   sample_rate - sampling rate. this is fundamental parameter we always have to
     know.
 
@@ -78,7 +78,7 @@
     For compressed formats that contain relation in the bitstream so decoder
     may always know it, it is acceptable not to specify relation field at
     the input of decoder. But at output decoder must specify correct relation.
-    
+
   level - absolute value for 0dB level. Generally depends on format, i.e.
     for PCM16 format it is 32767.0, so I think about to get rid of this 
     parameter. Now it is used to pre-scale data.
@@ -222,6 +222,7 @@
 
 #include "defs.h"
 #include <string>
+#include <boost/shared_ptr.hpp>
 
 using std::string;
 
@@ -262,6 +263,9 @@ using std::string;
 // LPCM samples are packed into blocks of 2 samples.
 #define FORMAT_LPCM20     15
 #define FORMAT_LPCM24     16
+
+// AAC
+#define FORMAT_AAC_FRAME  17
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format masks
@@ -424,18 +428,41 @@ public:
   int relation;         // interchannel relation
   sample_t level;       // 0dB level
 
-  Speakers() 
+  boost::shared_ptr<uint8_t> format_data;
+  size_t data_size;     // format data size
+
+  Speakers()
   {
-    set_unknown();
-  };
+    format = FORMAT_UNKNOWN;
+    mask = 0;
+    sample_rate = 0;
+    relation = NO_RELATION;
+    level = 1.0;
+    data_size = 0;
+  }
 
   Speakers(int _format, int _mask, int _sample_rate, sample_t _level = -1, int _relation = NO_RELATION)
   {
-    set(_format, _mask, _sample_rate, _level, _relation);
+    format = _format;
+    mask = _mask;
+    sample_rate = _sample_rate;
+    level = _level;
+    if (level < 0) switch (format)
+    {
+      // See filters/convert_func.cpp for notes about fractional levels
+      case FORMAT_PCM16: case FORMAT_PCM16_BE: level = 32767.5; break;
+      case FORMAT_PCM24: case FORMAT_PCM24_BE: level = 8388607.5; break;
+      case FORMAT_PCM32: case FORMAT_PCM32_BE: level = 2147483647.5; break;
+      case FORMAT_LPCM20: level = 524288.5; break;
+      case FORMAT_LPCM24: level = 8388607.5; break;
+      default: level = 1.0;
+    }
+    relation = _relation;
+
+    data_size = 0;
   }
 
-  inline void set(int format, int mask, int sample_rate, sample_t level = -1, int relation = NO_RELATION);
-  inline void set_unknown();
+  void set_format_data(uint8_t *format_data_, size_t data_size_);
 
   inline bool is_unknown() const;
   inline bool is_linear() const;
@@ -566,36 +593,6 @@ inline void channel_order(int mask, int order[CH_NAMES])
 
   for (; ch_index < CH_NAMES; ch_index++)
     order[ch_index] = CH_NONE;
-}
-
-inline void 
-Speakers::set(int _format, int _mask, int _sample_rate, sample_t _level, int _relation)
-{
-  format = _format;
-  mask = _mask;
-  sample_rate = _sample_rate;
-  level = _level;
-  if (level < 0) switch (format)
-  {
-    // See filters/convert_func.cpp for notes about fractional levels
-    case FORMAT_PCM16: case FORMAT_PCM16_BE: level = 32767.5; break;
-    case FORMAT_PCM24: case FORMAT_PCM24_BE: level = 8388607.5; break;
-    case FORMAT_PCM32: case FORMAT_PCM32_BE: level = 2147483647.5; break;
-    case FORMAT_LPCM20: level = 524288.5; break;
-    case FORMAT_LPCM24: level = 8388607.5; break;
-    default: level = 1.0;
-  }
-  relation = _relation;
-}
-
-inline void 
-Speakers::set_unknown()
-{
-  format = FORMAT_UNKNOWN;
-  mask = 0;
-  sample_rate = 0;
-  relation = NO_RELATION;
-  level = 1.0;
 }
 
 inline bool Speakers::is_unknown() const
