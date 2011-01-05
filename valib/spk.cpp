@@ -78,6 +78,22 @@ static const char *custom_modes[] =
   "Custom 8ch", "Custom 9ch", "Custom 10ch", "Custom 11ch"
 };
 
+void 
+Speakers::set_format_data(uint8_t *format_data_, size_t data_size_)
+{
+  if (format_data_ && data_size_)
+  {
+    format_data = boost::shared_ptr<uint8_t>(new uint8_t[data_size_]);
+    memcpy(format_data.get(), format_data_, data_size_);
+    data_size = data_size_;
+  }
+  else
+  {
+    format_data.reset();
+    data_size = 0;
+  }
+}
+
 const char *
 Speakers::format_text() const
 {
