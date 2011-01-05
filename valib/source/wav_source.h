@@ -42,6 +42,7 @@ public:
   /////////////////////////////////////////////////////////
   // Source interface
 
+  virtual void reset();
   virtual bool get_chunk(Chunk &out);
 
   virtual bool new_stream() const
