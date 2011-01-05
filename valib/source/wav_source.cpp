@@ -233,6 +233,13 @@ WAVSource::wave_format() const
 ///////////////////////////////////////////////////////////
 // Source interface
 
+void
+WAVSource::reset()
+{
+  f.seek(data_start);
+  data_remains = data_size;
+}
+
 bool
 WAVSource::get_chunk(Chunk &chunk)
 {
