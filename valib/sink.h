@@ -93,7 +93,7 @@ class SimpleSink;
     it may be nessesary to process several chunks befor the playback actually
     starts.
 
-    When sink finds an error and cannot proceed, it must throw SinkError
+    When sink finds an error and cannot proceed, it must throw Sink::Error
     exception. reset() must be called on the sink after an error.
 
   \fn void Sink::flush()
