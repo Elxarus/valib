@@ -317,8 +317,7 @@ class Filter;
     because of resource allocation errors.
 
     An ability to open the filter with a certain format also depends on filter
-    parameters. When parameters change filter can_open() result may also
-    change.
+    parameters. When parameters change can_open() result may also change.
 
     This function should not throw because of resource allocation errors or
     other reasons. I.e. it should catch all exceptions during the test and
@@ -560,6 +559,8 @@ public:
   \name Open & close the filter
 
   \fn bool SimpleFilter::open(Speakers new_spk)
+    \param new_spk Input format
+
     Open the filter with the new format.
 
     Calls init().
@@ -584,6 +585,8 @@ public:
 
   \fn bool SimpleFilter::init()
     Override this to do some initialization.
+
+    spk member is specifies the current input format.
 
   \fn void SimpleFilter::uninit()
     Override this to free resources allocated by init().
