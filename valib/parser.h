@@ -232,78 +232,96 @@ public:
   virtual string   header_info(const uint8_t *hdr) const;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// FrameParser
-//
-// Frame transformation interface. Frame transformations include:
-// * Decoders
-// * Loseless frame transformations:
-//   * Bitstream format change
-//   * Gain change
-// * Other frame transformations:
-//   * Frame wrappers/unwrappers
-//   * Bitrate change (without reencoding, aka transcoding)
-//   * etc...
-// * Stream validations
-// * etc... 
-//
-// Unlike HeaderParser interface, FrameParser has an internal state and must
-// receive frames in correct order, because frames in a stream are almost always
-// related with each other. To prepare parser to receive a new stream and set
-// it into initial state we must call reset().
-//
-// We should reset the transformer with each new stream detected by header
-// parser.
-//
-// All other things are very strightforward: we load a frame with help of
-// HeaderParser and give the frame loaded to FrameParser. FrameParser
-// does its job and provies access to the transformed data through its
-// interface.
-//
-// FrameParser may do the job in-place at the buffer received with
-// parse_frame() call.
-//
-// header_parser()
-//   Returns header parser this tranformer works with.
-//
-// reset()
-//   Set transformer into the initial state. Drop all internal buffers and
-//   state variables.
-//
-// parse_frame()
-//   Transform the next frame of a stream.
-//   parse_frame() call should not fail if error detected is handled with some
-//   kind of restoration procedure that produces some output.
-//
-// get_output()
-//   Format of a transformed data. FORMAT_UNKNOWN may indicate an error.
-//
-// get_samples()
-//   For linear output format returns pointers to sample buffers.
-//   Undefined for non-linear output format.
-//
-// get_nsamples()
-//   For linear output returns numer of samples stored at sample buffers.
-//   For non-linear output should indicate number of samples at the output
-//   frame or 0 if number of samples is unknown.
-//
-// get_rawdata()
-//   For non-linear output returns pointers to transformed data buffer.
-//   For linear output may return a pointer to the original frame data.
-//
-// get_rawsize()
-//   For non-linear output returns size of transformed data.
-//   For linear output may return number of bytes actually parsed. It is useful
-//   to compact sparse stream.
-//
-// stream_info()
-//   Dump stream information. It may be more informative than header info but
-//   should contain only stream-wide information (that does not change from
-//   frame to frame).
-//
-// frame_info()
-//   Dump the frame information. Most detailed information for the certain
-//   frame. May not include info dumped with stream_info() call.
+
+
+/**************************************************************************//**
+  \class FrameParser
+  \brief Frame transformation interface.
+
+  Frame transformations include:
+  <ul>
+  <li>Decoders</li>
+  <li>Loseless frame transformations:</li>
+    <ul>
+    <li>Bitstream format change</li>
+    <li>Gain change</li>
+    </ul>
+  <li>Other frame transformations:</li>
+    <ul>
+    <li>Frame wrappers/unwrappers</li>
+    <li>Bitrate change (without reencoding, aka transcoding)</li>
+    <li>etc...</li>
+    </ul>
+  <li>etc...</li>
+  </ul>
+
+  Unlike HeaderParser interface, FrameParser has an internal state and must
+  receive frames in correct order, because frames in a stream are almost always
+  related with each other. To prepare a parser to receive a new stream and set
+  it into initial state we must call reset().
+
+  We should reset the transformer with each new stream detected by the header
+  parser.
+
+  All other things are very strightforward: we load a frame with help of
+  HeaderParser and give the frame loaded to FrameParser. FrameParser
+  does its job and provies access to the transformed data through its
+  interface.
+
+  FrameParser may do the job in-place at the buffer received with
+  parse_frame() call.
+
+  \fn const HeaderParser *FrameParser::header_parser()
+    Returns header parser this tranformer works with.
+
+  \fn void FrameParser::reset()
+    Set transformer into the initial state. Drop all internal buffers and
+    state variables.
+
+  \fn bool FrameParser::process(uint8_t *frame, size_t size)
+    \param frame Pointer to the frame buffer
+    \param size The size of the frame
+    \return Returns true on success and false otherwise.
+
+    Transform the next frame of a stream.
+
+    When possible, process() should not fail on error and proceed with
+    with some kind of restoration procedure that produces some output.
+
+  \fn Speakers FrameParser::get_output()
+    Format of a transformed data. FORMAT_UNKNOWN may indicate an error.
+
+  \fn samples_t FrameParser::get_samples()
+
+    For linear output format returns pointers to sample buffers.
+
+    Undefined for non-linear output format.
+
+  \fn size_t FrameParser::get_nsamples()
+
+    For linear output returns numer of samples stored at sample buffers.
+
+    For non-linear output should indicate number of samples at the output
+
+    frame or 0 if number of samples is unknown.
+
+  \fn uint8_t *FrameParser::get_rawdata()
+
+    For non-linear output returns pointers to transformed data buffer.
+
+    For linear output may return a pointer to the original frame data.
+
+  \fn size_t FrameParser::get_rawsize()
+    For non-linear output returns size of transformed data.
+    For linear output may return number of bytes actually parsed. It is useful
+    to compact sparse stream.
+
+  \fn string FrameParser::info()
+    Dump stream information. It may be more informative than header info but
+    should contain only stream-wide information (that does not change from
+    frame to frame).
+******************************************************************************/
+
 
 class FrameParser
 {
@@ -338,146 +356,179 @@ public:
 
 
 
-///////////////////////////////////////////////////////////////////////////////
-// StreamBuffer
-//
-// Implements stream scanning algorithm. This includes reliable syncronization
-// algorithm with 3 consecutive syncpoints and frame load algorithn. May be
-// used when we need:
-// * reliable stream syncronization
-// * frame-based stream walk
-//
-// It is a difference between frame size and frame interval. Frame interval
-// is a distance between consecutive syncpoints. Frame size is size of
-// frame data. Frame interval may be larger than frame size because of SPDIF
-// padding for example.
-//
-// We can parse 2 types of streams: streams with frame size known from the
-// header and streams with unknown frame size.
-//
-// For known frame size we load only known frame data and all other data is
-// skipped. Frame interval is known only after successful frame load and it is
-// a distance between *previous* frame header and current frame's header.
-//
-// To detect stream changes we search for new stream header after the end of
-// the frame loaded. If we cannot find a header of the same stream before
-// we reach maximum frame size we do resync.
-//
-// For unknown frame size frame interval is a constant determined at stream
-// syncronization procedure. We always load all frame interval data therefore
-// frame size and frame interval are always equal in this case and stream is
-// known to be of constant bitrate.
-//
-// If header of the same stream is not found exactly after the end of loaded
-// frame we do resync. Therefore this type of the stream cannot contain
-// inter-frame debris (see below).
-// 
-// Debris is all data that do not belong to frames. This includes all data that
-// is not a compressed stream at all and all inter-frame data.
-// Debris is the mechanism to maintain bit-to-bit correctness, so we may
-// construct the original stream back from parsed one. Also it allows us to
-// create stream detector, so we can process uncompressed data in one way and
-// compessed in another. For instance, it is required for PCM/SPDIF detection
-// and helps to handle SPDIF <-> PCM transitions in a correct way.
-//
-// After load() call StreamBuffer may be in following states:
-//
-// syn new deb frm
-//  -   -   -   -   no sync (not enough data) (1)
-//  -   -   +   -   no sync with debris output
-//  +   -   -   -   no frame loaded (not enough data) (1)
-//  +   -   -   +   frame without debris
-//  +   -   +   -   inter-frame debris (2)
-//  +   -   +   +   frame with debris
-//  +   +   -   +   sync on a new stream
-//  +   +   +   +   sync on a new stream with debris
-// (1) - all input buffer data is known to be processed after load() call
-// (2) - state is possible but not used in curent implementation.
-//
-// Prohibited states:
-//
-// syn new deb frm
-//  -   -   *   +   frame loaded without sync
-//  -   +   *   *   new stream without sync
-//  +   +   *   -   new stream detection without a frame loaded
-//
-// load() call returns false in case when stream buffer was not loaded with
-// debris or frame data. I.e. in states marked with (1).
-//
-// load_frame() skips all debris data and loads only frames. It returns false
-// in all states without a frame loaded. So only following states are possible
-// after load_frame():
-//
-// syn new frm
-//  -   -   -   no sync (not enough data) (1)
-//  +   -   -   frame was not loaded (not enough data) (1)
-//  +   -   +   frame loaded
-//  +   +   +   sync on a new stream
-// (1) - all input buffer is known to be processed after load_frame() call
-//
-// flush() releases all buffered data as debris. Returns true if it is some
-// data to flush.
-//
-// Internal buffer structure
-// =========================
-//
-// StreamBuffer uses 3-point syncronization. This means that we need buffer
-// space for 2 full frames and 1 header more. Also, we need some space for a
-// copy of a header to load each frame.
-//
-// +-- header pointer
-// V
-// +--------------+-----------------------+-----------------------+---------+
-// | Header1 copy | Frame1                | Frame2                | Header3 |
-// +--------------+-----------------------+-----------------------+---------+
-//                ^
-//                +-- frame pointer
-// 
-// And total buffer size equals to:
-// buffer_size = max_frame_size * 2 + header_size * 2;
-//
-// Important note!!!
-// =================
-//
-// For unknown frame size and SPDIF stream we cannot load the last frame of
-// the stream correctly! (14bit DTS falls into this condition)
-//
-// If stream ends after the last frame the last frame is not loaded at all.
-// It is because we must load full inter-stream interval but we cannot do this
-// because SPDIF header is not transmitted after the last frame:
-//
-//                +------------- frame interval ---------+
-//                V                                      V
-// +--------------------------------------+--------------------------------------+
-// | SPDIF header | Frame1 data | padding | SPDIF header | Frame2 data | padding |
-// +--------------------------------------+--------------------------------------+
-//                                                       ^                       ^
-//                         Less than frame interval -----+-----------------------+
-//
-// We can correctly handle switch between different types of SPDIF stream, but
-// we cannot correctly handle switch between SPDIF with unknown frame size to
-// non-SPDIF stream, and we loose at least one frame of a new stream:
-//
-//                +------------ frame interval --------+
-//                V                                    V
-// +------------------------------------+------------------------------------+
-// | SPDIF header | DTS frame | padding | SPDIF header | AC3 frame | padding |
-// +------------------------------------+------------------------------------+
-//                                                     ^
-//                                                     +-- correct stream switch
-//
-//                +------------ frame interval --------+
-//                V                                    V
-// +------------------------------------+----------------------------------+
-// | SPDIF header | DTS frame | padding | AC3 frame | AC3Frame | AC3 frame |
-// +------------------------------------+----------------------------------+
-//                                      ^                      ^
-//                                      +---- lost frames -----+--- stream switch
-//
-// Therefore in spite of the fact that we CAN work with SPDIF stream it is
-// recommended to demux SPDIF stream before working with the contained stream.
-// We can demux SPDIF stream correctly because SPDIF header contains real
-// frame size of the contained stream.
+/**************************************************************************//**
+  \class StreamBuffer
+  \brief Stream syncronization and scanning algorithm.
+
+  Implements stream scanning algorithm. This includes reliable syncronization
+  algorithm with 3 consecutive syncpoints and frame load algorithn. May be
+  used when we need:
+  \li reliable stream syncronization
+  \li frame-based stream walk
+
+  It is a difference between frame size and frame interval. Frame interval
+  is a distance between consecutive syncpoints. Frame size is size of
+  frame data. Frame interval may be larger than frame size because of padding
+  for example.
+
+  We can parse 2 types of streams: streams with frame size known from the
+  header and streams with unknown frame size.
+
+  For known frame size we load only known frame data and all other data is
+  skipped. Frame interval is known only after successful frame load and it is
+  a distance between *previous* frame header and current frame's header.
+
+  To detect stream changes we search for new stream header after the end of
+  the frame loaded. If we cannot find a header of the same stream before
+  we reach maximum frame size we do resync.
+
+  For unknown frame size frame interval is a constant determined at stream
+  syncronization procedure. We always load the whole frame interval, therefore
+  frame size and frame interval are always equal in this case and stream is
+  known to be of constant bitrate.
+
+  If header of the same stream is not found exactly after the end of the frame
+  loaded we do resync. Therefore this type of the stream cannot contain
+  inter-frame debris (see below).
+ 
+  Debris is all data that do not belong to frames. This includes all data that
+  that we cannot sync on and all inter-frame data.
+
+  Debris is the mechanism to maintain bit-to-bit correctness, so we may
+  construct the original stream back from the parsed one. Also it allows us to
+  create stream detector, so we can process uncompressed data in one way and
+  compessed in another. For instance, it is required for PCM/SPDIF detection
+  and helps to handle SPDIF <-> PCM transitions in a correct way.
+
+  After load() call StreamBuffer may be in following states:
+
+  \verbatim
+  syn new deb frm
+   -   -   -   -   no sync (not enough data) (1)
+   -   -   +   -   no sync with debris output
+   +   -   -   -   no frame loaded (not enough data) (1)
+   +   -   -   +   frame without debris
+   +   -   +   -   inter-frame debris (2)
+   +   -   +   +   frame with debris
+   +   +   -   +   sync on a new stream
+   +   +   +   +   sync on a new stream with debris
+
+  syn - see is_in_sync()
+  new - see is_new_stream()
+  deb - see is_debris_exists()
+  frm - see is_frema_loaded()
+
+  (1) - all input buffer data is known to be processed after load() call
+  (2) - state is possible but not used in curent implementation.
+  \endverbatim
+
+  Prohibited states:
+
+  \verbatim
+  syn new deb frm
+   -   -   *   +   frame loaded without sync
+   -   +   *   *   new stream without sync
+   +   +   *   -   new stream detection without a frame loaded
+
+  syn - see is_in_sync()
+  new - see is_new_stream()
+  deb - see is_debris_exists()
+  frm - see is_frema_loaded()
+  \endverbatim
+
+  load() call returns false in case when stream buffer was not loaded with
+  debris or frame data. I.e. in states marked with (1).
+
+  load_frame() skips all debris data and loads only frames. It returns false
+  in all states without a frame loaded. So only following states are possible
+  after load_frame():
+
+  \verbatim
+  syn new frm
+   -   -   -   no sync (not enough data) (1)
+   +   -   -   frame was not loaded (not enough data) (1)
+   +   -   +   frame loaded
+   +   +   +   sync on a new stream
+
+  syn - see is_in_sync()
+  new - see is_new_stream()
+  deb - see is_debris_exists()
+  frm - see is_frema_loaded()
+
+  (1) - all input buffer is known to be processed after load_frame() call
+  \endverbatim
+
+  flush() releases all buffered data as debris. Returns true if it is some
+  data to flush.
+
+  \section stream_buffer_internal Internal buffer structure
+
+  StreamBuffer uses 3-point synchronization. This means that we need buffer
+  space for 2 full frames and 1 header more. Also, we need some space for a
+  copy of a header to load each frame.
+
+  \verbatim
+  +-- header pointer
+  V
+  +--------------+-----------------------+-----------------------+---------+
+  | Header1 copy | Frame1                | Frame2                | Header3 |
+  +--------------+-----------------------+-----------------------+---------+
+                 ^
+                 +-- frame pointer
+  \endverbatim
+
+  And total buffer size equals to:
+  buffer_size = max_frame_size * 2 + header_size * 2;
+
+  <b>Important note!!!</b>
+
+  For unknown frame size and SPDIF stream we cannot load the last frame of
+  the stream correctly! (14bit DTS falls into this condition)
+
+  If stream ends after the last frame the last frame is not loaded at all.
+  It is because we must load full inter-stream interval but we cannot do this
+  because SPDIF header is not transmitted after the last frame:
+
+  \verbatim
+                 +------------- frame interval ---------+
+                 V                                      V
+  +--------------------------------------+--------------------------------------+
+  | SPDIF header | Frame1 data | padding | SPDIF header | Frame2 data | padding |
+  +--------------------------------------+--------------------------------------+
+                                                        ^                       ^
+                          Less than frame interval -----+-----------------------+
+  \endverbatim
+
+  We can correctly handle switch between different types of SPDIF stream, but
+  we cannot correctly handle switch between SPDIF with unknown frame size to
+  non-SPDIF stream, and we loose at least one frame of a new stream:
+
+  \verbatim
+                 +------------ frame interval --------+
+                 V                                    V
+  +------------------------------------+------------------------------------+
+  | SPDIF header | DTS frame | padding | SPDIF header | AC3 frame | padding |
+  +------------------------------------+------------------------------------+
+                                                      ^
+                                                      +-- correct stream switch
+  \endverbatim
+
+  \verbatim
+                 +------------ frame interval --------+
+                 V                                    V
+  +------------------------------------+----------------------------------+
+  | SPDIF header | DTS frame | padding | AC3 frame | AC3Frame | AC3 frame |
+  +------------------------------------+----------------------------------+
+                                       ^                      ^
+                                       +---- lost frames -----+--- stream switch
+  \endverbatim
+
+  Therefore in spite of the fact that we CAN work with SPDIF stream directly, it
+  is recommended to demux SPDIF stream before working with the contained stream.
+
+  We can demux SPDIF stream correctly because SPDIF header contains real
+  frame size of the contained stream.
+******************************************************************************/
 
 class StreamBuffer
 {
