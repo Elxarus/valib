@@ -40,7 +40,7 @@ TEST(proc_pass, "AudioProcessor noise passthrough test")
   for (int iformat = 0; iformat < array_size(formats); iformat++)
     for (int imode = 0; imode < array_size(modes); imode++)
     {
-      spk.set(formats[iformat], modes[imode], 48000);
+      spk = Speakers(formats[iformat], modes[imode], 48000);
       log->msg("Testing %s %s %iHz with %iK samples", spk.format_text(), spk.mode_text(), spk.sample_rate, block_size / 1024);
 
       int data_size = block_size;
