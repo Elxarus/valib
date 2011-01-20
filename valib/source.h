@@ -6,11 +6,9 @@
 #ifndef VALIB_SOURCE_H
 #define VALIB_SOURCE_H
 
-#include <string>
 #include <boost/utility.hpp>
 #include "chunk.h"
-
-using std::string;
+#include "exception.h"
 
 /**************************************************************************//**
   \class Source
@@ -67,20 +65,16 @@ using std::string;
 class Source : boost::noncopyable
 {
 public:
-  //* Processing error exception
-  class Error
+  //! Processing error exception
+  class Error : public EProcessing
   {
   public:
-    Source *source;
-    int code;
-    string text;
-
     Error(Source *source_, int code_, string text_):
-    source(source_), code(code_), text(text_)
+    EProcessing(source_->name(), code_, text_)
     {}
 
     Error(Source *source_, string text_):
-    source(source_), code(-1), text(text_)
+    EProcessing(source_->name(), text_)
     {}
   };
 

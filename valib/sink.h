@@ -6,11 +6,9 @@
 #ifndef VALIB_SINK_H
 #define VALIB_SINK_H
 
-#include <string>
 #include <boost/utility.hpp>
 #include "chunk.h"
-
-using std::string;
+#include "exception.h"
 
 class Sink;
 class SimpleSink;
@@ -118,20 +116,16 @@ class SimpleSink;
 class Sink : boost::noncopyable
 {
 public:
-  //* Processing error exception
-  class Error
+  //! Processing error exception
+  class Error : public EProcessing
   {
   public:
-    Sink *sink;
-    int code;
-    string text;
-
     Error(Sink *sink_, int code_, string text_):
-    sink(sink_), code(code_), text(text_)
+    EProcessing(sink_->name(), code_, text_)
     {}
 
     Error(Sink *sink_, string text_):
-    sink(sink_), code(-1), text(text_)
+    EProcessing(sink_->name(), text_)
     {}
   };
 

@@ -3,14 +3,12 @@
   \brief Filter: base interface for filters
 ******************************************************************************/
 
-#ifndef VALIB_FILTER2_H
-#define VALIB_FILTER2_H
+#ifndef VALIB_FILTER_H
+#define VALIB_FILTER_H
 
-#include <string>
 #include <boost/utility.hpp>
 #include "chunk.h"
-
-using std::string;
+#include "exception.h"
 
 class Filter;
 
@@ -493,20 +491,16 @@ class Filter;
 class Filter : boost::noncopyable
 {
 public:
-  //* Processing error exception
-  class Error
+  //! Processing error exception
+  class Error : public EProcessing
   {
   public:
-    Filter *filter; /// Filter that caused the exception
-    int code;       /// Error code
-    string text;    /// Error text
-
     Error(Filter *filter_, int code_, string text_):
-    filter(filter_), code(code_), text(text_)
+    EProcessing(filter_->name(), code_, text_)
     {}
 
     Error(Filter *filter_, string text_):
-    filter(filter_), code(-1), text(text_)
+    EProcessing(filter_->name(), text_)
     {}
   };
 
