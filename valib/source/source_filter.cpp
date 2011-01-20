@@ -1,7 +1,7 @@
 #include "source_filter.h"
 
 bool
-SourceFilter2::set(Source *source_, Filter *filter_)
+SourceFilter::set(Source *source_, Filter *filter_)
 {
   if (!source_)
     return false;
@@ -23,14 +23,14 @@ SourceFilter2::set(Source *source_, Filter *filter_)
 }
 
 void
-SourceFilter2::release()
+SourceFilter::release()
 {
   source = 0;
   filter = 0;
 }
 
 void
-SourceFilter2::reset()
+SourceFilter::reset()
 {
   if (!source) return;
 
@@ -47,7 +47,7 @@ SourceFilter2::reset()
 // Source interface
 
 bool
-SourceFilter2::get_chunk(Chunk &out)
+SourceFilter::get_chunk(Chunk &out)
 {
   if (!source) return false;
   if (!filter) return source->get_chunk(out);
@@ -126,7 +126,7 @@ SourceFilter2::get_chunk(Chunk &out)
 }
 
 bool
-SourceFilter2::new_stream() const
+SourceFilter::new_stream() const
 {
   if (!source) return false;
   if (!filter) return source->new_stream();
@@ -134,7 +134,7 @@ SourceFilter2::new_stream() const
 }
 
 Speakers
-SourceFilter2::get_output() const
+SourceFilter::get_output() const
 {
   if (!source) return spk_unknown;
   if (!filter) return source->get_output();
