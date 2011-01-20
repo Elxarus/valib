@@ -9,7 +9,7 @@
 #include "../filter.h"
 #include "../source.h"
 
-class SourceFilter2 : public Source
+class SourceFilter : public Source
 {
 protected:
   Source *source;
@@ -21,11 +21,11 @@ protected:
   enum { state_empty, state_filter, state_new_stream } state;
 
 public:
-  SourceFilter2():
+  SourceFilter():
   source(0), filter(0)
   {}
 
-  SourceFilter2(Source *source_, Filter *filter_):
+  SourceFilter(Source *source_, Filter *filter_):
   source(0), filter(0)
   { set(source_, filter_); }
 

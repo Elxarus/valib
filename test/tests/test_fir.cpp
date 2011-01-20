@@ -227,14 +227,14 @@ TEST(param_fir, "ParamFIR")
   ToneGen tone;
   SliceFilter slice;
   Convolver conv;
-  SourceFilter2 conv_src(&tone, &conv);
-  SourceFilter2 test_src(&conv_src, &slice);
+  SourceFilter conv_src(&tone, &conv);
+  SourceFilter test_src(&conv_src, &slice);
 
   // Reference source ref_src (tone -> slice)
 
   ToneGen ref_tone;
   SliceFilter ref_slice;
-  SourceFilter2 ref_src(&ref_tone, &ref_slice);
+  SourceFilter ref_src(&ref_tone, &ref_slice);
 
   /////////////////////////////////////////////////////////
   // Low pass

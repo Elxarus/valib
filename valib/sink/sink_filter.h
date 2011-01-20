@@ -9,18 +9,18 @@
 #include "../filter.h"
 #include "../sink.h"
 
-class SinkFilter2 : public Sink
+class SinkFilter : public Sink
 {
 protected:
   Sink   *sink;
   Filter *filter;
 
 public:
-  SinkFilter2():
+  SinkFilter():
   sink(0), filter(0)
   {}
 
-  SinkFilter2(Sink *sink_, Filter *filter_):
+  SinkFilter(Sink *sink_, Filter *filter_):
   sink(0), filter(0)
   { set(sink_, filter_); }
 

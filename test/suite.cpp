@@ -117,8 +117,8 @@ int compare(Log *log, Source *src, Source *ref)
 
 int compare(Log *log, Source *src, Filter *src_filter, Source *ref, Filter *ref_filter)
 {
-  SourceFilter2 sf(src, src_filter);
-  SourceFilter2 rf(ref, ref_filter);
+  SourceFilter sf(src, src_filter);
+  SourceFilter rf(ref, ref_filter);
   return compare(log, &sf, &rf);
 }
 
@@ -179,7 +179,7 @@ sample_t calc_peak(Source *source)
 sample_t calc_peak(Source *source, Filter *filter)
 {
   assert(source != 0);
-  SourceFilter2 source_filter(source, filter);
+  SourceFilter source_filter(source, filter);
   return calc_peak(&source_filter);
 }
 
@@ -212,7 +212,7 @@ double calc_rms(Source *source)
 double calc_rms(Source *source, Filter *filter)
 {
   assert(source != 0);
-  SourceFilter2 source_filter(source, filter);
+  SourceFilter source_filter(source, filter);
   return calc_rms(&source_filter);
 }
 
@@ -260,8 +260,8 @@ sample_t calc_diff(Source *s1, Source *s2)
 sample_t calc_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)
 {
   assert(s1 != 0 && s2 != 0);
-  SourceFilter2 sf1(s1, f1);
-  SourceFilter2 sf2(s2, f2);
+  SourceFilter sf1(s1, f1);
+  SourceFilter sf2(s2, f2);
   return calc_diff(&sf1, &sf2);
 }
 
@@ -310,7 +310,7 @@ double calc_rms_diff(Source *s1, Source *s2)
 double calc_rms_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)
 {
   assert(s1 != 0 && s2 != 0);
-  SourceFilter2 sf1(s1, f1);
-  SourceFilter2 sf2(s2, f2);
+  SourceFilter sf1(s1, f1);
+  SourceFilter sf2(s2, f2);
   return calc_rms_diff(&sf1, &sf2);
 }

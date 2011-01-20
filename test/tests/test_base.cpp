@@ -142,7 +142,7 @@ TEST(base_source_filter, "SourceFilter")
 
   // Init constructor test
 
-  SourceFilter2 src_filter(&src_noise, &pass_filter);
+  SourceFilter src_filter(&src_noise, &pass_filter);
   CHECK(src_filter.get_source() == &src_noise);
   CHECK(src_filter.get_filter() == &pass_filter);
 
@@ -205,7 +205,7 @@ TEST(base_sink_filter, "SinkFilter")
 
   // Init constructor test
 
-  SinkFilter2 sink_filter(&null_sink, &pass_filter);
+  SinkFilter sink_filter(&null_sink, &pass_filter);
   CHECK(sink_filter.get_sink() == &null_sink);
   CHECK(sink_filter.get_filter() == &pass_filter);
 
