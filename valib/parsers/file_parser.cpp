@@ -1,3 +1,4 @@
+#include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -165,32 +166,28 @@ FileParser::stats(unsigned max_measurments, vtime_t precision)
   return stat_size > 0;
 }
 
-size_t 
-FileParser::file_info(char *buf, size_t size) const
+string
+FileParser::file_info() const
 {
-  char info[1024];
+  using std::endl;
+  std::stringstream result;
 
-  size_t len = sprintf(info,
-    "File: %s\n"
-    "Size: %.0f (%i %sB)\n",
-    filename,
-    (double)f.size(), compact_size(f.size()), compact_suffix(f.size()));
+  result << "File: " << filename << endl;
+  result << "Size: " << f.size()
+         << " (" << compact_size(f.size()) << " " << compact_suffix(f.size()) << "B)" << endl;
 
   if (stat_size)
-    len += sprintf(info + len,
-      "Length: %i:%02i:%02i\n"
-      "Frames: %i\n"
-      "Frame interval: %i\n"
-      "Bitrate: %ikbps\n",
-      int(get_size(time)) / 3600, int(get_size(time)) % 3600 / 60, int(get_size(time)) % 60,
-      int(get_size(frames)), 
-      int(avg_frame_interval),
-      int(avg_bitrate / 1000));
+  {
+    result << "Length: "
+      << int(get_size(time)) / 3600 << ":"
+      << int(get_size(time)) % 3600 / 60 << ":"
+      << int(get_size(time)) % 60 << endl;
+    result << "Frames: " << int(get_size(frames)) << endl;
+    result << "Frame interval: " << int(avg_frame_interval) << endl;
+    result << "Bitrate: " << int(avg_bitrate / 1000) << "kbps" << endl;
+  }
 
-  if (len + 1 > size) len = size - 1;
-  memcpy(buf, info, len + 1);
-  buf[len] = 0;
-  return len;
+  return result.str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

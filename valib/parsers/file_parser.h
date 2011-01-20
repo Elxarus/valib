@@ -53,7 +53,7 @@ public:
   const char *get_filename() const { return filename; }
   const HeaderParser *get_parser() const { return stream.get_parser(); }
 
-  size_t file_info(char *buf, size_t size) const;
+  string file_info() const;
 
   /////////////////////////////////////////////////////////////////////////////
   // Positioning
