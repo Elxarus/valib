@@ -1,5 +1,5 @@
 /*
-  DelayFIR test
+  EchoFIR test
 */
 
 #include "fir/echo_fir.h"

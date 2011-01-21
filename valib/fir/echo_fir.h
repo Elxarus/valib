@@ -1,6 +1,6 @@
 /**************************************************************************//**
   \file echo_fir.h
-  \brief EchoFIR class
+  \brief EchoFIR: Single echo filter
 ******************************************************************************/
 
 #ifndef VALIB_ECHO_FIR
@@ -35,6 +35,7 @@
 
   \fn void EchoFIR::set_delay(vtime_t delay)
     \param delay Delay value
+
     Set delay.
 
   \fn vtime_t EchoFIR::get_delay() const
@@ -42,6 +43,7 @@
 
   \fn void EchoFIR::set_gain(double gain)
     \param gain Gain value
+
     Set gain.
 
   \fn double EchoFIR::get_gain() const
