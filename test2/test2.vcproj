@@ -185,6 +185,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="fir"
+			>
+			<File
+				RelativePath=".\tests\fir\test_delay_fir.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\fir\test_echo_fir.cpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\main.cpp"
 			>
