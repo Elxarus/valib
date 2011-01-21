@@ -25,9 +25,9 @@ EqualizerMch::get_bands(int ch_name, EqBand *bands, size_t first_band, size_t nb
 }
 
 void
-EqualizerMch::reset_eq(int ch_name)
+EqualizerMch::clear_bands(int ch_name)
 {
-  if (ch_name == CH_NONE) { master.reset(); return; }
+  if (ch_name == CH_NONE) { master.clear_bands(); return; }
   if (ch_name < 0 || ch_name > CH_NAMES) return;
-  ch_eq[ch_name].reset();
+  ch_eq[ch_name].clear_bands();
 }

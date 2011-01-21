@@ -5,6 +5,7 @@
 inline double sinc(double x) { return x == 0 ? 1 : sin(x)/x; }
 inline double lpf(int i, double f) { return 2 * f * sinc(i * 2 * M_PI * f); }
 
+static const double max_gain = 1e10;    // 200dB
 static const double min_ripple = 0.001;
 static const double max_ripple = 3.0;
 static const double def_ripple = 0.1;
@@ -42,7 +43,7 @@ struct StepFilter
 EqFIR::EqFIR(): ver(0), nbands(0), ripple(def_ripple)
 {}
 
-EqFIR::EqFIR(const EqBand *new_bands, size_t new_nbands): ver(0), nbands(0)
+EqFIR::EqFIR(const EqBand *new_bands, size_t new_nbands): ver(0), nbands(0), ripple(def_ripple)
 {
   set_bands(new_bands, new_nbands);
 }
@@ -58,7 +59,7 @@ EqFIR::set_bands(const EqBand *new_bands, size_t new_nbands)
 {
   size_t i;
 
-  reset();
+  clear_bands();
   if (new_nbands == 0 || !new_bands)
     return 0;
 
@@ -70,8 +71,8 @@ EqFIR::set_bands(const EqBand *new_bands, size_t new_nbands)
       bands[nbands++] = new_bands[i];
 
   for (i = 0; i < nbands; i++)
-    if (bands[i].gain > 1e10)
-      bands[i].gain = 1e10;
+    if (bands[i].gain > max_gain)
+      bands[i].gain = max_gain;
 
   // simple bubble sort
   if (nbands > 1)
@@ -107,7 +108,7 @@ EqFIR::get_bands(EqBand *out_bands, size_t first_band, size_t out_nbands) const
   for (size_t i = 0; i < out_nbands; i++)
     out_bands[i] = bands[first_band + i];
 
-  return nbands;
+  return out_nbands;
 }
 
 double
@@ -129,7 +130,7 @@ EqFIR::set_ripple(double new_ripple)
 }
 
 void
-EqFIR::reset()
+EqFIR::clear_bands()
 {
   if (nbands)
   {
