@@ -46,7 +46,7 @@ public:
   size_t get_nbands() const { return eq.get_nbands(); };
   size_t set_bands(const EqBand *bands, size_t nbands) { return eq.set_bands(bands, nbands); }
   size_t get_bands(EqBand *bands, size_t first_band, size_t nbands) const { return eq.get_bands(bands, first_band, nbands); }
-  void reset_eq() { eq.reset(); }
+  void clear_bands() { eq.clear_bands(); }
 };
 
 #endif

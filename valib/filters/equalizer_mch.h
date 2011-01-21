@@ -63,7 +63,7 @@ public:
   size_t get_nbands(int ch_name) const;
   size_t set_bands(int ch_name, const EqBand *bands, size_t nbands);
   size_t get_bands(int ch_name, EqBand *bands, size_t first_band, size_t nbands) const;
-  void reset_eq(int ch_name);
+  void clear_bands(int ch_name);
 };
 
 #endif
