@@ -27,7 +27,7 @@
   \fn void DelayFIR::set_delay(vtime_t delay)
     \param delay Delay value
 
-    Set the delay.
+    Set the delay. Must be positive, zero delay is set otherwise.
 
   \fn vtime_t DelayFIR::get_delay() const
     Returns the current delay.
