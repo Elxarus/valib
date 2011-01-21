@@ -176,6 +176,14 @@
 				RelativePath=".\noise_buf.h"
 				>
 			</File>
+			<File
+				RelativePath=".\suite.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\suite.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\main.cpp"
