@@ -204,6 +204,10 @@
 				RelativePath=".\tests\fir\test_multi_fir.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\tests\fir\test_parallel_fir.cpp"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\main.cpp"
