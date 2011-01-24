@@ -1,27 +1,27 @@
 /*
-  MultiFIR test
+  ParallelFIR test
 */
 
 #include "fir/echo_fir.h"
 #include "fir/delay_fir.h"
-#include "fir/multi_fir.h"
+#include "fir/parallel_fir.h"
 #include "fir/param_fir.h"
 #include "bad_fir.h"
 #include <boost/scoped_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
 static const int sample_rate = 48000;
-static const double gain = 0.5;
+static const double gain = 2.0;
 
 static const FIRGen *zero_list[] = { &fir_zero };
 static const FIRGen *identity_list[] = { &fir_identity };
 
-BOOST_AUTO_TEST_SUITE(multi_fir)
+BOOST_AUTO_TEST_SUITE(parallel_fir)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {
   boost::scoped_ptr<const FIRInstance> fir;
-  MultiFIR gen;
+  ParallelFIR gen;
 
   // Empty generator produces null instance
   fir.reset(gen.make(sample_rate));
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 BOOST_AUTO_TEST_CASE(init_constructor)
 {
   boost::scoped_ptr<const FIRInstance> fir;
-  MultiFIR gen(zero_list, array_size(zero_list));
+  ParallelFIR gen(zero_list, array_size(zero_list));
 
   fir.reset(gen.make(sample_rate));
   BOOST_REQUIRE(fir);
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(set)
 {
   int ver;
   boost::scoped_ptr<const FIRInstance> fir;
-  MultiFIR gen;
+  ParallelFIR gen;
 
   // Set zero list
   ver = gen.version();
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(version)
   int ver;
   FIRGain gain1, gain2;
   FIRGen *gain_list[] = { &gain1, &gain2 };
-  MultiFIR gen(gain_list, array_size(gain_list));
+  ParallelFIR gen(gain_list, array_size(gain_list));
 
   ver = gen.version();
   gain1.set_gain(gain);
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(make)
   boost::scoped_ptr<const FIRInstance> fir;
   FIRGain gain1(gain), gain2(gain);
   BadFIR bad_gen;
-  MultiFIR gen;
+  ParallelFIR gen;
 
   // Null pointers in the list must be ignored
   FIRGen *list_with_null[] = { &gain1, 0, &gain2 };
@@ -127,53 +127,39 @@ BOOST_AUTO_TEST_CASE(make)
 
   fir.reset(gen.make(sample_rate));
   BOOST_CHECK(fir.get() == 0);
-
-  // Zero generator in the list produces zero filter
-  FIRGen *list_with_zero[] = { &gain1, &fir_zero, &gain2 };
-  gen.set(list_with_zero, array_size(list_with_zero));
-
-  fir.reset(gen.make(sample_rate));
-  BOOST_REQUIRE(fir);
-  BOOST_CHECK_EQUAL(fir->type(), firt_zero);
 }
 
-BOOST_AUTO_TEST_CASE(make_convolution)
+BOOST_AUTO_TEST_CASE(make_sum)
 {
-  // Simple convolution test.
-  // Sequence of parametric, gain and delay filters produces the same
-  // parametric filter gained and shifted.
+  // Sum HPF, LPF, Delay, Zero and Gain filters get Echo result
 
   int i;
   const int freq = 8000;   // 8kHz frequency for low-pass filter
   const double att = 50;   // 50dB atteniutaion
   const int trans = 500;   // 500Hz transition bandwidth
   const int delay = 10;    // Delay in samples
-  boost::scoped_ptr<const FIRInstance> low_pass_fir;
   boost::scoped_ptr<const FIRInstance> fir;
 
   ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
+  ParamFIR high_pass(FIR_HIGH_PASS, freq, 0, trans, att);
   DelayFIR delay_gen(vtime_t(delay) / sample_rate);
   FIRGain gain_gen(gain);
   BadFIR bad_gen;
 
-  FIRGen *convolution_list[] = { &low_pass, 0, &gain_gen, &bad_gen, &delay_gen };
-  MultiFIR gen(convolution_list, array_size(convolution_list));
-
-  low_pass_fir.reset(low_pass.make(sample_rate));
-  BOOST_REQUIRE(low_pass_fir);
+  const FIRGen *list[] = { &low_pass, 0, &high_pass, &fir_zero, &gain_gen, &delay_gen };
+  ParallelFIR gen(list, array_size(list));
 
   fir.reset(gen.make(sample_rate));
   BOOST_REQUIRE(fir);
   BOOST_CHECK_EQUAL(fir->type(), firt_custom);
-  BOOST_CHECK_EQUAL(fir->length, low_pass_fir->length + delay);
 
-  for (i = 0; i < delay; i++)
-    if (fir->data[i] != 0.0)
-      BOOST_FAIL("Convolution error");
+  for (i = 0; i < fir->length; i++)
+    if (i != fir->center && i != fir->center + delay)
+      if (fir->data[i] > SAMPLE_THRESHOLD / fir->length)
+        BOOST_FAIL("FIR build error");
 
-  for (i = 0; i < low_pass_fir->length; i++)
-    if (!EQUAL_SAMPLES(low_pass_fir->data[i] * gain, fir->data[i+delay]))
-      BOOST_FAIL("Convolution error");
+  BOOST_CHECK(EQUAL_SAMPLES(fir->data[fir->center], gain + 1.0));
+  BOOST_CHECK(EQUAL_SAMPLES(fir->data[fir->center + delay], 1.0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

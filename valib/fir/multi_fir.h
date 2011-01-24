@@ -14,7 +14,15 @@
 
   Several filters applied sequentially may be represented as a single equivalent
   FIR filter. The reason to actually build this filter is the computational
-  efficiency. Equivalent filter requires significantly less computations.
+  efficiency. Equivalent filter requires significantly less computations. In
+  conjunction with ParallelFIR it allows to build complex and efficient filters
+  from simple primitives.
+
+  \verbatim                           
+     +----------+   +----------+        +----------+
+  -->| Filter 1 |-->| Filter 2 |- ... ->| Filter n |-->
+     +----------+   +----------+        +----------+
+  \endverbatim
 
   For example, complexity of 2 FIR filters of length N when applied one-by-one
   is O(2 * log(N)) per output sample. Equivalent filter has complexity about
