@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(make_convolution)
   boost::scoped_ptr<const FIRInstance> low_pass_fir;
   boost::scoped_ptr<const FIRInstance> fir;
 
-  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
+  ParamFIR low_pass(ParamFIR::low_pass, freq, 0, trans, att);
   DelayFIR delay_gen(vtime_t(delay) / sample_rate);
   FIRGain gain_gen(gain);
   BadFIR bad_gen;

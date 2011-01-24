@@ -95,7 +95,7 @@ TEST(convolver, "Convolver test")
   const int freq = 1000;
   const int df = 100;
   const double att = 100;
-  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, df, att);
+  ParamFIR low_pass(ParamFIR::low_pass, freq, 0, df, att);
 
   const FIRInstance *fir = low_pass.make(spk.sample_rate);
   CHECK(fir != 0);

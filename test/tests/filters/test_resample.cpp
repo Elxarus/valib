@@ -106,7 +106,7 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
   // In normalized form nyquist = 0.5, so we have following parameters of the
   // bandlimiting filter: passband = q-0.5, transition band = 0.5*(1-q)
 
-  ParamFIR low_pass(FIR_LOW_PASS, q-0.5, 0, 0.5*(1-q), a + 10, true);
+  ParamFIR low_pass(ParamFIR::low_pass, q-0.5, 0, 0.5*(1-q), a + 10, true);
 
   const FIRInstance *fir = low_pass.make(rate1);
   CHECK(fir != 0);

@@ -217,10 +217,10 @@ TEST(param_fir, "ParamFIR")
   // FIRs
 
   int freq = spk.sample_rate / 4;
-  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
-  ParamFIR high_pass(FIR_HIGH_PASS, freq, 0, trans, att);
-  ParamFIR band_pass(FIR_BAND_PASS, freq - trans, freq + trans, trans, att);
-  ParamFIR band_stop(FIR_BAND_STOP, freq - trans, freq + trans, trans, att);
+  ParamFIR low_pass(ParamFIR::low_pass, freq, 0, trans, att);
+  ParamFIR high_pass(ParamFIR::high_pass, freq, 0, trans, att);
+  ParamFIR band_pass(ParamFIR::band_pass, freq - trans, freq + trans, trans, att);
+  ParamFIR band_stop(ParamFIR::band_stop, freq - trans, freq + trans, trans, att);
 
   // Test source test_src (tone -> convolver -> slice)
 
@@ -421,7 +421,7 @@ TEST(multi_fir, "MultiFIR test")
   const FIRInstance *fir_ref;
   int i, ver;
 
-  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
+  ParamFIR low_pass(ParamFIR::low_pass, freq, 0, trans, att);
   DelayFIR delay_fir(vtime_t(delay) / sample_rate);
   FIRGain gain_fir(gain);
 
@@ -536,8 +536,8 @@ TEST(parallel_fir, "ParallelFIR test")
   const FIRInstance *fir;
   int i, ver;
 
-  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
-  ParamFIR high_pass(FIR_HIGH_PASS, freq, 0, trans, att);
+  ParamFIR low_pass(ParamFIR::low_pass, freq, 0, trans, att);
+  ParamFIR high_pass(ParamFIR::high_pass, freq, 0, trans, att);
   DelayFIR delay_fir(vtime_t(delay) / sample_rate);
   FIRGain gain_fir(gain);
 

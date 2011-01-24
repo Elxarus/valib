@@ -7,15 +7,15 @@ inline double sinc(double x) { return x == 0 ? 1 : sin(x)/x; }
 inline double lpf(int i, double f) { return 2 * f * sinc(i * 2 * M_PI * f); }
 
 ParamFIR::ParamFIR():
-ver(0), type(0), f1(0.0), f2(0.0), df(0.0), a(0.0), norm(false)
+ver(0), type(low_pass), f1(0.0), f2(0.0), df(0.0), a(0.0), norm(false)
 {}
 
-ParamFIR::ParamFIR(int type_, double f1_, double f2_, double df_, double a_, bool norm_):
+ParamFIR::ParamFIR(filter_t type_, double f1_, double f2_, double df_, double a_, bool norm_):
 ver(0), type(type_), f1(f1_), f2(f2_), df(df_), a(a_), norm(norm_)
 {}
 
 void
-ParamFIR::set(int type_, double f1_, double f2_, double df_, double a_, bool norm_)
+ParamFIR::set(filter_t type_, double f1_, double f2_, double df_, double a_, bool norm_)
 {
   ver++;
   type = type_;
@@ -25,7 +25,7 @@ ParamFIR::set(int type_, double f1_, double f2_, double df_, double a_, bool nor
   a  = a_;
   norm = norm_;
 
-  if (type == FIR_BAND_PASS || type == FIR_BAND_STOP)
+  if (type == band_pass || type == band_stop)
     if (f1 > f2)
     {
       double temp = f1;
@@ -34,7 +34,7 @@ ParamFIR::set(int type_, double f1_, double f2_, double df_, double a_, bool nor
 }
 
 void
-ParamFIR::get(int *type_, double *f1_, double *f2_, double *df_, double *a_, bool *norm_)
+ParamFIR::get(filter_t *type_, double *f1_, double *f2_, double *df_, double *a_, bool *norm_)
 {
   if (type_) *type_ = type;
   if (f1_)   *f1_ = f1;
@@ -71,23 +71,23 @@ ParamFIR::make(int sample_rate) const
 
   switch (type)
   {
-    case FIR_LOW_PASS:
+    case low_pass:
       if (f1_ >= 0.5) return new IdentityFIRInstance(sample_rate);
       if (f1_ == 0.0) return new GainFIRInstance(sample_rate, db2value(a));
       break;
 
-    case FIR_HIGH_PASS:
+    case high_pass:
       if (f1_ >= 0.5) return new GainFIRInstance(sample_rate, db2value(a));
       if (f1_ == 0.0) return new IdentityFIRInstance(sample_rate);
       break;
 
-    case FIR_BAND_PASS:
+    case band_pass:
       if (f1_ >= 0.5) return new GainFIRInstance(sample_rate, db2value(a));
       if (f2_ == 0.0) return new GainFIRInstance(sample_rate, db2value(a));
       if (f1_ == 0.0 && f2_ >= 0.5) return new IdentityFIRInstance(sample_rate);
       break;
 
-    case FIR_BAND_STOP:
+    case band_stop:
       if (f1_ >= 0.5) return new IdentityFIRInstance(sample_rate);
       if (f2_ == 0.0) return new IdentityFIRInstance(sample_rate);
       if (f1_ == 0.0 && f2_ >= 0.5) return new GainFIRInstance(sample_rate, db2value(a));
@@ -110,23 +110,23 @@ ParamFIR::make(int sample_rate) const
   double alpha = kaiser_alpha(a);
   switch (type)
   {
-    case FIR_LOW_PASS:
+    case low_pass:
       for (i = 0; i < n; i++)
         filter[i] = (sample_t) (2 * f1_ * sinc((i - c) * 2 * M_PI * f1_) * kaiser_window(i - c, n, alpha));
       return fir;
 
-    case FIR_HIGH_PASS:
+    case high_pass:
       for (i = 0; i < n; i++)
         filter[i] = (sample_t) (-2 * f1_ * sinc((i - c) * 2 * M_PI * f1_) * kaiser_window(i - c, n, alpha));
       filter[c] = (sample_t) ((1 - 2 * f1_) * kaiser_window(0, n, alpha));
       return fir;
 
-    case FIR_BAND_PASS:
+    case band_pass:
       for (i = 0; i < n; i++)
         filter[i] = (sample_t) ((2 * f2_ * sinc((i - c) * 2 * M_PI * f2_) - 2 * f1_ * sinc((i - c) * 2 * M_PI * f1_)) * kaiser_window(i - c, n, alpha));
       return fir;
 
-    case FIR_BAND_STOP:
+    case band_stop:
       for (i = 0; i < n; i++)
         filter[i] = (sample_t) ((2 * f1_ * sinc((i - c) * 2 * M_PI * f1_) - 2 * f2_ * sinc((i - c) * 2 * M_PI * f2_)) * kaiser_window(i - c, n, alpha));
       filter[c] = (sample_t) ((2 * f1_ + 1 - 2 * f2_) * kaiser_window(0, n, alpha));
