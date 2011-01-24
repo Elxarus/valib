@@ -47,10 +47,13 @@ struct EqBand
            f1 f2    f3 f4
   \endverbatim
 
-  Special-cases:
+  Special cases:
   \li Equalizer with zero bands is passthrough filter.
   \li Equalizer with one band is gain filter.
   \li Equalizer with two bands is a single step filter.
+
+  Frequency response at zero frequency equals to the first band's gain.
+  Response at nyquist frequency equals to the last band's gain.
 
   Following changes are done on bands:
   \li Bands are sorted by frequency.
