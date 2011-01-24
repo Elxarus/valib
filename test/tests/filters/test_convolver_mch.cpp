@@ -25,8 +25,8 @@ TEST(convolver_mch, "ConvolverMch test")
   FIRIdentity identity_fir;
   FIRGain gain_fir(gain);
 
-  ParamFIR lpf1(FIR_LOW_PASS, freq, 0, df / 2, att);
-  ParamFIR lpf2(FIR_LOW_PASS, freq, 0, df, att);
+  ParamFIR lpf1(ParamFIR::low_pass, freq, 0, df / 2, att);
+  ParamFIR lpf2(ParamFIR::low_pass, freq, 0, df, att);
 
   NoiseGen noise1;
   NoiseGen noise2;

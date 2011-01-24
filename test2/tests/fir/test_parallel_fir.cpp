@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(make_sum)
   const int delay = 10;    // Delay in samples
   boost::scoped_ptr<const FIRInstance> fir;
 
-  ParamFIR low_pass(FIR_LOW_PASS, freq, 0, trans, att);
-  ParamFIR high_pass(FIR_HIGH_PASS, freq, 0, trans, att);
+  ParamFIR low_pass(ParamFIR::low_pass, freq, 0, trans, att);
+  ParamFIR high_pass(ParamFIR::high_pass, freq, 0, trans, att);
   DelayFIR delay_gen(vtime_t(delay) / sample_rate);
   FIRGain gain_gen(gain);
   BadFIR bad_gen;

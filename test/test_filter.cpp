@@ -45,7 +45,7 @@ int test_all_filters(Log *log)
   Mixer          mixer_ib(2048); // immediate
   Resample       resample_up;    // upsample
   Resample       resample_down;  // downsample
-  ParamFIR       low_pass_ir(FIR_LOW_PASS, 0.5, 0.0, 0.1, 100, true);
+  ParamFIR       low_pass_ir(ParamFIR::low_pass, 0.5, 0.0, 0.1, 100, true);
   Convolver      convolver(&low_pass_ir);
   Delay          delay;
   BassRedir      bass_redir_ip; // inplace

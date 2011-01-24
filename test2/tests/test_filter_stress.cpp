@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(convert_pcm2linear)
 
 BOOST_AUTO_TEST_CASE(convolver)
 {
-  ParamFIR low_pass(FIR_LOW_PASS, 0.5, 0.0, 0.1, 100, true);
+  ParamFIR low_pass(ParamFIR::low_pass, 0.5, 0.0, 0.1, 100, true);
   Convolver filter(&low_pass);
 
   open_stress_test(&filter);
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(convolver)
 
 BOOST_AUTO_TEST_CASE(convolver_mch)
 {
-  ParamFIR low_pass(FIR_LOW_PASS, 0.5, 0.0, 0.1, 100, true);
+  ParamFIR low_pass(ParamFIR::low_pass, 0.5, 0.0, 0.1, 100, true);
   ConvolverMch filter;
   // Set only one channel filter (more complex case)
   filter.set_fir(CH_L, &low_pass);
