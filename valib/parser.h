@@ -415,8 +415,8 @@ public:
 
   syn - see is_in_sync()
   new - see is_new_stream()
-  deb - see is_debris_exists()
-  frm - see is_frema_loaded()
+  deb - see has_debris()
+  frm - see has_frame()
 
   (1) - all input buffer data is known to be processed after load() call
   (2) - state is possible but not used in curent implementation.
@@ -432,8 +432,8 @@ public:
 
   syn - see is_in_sync()
   new - see is_new_stream()
-  deb - see is_debris_exists()
-  frm - see is_frema_loaded()
+  deb - see has_debris()
+  frm - see has_frame()
   \endverbatim
 
   load() call returns false in case when stream buffer was not loaded with
@@ -452,8 +452,8 @@ public:
 
   syn - see is_in_sync()
   new - see is_new_stream()
-  deb - see is_debris_exists()
-  frm - see is_frema_loaded()
+  deb - see has_debris()
+  frm - see has_frema()
 
   (1) - all input buffer is known to be processed after load_frame() call
   \endverbatim
@@ -528,6 +528,190 @@ public:
 
   We can demux SPDIF stream correctly because SPDIF header contains real
   frame size of the contained stream.
+
+  \name Init
+
+  \fn void StreamBuffer::set_parser(const HeaderParser *parser)
+    \param parser Header parser
+
+    Defines the header parser to use for stream parsing. Passing null is
+    equivalent to release_parser();
+
+  \fn const HeaderParser *StreamBuffer::get_parser() const
+    Returns currently used header parser.
+
+  \fn void StreamBuffer::release_parser()
+    Forgets the parser set with set_parser().
+
+  \name Processing
+
+  \fn void StreamBuffer::reset()
+    Reset internal buffers and prepare to receive a new stream.
+
+  \fn bool StreamBuffer::load(uint8_t **data, uint8_t *end)
+    \param data Pointer to the beginning of the input buffer
+    \param end Pointer to the end of the input buffer
+
+    Load next piece of data (frame or debris). When data was loaded, it returns
+    true and moves \c data pointer. Otherwise it returns false and moves
+    \c data pointer to the end of the input buffer.
+
+    When buffer is loaded, you can:
+    \li determine the kind of data buffered with help of has_frame() and
+        has_debris()
+    \li get access to frame buffer with get_frame() and get_frame_size()
+    \li get access to debris buffer with get_debris() and get_debris_size()
+    \li determine the format of the frame loaded with get_spk()
+
+    Frame and debris buffers are allowed to be modified inplace. So you are not
+    obligated to copy data away from these buffers for inplace processing.
+
+    \code
+      StreamBuffer stream(header_parser);
+      // .....
+      while (stream.load(data, end))
+      {
+        if (stream.has_debris())
+          // It is safe to modify debris buffer
+          memset(stream.get_debris(), stream.get_debris_size(), 0);
+
+        if (stream.has_frame())
+          // It is safe to modify frame buffer
+          bs_convert(
+            stream.get_frame(), stream.get_frame_size(), stream.header_info().bs_type,
+            stream.get_frame(), stream.get_frame_size(), BITSTREAM_8);
+      }
+    \endcode
+
+    You can reconstruct the original stream \b exactly. To do this, place the
+    debris buffer before the frame buffer. The following code shows how to
+    parse a file and write an exact copy.
+
+    \code
+      AutoFile in(input_file_name);
+      AutoFile out(output_file_name, "wb");
+      Rawdata buf(buf_size);
+      StreamBuffer stream(&ac3_header);
+
+      uint8_t *buf_pos = buf.begin();
+      uint8_t *buf_end = buf.begin();
+      while (!in.eof() || buf_pos < buf_end)
+      {
+        if (buf_pos >= buf_end)
+        {
+          size_t read_size = in.read(buf.begin(), buf.size());
+          buf_pos = buf.begin();
+          buf_end = buf_pos + read_size;
+        }
+
+        while (stream.load(&buf_pos, buf_end))
+        {
+          if (stream.has_debris())
+            out.write(stream.get_debris(), stream.get_debris_size());
+          if (stream.has_frame())
+            out.write(stream.get_frame(), stream.get_frame_size());
+        }
+      }
+
+      // StreamBuffer may have some data buffered
+      if (stream.flush())
+      {
+        if (stream.has_debris())
+          out.write(stream.get_debris(), stream.get_debris_size());
+        if (stream.has_frame())
+          out.write(stream.get_frame(), stream.get_frame_size());
+      }
+    \endcode
+
+  \fn bool StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
+    \param data Pointer to the beginning of the input buffer
+    \param end Pointer to the end of the input buffer
+
+    Loads a next frame. When the frame is loaded successfully, it returns true
+    and moves the data pointer. Otherwise, it returns false and moves the
+    pointer to the end of the input buffer. See load() for more info.
+
+    This function is more convinient than load() when you need frame data only.
+
+    Note, that you cannot reconstruct the stream exactly because inter-frame
+    data may be lost.
+
+  \fn bool StreamBuffer::flush()
+    At the end of the stream processing some data may be still buffered. To be
+    able to perfectly reconstruct the stream we must fetch this data too. This
+    function makes the buffered data available with get_frame() and
+    get_debris().
+
+    Returns true when data is available and false otherwise.
+
+  \name State flags
+
+  \fn bool StreamBuffer::is_in_sync() const
+    Returns true when synchronization sequence is found. The format of the
+    stream is available using get_spk(). Both frame and debris output is
+    possible.
+
+    This flag becomes false when sync is lost (or still not found).
+
+  \fn bool StreamBuffer::is_new_stream() const
+    Returns true when new synchronization on a new stream was done. A frame
+    of a new format is available immediately.
+
+    Returns false when stream continues without change or not in sync.
+
+  \fn bool StreamBuffer::has_frame() const
+    Returns true when a frame is available. In this case get_frame() returns
+    the pointer to the beginning of the frame and get_frame_size() returns
+    non-zero frame size.
+
+  \fn bool StreamBuffer::has_debris() const
+    Returns true when non-frame data is available. In this case get_debris()
+    returns the pointer to the beginning of the data and get_debris_size()
+    returns non-zero data size.
+
+  \name Data access
+
+  \fn const uint8_t * StreamBuffer::get_buffer() const
+    Returns pointer to the internal synchronization buffer. Not for use in most
+    cases!
+
+  \fn size_t StreamBuffer::get_buffer_size() const
+    Returns the size of the data at the internal buffer. Not for use in most
+    cases!
+
+  \fn uint8_t * StreamBuffer::get_debris() const
+    Returns pointer to non-frame data when has_debris() is true and null
+    pointer otherwise. You can modify this buffer directly for inplace
+    processing.
+
+  \fn size_t StreamBuffer::get_debris_size() const
+    Returns the size of non-frame data when has_debris() is true and zero
+    otherwise. You can use this value directly instead of has_debris().
+
+  \fn Speakers StreamBuffer::get_spk() const
+    Returns the format of the stream when is_in_sync() returns true and
+    FORMAT_UNKNOWN otherwise.
+
+  \fn uint8_t * StreamBuffer::get_frame() const
+    Returns pointer to frame data when has_frame() is true and null pointer
+    otherwise. You can modify this buffer directly for inplace processing.
+
+  \fn size_t StreamBuffer::get_frame_size() const
+    Returns the size of frame data when has_frame() is true and zero otherwise.
+    You can use this value directly instead of has_debris().
+
+  \fn size_t StreamBuffer::get_frame_interval() const
+    Returns inter-frame interval.
+
+  \fn int StreamBuffer::get_frames() const
+    Returns the total number of frames loaded since construction.
+
+  \fn string StreamBuffer::stream_info() const
+    Prints stream information.
+
+  \fn HeaderInfo StreamBuffer::header_info() const
+    Prints current frame information.
+
 ******************************************************************************/
 
 class StreamBuffer
@@ -535,10 +719,10 @@ class StreamBuffer
 protected:
   // Parser info (constant)
 
-  const HeaderParser *parser;    // header parser
-  size_t header_size;            // cached header size
-  size_t min_frame_size;         // cached min frame size
-  size_t max_frame_size;         // cached max frame size
+  const HeaderParser *parser;    //!< header parser
+  size_t header_size;            //!< cached header size
+  size_t min_frame_size;         //!< cached min frame size
+  size_t max_frame_size;         //!< cached max frame size
 
   // Buffers
   // We need a header of a previous frame to load next one, but frame data of
@@ -548,29 +732,29 @@ protected:
 
   Rawdata  buf;
 
-  uint8_t *header_buf;           // header buffer pointer
-  HeaderInfo hinfo;              // header info (parsed header buffer)
+  uint8_t *header_buf;           //!< header buffer pointer
+  HeaderInfo hinfo;              //!< header info (parsed header buffer)
 
-  uint8_t *sync_buf;             // sync buffer pointer
-  size_t   sync_size;            // size of sync buffer
-  size_t   sync_data;            // data loaded to the sync buffer
-  size_t   pre_frame;            // amount of pre-frame data allowed
-                                 // (see comment to sync() function)
+  uint8_t *sync_buf;             //!< sync buffer pointer
+  size_t   sync_size;            //!< size of the sync buffer
+  size_t   sync_data;            //!< size of data loaded at the sync buffer
+  size_t   pre_frame;            //!< amount of pre-frame data allowed
+                                 //!< (see comment to sync() function)
 
   // Data (frame data and debris)
 
-  uint8_t   *debris;             // pointer to the start of debris
-  size_t     debris_size;        // size of debris
+  uint8_t   *debris;             //!< pointer to the start of debris data
+  size_t     debris_size;        //!< size of debris data
 
-  uint8_t   *frame;              // pointer to the start of the frame
-  size_t     frame_size;         // size of the frame loaded
-  size_t     frame_interval;     // frame interval
+  uint8_t   *frame;              //!< pointer to the start of the frame
+  size_t     frame_size;         //!< size of the frame loaded
+  size_t     frame_interval;     //!< frame interval
 
   // Flags
 
-  bool in_sync;                  // we're in sync with the stream
-  bool new_stream;               // frame loaded belongs to a new stream
-  int  frames;                   // number of frames loaded
+  bool in_sync;                  //!< we're in sync with the stream
+  bool new_stream;               //!< frame loaded belongs to a new stream
+  int  frames;                   //!< number of frames loaded
 
   inline bool load_buffer(uint8_t **data, uint8_t *end, size_t required_size);
   inline void drop_buffer(size_t size);
@@ -584,7 +768,7 @@ public:
   /////////////////////////////////////////////////////////
   // Init
 
-  bool set_parser(const HeaderParser *parser);
+  void set_parser(const HeaderParser *parser);
   const HeaderParser *get_parser() const { return parser; }
   void release_parser();
 
@@ -601,8 +785,8 @@ public:
 
   bool is_in_sync()             const { return in_sync;         }
   bool is_new_stream()          const { return new_stream;      }
-  bool is_frame_loaded()        const { return frame_size  > 0; }
-  bool is_debris_exists()       const { return debris_size > 0; }
+  bool has_frame()              const { return frame_size  > 0; }
+  bool has_debris()             const { return debris_size > 0; }
 
   /////////////////////////////////////////////////////////
   // Data access

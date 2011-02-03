@@ -67,7 +67,7 @@ static void sync_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size
       streambuf.load(&ptr, end);
 
       // check debris
-      if (streambuf.is_debris_exists())
+      if (streambuf.has_debris())
       {
         debris      = streambuf.get_debris();
         debris_size = streambuf.get_debris_size();
@@ -77,7 +77,7 @@ static void sync_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size
       }
 
       // check frame & junk size
-      if (streambuf.is_frame_loaded())
+      if (streambuf.has_frame())
       {
         frame       = streambuf.get_frame();
         frame_size  = streambuf.get_frame_size();
@@ -118,7 +118,7 @@ static void passthrough_test(const HeaderParser *hparser, uint8_t *buf, size_t b
 
     // count streams & frames
     if (streambuf.is_new_stream())  streams++;
-    if (streambuf.is_frame_loaded()) frames++;
+    if (streambuf.has_frame()) frames++;
 
     debris      = streambuf.get_debris();
     debris_size = streambuf.get_debris_size();
@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(constructor)
 
   BOOST_CHECK(!buf.is_in_sync());
   BOOST_CHECK(!buf.is_new_stream());
-  BOOST_CHECK(!buf.is_frame_loaded());
-  BOOST_CHECK(!buf.is_debris_exists());
+  BOOST_CHECK(!buf.has_frame());
+  BOOST_CHECK(!buf.has_debris());
 }
 
 BOOST_AUTO_TEST_CASE(init_constructor)
@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(init_constructor)
 
   BOOST_CHECK(!buf.is_in_sync());
   BOOST_CHECK(!buf.is_new_stream());
-  BOOST_CHECK(!buf.is_frame_loaded());
-  BOOST_CHECK(!buf.is_debris_exists());
+  BOOST_CHECK(!buf.has_frame());
+  BOOST_CHECK(!buf.has_debris());
 }
 
 BOOST_AUTO_TEST_CASE(set_parser)

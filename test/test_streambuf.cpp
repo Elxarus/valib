@@ -198,8 +198,8 @@ public:
         streambuf.load(&ptr, end);
 
         // count frames and streams
-        if (streambuf.is_new_stream())   streams++;
-        if (streambuf.is_frame_loaded()) frames++;
+        if (streambuf.is_new_stream()) streams++;
+        if (streambuf.has_frame())     frames++;
 
         // get data
         debris      = streambuf.get_debris();
