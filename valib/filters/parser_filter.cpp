@@ -34,9 +34,7 @@ ParserFilter::set_parser(FrameParser *_parser)
     return true;
 
   const HeaderParser *header_parser = _parser->header_parser();
-  if (!stream.set_parser(header_parser))
-    return false;
-
+  stream.set_parser(header_parser);
   parser = _parser;
   return true;
 }

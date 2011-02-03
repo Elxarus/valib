@@ -65,12 +65,10 @@ FileParser::open(const char *_filename, const HeaderParser *_parser, size_t _max
   if (is_open()) 
     close();
 
-  if (!stream.set_parser(_parser))
-    return false;
-
   if (!f.open(_filename))
     return false;
 
+  stream.set_parser(_parser);
   max_scan = _max_scan;
   filename = strdup(_filename);
 

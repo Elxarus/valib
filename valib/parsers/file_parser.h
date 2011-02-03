@@ -48,7 +48,7 @@ public:
   bool stats(unsigned max_measurments = 100, vtime_t precision = 0.5);
 
   bool is_open() const { return f != 0; }
-  bool eof() const { return f.eof() && (buf_pos >= buf_data) && !stream.is_frame_loaded(); }
+  bool eof() const { return f.eof() && (buf_pos >= buf_data) && !stream.has_frame(); }
 
   const char *get_filename() const { return filename; }
   const HeaderParser *get_parser() const { return stream.get_parser(); }
@@ -75,7 +75,7 @@ public:
 
   bool is_in_sync()             const { return stream.is_in_sync();         }
   bool is_new_stream()          const { return stream.is_new_stream();      }
-  bool is_frame_loaded()        const { return stream.is_frame_loaded();    }
+  bool has_frame()              const { return stream.has_frame();    }
 
   Speakers get_spk()            const { return stream.get_spk();            }
   uint8_t *get_frame()          const { return stream.get_frame();          }

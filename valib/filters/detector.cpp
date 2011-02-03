@@ -65,9 +65,7 @@ Detector::init()
   if (!hparser)
     return false;
 
-  if (!stream.set_parser(hparser))
-    return false;
-
+  stream.set_parser(hparser);
   reset();
   return true;
 }
@@ -107,13 +105,13 @@ Detector::process(Chunk &in, Chunk &out)
           is_new_stream = true;
         out_spk = stream.get_spk();
 
-        if (stream.is_debris_exists())
+        if (stream.has_debris())
         {
           out.set_rawdata(stream.get_debris(), stream.get_debris_size());
           state = state_frame;
           return true;
         }
-        else if (stream.is_frame_loaded())
+        else if (stream.has_frame())
         {
           out.set_rawdata(stream.get_frame(), stream.get_frame_size());
           sync.send_frame_sync(out);
@@ -122,7 +120,7 @@ Detector::process(Chunk &in, Chunk &out)
         else
           return false;
       }
-      else if (stream.is_debris_exists())
+      else if (stream.has_debris())
       {
         if (!out_spk.is_unknown() && out_spk != spk)
           is_new_stream = true;
@@ -136,7 +134,7 @@ Detector::process(Chunk &in, Chunk &out)
         return false;
 
     case state_frame:
-      assert(stream.is_frame_loaded());
+      assert(stream.has_frame());
       out.set_rawdata(stream.get_frame(), stream.get_frame_size());
       sync.send_frame_sync(out);
       state = state_load;
@@ -157,7 +155,7 @@ Detector::flush(Chunk &out)
   {
     case state_load:
       stream.flush();
-      if (stream.is_debris_exists())
+      if (stream.has_debris())
         out.set_rawdata(stream.get_debris(), stream.get_debris_size());
       else
         out.clear();

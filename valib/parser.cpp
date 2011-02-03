@@ -110,28 +110,22 @@ StreamBuffer::StreamBuffer(const HeaderParser *_parser)
 StreamBuffer::~StreamBuffer()
 {}
 
-bool 
-StreamBuffer::set_parser(const HeaderParser *_parser)
+void
+StreamBuffer::set_parser(const HeaderParser *new_parser)
 {
   release_parser();
+  if (!new_parser) return;
 
-  if (!_parser) 
-    return false;
+  buf.allocate(new_parser->max_frame_size() * 3 + new_parser->header_size() * 2);
 
-  if  (!buf.allocate(_parser->max_frame_size() * 3 + _parser->header_size() * 2))
-    return false;
-
-  parser         = _parser;
+  parser         = new_parser;
   header_size    = parser->header_size();
   min_frame_size = parser->min_frame_size();
   max_frame_size = parser->max_frame_size();
 
   header_buf = buf.begin();
-
-  sync_buf = buf.begin() + header_size;
-  sync_size = max_frame_size * 3 + header_size;
-
-  return true;
+  sync_buf   = buf.begin() + header_size;
+  sync_size  = max_frame_size * 3 + header_size;
 }
 
 void 
@@ -475,10 +469,10 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
 bool 
 StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
 {
-  while (*data < end || is_frame_loaded() || is_debris_exists())
+  while (*data < end || has_frame() || has_debris())
   {
     load(data, end);
-    if (is_frame_loaded())
+    if (has_frame())
       return true;
   }
   return false;
