@@ -288,16 +288,16 @@ public:
     When possible, process() should not fail on error and proceed with
     with some kind of restoration procedure that produces some output.
 
-  \fn Speakers FrameParser::get_output()
+  \fn Speakers FrameParser::get_output() const
     Format of a transformed data. FORMAT_UNKNOWN may indicate an error.
 
-  \fn samples_t FrameParser::get_samples()
+  \fn samples_t FrameParser::get_samples() const
 
     For linear output format returns pointers to sample buffers.
 
     Undefined for non-linear output format.
 
-  \fn size_t FrameParser::get_nsamples()
+  \fn size_t FrameParser::get_nsamples() const
 
     For linear output returns numer of samples stored at sample buffers.
 
@@ -305,18 +305,18 @@ public:
 
     frame or 0 if number of samples is unknown.
 
-  \fn uint8_t *FrameParser::get_rawdata()
+  \fn uint8_t *FrameParser::get_rawdata() const
 
     For non-linear output returns pointers to transformed data buffer.
 
     For linear output may return a pointer to the original frame data.
 
-  \fn size_t FrameParser::get_rawsize()
+  \fn size_t FrameParser::get_rawsize() const
     For non-linear output returns size of transformed data.
     For linear output may return number of bytes actually parsed. It is useful
     to compact sparse stream.
 
-  \fn string FrameParser::info()
+  \fn string FrameParser::info() const
     Dump stream information. It may be more informative than header info but
     should contain only stream-wide information (that does not change from
     frame to frame).
