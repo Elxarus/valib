@@ -38,6 +38,7 @@
     Source returns a new stream. It may do this for the following reasons:
     \li It want the downstream to flush and prepare to receive a new stream.
     \li It wants to change the output format
+
     get_chunk() call affect this flag
 
   \fn Speakers Source::get_output() const
