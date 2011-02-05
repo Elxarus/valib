@@ -754,14 +754,6 @@
 			Name="parsers"
 			>
 			<File
-				RelativePath="..\valib\parsers\file_parser.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\valib\parsers\file_parser.h"
-				>
-			</File>
-			<File
 				RelativePath="..\valib\parsers\multi_frame.cpp"
 				>
 			</File>
@@ -1007,6 +999,14 @@
 			</File>
 			<File
 				RelativePath="..\valib\source\dsound_source.h"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\source\file_parser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\source\file_parser.h"
 				>
 			</File>
 			<File
