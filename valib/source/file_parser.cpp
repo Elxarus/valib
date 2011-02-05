@@ -1,12 +1,8 @@
+#include <vector>
 #include <sstream>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
 #include "file_parser.h"
 
-
-#define FLOAT_THRESHOLD 1e-20
-static const size_t max_buf_size = 65536;
+static const size_t buf_size = 65536;
 
 int compact_size(AutoFile::fsize_t size)
 {
@@ -34,12 +30,9 @@ const char *compact_suffix(AutoFile::fsize_t size)
 
 FileParser::FileParser()
 {
-  filename = 0;
-
-  buf = new uint8_t[max_buf_size];
-  buf_size = buf? max_buf_size: 0;
-  buf_data = 0;
-  buf_pos = 0;
+  buf.allocate(buf_size);
+  buf_pos = buf.begin();
+  buf_end = buf.begin();
 
   stat_size = 0;
   avg_frame_interval = 0;
@@ -49,31 +42,42 @@ FileParser::FileParser()
 }
 
 FileParser::~FileParser()
-{
-  close();
-  safe_delete(buf);
-}
+{}
 
 ///////////////////////////////////////////////////////////////////////////////
 // File operations
 
 bool 
-FileParser::open(const char *_filename, const HeaderParser *_parser, size_t _max_scan)
+FileParser::open(const string &new_filename, const HeaderParser *new_parser, size_t new_max_scan)
 {
-  if (!buf || !_parser || !_filename) return false;
-
   if (is_open()) 
     close();
 
-  if (!f.open(_filename))
+  if (!new_parser)
     return false;
 
-  stream.set_parser(_parser);
-  max_scan = _max_scan;
-  filename = strdup(_filename);
+  if (!f.open(new_filename.c_str()))
+    return false;
 
-  reset();
+  stream.set_parser(new_parser);
+  max_scan = new_max_scan;
+  filename = new_filename;
+
+  stream_reset();
   return true;
+}
+
+bool 
+FileParser::open_probe(const string &new_filename, const HeaderParser *new_parser, size_t new_max_scan)
+{
+  if (!open(new_filename, new_parser, new_max_scan))
+    return false;
+
+  if (probe())
+    return true;
+
+  close();
+  return false;
 }
 
 void 
@@ -81,8 +85,6 @@ FileParser::close()
 {
   stream.release_parser();
   f.close();
-
-  safe_delete(filename);
 
   stat_size = 0;
   avg_frame_interval = 0;
@@ -103,33 +105,30 @@ FileParser::probe()
 }
 
 bool
-FileParser::stats(unsigned max_measurments, vtime_t precision)
+FileParser::stats(vtime_t precision, unsigned min_measurements, unsigned max_measurements)
 {
   if (!f) return false;
 
   fsize_t old_pos = f.pos();
 
-  // If we cannot load a frame we will not gather any stats.
+  // Do not measure if we cannot load a frame.
   // (If file format is unknown measurments may take much of time)
   if (!load_frame())
   {
-    f.seek(old_pos);
+    seek(old_pos);
     return false;
   }
 
+  double precision_squared = precision * precision / 4;
   stat_size = 0;
   avg_frame_interval = 0;
   avg_bitrate = 0;
 
-  vtime_t old_length;
-  vtime_t new_length;
-
-  old_length = 0;
-  for (unsigned i = 0; i < max_measurments; i++)
+  std::vector<double> bitrate_stat;
+  for (unsigned i = 0; i < max_measurements; i++)
   {
     fsize_t file_pos = fsize_t((double)rand() * f.size() / RAND_MAX);
-    f.seek(file_pos);
-
+    seek(file_pos);
     if (!load_frame())
       continue;
 
@@ -139,18 +138,46 @@ FileParser::stats(unsigned max_measurments, vtime_t precision)
     HeaderInfo hinfo = stream.header_info();
 
     stat_size++;
+    double bitrate = double(stream.get_frame_interval() * 8 * hinfo.spk.sample_rate) / hinfo.nsamples;
     avg_frame_interval += stream.get_frame_interval();
-    avg_bitrate        += float(stream.get_frame_interval() * 8 * hinfo.spk.sample_rate) / hinfo.nsamples;
+    avg_bitrate        += bitrate;
+    bitrate_stat.push_back(bitrate);
 
     ///////////////////////////////////////////////////////
-    // Finish scanning if we have enough accuracy
+    // Stop measure when we have enough accuracy
+    //
+    // We measure bitrate and derive the duration as follow:
+    // D(b) = s/b
+    // where
+    //   d - duration
+    //   s - file size in bits
+    //   b - bitrate
+    //
+    // Therefore, duration measurement error is derived from
+    // bitrate measurement error as follow:
+    // S_d = \frac{dD(b)}{db} S_b = \frac{s}{b^2} S_b
+    //
+    // Where S_b is bitrate measurement error:
+    // S_b = \sqrt{\frac{\sum_{i=1}^N{(\bar{b}-b_i)}}{N(N-1)}}
+    //
+    // To avoid calculation of the square root, squared error is used:
+    // S_d^2 = \frac{s^2}{b^4} \cdot \frac{\sum_{i=1}^N{(\bar{b}-b_i)}}{N(N-1)}
 
-    if (precision > FLOAT_THRESHOLD)
+    if (precision == 0.0 && stat_size > min_measurements)
+      // Break when min_measurements are done
+      break;
+
+    if (precision > 0 && stat_size > min_measurements)
     {
-      new_length = double(f.size()) * 8 * stat_size / avg_bitrate;
-      if (stat_size > 10 && fabs(old_length - new_length) < precision)
+      // Break when we reach enough accuracy
+      double error_squared = 0;
+      double bitrate = avg_bitrate / stat_size;
+      for (i = 0; i < stat_size; i++)
+        error_squared += (bitrate - bitrate_stat[i])*(bitrate - bitrate_stat[i]);
+      error_squared /= stat_size * (stat_size - 1);
+      error_squared *= f.size()*f.size()*64 / (bitrate*bitrate*bitrate*bitrate);
+      if (error_squared < precision_squared)
         break;
-      old_length = new_length;
     }
   }
 
@@ -213,7 +240,7 @@ FileParser::units_factor(units_t units) const
 FileParser::fsize_t
 FileParser::get_pos() const
 {
-  return f.is_open()? fsize_t(f.pos() - buf_data + buf_pos): 0;
+  return f.is_open()? fsize_t(f.pos() - (buf_end - buf_pos)): 0;
 }
 
 double 
@@ -238,7 +265,7 @@ int
 FileParser::seek(fsize_t pos)
 {
   int result = f.seek(pos);
-  reset();
+  stream_reset();
   return result;
 }
 
@@ -246,8 +273,8 @@ int
 FileParser::seek(double pos, units_t units)
 { 
   double factor = units_factor(units);
-  if (factor > FLOAT_THRESHOLD)
-    return seek(fsize_t(pos / factor));
+  if (factor > 0)
+    return seek(fsize_t(pos / factor + 0.5));
   return -1;
 }
 
@@ -255,61 +282,67 @@ FileParser::seek(double pos, units_t units)
 // Frame-level interface (StreamBuffer interface wrapper)
 
 void
-FileParser::reset()
+FileParser::stream_reset()
 {
-  buf_data = 0;
-  buf_pos = 0;
+  buf_pos = buf.begin();
+  buf_end = buf.begin();
   stream.reset();
 }
 
 bool
 FileParser::load_frame()
 {
-  size_t sync_size = 0;
+  size_t scan_size = 0;
 
-  while (1)
+  while (!f.eof() || buf_pos < buf_end)
   {
-    ///////////////////////////////////////////////////////
-    // Load a frame
-
-    uint8_t *pos = buf + buf_pos;
-    uint8_t *end = buf + buf_data;
-    if (stream.load_frame(&pos, end))
+    if (buf_pos >= buf_end)
     {
-      buf_pos = pos - buf;
+      size_t read_size = f.read(buf.begin(), buf.size());
+      buf_pos = buf.begin();
+      buf_end = buf.begin() + read_size;
+    }
+
+    size_t data_size = buf_end - buf_pos;
+
+    if (stream.load_frame(&buf_pos, buf_end))
       return true;
-    }
 
-    ///////////////////////////////////////////////////////
-    // Stop file scanning if scanned too much
-
-    sync_size += (pos - buf) - buf_pos;
-    buf_pos = pos - buf;
-    if (max_scan > 0) // do limiting
-    {
-      if ((sync_size > stream.get_parser()->max_frame_size() * 3) && // minimum required to sync and load a frame
-          (sync_size > max_scan))                                    // limit scanning
-        return false;
-    }
-
-    ///////////////////////////////////////////////////////
-    // Fill the buffer
-
-    if (!buf_data || buf_pos >= buf_data)
-    {
-      /* Move the data
-      if (buf_data && buf_pos)
-        memmove(buf, buf + buf_pos, buf_data - buf_pos);
-      buf_pos = 0;
-      buf_data -= buf_pos;
-      */
-
-      buf_pos = 0;
-      buf_data = fread(buf, 1, max_buf_size, f);
-      if (!buf_data) return false;
-    }
-
+    scan_size += data_size;
+    if (max_scan && scan_size > max_scan)
+      return false;
   }
-  // never be here
   return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Source interface
+
+void
+FileParser::reset()
+{
+  seek(0);
+}
+
+bool
+FileParser::get_chunk(Chunk &out)
+{
+  if (load_frame())
+  {
+    out.set_rawdata(stream.get_frame(), stream.get_frame_size());
+    return true;
+  }
+  return false;
+}
+
+bool
+FileParser::new_stream() const
+{
+  return stream.is_new_stream();
+}
+
+Speakers
+FileParser::get_output() const
+{
+  return stream.get_spk();
 }

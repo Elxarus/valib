@@ -213,6 +213,14 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="source"
+			>
+			<File
+				RelativePath=".\tests\source\test_file_parser.cpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\main.cpp"
 			>
