@@ -30,6 +30,9 @@ const char *compact_suffix(AutoFile::fsize_t size)
 
 FileParser::FileParser()
 {
+  has_probe = false;
+  is_new_stream = false;
+
   buf.allocate(buf_size);
   buf_pos = buf.begin();
   buf_end = buf.begin();
@@ -86,6 +89,9 @@ FileParser::close()
   stream.release_parser();
   f.close();
 
+  has_probe = false;
+  is_new_stream = false;
+
   stat_size = 0;
   avg_frame_interval = 0;
   avg_bitrate = 0;
@@ -98,9 +104,12 @@ FileParser::probe()
 {
   if (!f) return false;
 
-  fsize_t old_pos = f.pos();
+  if (has_probe)
+    return true;
+
+  stream_reset();
   bool result = load_frame();
-  f.seek(old_pos);
+  has_probe = true;
   return result;
 }
 
@@ -287,6 +296,8 @@ FileParser::stream_reset()
   buf_pos = buf.begin();
   buf_end = buf.begin();
   stream.reset();
+  has_probe = false;
+  is_new_stream = false;
 }
 
 bool
@@ -327,8 +338,16 @@ FileParser::reset()
 bool
 FileParser::get_chunk(Chunk &out)
 {
+  if (has_probe)
+  {
+    out.set_rawdata(stream.get_frame(), stream.get_frame_size());
+    has_probe = false;
+    return true;
+  }
+
   if (load_frame())
   {
+    is_new_stream = stream.is_new_stream();
     out.set_rawdata(stream.get_frame(), stream.get_frame_size());
     return true;
   }
@@ -338,7 +357,7 @@ FileParser::get_chunk(Chunk &out)
 bool
 FileParser::new_stream() const
 {
-  return stream.is_new_stream();
+  return is_new_stream;
 }
 
 Speakers

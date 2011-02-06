@@ -180,6 +180,47 @@ BOOST_AUTO_TEST_CASE(max_scan)
   BOOST_CHECK(result);
 }
 
+// Check new_stream() behavior after probe() and seek()
+BOOST_AUTO_TEST_CASE(new_stream)
+{
+  bool result;
+  Chunk chunk;
+  const string filename = "a.ac3.03f.ac3";
+  const HeaderParser *parser = &ac3_header;
+  const Speakers spk(FORMAT_AC3, MODE_5_1, 48000);
+
+  FileParser f;
+
+  // new_stream() returns true after open()
+  result = f.open(filename, parser);
+  BOOST_REQUIRE(result);
+  BOOST_CHECK(f.get_output().is_unknown());
+
+  result = f.get_chunk(chunk);
+  BOOST_CHECK(result);
+  BOOST_CHECK(f.new_stream());
+  BOOST_CHECK(f.get_output() == spk);
+
+  // new_stream() returns false after probe()
+  result = f.open_probe(filename, parser);
+  BOOST_REQUIRE(result);
+  BOOST_CHECK(f.get_output() == spk);
+
+  result = f.get_chunk(chunk);
+  BOOST_CHECK(result);
+  BOOST_CHECK(!f.new_stream());
+  BOOST_CHECK(f.get_output() == spk);
+
+  // new_stream() returns true after seek()
+  f.seek(1000);
+  BOOST_CHECK(f.get_output().is_unknown());
+
+  result = f.get_chunk(chunk);
+  BOOST_CHECK(result);
+  BOOST_CHECK(f.new_stream());
+  BOOST_CHECK(f.get_output() == spk);
+}
+
 // Read frames and compare with raw file
 BOOST_AUTO_TEST_CASE(passthrough)
 {
@@ -216,6 +257,44 @@ BOOST_AUTO_TEST_CASE(open_probe_passthrough)
   BOOST_REQUIRE(result);
 
   compare(&f, &raw);
+}
+
+BOOST_AUTO_TEST_CASE(format_change)
+{
+  bool result;
+  Chunk chunk;
+  const string filename = "a.ac3.mix.ac3";
+  const HeaderParser *parser = &ac3_header;
+  struct {
+    Speakers spk;
+    size_t frames;
+  } streams[] = {
+    { Speakers(FORMAT_AC3, MODE_5_1, 48000), 750 },
+    { Speakers(FORMAT_AC3, MODE_STEREO, 48000), 375 },
+    { Speakers(FORMAT_AC3, MODE_5_1, 48000), 375 },
+  };
+
+  FileParser f;
+  result = f.open(filename, parser);
+  BOOST_REQUIRE(result);
+
+  size_t frame_count = 0;
+  size_t stream_count = 0;
+  while (f.get_chunk(chunk))
+  {
+    if (f.new_stream())
+    {
+      BOOST_CHECK(f.get_output() == streams[stream_count].spk);
+      if (stream_count > 0)
+        BOOST_CHECK_EQUAL(frame_count, streams[stream_count-1].frames);
+      stream_count++;
+      frame_count = 0;
+    }
+    frame_count++;
+  }
+
+  BOOST_CHECK_EQUAL(frame_count, streams[stream_count-1].frames);
+  BOOST_CHECK_EQUAL(stream_count, array_size(streams));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
