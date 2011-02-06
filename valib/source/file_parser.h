@@ -19,7 +19,53 @@
   Uses StreamBuffer to sychronize and read frames. Allows seeking and provides
   extended info about the file.
 
-  Example:
+  This source has data-driven output format. I.e. it does not report the
+  format immediately after file open. To actually detect the data format use
+  probe().
+
+  Also, seek() function drops output format back to FORMAT_UNKNOWN. You may
+  also use probe() to determine the data format at the new point.
+
+  Note, that it is a difference in handling new_stream() with and without
+  probe(). Without probe(), new_stream() returns true after first get_chunk()
+  call because output format is determined for the first time. With probe()
+  new_stream() is not reported because format is already known.
+
+  Call sequence without probe():
+  \verbatim
+  +-------------+----------------------------+----------
+  | call        | result                     | Comment
+  +-------------+----------------------------+----------
+    open()        get_output() = spk_unknown   Data format is not known
+
+    get_chunk()   get_output() = data_format   Data format is detected
+                  new_stream() = true          Indicate the format change
+
+    get_chunk()   get_output() = data_format   Data format remains the same
+                  new_stream() = false         No format change
+  \endverbatim
+
+  Call sequence with probe():
+  \verbatim
+  +-------------+----------------------------+----------
+  | call        | result                     | Comment
+  +-------------+----------------------------+----------
+    open()        get_output() = spk_unknown   Data format is not known
+
+    probe()       get_output() = data_format   Detect data format explicitly
+
+    get_chunk()   get_output() = data_format   Data format remains the same
+                  new_stream() = false         No format change
+  \endverbatim
+
+  Therefore, you have to setup the downstream after probe() explicitly, but
+  this setup will not be broken with new_stream() mechanism.
+  
+  If you still wish to use new_stream() format change mechanism to initialize
+  downstream after probe(), you may call seek(0). This will drop the format
+  back to FROMAT_UNKNOWN and new_stream() will work as usual.
+
+  Usage example:
   \code
     Chunk chunk;
     FileParser f(file_name);
@@ -201,6 +247,9 @@ protected:
 
   AutoFile f;                //!< File we operate on
   string filename;           //!< File name
+
+  bool has_probe;            //!< probe() was done
+  bool is_new_stream;        //!< new_stream flag
 
   Rawdata buf;               //!< Data buffer
   uint8_t *buf_pos;          //!< Current buffer position pointer
