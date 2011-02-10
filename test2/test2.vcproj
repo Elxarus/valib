@@ -221,6 +221,22 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="parsers"
+			>
+			<Filter
+				Name="aac"
+				>
+				<File
+					RelativePath=".\tests\parsers\aac\test_aac_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\parsers\aac\test_adts_header.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
 		<File
 			RelativePath=".\main.cpp"
 			>

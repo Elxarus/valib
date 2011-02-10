@@ -266,6 +266,7 @@ using std::string;
 
 // AAC
 #define FORMAT_AAC_FRAME  17
+#define FORMAT_AAC_ADTS   18
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format masks

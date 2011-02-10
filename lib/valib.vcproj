@@ -108,7 +108,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -169,7 +169,7 @@
 				PreprocessorDefinitions="NDEBUG"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -231,7 +231,7 @@
 				PreprocessorDefinitions="NDEBUG"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -946,6 +946,26 @@
 				</File>
 				<File
 					RelativePath="..\valib\parsers\spdif\spdif_wrapper.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="aac"
+				>
+				<File
+					RelativePath="..\valib\parsers\aac\aac_adts_header.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\aac\aac_adts_header.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\aac\aac_adts_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\aac\aac_adts_parser.h"
 					>
 				</File>
 			</Filter>
