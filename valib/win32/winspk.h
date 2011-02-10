@@ -50,6 +50,7 @@ typedef struct {
 #define WAVE_FORMAT_MPEG 0x0050
 #define WAVE_FORMAT_AVI_AC3 0x2000
 #define WAVE_FORMAT_AVI_DTS 0x2001
+#define WAVE_FORMAT_AVI_AAC 0x00FF
 #define WAVE_FORMAT_DOLBY_AC3_SPDIF 0x0092
 
 bool wfx2spk(WAVEFORMATEX *wfx, Speakers &spk);

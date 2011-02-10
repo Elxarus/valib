@@ -231,6 +231,8 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
 {
   int format, mask;
   WAVEFORMATEXTENSIBLE *wfex = 0;
+  uint8_t *format_data = 0;
+  size_t data_size = 0;
 
   if (!wfx)
     return false;
@@ -309,6 +311,10 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         format = FORMAT_MPA;
         break;
 
+      case WAVE_FORMAT_AVI_AAC:
+        format = FORMAT_AAC_FRAME;
+        break;
+
       default:
         return false;
     }
@@ -328,9 +334,17 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         case 8: mask = MODE_7_1;    break;
         default: return false;
       }
+
+    // format data
+    if (wfx->cbSize)
+    {
+      format_data = reinterpret_cast<uint8_t *>(wfx+1);
+      data_size = wfx->cbSize;
+    }
   }
 
   spk = Speakers(format, mask, wfx->nSamplesPerSec);
+  spk.set_format_data(format_data, data_size);
   return true;
 }
 

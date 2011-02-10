@@ -7,11 +7,17 @@
   ** Detector
   ** Spdifer/Despdifer
   ** AudioDecoder
+
+  AACParser is not noise-resistant
 */
 
 #include "filter.h"
+#include "parsers/aac/aac_adts_header.h"
+#include "parsers/aac/aac_adts_parser.h"
+#include "source/file_parser.h"
 #include "source/generator.h"
 #include "source/raw_source.h"
+#include "source/source_filter.h"
 #include "../all_filters.h"
 #include "fir/param_fir.h"
 #include <boost/test/unit_test.hpp>
@@ -491,6 +497,40 @@ BOOST_AUTO_TEST_CASE(spectrum)
 {
   Spectrum filter;
   filter.set_length(1024);
+
+  open_stress_test(&filter);
+  filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
+}
+
+///////////////////////////////////////////////////////////
+// Codecs
+
+BOOST_AUTO_TEST_CASE(aac_parser)
+{
+  AACParser filter;
+  open_stress_test(&filter);
+
+  FileParser f;
+  f.open("a.aac.03f.adts", &adts_header);
+  BOOST_REQUIRE(f.is_open());
+
+  ADTSParser parser;
+  ParserFilter parser_filter(&parser);
+  SourceFilter source(&f, &parser_filter);
+
+  Chunk chunk;
+  BOOST_REQUIRE(source.get_chunk(chunk));
+  BOOST_REQUIRE(filter.open(source.get_output()));
+  filter_stress_test(&filter, &source);
+
+  // AACParser does not pass noise stress test!
+  // FAAD2 is not noise-resistant library.
+  // noise_stress_test(Speakers(FORMAT_AAC_FRAME, 0, 0), &filter);
+}
+
+BOOST_AUTO_TEST_CASE(ac3_enc)
+{
+  AC3Enc filter;
 
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
