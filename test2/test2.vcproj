@@ -237,6 +237,14 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="filters"
+			>
+			<File
+				RelativePath=".\tests\filters\test_filter_switch.cpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\main.cpp"
 			>
