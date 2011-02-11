@@ -12,6 +12,7 @@
 */
 
 #include "filter.h"
+#include "parsers/ac3/ac3_header.h"
 #include "parsers/aac/aac_adts_header.h"
 #include "parsers/aac/aac_adts_parser.h"
 #include "source/file_parser.h"
@@ -418,6 +419,21 @@ BOOST_AUTO_TEST_CASE(dvd_graph_spdif)
 
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_PES, 0, 0), &filter, "a.madp.mix.pes");
+}
+
+BOOST_AUTO_TEST_CASE(frame_splitter_ac3)
+{
+  FrameSplitter filter(&ac3_header);
+  open_stress_test(&filter);
+  filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3");
+  noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
+}
+
+BOOST_AUTO_TEST_CASE(gain)
+{
+  Gain filter;
+  open_stress_test(&filter);
+  filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(levels)

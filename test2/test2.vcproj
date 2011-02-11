@@ -244,6 +244,10 @@
 				RelativePath=".\tests\filters\test_filter_switch.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\tests\filters\test_frame_splitter.cpp"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\main.cpp"

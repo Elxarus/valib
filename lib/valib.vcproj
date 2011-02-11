@@ -618,6 +618,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\frame_splitter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\frame_splitter.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\gain.cpp"
 				>
 			</File>
