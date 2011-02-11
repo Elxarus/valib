@@ -34,7 +34,9 @@ public:
   void reset_hresult()               { hr = S_OK;      }
   HRESULT get_hresult()              { return hr;      }
 
+  /////////////////////////////////////////////////////////
   // Sink interface
+
   virtual bool can_open(Speakers spk) const;
   virtual bool init();
   virtual void process(const Chunk &chunk);
