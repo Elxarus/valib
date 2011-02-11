@@ -103,6 +103,9 @@ bool
 AACParser::process(Chunk &in, Chunk &out)
 {
   NeAACDecFrameInfo info;
+  bool sync = in.sync;
+  vtime_t time = in.time;
+  in.set_sync(false, 0);
 
   while (in.size)
   {
@@ -112,7 +115,7 @@ AACParser::process(Chunk &in, Chunk &out)
         info.bytesconsumed > in.size) // decoder used more bytes than we have
     {
       reset();
-      in.size = 0;
+      in.clear();
       return false;
     }
 
@@ -139,9 +142,12 @@ AACParser::process(Chunk &in, Chunk &out)
         for (int i = 0, j = ch; i < nsamples; i++, j += nch)
           buf[ch][i] = s[j];
 
+      // Reorder channels
       samples_t samples = buf.samples();
       samples.reorder_to_std(out_spk, aac_order);
-      out.set_linear(samples, nsamples);
+
+      // Return
+      out.set_linear(samples, nsamples, sync, time);
       return true;
     }
   }
