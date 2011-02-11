@@ -734,8 +734,8 @@ private:
   Filter *f; /// Delegatee filter.
 
 protected:
-  void wrap(Filter *)
-  { f = f; }
+  void wrap(Filter *f_)
+  { f = f_; }
 
   void unwrap()
   { f = 0; }
