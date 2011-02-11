@@ -614,6 +614,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\filter_switch.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\gain.cpp"
 				>
 			</File>
