@@ -16,6 +16,8 @@
 #include "filters/equalizer.h"
 #include "filters/equalizer_mch.h"
 #include "filters/filter_graph.h"
+#include "filters/filter_switch.h"
+#include "filters/frame_splitter.h"
 #include "filters/gain.h"
 #include "filters/levels.h"
 #include "filters/mixer.h"
