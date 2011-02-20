@@ -214,8 +214,7 @@ Converter::init()
   if (convert == 0)
     return false;
 
-  if (!buf.allocate(spk.nch() * nsamples * sample_size(format)))
-    return false;
+  buf.allocate(spk.nch() * nsamples * sample_size(format));
 
   if (format == FORMAT_LINEAR)
   {
@@ -260,8 +259,7 @@ Converter::process(Chunk &in, Chunk &out)
     return !out.is_dummy();
   }
 
-  if (convert == 0)
-    throw Error(this, "Cannot convert: no conversion function");
+  assert(convert != 0);
 
   if (format == FORMAT_LINEAR)
     return convert_pcm2linear(in, out);
