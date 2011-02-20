@@ -196,12 +196,10 @@ Convolver::process(Chunk &in, Chunk &out)
   if (fir_changed())
   {
     if (need_flushing())
-    {
-      flush(out);
-      return true;
-    }
+      return flush(out);
+
     if (!open(spk))
-      throw Error(this, "Cannot handle fir change");
+      THROW(EFirChange());
   }
 
   /////////////////////////////////////////////////////////

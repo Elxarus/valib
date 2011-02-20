@@ -43,6 +43,9 @@ protected:
   { return state == state_filter && post_samples > 0; }
 
 public:
+  //! Fir change error
+  struct EFirChange : public Filter::Error {};
+
   Convolver(const FIRGen *gen_ = 0);
   ~Convolver();
 

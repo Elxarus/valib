@@ -67,17 +67,7 @@ class Source : boost::noncopyable
 {
 public:
   //! Processing error exception
-  class Error : public EProcessing
-  {
-  public:
-    Error(Source *source_, int code_, string text_):
-    EProcessing(source_->name(), code_, text_)
-    {}
-
-    Error(Source *source_, string text_):
-    EProcessing(source_->name(), text_)
-    {}
-  };
+  struct Error : public EProcessing {};
 
   Source() {}
   virtual ~Source() {}

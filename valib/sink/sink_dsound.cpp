@@ -1,6 +1,7 @@
 #include <math.h>
 #include "sink_dsound.h"
 #include "../win32/winspk.h"
+#include "../win32/hresult_exception.h"
 
 #define SAFE_RELEASE(p) { if (p) p->Release(); p = 0; }
 
@@ -413,6 +414,7 @@ DSoundSink::process(const Chunk &chunk)
 
   size_t  size = chunk.size;
   uint8_t *buf = chunk.rawdata;
+  HRESULT hr;
 
   while (size)
   {
@@ -428,8 +430,8 @@ DSoundSink::process(const Chunk &chunk)
     // (check free space in playback buffer and size of 
     // remaining input data)
 
-    if FAILED(ds_buf->GetCurrentPosition(&play_cur, 0))
-      throw Error(this, "ds_buf->GetCurrentPosition()");
+    if FAILED(hr = ds_buf->GetCurrentPosition(&play_cur, 0))
+      THROW(EDirectSound() << boost::errinfo_api_function("IDirectSoundBuffer::GetCurrentPosition()") << errinfo_hresult(hr));
 
     if (play_cur > cur)
       data_size = play_cur - cur;
@@ -451,8 +453,8 @@ DSoundSink::process(const Chunk &chunk)
 
     if (data_size)
     {
-      if FAILED(ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
-        throw Error(this, "ds_buf->Lock()");
+      if FAILED(hr = ds_buf->Lock(cur, data_size, &data1, &data1_bytes, &data2, &data2_bytes, 0))
+        THROW(EDirectSound() << boost::errinfo_api_function("IDirectSoundBuffer::Lock()") << errinfo_hresult(hr));
 
       memcpy(data1, buf, data1_bytes);
       buf += data1_bytes;
@@ -467,8 +469,8 @@ DSoundSink::process(const Chunk &chunk)
         cur += data2_bytes;
       }
 
-      if FAILED(ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
-        throw Error(this, "ds_buf->Unlock()");
+      if FAILED(hr = ds_buf->Unlock(data1, data1_bytes, data2, data2_bytes))
+        THROW(EDirectSound() << boost::errinfo_api_function("IDirectSoundBuffer::Unlock()") << errinfo_hresult(hr));
     }
 
     ///////////////////////////////////////////////////////

@@ -74,6 +74,9 @@ public:
   int  encode_frame();
 
 public:
+  //! Encoding error exception
+  struct EncodingError : public Filter::Error {};
+
   AC3Enc();
 
   int  get_bitrate() const;

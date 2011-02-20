@@ -290,7 +290,7 @@ FilterGraph::process_chain(Chunk &out)
       // the processing state) down.
 
       if (!build_chain(node))
-        throw Error(this, "process() error: cannot rebuild the chain");
+        THROW(EChainRebuild());
 
       is_new_stream = true;
       node->state = state_processing;
@@ -352,7 +352,7 @@ FilterGraph::reset()
       if (node->next->id != next_id(node->id, node->filter->get_output()))
       {
         if (!build_chain(node))
-          throw Error(this, "reset() error: cannot rebuild the chain");
+          THROW(EChainRebuild());
         break;
       }
       else

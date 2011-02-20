@@ -1,5 +1,6 @@
 #include "sink_dshow.h"
 #include "../win32/winspk.h"
+#include "../win32/hresult_exception.h"
 
 DEFINE_GUID(MEDIASUBTYPE_AVI_AC3, 
 0x00002000, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
@@ -328,12 +329,14 @@ DShowSink::process(const Chunk &chunk)
 
   uint8_t *chunk_buf = chunk.rawdata;
   size_t chunk_size = chunk.size;
+  HRESULT temp_hr;
 
+  hr = E_FAIL;
   while (chunk_size)
   {
     // Allocate output sample
-    if FAILED(GetDeliveryBuffer(&sample, 0, 0, 0))
-      throw Error(this, "GetDeliveryBuffer() failed");
+    if FAILED(temp_hr = GetDeliveryBuffer(&sample, 0, 0, 0))
+      THROW(Error() << boost::errinfo_api_function("CBaseOutputPin::GetDeliveryBuffer()") << errinfo_hresult(temp_hr));
 
     // Dynamic format change
     if (send_mt)
@@ -359,10 +362,10 @@ DShowSink::process(const Chunk &chunk)
     // Data
     sample->GetPointer((BYTE**)&sample_buf);
     sample_size = (long)MIN((size_t)sample->GetSize(), chunk_size);
-    if FAILED(sample->SetActualDataLength(sample_size))
+    if FAILED(temp_hr = sample->SetActualDataLength(sample_size))
     {
       sample->Release();
-      throw Error(this, "SetActualDataLength() failed");
+      THROW(Error() << boost::errinfo_api_function("IMediaSample::SetActualDataLength()") << errinfo_hresult(temp_hr));
     }
     memcpy(sample_buf, chunk_buf, sample_size);
     chunk_buf  += sample_size;
@@ -391,6 +394,6 @@ DShowSink::process(const Chunk &chunk)
     hr = Deliver(sample);
     sample->Release();
     if FAILED(hr)
-      throw Error(this, "Deliver() failed");
+      THROW(Error() << boost::errinfo_api_function("CBaseOutputPin::Deliver()") << errinfo_hresult(hr));
   }
 }

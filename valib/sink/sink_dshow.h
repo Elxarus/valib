@@ -26,6 +26,9 @@ protected:
   HRESULT SetMediaType(const CMediaType *mt);
 
 public:
+  //! Processing error exception
+  struct Error : public Sink::Error {};
+
   DShowSink(CTransformFilter* pFilter, HRESULT* phr);
 
   void send_discontinuity()          { send_dc = true; }

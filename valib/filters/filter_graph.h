@@ -118,6 +118,9 @@ protected:
   { return 0; }
 
 public:
+  //! Chain rebuild error
+  struct EChainRebuild : public Filter::Error {};
+
   enum { node_start = -1, node_end = -2, node_err = -3 };
 
   FilterGraph();

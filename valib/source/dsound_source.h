@@ -13,6 +13,12 @@
 class DSoundSource : public Source
 {
 protected:
+  //! Processing error exception
+  struct Error : public Source::Error {};
+
+  //! DirectSound error
+  struct EDirectSound : public Source::Error {};
+
   /////////////////////////////////////////////////////////
   // Parameters set by user and
   // directly determined from thoose
