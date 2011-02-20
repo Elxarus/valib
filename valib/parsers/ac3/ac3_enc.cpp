@@ -273,7 +273,7 @@ AC3Enc::process(Chunk &in, Chunk &out)
   {
     // encode frame
     if (!encode_frame())
-      throw Error(this, "Encoding error");
+      THROW(EncodingError());
 
     out.set_rawdata(frame_buf, frame_size);
     out.set_sync(sync, time);

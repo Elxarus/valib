@@ -492,17 +492,7 @@ class Filter : boost::noncopyable
 {
 public:
   //! Processing error exception
-  class Error : public EProcessing
-  {
-  public:
-    Error(Filter *filter_, int code_, string text_):
-    EProcessing(filter_->name(), code_, text_)
-    {}
-
-    Error(Filter *filter_, string text_):
-    EProcessing(filter_->name(), text_)
-    {}
-  };
+  struct Error : public EProcessing {};
 
   Filter() {};
   virtual ~Filter() {};

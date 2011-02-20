@@ -314,6 +314,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\exception.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filter.cpp"
 				>
 			</File>
@@ -1083,6 +1087,14 @@
 			</File>
 			<File
 				RelativePath="..\valib\win32\cpu.h"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\win32\hresult_exception.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\win32\hresult_exception.h"
 				>
 			</File>
 			<File

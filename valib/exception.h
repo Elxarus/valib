@@ -7,29 +7,16 @@
 #define VALIB_EXCEPTION_H
 
 #include <string>
+#include <boost/exception/all.hpp>
 
-using std::string;
+#define THROW(x) BOOST_THROW_EXCEPTION(x)
 
 /**************************************************************************//**
   \class ValibException
   \brief Base class for valib library exceptions.
 ******************************************************************************/
 
-class ValibException
-{
-public:
-  string source; //!< Error source (class name)
-  int code;      //!< Error code
-  string text;   //!< Error text
-
-  ValibException(string source_, int code_, string text_):
-  source(source_), code(code_), text(text_)
-  {}
-
-  ValibException(string source_, string text_):
-  source(source_), code(-1), text(text_)
-  {}
-};
+struct ValibException : virtual std::exception, virtual boost::exception {};
 
 /**************************************************************************//**
   \class EProcessing
@@ -39,16 +26,14 @@ public:
   functions).
 ******************************************************************************/
 
-class EProcessing : public ValibException
-{
-public:
-  EProcessing(string source_, int code_, string text_):
-  ValibException(source_, code_, text_)
-  {}
+struct EProcessing : public ValibException {};
 
-  EProcessing(string source_, string text_):
-  ValibException(source_, text_)
-  {}
-};
+/*****************************************************************************/
+
+#include "spk.h"
+
+typedef boost::error_info<struct tag_errinfo_hresult,Speakers > errinfo_spk;
+inline std::string to_string(errinfo_spk const &e)
+{ return e.value().print(); }
 
 #endif

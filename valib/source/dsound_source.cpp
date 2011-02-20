@@ -4,6 +4,7 @@
 #include <ksmedia.h>
 #include "dsound_source.h"
 #include "../win32/winspk.h"
+#include "../win32/hresult_exception.h"
 
 DSoundSource::DSoundSource()
 {
@@ -183,9 +184,10 @@ DSoundSource::get_chunk(Chunk &chunk)
   void *data2;
   DWORD len1;
   DWORD len2;
+  HRESULT hr;
 
-  if FAILED(ds_buf->GetCurrentPosition(0, &read_cur)) 
-    throw Error(this, "ds_buf->GetCurrentPosition()");
+  if FAILED(hr = ds_buf->GetCurrentPosition(0, &read_cur)) 
+    THROW(EDirectSound() << boost::errinfo_api_function("IDirectSoundCaptureBuffer::GetCurrentPosition()") << errinfo_hresult(hr));
 
   data_size = buf_size + read_cur - cur;
   if (data_size >= buf_size)
@@ -197,8 +199,8 @@ DSoundSource::get_chunk(Chunk &chunk)
     return true;
   }
 
-  if FAILED(ds_buf->Lock(cur, data_size, &data1, &len1, &data2, &len2, 0))
-    throw Error(this, "ds_buf->Lock()");
+  if FAILED(hr = ds_buf->Lock(cur, data_size, &data1, &len1, &data2, &len2, 0))
+    THROW(EDirectSound() << boost::errinfo_api_function("IDirectSoundCaptureBuffer::Lock()") << errinfo_hresult(hr));
 
   memcpy(out_buf.begin(), data1, len1);
   memcpy(out_buf.begin() + len1, data2, len2);
@@ -208,7 +210,7 @@ DSoundSource::get_chunk(Chunk &chunk)
     cur -= buf_size;
 
   if FAILED(ds_buf->Unlock(data1, len1, data2, len2))
-    throw Error(this, "ds_buf->Unlock()");
+    THROW(EDirectSound() << boost::errinfo_api_function("IDirectSoundCaptureBuffer::Unlock()") << errinfo_hresult(hr));
 
   chunk.set_rawdata(out_buf.begin(), len1 + len2, true, time);
   time += (len1 + len2) * bytes2time;

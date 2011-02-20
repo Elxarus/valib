@@ -75,6 +75,12 @@ protected:
   bool try_open(WAVEFORMATEX *wf) const;
 
 public:
+  //! Processing error exception
+  struct Error : public Sink::Error {};
+
+  //! DirectSound error
+  struct EDirectSound : public Sink::Error {};
+
   DSoundSink();
   ~DSoundSink();
 

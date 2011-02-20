@@ -46,6 +46,9 @@ protected:
   void process_convolve();
 
 public:
+  //! Fir change error
+  struct EFirChange : public Filter::Error {};
+
   ConvolverMch();
   ~ConvolverMch();
 

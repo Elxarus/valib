@@ -117,17 +117,7 @@ class Sink : boost::noncopyable
 {
 public:
   //! Processing error exception
-  class Error : public EProcessing
-  {
-  public:
-    Error(Sink *sink_, int code_, string text_):
-    EProcessing(sink_->name(), code_, text_)
-    {}
-
-    Error(Sink *sink_, string text_):
-    EProcessing(sink_->name(), text_)
-    {}
-  };
+  struct Error : public EProcessing {};
 
   Sink() {}
   virtual ~Sink() {}

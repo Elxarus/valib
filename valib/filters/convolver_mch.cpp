@@ -292,12 +292,10 @@ ConvolverMch::process(Chunk &in, Chunk &out)
   if (fir_changed())
   {
     if (need_flushing())
-    {
-      flush(out);
-      return true;
-    }
+      return flush(out);
+
     if (!open(spk))
-      return false;
+      THROW(EFirChange());
   }
 
   /////////////////////////////////////////////////////////
