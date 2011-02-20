@@ -275,17 +275,17 @@ DShowSink::can_open(Speakers _spk) const
   CMediaType mt;
   if (spk2mt(_spk, mt, true) && query_downstream(&mt))
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz extensible): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s extensible): Ok", this, _spk.print().c_str()));
     return true;
   }
   else if (spk2mt(_spk, mt, false) && query_downstream(&mt))
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz): Ok", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s): Ok", this, _spk.print().c_str()));
     return true;
   }
   else
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s %s %iHz): format refused", this, _spk.mode_text(), _spk.format_text(), _spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s): format refused", this, _spk.print().c_str()));
     return false;
   }
 }
@@ -300,17 +300,17 @@ DShowSink::init()
   CMediaType mt;
   if (spk2mt(spk, mt, true) && set_downstream(&mt))
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz extensible): Ok %s", this, spk.mode_text(), spk.format_text(), spk.sample_rate, send_mt? "(send mediatype)": ""));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s extensible): Ok %s", this, spk.print().c_str(), send_mt? "(send mediatype)": ""));
     return true;
   } 
   else if (spk2mt(spk, mt, false) && set_downstream(&mt))
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Ok %s", this, spk.mode_text(), spk.format_text(), spk.sample_rate, send_mt? "(send mediatype)": ""));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s): Ok %s", this, spk.print().c_str(), send_mt? "(send mediatype)": ""));
     return true;
   }
   else
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s %s %iHz): Failed", this, spk.mode_text(), spk.format_text(), spk.sample_rate));
+    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s): Failed", this, spk.print().c_str()));
     return false;
   }
 };
