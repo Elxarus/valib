@@ -140,7 +140,6 @@ public:
 
 public:
   AC3Parser();
-  ~AC3Parser();
 
   /////////////////////////////////////////////////////////
   // FrameParser overrides
