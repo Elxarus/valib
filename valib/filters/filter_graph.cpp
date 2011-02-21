@@ -54,7 +54,7 @@ FilterGraph::print_chain() const
     text += string() + '(' + spk.print() + ')';
 
     // print filter name
-    text += std::string() + " -> " + node->filter->name() + " -> ";
+    text += string() + " -> " + node->filter->name() + " -> ";
   }
 
   // Output format
@@ -363,11 +363,17 @@ FilterGraph::reset()
 string
 FilterGraph::info() const
 {
-  string text = print_chain();
-  text += "\n";
+  string info;
   for (Node *node = start.next; node->id != node_end; node = node->next)
-    text += string() + node->filter->name() + "\n"
-                     + node->filter->info() + "\n";
+  {
+    string filter_info = node->filter->info();
+    if (filter_info.length() > 0)
+      info += node->filter->name() + "\n" + filter_info + "\n";
+  }
+
+  string text = print_chain();
+  if (info.length() > 0)
+    text += "\n\n" + info;
 
   return text;
 }
