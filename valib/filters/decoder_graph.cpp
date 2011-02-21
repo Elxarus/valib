@@ -1,69 +1,9 @@
-#include <stdio.h>
+#include <sstream>
 #include "decoder_graph.h"
 
 DecoderGraph::DecoderGraph()
 :proc(4096)
 {}
-
-///////////////////////////////////////////////////////////
-// User format
-
-size_t
-DecoderGraph::get_info(char *_buf, size_t _len) const
-{
-  Speakers spk;
-  static const size_t buf_size = 2048;
-  char buf[buf_size];
-  size_t pos = 0;
-
-  spk = get_input();
-  pos += sprintf(buf + pos, "Input format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
-
-  spk = proc.get_user();
-  pos += sprintf(buf + pos, "User format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
-
-  spk = get_output();
-  pos += sprintf(buf + pos, "Output format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
-/*
-  if (next_id(node_start) != node_end)
-  {
-    pos += sprintf(buf + pos, "\nDecoding chain:\n");
-    pos += chain_text(buf + pos, buf_size - pos);
-
-    pos += sprintf(buf + pos, "\n\nFilters info (in order of processing):\n\n");
-    int node = next_id(node_start);
-    while (node != node_end)
-    {
-      const char *filter_name = get_name(node);
-      if (!filter_name) filter_name = "Unknown filter";
-      pos += sprintf(buf + pos, "%s:\n", filter_name);
-
-      switch (node)
-      {
-      case node_decode:
-        pos += dec.get_info(buf + pos, buf_size - pos);
-        break;
-
-      case node_proc:
-        pos += proc.get_info(buf + pos, buf_size - pos);
-        pos += sprintf(buf + pos, "\n");
-        break;
-
-      default:
-        pos += sprintf(buf + pos, "-\n");
-        break;
-      }
-      pos += sprintf(buf + pos, "\n");
-      node = next_id(node);
-    }
-  }
-*/
-  if (pos + 1 > _len) pos = _len - 1;
-  memcpy(_buf, buf, pos + 1);
-  _buf[pos] = 0;
-  return pos;
-}
-
 
 /////////////////////////////////////////////////////////////////////////////
 // Filter overrides
@@ -72,6 +12,20 @@ void
 DecoderGraph::reset()
 {
   FilterGraph::reset();
+}
+
+string
+DecoderGraph::info() const
+{
+  using std::endl;
+  std::stringstream result;
+
+  result << "Input format: " << get_input().print() << endl;
+  result << "User format: " << proc.get_user().print() << endl;
+  result << "Output format: " << get_output().print() << endl;
+
+  result << endl << "Filter chain:" << endl << FilterGraph::info();
+  return result.str();
 }
 
 /////////////////////////////////////////////////////////////////////////////
