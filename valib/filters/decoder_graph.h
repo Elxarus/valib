@@ -24,15 +24,10 @@ public:
   DecoderGraph();
 
   /////////////////////////////////////////////////////////////////////////////
-  // DecoderGraph interface
-
-  // Summary information
-  size_t get_info(char *_buf, size_t _len) const;
-
-  /////////////////////////////////////////////////////////////////////////////
   // Filter overrides
 
   virtual void reset();
+  virtual string info() const;
 
 protected:
   enum state_t 
