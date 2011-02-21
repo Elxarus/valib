@@ -31,18 +31,6 @@ DecoderGraph::info() const
 /////////////////////////////////////////////////////////////////////////////
 // FilterGraph overrides
 
-std::string
-DecoderGraph::get_name(int node) const
-{
-  switch (node)
-  {
-    case node_despdif: return "Despdif";
-    case node_decode:  return "Decoder";
-    case node_proc:    return "Processor";
-  }
-  return 0;
-}
-
 Filter *
 DecoderGraph::init_filter(int node, Speakers spk)
 {
