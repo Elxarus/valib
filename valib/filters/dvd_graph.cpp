@@ -1,5 +1,4 @@
 #include <sstream>
-#include <stdio.h>
 #include "dvd_graph.h"
 
 DVDGraph::DVDGraph(int _nsamples, const Sink *_sink)

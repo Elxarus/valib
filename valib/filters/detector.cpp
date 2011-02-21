@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "detector.h"
 #include "../parsers/spdif/spdif_header.h"
 #include "../parsers/mpa/mpa_header.h"
