@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <sstream>
 #include "defs.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,39 +52,42 @@ static char info_str[1024];
 
 const char *valib_build_info()
 {
-  static bool init = false;
-  if (!init)
-  {
-    int ptr = 0;
-    ptr += sprintf(info_str + ptr, "Compiler: "
-    #if defined(_MSC_VER)
-      "MSVC %i\n", _MSC_VER);
-    #elif defined(__GNUC__)
-      "GCC %s\n", __VERSION__);
-    #else
-      "Unknown%s\n",
-    #endif
+  using std::endl;
+  static const char *info = 0;
+  static std::string str;
 
-    ptr += sprintf(info_str + ptr, "Debug/Release: "
-    #ifdef _DEBUG
-      "Debug\n");
-    #else
-      "Release\n");
-    #endif
+  if (info) return info;
 
-    ptr += sprintf(info_str + ptr, "Build date: " __DATE__ " " __TIME__"\n");
-    ptr += sprintf(info_str + ptr, "Number of channels: %i\n", NCHANNELS);
-    ptr += sprintf(info_str + ptr, "Sample format: "
-    #ifdef FLOAT_SAMPLE
-      "float\n");
-    #else
-      "double\n");
-    #endif
-    ptr += sprintf(info_str + ptr, "Sample size: %i\n", sizeof(sample_t));
-    init = true;
-  }
+  std::stringstream stream;
+  stream << "Compiler: " <<
+  #if defined(_MSC_VER)
+    "MSVC " << _MSC_VER << endl;
+  #elif defined(__GNUC__)
+    "GCC " << __VERSION__ << endl;
+  #else
+    "Unknown" << endl;
+  #endif
 
-  return info_str;
+  stream << "Build: " <<
+  #ifdef _DEBUG
+    "Debug" << endl;
+  #else
+    "Release" << endl;
+  #endif
+
+  stream << "Build date: " << __DATE__ " " __TIME__ << endl;
+  stream << "Number of channels: " << NCHANNELS << endl;
+  stream << "Sample format: " <<
+  #ifdef FLOAT_SAMPLE
+    "float" << endl;
+  #else
+    "double" << endl;
+  #endif
+  stream << "Sample size: " << sizeof(sample_t) << endl;
+
+  str = stream.str();
+  info = str.c_str();
+  return info;
 }
 
 const char *valib_credits()
