@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "frame_splitter.h"
 
 FrameSplitter::FrameSplitter()
