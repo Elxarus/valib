@@ -138,13 +138,11 @@ public:
   // SPDIF status
   int get_spdif_status() const;
 
-  // Summary information
-  size_t get_info(char *_buf, size_t _len) const;
-
   /////////////////////////////////////////////////////////////////////////////
   // Filter overrides
 
   virtual void reset();
+  string  info() const;
 
 protected:
   Speakers user_spk;

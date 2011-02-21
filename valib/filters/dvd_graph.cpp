@@ -1,3 +1,4 @@
+#include <sstream>
 #include <stdio.h>
 #include "dvd_graph.h"
 
@@ -312,135 +313,99 @@ DVDGraph::get_spdif_status() const
   return spdif_status;
 }
 
-size_t
-DVDGraph::get_info(char *_buf, size_t _len) const
+string
+DVDGraph::info() const
 {
-  Speakers spk;
-  static const size_t buf_size = 2048;
-  char buf[buf_size];
-  size_t pos = 0;
+  using std::endl;
+  std::stringstream result;
 
-  spk = get_input();
-  pos += sprintf(buf + pos, "Input format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
-
-  spk = user_spk;
-  pos += sprintf(buf + pos, "User format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
-
-  spk = get_output();
-  pos += sprintf(buf + pos, "Output format: %s %s %i\n", spk.format_text(), spk.mode_text(), spk.sample_rate);
+  result << "Input format: " << get_input().print() << endl;
+  result << "User format: " << user_spk.print() << endl;
+  result << "Output format: " << get_output().print() << endl;
 
   if (use_spdif)
   {
-    pos += sprintf(buf + pos, "\nUse SPDIF\n");
+    result << endl << "Use SPDIF" << endl;
 
-    pos += sprintf(buf + pos, "  SPDIF status: ");
+    // SPDIF status
+
+    result << "SPDIF status: ";
     switch (spdif_status)
     {
-      case SPDIF_MODE_NONE:        pos += sprintf(buf + pos, "No data\n"); break;
-      case SPDIF_MODE_DISABLED:    pos += sprintf(buf + pos, "Disabled "); break;
-      case SPDIF_MODE_PASSTHROUGH: pos += sprintf(buf + pos, "SPDIF passthrough\n"); break;
-      case SPDIF_MODE_ENCODE:      pos += sprintf(buf + pos, "AC3 encode\n"); break;
-      default:                     pos += sprintf(buf + pos, "Unknown\n"); break;
-    }
+      case SPDIF_MODE_NONE:        result << "No data"; break;
+      case SPDIF_MODE_PASSTHROUGH: result << "SPDIF passthrough"; break;
+      case SPDIF_MODE_ENCODE:      result << "AC3 encode"; break;
+      case SPDIF_MODE_DISABLED:
+        result << "Disabled ";
+        switch (spdif_err)
+        {
+          case SPDIF_ERR_STEREO_PCM:       result << "(Do not encode stereo PCM)"; break;
+          case SPDIF_ERR_FORMAT:           result << "(Format is not allowed for passthrough)"; break;
+          case SPDIF_ERR_SAMPLE_RATE:      result << "(Disallowed sample rate)"; break;
+          case SPDIF_ERR_SINK:             result << "(SPDIF output is not supported)"; break;
+          case SPDIF_ERR_ENCODER_DISABLED: result << "(AC3 encoder disabled)"; break;
+          case SPDIF_ERR_PROC:             result << "(Cannot determine format to encode)"; break;
+          case SPDIF_ERR_ENCODER:          result << "(Encoder does not support the format given)"; break;
+        }
+        break;
 
-    if (spdif_status == SPDIF_MODE_DISABLED)
-    {
-      switch (spdif_err)
-      {
-        case SPDIF_ERR_STEREO_PCM:       pos += sprintf(buf + pos, "(Do not encode stereo PCM)\n"); break;
-        case SPDIF_ERR_FORMAT:           pos += sprintf(buf + pos, "(Format is not allowed for passthrough)\n"); break;
-        case SPDIF_ERR_SAMPLE_RATE:      pos += sprintf(buf + pos, "(Disallowed sample rate)\n"); break;
-        case SPDIF_ERR_SINK:             pos += sprintf(buf + pos, "(SPDIF output is not supported)\n"); break;
-        case SPDIF_ERR_ENCODER_DISABLED: pos += sprintf(buf + pos, "(AC3 encoder disabled)\n"); break;
-        case SPDIF_ERR_PROC:             pos += sprintf(buf + pos, "(Cannot determine format to encode)\n"); break;
-        case SPDIF_ERR_ENCODER:          pos += sprintf(buf + pos, "(Encoder does not support the format given)\n"); break;
-        default:                         pos += sprintf(buf + pos, "\n"); break;
-      }
+      default: result << "Unknown"; break;
     }
+    result << endl;
 
-    pos += sprintf(buf + pos, "  SPDIF passthrough for:");
-    if (spdif_pt & FORMAT_MASK_MPA) pos += sprintf(buf + pos, " MPA");
-    if (spdif_pt & FORMAT_MASK_AC3) pos += sprintf(buf + pos, " AC3");
-    if (spdif_pt & FORMAT_MASK_DTS) pos += sprintf(buf + pos, " DTS");
-    pos += sprintf(buf + pos, spdif_pt? "\n": " -\n");
+    // SPDIF passthrough formats
+
+    result << "  SPDIF passthrough for:";
+    if (spdif_pt & FORMAT_MASK_MPA) result << " MPA";
+    if (spdif_pt & FORMAT_MASK_AC3) result << " AC3";
+    if (spdif_pt & FORMAT_MASK_DTS) result << " DTS";
+    if (spdif_pt == 0) result << " -";
+    result << endl;
+
+    // Encode to AC3 option
 
     if (spdif_encode)
-      pos += sprintf(buf + pos, "  Use AC3 encoder (%s)\n",
-        spdif_stereo_pt? "do not encode stereo PCM": "encode stereo PCM");
+      result << "  Use AC3 encoder " << 
+        spdif_stereo_pt? "(do not encode stereo PCM)": "(encode stereo PCM)";
     else
-      pos += sprintf(buf + pos, "  Do not use AC3 encoder\n");
+      result << "  Do not use AC3 encoder";
+    result << endl;
+
+    // SPDIF as PCM option
 
     if (spdif_as_pcm)
-      pos += sprintf(buf + pos, "  SPDIF as PCM output");
+      result << "  SPDIF as PCM output" << endl;
+
+    // Check SPDIF sample rate
 
     if (spdif_check_sr)
     {
       if (!spdif_allow_48 && !spdif_allow_44 && !spdif_allow_32)
-        pos += sprintf(buf + pos, "  Check SPDIF sample rate: NO ONE SAMPLE RATE ALLOWED!\n");
+        result << "  Check SPDIF sample rate: NO ONE SAMPLE RATE ALLOWED!";
       else
       {
-        pos += sprintf(buf + pos, "  Check SPDIF sample rate (allow:");
-        if (spdif_allow_48) pos += sprintf(buf + pos, " 48kHz");
-        if (spdif_allow_44) pos += sprintf(buf + pos, " 44.1kHz");
-        if (spdif_allow_32) pos += sprintf(buf + pos, " 32kHz");
-        pos += sprintf(buf + pos, ")\n");
+        result << "  Check SPDIF sample rate (allow:";
+        if (spdif_allow_48) result << " 48kHz";
+        if (spdif_allow_44) result << " 44.1kHz";
+        if (spdif_allow_32) result << " 32kHz";
+        result << ")";
       }
     }
     else
-      pos += sprintf(buf + pos, "  Do not check SPDIF sample rate\n");
+      result << "  Do not check SPDIF sample rate";
+    result << endl;
+
+    // Query sink option
 
     if (query_sink)
-      pos += sprintf(buf + pos, "  Query for SPDIF output support\n");
+      result << "  Query for SPDIF output support";
     else
-      pos += sprintf(buf + pos, "  Do not query for SPDIF output support\n");
+      result << "  Do not query for SPDIF output support";
+    result << endl;
   }
-/*
-  if (chain_next(node_start) != node_end)
-  {
-    pos += sprintf(buf + pos, "\nDecoding chain:\n");
-    pos += chain_text(buf + pos, buf_size - pos);
 
-    pos += sprintf(buf + pos, "\n\nFilters info (in order of processing):\n\n");
-    int node = chain_next(node_start);
-    while (node != node_end)
-    {
-      const char *filter_name = get_name(node);
-      if (!filter_name) filter_name = "Unknown filter";
-      pos += sprintf(buf + pos, "%s:\n", filter_name);
-
-      switch (node)
-      {
-      case state_spdif_pt:
-        pos += spdifer_pt.get_info(buf + pos, buf_size - pos);
-        break;
-
-      case state_decode:
-        pos += dec.get_info(buf + pos, buf_size - pos);
-        break;
-
-      case state_proc:
-      case state_proc_enc:
-        pos += proc.get_info(buf + pos, buf_size - pos);
-        pos += sprintf(buf + pos, "\n");
-        break;
-
-      case state_spdif_enc:
-        pos += spdifer_enc.get_info(buf + pos, buf_size - pos);
-        break;
-
-      default:
-        pos += sprintf(buf + pos, "-\n");
-        break;
-      }
-      pos += sprintf(buf + pos, "\n");
-      node = chain_next(node);
-    }
-  }
-*/
-  if (pos + 1 > _len) pos = _len - 1;
-  memcpy(_buf, buf, pos + 1);
-  _buf[pos] = 0;
-  return pos;
+  result << endl << "Filter chain:" << endl << FilterGraph::info();
+  return result.str();
 }
 
 
