@@ -320,7 +320,11 @@ void
 DShowSink::process(const Chunk &chunk)
 {
   if (!m_Connected)
+  {
+    hr = VFW_E_NOT_CONNECTED;
+    THROW(Error() << errinfo_hresult(hr));
     return;
+  }
 
   IMediaSample *sample;
 
