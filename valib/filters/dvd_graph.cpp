@@ -423,27 +423,6 @@ DVDGraph::reset()
 /////////////////////////////////////////////////////////////////////////////
 // FilterGraph overrides
 
-std::string
-DVDGraph::get_name(int node) const
-{
-  switch (node)
-  {
-    case state_demux:       return "Demux";
-    case state_detector:    return "Detector";
-    case state_despdif:     return "Despdif";
-    case state_spdif_pt:    return "Spdifer";
-    case state_decode:      return "Decoder";
-    case state_proc:
-    case state_proc_enc:
-                            return "Processor";
-    case state_encode:      return "Encoder";
-    case state_spdif_enc:   return "Spdifer";
-    case state_spdif2pcm:   return "SPDIF->PCM";
-    case state_dejitter:    return "Dejitter";
-  }
-  return 0;
-}
-
 Filter *
 DVDGraph::init_filter(int node, Speakers spk)
 {

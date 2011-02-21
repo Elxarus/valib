@@ -42,7 +42,6 @@ protected:
 
   virtual int next_id(int id, Speakers spk) const;
   virtual Filter *init_filter(int id, Speakers spk);
-  virtual std::string get_name(int id) const;
 };
 
 #endif

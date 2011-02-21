@@ -101,9 +101,6 @@ protected:
   //
   // void uninit_filter(int id)
   //   Filter was removed from the chain.
-  //
-  // const char *get_name()
-  //   Return the filter's name.
 
   virtual int next_id(int id, Speakers spk) const
   { return id == node_start? node_end: node_err; }
@@ -113,9 +110,6 @@ protected:
 
   virtual void uninit_filter(int id)
   {}
-
-  virtual string get_name(int id) const
-  { return 0; }
 
 public:
   //! Chain rebuild error
@@ -171,12 +165,12 @@ protected:
   {
     int id;
     Filter *filter;
-    string name;
 
-    Node(int id_, Filter *filter_, const string &name_ = string()):
-    id(id_), filter(filter_), name(name_) {}
+    Node(int id_, Filter *filter_):
+    id(id_), filter(filter_)
+    {}
 
-    bool operator ==(int id_)          const { return id == id_;         }
+    bool operator ==(int id_)         const { return id == id_;         }
     bool operator ==(Filter *filter_) const { return filter == filter_; }
   };
 
@@ -189,7 +183,6 @@ protected:
 
   virtual int next_id(int id, Speakers spk) const;
   virtual Filter *init_filter(int id, Speakers spk);
-  virtual string get_name(int id) const;
 
 public:
   FilterChain();
@@ -231,8 +224,8 @@ public:
   //   Destroy the chain and release all filters
   //   immediately. Current processing is interrupted.
 
-  bool add_front(Filter *filter, const string &name = string());
-  bool add_back(Filter *filter, const string &name = string());
+  bool add_front(Filter *filter);
+  bool add_back(Filter *filter);
 
   void remove(Filter *filter);
   void clear();

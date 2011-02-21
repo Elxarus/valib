@@ -186,7 +186,6 @@ protected:
   /////////////////////////////////////////////////////////////////////////////
   // FilterGraph2 overrides
 
-  virtual std::string get_name(int id) const;
   virtual Filter *init_filter(int id, Speakers spk);
   virtual int next_id(int is, Speakers spk) const;
 

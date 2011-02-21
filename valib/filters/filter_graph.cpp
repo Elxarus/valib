@@ -535,23 +535,23 @@ FilterChain::~FilterChain()
 {}
 
 bool
-FilterChain::add_front(Filter *filter, const string &name)
+FilterChain::add_front(Filter *filter)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
 
-  nodes.insert(++nodes.begin(), Node(id++, filter, name));
+  nodes.insert(++nodes.begin(), Node(id++, filter));
   invalidate();
   return true;
 }
 
 bool
-FilterChain::add_back(Filter *filter, const string &name)
+FilterChain::add_back(Filter *filter)
 {
   if (!filter || find(nodes.begin(), nodes.end(), filter) != nodes.end())
     return false;
 
-  nodes.insert(--nodes.end(), Node(id++, filter, name));
+  nodes.insert(--nodes.end(), Node(id++, filter));
   invalidate();
   return true;
 }
@@ -596,12 +596,4 @@ FilterChain::init_filter(int id_, Speakers spk_)
   const_list_iter it = find(nodes.begin(), nodes.end(), id_);
   if (it == nodes.end()) return 0;
   return it->filter;
-}
-
-std::string
-FilterChain::get_name(int id_) const
-{
-  const_list_iter it = find(nodes.begin(), nodes.end(), id_);
-  if (it == nodes.end()) return 0;
-  return it->name.c_str();
 }
