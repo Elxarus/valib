@@ -36,13 +36,11 @@ protected:
 
 public:
   Detector();
-  ~Detector();
 
   /////////////////////////////////////////////////////////
   // Own interface
 
   int  get_frames() const { return stream.get_frames(); }
-  string get_info() const { return stream.stream_info(); }
   HeaderInfo header_info() const { return stream.header_info(); }
 
   /////////////////////////////////////////////////////////
@@ -60,6 +58,9 @@ public:
 
   virtual Speakers get_output() const
   { return out_spk; }
+
+  string info() const
+  { return stream.stream_info(); }
 };
 
 #endif

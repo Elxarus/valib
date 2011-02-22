@@ -30,10 +30,6 @@ Detector::Detector()
   uni_header.set_parsers(uni_parsers, array_size(uni_parsers));
 }
 
-Detector::~Detector()
-{
-}
-
 const HeaderParser *
 Detector::find_parser(Speakers spk) const
 {
@@ -100,7 +96,7 @@ Detector::process(Chunk &in, Chunk &out)
 
       if (stream.is_in_sync())
       {
-        if (!out_spk.is_unknown() && stream.is_new_stream())
+        if (out_spk.is_unknown() || stream.is_new_stream())
           is_new_stream = true;
         out_spk = stream.get_spk();
 
@@ -121,7 +117,7 @@ Detector::process(Chunk &in, Chunk &out)
       }
       else if (stream.has_debris())
       {
-        if (!out_spk.is_unknown() && out_spk != spk)
+        if (out_spk.is_unknown() || out_spk != spk)
           is_new_stream = true;
         out_spk = spk;
 
