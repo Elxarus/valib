@@ -241,6 +241,10 @@
 			Name="filters"
 			>
 			<File
+				RelativePath=".\tests\filters\test_cache.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\filters\test_detector.cpp"
 				>
 			</File>
