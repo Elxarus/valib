@@ -16,14 +16,25 @@ vtime_t
 CacheFilter::get_size() const
 { return buf_size; }
 
+size_t
+CacheFilter::get_nsamples() const
+{ return buf_samples; }
+
 void
 CacheFilter::set_size(vtime_t new_size)
 {
+  if (!is_open())
+  {
+    // No buffer reallocation required in the closed state
+    buf_size = new_size;
+    return;
+  }
+
   const int nch = spk.nch();
 
   if (new_size < 0) new_size = 0;
 
-  int new_buf_samples = (int)(new_size * spk.sample_rate + 0.5);
+  int new_buf_samples = round<int>(new_size * spk.sample_rate);
   if (new_buf_samples == buf_samples)
     return;
 
@@ -84,7 +95,7 @@ CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t si
   if (size < (size_t)cached_samples)
     actual_size = (int)size;
 
-  int start_pos = int((stream_time - time) * spk.sample_rate + 0.5);
+  int start_pos = round<int>((stream_time - time) * spk.sample_rate);
 
   if (start_pos < actual_size) start_pos = actual_size;
   if (start_pos > cached_samples) start_pos = cached_samples;
@@ -111,7 +122,7 @@ CacheFilter::get_samples(int ch_name, vtime_t time, sample_t *samples, size_t si
       if (order[ch] == ch_name)
       {
         copy_samples(samples, buf[ch] + start_pos, size1);
-        copy_samples(samples + size1, buf[ch], size1);
+        copy_samples(samples + size1, buf[ch], size2);
         break;
       }
   }
@@ -138,7 +149,7 @@ bool
 CacheFilter::init()
 {
   stream_time = 0;
-  buf_samples = (int)(buf_size * spk.sample_rate + 0.5);
+  buf_samples = round<int>(buf_size * spk.sample_rate);
   buf.allocate(spk.nch(), buf_samples);
   buf.zero();
   cached_samples = 0;
@@ -147,10 +158,19 @@ CacheFilter::init()
 }
 
 void
-CacheFilter::reset()
+CacheFilter::uninit()
 {
   stream_time = 0;
+  buf_samples = 0;
+  cached_samples = 0;
+  pos = 0;
+}
+
+void
+CacheFilter::reset()
+{
   buf.zero();
+  stream_time = 0;
   cached_samples = 0;
   pos = 0;
 }
