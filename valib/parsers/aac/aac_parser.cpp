@@ -53,6 +53,11 @@ info2spk(const NeAACDecFrameInfo &info)
 AACParser::AACParser(): h_aac(0)
 {}
 
+AACParser::~AACParser()
+{
+  uninit();
+}
+
 bool
 AACParser::can_open(Speakers spk) const
 {

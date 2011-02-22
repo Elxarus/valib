@@ -14,6 +14,7 @@ protected:
 
 public:
   AACParser();
+  ~AACParser();
 
   bool can_open(Speakers spk) const;
   bool init();
