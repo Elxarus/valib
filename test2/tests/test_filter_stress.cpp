@@ -73,8 +73,6 @@ public:
     {
       if (new_stream())
         out_spk = get_output();
-      else if (out_spk.is_unknown())
-        out_spk = get_output();
       else if (get_output() != out_spk)
         BOOST_REQUIRE_EQUAL(get_output(), out_spk);
     }
