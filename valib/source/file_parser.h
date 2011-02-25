@@ -270,7 +270,6 @@ public:
   inline double units_factor(units_t units) const;
 
   FileParser();
-  FileParser(const string &filename, const HeaderParser *parser, size_t max_scan = 0);
   ~FileParser();
 
   /////////////////////////////////////////////////////////////////////////////
