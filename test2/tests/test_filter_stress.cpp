@@ -542,6 +542,19 @@ BOOST_AUTO_TEST_CASE(aac_parser)
   // noise_stress_test(Speakers(FORMAT_AAC_FRAME, 0, 0), &filter);
 }
 
+BOOST_AUTO_TEST_CASE(ac3_parser)
+{
+  AC3Parser filter;
+  open_stress_test(&filter);
+
+  FileParser source;
+  source.open_probe("a.ac3.03f.ac3", &ac3_header);
+  BOOST_REQUIRE(source.is_open());
+  filter_stress_test(&filter, &source);
+
+  noise_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter);
+}
+
 BOOST_AUTO_TEST_CASE(ac3_enc)
 {
   AC3Enc filter;

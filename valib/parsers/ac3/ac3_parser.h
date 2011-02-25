@@ -1,9 +1,9 @@
 #ifndef VALIB_AC3_PARSER_H
 #define VALIB_AC3_PARSER_H
 
-#include "../../buffer.h"
-#include "../../parser.h"
 #include "../../bitstream.h"
+#include "../../buffer.h"
+#include "../../filter.h"
 #include "ac3_defs.h"
 #include "ac3_imdct.h"
 
@@ -128,7 +128,7 @@ public:
   int8_t lfebap[7];
 };
 
-class AC3Parser : public FrameParser, public AC3Info, public AC3FrameState
+class AC3Parser : public SimpleFilter, public AC3Info, public AC3FrameState
 {
 public:
   bool do_crc;        // do crc check
@@ -142,20 +142,21 @@ public:
   AC3Parser();
 
   /////////////////////////////////////////////////////////
-  // FrameParser overrides
+  // SimpleFilter overrides
 
-  virtual const HeaderParser *header_parser() const;
+  bool can_open(Speakers spk) const;
+  bool init();
 
-  virtual void reset();
-  virtual bool process(uint8_t *frame, size_t size);
+  void reset();
+  bool process(Chunk &in, Chunk &out);
 
-  virtual Speakers  get_output()   const { return spk;               }
-  virtual samples_t get_samples()  const { return samples;           }
-  virtual size_t    get_nsamples() const { return AC3_FRAME_SAMPLES; }
-  virtual uint8_t  *get_rawdata()  const { return 0;                 }
-  virtual size_t    get_rawsize()  const { return 0;                 }
+  bool new_stream() const
+  { return new_stream_flag; }
 
-  virtual string info() const;
+  Speakers get_output() const
+  { return out_spk; }
+
+  string info() const;
 
 #ifndef AC3_DEBUG 
 protected:
@@ -166,10 +167,11 @@ public:
   /////////////////////////////////////////////////////////
   // AC3 parse
 
-  Speakers  spk;        // output format
+  Speakers  out_spk;    // output format
   uint8_t  *frame;      // frame data
   size_t    frame_size; // frame size
   int       bs_type;    // bitstream type
+  bool      new_stream_flag;
 
   SampleBuf samples;    // samples buffer
   SampleBuf delay;      // delayed samples buffer
@@ -178,7 +180,7 @@ public:
 
   int block;
 
-  bool start_parse(uint8_t *frame, size_t size);
+  bool parse_frame(uint8_t *frame, size_t size);
   bool crc_check();
   bool decode_block();
   bool parse_header();

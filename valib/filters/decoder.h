@@ -8,7 +8,6 @@
 
 #include "parser_filter.h"
 #include "../parsers/mpa/mpa_parser.h"
-#include "../parsers/ac3/ac3_parser.h"
 #include "../parsers/dts/dts_parser.h"
 #include "../parsers/multi_frame.h"
 
@@ -19,14 +18,13 @@ protected:
   ParserFilter parser;
 
   MPAParser mpa;
-  AC3Parser ac3;
   DTSParser dts;
   MultiFrame multi_parser;
 
 public:
   AudioDecoder(): FilterWrapper(&parser)
   {
-    FrameParser *parsers[] = { &ac3, &dts, &mpa };
+    FrameParser *parsers[] = { &dts, &mpa };
     multi_parser.set_parsers(parsers, array_size(parsers));
     parser.set_parser(&multi_parser);
   }
