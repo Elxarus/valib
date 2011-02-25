@@ -39,7 +39,7 @@ CacheFilter::set_size(vtime_t new_size)
     return;
 
   int new_cached_samples = cached_samples;
-  if (new_buf_samples < buf_samples)
+  if (new_buf_samples < new_cached_samples)
     new_cached_samples = new_buf_samples;
 
   int new_pos = pos;
@@ -74,7 +74,7 @@ CacheFilter::set_size(vtime_t new_size)
   if (new_buf_samples > buf_samples)
   {
     move_samples(buf, pos + new_buf_samples - buf_samples, buf, pos, nch, buf_samples - pos);
-    zero_samples(buf, pos, new_buf_samples - buf_samples);
+    zero_samples(buf, pos, nch, new_buf_samples - buf_samples);
   }
 
   buf_size = new_size;
