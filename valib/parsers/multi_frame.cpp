@@ -27,9 +27,6 @@ MultiFrame::set_parsers(FrameParser **_parsers, size_t _nparsers)
 {
   release_parsers();
 
-  if (!multi_header.set_parsers(_parsers, _nparsers))
-    return false;
-
   parsers = new FrameParser *[_nparsers];
   if (!parsers)
   {
@@ -40,6 +37,11 @@ MultiFrame::set_parsers(FrameParser **_parsers, size_t _nparsers)
   nparsers = _nparsers;
   for (size_t i = 0; i < nparsers; i++)
     parsers[i] = _parsers[i];
+
+  MultiHeader::list_t hparsers;
+  for (size_t i = 0; i < nparsers; i++)
+    hparsers.push_back(parsers[i]->header_parser());
+  multi_header.set_parsers(hparsers);
 
   reset();
   return true;
