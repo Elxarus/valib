@@ -106,4 +106,44 @@ public:
 
 };
 
+class SampleBufNoise : public SampleBuf
+{
+public:
+  RNG rng;
+
+  SampleBufNoise()
+  {}
+
+  SampleBufNoise(unsigned nch, size_t nsamples, int seed):
+  rng(seed), SampleBuf(nch, nsamples)
+  {
+    fill_noise();
+  }
+
+  inline void fill_noise()
+  {
+    for (unsigned ch = 0; ch < f_nch; ch++)
+      rng.fill_samples(f_samples[ch], f_nsamples);
+  }
+
+  inline void fill_noise(int seed)
+  {
+    rng.seed(seed);
+    fill_noise();
+  }
+
+  inline void allocate_noise(unsigned nch, size_t nsamples)
+  {
+    allocate(nch, nsamples);
+    fill_noise();
+  }
+
+  inline void allocate_noise(unsigned nch, size_t nsamples, int seed)
+  {
+    allocate(nch, nsamples);
+    fill_noise(seed);
+  }
+
+};
+
 #endif
