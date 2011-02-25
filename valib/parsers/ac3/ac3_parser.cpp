@@ -65,12 +65,19 @@ AC3Parser::AC3Parser()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// FrameParser overrides
+// SimpleFilter overrides
 
-const HeaderParser *
-AC3Parser::header_parser() const
+bool
+AC3Parser::can_open(Speakers spk) const
 {
-  return &ac3_header;
+  return spk.format == FORMAT_AC3;
+}
+
+bool
+AC3Parser::init()
+{
+  reset();
+  return true;
 }
 
 void 
@@ -79,10 +86,11 @@ AC3Parser::reset()
   memset((AC3Info*)this, 0, sizeof(AC3Info));
   memset((AC3FrameState*)this, 0, sizeof(AC3FrameState));
 
-  spk = spk_unknown;
+  out_spk = spk_unknown;
   frame = 0;
   frame_size = 0;
   bs_type = 0;
+  new_stream_flag = false;
 
   block = 0;
   samples.zero();
@@ -90,29 +98,24 @@ AC3Parser::reset()
 }
 
 bool
-AC3Parser::process(uint8_t *frame, size_t size)
+AC3Parser::process(Chunk &in, Chunk &out)
 {
-  if (!start_parse(frame, size))
+  bool sync = in.sync;
+  vtime_t time = in.time;
+  in.set_sync(false, 0);
+
+  if (in.size == 0)
+    return false;
+
+  if (!parse_frame(in.rawdata, in.size))
   {
     errors++;
     return false;
   }
 
-  if (!parse_header())
-  {
-    errors++;
-    return false;
-  }
-
-  while (block < AC3_NBLOCKS)
-    if (!decode_block())
-    {
-      errors++;
-      return false;
-    }
-
+  in.clear();
+  out.set_linear(samples, AC3_FRAME_SAMPLES, sync, time);
   frames++;
-
   return true;
 }
 
@@ -120,11 +123,11 @@ string
 AC3Parser::info() const 
 {
   using std::endl;
-  int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * spk.sample_rate / 512000;
-  int cpl_freq = cplinu? cplstrtmant * spk.sample_rate / 512000: max_freq;
+  int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * out_spk.sample_rate / 512000;
+  int cpl_freq = cplinu? cplstrtmant * out_spk.sample_rate / 512000: max_freq;
 
   std::stringstream result;
-  result << "Format: " << spk.print() << endl;
+  result << "Format: " << out_spk.print() << endl;
   result << "Bitrate: " << bitrate << endl;
   result << "Stream: " << (bs_type == BITSTREAM_8? "8 bit": "16bit low endian") << endl;
   result << "Frame size: " << frame_size << endl;
@@ -141,9 +144,12 @@ AC3Parser::info() const
 // AC3 parse
 
 bool
-AC3Parser::start_parse(uint8_t *_frame, size_t _size)
+AC3Parser::parse_frame(uint8_t *_frame, size_t _size)
 {
   HeaderInfo hinfo;
+
+  if (_size < ac3_header.header_size())
+    return false;
 
   if (!ac3_header.parse_header(_frame, &hinfo))
     return false;
@@ -151,8 +157,8 @@ AC3Parser::start_parse(uint8_t *_frame, size_t _size)
   if (hinfo.frame_size > _size)
     return false;
 
-  spk = hinfo.spk;
-  spk.format = FORMAT_LINEAR;
+  out_spk = hinfo.spk;
+  out_spk.format = FORMAT_LINEAR;
   frame = _frame;
   frame_size = hinfo.frame_size;
   bs_type = hinfo.bs_type;
@@ -166,6 +172,14 @@ AC3Parser::start_parse(uint8_t *_frame, size_t _size)
       return false;
 
   bs.set(frame, 0, frame_size * 8);
+
+  if (!parse_header())
+    return false;
+
+  while (block < AC3_NBLOCKS)
+    if (!decode_block())
+      return false;
+
   return true;
 }
 
@@ -361,14 +375,14 @@ AC3Parser::decode_block()
 
   if (do_imdct)
   {
-    int nfchans = spk.lfe()? spk.nch() - 1: spk.nch();
+    int nfchans = out_spk.lfe()? out_spk.nch() - 1: out_spk.nch();
     for (int ch = 0; ch < nfchans; ch++)
       if (blksw[ch])
         imdct.imdct_256(s[ch], delay[ch]);
       else
         imdct.imdct_512(s[ch], delay[ch]);
 
-    if (spk.lfe())
+    if (out_spk.lfe())
       imdct.imdct_512(s[nfchans], d[nfchans]);
   }
 

@@ -236,6 +236,14 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="ac3"
+				>
+				<File
+					RelativePath=".\tests\parsers\ac3\test_ac3_parser.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="filters"
