@@ -61,7 +61,7 @@ public:
   /////////////////////////////////////////////////////////
   // Own interface
 
-  bool set_parser(const HeaderParser *parser);
+  void set_parser(const HeaderParser *parser);
   const HeaderParser *get_parser() const;
 
   int get_frames() const         { return stream.get_frames();  }

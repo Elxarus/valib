@@ -8,12 +8,11 @@ FrameSplitter::FrameSplitter(const HeaderParser *new_parser)
   set_parser(new_parser);
 }
 
-bool
+void
 FrameSplitter::set_parser(const HeaderParser *new_parser)
 {
   reset();
   stream.set_parser(new_parser);
-  return true;
 }
 
 const HeaderParser *
