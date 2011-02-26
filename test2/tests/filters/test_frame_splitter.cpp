@@ -27,6 +27,14 @@ BOOST_AUTO_TEST_CASE(init_constructor)
   BOOST_CHECK(f.can_open(Speakers(FORMAT_AC3, 0, 0)));
 }
 
+BOOST_AUTO_TEST_CASE(set_parser)
+{
+  FrameSplitter f;
+  f.set_parser(&ac3_header);
+  BOOST_CHECK_EQUAL(f.get_parser(), &ac3_header);
+  BOOST_CHECK_EQUAL(f.get_frames(), 0);
+}
+
 // Ensure, that get_chunk() returns frames
 // Count frames and streams in a file
 BOOST_AUTO_TEST_CASE(get_chunk)
