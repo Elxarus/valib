@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(init_constructor)
 }
 
 // Ensure, that get_chunk() returns frames
-// Count streams in a file
+// Count frames and streams in a file
 BOOST_AUTO_TEST_CASE(get_chunk)
 {
   const Speakers spk(FORMAT_RAWDATA, 0, 0);
@@ -43,6 +43,7 @@ BOOST_AUTO_TEST_CASE(get_chunk)
   BOOST_CHECK(f.get_output().is_unknown());
 
   int streams = 0;
+  int frames = 0;
   while (raw_file.get_chunk(raw))
   {
     while (f.process(raw, frame))
@@ -54,8 +55,10 @@ BOOST_AUTO_TEST_CASE(get_chunk)
       }
       if (!ac3_header.parse_header(frame.rawdata))
         BOOST_FAIL("Not a frame output");
+      frames++;
     }
   }
+  BOOST_CHECK_EQUAL(frames, 1500);
   BOOST_CHECK_EQUAL(streams, 3);
 }
 
