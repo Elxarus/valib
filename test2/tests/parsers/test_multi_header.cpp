@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_SUITE(multi_header)
 BOOST_AUTO_TEST_CASE(constructor)
 {
   MultiHeader parser;
+  BOOST_CHECK_EQUAL(parser.get_parsers().size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(init_constructor1)
@@ -31,15 +32,11 @@ BOOST_AUTO_TEST_CASE(init_constructor1)
 
 BOOST_AUTO_TEST_CASE(init_constructor2)
 {
-  MultiHeader::list_t parsers;
-  parsers.push_back(&ac3_header);
-  parsers.push_back(&dts_header);
-
-  MultiHeader parser(parsers);
+  MultiHeader parser(MultiHeader::list_t(parsers, parsers + array_size(parsers)));
 
   MultiHeader::list_t list = parser.get_parsers();
-  BOOST_REQUIRE_EQUAL(list.size(), parsers.size());
-  for (size_t i = 0; i < parsers.size(); i++)
+  BOOST_REQUIRE_EQUAL(list.size(), array_size(parsers));
+  for (size_t i = 0; i < array_size(parsers); i++)
     BOOST_CHECK_EQUAL(parsers[i], list[i]);
 }
 
@@ -56,27 +53,45 @@ BOOST_AUTO_TEST_CASE(set_parsers1)
 
 BOOST_AUTO_TEST_CASE(set_parsers2)
 {
-  MultiHeader::list_t parsers;
-  parsers.push_back(&ac3_header);
-  parsers.push_back(&dts_header);
-
   MultiHeader parser;
-  parser.set_parsers(parsers);
+  parser.set_parsers(MultiHeader::list_t(parsers, parsers + array_size(parsers)));
 
   MultiHeader::list_t list = parser.get_parsers();
-  BOOST_REQUIRE_EQUAL(list.size(), parsers.size());
-  for (size_t i = 0; i < parsers.size(); i++)
+  BOOST_REQUIRE_EQUAL(list.size(), array_size(parsers));
+  for (size_t i = 0; i < array_size(parsers); i++)
     BOOST_CHECK_EQUAL(parsers[i], list[i]);
 }
 
 BOOST_AUTO_TEST_CASE(release_parsers)
 {
-  MultiHeader parser;
-  parser.set_parsers(parsers, array_size(parsers));
-
+  MultiHeader parser(parsers, array_size(parsers));
   parser.release_parsers();
-  MultiHeader::list_t list = parser.get_parsers();
-  BOOST_CHECK_EQUAL(list.size(), 0);
+  BOOST_CHECK_EQUAL(parser.get_parsers().size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(add_remove)
+{
+  MultiHeader parser;
+
+  parser.add_parser(&ac3_header);
+  BOOST_CHECK_EQUAL(parser.get_parsers().size(), 1);
+  BOOST_CHECK(parser.can_parse(FORMAT_AC3));
+  BOOST_CHECK(!parser.can_parse(FORMAT_DTS));
+
+  parser.add_parser(&dts_header);
+  BOOST_CHECK_EQUAL(parser.get_parsers().size(), 2);
+  BOOST_CHECK(parser.can_parse(FORMAT_AC3));
+  BOOST_CHECK(parser.can_parse(FORMAT_DTS));
+
+  parser.remove_parser(&ac3_header);
+  BOOST_CHECK_EQUAL(parser.get_parsers().size(), 1);
+  BOOST_CHECK(!parser.can_parse(FORMAT_AC3));
+  BOOST_CHECK(parser.can_parse(FORMAT_DTS));
+
+  parser.remove_parser(&dts_header);
+  BOOST_CHECK_EQUAL(parser.get_parsers().size(), 0);
+  BOOST_CHECK(!parser.can_parse(FORMAT_AC3));
+  BOOST_CHECK(!parser.can_parse(FORMAT_DTS));
 }
 
 BOOST_AUTO_TEST_CASE(header_size)

@@ -51,8 +51,10 @@ public:
 
   void set_parsers(const list_t &parsers);
   void set_parsers(const HeaderParser *const *parsers, size_t nparsers);
-  list_t get_parsers() const;
+  void add_parser(const HeaderParser *parser);
+  void remove_parser(const HeaderParser *parser);
   void release_parsers();
+  list_t get_parsers() const;
 
   /////////////////////////////////////////////////////////
   // HeaderParser overrides
@@ -71,6 +73,7 @@ protected:
   size_t f_min_frame_size; //!< minimum min_frame_size() value
   size_t f_max_frame_size; //!< maximum max_frame_size() value
   list_t parsers;          //!< list of parsers
+  void update();
 };
 
 #endif
