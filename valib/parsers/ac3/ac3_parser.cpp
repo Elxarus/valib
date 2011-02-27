@@ -4,7 +4,6 @@
 #include "ac3_header.h"
 #include "ac3_parser.h"
 #include "ac3_bitalloc.h"
-#include "ac3_dither.h"
 #include "ac3_tables.h"
 
 // todo:
@@ -24,25 +23,6 @@
 #define DELTA_BIT_RESERVED 3
 
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Quanitizier class
-// Decode mantissas
-///////////////////////////////////////////////////////////////////////////////
-
-class Quantizer
-{
-protected:
-  int q3_cnt, q5_cnt, q11_cnt;
-  sample_t q3[2];
-  sample_t q5[2];
-  sample_t q11;
-
-public:
-  Quantizer(): q3_cnt(0), q5_cnt(0), q11_cnt(0) {};
-
-  void get_coeff(ReadBS &bs, sample_t *s, int8_t *bap, int8_t *exp, int n, bool dither);
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC3Parser
@@ -95,6 +75,7 @@ AC3Parser::reset()
   block = 0;
   samples.zero();
   delay.zero();
+  lfsr_state = 1;
 }
 
 bool
@@ -915,13 +896,13 @@ AC3Parser::parse_coeff(samples_t samples)
   for (ch = 0; ch < nfchans; ch++)
   {
     // parse channel mantissas
-    q.get_coeff(bs, samples[ch], bap[ch], exps[ch], endmant[ch], dithflag[ch]);
+    get_coeff(q, samples[ch], bap[ch], exps[ch], endmant[ch], dithflag[ch]);
 
     if (chincpl[ch] && !got_cplchan)
     {
       // parse coupling channel mantissas
       got_cplchan = true;
-      q.get_coeff(bs, samples[ch] + cplstrtmant, cplbap + cplstrtmant, cplexps + cplstrtmant, cplendmant - cplstrtmant, false);
+      get_coeff(q, samples[ch] + cplstrtmant, cplbap + cplstrtmant, cplexps + cplstrtmant, cplendmant - cplstrtmant, false);
 
       // copy coupling coeffs to all coupled channels
       for (int ch2 = ch + 1; ch2 < nfchans; ch2++)
@@ -932,7 +913,7 @@ AC3Parser::parse_coeff(samples_t samples)
 
   if (lfeon)
   {
-    q.get_coeff(bs, samples[nfchans], lfebap, lfeexps, 7, false);
+    get_coeff(q, samples[nfchans], lfebap, lfeexps, 7, false);
     memset(samples[nfchans] + 7, 0, 249 * sizeof(sample_t));
   }
 
@@ -996,7 +977,7 @@ AC3Parser::parse_coeff(samples_t samples)
 }
 
 void 
-Quantizer::get_coeff(ReadBS &bs, sample_t *s, int8_t *bap, int8_t *exp, int n, bool dither)
+AC3Parser::get_coeff(Quantizer &q, sample_t *s, int8_t *bap, int8_t *exp, int n, bool dither)
 {
   int ibap;
   while (n--)
@@ -1016,28 +997,28 @@ Quantizer::get_coeff(ReadBS &bs, sample_t *s, int8_t *bap, int8_t *exp, int n, b
 
       case 1: 
         // 3-levels 3 values in 5 bits
-        if (q3_cnt--)
-          *s++ = q3[q3_cnt] * scale_factor[*exp++];
+        if (q.q3_cnt--)
+          *s++ = q.q3[q.q3_cnt] * scale_factor[*exp++];
         else
         {
           int code = bs.get(5);
-          q3[0] = q3_3_tbl[code];
-          q3[1] = q3_2_tbl[code];
-          q3_cnt = 2;
+          q.q3[0] = q3_3_tbl[code];
+          q.q3[1] = q3_2_tbl[code];
+          q.q3_cnt = 2;
           *s++ = q3_1_tbl[code] * scale_factor[*exp++];
         }
         break;
 
       case 2:  
         // 5-levels 3 values in 7 bits
-        if (q5_cnt--)
-          *s++ = q5[q5_cnt] * scale_factor[*exp++];
+        if (q.q5_cnt--)
+          *s++ = q.q5[q.q5_cnt] * scale_factor[*exp++];
         else
         {
           int code = bs.get(7);
-          q5[0] = q5_3_tbl[code];
-          q5[1] = q5_2_tbl[code];
-          q5_cnt = 2;
+          q.q5[0] = q5_3_tbl[code];
+          q.q5[1] = q5_2_tbl[code];
+          q.q5_cnt = 2;
           *s++ = q5_1_tbl[code] * scale_factor[*exp++];
         }
         break;
@@ -1048,13 +1029,13 @@ Quantizer::get_coeff(ReadBS &bs, sample_t *s, int8_t *bap, int8_t *exp, int n, b
 
       case 4:
         // 11-levels 2 values in 7 bits
-        if (q11_cnt--)
-          *s++ = q11 * scale_factor[*exp++];
+        if (q.q11_cnt--)
+          *s++ = q.q11 * scale_factor[*exp++];
         else
         {
           int code = bs.get(7);
-          q11 = q11_2_tbl[code];
-          q11_cnt = 1;
+          q.q11 = q11_2_tbl[code];
+          q.q11_cnt = 1;
           *s++ = q11_1_tbl[code] * scale_factor[*exp++];
         }
         break;
@@ -1076,4 +1057,47 @@ Quantizer::get_coeff(ReadBS &bs, sample_t *s, int8_t *bap, int8_t *exp, int n, b
         break;
     }
   }
+}
+
+int16_t
+AC3Parser::dither_gen()
+{
+  static const uint16_t dither_lut[256] = {
+      0x0000, 0xa011, 0xe033, 0x4022, 0x6077, 0xc066, 0x8044, 0x2055,
+      0xc0ee, 0x60ff, 0x20dd, 0x80cc, 0xa099, 0x0088, 0x40aa, 0xe0bb,
+      0x21cd, 0x81dc, 0xc1fe, 0x61ef, 0x41ba, 0xe1ab, 0xa189, 0x0198,
+      0xe123, 0x4132, 0x0110, 0xa101, 0x8154, 0x2145, 0x6167, 0xc176,
+      0x439a, 0xe38b, 0xa3a9, 0x03b8, 0x23ed, 0x83fc, 0xc3de, 0x63cf,
+      0x8374, 0x2365, 0x6347, 0xc356, 0xe303, 0x4312, 0x0330, 0xa321,
+      0x6257, 0xc246, 0x8264, 0x2275, 0x0220, 0xa231, 0xe213, 0x4202,
+      0xa2b9, 0x02a8, 0x428a, 0xe29b, 0xc2ce, 0x62df, 0x22fd, 0x82ec,
+      0x8734, 0x2725, 0x6707, 0xc716, 0xe743, 0x4752, 0x0770, 0xa761,
+      0x47da, 0xe7cb, 0xa7e9, 0x07f8, 0x27ad, 0x87bc, 0xc79e, 0x678f,
+      0xa6f9, 0x06e8, 0x46ca, 0xe6db, 0xc68e, 0x669f, 0x26bd, 0x86ac,
+      0x6617, 0xc606, 0x8624, 0x2635, 0x0660, 0xa671, 0xe653, 0x4642,
+      0xc4ae, 0x64bf, 0x249d, 0x848c, 0xa4d9, 0x04c8, 0x44ea, 0xe4fb,
+      0x0440, 0xa451, 0xe473, 0x4462, 0x6437, 0xc426, 0x8404, 0x2415,
+      0xe563, 0x4572, 0x0550, 0xa541, 0x8514, 0x2505, 0x6527, 0xc536,
+      0x258d, 0x859c, 0xc5be, 0x65af, 0x45fa, 0xe5eb, 0xa5c9, 0x05d8,
+      0xae79, 0x0e68, 0x4e4a, 0xee5b, 0xce0e, 0x6e1f, 0x2e3d, 0x8e2c,
+      0x6e97, 0xce86, 0x8ea4, 0x2eb5, 0x0ee0, 0xaef1, 0xeed3, 0x4ec2,
+      0x8fb4, 0x2fa5, 0x6f87, 0xcf96, 0xefc3, 0x4fd2, 0x0ff0, 0xafe1,
+      0x4f5a, 0xef4b, 0xaf69, 0x0f78, 0x2f2d, 0x8f3c, 0xcf1e, 0x6f0f,
+      0xede3, 0x4df2, 0x0dd0, 0xadc1, 0x8d94, 0x2d85, 0x6da7, 0xcdb6,
+      0x2d0d, 0x8d1c, 0xcd3e, 0x6d2f, 0x4d7a, 0xed6b, 0xad49, 0x0d58,
+      0xcc2e, 0x6c3f, 0x2c1d, 0x8c0c, 0xac59, 0x0c48, 0x4c6a, 0xec7b,
+      0x0cc0, 0xacd1, 0xecf3, 0x4ce2, 0x6cb7, 0xcca6, 0x8c84, 0x2c95,
+      0x294d, 0x895c, 0xc97e, 0x696f, 0x493a, 0xe92b, 0xa909, 0x0918,
+      0xe9a3, 0x49b2, 0x0990, 0xa981, 0x89d4, 0x29c5, 0x69e7, 0xc9f6,
+      0x0880, 0xa891, 0xe8b3, 0x48a2, 0x68f7, 0xc8e6, 0x88c4, 0x28d5,
+      0xc86e, 0x687f, 0x285d, 0x884c, 0xa819, 0x0808, 0x482a, 0xe83b,
+      0x6ad7, 0xcac6, 0x8ae4, 0x2af5, 0x0aa0, 0xaab1, 0xea93, 0x4a82,
+      0xaa39, 0x0a28, 0x4a0a, 0xea1b, 0xca4e, 0x6a5f, 0x2a7d, 0x8a6c,
+      0x4b1a, 0xeb0b, 0xab29, 0x0b38, 0x2b6d, 0x8b7c, 0xcb5e, 0x6b4f,
+      0x8bf4, 0x2be5, 0x6bc7, 0xcbd6, 0xeb83, 0x4b92, 0x0bb0, 0xaba1
+  };
+
+  int16_t state = dither_lut[lfsr_state >> 8] ^ (lfsr_state << 8);
+  lfsr_state = (uint16_t) state;
+  return state;
 }
