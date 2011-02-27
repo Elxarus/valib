@@ -801,10 +801,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\ac3\ac3_dither.h"
-					>
-				</File>
-				<File
 					RelativePath="..\valib\parsers\ac3\ac3_enc.cpp"
 					>
 				</File>
