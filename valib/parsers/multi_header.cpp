@@ -104,9 +104,11 @@ MultiHeader::can_parse(int format) const
 bool
 MultiHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 {
+  size_t size = parsers.size();
+  if (!size || hdr == 0) return false;
+
   // Speed hack: direct array access is MUCH faster in debug mode
   const HeaderParser * const *p = &parsers[0];
-  size_t size = parsers.size();
   for (size_t i = 0; i < size; i++)
     if (p[i]->parse_header(hdr, hinfo))
       return true;
@@ -116,9 +118,11 @@ MultiHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 bool
 MultiHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 {
+  size_t size = parsers.size();
+  if (!size) return false;
+
   // Speed hack: direct array access is MUCH faster in debug mode
   const HeaderParser * const *p = &parsers[0];
-  size_t size = parsers.size();
   for (size_t i = 0; i < size; i++)
     if (p[i]->compare_headers(hdr1, hdr2))
       return true;
@@ -128,9 +132,11 @@ MultiHeader::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
 string
 MultiHeader::header_info(const uint8_t *hdr) const
 {
+  size_t size = parsers.size();
+  if (!size) return string();
+
   // Speed hack: direct array access is MUCH faster in debug mode
   const HeaderParser * const *p = &parsers[0];
-  size_t size = parsers.size();
   for (size_t i = 0; i < size; i++)
     if (p[i]->parse_header(hdr))
       return p[i]->header_info(hdr);

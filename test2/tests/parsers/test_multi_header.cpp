@@ -17,7 +17,15 @@ BOOST_AUTO_TEST_SUITE(multi_header)
 BOOST_AUTO_TEST_CASE(constructor)
 {
   MultiHeader parser;
+
   BOOST_CHECK_EQUAL(parser.get_parsers().size(), 0);
+  BOOST_CHECK_EQUAL(parser.header_size(), 0);
+  BOOST_CHECK_EQUAL(parser.min_frame_size(), 0);
+  BOOST_CHECK_EQUAL(parser.max_frame_size(), 0);
+
+  BOOST_CHECK_EQUAL(parser.parse_header(0), false);
+  BOOST_CHECK_EQUAL(parser.compare_headers(0, 0), false);
+  BOOST_CHECK_EQUAL(parser.header_info(0), string());
 }
 
 BOOST_AUTO_TEST_CASE(init_constructor1)
