@@ -114,7 +114,12 @@ void
 StreamBuffer::set_parser(const HeaderParser *new_parser)
 {
   release_parser();
-  if (!new_parser) return;
+
+  // Check parser correctness
+  if (!new_parser ||
+      new_parser->max_frame_size() == 0 ||
+      new_parser->header_size() == 0)
+    return;
 
   buf.allocate(new_parser->max_frame_size() * 3 + new_parser->header_size() * 2);
 

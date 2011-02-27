@@ -147,7 +147,7 @@ static void passthrough_test(const HeaderParser *hparser, uint8_t *buf, size_t b
   if (file_frames)  BOOST_CHECK_EQUAL(frames, file_frames);
 }
 
-BOOST_AUTO_TEST_SUITE(streambuf)
+BOOST_AUTO_TEST_SUITE(stream_buffer)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {
@@ -175,16 +175,45 @@ BOOST_AUTO_TEST_CASE(init_constructor)
 
 BOOST_AUTO_TEST_CASE(set_parser)
 {
+  MultiHeader bad_parser; // MultiHeader without parsers set
   StreamBuffer buf;
 
+  buf.set_parser(&bad_parser);
+  BOOST_CHECK(buf.get_parser() == 0);
+
   buf.set_parser(&ac3_header);
-  BOOST_CHECK(buf.get_parser() == &ac3_header);
+  BOOST_CHECK_EQUAL(buf.get_parser(), &ac3_header);
 
   buf.set_parser(&dts_header);
-  BOOST_CHECK(buf.get_parser() == &dts_header);
+  BOOST_CHECK_EQUAL(buf.get_parser(), &dts_header);
 
   buf.release_parser();
   BOOST_CHECK(buf.get_parser() == 0);
+}
+
+// Test operation without parser set
+BOOST_AUTO_TEST_CASE(null_parser)
+{
+  RawNoise noise(noise_size, seed);
+  uint8_t *begin = 0, *end = noise.begin() + noise.size();
+  bool result;
+
+  StreamBuffer buf;
+
+  buf.reset();
+
+  begin = noise.begin();
+  result = buf.load(&begin, end);
+  BOOST_CHECK(!result);
+  BOOST_CHECK_EQUAL(begin, end);
+
+  begin = noise.begin();
+  result = buf.load_frame(&begin, end);
+  BOOST_CHECK(!result);
+  BOOST_CHECK_EQUAL(begin, end);
+
+  result = buf.flush();
+  BOOST_CHECK(!result);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
