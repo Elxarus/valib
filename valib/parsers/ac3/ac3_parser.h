@@ -163,6 +163,16 @@ protected:
 #else
 public:
 #endif
+  struct Quantizer
+  {
+    int q3_cnt, q5_cnt, q11_cnt;
+    sample_t q3[2];
+    sample_t q5[2];
+    sample_t q11;
+
+    Quantizer(): q3_cnt(0), q5_cnt(0), q11_cnt(0)
+    {};
+  };
 
   /////////////////////////////////////////////////////////
   // AC3 parse
@@ -177,6 +187,8 @@ public:
   SampleBuf delay;      // delayed samples buffer
   IMDCT     imdct;      // IMDCT
   ReadBS    bs;         // Bitstream reader
+  uint16_t  lfsr_state; // dithering state
+
 
   int block;
 
@@ -188,7 +200,9 @@ public:
   bool parse_exponents(int8_t *exps, int8_t absexp, int expstr, int nexpgrps);
   bool parse_deltba(int8_t *deltba);
   void parse_coeff(samples_t samples);
+  void get_coeff(Quantizer &q, sample_t *s, int8_t *bap, int8_t *exp, int n, bool dither);
 
+  int16_t dither_gen();
 };
 
 #endif
