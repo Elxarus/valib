@@ -61,6 +61,19 @@ public:
   void set_filters(const list_t &new_filters)
   { filters = new_filters; }
 
+  void add_filter(Filter *filter)
+  { filters.push_back(filter); }
+
+  void remove_filter(Filter *filter)
+  {
+    filters.erase(
+      std::remove(filters.begin(), filters.end(), filter),
+      filters.end());
+  }
+
+  void release_filters()
+  { filters.clear(); }
+
   list_t get_filters() const
   { return filters; }
 
