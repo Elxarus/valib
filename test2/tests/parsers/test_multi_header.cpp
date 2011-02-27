@@ -9,6 +9,7 @@
 #include "parsers/mpa/mpa_header.h"
 #include "auto_file.h"
 
+static const HeaderParser *parsers_with_null[] = { &ac3_header, 0, &dts_header, &mpa_header };
 static const HeaderParser *parsers[] = { &ac3_header, &dts_header, &mpa_header };
 static const char *files[] = { "a.ac3.03f.ac3", "a.dts.03f.dts", "a.mp2.005.mp2" };
 
@@ -30,7 +31,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 
 BOOST_AUTO_TEST_CASE(init_constructor1)
 {
-  MultiHeader parser(parsers, array_size(parsers));
+  MultiHeader parser(parsers_with_null, array_size(parsers_with_null));
 
   MultiHeader::list_t list = parser.get_parsers();
   BOOST_REQUIRE_EQUAL(list.size(), array_size(parsers));
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_CASE(init_constructor1)
 
 BOOST_AUTO_TEST_CASE(init_constructor2)
 {
-  MultiHeader parser(MultiHeader::list_t(parsers, parsers + array_size(parsers)));
+  MultiHeader parser(MultiHeader::list_t(parsers_with_null, parsers_with_null + array_size(parsers_with_null)));
 
   MultiHeader::list_t list = parser.get_parsers();
   BOOST_REQUIRE_EQUAL(list.size(), array_size(parsers));
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE(init_constructor2)
 BOOST_AUTO_TEST_CASE(set_parsers1)
 {
   MultiHeader parser;
-  parser.set_parsers(parsers, array_size(parsers));
+  parser.set_parsers(parsers_with_null, array_size(parsers_with_null));
 
   MultiHeader::list_t list = parser.get_parsers();
   BOOST_REQUIRE_EQUAL(list.size(), array_size(parsers));
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(set_parsers1)
 BOOST_AUTO_TEST_CASE(set_parsers2)
 {
   MultiHeader parser;
-  parser.set_parsers(MultiHeader::list_t(parsers, parsers + array_size(parsers)));
+  parser.set_parsers(MultiHeader::list_t(parsers_with_null, parsers_with_null + array_size(parsers_with_null)));
 
   MultiHeader::list_t list = parser.get_parsers();
   BOOST_REQUIRE_EQUAL(list.size(), array_size(parsers));
@@ -80,6 +81,9 @@ BOOST_AUTO_TEST_CASE(release_parsers)
 BOOST_AUTO_TEST_CASE(add_remove)
 {
   MultiHeader parser;
+
+  parser.add_parser(0);
+  BOOST_CHECK_EQUAL(parser.get_parsers().size(), 0);
 
   parser.add_parser(&ac3_header);
   BOOST_CHECK_EQUAL(parser.get_parsers().size(), 1);

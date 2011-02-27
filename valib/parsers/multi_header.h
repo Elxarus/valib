@@ -23,20 +23,35 @@
     \param parsers List of parsers
 
     Sets the list of parsers to represent.
+    Null pointers are removed from the list.
 
   \fn void MultiHeader::set_parsers(const HeaderParser *const *parsers, size_t nparsers)
     \param parsers  Pointer to an array of parsers
     \param nparsers Number of parsers in the array
 
     Sets the list of parsers to represent. Useful for statically allocated list.
+    Null pointers are removed from the list.
 
     \code
       const HeaderParser *parsers[] = { &ac3_header, &dts_header, &mpa_header };
       MultiHeader multi_header(parsers, array_size(parsers));
     \endcode
 
+  \fn void MultiHeader::add_parser(const HeaderParser *parser)
+    \param parser Parser to add
+
+    Adds a single parser to the list. Null value is ignored.
+
+  \fn void MultiHeader::remove_parser(const HeaderParser *parser)
+    \param parser Parser to remove
+
+    Removes the parser from the list.
+
   \fn void MultiHeader::release_parsers()
     Clear the set of parsers.
+
+  \fn list_t MultiHeader::get_parsers() const
+    Returns the list of parsers
 
 ******************************************************************************/
 
@@ -72,7 +87,11 @@ protected:
   size_t f_header_size;    //!< maximum header size
   size_t f_min_frame_size; //!< minimum min_frame_size() value
   size_t f_max_frame_size; //!< maximum max_frame_size() value
+
   list_t parsers;          //!< list of parsers
+  const HeaderParser **p;  //!< raw list of parsers
+  size_t n;                //!< number of parsers
+
   void update();
 };
 
