@@ -9,27 +9,20 @@ MultiHeader::MultiHeader()
 
 MultiHeader::MultiHeader(const list_t &new_parsers)
 {
-  f_header_size = 0;
-  f_min_frame_size = 0;
-  f_max_frame_size = 0;
   set_parsers(new_parsers);
 }
 
 MultiHeader::MultiHeader(const HeaderParser *const *new_parsers, size_t nparsers)
 {
-  f_header_size = 0;
-  f_min_frame_size = 0;
-  f_max_frame_size = 0;
   set_parsers(new_parsers, nparsers);
 }
 
 void
-MultiHeader::set_parsers(const list_t &new_parsers)
+MultiHeader::update()
 {
   f_header_size = 0;
   f_min_frame_size = 0;
   f_max_frame_size = 0;
-  parsers = new_parsers;
 
   if (parsers.size() > 0)
   {
@@ -54,6 +47,13 @@ MultiHeader::set_parsers(const list_t &new_parsers)
     f_min_frame_size = f_header_size;
 }
 
+void
+MultiHeader::set_parsers(const list_t &new_parsers)
+{
+  parsers = new_parsers;
+  update();
+}
+
 MultiHeader::list_t
 MultiHeader::get_parsers() const
 {
@@ -63,16 +63,33 @@ MultiHeader::get_parsers() const
 void
 MultiHeader::set_parsers(const HeaderParser *const *new_parsers, size_t nparsers)
 {
-  set_parsers(list_t(new_parsers, new_parsers + nparsers));
+  parsers = list_t(new_parsers, new_parsers + nparsers);
+  update();
+}
+
+void
+MultiHeader::add_parser(const HeaderParser *parser)
+{
+  parsers.push_back(parser);
+  update();
+}
+
+void
+MultiHeader::remove_parser(const HeaderParser *parser)
+{
+  parsers.erase(
+    std::remove(parsers.begin(), parsers.end(), parser),
+    parsers.end());
+  update();
 }
 
 void
 MultiHeader::release_parsers()
 {
+  parsers.clear();
   f_header_size = 0;
   f_min_frame_size = 0;
   f_max_frame_size = 0;
-  parsers.clear();
 }
 
 bool
