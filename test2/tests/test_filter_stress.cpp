@@ -550,4 +550,17 @@ BOOST_AUTO_TEST_CASE(ac3_enc)
   filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
 
+BOOST_AUTO_TEST_CASE(dts_parser)
+{
+  DTSParser filter;
+  open_stress_test(&filter);
+
+  FileParser source;
+  source.open_probe("a.dts.03f.dts", &dts_header);
+  BOOST_REQUIRE(source.is_open());
+  filter_stress_test(&filter, &source);
+
+  noise_stress_test(Speakers(FORMAT_DTS, 0, 0), &filter);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
