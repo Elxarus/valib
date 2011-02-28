@@ -12,6 +12,9 @@
 
 MPAParser::MPAParser()
 {
+  frames = 0;
+  errors = 0;
+
   samples.allocate(2, MPA_NSAMPLES);
   synth[0] = new SynthBufferFPU();
   synth[1] = new SynthBufferFPU();
@@ -20,7 +23,6 @@ MPAParser::MPAParser()
   reset();
 }
 
-
 MPAParser::~MPAParser()
 {
   safe_delete(synth[0]);
@@ -28,25 +30,74 @@ MPAParser::~MPAParser()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// FrameParser overrides
+// SimpleFilter overrides
 
-const HeaderParser *
-MPAParser::header_parser() const
+bool
+MPAParser::can_open(Speakers spk) const
 {
-  return &mpa_header;
+  return spk.format == FORMAT_MPA;
+}
+
+bool
+MPAParser::init()
+{
+  reset();
+  return true;
 }
 
 void 
 MPAParser::reset()
 {
-  spk = spk_unknown;
+  out_spk = spk_unknown;
+  new_stream_flag = false;
   samples.zero();
   if (synth[0]) synth[0]->reset();
   if (synth[1]) synth[1]->reset();
 }
 
 bool
-MPAParser::process(uint8_t *frame, size_t size)
+MPAParser::process(Chunk &in, Chunk &out)
+{
+  bool sync = in.sync;
+  vtime_t time = in.time;
+  in.set_sync(false, 0);
+
+  if (in.size == 0)
+    return false;
+
+  if (!parse_frame(in.rawdata, in.size))
+  {
+    in.clear();
+    errors++;
+    return false;
+  }
+
+  in.clear();
+  out.set_linear(samples, bsi.nsamples, sync, time);
+  frames++;
+  return true;
+}
+
+string
+MPAParser::info() const 
+{
+  using std::endl;
+  std::stringstream result;
+  result << "Format: " << out_spk.print() << endl;
+  result << "Ver: " << (bsi.ver? "MPEG2 LSF": "MPEG1") << endl;
+  result << "Frame size: " << bsi.frame_size << endl;
+  result << "Stream: " << (bsi.bs_type == BITSTREAM_8? "8 bit": "16bit low endian") << endl;
+  result << "Bitrate: " << bsi.bitrate / 1000 << endl;
+  result << "Bandwidth: " << bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2 << "kHz/" << bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2 << "kHz" << endl;
+  return result.str();
+}
+
+//////////////////////////////////////////////////////////////////////
+// MPA parsing
+//////////////////////////////////////////////////////////////////////
+
+bool
+MPAParser::parse_frame(uint8_t *frame, size_t size)
 {
   if (!parse_header(frame, size))
     return false;
@@ -93,25 +144,6 @@ MPAParser::crc_check(const uint8_t *frame, size_t protected_data_bits) const
   crc = crc16.calc(crc, frame + 4, 0, 16); // crc
   return crc == 0;
 }
-
-
-string
-MPAParser::info() const 
-{
-  using std::endl;
-  std::stringstream result;
-  result << "Format: " << spk.print() << endl;
-  result << "Ver: " << (bsi.ver? "MPEG2 LSF": "MPEG1") << endl;
-  result << "Frame size: " << bsi.frame_size << endl;
-  result << "Stream: " << (bsi.bs_type == BITSTREAM_8? "8 bit": "16bit low endian") << endl;
-  result << "Bitrate: " << bsi.bitrate / 1000 << endl;
-  result << "Bandwidth: " << bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2 << "kHz/" << bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2 << "kHz" << endl;
-  return result.str();
-}
-
-//////////////////////////////////////////////////////////////////////
-// MPA parsing
-//////////////////////////////////////////////////////////////////////
 
 bool 
 MPAParser::parse_header(const uint8_t *frame, size_t size)
@@ -194,7 +226,7 @@ MPAParser::parse_header(const uint8_t *frame, size_t size)
                   jsbound_tbl[bsi.layer][hdr.mode_ext]: 
                   bsi.sblimit;
 
-  spk = Speakers(FORMAT_LINEAR, (bsi.mode == MPA_MODE_SINGLE)? MODE_MONO: MODE_STEREO, bsi.freq);
+  out_spk = Speakers(FORMAT_LINEAR, (bsi.mode == MPA_MODE_SINGLE)? MODE_MONO: MODE_STEREO, bsi.freq);
   return true; 
 }
 

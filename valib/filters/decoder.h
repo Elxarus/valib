@@ -17,9 +17,6 @@
 #include "../parsers/dts/dts_parser.h"
 #include "../parsers/mpa/mpa_parser.h"
 
-#include "parser_filter.h"
-#include "../parsers/multi_frame.h"
-
 class AudioDecoder : public ParserFilter2
 {
 public:
@@ -33,17 +30,8 @@ public:
     add(&adts_header, &aac);
     add(&ac3_header, &ac3);
     add(&dts_header, &dts);
-
-    // Thunk for old interface (FrameParser)
-    FrameParser *parsers[] = { &mpa };
-    uni_frame.set_parsers(parsers, array_size(parsers));
-    uni_parser.set_parser(&uni_frame);
-    add(0, &uni_parser);
+    add(&mpa_header, &mpa);
   }
-
-protected:
-  MultiFrame uni_frame;
-  ParserFilter uni_parser;
 };
 
 #endif

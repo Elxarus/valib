@@ -256,6 +256,14 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="mpa"
+				>
+				<File
+					RelativePath=".\tests\parsers\mpa\test_mpa_parser.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="filters"
