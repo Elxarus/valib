@@ -338,28 +338,15 @@ BOOST_AUTO_TEST_CASE(convolver_mch)
   filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
 
-BOOST_AUTO_TEST_CASE(audio_decoder_ac3)
+BOOST_AUTO_TEST_CASE(parser_filter_ac3)
 {
-  AudioDecoder filter;
+  ParserFilter2 filter;
+  AC3Parser ac3_parser;
+  filter.add(&ac3_header, &ac3_parser);
+
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3");
   noise_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter);
-}
-
-BOOST_AUTO_TEST_CASE(audio_decoder_dts)
-{
-  AudioDecoder filter;
-  open_stress_test(&filter);
-  filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts");
-  noise_stress_test(Speakers(FORMAT_DTS, 0, 0), &filter);
-}
-
-BOOST_AUTO_TEST_CASE(audio_decoder_mpa)
-{
-  AudioDecoder filter;
-  open_stress_test(&filter);
-  filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2");
-  noise_stress_test(Speakers(FORMAT_MPA, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(decoder_graph)

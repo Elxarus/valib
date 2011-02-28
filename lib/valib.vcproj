@@ -662,6 +662,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\parser_filter2.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\parser_filter2.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\passthrough.h"
 				>
 			</File>
