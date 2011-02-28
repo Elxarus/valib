@@ -22,6 +22,7 @@
 #include "filters/levels.h"
 #include "filters/mixer.h"
 #include "filters/parser_filter.h"
+#include "filters/parser_filter2.h"
 #include "filters/passthrough.h"
 #include "filters/proc.h"
 #include "filters/resample.h"
