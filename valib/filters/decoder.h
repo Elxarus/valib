@@ -32,9 +32,10 @@ public:
   {
     add(&adts_header, &aac);
     add(&ac3_header, &ac3);
+    add(&dts_header, &dts);
 
     // Thunk for old interface (FrameParser)
-    FrameParser *parsers[] = { &dts, &mpa };
+    FrameParser *parsers[] = { &mpa };
     uni_frame.set_parsers(parsers, array_size(parsers));
     uni_parser.set_parser(&uni_frame);
     add(0, &uni_parser);

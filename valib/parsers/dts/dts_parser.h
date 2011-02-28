@@ -5,9 +5,9 @@
 #ifndef VALIB_DTS_PARSER_H
 #define VALIB_DTS_PARSER_H
 
-#include "../../buffer.h"
-#include "../../parser.h"
 #include "../../bitstream.h"
+#include "../../buffer.h"
+#include "../../filter.h"
 #include "dts_defs.h"
 
 class DTSInfo
@@ -80,35 +80,40 @@ public:
   double subband_fir_noidea[DTS_PRIM_CHANNELS_MAX][64];
 };
 
-class DTSParser : public FrameParser, public DTSInfo
+class DTSParser : public SimpleFilter, public DTSInfo
 {
 public:
+  int frames;
+  int errors;
+
   DTSParser();
 
   /////////////////////////////////////////////////////////
-  // FrameParser overrides
+  // SimpleFilter overrides
 
-  virtual const HeaderParser *header_parser() const;
+  bool can_open(Speakers spk) const;
+  bool init();
 
-  virtual void reset();
-  virtual bool process(uint8_t *frame, size_t size);
+  void reset();
+  bool process(Chunk &in, Chunk &out);
 
-  virtual Speakers  get_output()   const { return spk;      }
-  virtual samples_t get_samples()  const { return samples;  }
-  virtual size_t    get_nsamples() const { return nsamples; }
-  virtual uint8_t  *get_rawdata()  const { return 0;        }
-  virtual size_t    get_rawsize()  const { return 0;        }
+  bool new_stream() const
+  { return new_stream_flag; }
 
-  virtual string info() const;
+  Speakers get_output() const
+  { return out_spk; }
+
+  string info() const;
 
 protected:
   /////////////////////////////////////////////////////////
   // DTS parse
 
-  Speakers  spk;
+  Speakers  out_spk;
   size_t    frame_size;
   size_t    nsamples;
   int       bs_type;
+  bool      new_stream_flag;
 
   ReadBS    bs;
   Rawdata   frame_buf;
@@ -122,6 +127,7 @@ protected:
   void init_cosmod();
 
   // parse functions
+  bool parse_frame(uint8_t *frame, size_t size);
   bool parse_frame_header();
   bool parse_subframe_header();
   bool parse_subsubframe();

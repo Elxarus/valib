@@ -1,39 +1,39 @@
 /*
-  AC3Parser test
+  DTSParser test
 */
 
 #include <boost/test/unit_test.hpp>
 #include "filters/convert.h"
-#include "parsers/ac3/ac3_parser.h"
-#include "parsers/ac3/ac3_header.h"
+#include "parsers/dts/dts_parser.h"
+#include "parsers/dts/dts_header.h"
 #include "source/file_parser.h"
 #include "source/wav_source.h"
 #include "../../../suite.h"
 
 const size_t block_size = 65536;
 
-BOOST_AUTO_TEST_SUITE(ac3_parser)
+BOOST_AUTO_TEST_SUITE(dts_parser)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {
-  AC3Parser ac3;
+  DTSParser dts;
 }
 
 BOOST_AUTO_TEST_CASE(decode)
 {
   // Test chain:
-  // FileParser -> AC3Parser
+  // FileParser -> DTSParser
 
   FileParser f;
-  f.open_probe("a.ac3.03f.ac3", &ac3_header);
+  f.open_probe("a.dts.03f.dts", &dts_header);
   BOOST_REQUIRE(f.is_open());
 
-  AC3Parser ac3;
+  DTSParser dts;
 
   // Reference chain:
   // WAVSource -> Converter
 
-  WAVSource wav("a.ac3.03f.ac3.wav", block_size);
+  WAVSource wav("a.dts.03f.dts.wav", block_size);
   BOOST_REQUIRE(wav.is_open());
 
   Converter conv(1024);
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(decode)
   // 32bit floating-point has 24-bit mantissa,
   // therefore noise level is about -144dB.
   // So 1e-7 (-140dB) is usable threshold value 
-  double diff = calc_diff(&f, &ac3, &wav, &conv);
+  double diff = calc_diff(&f, &dts, &wav, &conv);
   BOOST_CHECK_LE(diff, 1e-7);
 }
 

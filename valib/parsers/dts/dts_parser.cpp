@@ -85,6 +85,9 @@ decode_blockcode(int code, int levels, int *values)
 
 DTSParser::DTSParser()
 {
+  frames = 0;
+  errors = 0;
+
   init_cosmod();
   samples.allocate(DTS_NCHANNELS, DTS_MAX_SAMPLES);
   reset();
@@ -111,21 +114,28 @@ DTSParser::init_cosmod()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// FrameParser overrides
+// SimpleFilter overrides
 
-const HeaderParser *
-DTSParser::header_parser() const
+bool
+DTSParser::can_open(Speakers spk) const
 {
-  return &dts_header;
+  return spk.format == FORMAT_DTS;
 }
 
+bool
+DTSParser::init()
+{
+  reset();
+  return true;
+}
 
 void 
 DTSParser::reset()
 {
-  spk = spk_unknown;
+  out_spk = spk_unknown;
   frame_size = 0;
   nsamples = 0;
+  new_stream_flag = false;
 
   frame_type      = 0;
   samples_deficit = 0;
@@ -142,18 +152,70 @@ DTSParser::reset()
 }
 
 bool
-DTSParser::process(uint8_t *frame, size_t size)
+DTSParser::process(Chunk &in, Chunk &out)
+{
+  bool sync = in.sync;
+  vtime_t time = in.time;
+  in.set_sync(false, 0);
+
+  if (in.size == 0)
+    return false;
+
+  if (!parse_frame(in.rawdata, in.size))
+  {
+    errors++;
+    return false;
+  }
+
+  in.clear();
+  out.set_linear(samples, nsamples, sync, time);
+  frames++;
+  return true;
+}
+
+string
+DTSParser::info() const
+{
+  using std::endl;
+
+  char *stream = "???";
+  switch (bs_type)
+  {
+    case BITSTREAM_16BE: stream = "16bit BE"; break;
+    case BITSTREAM_16LE: stream = "16bit LE"; break;
+    case BITSTREAM_14BE: stream = "14bit BE"; break;
+    case BITSTREAM_14LE: stream = "14bit LE"; break;
+  }
+
+  std::stringstream result;
+  result << "Format: " << out_spk.print() << endl;
+  result << "Bitrate: " << dts_bit_rates[bit_rate] / 1000 << endl;
+  result << "Stream: " << stream << endl;
+  result << "Frame size: " << frame_size << endl;
+  result << "NSamples: " << nsamples << endl;
+  result << "amode: " << amode << endl;
+  result << (crc_present? "CRC protected\n": "No CRC") << endl;
+  return result.str();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                         Decode frame
+///////////////////////////////////////////////////////////////////////////////
+
+
+
+bool
+DTSParser::parse_frame(uint8_t *frame, size_t size)
 {
   HeaderInfo hinfo;
-
   if (!dts_header.parse_header(frame, &hinfo))
     return false;
 
   if (hinfo.frame_size > size)
     return false;
 
-  spk = hinfo.spk;
-  spk.format = FORMAT_LINEAR;
+  out_spk = hinfo.spk;
+  out_spk.format = FORMAT_LINEAR;
   frame_size = hinfo.frame_size;
   nsamples = hinfo.nsamples;
   bs_type = hinfo.bs_type;
@@ -167,10 +229,7 @@ DTSParser::process(uint8_t *frame, size_t size)
   if (bs_type == BITSTREAM_14BE || bs_type == BITSTREAM_14LE)
   {
     // Buffered conversion
-    if (frame_buf.size() < size * 8 / 7)
-      if (frame_buf.allocate(size * 8 / 7))
-        return false;
-
+    frame_buf.allocate(size * 8 / 7);
     size_t data_size = bs_convert(frame, size, bs_type, frame_buf, BITSTREAM_8);
     if (data_size == 0)
       return false;
@@ -221,31 +280,6 @@ DTSParser::process(uint8_t *frame, size_t size)
   }
 
   return true;
-}
-
-string
-DTSParser::info() const
-{
-  using std::endl;
-
-  char *stream = "???";
-  switch (bs_type)
-  {
-    case BITSTREAM_16BE: stream = "16bit BE"; break;
-    case BITSTREAM_16LE: stream = "16bit LE"; break;
-    case BITSTREAM_14BE: stream = "14bit BE"; break;
-    case BITSTREAM_14LE: stream = "14bit LE"; break;
-  }
-
-  std::stringstream result;
-  result << "Format: " << spk.print() << endl;
-  result << "Bitrate: " << dts_bit_rates[bit_rate] / 1000 << endl;
-  result << "Stream: " << stream << endl;
-  result << "Frame size: " << frame_size << endl;
-  result << "NSamples: " << nsamples << endl;
-  result << "amode: " << amode << endl;
-  result << (crc_present? "CRC protected\n": "No CRC") << endl;
-  return result.str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -387,21 +421,9 @@ DTSParser::parse_frame_header()
   current_subframe = 0;
   current_subsubframe = 0;
 
-  if (amode >= sizeof(amode2mask_tbl) / sizeof(amode2mask_tbl[0]))
+  if (amode >= array_size(amode2mask_tbl))
     return false;
-/*
-  if (bs.get_type() == BITSTREAM_14LE ||
-      bs.get_type() == BITSTREAM_14BE)
-    frame_size = frame_size * 16 / 14;
 
-  int mask = amode2mask_tbl[amode];
-  int relation = amode2rel_tbl[amode];
-  if (lfe) mask |= CH_MASK_LFE;
-  spk.set(FORMAT_DTS, mask, dts_sample_rates[sample_rate], 1.0, relation);
-
-  // todo: support short frames
-  nsamples = sample_blocks * 32;
-*/
   return true;
 }
 
