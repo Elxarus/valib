@@ -6,14 +6,14 @@
 #ifndef VALIB_MPA_PARSER_H
 #define VALIB_MPA_PARSER_H
 
-#include "../../parser.h"
 #include "../../bitstream.h"
 #include "../../buffer.h"
+#include "../../filter.h"
 #include "mpa_defs.h"
 #include "mpa_synth.h"
 
 
-class MPAParser : public FrameParser
+class MPAParser : public SimpleFilter
 {
 public:
   // raw frame header struct
@@ -61,29 +61,34 @@ public:
   Header   hdr; // raw header
   BSI      bsi; // bitstream information
 
+  int frames;
+  int errors;
+
   MPAParser();
   ~MPAParser();
 
   /////////////////////////////////////////////////////////
-  // FrameParser overrides
+  // SimpleFilter overrides
 
-  virtual const HeaderParser *header_parser() const;
+  bool can_open(Speakers spk) const;
+  bool init();
 
-  virtual void reset();
-  virtual bool process(uint8_t *frame, size_t size);
+  void reset();
+  bool process(Chunk &in, Chunk &out);
 
-  virtual Speakers  get_output()   const { return spk;          }
-  virtual samples_t get_samples()  const { return samples;      }
-  virtual size_t    get_nsamples() const { return bsi.nsamples; }
-  virtual uint8_t  *get_rawdata()  const { return 0;            }
-  virtual size_t    get_rawsize()  const { return 0;            }
+  bool new_stream() const
+  { return new_stream_flag; }
 
-  virtual string info() const;
+  Speakers get_output() const
+  { return out_spk; }
+
+  string info() const;
 
 private:
-  Speakers  spk;        // output format
+  Speakers  out_spk;    // output format
   SampleBuf samples;    // samples buffer
   ReadBS    bs;         // bitstream reader
+  bool      new_stream_flag;
 
   SynthBuffer *synth[MPA_NCH]; // synthesis buffers
   int II_table;         // Layer II allocation table number 
@@ -91,6 +96,7 @@ private:
   /////////////////////////////////////////////////////////
   // Common decoding functions
 
+  bool parse_frame(uint8_t *frame, size_t size);
   bool parse_header(const uint8_t *frame, size_t size);
   bool crc_check(const uint8_t *frame, size_t protected_data_bits) const;
 
