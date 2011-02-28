@@ -90,6 +90,7 @@ AC3Parser::process(Chunk &in, Chunk &out)
 
   if (!parse_frame(in.rawdata, in.size))
   {
+    in.clear();
     errors++;
     return false;
   }
