@@ -248,6 +248,14 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="dts"
+				>
+				<File
+					RelativePath=".\tests\parsers\dts\test_dts_parser.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="filters"
