@@ -11,8 +11,8 @@
 #ifndef VALIB_SPDIF_WRAPPER_H
 #define VALIB_SPDIF_WRAPPER_H
 
+#include "../../filter.h"
 #include "../../parser.h"
-#include "../multi_header.h"
 
 #define DTS_MODE_AUTO    0
 #define DTS_MODE_WRAPPED 1
@@ -22,42 +22,41 @@
 #define DTS_CONV_16BIT   1
 #define DTS_CONV_14BIT   2
 
-class SPDIFWrapper : public FrameParser
+class SPDIFWrapper : public SimpleFilter
 {
 public:
   int  dts_mode;
   int  dts_conv;
 
   SPDIFWrapper(int dts_mode = DTS_MODE_AUTO, int dts_conv = DTS_CONV_NONE);
-  ~SPDIFWrapper();
 
-  HeaderInfo header_info() const { return hdr; }
+  HeaderInfo header_info() const { return hinfo; }
 
   /////////////////////////////////////////////////////////
-  // FrameParser overrides
+  // SimpleFilter overrides
 
-  virtual const HeaderParser *header_parser() const;
+  bool can_open(Speakers spk) const;
+  bool init();
 
-  virtual void reset();
-  virtual bool process(uint8_t *frame, size_t size);
+  void reset();
+  bool process(Chunk &in, Chunk &out);
 
-  virtual Speakers  get_output()   const { return spk;          }
-  virtual samples_t get_samples()  const { samples_t samples; samples.zero(); return samples; }
-  virtual size_t    get_nsamples() const { return hdr.nsamples; }
-  virtual uint8_t  *get_rawdata()  const { return spdif_frame;  }
-  virtual size_t    get_rawsize()  const { return spdif_size;   }
+  bool new_stream() const
+  { return new_stream_flag; }
 
-  virtual string info() const;
+  Speakers get_output() const
+  { return out_spk; }
+
+  string info() const;
 
 protected:
-  uint8_t    *buf;          // output frame buffer
+  Rawdata     buf;          // output frame buffer
+  Speakers    out_spk;      // output format
+  bool        passthrough;  // passthrough mode
+  bool        new_stream_flag;
 
-  MultiHeader spdifable;    // spdifable formats header parser
-  HeaderInfo  hdr;          // input raw frame info
-
-  Speakers    spk;          // output format
-  uint8_t    *spdif_frame;  // spdif frame pointer
-  size_t      spdif_size;   // spdif frame size
+  HeaderInfo  hinfo;        // input raw frame info
+  Rawdata     header;
 
   bool use_header;          // use SPDIF header
   int spdif_bs;             // SPDIF bitstream type

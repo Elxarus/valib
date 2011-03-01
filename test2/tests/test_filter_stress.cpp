@@ -589,4 +589,17 @@ BOOST_AUTO_TEST_CASE(spdif_parser)
   noise_stress_test(Speakers(FORMAT_SPDIF, 0, 0), &filter);
 }
 
+BOOST_AUTO_TEST_CASE(spdif_wrapper)
+{
+  SPDIFWrapper filter;
+  open_stress_test(&filter);
+
+  FileParser source;
+  source.open_probe("a.ac3.03f.ac3", &ac3_header);
+  BOOST_REQUIRE(source.is_open());
+  filter_stress_test(&filter, &source);
+
+  noise_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
