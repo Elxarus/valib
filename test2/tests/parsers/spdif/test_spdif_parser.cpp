@@ -36,30 +36,11 @@ BOOST_AUTO_TEST_CASE(streams_frames)
   f.open_probe("a.mad.mix.spdif", &spdif_header);
   BOOST_REQUIRE(f.is_open());
 
-  SPDIFParser spdif;
-  spdif.open(f.get_output());
-  BOOST_CHECK(spdif.is_open());
+  SPDIFParser parser;
+  parser.open(f.get_output());
+  BOOST_CHECK(parser.is_open());
 
-  Chunk chunk;
-  int streams = 0;
-  int frames = 0;
-  while (f.get_chunk(chunk))
-  {
-    if (f.new_stream())
-    {
-      spdif.open(f.get_output());
-      BOOST_CHECK(spdif.is_open());
-    }
-    while (spdif.process(chunk, Chunk()))
-    {
-      if (spdif.new_stream())
-        streams++;
-      frames++;
-    }
-  }
-
-  BOOST_CHECK_EQUAL(streams, 7);
-  BOOST_CHECK_EQUAL(frames, 4375);
+  check_streams_chunks(&f, &parser, 7, 4375);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

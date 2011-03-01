@@ -16,6 +16,11 @@
 void compare(Source *src, Source *ref);
 void compare(Source *src, Filter *src_filter, Source *ref, Filter *ref_filter = 0);
 
+// Check number of stream changes and total number of chunks (optionally)
+
+void check_streams_chunks(Source *src, int streams, int chunks = -1);
+void check_streams_chunks(Source *src, Filter *f, int streams, int chuns = -1);
+
 sample_t calc_peak(Source *s);
 sample_t calc_peak(Source *s, Filter *f);
 
