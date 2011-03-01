@@ -89,6 +89,7 @@ private:
   SampleBuf samples;    // samples buffer
   ReadBS    bs;         // bitstream reader
   bool      new_stream_flag;
+  Rawdata   header;
 
   SynthBuffer *synth[MPA_NCH]; // synthesis buffers
   int II_table;         // Layer II allocation table number 

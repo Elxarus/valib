@@ -182,6 +182,7 @@ public:
   size_t    frame_size; // frame size
   int       bs_type;    // bitstream type
   bool      new_stream_flag;
+  Rawdata   header;
 
   SampleBuf samples;    // samples buffer
   SampleBuf delay;      // delayed samples buffer
