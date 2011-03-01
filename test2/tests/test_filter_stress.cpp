@@ -514,9 +514,8 @@ BOOST_AUTO_TEST_CASE(aac_parser)
   f.open("a.aac.03f.adts", &adts_header);
   BOOST_REQUIRE(f.is_open());
 
-  ADTSParser parser;
-  ParserFilter parser_filter(&parser);
-  SourceFilter source(&f, &parser_filter);
+  ADTSParser adts;
+  SourceFilter source(&f, &adts);
 
   Chunk chunk;
   BOOST_REQUIRE(source.get_chunk(chunk));
