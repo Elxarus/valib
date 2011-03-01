@@ -14,7 +14,9 @@
 #define VALIB_SPDIFER_H
 
 #include "parser_filter.h"
+#include "parser_filter2.h"
 #include "../parsers/spdif/spdif_wrapper.h"
+#include "../parsers/spdif/spdif_header.h"
 #include "../parsers/spdif/spdif_parser.h"
 
 
@@ -47,25 +49,19 @@ public:
   HeaderInfo header_info()                   const { return parser.header_info();      }
 };
 
-class Despdifer : public FilterWrapper
+class Despdifer : public ParserFilter2
 {
 protected:
-  ParserFilter parser;
   SPDIFParser  spdif_parser;
 
 public:
-  Despdifer(): FilterWrapper(&parser), spdif_parser(true)
+  Despdifer(): spdif_parser(true)
   {
-    parser.set_parser(&spdif_parser);
+    add(&spdif_header, &spdif_parser);
   }
 
   bool get_big_endian() const           { return spdif_parser.get_big_endian();     }
   void set_big_endian(bool _big_endian) { spdif_parser.set_big_endian(_big_endian); }
-
-  int        get_frames()  const { return parser.get_frames();  }
-  int        get_errors()  const { return parser.get_errors();  }
-  string     info()        const { return parser.info();        }
-  HeaderInfo header_info() const { return parser.header_info(); }
 };
 
 #endif
