@@ -48,4 +48,17 @@ BOOST_AUTO_TEST_CASE(decode)
   BOOST_CHECK_LE(diff, 1e-7);
 }
 
+BOOST_AUTO_TEST_CASE(streams_frames)
+{
+  FileParser f;
+  f.open_probe("a.dts.03f.mix", &dts_header);
+  BOOST_REQUIRE(f.is_open());
+
+  DTSParser parser;
+  parser.open(f.get_output());
+  BOOST_CHECK(parser.is_open());
+
+  check_streams_chunks(&f, &parser, 3, 3375);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
