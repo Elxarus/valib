@@ -142,6 +142,7 @@ BOOST_AUTO_TEST_CASE(parse_header)
   for (int i = 0; i < array_size(parsers); i++)
   {
     MemFile f(files[i]);
+    BOOST_REQUIRE(f);
     BOOST_CHECK(parser.parse_header(f));
   }
 }
@@ -154,6 +155,8 @@ BOOST_AUTO_TEST_CASE(compare_headers)
     {
       MemFile f1(files[i]);
       MemFile f2(files[j]);
+      BOOST_REQUIRE(f1);
+      BOOST_REQUIRE(f2);
       BOOST_CHECK_EQUAL(parser.compare_headers(f1, f2), i == j);
     }
 }
