@@ -654,14 +654,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\valib\filters\parser_filter.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\valib\filters\parser_filter.h"
-				>
-			</File>
-			<File
 				RelativePath="..\valib\filters\parser_filter2.cpp"
 				>
 			</File>
@@ -777,14 +769,6 @@
 		<Filter
 			Name="parsers"
 			>
-			<File
-				RelativePath="..\valib\parsers\multi_frame.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\valib\parsers\multi_frame.h"
-				>
-			</File>
 			<File
 				RelativePath="..\valib\parsers\multi_header.cpp"
 				>

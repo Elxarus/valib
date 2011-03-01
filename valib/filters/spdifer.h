@@ -13,7 +13,7 @@
 #ifndef VALIB_SPDIFER_H
 #define VALIB_SPDIFER_H
 
-#include "parser_filter.h"
+#include "parser_filter2.h"
 #include "../parsers/spdif/spdif_wrapper.h"
 #include "../parsers/spdif/spdif_header.h"
 #include "../parsers/spdif/spdif_parser.h"

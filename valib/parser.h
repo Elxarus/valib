@@ -12,8 +12,6 @@
 
 struct HeaderInfo;
 class HeaderParser;
-class FrameParser;
-
 class StreamBuffer;
 
 /**************************************************************************//**
@@ -230,128 +228,6 @@ public:
   virtual bool     parse_header(const uint8_t *hdr, HeaderInfo *info = 0) const = 0;
   virtual bool     compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
   virtual string   header_info(const uint8_t *hdr) const;
-};
-
-
-
-/**************************************************************************//**
-  \class FrameParser
-  \brief Frame transformation interface.
-
-  Frame transformations include:
-  <ul>
-  <li>Decoders</li>
-  <li>Loseless frame transformations:</li>
-    <ul>
-    <li>Bitstream format change</li>
-    <li>Gain change</li>
-    </ul>
-  <li>Other frame transformations:</li>
-    <ul>
-    <li>Frame wrappers/unwrappers</li>
-    <li>Bitrate change (without reencoding, aka transcoding)</li>
-    <li>etc...</li>
-    </ul>
-  <li>etc...</li>
-  </ul>
-
-  Unlike HeaderParser interface, FrameParser has an internal state and must
-  receive frames in correct order, because frames in a stream are almost always
-  related with each other. To prepare a parser to receive a new stream and set
-  it into initial state we must call reset().
-
-  We should reset the transformer with each new stream detected by the header
-  parser.
-
-  All other things are very strightforward: we load a frame with help of
-  HeaderParser and give the frame loaded to FrameParser. FrameParser
-  does its job and provies access to the transformed data through its
-  interface.
-
-  FrameParser may do the job in-place at the buffer received with
-  parse_frame() call.
-
-  \fn const HeaderParser *FrameParser::header_parser()
-    Returns header parser this tranformer works with.
-
-  \fn void FrameParser::reset()
-    Set transformer into the initial state. Drop all internal buffers and
-    state variables.
-
-  \fn bool FrameParser::process(uint8_t *frame, size_t size)
-    \param frame Pointer to the frame buffer
-    \param size The size of the frame
-    \return Returns true on success and false otherwise.
-
-    Transform the next frame of a stream.
-
-    When possible, process() should not fail on error and proceed with
-    with some kind of restoration procedure that produces some output.
-
-  \fn Speakers FrameParser::get_output() const
-    Format of a transformed data. FORMAT_UNKNOWN may indicate an error.
-
-  \fn samples_t FrameParser::get_samples() const
-
-    For linear output format returns pointers to sample buffers.
-
-    Undefined for non-linear output format.
-
-  \fn size_t FrameParser::get_nsamples() const
-
-    For linear output returns numer of samples stored at sample buffers.
-
-    For non-linear output should indicate number of samples at the output
-
-    frame or 0 if number of samples is unknown.
-
-  \fn uint8_t *FrameParser::get_rawdata() const
-
-    For non-linear output returns pointers to transformed data buffer.
-
-    For linear output may return a pointer to the original frame data.
-
-  \fn size_t FrameParser::get_rawsize() const
-    For non-linear output returns size of transformed data.
-    For linear output may return number of bytes actually parsed. It is useful
-    to compact sparse stream.
-
-  \fn string FrameParser::info() const
-    Dump stream information. It may be more informative than header info but
-    should contain only stream-wide information (that does not change from
-    frame to frame).
-******************************************************************************/
-
-
-class FrameParser
-{
-public:
-  FrameParser() {};
-  virtual ~FrameParser() {};
-
-  virtual const HeaderParser *header_parser() const = 0;
-
-  /////////////////////////////////////////////////////////
-  // Frame transformation
-
-  virtual void reset() = 0;
-  virtual bool process(uint8_t *frame, size_t size) = 0;
-
-  /////////////////////////////////////////////////////////
-  // Transformed data access
-
-  virtual Speakers  get_output() const = 0;
-
-  virtual samples_t get_samples() const = 0;
-  virtual size_t    get_nsamples() const = 0;
-
-  virtual uint8_t  *get_rawdata() const = 0;
-  virtual size_t    get_rawsize() const = 0;
-
-  /////////////////////////////////////////////////////////
-  // Stream information
-
-  virtual string info() const = 0;
 };
 
 
