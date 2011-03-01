@@ -16,6 +16,7 @@ MPAParser::MPAParser()
   errors = 0;
 
   samples.allocate(2, MPA_NSAMPLES);
+  header.allocate(mpa_header.header_size());
   synth[0] = new SynthBufferFPU();
   synth[1] = new SynthBufferFPU();
 
@@ -51,6 +52,7 @@ MPAParser::reset()
   out_spk = spk_unknown;
   new_stream_flag = false;
   samples.zero();
+  header.zero();
   if (synth[0]) synth[0]->reset();
   if (synth[1]) synth[1]->reset();
 }
@@ -70,6 +72,14 @@ MPAParser::process(Chunk &in, Chunk &out)
     in.clear();
     errors++;
     return false;
+  }
+
+  if (mpa_header.compare_headers(in.rawdata, header))
+    new_stream_flag = false;
+  else
+  {
+    new_stream_flag = true;
+    memcpy(header, in.rawdata, mpa_header.header_size());
   }
 
   in.clear();

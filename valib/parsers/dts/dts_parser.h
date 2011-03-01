@@ -114,6 +114,7 @@ protected:
   size_t    nsamples;
   int       bs_type;
   bool      new_stream_flag;
+  Rawdata   header;
 
   ReadBS    bs;
   Rawdata   frame_buf;

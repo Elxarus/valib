@@ -40,6 +40,7 @@ AC3Parser::AC3Parser()
   // allocate buffers
   samples.allocate(AC3_NCHANNELS, AC3_FRAME_SAMPLES);
   delay.allocate(AC3_NCHANNELS, AC3_BLOCK_SAMPLES);
+  header.allocate(ac3_header.header_size());
 
   reset();
 }
@@ -71,6 +72,7 @@ AC3Parser::reset()
   frame_size = 0;
   bs_type = 0;
   new_stream_flag = false;
+  header.zero();
 
   block = 0;
   samples.zero();
@@ -93,6 +95,14 @@ AC3Parser::process(Chunk &in, Chunk &out)
     in.clear();
     errors++;
     return false;
+  }
+
+  if (ac3_header.compare_headers(in.rawdata, header))
+    new_stream_flag = false;
+  else
+  {
+    new_stream_flag = true;
+    memcpy(header, in.rawdata, ac3_header.header_size());
   }
 
   in.clear();

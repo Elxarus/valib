@@ -90,6 +90,7 @@ DTSParser::DTSParser()
 
   init_cosmod();
   samples.allocate(DTS_NCHANNELS, DTS_MAX_SAMPLES);
+  header.allocate(dts_header.header_size());
   reset();
 }
 
@@ -136,6 +137,7 @@ DTSParser::reset()
   frame_size = 0;
   nsamples = 0;
   new_stream_flag = false;
+  header.zero();
 
   frame_type      = 0;
   samples_deficit = 0;
@@ -166,6 +168,14 @@ DTSParser::process(Chunk &in, Chunk &out)
     in.clear();
     errors++;
     return false;
+  }
+
+  if (dts_header.compare_headers(in.rawdata, header))
+    new_stream_flag = false;
+  else
+  {
+    new_stream_flag = true;
+    memcpy(header, in.rawdata, dts_header.header_size());
   }
 
   in.clear();
