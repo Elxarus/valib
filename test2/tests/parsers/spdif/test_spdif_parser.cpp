@@ -3,12 +3,9 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "parsers/ac3/ac3_header.h"
-#include "parsers/dts/dts_header.h"
-#include "parsers/mpa/mpa_header.h"
 #include "parsers/spdif/spdif_header.h"
 #include "parsers/spdif/spdif_parser.h"
-#include "parsers/multi_header.h"
+#include "parsers/spdif/spdifable_header.h"
 #include "source/file_parser.h"
 #include "../../../suite.h"
 
@@ -21,10 +18,6 @@ BOOST_AUTO_TEST_CASE(constructor)
 
 BOOST_AUTO_TEST_CASE(parse)
 {
-  const HeaderParser *parsers[] = 
-  { &ac3_header, &dts_header, &mpa_header };
-  MultiHeader spdifable_header(parsers, array_size(parsers));
-
   FileParser f_spdif;
   f_spdif.open_probe("a.mad.mix.spdif", &spdif_header);
   BOOST_REQUIRE(f_spdif.is_open());
@@ -39,21 +32,31 @@ BOOST_AUTO_TEST_CASE(parse)
 
 BOOST_AUTO_TEST_CASE(streams_frames)
 {
-  FileParser f_spdif;
-  f_spdif.open_probe("a.mad.mix.spdif", &spdif_header);
-  BOOST_REQUIRE(f_spdif.is_open());
+  FileParser f;
+  f.open_probe("a.mad.mix.spdif", &spdif_header);
+  BOOST_REQUIRE(f.is_open());
+
+  SPDIFParser spdif;
+  spdif.open(f.get_output());
+  BOOST_CHECK(spdif.is_open());
 
   Chunk chunk;
-  SPDIFParser spdif;
   int streams = 0;
   int frames = 0;
-  while (f_spdif.get_chunk(chunk))
+  while (f.get_chunk(chunk))
+  {
+    if (f.new_stream())
+    {
+      spdif.open(f.get_output());
+      BOOST_CHECK(spdif.is_open());
+    }
     while (spdif.process(chunk, Chunk()))
     {
       if (spdif.new_stream())
         streams++;
       frames++;
     }
+  }
 
   BOOST_CHECK_EQUAL(streams, 7);
   BOOST_CHECK_EQUAL(frames, 4375);
