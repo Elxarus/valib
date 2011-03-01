@@ -3,9 +3,7 @@
 #include "spdif_wrapper.h"
 
 #include "../../bitstream.h"
-#include "../mpa/mpa_header.h"
-#include "../ac3/ac3_header.h"
-#include "../dts/dts_header.h"
+#include "spdifable_header.h"
 
 #define MAX_SPDIF_FRAME_SIZE 8192
 
@@ -19,166 +17,182 @@ inline bool is_14bit(int bs_type)
 SPDIFWrapper::SPDIFWrapper(int _dts_mode, int _dts_conv)
 :dts_mode(_dts_mode), dts_conv(_dts_conv)
 {
-  const HeaderParser *parsers[] = { &spdif_header, &mpa_header, &ac3_header, &dts_header };
-  spdifable.set_parsers(parsers, array_size(parsers));
-  buf = new uint8_t[MAX_SPDIF_FRAME_SIZE];
-}
-
-SPDIFWrapper::~SPDIFWrapper()
-{
-  safe_delete(buf);
+  buf.allocate(MAX_SPDIF_FRAME_SIZE);
+  header.allocate(spdifable_header.header_size());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// FrameParser overrides
+// SimpleFilter overrides
 
-const HeaderParser *
-SPDIFWrapper::header_parser() const
+bool
+SPDIFWrapper::can_open(Speakers spk) const
 {
-  return &spdifable;
+  return spdifable_header.can_parse(spk.format);
+}
+
+bool
+SPDIFWrapper::init()
+{
+  reset();
+  return true;
 }
 
 void 
 SPDIFWrapper::reset()
 {
-  hdr.clear();
-
-  spk = spk_unknown;
-  spdif_frame = 0;
-  spdif_size = 0;
+  out_spk = spk_unknown;
+  passthrough = false;
+  new_stream_flag = false;
+  hinfo.clear();
+  header.zero();
 }
 
 bool
-SPDIFWrapper::process(uint8_t *frame, size_t size)
+SPDIFWrapper::process(Chunk &in, Chunk &out)
 {
-  spdif_frame = 0;
-  spdif_size = 0;
+  out = in;
+  in.clear();
+  if (passthrough)
+  {
+    new_stream_flag = false;
+    return !out.is_dummy();
+  }
+
+  uint8_t *frame = out.rawdata;
+  size_t size = out.size;
 
   /////////////////////////////////////////////////////////
   // Determine frame's characteristics
 
-  if (!spdifable.parse_header(frame, &hdr))
+  if (size < spdifable_header.header_size())
+    return false;
+
+  if (!spdifable_header.parse_header(frame, &hinfo))
     // unknown format
     return false;
 
-  if (!hdr.spdif_type)
+  if (!hinfo.spdif_type)
   {
-    // passthrough non-spdifable format
-    spk = hdr.spk;
-    spdif_frame = frame;
-    spdif_size = size;
+    // passthrough non-spdifable_header format
+    passthrough = true;
+    new_stream_flag = true;
+    out_spk = hinfo.spk;
     return true;
   }
 
-  /////////////////////////////////////////////////////////
-  // Parse spdif input if nessesary
-
-  uint8_t *raw_frame = frame;
-  size_t raw_size = size;
+  if (spdifable_header.compare_headers(frame, header))
+    new_stream_flag = false;
+  else
+  {
+    memcpy(header.begin(), frame, spdifable_header.header_size());
+    new_stream_flag = true;
+    out_spk = hinfo.spk;
+    out_spk.format = FORMAT_SPDIF;
+  }
 
   /////////////////////////////////////////////////////////
   // SPDIF frame size
 
-  size_t spdif_frame_size = hdr.nsamples * 4;
+  size_t spdif_frame_size = hinfo.nsamples * 4;
   if (spdif_frame_size > MAX_SPDIF_FRAME_SIZE)
   {
     // impossible to send over spdif
-    // passthrough non-spdifable data
-    spk = hdr.spk;
-    spdif_frame = raw_frame;
-    spdif_size = raw_size;
+    // passthrough non-spdifable_header data
+    passthrough = true;
+    new_stream_flag = true;
+    out_spk = hinfo.spk;
     return true;
   }
 
   /////////////////////////////////////////////////////////
   // Determine output bitstream type and header usage
 
-  if (hdr.spk.format == FORMAT_DTS)
+  if (hinfo.spk.format == FORMAT_DTS)
   {
     // DTS frame may grow if conversion to 14bit stream format is used
-    bool frame_grows = (dts_conv == DTS_CONV_14BIT) && !is_14bit(hdr.bs_type);
+    bool frame_grows = (dts_conv == DTS_CONV_14BIT) && !is_14bit(hinfo.bs_type);
     // DTS frame may shrink if conversion to 16bit stream format is used
-    bool frame_shrinks = (dts_conv == DTS_CONV_16BIT) && is_14bit(hdr.bs_type);
+    bool frame_shrinks = (dts_conv == DTS_CONV_16BIT) && is_14bit(hinfo.bs_type);
 
     switch (dts_mode)
     {
     case DTS_MODE_WRAPPED:
       use_header = true;
-      if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size - sizeof(spdif_header_s)))
+      if (frame_grows && (size * 8 / 7 <= spdif_frame_size - sizeof(spdif_header_s)))
         spdif_bs = BITSTREAM_14LE;
-      else if (frame_shrinks && (raw_size * 7 / 8 <= spdif_frame_size - sizeof(spdif_header_s)))
+      else if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size - sizeof(spdif_header_s)))
         spdif_bs = BITSTREAM_16LE;
-      else if (raw_size <= spdif_frame_size - sizeof(spdif_header_s))
-        spdif_bs = is_14bit(hdr.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
+      else if (size <= spdif_frame_size - sizeof(spdif_header_s))
+        spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
       {
         // impossible to wrap
-        // passthrough non-spdifable data
-        spk = hdr.spk;
-        spdif_frame = raw_frame;
-        spdif_size = raw_size;
+        // passthrough non-spdifable_header data
+        passthrough = true;
+        new_stream_flag = true;
+        out_spk = hinfo.spk;
         return true;
       }
       break;
 
     case DTS_MODE_PADDED:
       use_header = false;
-      if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size))
+      if (frame_grows && (size * 8 / 7 <= spdif_frame_size))
         spdif_bs = BITSTREAM_14LE;
-      else if (frame_shrinks && (raw_size * 7 / 8 <= spdif_frame_size))
+      else if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size))
         spdif_bs = BITSTREAM_16LE;
-      else if (raw_size <= spdif_frame_size)
-        spdif_bs = is_14bit(hdr.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
+      else if (size <= spdif_frame_size)
+        spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
       {
         // impossible to send over spdif
-        // passthrough non-spdifable data
-        spk = hdr.spk;
-        spdif_frame = raw_frame;
-        spdif_size = raw_size;
+        // passthrough non-spdifable_header data
+        passthrough = true;
+        new_stream_flag = true;
+        out_spk = hinfo.spk;
         return true;
       }
       break;
 
     case DTS_MODE_AUTO:
     default:
-      if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size - sizeof(spdif_header_s)))
+      if (frame_grows && (size * 8 / 7 <= spdif_frame_size - sizeof(spdif_header_s)))
       {
         use_header = true;
         spdif_bs = BITSTREAM_14LE;
       }
-      else if (frame_grows && (raw_size * 8 / 7 <= spdif_frame_size))
+      else if (frame_grows && (size * 8 / 7 <= spdif_frame_size))
       {
         use_header = false;
         spdif_bs = BITSTREAM_14LE;
       }
-      if (frame_shrinks && (raw_size * 7 / 8 <= spdif_frame_size - sizeof(spdif_header_s)))
+      if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size - sizeof(spdif_header_s)))
       {
         use_header = true;
         spdif_bs = BITSTREAM_14LE;
       }
-      else if (frame_shrinks && (raw_size * 7 / 8 <= spdif_frame_size))
+      else if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size))
       {
         use_header = false;
         spdif_bs = BITSTREAM_14LE;
       }
-      else if (raw_size <= spdif_frame_size - sizeof(spdif_header_s))
+      else if (size <= spdif_frame_size - sizeof(spdif_header_s))
       {
         use_header = true;
-        spdif_bs = is_14bit(hdr.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
+        spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       }
-      else if (raw_size <= spdif_frame_size)
+      else if (size <= spdif_frame_size)
       {
         use_header = false;
-        spdif_bs = is_14bit(hdr.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
+        spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       }
       else
       {
         // impossible to send over spdif
-        // passthrough non-spdifable data
-        spk = hdr.spk;
-        spdif_frame = raw_frame;
-        spdif_size = raw_size;
+        // passthrough non-spdifable_header data
+        passthrough = true;
+        new_stream_flag = true;
+        out_spk = hinfo.spk;
         return true;
       }
       break;
@@ -186,7 +200,7 @@ SPDIFWrapper::process(uint8_t *frame, size_t size)
   }
   else
   {
-    if (raw_size <= spdif_frame_size - sizeof(spdif_header_s))
+    if (size <= spdif_frame_size - sizeof(spdif_header_s))
     {
       use_header = true;
       spdif_bs = BITSTREAM_16LE;
@@ -194,10 +208,10 @@ SPDIFWrapper::process(uint8_t *frame, size_t size)
     else
     {
       // impossible to wrap
-      // passthrough non-spdifable data
-      spk = hdr.spk;
-      spdif_frame = raw_frame;
-      spdif_size = raw_size;
+      // passthrough non-spdifable_header data
+      passthrough = true;
+      new_stream_flag = true;
+      out_spk = hinfo.spk;
       return true;
     }
   }
@@ -208,7 +222,7 @@ SPDIFWrapper::process(uint8_t *frame, size_t size)
   size_t payload_size;
   if (use_header)
   {
-    payload_size = bs_convert(raw_frame, raw_size, hdr.bs_type, buf + sizeof(spdif_header_s), spdif_bs);
+    payload_size = bs_convert(frame, size, hinfo.bs_type, buf + sizeof(spdif_header_s), spdif_bs);
     assert(payload_size < MAX_SPDIF_FRAME_SIZE - sizeof(spdif_header_s));
     memset(buf + sizeof(spdif_header_s) + payload_size, 0, spdif_frame_size - sizeof(spdif_header_s) - payload_size);
 
@@ -216,12 +230,12 @@ SPDIFWrapper::process(uint8_t *frame, size_t size)
     if (spdif_bs == BITSTREAM_14LE)
       buf[sizeof(spdif_header_s) + 3] = 0xe8;
 
-    spdif_header_s *header = (spdif_header_s *)buf;
-    header->set(hdr.spdif_type, (uint16_t)payload_size * 8);
+    spdif_header_s *header = (spdif_header_s *)buf.begin();
+    header->set(hinfo.spdif_type, (uint16_t)payload_size * 8);
   }
   else
   {
-    payload_size = bs_convert(raw_frame, raw_size, hdr.bs_type, buf, spdif_bs);
+    payload_size = bs_convert(frame, size, hinfo.bs_type, buf, spdif_bs);
     assert(payload_size < MAX_SPDIF_FRAME_SIZE);
     memset(buf + payload_size, 0, spdif_frame_size - payload_size);
 
@@ -237,11 +251,7 @@ SPDIFWrapper::process(uint8_t *frame, size_t size)
   /////////////////////////////////////////////////////////
   // Send spdif frame
 
-  spk = hdr.spk;
-  spk.format = FORMAT_SPDIF;
-  spdif_frame = buf;
-  spdif_size = spdif_frame_size;
-
+  out.set_rawdata(buf.begin(), spdif_frame_size, out.sync, out.time);
   return true;
 }
 
@@ -259,9 +269,9 @@ SPDIFWrapper::info() const
 
   using std::endl;
   std::stringstream result;
-  result << "Output format: " << spk.print() << endl;
+  result << "Output format: " << out_spk.print() << endl;
   result << "SPDIF format: " << (use_header? "wrapped": "padded") << endl;
   result << "Bitstream: " << bitstream << endl;
-  result << "Frame size: " << spdif_size << endl;
+//  result << "Frame size: " << spdif_size << endl;
   return result.str();
 }

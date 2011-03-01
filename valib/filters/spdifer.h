@@ -14,23 +14,24 @@
 #define VALIB_SPDIFER_H
 
 #include "parser_filter.h"
-#include "parser_filter2.h"
 #include "../parsers/spdif/spdif_wrapper.h"
 #include "../parsers/spdif/spdif_header.h"
 #include "../parsers/spdif/spdif_parser.h"
 
 
 
-class Spdifer : public FilterWrapper
+class Spdifer : public ParserFilter2
 {
 protected:
-  ParserFilter parser;
   SPDIFWrapper spdif_wrapper;
+  MultiHeader spdifable;
 
 public:
-  Spdifer(): FilterWrapper(&parser)
+  Spdifer()
   {
-    parser.set_parser(&spdif_wrapper);
+    const HeaderParser *parsers[] = { &mpa_header, &ac3_header, &dts_header };
+    spdifable.set_parsers(parsers, array_size(parsers));
+    add(&spdifable, &spdif_wrapper);
   }
 
   /////////////////////////////////////////////////////////
@@ -42,11 +43,8 @@ public:
   int        get_dts_conv()                  const { return spdif_wrapper.dts_conv;       }
   void       set_dts_conv(int dts_conv)            { spdif_wrapper.dts_conv = dts_conv;   }
 
-  int        get_frames()                    const { return parser.get_frames();       }
-  int        get_errors()                    const { return parser.get_errors();       }
-
-  string     info()                          const { return parser.info();             }
-  HeaderInfo header_info()                   const { return parser.header_info();      }
+  string     info()                          const { return spdif_wrapper.info();         }
+  HeaderInfo header_info()                   const { return spdif_wrapper.header_info();  }
 };
 
 class Despdifer : public ParserFilter2
