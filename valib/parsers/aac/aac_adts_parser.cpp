@@ -23,31 +23,49 @@ static const int modes[] =
 
 ADTSParser::ADTSParser()
 {
+  header.allocate(adts_header.header_size());
   reset();
 }
 
-ADTSParser::~ADTSParser()
-{}
-
 ///////////////////////////////////////////////////////////////////////////////
-// FrameParser overrides
+// SimpleFilter overrides
 
-const HeaderParser *
-ADTSParser::header_parser() const
+bool
+ADTSParser::can_open(Speakers spk) const
 {
-  return &adts_header;
+  return spk.format == FORMAT_AAC_ADTS;
+}
+
+bool
+ADTSParser::init()
+{
+  reset();
+  return true;
 }
 
 void 
 ADTSParser::reset()
 {
-  data = 0;
-  data_size = 0;
+  out_spk = spk_unknown;
+  new_stream_flag = false;
+  header.zero();
 }
 
 bool
-ADTSParser::process(uint8_t *frame, size_t size)
+ADTSParser::process(Chunk &in, Chunk &out)
 {
+  bool     sync  = in.sync;
+  vtime_t  time  = in.time;
+  uint8_t *frame = in.rawdata;
+  size_t   size  = in.size;
+  in.clear();
+
+  if (size < adts_header.header_size())
+    return false;
+
+  /////////////////////////////////////////////////////////
+  // Parse ADTS header
+
   int protection_absent;
   int profile;
   int sampling_frequency_index;
@@ -69,23 +87,31 @@ ADTSParser::process(uint8_t *frame, size_t size)
   else
     return false;
 
-  if (protection_absent)
-  {
-    data = frame + 7;
-    data_size = frame_length - 7;
-  }
+  /////////////////////////////////////////////////////////
+  // Format change
+
+  if (adts_header.compare_headers(frame, header))
+    new_stream_flag = false;
   else
   {
-    data = frame + 9;
-    data_size = frame_length - 9;
+    new_stream_flag = true;
+    memcpy(header, frame, adts_header.header_size());
+
+    uint8_t audio_specific_config[2];
+    audio_specific_config[0] = ((profile+1) << 3) | (sampling_frequency_index >> 1);
+    audio_specific_config[1] = ((sampling_frequency_index & 1) << 7) | (channel_configuration << 3);
+
+    out_spk = Speakers(FORMAT_AAC_FRAME, modes[channel_configuration], sample_rates[sampling_frequency_index]);
+    out_spk.set_format_data(audio_specific_config, 2);
   }
 
-  uint8_t audio_specific_config[2];
-  audio_specific_config[0] = ((profile+1) << 3) | (sampling_frequency_index >> 1);
-  audio_specific_config[1] = ((sampling_frequency_index & 1) << 7) | (channel_configuration << 3);
+  /////////////////////////////////////////////////////////
+  // Return payload
 
-  spk = Speakers(FORMAT_AAC_FRAME, modes[channel_configuration], sample_rates[sampling_frequency_index]);
-  spk.set_format_data(audio_specific_config, 2);
+  if (protection_absent)
+    out.set_rawdata(frame+7, frame_length-7, sync, time);
+  else
+    out.set_rawdata(frame+9, frame_length-9, sync, time);
 
   return true;
 }

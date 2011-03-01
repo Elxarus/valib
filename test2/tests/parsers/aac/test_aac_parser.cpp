@@ -3,7 +3,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "filters/parser_filter.h"
 #include "filters/convert.h"
 #include "parsers/aac/aac_parser.h"
 #include "parsers/aac/aac_adts_parser.h"
@@ -31,9 +30,7 @@ BOOST_AUTO_TEST_CASE(decode)
   f.open("a.aac.03f.adts", &adts_header);
   BOOST_REQUIRE(f.is_open());
 
-  ADTSParser adts_parser;
-  ParserFilter adts(&adts_parser);
-
+  ADTSParser adts;
   SourceFilter test_src(&f, &adts);
 
   AACParser aac;
