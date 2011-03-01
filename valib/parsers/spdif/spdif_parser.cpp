@@ -71,6 +71,7 @@ void
 SPDIFParser::reset()
 {
   hinfo.clear();
+  header.zero();
   new_stream_flag = false;
 }
 
