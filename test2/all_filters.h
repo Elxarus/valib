@@ -33,3 +33,6 @@
 #include "parsers/aac/aac_parser.h"
 #include "parsers/ac3/ac3_parser.h"
 #include "parsers/ac3/ac3_enc.h"
+#include "parsers/dts/dts_parser.h"
+#include "parsers/mpa/mpa_parser.h"
+#include "parsers/spdif/spdif_parser.h"

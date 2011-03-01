@@ -1,4 +1,3 @@
-#include "spdif_header.h"
 #include "spdif_parser.h"
 
 #include "../../bitstream.h"
@@ -39,58 +38,87 @@ inline static const int to_big_endian(int bs_type)
 }
 
 
-SPDIFParser::SPDIFParser(bool _big_endian)
+SPDIFParser::SPDIFParser(bool big_endian_)
 {
-  big_endian = _big_endian;
+  size_t header_size[] = {
+    ac3_header.header_size(),
+    dts_header.header_size(),
+    mpa_header.header_size()
+  };
+
+  big_endian = big_endian_;
+  header.allocate(*std::max_element(header_size, header_size + array_size(header_size)));
   reset();
 }
 
-SPDIFParser::~SPDIFParser()
-{}
-
 ///////////////////////////////////////////////////////////////////////////////
-// FrameParser overrides
+// SimpleFilter overrides
 
-const HeaderParser *
-SPDIFParser::header_parser() const
+bool
+SPDIFParser::can_open(Speakers spk) const
 {
-  return &spdif_header;
+  return spk.format == FORMAT_SPDIF;
+}
+
+bool
+SPDIFParser::init()
+{
+  reset();
+  return true;
 }
 
 void 
 SPDIFParser::reset()
 {
-  data = 0;
-  data_size = 0;
-  hdr.clear();
+  hinfo.clear();
+  new_stream_flag = false;
 }
 
 bool
-SPDIFParser::process(uint8_t *frame, size_t size)
+SPDIFParser::process(Chunk &in, Chunk &out)
 {
+  bool sync = in.sync;
+  vtime_t time = in.time;
+  in.set_sync(false, 0);
+  if (in.size == 0)
+    return false;
+
+  uint8_t *frame = in.rawdata;
+  size_t size = in.size;
+  in.clear();
+
   if ((frame[0] != 0x00) || (frame[1] != 0x00) || (frame[2]  != 0x00) || (frame[3]  != 0x00) ||
       (frame[4] != 0x00) || (frame[5] != 0x00) || (frame[6]  != 0x00) || (frame[7]  != 0x00) ||
       (frame[8] != 0x72) || (frame[9] != 0xf8) || (frame[10] != 0x1f) || (frame[11] != 0x4e))
     return false;
 
-  const spdif_header_s *header = (spdif_header_s *)frame;
-  uint8_t *subheader = frame + sizeof(spdif_header_s);
+  const spdif_header_s *spdif_header = (spdif_header_s *)frame;
+  uint8_t *payload = frame + sizeof(spdif_header_s);
+  size_t payload_size = (spdif_header->len + 7) / 8;
+  if (size < sizeof(spdif_header_s) + payload_size)
+    return false;
 
-  const HeaderParser *parser = find_parser(header->type);
-  if (parser)
-    if (parser->parse_header(subheader, &hdr))
+  const HeaderParser *parser = find_parser(spdif_header->type);
+  if (parser && parser->parse_header(payload, &hinfo))
+  {
+    if (parser->compare_headers(payload, header))
+      new_stream_flag = false;
+    else
     {
-      data = subheader;
-      data_size = header->len / 8;
-      if (big_endian)
-      {
-        hdr.bs_type = to_big_endian(hdr.bs_type);
-        bs_conv_swab16(data, data_size, data);
-      }
-      return true;
+      memcpy(header.begin(), payload, parser->header_size());
+      new_stream_flag = true;
     }
+      
+    if (big_endian)
+    {
+      hinfo.bs_type = to_big_endian(hinfo.bs_type);
+      bs_conv_swab16(payload, payload_size, payload);
+    }
+    out.set_rawdata(payload, payload_size, sync, time);
+    return true;
+  }
 
-  hdr.clear();
+  reset();
   return false;
 }
 

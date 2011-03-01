@@ -264,6 +264,14 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="spdif"
+				>
+				<File
+					RelativePath=".\tests\parsers\spdif\test_spdif_parser.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="filters"

@@ -17,7 +17,7 @@ inline bool is_14bit(int bs_type)
 
 
 SPDIFWrapper::SPDIFWrapper(int _dts_mode, int _dts_conv)
-:dts_mode(_dts_mode), dts_conv(_dts_conv), spdif_parser(false)
+:dts_mode(_dts_mode), dts_conv(_dts_conv)
 {
   const HeaderParser *parsers[] = { &spdif_header, &mpa_header, &ac3_header, &dts_header };
   spdifable.set_parsers(parsers, array_size(parsers));
@@ -42,7 +42,6 @@ void
 SPDIFWrapper::reset()
 {
   hdr.clear();
-  spdif_parser.reset();
 
   spk = spk_unknown;
   spdif_frame = 0;
@@ -74,25 +73,9 @@ SPDIFWrapper::process(uint8_t *frame, size_t size)
   /////////////////////////////////////////////////////////
   // Parse spdif input if nessesary
 
-  uint8_t *raw_frame;
-  size_t raw_size;
+  uint8_t *raw_frame = frame;
+  size_t raw_size = size;
 
-  if (hdr.spk.format == FORMAT_SPDIF)
-  {
-    if (!spdif_parser.process(frame, size))
-      // cannot parse spdif frame
-      return false;
-
-    hdr = spdif_parser.header_info();
-    raw_frame = spdif_parser.get_rawdata();
-    raw_size = spdif_parser.get_rawsize();
-  }
-  else
-  {
-    raw_frame = frame;
-    raw_size = size;
-  }
-  
   /////////////////////////////////////////////////////////
   // SPDIF frame size
 
