@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(convolver_mch)
 
 BOOST_AUTO_TEST_CASE(parser_filter_ac3)
 {
-  ParserFilter2 filter;
+  ParserFilter filter;
   AC3Parser ac3_parser;
   filter.add(&ac3_header, &ac3_parser);
 

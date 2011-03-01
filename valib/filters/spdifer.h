@@ -13,7 +13,7 @@
 #ifndef VALIB_SPDIFER_H
 #define VALIB_SPDIFER_H
 
-#include "parser_filter2.h"
+#include "parser_filter.h"
 #include "../parsers/spdif/spdif_wrapper.h"
 #include "../parsers/spdif/spdif_header.h"
 #include "../parsers/spdif/spdif_parser.h"
@@ -21,7 +21,7 @@
 
 
 
-class Spdifer : public ParserFilter2
+class Spdifer : public ParserFilter
 {
 protected:
   SPDIFWrapper spdif_wrapper;
@@ -45,7 +45,7 @@ public:
   HeaderInfo header_info()                   const { return spdif_wrapper.header_info();  }
 };
 
-class Despdifer : public ParserFilter2
+class Despdifer : public ParserFilter
 {
 protected:
   SPDIFParser  spdif_parser;

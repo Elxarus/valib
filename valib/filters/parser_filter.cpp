@@ -1,7 +1,7 @@
-#include "parser_filter2.h"
+#include "parser_filter.h"
 
 void
-ParserFilter2::add(const HeaderParser *new_header, Filter *new_filter)
+ParserFilter::add(const HeaderParser *new_header, Filter *new_filter)
 {
   header.add_parser(new_header);
   filter.add_filter(new_filter);
@@ -9,20 +9,20 @@ ParserFilter2::add(const HeaderParser *new_header, Filter *new_filter)
 }
 
 void
-ParserFilter2::add(const HeaderParser *new_header)
+ParserFilter::add(const HeaderParser *new_header)
 {
   header.add_parser(new_header);
   sync.set_parser(&header);
 }
 
 void
-ParserFilter2::add(Filter *new_filter)
+ParserFilter::add(Filter *new_filter)
 {
   filter.add_filter(new_filter);
 }
 
 void
-ParserFilter2::release()
+ParserFilter::release()
 {
   header.release_parsers();
   filter.release_filters();
@@ -33,7 +33,7 @@ ParserFilter2::release()
 // FilterGraph overrides
 
 int
-ParserFilter2::next_id(int id, Speakers spk) const
+ParserFilter::next_id(int id, Speakers spk) const
 {
   switch (id)
   {
@@ -59,7 +59,7 @@ ParserFilter2::next_id(int id, Speakers spk) const
 }
 
 Filter *
-ParserFilter2::init_filter(int id, Speakers spk)
+ParserFilter::init_filter(int id, Speakers spk)
 {
   switch (id)
   {
