@@ -968,6 +968,14 @@
 					RelativePath="..\valib\parsers\spdif\spdif_wrapper.h"
 					>
 				</File>
+				<File
+					RelativePath="..\valib\parsers\spdif\spdifable_header.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\spdif\spdifable_header.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="aac"
