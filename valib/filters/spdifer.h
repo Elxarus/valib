@@ -17,6 +17,7 @@
 #include "../parsers/spdif/spdif_wrapper.h"
 #include "../parsers/spdif/spdif_header.h"
 #include "../parsers/spdif/spdif_parser.h"
+#include "../parsers/spdif/spdifable_header.h"
 
 
 
@@ -24,14 +25,11 @@ class Spdifer : public ParserFilter2
 {
 protected:
   SPDIFWrapper spdif_wrapper;
-  MultiHeader spdifable;
 
 public:
   Spdifer()
   {
-    const HeaderParser *parsers[] = { &mpa_header, &ac3_header, &dts_header };
-    spdifable.set_parsers(parsers, array_size(parsers));
-    add(&spdifable, &spdif_wrapper);
+    add(&spdifable_header, &spdif_wrapper);
   }
 
   /////////////////////////////////////////////////////////
