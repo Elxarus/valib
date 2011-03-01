@@ -48,4 +48,17 @@ BOOST_AUTO_TEST_CASE(decode)
   BOOST_CHECK_LE(diff, 1e-7);
 }
 
+BOOST_AUTO_TEST_CASE(streams_frames)
+{
+  FileParser f;
+  f.open_probe("a.ac3.mix.ac3", &ac3_header);
+  BOOST_REQUIRE(f.is_open());
+
+  AC3Parser parser;
+  parser.open(f.get_output());
+  BOOST_CHECK(parser.is_open());
+
+  check_streams_chunks(&f, &parser, 3, 1500);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
