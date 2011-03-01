@@ -93,6 +93,31 @@ void compare(Source *src, Filter *src_filter, Source *ref, Filter *ref_filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void check_streams_chunks(Source *src, int correct_streams, int correct_chunks)
+{
+  Chunk chunk;
+  int streams = 0;
+  int chunks = 0;
+  while (src->get_chunk(chunk))
+  {
+    if (src->new_stream())
+      streams++;
+    chunks++;
+  }
+
+  BOOST_CHECK_EQUAL(streams, correct_streams);
+  if (correct_chunks >= 0)
+    BOOST_CHECK_EQUAL(chunks, correct_chunks); 
+}
+
+void check_streams_chunks(Source *src, Filter *f, int streams, int chunks)
+{
+  SourceFilter sf(src, f);
+  check_streams_chunks(&sf, streams, chunks);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 sample_t calc_peak(Source *source)
 {
   assert(source != 0);
