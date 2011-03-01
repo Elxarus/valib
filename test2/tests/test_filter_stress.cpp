@@ -482,7 +482,6 @@ BOOST_AUTO_TEST_CASE(spdifer)
   noise_stress_test(Speakers(FORMAT_AC3,     0, 0), &filter);
   noise_stress_test(Speakers(FORMAT_MPA,     0, 0), &filter);
   noise_stress_test(Speakers(FORMAT_DTS,     0, 0), &filter);
-  noise_stress_test(Speakers(FORMAT_SPDIF,   0, 0), &filter);
   noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
 }
 
