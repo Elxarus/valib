@@ -654,11 +654,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\valib\filters\parser_filter2.cpp"
+				RelativePath="..\valib\filters\parser_filter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\filters\parser_filter2.h"
+				RelativePath="..\valib\filters\parser_filter.h"
 				>
 			</File>
 			<File

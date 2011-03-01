@@ -1,10 +1,10 @@
 /**************************************************************************//**
-  \file parser_filter2.h
-  \brief ParserFilter2: synchronize and process raw audio data.
+  \file parser_filter.h
+  \brief ParserFilter: synchronize and process raw audio data.
 ******************************************************************************/
 
-#ifndef VALIB_PARSER_FILTER2_H
-#define VALIB_PARSER_FILTER2_H
+#ifndef VALIB_PARSER_FILTER_H
+#define VALIB_PARSER_FILTER_H
 
 #include "filter_graph.h"
 #include "filter_switch.h"
@@ -12,7 +12,7 @@
 #include "../parsers/multi_header.h"
 
 /**************************************************************************//**
-  \class ParserFilter2
+  \class ParserFilter
   \brief Synchronize and process raw audio data.
 
   Uses StreamBuffer to synchronize raw audio data and process it with an
@@ -33,13 +33,13 @@
 
 ******************************************************************************/
 
-class ParserFilter2 : public FilterGraph
+class ParserFilter : public FilterGraph
 {
 public:
-  ParserFilter2()
+  ParserFilter()
   {}
 
-  ParserFilter2(const HeaderParser *new_header, Filter *new_filter)
+  ParserFilter(const HeaderParser *new_header, Filter *new_filter)
   { add(new_header, new_filter); }
 
   void add(const HeaderParser *new_header, Filter *new_filter);

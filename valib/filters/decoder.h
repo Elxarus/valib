@@ -5,7 +5,7 @@
 #ifndef VALIB_DECODER_H
 #define VALIB_DECODER_H
 
-#include "parser_filter2.h"
+#include "parser_filter.h"
 
 #include "../parsers/aac/aac_adts_header.h"
 #include "../parsers/ac3/ac3_header.h"
@@ -17,7 +17,7 @@
 #include "../parsers/dts/dts_parser.h"
 #include "../parsers/mpa/mpa_parser.h"
 
-class AudioDecoder : public ParserFilter2
+class AudioDecoder : public ParserFilter
 {
 public:
   AACParser aac;

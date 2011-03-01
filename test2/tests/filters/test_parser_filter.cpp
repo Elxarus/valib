@@ -3,7 +3,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "filters/parser_filter2.h"
+#include "filters/parser_filter.h"
 #include "parsers/ac3/ac3_header.h"
 #include "parsers/ac3/ac3_parser.h"
 #include "parsers/dts/dts_header.h"
@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(parser_filter)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {
-  ParserFilter2 dec;
+  ParserFilter dec;
 }
 
 BOOST_AUTO_TEST_CASE(add_release)
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(add_release)
   Speakers spk_ac3(FORMAT_AC3, 0, 0);
   Speakers spk_dts(FORMAT_DTS, 0, 0);
 
-  ParserFilter2 dec;
+  ParserFilter dec;
   BOOST_CHECK(!dec.can_open(spk_ac3));
   BOOST_CHECK(!dec.can_open(spk_dts));
 
@@ -43,11 +43,11 @@ BOOST_AUTO_TEST_CASE(add_release)
 
 BOOST_AUTO_TEST_CASE(decode)
 {
-  // Test chain: RAWSource -> ParserFilter2(AC3Parser)
+  // Test chain: RAWSource -> ParserFilter(AC3Parser)
   RAWSource raw(Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.03f.ac3");
   BOOST_REQUIRE(raw.is_open());
   AC3Parser ac3_test;
-  ParserFilter2 dec;
+  ParserFilter dec;
   dec.add(&ac3_header, &ac3_test);
 
   // Reference chain: FileParser(AC3Header) -> AC3Parser
