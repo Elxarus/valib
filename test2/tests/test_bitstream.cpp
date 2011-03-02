@@ -541,3 +541,32 @@ BOOST_AUTO_TEST_CASE(bs_convert_3step)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+///////////////////////////////////////////////////////////////////////////////
+// Noise read-write test
+// Read data from one noise block and write into another. The result must be
+// equal to the original noise block.
+
+BOOST_AUTO_TEST_CASE(bs_read_write)
+{
+  RNG rng(seed);
+  RawNoise noise(block_size, seed);
+  Rawdata result(block_size);
+
+  ReadBS reader(noise, 0, noise.size() * 8);
+  WriteBS writer(result, 0, result.size() * 8);
+
+  size_t size_bits = noise.size() * 8;
+  size_t total_bits = 0;
+  while (total_bits < size_bits)
+  {
+    int bits = rng.get_range(32);
+    if (total_bits + bits > size_bits)
+      bits = size_bits - total_bits;
+    uint32_t value = reader.get(bits);
+    writer.put(bits, value);
+    total_bits += bits;
+  }
+  writer.flush();
+  BOOST_CHECK(memcmp(noise.begin(), result.begin(), noise.size()) == 0);
+}
