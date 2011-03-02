@@ -72,7 +72,7 @@
 
   Simply speaking, the range [0..nyquist] cuts the filter's frequency response.
 
-  \fn void ParamFIR::set(int type, double  f1, double  f2, double  df, double  a, bool  norm = false);
+  \fn void ParamFIR::set(filter_t type, double  f1, double  f2, double  df, double  a, bool  norm = false)
     \param type Filter type
     \param f1 First center frequency
     \param f2 Second center frequency
@@ -82,7 +82,7 @@
 
     Set filter parameters.
 
-  \fn void ParamFIR::get(int *type, double *f1, double *f2, double *df, double *a, bool *norm = 0);
+  \fn void ParamFIR::get(filter_t *type, double *f1, double *f2, double *df, double *a, bool *norm = 0)
     \param type Filter type
     \param f1 First center frequency
     \param f2 Second center frequency
