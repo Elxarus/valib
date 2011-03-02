@@ -81,11 +81,11 @@ static inline int set_rounding()
   // Set x87 FPU rounding mode.
   // Returns unchanged FPU control word to restore later.
 
-  const uint16_t rc_mask    = 0x0c00;
-  const uint16_t rc_nearest = 0x0000;
-  const uint16_t rc_down    = 0x0400;
-  const uint16_t rc_up      = 0x0800;
-  const uint16_t rc_trunc   = 0x0c00;
+  static const uint16_t rc_mask    = 0x0c00;
+  static const uint16_t rc_nearest = 0x0000;
+  static const uint16_t rc_down    = 0x0400;
+  static const uint16_t rc_up      = 0x0800;
+  static const uint16_t rc_trunc   = 0x0c00;
 
   uint16_t x87_ctrl;
   __asm fnstcw [x87_ctrl];

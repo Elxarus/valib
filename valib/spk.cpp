@@ -168,8 +168,7 @@ samples_t::reorder_to_std(Speakers _spk, const order_t _order)
 {
   int i, ch;
   int mask = _spk.mask;
-  int nch = _spk.nch();
-  assert(nch <= NCHANNELS);
+  assert(_spk.nch() <= NCHANNELS);
 
   sample_t *tmp[CH_NAMES];
 
@@ -189,8 +188,7 @@ samples_t::reorder_from_std(Speakers _spk, const order_t _order)
 {
   int i, ch;
   int mask = _spk.mask;
-  int nch = _spk.nch();
-  assert(nch <= NCHANNELS);
+  assert(_spk.nch() <= NCHANNELS);
 
   sample_t *tmp[CH_NAMES];
 
@@ -210,8 +208,7 @@ samples_t::reorder(Speakers _spk, const order_t _input_order, const order_t _out
 {
   int i, ch;
   int mask = _spk.mask;
-  int nch = _spk.nch();
-  assert(nch <= NCHANNELS);
+  assert(_spk.nch() <= NCHANNELS);
 
   sample_t *tmp[CH_NAMES];
 

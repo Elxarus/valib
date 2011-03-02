@@ -44,11 +44,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				MinimalRebuild="true"
-				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				WarningLevel="4"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 				DisableSpecificWarnings="4100,4127,4244,4201,4210"
 			/>
 			<Tool
@@ -110,6 +109,7 @@
 				RuntimeLibrary="1"
 				WarningLevel="4"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4100,4127,4244,4201,4210"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -171,6 +171,7 @@
 				EnableFunctionLevelLinking="true"
 				WarningLevel="4"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4100,4127,4244,4201,4210"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -233,6 +234,7 @@
 				EnableFunctionLevelLinking="true"
 				WarningLevel="4"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4100,4127,4244,4201,4210"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

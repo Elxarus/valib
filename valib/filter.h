@@ -647,7 +647,7 @@ public:
   virtual void reset()
   {}
 
-  virtual bool flush(Chunk &out)
+  virtual bool flush(Chunk &)
   { return false; }
 
   virtual bool new_stream() const
