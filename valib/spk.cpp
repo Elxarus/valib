@@ -116,6 +116,7 @@ Speakers::format_text() const
     case FORMAT_PES:         return "MPEG Program Stream";
     case FORMAT_SPDIF:       return "SPDIF";
 
+    case FORMAT_AAC_FRAME:   return "AAC";
     case FORMAT_AC3:         return "AC3";
     case FORMAT_MPA:         return "MPEG Audio";
     case FORMAT_DTS:         return "DTS";
