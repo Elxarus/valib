@@ -220,12 +220,13 @@ size_t bs_conv_swab16(const uint8_t *in_buf, size_t size, uint8_t *out_buf)
   // If input size is odd we add a zero byte to the end.
   // Therefore output buffer size MUST BE LARGER than input buffer.
 
-  if (size & 1)
-    out_buf[size++] = 0;
-
   uint16_t *in16 = (uint16_t *)in_buf;
   uint16_t *out16 = (uint16_t *)out_buf;
   size_t i = size >> 1;
+
+  if (size & 1)
+    out16[i] = swab_u16(in_buf[size-1]);
+
   while (i--)
     out16[i] = swab_u16(in16[i]);
 
