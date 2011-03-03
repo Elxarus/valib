@@ -169,12 +169,12 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size - sizeof(spdif_header_s)))
       {
         use_header = true;
-        spdif_bs = BITSTREAM_14LE;
+        spdif_bs = BITSTREAM_16LE;
       }
       else if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size))
       {
         use_header = false;
-        spdif_bs = BITSTREAM_14LE;
+        spdif_bs = BITSTREAM_16LE;
       }
       else if (size <= spdif_frame_size - sizeof(spdif_header_s))
       {
