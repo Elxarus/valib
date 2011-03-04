@@ -60,7 +60,8 @@ protected:
 
   bool use_header;          // use SPDIF header
   int spdif_bs;             // SPDIF bitstream type
-  
+
+  static const size_t header_size;
   struct spdif_header_s
   {
     uint16_t zero1;
