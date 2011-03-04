@@ -116,7 +116,6 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
     bool frame_grows = (dts_conv == DTS_CONV_14BIT) && !is_14bit(hinfo.bs_type);
     // DTS frame may shrink if conversion to 16bit stream format is used
     bool frame_shrinks = (dts_conv == DTS_CONV_16BIT) && is_14bit(hinfo.bs_type);
-    bool no_frame_change = !frame_grows && !frame_shrinks;
 
     switch (dts_mode)
     {
@@ -126,7 +125,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
         spdif_bs = BITSTREAM_14LE;
       else if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size - header_size))
         spdif_bs = BITSTREAM_16LE;
-      else if (no_frame_change && size <= spdif_frame_size - header_size)
+      else if (size <= spdif_frame_size - header_size)
         spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
       {
@@ -145,7 +144,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
         spdif_bs = BITSTREAM_14LE;
       else if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size))
         spdif_bs = BITSTREAM_16LE;
-      else if (no_frame_change && size <= spdif_frame_size)
+      else if (size <= spdif_frame_size)
         spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
       {
@@ -180,12 +179,12 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
         use_header = false;
         spdif_bs = BITSTREAM_16LE;
       }
-      else if (no_frame_change && size <= spdif_frame_size - header_size)
+      else if (size <= spdif_frame_size - header_size)
       {
         use_header = true;
         spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       }
-      else if (no_frame_change && size <= spdif_frame_size)
+      else if (size <= spdif_frame_size)
       {
         use_header = false;
         spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;

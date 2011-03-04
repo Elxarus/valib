@@ -12,7 +12,7 @@
 #include "source/file_parser.h"
 #include "../../../suite.h"
 
-// Fitler that pads DTS frames with zeros to match certain size
+// Filter that pads DTS frames with zeros to match certain size
 class DTSFrameResize : public SimpleFilter
 {
 public:
@@ -126,8 +126,6 @@ BOOST_AUTO_TEST_CASE(streams_frames)
 
 BOOST_AUTO_TEST_CASE(dts_options)
 {
-  static const size_t fs = 2048; // SPDIF frame size
-  static const size_t hs = 16; // SPDIF header size
   enum mode_t { mode_wrap, mode_pad, mode_pass };
   struct {
     int dts_mode;
@@ -139,28 +137,38 @@ BOOST_AUTO_TEST_CASE(dts_options)
     mode_t mode;
   } tests[] = {
     { DTS_MODE_AUTO, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2032, 2032, mode_wrap },
+    { DTS_MODE_AUTO, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2033, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2047, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2049, 2049, mode_pass },
 
     { DTS_MODE_AUTO, DTS_CONV_NONE, "a.dts.03f.dts14", "a.dts.03f.dts14", 2032, 2032, mode_wrap },
+    { DTS_MODE_AUTO, DTS_CONV_NONE, "a.dts.03f.dts14", "a.dts.03f.dts14", 2033, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_NONE, "a.dts.03f.dts14", "a.dts.03f.dts14", 2047, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_NONE, "a.dts.03f.dts14", "a.dts.03f.dts14", 2049, 2049, mode_pass },
 
     { DTS_MODE_AUTO, DTS_CONV_16BIT, "a.dts.03f.dts", "a.dts.03f.dts", 2032, 2032, mode_wrap },
+    { DTS_MODE_AUTO, DTS_CONV_16BIT, "a.dts.03f.dts", "a.dts.03f.dts", 2033, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_16BIT, "a.dts.03f.dts", "a.dts.03f.dts", 2047, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_16BIT, "a.dts.03f.dts", "a.dts.03f.dts", 2049, 2049, mode_pass },
 
     { DTS_MODE_AUTO, DTS_CONV_16BIT, "a.dts.03f.dts14", "a.dts.03f.dts",   2320, 2030, mode_wrap },
+    { DTS_MODE_AUTO, DTS_CONV_16BIT, "a.dts.03f.dts14", "a.dts.03f.dts",   2328, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_16BIT, "a.dts.03f.dts14", "a.dts.03f.dts",   2336, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_16BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2344, 2344, mode_pass },
 
     { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts14", 1778, 2032, mode_wrap },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts14", 1779, 2048, mode_pad  },
     { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts14", 1792, 2048, mode_pad  },
-    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   1799, 1799, mode_pass },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   1793, 1793, mode_wrap },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   2032, 2032, mode_wrap },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   2033, 2048, mode_pad  },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   2047, 2048, mode_pad  },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   2049, 2049, mode_pass },
 
     { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2032, 2032, mode_wrap },
-    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2040, 2048, mode_pad  },
-    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2056, 2056, mode_pass },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2033, 2048, mode_pad  },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2047, 2048, mode_pad  },
+    { DTS_MODE_AUTO, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2049, 2049, mode_pass },
 
     { DTS_MODE_WRAPPED, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2032, 2032, mode_wrap },
     { DTS_MODE_WRAPPED, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2047, 2047, mode_pass },
@@ -175,32 +183,30 @@ BOOST_AUTO_TEST_CASE(dts_options)
     { DTS_MODE_WRAPPED, DTS_CONV_16BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2336, 2336, mode_pass },
 
     { DTS_MODE_WRAPPED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts14", 1778, 2032, mode_wrap },
-    { DTS_MODE_WRAPPED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   1792, 1792, mode_pass },
+    { DTS_MODE_WRAPPED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   1779, 1779, mode_wrap },
+    { DTS_MODE_WRAPPED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   2032, 2032, mode_wrap },
+    { DTS_MODE_WRAPPED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   2033, 2033, mode_pass },
 
     { DTS_MODE_WRAPPED, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2032, 2032, mode_wrap },
     { DTS_MODE_WRAPPED, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2040, 2040, mode_pass },
 
-    { DTS_MODE_PADDED, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2032, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2047, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_NONE, "a.dts.03f.dts", "a.dts.03f.dts", 2049, 2049, mode_pass },
 
-    { DTS_MODE_PADDED, DTS_CONV_NONE, "a.dts.03f.dts14", "a.dts.03f.dts14", 2032, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_NONE, "a.dts.03f.dts14", "a.dts.03f.dts14", 2047, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_NONE, "a.dts.03f.dts14", "a.dts.03f.dts14", 2049, 2049, mode_pass },
 
-    { DTS_MODE_PADDED, DTS_CONV_16BIT, "a.dts.03f.dts", "a.dts.03f.dts", 2032, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_16BIT, "a.dts.03f.dts", "a.dts.03f.dts", 2047, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_16BIT, "a.dts.03f.dts", "a.dts.03f.dts", 2049, 2049, mode_pass },
 
-    { DTS_MODE_PADDED, DTS_CONV_16BIT, "a.dts.03f.dts14", "a.dts.03f.dts",   2320, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_16BIT, "a.dts.03f.dts14", "a.dts.03f.dts",   2336, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_16BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2344, 2344, mode_pass },
 
-    { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts14", 1778, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts14", 1792, 2048, mode_pad  },
-    { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   1799, 1799, mode_pass },
+    { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   1793, 2048, mode_pad  },
+    { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   2047, 2048, mode_pad  },
+    { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts", "a.dts.03f.dts",   2049, 2049, mode_pass },
 
-    { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2032, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2040, 2048, mode_pad  },
     { DTS_MODE_PADDED, DTS_CONV_14BIT, "a.dts.03f.dts14", "a.dts.03f.dts14", 2056, 2056, mode_pass },
   };
