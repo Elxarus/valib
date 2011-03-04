@@ -27,7 +27,8 @@ protected:
   SPDIFWrapper spdif_wrapper;
 
 public:
-  Spdifer()
+  Spdifer(int dts_mode = DTS_MODE_AUTO, int dts_conv = DTS_CONV_NONE):
+  spdif_wrapper(dts_mode, dts_conv)
   {
     add(&spdifable_header, &spdif_wrapper);
   }
