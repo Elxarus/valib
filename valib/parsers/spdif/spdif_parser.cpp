@@ -80,18 +80,42 @@ SPDIFParser::process(Chunk &in, Chunk &out)
 {
   bool sync = in.sync;
   vtime_t time = in.time;
-  in.set_sync(false, 0);
-  if (in.size == 0)
-    return false;
-
   uint8_t *frame = in.rawdata;
   size_t size = in.size;
   in.clear();
 
+  if (size < 12)
+    return false;
+
   if ((frame[0] != 0x00) || (frame[1] != 0x00) || (frame[2]  != 0x00) || (frame[3]  != 0x00) ||
       (frame[4] != 0x00) || (frame[5] != 0x00) || (frame[6]  != 0x00) || (frame[7]  != 0x00) ||
       (frame[8] != 0x72) || (frame[9] != 0xf8) || (frame[10] != 0x1f) || (frame[11] != 0x4e))
-    return false;
+  {
+    // DTS
+    if (size < dts_header.header_size())
+      return false;
+    if (!dts_header.parse_header(frame, &hinfo))
+      return false;
+    if (size < hinfo.frame_size)
+      return false;
+
+    if (dts_header.compare_headers(frame, header))
+      new_stream_flag = false;
+    else
+    {
+      memcpy(header.begin(), frame, dts_header.header_size());
+      new_stream_flag = true;
+    }
+
+    if (big_endian)
+    {
+      hinfo.bs_type = to_big_endian(hinfo.bs_type);
+      bs_conv_swab16(frame, size, frame);
+    }
+
+    out.set_rawdata(frame, size, sync, time);
+    return true;
+  }
 
   const spdif_header_s *spdif_header = (spdif_header_s *)frame;
   uint8_t *payload = frame + sizeof(spdif_header_s);
