@@ -78,6 +78,23 @@ BOOST_AUTO_TEST_SUITE(spdif_wrapper)
 BOOST_AUTO_TEST_CASE(constructor)
 {
   SPDIFWrapper spdifer;
+  BOOST_CHECK_EQUAL(spdifer.dts_mode, DTS_MODE_AUTO);
+  BOOST_CHECK_EQUAL(spdifer.dts_conv, DTS_CONV_NONE);
+}
+
+BOOST_AUTO_TEST_CASE(init_constructor)
+{
+  SPDIFWrapper spdifer(DTS_MODE_WRAPPED, DTS_CONV_14BIT);
+  BOOST_CHECK_EQUAL(spdifer.dts_mode, DTS_MODE_WRAPPED);
+  BOOST_CHECK_EQUAL(spdifer.dts_conv, DTS_CONV_14BIT);
+}
+
+BOOST_AUTO_TEST_CASE(can_open)
+{
+  SPDIFWrapper spdifer;
+  BOOST_CHECK(spdifer.can_open(Speakers(FORMAT_AC3, 0, 0)));
+  BOOST_CHECK(spdifer.can_open(Speakers(FORMAT_DTS, 0, 0)));
+  BOOST_CHECK(spdifer.can_open(Speakers(FORMAT_MPA, 0, 0)));
 }
 
 BOOST_AUTO_TEST_CASE(parse)
