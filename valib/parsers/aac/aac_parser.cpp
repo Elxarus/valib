@@ -1,6 +1,6 @@
 #include "../../buffer.h"
 #include "aac_parser.h"
-#include "libfaad/neaacdec.h"
+#include "../../../3rdparty/faad/neaacdec.h"
 
 static const size_t max_frame_size = FAAD_MIN_STREAMSIZE * NCHANNELS;
 static const order_t aac_order = { CH_C, CH_L, CH_R, CH_SL, CH_SR, CH_BL, CH_BR, CH_LFE, CH_NONE, CH_NONE, CH_NONE };
