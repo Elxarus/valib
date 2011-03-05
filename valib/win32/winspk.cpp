@@ -307,6 +307,7 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         format = FORMAT_DTS;
         break;
 
+      case WAVE_FORMAT_MPEGLAYER3:
       case WAVE_FORMAT_MPEG:
         format = FORMAT_MPA;
         break;
