@@ -272,409 +272,409 @@
 	</References>
 	<Files>
 		<Filter
-			Name="libfaad"
+			Name="faad"
 			>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\analysis.h"
+				RelativePath="..\3rdparty\faad\analysis.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\bits.c"
+				RelativePath="..\3rdparty\faad\bits.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\bits.h"
+				RelativePath="..\3rdparty\faad\bits.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\cfft.c"
+				RelativePath="..\3rdparty\faad\cfft.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\cfft.h"
+				RelativePath="..\3rdparty\faad\cfft.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\cfft_tab.h"
+				RelativePath="..\3rdparty\faad\cfft_tab.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\common.c"
+				RelativePath="..\3rdparty\faad\common.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\common.h"
+				RelativePath="..\3rdparty\faad\common.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\decoder.c"
+				RelativePath="..\3rdparty\faad\decoder.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\drc.c"
+				RelativePath="..\3rdparty\faad\drc.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\drc.h"
+				RelativePath="..\3rdparty\faad\drc.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\drm_dec.c"
+				RelativePath="..\3rdparty\faad\drm_dec.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\drm_dec.h"
+				RelativePath="..\3rdparty\faad\drm_dec.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\error.c"
+				RelativePath="..\3rdparty\faad\error.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\error.h"
+				RelativePath="..\3rdparty\faad\error.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\faad.h"
+				RelativePath="..\3rdparty\faad\faad.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\filtbank.c"
+				RelativePath="..\3rdparty\faad\filtbank.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\filtbank.h"
+				RelativePath="..\3rdparty\faad\filtbank.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\fixed.h"
+				RelativePath="..\3rdparty\faad\fixed.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\hcr.c"
+				RelativePath="..\3rdparty\faad\hcr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\huffman.c"
+				RelativePath="..\3rdparty\faad\huffman.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\huffman.h"
+				RelativePath="..\3rdparty\faad\huffman.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ic_predict.c"
+				RelativePath="..\3rdparty\faad\ic_predict.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ic_predict.h"
+				RelativePath="..\3rdparty\faad\ic_predict.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\iq_table.h"
+				RelativePath="..\3rdparty\faad\iq_table.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\is.c"
+				RelativePath="..\3rdparty\faad\is.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\is.h"
+				RelativePath="..\3rdparty\faad\is.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\kbd_win.h"
+				RelativePath="..\3rdparty\faad\kbd_win.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\lt_predict.c"
+				RelativePath="..\3rdparty\faad\lt_predict.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\lt_predict.h"
+				RelativePath="..\3rdparty\faad\lt_predict.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\mdct.c"
+				RelativePath="..\3rdparty\faad\mdct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\mdct.h"
+				RelativePath="..\3rdparty\faad\mdct.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\mdct_tab.h"
+				RelativePath="..\3rdparty\faad\mdct_tab.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\mp4.c"
+				RelativePath="..\3rdparty\faad\mp4.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\mp4.h"
+				RelativePath="..\3rdparty\faad\mp4.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ms.c"
+				RelativePath="..\3rdparty\faad\ms.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ms.h"
+				RelativePath="..\3rdparty\faad\ms.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\neaacdec.h"
+				RelativePath="..\3rdparty\faad\neaacdec.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\output.c"
+				RelativePath="..\3rdparty\faad\output.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\output.h"
+				RelativePath="..\3rdparty\faad\output.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\pns.c"
+				RelativePath="..\3rdparty\faad\pns.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\pns.h"
+				RelativePath="..\3rdparty\faad\pns.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ps_dec.c"
+				RelativePath="..\3rdparty\faad\ps_dec.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ps_dec.h"
+				RelativePath="..\3rdparty\faad\ps_dec.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ps_syntax.c"
+				RelativePath="..\3rdparty\faad\ps_syntax.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ps_tables.h"
+				RelativePath="..\3rdparty\faad\ps_tables.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\pulse.c"
+				RelativePath="..\3rdparty\faad\pulse.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\pulse.h"
+				RelativePath="..\3rdparty\faad\pulse.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\rvlc.c"
+				RelativePath="..\3rdparty\faad\rvlc.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\rvlc.h"
+				RelativePath="..\3rdparty\faad\rvlc.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_dct.c"
+				RelativePath="..\3rdparty\faad\sbr_dct.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_dct.h"
+				RelativePath="..\3rdparty\faad\sbr_dct.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_dec.c"
+				RelativePath="..\3rdparty\faad\sbr_dec.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_dec.h"
+				RelativePath="..\3rdparty\faad\sbr_dec.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_e_nf.c"
+				RelativePath="..\3rdparty\faad\sbr_e_nf.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_e_nf.h"
+				RelativePath="..\3rdparty\faad\sbr_e_nf.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_fbt.c"
+				RelativePath="..\3rdparty\faad\sbr_fbt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_fbt.h"
+				RelativePath="..\3rdparty\faad\sbr_fbt.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_hfadj.c"
+				RelativePath="..\3rdparty\faad\sbr_hfadj.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_hfadj.h"
+				RelativePath="..\3rdparty\faad\sbr_hfadj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_hfgen.c"
+				RelativePath="..\3rdparty\faad\sbr_hfgen.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_hfgen.h"
+				RelativePath="..\3rdparty\faad\sbr_hfgen.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_huff.c"
+				RelativePath="..\3rdparty\faad\sbr_huff.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_huff.h"
+				RelativePath="..\3rdparty\faad\sbr_huff.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_noise.h"
+				RelativePath="..\3rdparty\faad\sbr_noise.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_qmf.c"
+				RelativePath="..\3rdparty\faad\sbr_qmf.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_qmf.h"
+				RelativePath="..\3rdparty\faad\sbr_qmf.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_qmf_c.h"
+				RelativePath="..\3rdparty\faad\sbr_qmf_c.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_syntax.c"
+				RelativePath="..\3rdparty\faad\sbr_syntax.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_syntax.h"
+				RelativePath="..\3rdparty\faad\sbr_syntax.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_tf_grid.c"
+				RelativePath="..\3rdparty\faad\sbr_tf_grid.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sbr_tf_grid.h"
+				RelativePath="..\3rdparty\faad\sbr_tf_grid.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\sine_win.h"
+				RelativePath="..\3rdparty\faad\sine_win.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\specrec.c"
+				RelativePath="..\3rdparty\faad\specrec.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\specrec.h"
+				RelativePath="..\3rdparty\faad\specrec.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ssr.c"
+				RelativePath="..\3rdparty\faad\ssr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ssr.h"
+				RelativePath="..\3rdparty\faad\ssr.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ssr_fb.c"
+				RelativePath="..\3rdparty\faad\ssr_fb.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ssr_fb.h"
+				RelativePath="..\3rdparty\faad\ssr_fb.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ssr_ipqf.c"
+				RelativePath="..\3rdparty\faad\ssr_ipqf.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ssr_ipqf.h"
+				RelativePath="..\3rdparty\faad\ssr_ipqf.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\ssr_win.h"
+				RelativePath="..\3rdparty\faad\ssr_win.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\structs.h"
+				RelativePath="..\3rdparty\faad\structs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\syntax.c"
+				RelativePath="..\3rdparty\faad\syntax.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\syntax.h"
+				RelativePath="..\3rdparty\faad\syntax.h"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\tns.c"
+				RelativePath="..\3rdparty\faad\tns.c"
 				>
 			</File>
 			<File
-				RelativePath="..\valib\parsers\aac\libfaad\tns.h"
+				RelativePath="..\3rdparty\faad\tns.h"
 				>
 			</File>
 			<Filter
 				Name="codebooks"
 				>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_1.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_1.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_10.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_10.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_11.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_11.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_2.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_2.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_3.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_3.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_4.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_4.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_5.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_5.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_6.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_6.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_7.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_7.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_8.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_8.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_9.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_9.h"
 					>
 				</File>
 				<File
-					RelativePath="..\valib\parsers\aac\libfaad\codebook\hcb_sf.h"
+					RelativePath="..\3rdparty\faad\codebook\hcb_sf.h"
 					>
 				</File>
 			</Filter>
