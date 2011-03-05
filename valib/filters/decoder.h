@@ -15,7 +15,7 @@
 #include "../parsers/aac/aac_parser.h"
 #include "../parsers/ac3/ac3_parser.h"
 #include "../parsers/dts/dts_parser.h"
-#include "../parsers/mpa/mpa_parser.h"
+#include "../parsers/mpa/mpa_mpg123.h"
 
 class AudioDecoder : public ParserFilter
 {
@@ -23,7 +23,7 @@ public:
   AACParser aac;
   AC3Parser ac3;
   DTSParser dts;
-  MPAParser mpa;
+  MPG123Parser mpa;
 
   AudioDecoder()
   {

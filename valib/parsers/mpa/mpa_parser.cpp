@@ -125,15 +125,12 @@ MPAParser::parse_frame(uint8_t *frame, size_t size)
   switch (bsi.layer)
   {
     case MPA_LAYER_I:
-      I_decode_frame(frame);
-      break;
-
+      return I_decode_frame(frame);
     case MPA_LAYER_II:
-      II_decode_frame(frame);
-      break;
+      return II_decode_frame(frame);
+    default:
+      return false;
   }
-
-  return true;
 }
 
 bool

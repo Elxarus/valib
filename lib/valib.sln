@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "valib", "valib.vcproj", "{3
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "aac", "aac.vcproj", "{B8D9A742-1BED-4B8D-BC46-3D1669F3405E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mpa", "mpa.vcproj", "{11F10C24-A2EC-4514-AD78-85CF2FEF698D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -29,6 +31,12 @@ Global
 		{B8D9A742-1BED-4B8D-BC46-3D1669F3405E}.Release|Win32.Build.0 = Release|Win32
 		{B8D9A742-1BED-4B8D-BC46-3D1669F3405E}.Release|x64.ActiveCfg = Release|x64
 		{B8D9A742-1BED-4B8D-BC46-3D1669F3405E}.Release|x64.Build.0 = Release|x64
+		{11F10C24-A2EC-4514-AD78-85CF2FEF698D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{11F10C24-A2EC-4514-AD78-85CF2FEF698D}.Debug|Win32.Build.0 = Debug|Win32
+		{11F10C24-A2EC-4514-AD78-85CF2FEF698D}.Debug|x64.ActiveCfg = Debug|Win32
+		{11F10C24-A2EC-4514-AD78-85CF2FEF698D}.Release|Win32.ActiveCfg = Release|Win32
+		{11F10C24-A2EC-4514-AD78-85CF2FEF698D}.Release|Win32.Build.0 = Release|Win32
+		{11F10C24-A2EC-4514-AD78-85CF2FEF698D}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
