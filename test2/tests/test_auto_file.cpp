@@ -2,6 +2,7 @@
   AutoFile class test
 */
 
+#include <limits>
 #include "auto_file.h"
 #include "../noise_buf.h"
 #include <boost/test/unit_test.hpp>
@@ -75,6 +76,26 @@ BOOST_AUTO_TEST_CASE(open_fail)
 
   BOOST_CHECK( !f.open(bad_file) );
   test_closed(f);
+}
+
+BOOST_AUTO_TEST_CASE(fsize_type)
+{
+  if (sizeof(AutoFile::fsize_t) > sizeof(size_t))
+  {
+    // 32bit
+    AutoFile::fsize_t large_size = std::numeric_limits<AutoFile::fsize_t>::max() - 1;
+    AutoFile::fsize_t good_size = std::numeric_limits<size_t>::max() - 1;
+
+    BOOST_CHECK(AutoFile::is_large(large_size));
+    BOOST_CHECK_EQUAL(good_size, AutoFile::size_cast(good_size));
+  }
+  else
+  {
+    // 64bit
+    AutoFile::fsize_t large_size = std::numeric_limits<AutoFile::fsize_t>::max() - 1;
+    BOOST_CHECK(!AutoFile::is_large(large_size));
+    BOOST_CHECK_EQUAL(large_size, AutoFile::size_cast(large_size));
+  }
 }
 
 BOOST_AUTO_TEST_CASE(read_write)
