@@ -590,6 +590,19 @@ BOOST_AUTO_TEST_CASE(mpa_parser)
   noise_stress_test(Speakers(FORMAT_MPA, 0, 0), &filter);
 }
 
+BOOST_AUTO_TEST_CASE(mpg123_parser)
+{
+  MPG123Parser filter;
+  open_stress_test(&filter);
+
+  FileParser source;
+  source.open_probe("a.mp2.005.mp2", &mpa_header);
+  BOOST_REQUIRE(source.is_open());
+  filter_stress_test(&filter, &source);
+
+  noise_stress_test(Speakers(FORMAT_MPA, 0, 0), &filter);
+}
+
 BOOST_AUTO_TEST_CASE(spdif_parser)
 {
   SPDIFParser filter;
