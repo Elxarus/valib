@@ -338,22 +338,20 @@ BOOST_AUTO_TEST_CASE(convolver_mch)
   filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
 
-BOOST_AUTO_TEST_CASE(parser_filter_ac3)
+BOOST_AUTO_TEST_CASE(audio_decoder_ac3)
 {
-  ParserFilter filter;
-  AC3Parser ac3_parser;
-  filter.add(&ac3_header, &ac3_parser);
-
+  AudioDecoder filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3");
-  noise_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter);
+  noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
 }
 
-BOOST_AUTO_TEST_CASE(decoder_graph)
+BOOST_AUTO_TEST_CASE(decoder_graph_spdif)
 {
   DecoderGraph filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif");
+  noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(syncer)
@@ -382,7 +380,14 @@ BOOST_AUTO_TEST_CASE(demux)
   noise_stress_test(Speakers(FORMAT_PES, 0, 0), &filter);
 }
 
-BOOST_AUTO_TEST_CASE(detector)
+BOOST_AUTO_TEST_CASE(detector_pcm)
+{
+  Detector filter;
+  open_stress_test(&filter);
+  filter_stress_test(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter, 0, 131072);
+}
+
+BOOST_AUTO_TEST_CASE(detector_spdif)
 {
   Detector filter;
   open_stress_test(&filter);
@@ -444,6 +449,17 @@ BOOST_AUTO_TEST_CASE(mixer_buffered)
 
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
+}
+
+BOOST_AUTO_TEST_CASE(parser_filter_ac3)
+{
+  ParserFilter filter;
+  AC3Parser ac3_parser;
+  filter.add(&ac3_header, &ac3_parser);
+
+  open_stress_test(&filter);
+  filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3");
+  noise_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(audio_processor)
