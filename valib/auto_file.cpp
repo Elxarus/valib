@@ -19,7 +19,7 @@ static AutoFile::fsize_t portable_tell(FILE *f)
 ///////////////////////////////////////////////////////////////////////////////
 // Standard Library implementation
 
-const AutoFile::fsize_t AutoFile::bad_size = std::numeric_limits<int>::max();
+const AutoFile::fsize_t AutoFile::bad_size = std::numeric_limits<long>::max();
 
 static int portable_seek(FILE *f, AutoFile::fsize_t pos, int origin)
 {
