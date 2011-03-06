@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(decode)
 
   // Compare
   double diff = calc_diff(&test_src, &aac, &wav, &conv);
-  BOOST_CHECK_LE(diff, 1e-10);
+  BOOST_CHECK_LE(diff, 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

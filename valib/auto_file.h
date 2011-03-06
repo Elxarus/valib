@@ -148,7 +148,7 @@ class AutoFile
 public:
   typedef int64_t fsize_t;
   static const fsize_t bad_size;
-  static bool is_large(fsize_t value) { return value > (fsize_t)(size_t)-1; }
+  static bool is_large(fsize_t value) { return value > (size_t)-1; }
   static size_t size_cast(fsize_t value) { return is_large(value)? -1: (size_t)value; }
 
 protected:
