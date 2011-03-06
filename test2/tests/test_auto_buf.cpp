@@ -7,10 +7,10 @@
 #include <boost/test/unit_test.hpp>
 #include "auto_buf.h"
 
-// bad_size must be less than a half of address space
-// otherwise VC++ throws "bad allocation size" exception
-// instead of std::bad_alloc in debug builds
-static const size_t bad_size = std::numeric_limits<size_t>::max() / 2 - 1;
+// If bad_size is larger, VC++ throws "Invalid allocation size" instead of 
+// std::bad_alloc and test fails:
+// Invalid allocation size - 7FFFFFFFFFFFFFFE (exceeded fffdefff)
+static const size_t bad_size = 0xfffdefff;
 static const size_t data_size  = 100;
 static const size_t data_size2 = 200;
 

@@ -1,4 +1,4 @@
-#include <limits.h>
+#include <limits>
 #include "auto_file.h"
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
@@ -6,7 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Vistual C implementation
 
-const AutoFile::fsize_t AutoFile::bad_size = (AutoFile::fsize_t)-1;
+const AutoFile::fsize_t AutoFile::bad_size = std::numeric_limits<AutoFile::fsize_t>::max();
 
 static int portable_seek(FILE *f, AutoFile::fsize_t pos, int origin)
 { return _fseeki64(f, pos, origin); }
@@ -19,7 +19,7 @@ static AutoFile::fsize_t portable_tell(FILE *f)
 ///////////////////////////////////////////////////////////////////////////////
 // Standard Library implementation
 
-const AutoFile::fsize_t AutoFile::bad_size = LONG_MAX;
+const AutoFile::fsize_t AutoFile::bad_size = std::numeric_limits<int>::max();
 
 static int portable_seek(FILE *f, AutoFile::fsize_t pos, int origin)
 {
