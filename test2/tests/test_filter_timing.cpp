@@ -8,7 +8,6 @@
 #include "source/generator.h"
 #include "source/raw_source.h"
 #include "source/source_filter.h"
-#include "parsers/aac/aac_adts_parser.h"
 #include "../all_filters.h"
 
 static const int seed = 9873457;
@@ -135,7 +134,6 @@ static void test_first_timestamp2(Source *src, Filter *f, bool frame_sync)
     else if (!src->get_chunk(in))
       BOOST_FAIL("Cannot fill the filter");
 
-  BOOST_CHECK(out.sync);
   if (frame_sync)
     BOOST_CHECK_EQUAL(out.time, time1);
   else
@@ -351,6 +349,15 @@ BOOST_AUTO_TEST_CASE(spectrum)
 
 ///////////////////////////////////////////////////////////
 // Codecs
+
+BOOST_AUTO_TEST_CASE(aac_adts_parser)
+{
+  ADTSParser filter;
+  FileParser source;
+  source.open_probe("a.aac.03f.adts", &adts_header);
+  BOOST_REQUIRE(source.is_open());
+  test_timing(&source, &filter);
+}
 
 BOOST_AUTO_TEST_CASE(aac_parser)
 {

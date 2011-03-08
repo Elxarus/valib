@@ -29,6 +29,7 @@
 #include "filters/spdifer.h"
 #include "filters/spectrum.h"
 
+#include "parsers/aac/aac_adts_parser.h"
 #include "parsers/aac/aac_parser.h"
 #include "parsers/ac3/ac3_parser.h"
 #include "parsers/ac3/ac3_enc.h"
