@@ -72,6 +72,12 @@
   sample_t get_sample()
     Get a new sample value in a range (-1..1)
 
+  double get_double()
+    Get a new double value in a range (-1..1)
+
+  bool get_bool()
+    Get a new boolean value in a range (-1..1)
+
   void fill_raw(void *data, size_t size)
     Fill the memory with random values
 
@@ -98,6 +104,8 @@ public:
   inline uint32_t next();
   inline uint32_t get_range(uint32_t range);
   inline sample_t get_sample();
+  inline double   get_double();
+  inline bool     get_bool();
 
   void fill_raw(void *data, size_t size);
   void fill_samples(sample_t *sample, size_t size);
@@ -132,6 +140,20 @@ RNG::get_sample()
 {
   static const sample_t inv = 2.0 / 2147483646.0; // 2^31 - 2 = 2147483646
   return (next() - 1) * inv - 1.0;
+}
+
+inline double
+RNG::get_double()
+{
+  static const double inv = 2.0 / 2147483646.0; // 2^31 - 2 = 2147483646
+  return (next() - 1) * inv - 1.0;
+}
+
+bool
+RNG::get_bool()
+{
+  static const uint32_t half = 1073741823;
+  return (next() - 1) >= half;
 }
 
 #endif
