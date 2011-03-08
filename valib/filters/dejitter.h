@@ -33,7 +33,8 @@ protected:
     Stat();
 
     void reset();
-    void add(vtime_t);
+    void push(vtime_t);
+    void shift(vtime_t);
     vtime_t stddev() const;
     vtime_t mean() const;
     size_t size() const;

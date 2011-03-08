@@ -10,8 +10,8 @@
 #endif
 
 static const int format_mask_dejitter = FORMAT_CLASS_PCM | FORMAT_MASK_LINEAR | FORMAT_MASK_SPDIF;
-static const size_t stat_size = 100;
-static const size_t min_stat_size = 50;
+static const size_t stat_size = 50;
+static const size_t min_stat_size = 10;
 
 ///////////////////////////////////////////////////////////
 // SyncerStat
@@ -24,11 +24,18 @@ Dejitter::Stat::reset()
 { stat.clear(); }
 
 void   
-Dejitter::Stat::add(vtime_t val)
+Dejitter::Stat::push(vtime_t val)
 {
   stat.push_back(val);
   if (stat.size() > stat_size)
     stat.pop_front();
+}
+
+void   
+Dejitter::Stat::shift(vtime_t val)
+{
+  for (size_t i = 0; i < stat.size(); i++)
+    stat[i] += val;
 }
 
 vtime_t 
@@ -284,14 +291,15 @@ Dejitter::process(Chunk &in, Chunk &out)
     vtime_t stddev = istat.stddev();
     vtime_t correction = 0;
 
-    if (istat.size() > min_stat_size && fabs(mean) > stddev)
+    if (istat.size() > min_stat_size && fabs(mean) > stddev/2)
     {
       correction = istat.mean() * 2 / istat.size();
       continuous_time += correction;
+      istat.shift(-correction);
     }
 
-    istat.add(delta);
-    ostat.add(correction);
+    istat.push(delta);
+    ostat.push(correction);
 
     #ifdef SYNCER_LOG_TIMING
       DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time, delta, istat.stddev(), istat.mean()));
@@ -302,8 +310,8 @@ Dejitter::process(Chunk &in, Chunk &out)
   }
   else // no dejitter
   {
-    istat.add(delta);
-    ostat.add(delta);
+    istat.push(delta);
+    ostat.push(delta);
 
     #ifdef SYNCER_LOG_TIMING
       DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time, delta, istat.stddev(), istat.mean()));
