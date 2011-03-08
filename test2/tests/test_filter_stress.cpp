@@ -14,7 +14,6 @@
 #include "filter.h"
 #include "parsers/ac3/ac3_header.h"
 #include "parsers/aac/aac_adts_header.h"
-#include "parsers/aac/aac_adts_parser.h"
 #include "source/file_parser.h"
 #include "source/generator.h"
 #include "source/raw_source.h"
@@ -233,6 +232,7 @@ void filter_stress_test(Filter *f, Source *src)
   };
 
   Chunk chunk;
+  f->open(src->get_output());
   filter_stress_test(f, src, chunk, ops, array_size(ops));
 }
 
@@ -520,6 +520,19 @@ BOOST_AUTO_TEST_CASE(spectrum)
 
 ///////////////////////////////////////////////////////////
 // Codecs
+
+BOOST_AUTO_TEST_CASE(adts_parser)
+{
+  ADTSParser filter;
+  open_stress_test(&filter);
+
+  FileParser source;
+  source.open_probe("a.aac.03f.adts", &adts_header);
+  BOOST_REQUIRE(source.is_open());
+  filter_stress_test(&filter, &source);
+
+  noise_stress_test(Speakers(FORMAT_AAC_ADTS, 0, 0), &filter);
+}
 
 BOOST_AUTO_TEST_CASE(aac_parser)
 {
