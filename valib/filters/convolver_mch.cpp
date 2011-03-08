@@ -312,7 +312,7 @@ ConvolverMch::process(Chunk &in, Chunk &out)
   /////////////////////////////////////////////////////////
   // Convolution
 
-  sync.receive_linear(in);
+  sync.receive_sync(in);
 
   // Trivial cases:
   // Copy delayed samples to the start of the buffer
@@ -333,6 +333,7 @@ ConvolverMch::process(Chunk &in, Chunk &out)
         copy_samples(buf[ch], c + pos, in.samples[ch], 0, gone);
     pos += (int)gone;
     in.drop_samples(gone);
+    sync.put(gone);
 
     if (pos < buf_size)
       return false;
@@ -348,7 +349,7 @@ ConvolverMch::process(Chunk &in, Chunk &out)
     out.drop_samples(pre_samples);
     pre_samples = 0;
   }
-  sync.send_linear(out, spk.sample_rate);
+  sync.send_sync_linear(out, spk.sample_rate);
   return true;
 }
 
@@ -381,6 +382,6 @@ ConvolverMch::flush(Chunk &out)
     out.drop_samples(pre_samples);
     pre_samples = 0;
   }
-  sync.send_linear(out, spk.sample_rate);
+  sync.send_sync_linear(out, spk.sample_rate);
   return true;
 }

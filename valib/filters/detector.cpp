@@ -1,19 +1,15 @@
 #include "detector.h"
 #include "../parsers/spdif/spdif_header.h"
-#include "../parsers/mpa/mpa_header.h"
+#include "../parsers/aac/aac_adts_header.h"
 #include "../parsers/ac3/ac3_header.h"
 #include "../parsers/dts/dts_header.h"
+#include "../parsers/mpa/mpa_header.h"
 
-
-static const HeaderParser *spdif_dts_parsers[] =
-{
-  &spdif_header,
-  &dts_header
-};
 
 static const HeaderParser *uni_parsers[] =
 {
   &spdif_header,
+  &adts_header,
   &ac3_header,
   &dts_header,
   &mpa_header
@@ -26,7 +22,6 @@ Detector::Detector()
   state = state_load;
   do_flush = false;
 
-  spdif_dts_header.set_parsers(spdif_dts_parsers, array_size(spdif_dts_parsers));
   uni_header.set_parsers(uni_parsers, array_size(uni_parsers));
 }
 
@@ -36,9 +31,10 @@ Detector::find_parser(Speakers spk) const
   switch (spk.format)
   {
     case FORMAT_RAWDATA: return &uni_header;
-    case FORMAT_PCM16:   return &spdif_dts_header;
-    case FORMAT_SPDIF:   return &spdif_dts_header;
+    case FORMAT_PCM16:   return &spdif_header;
+    case FORMAT_SPDIF:   return &spdif_header;
 
+    case FORMAT_AAC_ADTS:return &adts_header;
     case FORMAT_AC3:     return &ac3_header;
     case FORMAT_DTS:     return &dts_header;
     case FORMAT_MPA:     return &mpa_header;
@@ -50,6 +46,10 @@ Detector::find_parser(Speakers spk) const
 bool
 Detector::can_open(Speakers new_spk) const
 {
+  // Only stereo PCM16 is allowed for SPDIF detection
+  if (new_spk.format == FORMAT_PCM16)
+    return new_spk.mask == MODE_STEREO && new_spk.sample_rate > 0;
+
   return find_parser(new_spk) != 0;
 }
 
@@ -80,12 +80,7 @@ Detector::reset()
 bool
 Detector::process(Chunk &in, Chunk &out)
 {
-  if (in.sync)
-  {
-    sync.receive_sync(in, stream.get_buffer_size());
-    in.sync = false;
-    in.time = 0;
-  }
+  sync.receive_sync(in);
 
   do_flush = true;
   is_new_stream = false;
@@ -122,7 +117,10 @@ Detector::process(Chunk &in, Chunk &out)
         out_spk = spk;
 
         out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-        sync.send_frame_sync(out);
+        if (spk.format == FORMAT_PCM16)
+          sync.send_sync(out, 1.0/(4 * spk.sample_rate));
+        else
+          sync.send_frame_sync(out);
         return true;
       }
       else
@@ -149,14 +147,19 @@ Detector::flush(Chunk &out)
   switch (state)
   {
     case state_load:
-      stream.flush();
-      if (stream.has_debris())
-        out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-      else
-        out.clear();
-
       do_flush = false;
       is_new_stream = false;
+
+      stream.flush();
+      if (!stream.has_debris())
+        return false;
+
+      out.set_rawdata(stream.get_debris(), stream.get_debris_size());
+      if (out_spk.format == FORMAT_PCM16)
+        sync.send_sync(out, 1.0/(4 * spk.sample_rate));
+      else
+        sync.send_frame_sync(out);
+      sync.reset();
       return true;
 
     case state_frame:
@@ -172,12 +175,14 @@ Detector::flush(Chunk &out)
 void
 Detector::load(Chunk &in)
 {
-  size_t old_data_size = stream.get_buffer_size() + in.size;
+  uint8_t *buf = in.rawdata;
+  uint8_t *end = buf + in.size;
+  size_t old_data_size = stream.get_buffer_size();
 
-  uint8_t *end = in.rawdata + in.size;
-  stream.load(&in.rawdata, end);
-  in.size = end - in.rawdata;
+  stream.load(&buf, end);
+  size_t gone = buf - in.rawdata;
+  in.drop_rawdata(gone);
 
-  size_t new_data_size = stream.get_buffer_size() + in.size;
-  sync.drop(old_data_size - new_data_size);
+  sync.put(gone);
+  sync.drop(old_data_size + gone - stream.get_buffer_size());
 }
