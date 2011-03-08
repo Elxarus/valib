@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(aac_adts_parser)
   FileParser source;
   source.open_probe("a.aac.03f.adts", &adts_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter);
+  test_timing(&source, &filter, true);
 }
 
 BOOST_AUTO_TEST_CASE(aac_parser)
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(aac_parser)
   Chunk chunk;
   BOOST_REQUIRE(source.get_chunk(chunk));
   BOOST_REQUIRE(filter.open(source.get_output()));
-  test_timing(&source, &filter);
+  test_timing(&source, &filter, true);
 }
 
 BOOST_AUTO_TEST_CASE(ac3_parser)
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(ac3_parser)
   FileParser source;
   source.open_probe("a.ac3.03f.ac3", &ac3_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter);
+  test_timing(&source, &filter, true);
 }
 
 BOOST_AUTO_TEST_CASE(ac3_enc)
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(dts_parser)
   FileParser source;
   source.open_probe("a.dts.03f.dts", &dts_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter);
+  test_timing(&source, &filter, true);
 }
 
 BOOST_AUTO_TEST_CASE(mpa_parser)
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(mpa_parser)
   FileParser source;
   source.open_probe("a.mp2.005.mp2", &mpa_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter);
+  test_timing(&source, &filter, true);
 }
 
 BOOST_AUTO_TEST_CASE(mpg123_parser)
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(mpg123_parser)
   FileParser source;
   source.open_probe("a.mp2.005.mp2", &mpa_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter);
+  test_timing(&source, &filter, true);
 }
 
 BOOST_AUTO_TEST_CASE(spdif_parser)
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(spdif_parser)
   FileParser source;
   source.open_probe("a.ac3.03f.spdif", &spdif_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter);
+  test_timing(&source, &filter, true);
 }
 
 BOOST_AUTO_TEST_CASE(spdif_wrapper)
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(spdif_wrapper)
   FileParser source;
   source.open_probe("a.ac3.03f.ac3", &ac3_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter);
+  test_timing(&source, &filter, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
