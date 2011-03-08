@@ -443,6 +443,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tests\filters\test_dejitter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\filters\test_detector.cpp"
 				>
 			</File>

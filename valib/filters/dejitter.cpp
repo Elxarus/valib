@@ -1,5 +1,5 @@
 #include <math.h>
-#include <string.h>
+#include <numeric>
 #include "dejitter.h"
 
 // uncomment this to log timing information into DirectShow log
@@ -10,52 +10,49 @@
 #endif
 
 static const int format_mask_dejitter = FORMAT_CLASS_PCM | FORMAT_MASK_LINEAR | FORMAT_MASK_SPDIF;
+static const size_t stat_size = 100;
 
 ///////////////////////////////////////////////////////////
 // SyncerStat
 
-Syncer::SyncerStat::SyncerStat()
-{
-  reset();
-}
+Syncer::Stat::Stat()
+{}
 
 void   
-Syncer::SyncerStat::reset()
-{
-  memset(stat, 0, sizeof(stat));
-}
+Syncer::Stat::reset()
+{ stat.clear(); }
 
 void   
-Syncer::SyncerStat::add(vtime_t _val)
+Syncer::Stat::add(vtime_t val)
 {
-  memmove(stat + 1, stat, sizeof(stat) - sizeof(stat[0]));
-  stat[0] = _val;
+  stat.push_back(val);
+  if (stat.size() >= stat_size)
+    stat.pop_front();
 }
 
 vtime_t 
-Syncer::SyncerStat::stddev() const
+Syncer::Stat::stddev() const
 {
+  if (!stat.size())
+    return 0;
   vtime_t sum = 0;
-  vtime_t avg = mean();
-  for (int i = 0; i < array_size(stat); i++)
-    sum += (stat[i] - avg) * (stat[i] - avg);
-  return sqrt(sum/array_size(stat));
+  vtime_t mean = std::accumulate(stat.begin(), stat.end(), 0) / stat.size();
+  for (size_t i = 0; i < stat.size(); i++)
+    sum += (stat[i] - mean) * (stat[i] - mean);
+  return sqrt(sum/stat.size());
 }
 
 vtime_t 
-Syncer::SyncerStat::mean() const
+Syncer::Stat::mean() const
 {
-  vtime_t sum = 0;
-  for (int i = 0; i < array_size(stat); i++)
-    sum += stat[i];
-  return sum/array_size(stat);
+  if (!stat.size())
+    return 0;
+  return std::accumulate(stat.begin(), stat.end(), 0) / stat.size();
 }
 
-int 
-Syncer::SyncerStat::len() const
-{
-  return array_size(stat);
-}
+size_t
+Syncer::Stat::size() const
+{ return stat.size(); }
 
 ///////////////////////////////////////////////////////////
 // Syncer
@@ -151,7 +148,10 @@ Syncer::process(Chunk &in, Chunk &out)
 
   // ignore non-sync chunks
   if (!out.sync)
+  {
+    continuous_time += out.size * size2time;
     return true;
+  }
 
   // catch syncronization
   vtime_t time = out.time;
@@ -160,8 +160,9 @@ Syncer::process(Chunk &in, Chunk &out)
     #ifdef SYNCER_LOG_TIMING
       DbgLog((LOG_TRACE, 3, "sync catch: %ims", int(time * 1000)));
     #endif
+    out.set_sync(true, time * time_factor + time_shift);
     continuous_sync = true;
-    continuous_time = time;
+    continuous_time = time + out.size * size2time;
     return true;
   }
 
@@ -279,7 +280,7 @@ Syncer::process(Chunk &in, Chunk &out)
 
     if (fabs(mean) > stddev)
     {
-      correction = istat.mean() * 2 / istat.len();
+      correction = istat.mean() * 2 / istat.size();
       continuous_time += correction;
     }
 

@@ -6,9 +6,8 @@
 #ifndef VALIB_DEJITTER_H
 #define VALIB_DEJITTER_H
 
+#include <deque>
 #include "../filter.h"
-
-#define STAT_SIZE 64
 
 class Syncer : public SimpleFilter
 {
@@ -28,22 +27,22 @@ protected:
   vtime_t threshold;
 
   // statistics
-  class SyncerStat
+  class Stat
   {
-  protected:
-    vtime_t stat[STAT_SIZE];
-
   public:
-    SyncerStat();
+    Stat();
 
     void reset();
     void add(vtime_t);
     vtime_t stddev() const;
     vtime_t mean() const;
-    int len() const;
+    size_t size() const;
+
+  protected:
+    std::deque<vtime_t> stat;
   };
-  SyncerStat istat;
-  SyncerStat ostat;
+  Stat istat;
+  Stat ostat;
 
 public:
   Syncer();
