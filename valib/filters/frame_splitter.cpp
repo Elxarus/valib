@@ -42,13 +42,7 @@ FrameSplitter::can_open(Speakers spk) const
 bool
 FrameSplitter::process(Chunk &in, Chunk &out)
 {
-  if (in.sync)
-  {
-    sync.receive_sync(in, stream.get_buffer_size());
-    in.sync = false;
-    in.time = 0;
-  }
-
+  sync.receive_sync(in);
   while (load_frame(in))
   {
     out.set_rawdata(stream.get_frame(), stream.get_frame_size());
@@ -63,13 +57,15 @@ FrameSplitter::process(Chunk &in, Chunk &out)
 bool
 FrameSplitter::load_frame(Chunk &in)
 {
+  uint8_t *buf = in.rawdata;
+  uint8_t *end = buf + in.size;
   size_t old_data_size = stream.get_buffer_size() + in.size;
 
-  uint8_t *end = in.rawdata + in.size;
-  bool result = stream.load_frame(&in.rawdata, end);
-  in.size = end - in.rawdata;
+  bool result = stream.load_frame(&buf, end);
+  size_t gone = buf - in.rawdata;
+  in.drop_rawdata(gone);
 
-  size_t new_data_size = stream.get_buffer_size() + in.size;
-  sync.drop(old_data_size - new_data_size);
+  sync.put(gone);
+  sync.drop(old_data_size + gone - stream.get_buffer_size());
   return result;
 }

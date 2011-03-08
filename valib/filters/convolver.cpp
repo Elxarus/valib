@@ -221,7 +221,7 @@ Convolver::process(Chunk &in, Chunk &out)
   /////////////////////////////////////////////////////////
   // Convolution
 
-  sync.receive_linear(in);
+  sync.receive_sync(in);
   if (pos < buf_size)
   {
     size_t gone = MIN(in.size, size_t(buf_size - pos));
@@ -229,6 +229,7 @@ Convolver::process(Chunk &in, Chunk &out)
 
     pos += (int)gone;
     in.drop_samples(gone);
+    sync.put(gone);
 
     if (pos < buf_size)
       return false;
@@ -243,7 +244,7 @@ Convolver::process(Chunk &in, Chunk &out)
     out.drop_samples(pre_samples);
     pre_samples = 0;
   }
-  sync.send_linear(out, spk.sample_rate);
+  sync.send_sync_linear(out, spk.sample_rate);
   return true;
 }
 
@@ -265,6 +266,6 @@ Convolver::flush(Chunk &out)
     out.drop_samples(pre_samples);
     pre_samples = 0;
   }
-  sync.send_linear(out, spk.sample_rate);
+  sync.send_sync_linear(out, spk.sample_rate);
   return true;
 }

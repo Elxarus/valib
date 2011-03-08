@@ -18,7 +18,6 @@
 class Detector : public SimpleFilter
 {
 protected:
-  MultiHeader spdif_dts_header;
   MultiHeader uni_header;
 
   enum state_t { state_load, state_frame };
