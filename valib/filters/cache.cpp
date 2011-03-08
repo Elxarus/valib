@@ -189,12 +189,8 @@ CacheFilter::process(Chunk &in, Chunk &out)
     return false;
 
   // Receive timestamp
-  if (in.sync)
-  {
-    stream_time = in.time;
-    in.sync = false;
-    in.time = 0;
-  }
+  if (out.sync)
+    stream_time = out.time;
 
   stream_time += vtime_t(size) / spk.sample_rate;
   cached_samples += (int)size;
