@@ -12,10 +12,6 @@ AGC::AGC(size_t _nsamples)
 
   sample[0]   = 0;
   sample[1]   = 0;
-  buf_sync[0] = false;
-  buf_sync[1] = false;
-  buf_time[0] = 0;
-  buf_time[1] = 0;
 
   nsamples  = 0;
 
@@ -71,19 +67,12 @@ AGC::get_buffer() const
 bool 
 AGC::fill_buffer(Chunk &chunk)
 {
-  if (chunk.sync && sample[block] == 0)
-  {
-    buf_sync[block] = chunk.sync;
-    buf_time[block] = chunk.time;
-    chunk.sync = false;
-    chunk.time = 0;
-  }
-
   size_t n = MIN(chunk.size, nsamples - sample[block]);
   copy_samples(buf[block], sample[block], chunk.samples, 0, spk.nch(), n);
 
   sample[block] += n;
   chunk.drop_samples(n);
+  sync.put(n);
   return sample[block] >= nsamples;
 }
 
@@ -229,22 +218,18 @@ AGC::process()
 void 
 AGC::reset()
 {
-  block       = 0;
-
-  sample[0]   = 0;
-  sample[1]   = 0;
-  buf_sync[0] = false;
-  buf_sync[1] = false;
-  buf_time[0] = 0;
-  buf_time[1] = 0;
-
-  level  = 1.0;
-  factor = 1.0;
+  block     = 0;
+  sample[0] = 0;
+  sample[1] = 0;
+  level     = 1.0;
+  factor    = 1.0;
+  sync.reset();
 }
 
 bool 
 AGC::process(Chunk &in, Chunk &out)
 {
+  sync.receive_sync(in);
   while (fill_buffer(in))
   {
     process();
@@ -253,11 +238,9 @@ AGC::process(Chunk &in, Chunk &out)
     if (!sample[block] && sample[next_block()])
       continue;
 
-    out.set_linear(
-      buf[block], sample[block],
-      buf_sync[block], buf_time[block]);
+    out.set_linear(buf[block], sample[block]);
+    sync.send_sync_linear(out, spk.sample_rate);
 
-    buf_sync[block] = false;
     sample[block] = 0; // drop block just sent
     return true;
   }
@@ -281,11 +264,9 @@ AGC::flush(Chunk &out)
     process();
   }
 
-  out.set_linear(
-    buf[block], sample[block],
-    buf_sync[block], buf_time[block]);
+  out.set_linear(buf[block], sample[block]);
+  sync.send_sync_linear(out, spk.sample_rate);
 
-  buf_sync[block] = false;
   sample[block] = 0;
   return true;
 }
