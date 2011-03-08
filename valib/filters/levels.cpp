@@ -197,10 +197,8 @@ Levels::process(Chunk &in, Chunk &out)
   if (out.is_dummy())
     return false;
 
-  size_t n = out.size;
-
-  if (in.sync)
-    continuous_time = in.time;
+  if (out.sync)
+    continuous_time = out.time;
 
   /////////////////////////////////////////////////////////
   // Find peak-levels
@@ -215,6 +213,7 @@ Levels::process(Chunk &in, Chunk &out)
   order_t order;
   spk.get_order(order);
 
+  size_t n = out.size;
   while (n)
   {
     size_t block_size = MIN(n, nsamples - sample);
