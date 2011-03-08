@@ -26,6 +26,7 @@
 
 #include "../buffer.h"
 #include "../filter.h"
+#include "../sync.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // AGC class
@@ -36,12 +37,10 @@ class AGC : public SamplesFilter
 protected:
   SampleBuf w;
   SampleBuf buf[2];               // sample buffers
+  SyncHelper sync;                // sync helper
 
   size_t    block;                // current block
   size_t    sample[2];            // number of samples filled
-  bool      buf_sync[2];          // beginning of the buffer is syncpoint
-  vtime_t   buf_time[2];          // timestamp at beginning of the buffer
-
   size_t    nsamples;             // number of samples per block
 
   sample_t  factor;               // previous block factor
