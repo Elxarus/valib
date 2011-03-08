@@ -354,9 +354,9 @@ BOOST_AUTO_TEST_CASE(decoder_graph_spdif)
   noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
 }
 
-BOOST_AUTO_TEST_CASE(syncer)
+BOOST_AUTO_TEST_CASE(dejitter)
 {
-  Syncer filter;
+  Dejitter filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter);
 }

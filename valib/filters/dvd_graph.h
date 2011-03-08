@@ -68,7 +68,7 @@ public:
   AC3Enc         enc;
   Spdifer        spdifer_enc;
   Spdif2PCM      spdif2pcm;
-  Syncer         syncer;
+  Dejitter       dejitter;
 
 public:
   DVDGraph(int nsamples = 4096, const Sink *sink = 0);

@@ -11,53 +11,59 @@
 
 static const int format_mask_dejitter = FORMAT_CLASS_PCM | FORMAT_MASK_LINEAR | FORMAT_MASK_SPDIF;
 static const size_t stat_size = 100;
+static const size_t min_stat_size = 50;
 
 ///////////////////////////////////////////////////////////
 // SyncerStat
 
-Syncer::Stat::Stat()
+Dejitter::Stat::Stat()
 {}
 
 void   
-Syncer::Stat::reset()
+Dejitter::Stat::reset()
 { stat.clear(); }
 
 void   
-Syncer::Stat::add(vtime_t val)
+Dejitter::Stat::add(vtime_t val)
 {
   stat.push_back(val);
-  if (stat.size() >= stat_size)
+  if (stat.size() > stat_size)
     stat.pop_front();
 }
 
 vtime_t 
-Syncer::Stat::stddev() const
+Dejitter::Stat::stddev() const
 {
   if (!stat.size())
     return 0;
+
   vtime_t sum = 0;
-  vtime_t mean = std::accumulate(stat.begin(), stat.end(), 0) / stat.size();
+  vtime_t avg = mean();
   for (size_t i = 0; i < stat.size(); i++)
-    sum += (stat[i] - mean) * (stat[i] - mean);
+    sum += (stat[i] - avg) * (stat[i] - avg);
   return sqrt(sum/stat.size());
 }
 
 vtime_t 
-Syncer::Stat::mean() const
+Dejitter::Stat::mean() const
 {
   if (!stat.size())
     return 0;
-  return std::accumulate(stat.begin(), stat.end(), 0) / stat.size();
+
+  vtime_t sum = 0;
+  for (size_t i = 0; i < stat.size(); i++)
+    sum += stat[i];
+  return sum/stat.size();
 }
 
 size_t
-Syncer::Stat::size() const
+Dejitter::Stat::size() const
 { return stat.size(); }
 
 ///////////////////////////////////////////////////////////
-// Syncer
+// Dejitter
 
-Syncer::Syncer()
+Dejitter::Dejitter()
 {
   size2time = 1.0;
 
@@ -72,14 +78,14 @@ Syncer::Syncer()
 }
 
 bool
-Syncer::can_open(Speakers new_spk) const
+Dejitter::can_open(Speakers new_spk) const
 {
   return new_spk.sample_rate > 0 &&
          (FORMAT_MASK(new_spk.format) & format_mask_dejitter) != 0;
 }
 
 bool
-Syncer::init()
+Dejitter::init()
 {
   reset();
 
@@ -126,7 +132,7 @@ Syncer::init()
 }
 
 void 
-Syncer::reset()
+Dejitter::reset()
 {
   #ifdef SYNCER_LOG_TIMING
     DbgLog((LOG_TRACE, 3, "sync drop"));
@@ -138,7 +144,7 @@ Syncer::reset()
 }
 
 bool 
-Syncer::process(Chunk &in, Chunk &out)
+Dejitter::process(Chunk &in, Chunk &out)
 {
   // passthrough
   out = in;
@@ -278,7 +284,7 @@ Syncer::process(Chunk &in, Chunk &out)
     vtime_t stddev = istat.stddev();
     vtime_t correction = 0;
 
-    if (fabs(mean) > stddev)
+    if (istat.size() > min_stat_size && fabs(mean) > stddev)
     {
       correction = istat.mean() * 2 / istat.size();
       continuous_time += correction;

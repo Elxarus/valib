@@ -10,7 +10,7 @@
 
 static const int seed = 9823475;
 static const size_t chunk_size = 128;
-static const size_t nchunks = 500;
+static const size_t nchunks = 1000;
 static const vtime_t jitter = 0.03;
 
 static inline bool compare_time(vtime_t t1, vtime_t t2)
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(dejitter)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {
-  Syncer f;
+  Dejitter f;
   BOOST_CHECK_EQUAL(f.get_time_shift(), 0);
   BOOST_CHECK_EQUAL(f.get_time_factor(), 1.0);
   BOOST_CHECK_EQUAL(f.get_dejitter(), true);
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 
 BOOST_AUTO_TEST_CASE(get_set)
 {
-  Syncer f;
+  Dejitter f;
   f.set_time_shift(1.1);
   BOOST_CHECK_EQUAL(f.get_time_shift(), 1.1);
   f.set_time_shift(0);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(dejitter)
   Speakers spk(FORMAT_PCM16, MODE_STEREO, 48000);
   double size2time = 1.0 / 192000;
 
-  Syncer f;
+  Dejitter f;
   NoiseGen noise(spk, seed, chunk_size * nchunks, chunk_size);
 
   Chunk in, out;
@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(dejitter)
   BOOST_REQUIRE(f.open(spk));
   while (noise.get_chunk(in))
   {
-    // Do not add jitter to the first chunk
-    // to let dejitter to catch the correct reference time
+    // Do not add jitter to the first chunk to let
+    // dejitter to catch the correct reference time
     bool sync = rng.get_bool();
     if (continuous_time == 0)
     {
@@ -92,8 +92,12 @@ BOOST_AUTO_TEST_CASE(dejitter)
     continuous_time += out.size * size2time;
   }
 
-  BOOST_CHECK_LE(f.get_input_mean(), jitter/5);
-  BOOST_CHECK_CLOSE(f.get_input_stddev(), jitter/2, 20.0);
+  vtime_t mean = f.get_input_mean();
+  vtime_t sd = f.get_input_stddev();
+
+  BOOST_CHECK_GT(fabs(f.get_input_mean()), 0);
+  BOOST_CHECK_LT(fabs(f.get_input_mean()), jitter/10);
+  BOOST_CHECK_CLOSE(f.get_input_stddev(), jitter/2, 30.0);
   BOOST_CHECK_EQUAL(f.get_output_mean(), 0);
   BOOST_CHECK_EQUAL(f.get_output_stddev(), 0);
 }
@@ -107,22 +111,19 @@ BOOST_AUTO_TEST_CASE(no_dejitter)
   Speakers spk(FORMAT_PCM16, MODE_STEREO, 48000);
   double size2time = 1.0 / 192000;
 
-  Syncer f;
+  Dejitter f;
   f.set_dejitter(false);
   NoiseGen noise(spk, seed, chunk_size * nchunks, chunk_size);
 
   Chunk in, out;
   vtime_t continuous_time = 0;
-  vtime_t jitter_time;
   BOOST_REQUIRE(f.open(spk));
   while (noise.get_chunk(in))
   {
     bool sync = rng.get_bool();
+    vtime_t jitter_time = continuous_time + rng.get_double() * jitter;
     if (sync)
-    {
-      jitter_time = continuous_time + rng.get_double() * jitter;
       in.set_sync(true, jitter_time);
-    }
 
     BOOST_REQUIRE(f.process(in, out));
     BOOST_REQUIRE_EQUAL(out.sync, sync);
@@ -131,10 +132,12 @@ BOOST_AUTO_TEST_CASE(no_dejitter)
     continuous_time += out.size * size2time;
   }
 
-  BOOST_CHECK_LE(f.get_input_mean(), jitter/5);
-  BOOST_CHECK_CLOSE(f.get_input_stddev(), jitter/2, 20.0);
-  BOOST_CHECK_LE(f.get_output_mean(), jitter/5);
-  BOOST_CHECK_CLOSE(f.get_output_stddev(), jitter/2, 20.0);
+  BOOST_CHECK_GT(fabs(f.get_input_mean()), 0);
+  BOOST_CHECK_LT(fabs(f.get_input_mean()), jitter/10);
+  BOOST_CHECK_CLOSE(f.get_input_stddev(), jitter/2, 30.0);
+  BOOST_CHECK_GT(fabs(f.get_output_mean()), 0);
+  BOOST_CHECK_LT(fabs(f.get_output_mean()), jitter/10);
+  BOOST_CHECK_CLOSE(f.get_output_stddev(), jitter/2, 30.0);
 }
 
 BOOST_AUTO_TEST_CASE(threshold)
@@ -146,7 +149,7 @@ BOOST_AUTO_TEST_CASE(threshold)
   double size2time = 1.0 / 192000;
   vtime_t time, diff;
 
-  Syncer f;
+  Dejitter f;
   RawNoise buf(seed, chunk_size);
   BOOST_REQUIRE(f.open(spk));
 

@@ -9,7 +9,7 @@
 #include <deque>
 #include "../filter.h"
 
-class Syncer : public SimpleFilter
+class Dejitter : public SimpleFilter
 {
 protected:
   double size2time;
@@ -45,10 +45,10 @@ protected:
   Stat ostat;
 
 public:
-  Syncer();
+  Dejitter();
 
   /////////////////////////////////////////////////////////
-  // Syncer interface
+  // Dejitter interface
 
   void    resync()                               { continuous_sync = false; }
 
