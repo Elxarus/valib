@@ -1,3 +1,9 @@
+/*
+  Resample introcudes time jitter with amplitude about T = 1/sample_rate
+  Also, unlike other filters it moves timestamp backwards, to the beginning
+  of the block.
+*/
+
 #include <math.h>
 #include <string.h>
 #include "resample.h"
@@ -530,7 +536,9 @@ Resample::process(Chunk &in, Chunk &out)
     time = in.time;
     time -= double(pos1 - c1x) / double(fs);
     time -= double(c2) / double(fd * m2);
-    time += double(pre_samples) / double(fd);
+    if (pre_samples)
+      // add pre_samples/fd, but pre_samples must be double to match the time exactly.
+      time += double(c2) / double(m2) / double(fd);
 
     in.sync = false;
     in.time = 0;
