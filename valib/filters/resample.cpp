@@ -5,7 +5,6 @@
 */
 
 #include <math.h>
-#include <string.h>
 #include "resample.h"
 #include "../dsp/kaiser.h"
 
@@ -308,8 +307,7 @@ Resample::do_resample()
   do_stage1(buf1.samples().samples, buf2.samples().samples, n_in, n_out);
 
   pos1 -= n_in;
-  for (ch = 0; ch < nch; ch++)
-    memmove(buf1[ch], buf1[ch] + n_in, pos1 * sizeof(sample_t));
+  move_samples(buf1, 0, buf1, n_in, nch, pos1);
 
   ///////////////////////////////////////////////////////
   // Stage 2 processing
@@ -345,8 +343,7 @@ Resample::do_resample()
     else
     {
       out_size -= pre_samples;
-      for (int ch = 0; ch < nch; ch++)
-        memmove(out_samples[ch], out_samples[ch] + pre_samples, out_size * sizeof(sample_t));
+      move_samples(out_samples, 0, out_samples, pre_samples, nch, out_size);
       pre_samples = 0;
     }
   }
@@ -444,7 +441,6 @@ Resample::reset()
   if (passthrough())
     return;
 
-  int ch;
   if (fs && fd)
   {
     pos_l = c1y;
@@ -461,12 +457,8 @@ Resample::reset()
 
     pos1 = c1x;
     shift = c2 - pre_samples*m2;
-
-    for (ch = 0; ch < nch; ch++)
-      memset(buf1[ch], 0, pos1 * sizeof(sample_t));
-
-    for (ch = 0; ch < nch; ch++)
-      memset(delay2[ch], 0, (n2/m2+1) * sizeof(sample_t));
+    zero_samples(buf1, nch, pos1);
+    zero_samples(delay2, nch, n2/m2+1);
   }
 }
 
@@ -503,12 +495,10 @@ Resample::process(Chunk &in, Chunk &out)
   ///////////////////////////////////////////////////////
   // Fill stage 1 buffer
 
-  int ch;
   int n = n2*m1/l1 + n1x + 1;
   if (in.size < (size_t)n - pos1)
   {
-    for (ch = 0; ch < nch; ch++)
-      memcpy(buf1[ch] + pos1, in.samples[ch], in.size * sizeof(sample_t));
+    copy_samples(buf1, pos1, in.samples, 0, nch, in.size);
     pos1 += (int)in.size;
 
     in.clear();
@@ -516,8 +506,7 @@ Resample::process(Chunk &in, Chunk &out)
     return false;
   }
 
-  for (ch = 0; ch < nch; ch++)
-    memcpy(buf1[ch] + pos1, in.samples[ch], (n - pos1) * sizeof(sample_t));
+  copy_samples(buf1, pos1, in.samples, 0, nch, n - pos1);
   in.drop_samples(n - pos1);
   pos1 = n;
 
@@ -539,8 +528,6 @@ Resample::flush(Chunk &out)
   if (!need_flushing())
     return false;
 
-  int ch;
-
   int actual_out_size = (stage1_out(pos1 - c1x) + c2 - shift) / m2 - pre_samples;
   if (!actual_out_size)
     return true;
@@ -549,8 +536,7 @@ Resample::flush(Chunk &out)
   // Zero the tail of the stage 1 buffer
 
   int n = n2*m1/l1 + n1x + 1 - pos1;
-  for (ch = 0; ch < nch; ch++)
-    memset(buf1[ch] + pos1, 0, n * sizeof(sample_t));
+  zero_samples(buf1, nch, n);
   post_samples -= n;
   pos1 += n;
 
@@ -561,13 +547,10 @@ Resample::flush(Chunk &out)
 
   if (post_samples <= 0)
   {
+    // If we have no enough data, then
+    // copy the rest from the delay buffer
     if (actual_out_size > out_size)
-    {
-      // If we have no enough data, then
-      // copy the rest from the delay buffer
-      for (ch = 0; ch < nch; ch++)
-        memcpy(buf2[ch] + out_size, delay2[ch], (actual_out_size - out_size) * sizeof(sample_t));
-    }
+      copy_samples(buf2, out_size, delay2, 0, nch, actual_out_size - out_size);
     out_size = actual_out_size;
     return true;
   }
