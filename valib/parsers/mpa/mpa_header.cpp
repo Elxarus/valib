@@ -65,7 +65,11 @@ static const int freq_tbl[2][3] =
   { 22050, 24000, 16000 }   // MPEG2 LSF
 };
 
-static const int slots_tbl[3] = { 12, 144, 144 };
+static const int slots_tbl[2][3] =
+{
+  { 12, 144, 144 },  // MPEG1
+  { 12, 144,  72 }   // MPEG2 LSF
+};
 
 bool
 MPAHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
@@ -116,7 +120,7 @@ MPAHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
 
   if (bitrate)
   {
-    hinfo->frame_size = bitrate * slots_tbl[layer] / sample_rate + h.padding;
+    hinfo->frame_size = bitrate * slots_tbl[ver][layer] / sample_rate + h.padding;
     hinfo->scan_size = 0; // do not scan
   }
   else
