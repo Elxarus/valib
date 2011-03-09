@@ -228,9 +228,7 @@ BOOST_AUTO_TEST_CASE(dts_options)
     SPDIFWrapper spdifer(tests[i].dts_mode, tests[i].dts_conv);
     SPDIFParser despdifer;
 
-    FilterChain test;
-    test.add_back(&resize);
-    test.add_back(&spdifer);
+    FilterChain test(&resize, &spdifer);
     if (tests[i].mode != mode_pass)
       test.add_back(&despdifer);
 

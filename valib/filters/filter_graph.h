@@ -186,6 +186,9 @@ protected:
 
 public:
   FilterChain();
+  FilterChain(Filter *f1, Filter *f2 = 0, Filter *f3 = 0, Filter *f4 = 0,
+    Filter *f5 = 0, Filter *f6 = 0, Filter *f7 = 0, Filter *f8 = 0);
+
   virtual ~FilterChain();
 
   /////////////////////////////////////////////////////////
