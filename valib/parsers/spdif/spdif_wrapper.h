@@ -101,6 +101,7 @@ protected:
   bool        passthrough;  // passthrough mode
   bool        new_stream_flag;
 
+  const HeaderParser *parser;// Spdifable format header
   HeaderInfo  hinfo;        // input raw frame info
   Rawdata     header;
 

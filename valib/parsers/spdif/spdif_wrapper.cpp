@@ -21,7 +21,8 @@ SPDIFWrapper::SPDIFWrapper(int _dts_mode, int _dts_conv)
 :dts_mode(_dts_mode), dts_conv(_dts_conv)
 {
   buf.allocate(MAX_SPDIF_FRAME_SIZE);
-  header.allocate(spdifable_header.header_size());
+  parser = spdifable_header();
+  header.allocate(parser->header_size());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -30,7 +31,7 @@ SPDIFWrapper::SPDIFWrapper(int _dts_mode, int _dts_conv)
 bool
 SPDIFWrapper::can_open(Speakers spk) const
 {
-  return spdifable_header.can_parse(spk.format);
+  return parser->can_parse(spk.format);
 }
 
 bool
@@ -67,27 +68,27 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
   /////////////////////////////////////////////////////////
   // Determine frame's characteristics
 
-  if (size < spdifable_header.header_size())
+  if (size < parser->header_size())
     return false;
 
-  if (!spdifable_header.parse_header(frame, &hinfo))
+  if (!parser->parse_header(frame, &hinfo))
     // unknown format
     return false;
 
   if (!hinfo.spdif_type)
   {
-    // passthrough non-spdifable_header format
+    // passthrough non-spdifable format
     passthrough = true;
     new_stream_flag = true;
     out_spk = hinfo.spk;
     return true;
   }
 
-  if (spdifable_header.compare_headers(frame, header))
+  if (parser->compare_headers(frame, header))
     new_stream_flag = false;
   else
   {
-    memcpy(header.begin(), frame, spdifable_header.header_size());
+    memcpy(header.begin(), frame, parser->header_size());
     new_stream_flag = true;
     out_spk = hinfo.spk;
     out_spk.format = FORMAT_SPDIF;
@@ -100,7 +101,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
   if (spdif_frame_size > MAX_SPDIF_FRAME_SIZE)
   {
     // impossible to send over spdif
-    // passthrough non-spdifable_header data
+    // passthrough non-spdifable data
     passthrough = true;
     new_stream_flag = true;
     out_spk = hinfo.spk;
@@ -130,7 +131,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       else
       {
         // impossible to wrap
-        // passthrough non-spdifable_header data
+        // passthrough non-spdifable data
         passthrough = true;
         new_stream_flag = true;
         out_spk = hinfo.spk;
@@ -149,7 +150,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       else
       {
         // impossible to send over spdif
-        // passthrough non-spdifable_header data
+        // passthrough non-spdifable data
         passthrough = true;
         new_stream_flag = true;
         out_spk = hinfo.spk;
@@ -192,7 +193,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       else
       {
         // impossible to send over spdif
-        // passthrough non-spdifable_header data
+        // passthrough non-spdifable data
         passthrough = true;
         new_stream_flag = true;
         out_spk = hinfo.spk;
@@ -211,7 +212,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
     else
     {
       // impossible to wrap
-      // passthrough non-spdifable_header data
+      // passthrough non-spdifable data
       passthrough = true;
       new_stream_flag = true;
       out_spk = hinfo.spk;

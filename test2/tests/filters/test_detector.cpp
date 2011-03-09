@@ -42,12 +42,12 @@ BOOST_AUTO_TEST_CASE(spdif_detection)
 BOOST_AUTO_TEST_CASE(dts_detection)
 {
   Speakers spk_pcm(FORMAT_PCM16, MODE_STEREO, 48000);
-  Speakers spk_dts(FORMAT_DTS, MODE_5_1, 48000);
-  RAWSource pcm(spk_pcm, "a.dts.03f.dts");
-  RAWSource dts(spk_dts, "a.dts.03f.dts");
+  Speakers spk_dts(FORMAT_SPDIF, MODE_5_1, 48000);
+  RAWSource pcm(spk_pcm, "a.dts.03f.spdifdts");
+  RAWSource spdif(spk_dts, "a.dts.03f.spdifdts");
 
   Detector f;
-  compare(&pcm, &f, &dts, 0);
+  compare(&pcm, &f, &spdif, 0);
 }
 
 BOOST_AUTO_TEST_CASE(ac3_detection)
