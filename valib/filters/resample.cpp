@@ -8,7 +8,6 @@
 #include <string.h>
 #include "resample.h"
 #include "../dsp/kaiser.h"
-#include "../dsp/fftsg.h"
 
 static const double k_conv = 2;
 static const double k_fft = 20.1977305724455;
@@ -36,17 +35,9 @@ Resample::Resample():
   g(0), l(0), m(0), l1(0), l2(0), m1(0), m2(0),
   n1(0), n1x(0), n1y(0),
   c1(0), c1x(0), c1y(0),
-  f1_raw(0), f1(0), order(0),
-  n2(0), n2b(0), c2(0), f2(0),
-  fft_ip(0), fft_w(0)
+  f1(0), order(0),
+  n2(0), n2b(0), c2(0)
 {
-  for (int i = 0; i < NCHANNELS; i++)
-  {
-    buf1[i] = 0;
-    buf2[i] = 0;
-    delay2[i] = 0;
-  }
-
   sample_rate = 0;
   out_samples.zero();
   out_size = 0;
@@ -59,17 +50,9 @@ Resample::Resample(int _sample_rate, double _a, double _q):
   g(0), l(0), m(0), l1(0), l2(0), m1(0), m2(0),
   n1(0), n1x(0), n1y(0),
   c1(0), c1x(0), c1y(0),
-  f1_raw(0), f1(0), order(0),
-  n2(0), n2b(0), c2(0), f2(0),
-  fft_ip(0), fft_w(0)
+  f1(0), order(0),
+  n2(0), n2b(0), c2(0)
 {
-  for (int i = 0; i < NCHANNELS; i++)
-  {
-    buf1[i] = 0;
-    buf2[i] = 0;
-    delay2[i] = 0;
-  }
-
   sample_rate = 0;
   out_samples.zero();
   out_size = 0;
@@ -216,8 +199,8 @@ Resample::init()
   for (i = 0; i < n1x * n1y; i++) f1[0][i] = 0;
   for (i = 1; i < n1y; i++) f1[i] = f1[0] + i * n1x;
 
-  f1_raw = new sample_t[n1y * n1x];
-  for (i = 0; i < n1x * n1y; i++) f1_raw[i] = 0;
+  f1_raw.allocate(n1y * n1x);
+  f1_raw.zero();
 
   // build the filter
   alpha = kaiser_alpha(a1);
@@ -252,8 +235,8 @@ Resample::init()
 
   // allocate the filter
   // f2[n2b]
-  f2 = new sample_t[n2b];
-  for (i = 0; i < n2b; i++) f2[i] = 0;
+  f2.allocate(n2b);
+  f2.zero();
 
   // make the filter
   // filter length is n2-1
@@ -261,34 +244,21 @@ Resample::init()
   for (i = 0; i < n2-1; i++)
     f2[i] = (sample_t)(kaiser_window(i - c2, n2-1, alpha) * lpf(i - c2, lpf2) * l2 / n2);
 
-  // convert the filter to frequency domain and init fft for future use
-  fft_ip    = new int[(int)(2 + sqrt(double(n2b)))];
-  fft_w     = new sample_t[n2b/2];
-  fft_ip[0] = 0;
-
-  rdft(n2b, 1, f2, fft_ip, fft_w);
+  // init fft and convert the filter to frequency domain
+  fft.set_length(n2b);
+  fft.rdft(f2);
 
   ///////////////////////////////////////////////////////
   // Allocate buffers
 
   const size_t buf1_size = n2*m1/l1+n1x+1;
-  buf1[0] = new sample_t[buf1_size * nch];
-  for (i = 1; i < nch; i++)
-    buf1[i] = buf1[0] + i * buf1_size;
-
-  buf2[0] = new sample_t[n2b * nch];
-  for (i = 1; i < nch; i++)
-    buf2[i] = buf2[0] + i * n2b;
-
   const size_t delay2_size = n2/m2+1;
-  delay2[0] = new sample_t[delay2_size * nch];
-  for (i = 1; i < nch; i++)
-    delay2[i] = delay2[0] + i * delay2_size;
 
-  out_samples.zero();
-  for (i = 0; i < nch; i++)
-    out_samples[i] = buf2[i];
+  buf1.allocate(nch, buf1_size);
+  buf2.allocate(nch, n2b);
+  delay2.allocate(nch, delay2_size);
 
+  out_samples = buf2.samples();
   out_size = 0;
   reset();
 
@@ -307,31 +277,14 @@ Resample::uninit()
 
   if (f1) safe_delete(f1[0]);
   safe_delete(f1);
-  safe_delete(f1_raw);
   safe_delete(order);
-  safe_delete(f2);
-  safe_delete(fft_ip);
-  safe_delete(fft_w);
-
-  safe_delete(buf1[0]);
-  safe_delete(buf2[0]);
-  safe_delete(delay2[0]);
 
   fs = 0; fd = 0; nch = 0; rate = 1.0;
   g = 0; l = 0; m = 0; l1 = 0; l2 = 0; m1 = 0; m2 = 0;
   n1 = 0; n1x = 0; n1y = 0;
   c1 = 0; c1x = 0; c1y = 0;
-  f1_raw = 0; f1 = 0; order = 0;
-  n2 = 0; n2b = 0; c2 = 0; f2 = 0;
-  fft_ip = 0; fft_w = 0;
-
-  out_samples.zero();
-  for (int i = 0; i < NCHANNELS; i++)
-  {
-    buf1[i] = 0;
-    buf2[i] = 0;
-    delay2[i] = 0;
-  }
+  f1 = 0; order = 0;
+  n2 = 0; n2b = 0; c2 = 0;
 }
 
 
@@ -352,7 +305,7 @@ Resample::do_resample()
   int n_in = stage1_in(n2);
   assert(pos1 >= n_in);
 
-  do_stage1(buf1, buf2, n_in, n_out);
+  do_stage1(buf1.samples().samples, buf2.samples().samples, n_in, n_out);
 
   pos1 -= n_in;
   for (ch = 0; ch < nch; ch++)
@@ -433,9 +386,8 @@ Resample::do_stage1(sample_t *in[], sample_t *out[], int n_in, int n_out)
       double sum = 0;
       for (int j = 0; j < n1x; j++)
         sum += iptr[order[i] + j] * f1[i][j];
-      optr[i] = sum;
+      optr[i++] = sum;
 
-      i++;
       if (i >= l1)
       {
         i = 0;
@@ -461,9 +413,8 @@ Resample::do_stage2()
 
   for (int ch = 0; ch < nch; ch++)
   {
-    memset(buf2[ch] + n2, 0, n2 * sizeof(sample_t));
-
-    rdft(n2b, 1, buf2[ch], fft_ip, fft_w);
+    zero_samples(buf2[ch] + n2, n2);
+    fft.rdft(buf2[ch]);
 
     buf2[ch][0] = f2[0] * buf2[ch][0];
     buf2[ch][1] = f2[1] * buf2[ch][1]; 
@@ -476,8 +427,7 @@ Resample::do_stage2()
       buf2[ch][i*2  ] = re;
       buf2[ch][i*2+1] = im;
     }
-
-    rdft(n2b, -1, buf2[ch], fft_ip, fft_w);
+    fft.inv_rdft(buf2[ch]);
   }
 
 #if RESAMPLE_PERF

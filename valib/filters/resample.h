@@ -1,6 +1,8 @@
 #ifndef VALIB_RESAMPLE_H
 #define VALIB_RESAMPLE_H
 
+#include "../dsp/fft.h"
+#include "../buffer.h"
 #include "../filter.h"
 #if RESAMPLE_PERF
 #include "../win32\cpu.h"
@@ -28,24 +30,22 @@ protected:
   int n1, n1x, n1y; // filter length, x and y lengths
   int c1, c1x, c1y; // center of the filter, x and y coordinates
   sample_t **f1;    // reordered filter [n1y][n1x]
-  sample_t *f1_raw; // raw filter [n1y * n1x]
+  Samples f1_raw;   // raw filter [n1y * n1x]
   int *order;       // input positions [l]
 
   // fft stage filter
   int n2, n2b;      // filter size and fft size
   int c2;           // center of the filter
-  sample_t *f2;     // filter [n2b]
+  Samples f2;       // filter [n2b]
 
-  // fft
-  int      *fft_ip;
-  sample_t *fft_w;
+  FFT fft;          // fft transformer
 
   // processing
   int pos_l, pos_m;            // stage1 convolution positions [0..l1), [0..m1)
   int pos1;                    // stage1 buffer position
-  sample_t *buf1[NCHANNELS];   // stage1 buffer
-  sample_t *buf2[NCHANNELS];   // stage2 buffer [n2b]
-  sample_t *delay2[NCHANNELS]; // fft stage delay buffer [n2/m2]
+  SampleBuf buf1;              // stage1 buffer
+  SampleBuf buf2;              // stage2 buffer [n2b]
+  SampleBuf delay2;            // fft stage delay buffer [n2/m2]
   int shift;                   // fft stage decimation shift
   int pre_samples;             // number of samples to drop from the beginning of output data
   int post_samples;            // number of samples to add to the end of input data
