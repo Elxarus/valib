@@ -531,6 +531,24 @@ FilterChain::FilterChain()
   nodes.push_back(Node(node_end, 0));
 }
 
+FilterChain::FilterChain(Filter *f1, Filter *f2, Filter *f3, Filter *f4,
+Filter *f5, Filter *f6, Filter *f7, Filter *f8)
+{
+  id = 1;
+  nodes.push_back(Node(node_start, 0));
+  nodes.push_back(Node(node_end, 0));
+
+  if (f1) add_back(f1);
+  if (f2) add_back(f2);
+  if (f3) add_back(f3);
+  if (f4) add_back(f4);
+  if (f5) add_back(f5);
+  if (f6) add_back(f6);
+  if (f7) add_back(f7);
+  if (f8) add_back(f8);
+}
+
+
 FilterChain::~FilterChain()
 {}
 

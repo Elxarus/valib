@@ -34,10 +34,6 @@ BOOST_AUTO_TEST_CASE(decode)
   conv_mpa.set_format(FORMAT_LINEAR);
   conv_mpa.set_order(win_order);
 
-  FilterChain test_chain;
-  test_chain.add_back(&mpa);
-  test_chain.add_back(&conv_mpa);
-
   // Reference chain:
   // WAVSource -> Converter
 
@@ -48,7 +44,7 @@ BOOST_AUTO_TEST_CASE(decode)
   conv.set_format(FORMAT_LINEAR);
   conv.set_order(win_order);
 
-  double diff = calc_diff(&f, &test_chain, &wav, &conv);
+  double diff = calc_diff(&f, &FilterChain(&mpa, &conv_mpa), &wav, &conv);
   BOOST_CHECK_LE(diff, 1e-6);
 }
 

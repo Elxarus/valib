@@ -5,9 +5,9 @@
 #include "../../suite.h"
 #include "fir/param_fir.h"
 #include "filters/convolver.h"
+#include "filters/filter_graph.h"
 #include "filters/slice.h"
 #include "source/generator.h"
-#include "source/source_filter.h"
 #include <boost/scoped_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -105,15 +105,13 @@ BOOST_AUTO_TEST_CASE(make)
   ToneGen tone;
   SliceFilter slice;
   Convolver conv;
-  SourceFilter test_src1(&tone, &conv);
-  SourceFilter test_src(&test_src1, &slice);
+  FilterChain test(&conv, &slice);
   conv.set_fir(&gen);
 
   // Reference source ref_src (tone -> slice)
 
   ToneGen ref_tone;
   SliceFilter ref_slice;
-  SourceFilter ref_src(&ref_tone, &ref_slice);
 
   /////////////////////////////////////////////////////////
   // Low pass
@@ -131,10 +129,10 @@ BOOST_AUTO_TEST_CASE(make)
   slice.init(len, block_size + len);
   ref_tone.init(spk, f1-df, 0, block_size + 2 * len);
   ref_slice.init(len, len + block_size);
-  test_src.reset();
-  ref_src.reset();
+  test.reset();
+  ref_slice.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(&tone, &test, &ref_tone, &ref_slice);
   BOOST_CHECK_GT(diff, 0);
   BOOST_CHECK_LT(value2db(diff), -a);
 
@@ -143,9 +141,9 @@ BOOST_AUTO_TEST_CASE(make)
 
   tone.init(spk, f1+df, 0, block_size + 2 * len);
   slice.init(len, block_size + len);
-  test_src.reset();
+  test.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(&tone, &test);
   BOOST_CHECK_GT(level, 0);
   BOOST_CHECK_LT(value2db(level), -a);
 
@@ -165,10 +163,10 @@ BOOST_AUTO_TEST_CASE(make)
   slice.init(len, block_size + len);
   ref_tone.init(spk, f1+df, 0, block_size + 2 * len);
   ref_slice.init(len, len + block_size);
-  test_src.reset();
-  ref_src.reset();
+  test.reset();
+  ref_slice.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(&tone, &test, &ref_tone, &ref_slice);
   BOOST_CHECK_GT(diff, 0);
   BOOST_CHECK_LT(value2db(diff), -a);
 
@@ -177,9 +175,9 @@ BOOST_AUTO_TEST_CASE(make)
 
   tone.init(spk, f1-df, 0, block_size + 2 * len);
   slice.init(len, block_size + len);
-  test_src.reset();
+  test.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(&tone, &test);
   BOOST_CHECK_GT(level, 0);
   BOOST_CHECK_LT(value2db(level), -a);
 
@@ -199,10 +197,10 @@ BOOST_AUTO_TEST_CASE(make)
   slice.init(len, block_size + len);
   ref_tone.init(spk, (f1+f2)/2, 0, block_size + 2 * len);
   ref_slice.init(len, len + block_size);
-  test_src.reset();
-  ref_src.reset();
+  test.reset();
+  ref_slice.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(&tone, &test, &ref_tone, &ref_slice);
   BOOST_CHECK_GT(diff, 0);
   BOOST_CHECK_LT(value2db(diff), -a);
 
@@ -211,17 +209,17 @@ BOOST_AUTO_TEST_CASE(make)
 
   tone.init(spk, f1-df, 0, block_size + 2 * len);
   slice.init(len, block_size + len);
-  test_src.reset();
+  test.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(&tone, &test);
   BOOST_CHECK_GT(level, 0);
   BOOST_CHECK_LT(value2db(level), -a);
 
   tone.init(spk, f2+df, 0, block_size + 2 * len);
   slice.init(len, block_size + len);
-  test_src.reset();
+  test.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(&tone, &test);
   BOOST_CHECK_GT(level, 0);
   BOOST_CHECK_LT(value2db(level), -a);
 
@@ -241,10 +239,10 @@ BOOST_AUTO_TEST_CASE(make)
   slice.init(len, block_size + len);
   ref_tone.init(spk, f1-df, 0, block_size + 2 * len);
   ref_slice.init(len, len + block_size);
-  test_src.reset();
-  ref_src.reset();
+  test.reset();
+  ref_slice.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(&tone, &test, &ref_tone, &ref_slice);
   BOOST_CHECK_GT(diff, 0);
   BOOST_CHECK_LT(value2db(diff), -a);
 
@@ -252,10 +250,10 @@ BOOST_AUTO_TEST_CASE(make)
   slice.init(len, block_size + len);
   ref_tone.init(spk, f2+df, 0, block_size + 2 * len);
   ref_slice.init(len, len + block_size);
-  test_src.reset();
-  ref_src.reset();
+  test.reset();
+  ref_slice.reset();
 
-  diff = calc_diff(&test_src, &ref_src);
+  diff = calc_diff(&tone, &test, &ref_tone, &ref_slice);
   BOOST_CHECK_GT(diff, 0);
   BOOST_CHECK_LT(value2db(diff), -a);
 
@@ -264,9 +262,9 @@ BOOST_AUTO_TEST_CASE(make)
 
   tone.init(spk, (f1+f2)/2, 0, block_size + 2 * len);
   slice.init(len, block_size + len);
-  test_src.reset();
+  test.reset();
 
-  level = calc_peak(&test_src);
+  level = calc_peak(&tone, &test);
   BOOST_CHECK_GT(level, 0);
   BOOST_CHECK_LT(value2db(level), -a);
 }

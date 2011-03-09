@@ -5,10 +5,10 @@
 #include "../../suite.h"
 #include "fir/eq_fir.h"
 #include "filters/convolver.h"
+#include "filters/filter_graph.h"
 #include "filters/gain.h"
 #include "filters/slice.h"
 #include "source/generator.h"
-#include "source/source_filter.h"
 #include <boost/scoped_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -128,19 +128,17 @@ BOOST_AUTO_TEST_CASE(make_eq)
   const size_t block_size = 65536;
   const Speakers spk(FORMAT_LINEAR, MODE_STEREO, sample_rate);
 
-  // Test source test_src (tone -> convolver -> slice)
+  // Test source chain: ToneGen -> Convolver -> Slice
   ToneGen tone;
   Convolver conv;
   SliceFilter slice;
-  SourceFilter test_src1(&tone, &conv);
-  SourceFilter test_src(&test_src1, &slice);
+  FilterChain test(&conv, &slice);
 
-  // Reference source ref_src (tone -> gain -> slice)
+  // Reference chain: ToneGen -> Gain -> Slice
   ToneGen ref_tone;
   Gain ref_gain;
   SliceFilter ref_slice;
-  SourceFilter ref_src1(&ref_tone, &ref_gain);
-  SourceFilter ref_src(&ref_src1, &ref_slice);
+  FilterChain ref(&ref_gain, &ref_slice);
 
   // EqFIR
   EqFIR fir(bands, nbands);
@@ -168,10 +166,10 @@ BOOST_AUTO_TEST_CASE(make_eq)
     ref_gain.gain = gain;
     ref_slice.init(len, len + block_size);
 
-    test_src.reset();
-    ref_src.reset();
+    test.reset();
+    ref.reset();
 
-    double diff = calc_diff(&test_src, &ref_src);
+    double diff = calc_diff(&tone, &test, &ref_tone, &ref);
     BOOST_CHECK_GT(diff, 0);
     BOOST_CHECK_LT(value2db(diff), fir.get_ripple());
   }
