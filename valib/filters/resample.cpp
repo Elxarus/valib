@@ -127,6 +127,12 @@ Resample::get(int *_sample_rate, double *_a, double *_q)
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
+Resample::can_open(Speakers spk) const
+{
+  return sample_rate && SamplesFilter::can_open(spk);
+}
+
+bool
 Resample::init()
 {
   uninit();
