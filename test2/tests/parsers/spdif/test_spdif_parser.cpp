@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(parse)
   BOOST_REQUIRE(f_spdif.is_open());
 
   FileParser f_raw;
-  f_raw.open_probe("a.mad.mix.mad", &spdifable_header);
+  f_raw.open_probe("a.mad.mix.mad", spdifable_header());
   BOOST_REQUIRE(f_raw.is_open());
 
   SPDIFParser spdif;

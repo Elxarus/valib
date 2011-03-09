@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(can_open)
 BOOST_AUTO_TEST_CASE(parse)
 {
   FileParser f_raw;
-  f_raw.open_probe("a.mad.mix.mad", &spdifable_header);
+  f_raw.open_probe("a.mad.mix.mad", spdifable_header());
   BOOST_REQUIRE(f_raw.is_open());
 
   FileParser f_spdif;
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(parse)
 BOOST_AUTO_TEST_CASE(streams_frames)
 {
   FileParser f;
-  f.open_probe("a.mad.mix.mad", &spdifable_header);
+  f.open_probe("a.mad.mix.mad", spdifable_header());
   BOOST_REQUIRE(f.is_open());
 
   SPDIFWrapper parser;
