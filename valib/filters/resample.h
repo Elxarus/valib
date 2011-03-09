@@ -105,8 +105,6 @@ public:
   /////////////////////////////////////////////////////////
   // SamplesFilter overrides
 
-  virtual bool can_open(Speakers spk) const;
-
   virtual bool init();
   virtual void uninit();
 

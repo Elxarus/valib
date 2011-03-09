@@ -123,8 +123,6 @@ BOOST_AUTO_TEST_CASE(constructor)
   BOOST_CHECK_EQUAL(f.get_sample_rate(), 0);
   BOOST_CHECK_EQUAL(f.get_attenuation(), 100);
   BOOST_CHECK_EQUAL(f.get_quality(), 0.99);
-  // Cannot open because destination sample rate is not set
-  BOOST_CHECK(!f.can_open(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000)));
 }
 
 BOOST_AUTO_TEST_CASE(init_constructor)
@@ -133,7 +131,6 @@ BOOST_AUTO_TEST_CASE(init_constructor)
   BOOST_CHECK_EQUAL(f.get_sample_rate(), 44100);
   BOOST_CHECK_EQUAL(f.get_attenuation(), 120);
   BOOST_CHECK_EQUAL(f.get_quality(), 0.999);
-  BOOST_CHECK(f.can_open(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000)));
 }
 
 BOOST_AUTO_TEST_CASE(get_set)
@@ -165,11 +162,22 @@ BOOST_AUTO_TEST_CASE(get_set)
 BOOST_AUTO_TEST_CASE(passthrough)
 {
   Speakers spk(FORMAT_LINEAR, MODE_STEREO, 48000);
-  Resample f(spk.sample_rate);
+  Resample f;
+
   NoiseGen noise(spk, seed, block_size);
   NoiseGen ref(spk, seed, block_size);
 
+  // Passthrough without sample rate set
   f.open(spk);
+  BOOST_REQUIRE(f.is_open());
+  BOOST_CHECK(f.passthrough());
+  compare(&noise, &f, &ref);
+
+  // Passthrough mode with sample rate set
+  f.set_sample_rate(spk.sample_rate);
+  f.open(spk);
+  noise.reset();
+  ref.reset();
   BOOST_REQUIRE(f.is_open());
   BOOST_CHECK(f.passthrough());
   compare(&noise, &f, &ref);
