@@ -462,6 +462,10 @@
 				RelativePath=".\tests\filters\test_parser_filter.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\tests\filters\test_resample.cpp"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\main.cpp"
