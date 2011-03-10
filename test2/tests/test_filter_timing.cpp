@@ -13,6 +13,14 @@
 static const int seed = 9873457;
 static const size_t noise_size = 1024*1024;
 static const vtime_t time1 = 123;
+static const vtime_t time2 = 321;
+
+#define FIRST_TIMESTAMP1 1
+#define FIRST_TIMESTAMP2 2
+#define BUFFERING        4
+
+#define ALL_TESTS        7
+#define PARSER_TESTS     3
 
 
 static const vtime_t size2time(Speakers spk, size_t size)
@@ -152,17 +160,91 @@ static void test_first_timestamp2(Source *src, Filter *f, bool frame_sync)
   }
 }
 
-static void test_timing(Source *src, Filter *f, bool frame_sync = false)
+static void test_buffering(Source *src, Filter *f, bool frame_sync)
+{
+  // Test buffering filter.
+  // Scenario:
+  // 1) reset();
+  // 2) Timestamp the first chunk (t1) and make it very small
+  // 3) Process it.
+  // 4) If filter returns data, it is not buffering filter. Exit.
+  // 5) Timestamp the next chunk with differnt time (t2)
+  // 6) Wait for output chunk and check that timestamp equals to time1
+  // 7) Next chunk must be stamped with t2+dt.
+  // 8) Get no timestamp for the next chunk.
+
+  // t1  t2
+  // V   V
+  // +---------------------------------------------
+  // |   |              |           | input chunks
+  // +---------------------------------------------
+  // |           |           |           | output chunks
+  // +---------------------------------------------
+  // V           V
+  // t1          t2' = t2 + dt
+
+  static const size_t min_block_size = 1;
+
+  Chunk in, out1, out2;
+  if (!f->is_open())
+    f->open(src->get_output());
+  BOOST_REQUIRE(f->is_open());
+  f->reset();
+
+  // Split the first chunk into 2 parts:
+  // very small (size=1) and the rest
+  Chunk chunk;
+  src->get_chunk(chunk);
+
+  in = chunk;
+  in.size = min_block_size;
+  in.set_sync(true, time1);
+  if (f->process(in, Chunk()))
+    // not a buffering filter
+    return;
+
+  in = chunk;
+  if (in.rawdata)
+    in.drop_rawdata(min_block_size);
+  else
+    in.drop_samples(min_block_size);
+  in.set_sync(true, time2);
+
+  // Get the first output chunk
+  while (!f->process(in, out1))
+    if (!src->get_chunk(in))
+      BOOST_FAIL("Cannot fill the filter");
+
+  BOOST_CHECK_EQUAL(out1.time, time1);
+
+  // Get the second output chunk
+  while (!f->process(in, out2))
+    if (!src->get_chunk(in))
+      BOOST_FAIL("Cannot fill the filter");
+
+  BOOST_CHECK(out2.sync);
+  if (frame_sync)
+    BOOST_CHECK_EQUAL(out2.time, time2);
+  else
+  {
+    vtime_t in_pos_time = size2time(f->get_input(), min_block_size);
+    vtime_t out_pos_time = size2time(f->get_output(), out1.size);
+    BOOST_CHECK(compare_time(out2.time - time2, out_pos_time - in_pos_time));
+  }
+}
+
+static void test_timing(Source *src, Filter *f, bool frame_sync = false, int tests = ALL_TESTS)
 {
   if (!f->is_open())
     f->open(src->get_output());
   BOOST_REQUIRE(f->is_open());
 
-  test_first_timestamp1(src, f);
-  test_first_timestamp2(src, f, frame_sync);
+//  if (tests & FIRST_TIMESTAMP1) test_first_timestamp1(src, f);
+//  if (tests & FIRST_TIMESTAMP2) test_first_timestamp2(src, f, frame_sync);
+  if (tests & BUFFERING)        test_buffering(src, f, frame_sync);
 }
 
-static void test_timing(Speakers spk, Filter *f, const char *filename = 0, bool frame_sync = false)
+static void test_timing(Speakers spk, Filter *f, const char *filename = 0, bool frame_sync = false, int tests = ALL_TESTS)
 {
   BOOST_REQUIRE(f);
   BOOST_REQUIRE(f->open(spk));
@@ -170,12 +252,12 @@ static void test_timing(Speakers spk, Filter *f, const char *filename = 0, bool 
   {
     RAWSource raw(spk, filename);
     BOOST_REQUIRE(raw.is_open());
-    test_timing(&raw, f, frame_sync);
+    test_timing(&raw, f, frame_sync, tests);
   }
   else
   {
     NoiseGen noise(spk, seed, noise_size);
-    test_timing(&noise, f, frame_sync);
+    test_timing(&noise, f, frame_sync, tests);
   }
 }
 
@@ -326,22 +408,20 @@ BOOST_AUTO_TEST_CASE(resample_up)
 {
   Resample filter;
   filter.set_sample_rate(48000);
-  // Resample does not pass test_first_timestamp2() test
+  // Resample does not pass FIRST_TIMESTAMP2 and BUFFERING tests
   // because it introduces time jitter in range of one sample
-  //test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 44100), &filter);
-  NoiseGen noise(Speakers(FORMAT_LINEAR, MODE_STEREO, 44100), seed, noise_size);
-  test_first_timestamp1(&noise, &filter);
+  test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 44100), &filter, 0, false,
+    ALL_TESTS & ~FIRST_TIMESTAMP2 & ~BUFFERING);
 }
 
 BOOST_AUTO_TEST_CASE(resample_down)
 {
   Resample filter;
   filter.set_sample_rate(44100);
-  // Resample does not pass test_first_timestamp2() test
+  // Resample does not pass FIRST_TIMESTAMP2 and BUFFERING test
   // because it introduces time jitter in range of one sample
-  //test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
-  NoiseGen noise(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), seed, noise_size);
-  test_first_timestamp1(&noise, &filter);
+  test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter, 0, false,
+    ALL_TESTS & ~FIRST_TIMESTAMP2 & ~BUFFERING);
 }
 
 BOOST_AUTO_TEST_CASE(spdifer_ac3)
@@ -365,6 +445,8 @@ BOOST_AUTO_TEST_CASE(spectrum)
 
 ///////////////////////////////////////////////////////////
 // Codecs
+// Do not run test_first_timestamp3() because parsers must
+// be feed with whole frames.
 
 BOOST_AUTO_TEST_CASE(aac_adts_parser)
 {
@@ -372,7 +454,7 @@ BOOST_AUTO_TEST_CASE(aac_adts_parser)
   FileParser source;
   source.open_probe("a.aac.03f.adts", &adts_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter, true);
+  test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(aac_parser)
@@ -392,8 +474,7 @@ BOOST_AUTO_TEST_CASE(aac_parser)
 
   // AACParser does not pass ttest_first_timestamp1() test because it swallows
   // the first frame.
-  //test_timing(&source, &filter, true);
-  test_first_timestamp2(&source, &filter, true);
+  test_timing(&source, &filter, true, PARSER_TESTS & ~FIRST_TIMESTAMP1);
 }
 
 BOOST_AUTO_TEST_CASE(ac3_parser)
@@ -402,7 +483,7 @@ BOOST_AUTO_TEST_CASE(ac3_parser)
   FileParser source;
   source.open_probe("a.ac3.03f.ac3", &ac3_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter, true);
+  test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(ac3_enc)
@@ -410,9 +491,7 @@ BOOST_AUTO_TEST_CASE(ac3_enc)
   AC3Enc filter;
   // AC3Enc does not pass test_first_timestamp2() test because it applies time
   // shift and it is hard to determine the correctness of this shift.
-  //test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
-  NoiseGen noise(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), seed, noise_size);
-  test_first_timestamp1(&noise, &filter);
+  test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter, 0, false, ALL_TESTS & ~FIRST_TIMESTAMP2);
 }
 
 BOOST_AUTO_TEST_CASE(dts_parser)
@@ -421,7 +500,7 @@ BOOST_AUTO_TEST_CASE(dts_parser)
   FileParser source;
   source.open_probe("a.dts.03f.dts", &dts_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter, true);
+  test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(mpa_parser)
@@ -430,7 +509,7 @@ BOOST_AUTO_TEST_CASE(mpa_parser)
   FileParser source;
   source.open_probe("a.mp2.005.mp2", &mpa_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter, true);
+  test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(mpg123_parser)
@@ -439,7 +518,7 @@ BOOST_AUTO_TEST_CASE(mpg123_parser)
   FileParser source;
   source.open_probe("a.mp2.005.mp2", &mpa_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter, true);
+  test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(spdif_parser)
@@ -448,7 +527,7 @@ BOOST_AUTO_TEST_CASE(spdif_parser)
   FileParser source;
   source.open_probe("a.ac3.03f.spdif", &spdif_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter, true);
+  test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(spdif_wrapper)
@@ -457,7 +536,7 @@ BOOST_AUTO_TEST_CASE(spdif_wrapper)
   FileParser source;
   source.open_probe("a.ac3.03f.ac3", &ac3_header);
   BOOST_REQUIRE(source.is_open());
-  test_timing(&source, &filter, true);
+  test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
