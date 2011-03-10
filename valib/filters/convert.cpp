@@ -34,6 +34,13 @@ Converter::convert_pcm2linear(Chunk &in, Chunk &out)
   size_t   out_size = 0;
 
   /////////////////////////////////////////////////////////
+  // If we have some data buffered, we have to adjust
+  // the resulting timestamp to avoid jitter
+
+  if (in.sync && part_size && spk.sample_rate)
+    in.time -= vtime_t(part_size) / double(sample_size * spk.sample_rate);
+
+  /////////////////////////////////////////////////////////
   // Process part of a sample
 
   if (part_size)
@@ -252,15 +259,17 @@ Converter::get_output() const
 bool 
 Converter::process(Chunk &in, Chunk &out)
 {
+  if (in.is_dummy())
+    return false;
+
   if (spk.format == format)
   {
     out = in;
     in.clear();
-    return !out.is_dummy();
+    return true;
   }
 
   assert(convert != 0);
-
   if (format == FORMAT_LINEAR)
     return convert_pcm2linear(in, out);
   else
