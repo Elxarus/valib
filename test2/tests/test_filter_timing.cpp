@@ -17,9 +17,10 @@ static const vtime_t time2 = 321;
 
 #define FIRST_TIMESTAMP1 1
 #define FIRST_TIMESTAMP2 2
-#define BUFFERING        4
+#define FIRST_TIMESTAMP3 4
+#define BUFFERING        8
 
-#define ALL_TESTS        7
+#define ALL_TESTS        0xf
 #define PARSER_TESTS     3
 
 
@@ -160,6 +161,37 @@ static void test_first_timestamp2(Source *src, Filter *f, bool frame_sync)
   }
 }
 
+static void test_first_timestamp3(Source *src, Filter *f)
+{
+  // Scenario:
+  // 1) reset()
+  // 2) Timestamp the first *empty* input chunk
+  // 3) Ensure, that first output chunk has the timestamp
+  // 4) Get no timestamp for the next output chunk
+
+  if (!f->is_open())
+    f->open(src->get_output());
+  BOOST_REQUIRE(f->is_open());
+
+  f->reset();
+  Chunk in, out;
+  in.set_sync(true, time1);
+  while (!f->process(in, out))
+    if (!src->get_chunk(in))
+      BOOST_FAIL("Cannot fill the filter");
+
+  BOOST_CHECK(out.sync);
+  BOOST_CHECK_EQUAL(out.time, time1);
+
+  while (!f->process(in, out))
+    if (!src->get_chunk(in))
+      BOOST_FAIL("Cannot fill the filter");
+
+  BOOST_CHECK(!out.sync);
+  while (f->process(in, out))
+    /*do nothing*/;
+}
+
 static void test_buffering(Source *src, Filter *f, bool frame_sync)
 {
   // Test buffering filter.
@@ -241,6 +273,7 @@ static void test_timing(Source *src, Filter *f, bool frame_sync = false, int tes
 
   if (tests & FIRST_TIMESTAMP1) test_first_timestamp1(src, f);
   if (tests & FIRST_TIMESTAMP2) test_first_timestamp2(src, f, frame_sync);
+  if (tests & FIRST_TIMESTAMP3) test_first_timestamp3(src, f);
   if (tests & BUFFERING)        test_buffering(src, f, frame_sync);
 }
 
