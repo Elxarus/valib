@@ -50,12 +50,10 @@ ADTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
   hinfo->spk = Speakers(FORMAT_AAC_ADTS, modes[channel_configuration], sample_rates[sampling_frequency_index]);
   hinfo->frame_size = frame_length;
   hinfo->scan_size = 0;
-  hinfo->nsamples = 0;
+  hinfo->nsamples = 1024;
   hinfo->bs_type = bs_type;
   hinfo->spdif_type = 0;
-
   return true;
-
 }
 
 bool
