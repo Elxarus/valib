@@ -302,8 +302,8 @@ Dejitter::process(Chunk &in, Chunk &out)
     ostat.push(correction);
 
     #ifdef SYNCER_LOG_TIMING
-      DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time, delta, istat.stddev(), istat.mean()));
-      DbgLog((LOG_TRACE, 3, "output: %-6.0f correction: %-6.0f", continuous_time, correction));
+      DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time*1000, delta*1000, istat.stddev()*1000, istat.mean()*1000));
+      DbgLog((LOG_TRACE, 3, "output: %-6.0f correction: %-6.0f", continuous_time*1000, correction*1000));
     #endif
 
     out.set_sync(continuous_sync, continuous_time * time_factor + time_shift);
