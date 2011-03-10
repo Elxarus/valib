@@ -211,7 +211,7 @@ public:
 
   inline void drop_rawdata(size_t drop_size)
   {
-    assert(rawdata);
+    assert(rawdata || drop_size == 0);
 
     if (drop_size > size)
       drop_size = size;
