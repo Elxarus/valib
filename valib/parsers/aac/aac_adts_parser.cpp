@@ -1,3 +1,4 @@
+#include <sstream>
 #include "aac_adts_header.h"
 #include "aac_adts_parser.h"
 
@@ -18,6 +19,9 @@ static const int modes[] =
   MODE_3_2_LFE,
   MODE_5_2_LFE
 };
+
+static const char *profile_str[] =
+{ "AAC Main", "AAC LC", "AAC SSR", "AAC LTP" };
 
 
 
@@ -49,6 +53,7 @@ ADTSParser::reset()
   out_spk = spk_unknown;
   new_stream_flag = false;
   header.zero();
+  frame_length = 0;
 }
 
 bool
@@ -65,12 +70,6 @@ ADTSParser::process(Chunk &in, Chunk &out)
 
   /////////////////////////////////////////////////////////
   // Parse ADTS header
-
-  int protection_absent;
-  int profile;
-  int sampling_frequency_index;
-  int channel_configuration;
-  int frame_length;
 
   if ((frame[0] == 0xff)         && // sync
      ((frame[1] & 0xf0) == 0xf0) && // sync
@@ -119,5 +118,15 @@ ADTSParser::process(Chunk &in, Chunk &out)
 string
 ADTSParser::info() const 
 {
-  return string();
+  if (frame_length == 0)
+    return string();
+
+  using std::endl;
+  std::stringstream result;
+  int sample_rate = sample_rates[sampling_frequency_index];
+  result << "Format: " << Speakers(FORMAT_AAC_ADTS, modes[channel_configuration], sample_rate).print() << endl;
+  result << "Profile: " << profile_str[profile] << endl;
+  result << "Frame size: " << frame_length << endl;
+  result << "Bitrate: " << int(frame_length * sample_rate * 8 / 1024 / 1000) << "kbps" << endl;
+  return result.str();
 }
