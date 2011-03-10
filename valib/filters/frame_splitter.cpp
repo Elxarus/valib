@@ -59,7 +59,7 @@ FrameSplitter::load_frame(Chunk &in)
 {
   uint8_t *buf = in.rawdata;
   uint8_t *end = buf + in.size;
-  size_t old_data_size = stream.get_buffer_size() + in.size;
+  size_t old_data_size = stream.get_buffer_size();
 
   bool result = stream.load_frame(&buf, end);
   size_t gone = buf - in.rawdata;
