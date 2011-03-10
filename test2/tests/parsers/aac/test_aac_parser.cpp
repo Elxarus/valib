@@ -50,4 +50,19 @@ BOOST_AUTO_TEST_CASE(decode)
   BOOST_CHECK_LE(diff, 1e-6);
 }
 
+BOOST_AUTO_TEST_CASE(streams_frames)
+{
+  FileParser f;
+  f.open("a.aac.03f.adts", &adts_header);
+  BOOST_REQUIRE(f.is_open());
+
+  ADTSParser adts;
+  SourceFilter test_src(&f, &adts);
+
+  // Note that number of AAC frames is one less that number of ADTS frames
+  // (see aac_adts_parser.cpp). It is because AACParser drops the first frame.
+  AACParser aac;
+  check_streams_chunks(&test_src, &aac, 1, 563);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
