@@ -119,7 +119,7 @@ public:
   {}
 
   NoiseGen(Speakers spk_, int seed_, uint64_t stream_len_, size_t chunk_size_ = 4096):
-  Generator(spk_, stream_len_, chunk_size_), rng(seed_)
+  Generator(spk_, stream_len_, chunk_size_), seed(seed_), rng(seed_)
   {}
 
   bool init(Speakers spk_, int seed_, uint64_t stream_len_, size_t chunk_size_ = 4096)
