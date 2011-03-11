@@ -35,6 +35,37 @@ static const char *dts_conv_text(int i)
   }
 }
 
+static void compare_file(const char *raw_file, const char *spdif_file)
+{
+  BOOST_MESSAGE("Transform " << spdif_file << " -> " << raw_file);
+
+  FileParser f_raw;
+  f_raw.open_probe(raw_file, spdifable_header());
+  BOOST_REQUIRE(f_raw.is_open());
+
+  FileParser f_spdif;
+  f_spdif.open_probe(spdif_file, &spdif_header);
+  BOOST_REQUIRE(f_spdif.is_open());
+
+  SPDIFWrapper spdifer;
+  compare(&f_raw, &spdifer, &f_spdif, 0);
+}
+
+static void test_streams_frames(const char *filename, int streams, int frames)
+{
+  BOOST_MESSAGE("Count frames at " << filename);
+
+  FileParser f;
+  f.open_probe(filename, spdifable_header());
+  BOOST_REQUIRE(f.is_open());
+
+  SPDIFWrapper parser;
+  parser.open(f.get_output());
+  BOOST_CHECK(parser.is_open());
+
+  check_streams_chunks(&f, &parser, streams, frames);
+}
+
 BOOST_AUTO_TEST_SUITE(spdif_wrapper)
 
 BOOST_AUTO_TEST_CASE(constructor)
@@ -61,29 +92,22 @@ BOOST_AUTO_TEST_CASE(can_open)
 
 BOOST_AUTO_TEST_CASE(parse)
 {
-  FileParser f_raw;
-  f_raw.open_probe("a.mad.mix.mad", spdifable_header());
-  BOOST_REQUIRE(f_raw.is_open());
-
-  FileParser f_spdif;
-  f_spdif.open_probe("a.mad.mix.spdif", &spdif_header);
-  BOOST_REQUIRE(f_spdif.is_open());
-
-  SPDIFWrapper spdifer;
-  compare(&f_raw, &spdifer, &f_spdif, 0);
+  compare_file("a.mp2.005.mp2", "a.mp2.005.spdif");
+  compare_file("a.mp2.002.mp2", "a.mp2.002.spdif");
+  compare_file("a.ac3.03f.ac3", "a.ac3.03f.spdif");
+  compare_file("a.ac3.005.ac3", "a.ac3.005.spdif");
+  compare_file("a.dts.03f.dts", "a.dts.03f.spdif");
+  compare_file("a.mad.mix.mad", "a.mad.mix.spdif");
 }
 
 BOOST_AUTO_TEST_CASE(streams_frames)
 {
-  FileParser f;
-  f.open_probe("a.mad.mix.mad", spdifable_header());
-  BOOST_REQUIRE(f.is_open());
-
-  SPDIFWrapper parser;
-  parser.open(f.get_output());
-  BOOST_CHECK(parser.is_open());
-
-  check_streams_chunks(&f, &parser, 7, 4375);
+  test_streams_frames("a.mp2.005.mp2", 1, 500);
+  test_streams_frames("a.mp2.002.mp2", 1, 500);
+  test_streams_frames("a.ac3.03f.ac3", 1, 375);
+  test_streams_frames("a.ac3.005.ac3", 1, 375);
+  test_streams_frames("a.dts.03f.dts", 1, 1125);
+  test_streams_frames("a.mad.mix.mad", 7, 4375);
 }
 
 BOOST_AUTO_TEST_CASE(dts_options)
