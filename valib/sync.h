@@ -314,7 +314,7 @@ SyncHelper::drop(size_t size)
 {
   for (size_t i = 0; i < t.size(); i++)
     t[i].pos -= size;
-  if (t.size() > 1 && t[1].pos <= 0)
+  while (t.size() > 1 && t[1].pos <= 0)
     t.pop_front();
   buf_size -= size;
 }
