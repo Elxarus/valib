@@ -16,6 +16,178 @@ class Filter;
   \class Filter
   \brief Base interface for all filters
 
+  Filter is a basic building block of audio processing. Filters do most of
+  jobs: decoding, encoding, processing, format conversions, etc.
+
+  Audio data is processed in blocks called chunks (see Chunk class). Each input
+  chunk may be processed in several steps, producing several output chunks. Or,
+  several input chunks may produce one output.
+
+  Filter may convert one data format into another. So, it has input and output
+  formats. Also, output format may change during processing.
+
+  \section filter_classification Filter classification
+
+  Threre'are many types of filters. But most have similar behavior.
+  Classification helps in describing these similarities and dirfferences and
+  introduces clear terminology.
+
+  \subsection filter_by_formet By format
+
+  Filters accept different input formats. But all formats are divided in 2
+  large groups: linear and rawdata. Linear format is an internal representation
+  that is convenient for fast processing. Rawdata formats are all other formats
+  (including PCM). The general processing scenario is follow:
+  \li (optional) parse containter format / other rawdata transform
+  \li input data converted from rawdata format into linear
+  \li processing is done
+  \li output data converted from linear format into rawdata format
+
+  Therefore, all filters may be classified by the format:
+
+  \li Linear filters. Most of audio processing filters. Accept linear format
+    at input and produce linear output.
+  \li Rawdata filters. Operate on rawdata formats. Do data transformation,
+    format detection, etc. 
+  \li Mixed. All other filters. Some filters do not care about the input format
+    at all. For example, Passthrough or Counter filters.
+
+  Decoders may be classified as rawdata filters because of many common
+  properties.
+
+  \subsection filter_by_buffering By buffering model
+
+  Filters may process data inplace, at the internal buffer or accumulate
+  and process it in large blocks. This leads us directly to the following:
+
+  \li Inplace filters. These filters process data inplace at the buffer provided
+    at input. Almost always one output chunk is produced for one input chunk
+    and flushing is not required. Note, that inplace filter \b may contain
+    internal buffer (see BassRedir, CacheFilter, Delay filters). Output data is
+    available immediately, i.e. inplace filters do not introduce processing
+    lag. Output chunk contains pointer to the input chunk's buffer. The last
+    is very important feature, that must be always taken into account.
+  \li Immediate filters. These filters processe data at internal buffer.
+    Because internal buffer is fixed in size in most cases, these filters may
+    produce more than one output chunk for one input. Flushing is not required
+    generally. Like inplace filters, immediate filters do not introduce
+    processing lag and output data is available immediately. Output chunk
+    contains poinrters to the internal buffer. Note, that the internal buffer
+    returned may be changed by the following inplace filter!
+  \li Buffering filters. These filters require to accumulate some data to
+    process. Because input data is not required to persist in between of
+    Filter::process() calls, filter has to copy it into the internal buffer.
+    When filter has enougth data it produces one or more output chunks.
+    Flushing is generally \b required. Buffering filters introduce processing
+    lag and must handle timestamps carefully. Output chunk contains poinrters
+    to the internal buffer. Note, that the internal buffer returned may be
+    changed by the following inplace filter!
+
+  Note, that some filters may behave differently depending on the input format
+  and/or its settings (see Mixer).
+
+  \subsection filter_by_streaming By streaming type
+
+  Filters may break the output stream and start a new one. We may classify
+  this behaviour:
+  \li Single stream filter. Output format is known immediately after open and
+    does not change at all. In the simplest case output format equals to the
+    input format. Filter settings may affect the output format but such
+    change cannot be done on-the-fly, during the audio processing, and may
+    require reset() or open() call.
+  \li Multiple streams. Output format is known immediately after open, but
+    filter may finish the output stream and start a new one. This may be a
+    result of settings change or because of some internal reasons.
+  \li Data-driven output format. In this case, filter cannot determine the
+    output format immediately after open. It has to receive some data to
+    deduct it.
+
+  In first 2 cases output stream is started indirectly immediately after open.
+  new_stream() is signaled \b only at the start of a next output stream.
+
+  In contrast, data-driven filter must always start a stream directly with
+  new_stream() signal.
+
+  \section timing Handling time stamps
+
+  Time stamps are passed with chunk data and filter is responsible for correct
+  transformation of input time stamps into output time stamps.
+
+  Synchronization point (syncpoint) is a point where time stamp may be applied.
+  Most compressed audio formats have large indivisible blocks of data (frames),
+  and specifiying time for the middle of the frame has no sense.
+  
+  Each sample of linear format is a syncpoint.
+
+  Timestamp passed with the chunk is applied to the first syncpoint appears at
+  the chunk's payload. If the chunk has a timestamp, but does not contain a
+  syncpoint or empty, this timestamp is applied to the first syncpoint at
+  subsequent data.
+
+  Some general rules filter should follow:
+  \li No timestamp should be lost
+  \li Do not create new timestamps
+  \li Do not move timestamps when possible
+  \li Move timestamps \b forward when required
+
+  As a rule, timestamp handling for inplace and immediate filters is very
+  simple: for each input chunk first output chunk is stamped with input
+  timestamp and subsequent chunks (if any) are not stamped.
+
+  Buffering filter is much harder case. In general case buffer's bounds do not
+  match input chunks' bounds and therefore we have to move timestamps:
+
+  \verbatim
+  t1     t2     t3     t4     t5     t6
+  |------|------|------|------|------|------> input chunks
+  |--------|--------|--------|--------|-----> output chunks
+  t1       t2'      t3'      t4'      t6'
+  \endverbatim
+
+  There're two main models of timestamp movement possible depending on the data
+  type.
+
+  \subsection timing_normal Normal sync
+
+  This model is applicable for linear format, PCM formats and some other.
+  We have to be able to determine time difference based on the data size.
+
+  Incoming timestamp is moved to the start of the next output chunk and
+  correction is applied:
+
+  \verbatim
+  0      pos2           pos3     pos4       pos5  position in bytes/samples
+  t1     t2             t3       t4         t5    timestamp
+  |------|--------------|--------|----------|---> input chunks
+  |----------|--------|-------------|-------|---> output chunks
+  t1         t2+dt2   no time       t4+dt3  t5    timestamp
+  0          pos2'    pos3'         pos4'   pos5' position in bytes/samples
+  \endverbatim
+
+  For linear format dt can be found as (position in samples):
+  dt_n = pos_n' - pos_n / sample_rate
+
+  For PCM format dt is found as (position in bytes):
+  dt_n = pos_n' - pos_n / (sample_rate * pcm_word_size * number_of_channels)
+
+  Note, that is is no timestamp at pos3'. Also, t3 is dropped because t4
+  is more suitable for the next output timestamp.
+
+  \subsection timing_frame Frame sync
+
+  Frame synchronization model is applicable for 'framed' audio data (MP3, AC3,
+  DTS, etc).
+  
+  Incoming timestamp is moved to the first subsequent syncpoint found without
+  any change:
+
+  \verbatim
+  t1     t2             t3       t4         t5    timestamp
+  |------|--------------|--------|----------|---> input chunks
+  |----------|--------|-------------|-------|---> output chunks
+  t1         t2       no time       t4      t5    timestamp
+  \endverbatim
+
   \section filter_usage Filter usage patterns
 
   \subsection no_format_change No format changes
@@ -57,7 +229,7 @@ class Filter;
     // Flush the filter.
     // Also may throw Filter::Error exception
 
-    while (filter->flush(out);)
+    while (filter->flush(out))
       do_something(out);
   }
   catch (Filter::Error)
