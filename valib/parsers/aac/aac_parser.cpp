@@ -80,6 +80,8 @@ AACParser::init()
 
   if (spk.data_size)
     NeAACDecInit2(h_aac, spk.format_data.get(), spk.data_size, &freq, &channels);
+  // This allows not to drop the first frame
+  NeAACDecPostSeekReset(h_aac, 1);
 
   out_spk = Speakers();
   new_stream_flag = false;
@@ -97,11 +99,14 @@ AACParser::uninit()
 void
 AACParser::reset()
 {
-  unsigned long freq = 0;
-  unsigned char channels = 0;
-  NeAACDecInit2(h_aac, 0, 0, &freq, &channels);
-  out_spk = Speakers();
-  new_stream_flag = false;
+  // NeAACDecInit2, NeAACDecPostSeekReset and combination of both do not clear
+  // the decoder properly and glitch appears after seek.
+  // NeAACDecPostSeekReset(h_aac, 0) is better than NeAACDecInit2 because it
+  // forces the decoder to drop the first frame, but it does not eliminate the
+  // problem completely. Only full decoder reopen allows to completely avoid
+  // unpleasant 'tsch' sound after seek.
+  if (!init())
+    THROW(EDecoderInit());
 }
 
 bool

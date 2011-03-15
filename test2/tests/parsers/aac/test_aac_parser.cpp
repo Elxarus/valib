@@ -4,6 +4,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include "filters/convert.h"
+#include "filters/filter_graph.h"
+#include "filters/slice.h"
 #include "parsers/aac/aac_parser.h"
 #include "parsers/aac/aac_adts_parser.h"
 #include "parsers/aac/aac_adts_header.h"
@@ -24,16 +26,17 @@ BOOST_AUTO_TEST_CASE(constructor)
 BOOST_AUTO_TEST_CASE(decode)
 {
   // Test chain:
-  // FileParser -> ParserFilter(ADTS) -> AACParser
+  // FileParser -> ParserFilter(ADTS) -> AACParser -> Slice
+  // Slice is required to cut the first frame because faad utility
+  // drops it but AACParser does not.
 
   FileParser f;
   f.open("a.aac.03f.adts", &adts_header);
   BOOST_REQUIRE(f.is_open());
 
   ADTSParser adts;
-  SourceFilter test_src(&f, &adts);
-
   AACParser aac;
+  SliceFilter cut_1st_frame(1024);
 
   // Reference chain:
   // WAVSource -> Converter
@@ -46,7 +49,7 @@ BOOST_AUTO_TEST_CASE(decode)
   conv.set_order(win_order);
 
   // Compare
-  double diff = calc_diff(&test_src, &aac, &wav, &conv);
+  double diff = calc_diff(&f, &FilterChain(&adts, &aac, &cut_1st_frame), &wav, &conv);
   BOOST_CHECK_LE(diff, 1e-6);
 }
 
@@ -57,12 +60,8 @@ BOOST_AUTO_TEST_CASE(streams_frames)
   BOOST_REQUIRE(f.is_open());
 
   ADTSParser adts;
-  SourceFilter test_src(&f, &adts);
-
-  // Note that number of AAC frames is one less that number of ADTS frames
-  // (see aac_adts_parser.cpp). It is because AACParser drops the first frame.
   AACParser aac;
-  check_streams_chunks(&test_src, &aac, 1, 563);
+  check_streams_chunks(&f, &FilterChain(&adts, &aac), 1, 564);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
