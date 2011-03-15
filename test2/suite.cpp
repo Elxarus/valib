@@ -21,11 +21,17 @@ void compare(Source *src, Source *ref)
   {
     if (src_chunk.is_empty())
       if (!src->get_chunk(src_chunk))
+      {
+        src_chunk.clear();
         break;
+      }
 
     if (ref_chunk.is_empty())
       if (!ref->get_chunk(ref_chunk))
+      {
+        src_chunk.clear();
         break;
+      }
 
     if (src_chunk.is_empty() || ref_chunk.is_empty())
       continue;
