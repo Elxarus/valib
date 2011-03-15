@@ -13,6 +13,8 @@ protected:
   void* h_aac;
 
 public:
+  struct EDecoderInit : public Filter::Error {};
+
   AACParser();
   ~AACParser();
 
