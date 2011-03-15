@@ -16,8 +16,17 @@ protected:
   size_t end;
 
 public:
-  SliceFilter(size_t _start = 0, size_t _end = 0);
-  void init(size_t _start, size_t _end);
+  static const size_t not_specified;
+
+  SliceFilter(size_t start = not_specified, size_t end = not_specified);
+  void init(size_t start = not_specified, size_t end = not_specified);
+
+  /////////////////////////////////////////////////////////
+  // Own interface
+
+  size_t get_pos() const   { return pos;   }
+  size_t get_start() const { return start; }
+  size_t get_end() const   { return end;   }
 
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
