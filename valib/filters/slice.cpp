@@ -1,18 +1,21 @@
+#include <limits>
 #include "slice.h"
 
-SliceFilter::SliceFilter(size_t _start, size_t _end):
-pos(0), start(_start), end(_end) 
+const size_t SliceFilter::not_specified = std::numeric_limits<size_t>::max();
+
+SliceFilter::SliceFilter(size_t new_start, size_t new_end):
+pos(0), start(new_start), end(new_end) 
 {
-  assert(start <= end);
+  assert(start == not_specified || end == not_specified || start <= end);
 }
 
 void
-SliceFilter::init(size_t _start, size_t _end)
+SliceFilter::init(size_t new_start, size_t new_end)
 {
   reset();
-  start = _start;
-  end = _end;
-  assert(start <= end);
+  start = new_start;
+  end = new_end;
+  assert(start == not_specified || end == not_specified || start <= end);
 }
 
 void
@@ -30,22 +33,22 @@ SliceFilter::process(Chunk &in, Chunk &out)
     return false;
 
   // ignore everything after the end
-  if (pos >= end)
+  if (end != not_specified && pos >= end)
     return false;
 
   // ignore everything before the beginning
-  if (pos + out.size <= start)
+  if (start != not_specified && pos + out.size <= start)
   {
     pos += out.size;
     return false;
   }
 
   // cut off the tail
-  if (pos + out.size > end)
+  if (end != not_specified && pos + out.size > end)
     out.size = end - pos;
 
   // cut of the head
-  if (pos < start)
+  if (start != not_specified && pos < start)
   {
     if (spk.is_linear())
       out.drop_samples(start - pos);

@@ -470,6 +470,10 @@
 				RelativePath=".\tests\filters\test_resample.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\tests\filters\test_slice_filter.cpp"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\main.cpp"
