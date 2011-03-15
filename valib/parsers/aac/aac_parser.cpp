@@ -65,12 +65,12 @@ AACParser::can_open(Speakers spk) const
 }
 
 bool
-AACParser::init()
+AACParser::init_decoder()
 {
   unsigned long freq = 0;
   unsigned char channels = 0;
 
-  uninit();
+  if (h_aac) NeAACDecClose(h_aac);
   h_aac = NeAACDecOpen();
   if (!h_aac) return false;
 
@@ -83,10 +83,16 @@ AACParser::init()
   // This allows not to drop the first frame
   NeAACDecPostSeekReset(h_aac, 1);
 
+  is_fresh = true;
+  return true;
+}
+
+bool
+AACParser::init()
+{
   out_spk = Speakers();
   new_stream_flag = false;
-
-  return true;
+  return init_decoder();
 }
 
 void
@@ -105,8 +111,12 @@ AACParser::reset()
   // forces the decoder to drop the first frame, but it does not eliminate the
   // problem completely. Only full decoder reopen allows to completely avoid
   // unpleasant 'tsch' sound after seek.
-  if (!init())
-    THROW(EDecoderInit());
+  if (!is_fresh)
+    if (!init())
+      THROW(EDecoderInit());
+
+  out_spk = Speakers();
+  new_stream_flag = false;
 }
 
 bool
@@ -119,6 +129,7 @@ AACParser::process(Chunk &in, Chunk &out)
 
   while (in.size)
   {
+    is_fresh = false;
     void *data = NeAACDecDecode(h_aac, &info, in.rawdata, in.size);
     if (info.error ||                 // error happen
         info.bytesconsumed == 0 ||    // prevent infinite loop
