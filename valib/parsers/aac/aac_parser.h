@@ -10,7 +10,10 @@ protected:
   bool new_stream_flag;
   Speakers out_spk;
   SampleBuf buf;
+
+  bool init_decoder();
   void* h_aac;
+  bool is_fresh;
 
 public:
   struct EDecoderInit : public Filter::Error {};
