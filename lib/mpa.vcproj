@@ -47,7 +47,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				WarningLevel="3"
+				WarningLevel="0"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -108,7 +108,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				WarningLevel="3"
+				WarningLevel="0"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -169,7 +169,7 @@
 				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				WarningLevel="3"
+				WarningLevel="0"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -231,7 +231,7 @@
 				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				WarningLevel="3"
+				WarningLevel="0"
 				DebugInformationFormat="3"
 			/>
 			<Tool

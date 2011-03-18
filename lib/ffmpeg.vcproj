@@ -11,6 +11,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -75,6 +78,66 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(ConfigurationName)\$(ProjectName)"
 			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
@@ -96,6 +159,67 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				EnableIntrinsicFunctions="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -254,50 +378,182 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\3rdparty\ffmpeg\lib\avcodec-52.def"
+		<Filter
+			Name="32bit"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
+			<File
+				RelativePath="..\3rdparty\ffmpeg\lib\avcodec-52.def"
 				>
-				<Tool
-					Name="VCCustomBuildTool"
-					CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib"
-					Outputs="$(IntDir)\$(InputName).lib"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\3rdparty\ffmpeg\lib\avutil-50.def"
 				>
-				<Tool
-					Name="VCCustomBuildTool"
-					CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib"
-					Outputs="$(IntDir)\$(InputName).lib"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\3rdparty\ffmpeg\lib\avutil-50.def"
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="64bit"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
+			<File
+				RelativePath="..\3rdparty\ffmpeg\lib\x64\avcodec64-52.def"
 				>
-				<Tool
-					Name="VCCustomBuildTool"
-					CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib"
-					Outputs="$(IntDir)\$(InputName).lib"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /machine:x64 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /machine:x64 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\3rdparty\ffmpeg\lib\x64\avutil64-50.def"
 				>
-				<Tool
-					Name="VCCustomBuildTool"
-					CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib"
-					Outputs="$(IntDir)\$(InputName).lib"
-				/>
-			</FileConfiguration>
-		</File>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /machine:x64 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="lib /machine:x64 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						Outputs="$(IntDir)\$(InputName).lib"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\valib\parsers\eac3\eac3_parser.cpp"
 			>
