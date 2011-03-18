@@ -118,6 +118,8 @@ Speakers::format_text() const
 
     case FORMAT_AAC_FRAME:   return "AAC";
     case FORMAT_AC3:         return "AC3";
+    case FORMAT_EAC3:        return "EAC3";
+    case FORMAT_AC3_EAC3:    return "AC3/EAC3";
     case FORMAT_MPA:         return "MPEG Audio";
     case FORMAT_DTS:         return "DTS";
 

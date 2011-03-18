@@ -257,16 +257,18 @@ using std::string;
 #define FORMAT_MPA        12
 #define FORMAT_AC3        13
 #define FORMAT_DTS        14
+#define FORMAT_EAC3       15
+#define FORMAT_AC3_EAC3   16 // AC3 or EAC3 stream
 
 // DVD LPCM
 // Note: the sample size for this formats is doubled because
 // LPCM samples are packed into blocks of 2 samples.
-#define FORMAT_LPCM20     15
-#define FORMAT_LPCM24     16
+#define FORMAT_LPCM20     17
+#define FORMAT_LPCM24     18
 
 // AAC
-#define FORMAT_AAC_FRAME  17
-#define FORMAT_AAC_ADTS   18
+#define FORMAT_AAC_FRAME  19
+#define FORMAT_AAC_ADTS   20
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format masks
