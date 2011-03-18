@@ -106,8 +106,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)"
-				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
+				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\x64\*.dll $(OutDir)&#x0D;&#x0A;"
+				Outputs="$(OutDir)\avcodec64-52.dll;$(OutDir)\avutil64-50.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -183,7 +183,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)"
+				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)&#x0D;&#x0A;"
 				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
 			/>
 			<Tool
@@ -261,8 +261,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)"
-				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
+				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\x64\*.dll $(OutDir)&#x0D;&#x0A;"
+				Outputs="$(OutDir)\avcodec64-52.dll;$(OutDir)\avutil64-50.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
