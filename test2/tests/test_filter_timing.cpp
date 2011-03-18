@@ -4,6 +4,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include "fir/param_fir.h"
+#include "parsers/ac3/ac3_header.h"
+#include "parsers/eac3/eac3_header.h"
 #include "source/file_parser.h"
 #include "source/generator.h"
 #include "source/raw_source.h"
@@ -536,6 +538,15 @@ BOOST_AUTO_TEST_CASE(dts_parser)
   DTSParser filter;
   FileParser source;
   source.open_probe("a.dts.03f.dts", &dts_header);
+  BOOST_REQUIRE(source.is_open());
+  test_timing(&source, &filter, true, PARSER_TESTS);
+}
+
+BOOST_AUTO_TEST_CASE(eac3_parser)
+{
+  EAC3Parser filter;
+  FileParser source;
+  source.open_probe("test.eac3.03f.eac3", &eac3_header);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }

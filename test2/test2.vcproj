@@ -31,6 +31,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)&#x0D;&#x0A;"
+				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -104,6 +106,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)"
+				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -179,6 +183,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)"
+				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -255,6 +261,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)"
+				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -435,6 +443,14 @@
 				</File>
 				<File
 					RelativePath=".\tests\parsers\spdif\test_spdif_wrapper.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="eac3"
+				>
+				<File
+					RelativePath=".\tests\parsers\eac3\test_eac3_parser.cpp"
 					>
 				</File>
 			</Filter>

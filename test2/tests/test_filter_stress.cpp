@@ -12,8 +12,9 @@
 */
 
 #include "filter.h"
-#include "parsers/ac3/ac3_header.h"
 #include "parsers/aac/aac_adts_header.h"
+#include "parsers/ac3/ac3_header.h"
+#include "parsers/eac3/eac3_header.h"
 #include "source/file_parser.h"
 #include "source/generator.h"
 #include "source/raw_source.h"
@@ -588,6 +589,19 @@ BOOST_AUTO_TEST_CASE(dts_parser)
   filter_stress_test(&filter, &source);
 
   noise_stress_test(Speakers(FORMAT_DTS, 0, 0), &filter);
+}
+
+BOOST_AUTO_TEST_CASE(eac3_parser)
+{
+  EAC3Parser filter;
+  open_stress_test(&filter);
+
+  FileParser source;
+  source.open_probe("test.eac3.03f.eac3", &eac3_header);
+  BOOST_REQUIRE(source.is_open());
+  filter_stress_test(&filter, &source);
+
+  noise_stress_test(Speakers(FORMAT_EAC3, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(mpa_parser)

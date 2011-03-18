@@ -2,22 +2,25 @@
 #include "../parsers/spdif/spdif_header.h"
 #include "../parsers/aac/aac_adts_header.h"
 #include "../parsers/ac3/ac3_header.h"
+#include "../parsers/ac3_eac3/ac3_eac3_header.h"
 #include "../parsers/dts/dts_header.h"
+#include "../parsers/eac3/eac3_header.h"
 #include "../parsers/mpa/mpa_header.h"
-
-
-static const HeaderParser *uni_parsers[] =
-{
-  &spdif_header,
-  &adts_header,
-  &ac3_header,
-  &dts_header,
-  &mpa_header
-};
 
 
 Detector::Detector()
 {
+  static const HeaderParser *uni_parsers[] =
+  {
+    &spdif_header,
+    &adts_header,
+    &ac3_header,
+    ac3_eac3_header(),
+    &dts_header,
+    &eac3_header,
+    &mpa_header
+  };
+
   out_spk = spk_unknown;
   state = state_load;
   do_flush = false;
@@ -36,7 +39,9 @@ Detector::find_parser(Speakers spk) const
 
     case FORMAT_AAC_ADTS:return &adts_header;
     case FORMAT_AC3:     return &ac3_header;
+    case FORMAT_AC3_EAC3:return ac3_eac3_header();
     case FORMAT_DTS:     return &dts_header;
+    case FORMAT_EAC3:    return &eac3_header;
     case FORMAT_MPA:     return &mpa_header;
   };
 

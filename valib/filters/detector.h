@@ -2,7 +2,11 @@
   Detector
 
   Format autodetection. Does not alter data, but detects compressed stream and
-  its format. Main purpose is to detect SPDIF stream at PCM16 data.
+  its format. Does 2 jobs:
+  * Detects SPDIF stream at PCM16 data.
+  * Finds the full format specification (sample rate and channel configuration)
+    using HeaderParser. This allows the downstream to make decisions based on
+    this info. For instance, do SPDIF passthrough only for 48kHz streams.
 */
 
 #ifndef VALIB_DETECTOR_H

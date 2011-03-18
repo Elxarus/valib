@@ -300,7 +300,7 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         break;
 
       case WAVE_FORMAT_AVI_AC3:
-        format = FORMAT_AC3;
+        format = FORMAT_AC3_EAC3;
         break;
 
       case WAVE_FORMAT_AVI_DTS:
