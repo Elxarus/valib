@@ -5,6 +5,17 @@
 #include "mpa_tables.h"
 
 
+static const char *layer_text(int layer)
+{
+  switch (layer)
+  {
+    case MPA_LAYER_I:   return "Layer I";
+    case MPA_LAYER_II:  return "Layer II";
+    case MPA_LAYER_III: return "Layer III";
+    default: return "";
+  }
+}
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -93,11 +104,12 @@ MPAParser::info() const
 {
   using std::endl;
   std::stringstream result;
-  result << "Format: " << out_spk.print() << endl;
+  result << "Format: " << Speakers(FORMAT_MPA, out_spk.mask, out_spk.sample_rate).print() << endl;
+  result << layer_text(bsi.layer) << endl;
   result << "Ver: " << (bsi.ver? "MPEG2 LSF": "MPEG1") << endl;
   result << "Frame size: " << bsi.frame_size << endl;
-  result << "Stream: " << (bsi.bs_type == BITSTREAM_8? "8 bit": "16bit low endian") << endl;
-  result << "Bitrate: " << bsi.bitrate / 1000 << endl;
+  result << "Stream: " << (bsi.bs_type == BITSTREAM_8? "byte stream": "16bit low endian") << endl;
+  result << "Bitrate: " << bsi.bitrate / 1000 << "kbps" << endl;
   result << "Bandwidth: " << bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2 << "kHz/" << bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2 << "kHz" << endl;
   return result.str();
 }

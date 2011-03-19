@@ -4,6 +4,7 @@
 #include "../../bitstream.h"
 #include "../../buffer.h"
 #include "../../filter.h"
+#include "../../parser.h"
 #include "ac3_defs.h"
 #include "ac3_imdct.h"
 
@@ -183,6 +184,8 @@ public:
   int       bs_type;    // bitstream type
   bool      new_stream_flag;
   Rawdata   header;
+  HeaderInfo hinfo;
+
 
   SampleBuf samples;    // samples buffer
   SampleBuf delay;      // delayed samples buffer

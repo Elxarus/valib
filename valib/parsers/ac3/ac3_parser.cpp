@@ -73,6 +73,7 @@ AC3Parser::reset()
   bs_type = 0;
   new_stream_flag = false;
   header.zero();
+  hinfo.clear();
 
   block = 0;
   samples.zero();
@@ -115,15 +116,15 @@ string
 AC3Parser::info() const 
 {
   using std::endl;
-  int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * out_spk.sample_rate / 512000;
-  int cpl_freq = cplinu? cplstrtmant * out_spk.sample_rate / 512000: max_freq;
+  int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * hinfo.spk.sample_rate / 512000;
+  int cpl_freq = cplinu? cplstrtmant * hinfo.spk.sample_rate / 512000: max_freq;
 
   std::stringstream result;
-  result << "Format: " << out_spk.print() << endl;
-  result << "Bitrate: " << bitrate << endl;
-  result << "Stream: " << (bs_type == BITSTREAM_8? "8 bit": "16bit low endian") << endl;
+  result << "Format: " << hinfo.spk.print() << endl;
+  result << "Bitrate: " << bitrate << "kbps" << endl;
+  result << "Stream: " << (bs_type == BITSTREAM_8? "byte stream": "16bit low endian") << endl;
   result << "Frame size: " << frame_size << endl;
-  result << "NSamples: " << AC3_FRAME_SAMPLES << endl;
+  result << "Samples: " << AC3_FRAME_SAMPLES << endl;
   result << "bsid: " << bsid << endl;
   result << "clev: " << std::setprecision(1) << value2db(clev) << "dB (" << std::setprecision(4) << clev << ")" << endl;
   result << "slev: " << std::setprecision(1) << value2db(slev) << "dB (" << std::setprecision(4) << slev << ")" << endl;
@@ -138,8 +139,6 @@ AC3Parser::info() const
 bool
 AC3Parser::parse_frame(uint8_t *_frame, size_t _size)
 {
-  HeaderInfo hinfo;
-
   if (_size < ac3_header.header_size())
     return false;
 
