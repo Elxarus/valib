@@ -950,6 +950,9 @@ public:
 
   virtual string info() const
   { return f? f->info(): string(); }
+
+  virtual string name() const
+  { return f? Filter::name() + "/" + f->name(): Filter::name(); }
 };
 
 #endif
