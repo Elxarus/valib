@@ -162,11 +162,54 @@ MPG123Parser::process(Chunk &in, Chunk &out)
   }
 }
 
+static const char *layer_text(int layer)
+{
+  switch (layer)
+  {
+    case 1: return "Layer I";
+    case 2: return "Layer II";
+    case 3: return "Layer III (MP3)";
+    default: return "Unknown";
+  }
+}
+
+static const char *ver_text(mpg123_version ver)
+{
+  switch (ver)
+  {
+    case MPG123_1_0: return "MPEG1";
+    case MPG123_2_0: return "MPEG2";
+    case MPG123_2_5: return "MPEG2.5";
+    default: return "Unknown";
+  }
+}
+
+static const char *mode_text(mpg123_mode mode)
+{
+  switch (mode)
+  {
+    case MPG123_M_STEREO: return "Stereo";
+    case MPG123_M_JOINT:  return "Joint Stereo";
+    case MPG123_M_DUAL:   return "Dual Channel";
+    case MPG123_M_MONO:   return "Mono";
+    default: return "Unknown";
+  }
+}
+
 string
 MPG123Parser::info() const 
 {
   using std::endl;
   std::stringstream result;
-  result << "Format: " << out_spk.print() << endl;
+  result << "Format: " << Speakers(FORMAT_MPA, out_spk.mask, out_spk.sample_rate).print() << endl;
+
+  mpg123_frameinfo info;
+  if (mpg123_info((mpg123_handle*)mh, &info) == MPG123_OK)
+  {
+    result << "Version: " << ver_text(info.version) << " " << layer_text(info.layer) << endl;
+    result << "Mode: " << mode_text(info.mode) << endl;
+    result << "Frame size: " << info.framesize << endl;
+    result << "Bitrate: " << info.bitrate << "kbps" << endl;
+  }
   return result.str();
 }
