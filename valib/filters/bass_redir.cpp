@@ -1,4 +1,5 @@
 #include <math.h>
+#include <boost/smart_ptr.hpp>
 #include "bass_redir.h"
 #include "../iir/linkwitz_riley.h"
 
@@ -19,15 +20,15 @@ BassRedir::BassRedir()
 }
 
 void
-BassRedir::update_filters(Speakers _spk)
+BassRedir::update_filters()
 {
-  int nch = _spk.nch();
-  int sample_rate = _spk.sample_rate;
+  int nch = spk.nch();
+  int sample_rate = spk.sample_rate;
 
   if (sample_rate)
   {
-    IIRInstance *lpf_iir = IIRLinkwitzRiley(4, freq, true).make(sample_rate);
-    IIRInstance *hpf_iir = IIRLinkwitzRiley(4, freq, false).make(sample_rate);
+    boost::scoped_ptr<IIRInstance> lpf_iir(IIRLinkwitzRiley(4, freq, true).make(sample_rate));
+    boost::scoped_ptr<IIRInstance> hpf_iir(IIRLinkwitzRiley(4, freq, false).make(sample_rate));
 
     // When we mix basses to several channels we have to
     // adjust the gain to keep the resulting loudness
@@ -35,12 +36,9 @@ BassRedir::update_filters(Speakers _spk)
     double ch_gain = bass_nch? 1.0 / sqrt(bass_nch) : 1.0;
     lpf_iir->apply_gain(gain * ch_gain);
 
-    lpf.init(lpf_iir);
+    lpf.init(lpf_iir.get());
     for (int i = 0; i < nch; i++)
-      hpf[i].init(hpf_iir);
-
-    safe_delete(lpf_iir);
-    safe_delete(hpf_iir);
+      hpf[i].init(hpf_iir.get());
   }
   else
   {
@@ -62,7 +60,7 @@ BassRedir::reset()
 bool
 BassRedir::init()
 {
-  update_filters(spk);
+  update_filters();
   return true;
 }
 
@@ -135,16 +133,18 @@ BassRedir::get_enabled() const
 }
 
 void 
-BassRedir::set_enabled(bool _enabled)
+BassRedir::set_enabled(bool enabled_)
 {
-  int nch = spk.nch();
-  if (_enabled && !enabled)
-  {
-    lpf.reset();
-    for (int i = 0; i < nch; i++)
-      hpf[i].reset();
-  }
-  enabled = _enabled;
+  // Need reset on disabled to enabled state change
+  if (enabled_ && !enabled)
+    reset();
+  enabled = enabled_;
+}
+
+bool
+BassRedir::is_active() const
+{
+  return is_open() && enabled && ((spk.mask & ch_mask) != 0) && ((spk.mask & ~ch_mask) != 0);
 }
 
 int
@@ -154,12 +154,12 @@ BassRedir::get_freq() const
 }
 
 void 
-BassRedir::set_freq(int _freq)
+BassRedir::set_freq(int freq_)
 {
-  if (freq != _freq)
+  if (freq != freq_)
   {
-    freq = _freq;
-    update_filters(spk);
+    freq = freq_;
+    update_filters();
   }
 }
 
@@ -170,12 +170,12 @@ BassRedir::get_gain() const
 }
 
 void 
-BassRedir::set_gain(sample_t _gain)
+BassRedir::set_gain(sample_t gain_)
 {
-  if (gain != _gain)
+  if (gain != gain_)
   {
-    gain = _gain;
-    update_filters(spk);
+    gain = gain_;
+    update_filters();
   }
 }
 
@@ -186,11 +186,11 @@ BassRedir::get_channels() const
 }
 
 void
-BassRedir::set_channels(int _ch_mask)
+BassRedir::set_channels(int ch_mask_)
 {
-  if (ch_mask != _ch_mask)
+  if (ch_mask != ch_mask_)
   {
-    ch_mask = _ch_mask & CH_MASK_ALL;
-    update_filters(spk);
+    ch_mask = ch_mask_ & CH_MASK_ALL;
+    update_filters();
   }
 }

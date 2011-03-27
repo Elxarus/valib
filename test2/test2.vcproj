@@ -459,6 +459,10 @@
 			Name="filters"
 			>
 			<File
+				RelativePath=".\tests\filters\test_bass_redir.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\filters\test_cache.cpp"
 				>
 			</File>
