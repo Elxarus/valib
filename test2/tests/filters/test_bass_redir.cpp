@@ -28,6 +28,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 {
   BassRedir f;
   BOOST_CHECK_EQUAL(f.get_enabled(), false);
+  BOOST_CHECK_EQUAL(f.get_level(), 0);
   BOOST_CHECK_EQUAL(f.get_freq(), 80);
   BOOST_CHECK_EQUAL(f.get_gain(), 1.0);
   BOOST_CHECK_EQUAL(f.get_channels(), CH_MASK_LFE);
@@ -78,6 +79,35 @@ BOOST_AUTO_TEST_CASE(is_active)
 
   f.open(Speakers(FORMAT_LINEAR, MODE_QUADRO, 48000));
   BOOST_CHECK_EQUAL(f.is_active(), true);
+}
+
+BOOST_AUTO_TEST_CASE(get_level)
+{
+  Chunk chunk;
+  BassRedir f;
+
+  // Get level in redirection mode
+  f.set_enabled(true);
+  f.set_freq(freq);
+  f.open(spk_2_1);
+
+  NoiseGen noise(spk_2_1, seed, block_size);
+  while (noise.get_chunk(chunk))
+    while (f.process(chunk, Chunk()))
+    {}
+
+  BOOST_CHECK_GT(f.get_level(), 0.001);
+
+  // Get level in passthrough mode
+  // Note that level must be dropped to zero
+  // when filter is switched to passthrough mode.
+  f.set_enabled(false);
+  noise.init(spk_2_1, seed, block_size);
+  while (noise.get_chunk(chunk))
+    while (f.process(chunk, Chunk()))
+    {}
+
+  BOOST_CHECK_EQUAL(f.get_level(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(filter_main_channels)

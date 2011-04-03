@@ -255,6 +255,7 @@ public:
   inline bool     get_bass_redir() const;
   inline int      get_bass_freq() const;
   inline int      get_bass_channels() const;
+  inline sample_t get_bass_level() const;
 
   inline void     set_bass_redir(bool bass_redir);
   inline void     set_bass_freq(int bass_freq);
@@ -502,6 +503,9 @@ inline int AudioProcessor::get_bass_freq() const
 
 inline int AudioProcessor::get_bass_channels() const
 { return bass_redir.get_channels(); }
+
+inline sample_t AudioProcessor::get_bass_level() const
+{ return bass_redir.get_level(); }
 
 inline void AudioProcessor::set_bass_redir(bool _bass_redir)
 { bass_redir.set_enabled(_bass_redir); }

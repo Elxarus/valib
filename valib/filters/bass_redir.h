@@ -56,6 +56,10 @@
     - Input format includes destination channels only. Example: format is
       stereo and bass destination is front channels.
 
+  \fn sample_t BassRedir::get_level() const
+    Returns current bass level (level at the low-pass filter's output). Useful
+    for monitoring the activity of the filter.
+
   \fn int BassRedir::get_freq() const
     Returns current crossover freuqency.
 
@@ -95,7 +99,10 @@ public:
   // filter is enabled
   bool     get_enabled() const;
   void     set_enabled(bool enabled);
+
+  // Redirection activity
   bool     is_active() const;
+  sample_t get_level() const;
 
   // cutoff frequency
   int      get_freq() const;
@@ -121,6 +128,9 @@ protected:
   int       freq;           //!< Crossover frequency
   sample_t  gain;           //!< Bass gain
   int       ch_mask;        //!< Destination channels
+  sample_t  level;          //!< Current bass level
+  sample_t  level_accum;    //!< Level accumulator
+  size_t    level_samples;  //!< Number of samples accumulated
 
   Samples   buf;            //!< Bass channel buffer
   IIRFilter hpf[NCHANNELS]; //!< High-pass filters for each channel

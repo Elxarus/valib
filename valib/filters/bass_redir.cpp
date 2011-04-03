@@ -3,7 +3,8 @@
 #include "bass_redir.h"
 #include "../iir/linkwitz_riley.h"
 
-#define BUF_SIZE 1024
+static const size_t buf_size = 1024;
+static const vtime_t level_period = 0.1; // 100ms level average period
 
 ///////////////////////////////////////////////////////////////////////////////
 // BassRedir
@@ -16,7 +17,9 @@ BassRedir::BassRedir()
   freq = 80;
   gain = 1.0;
   ch_mask = CH_MASK_LFE;
-  buf.allocate(BUF_SIZE);
+  level = 0;
+
+  buf.allocate(buf_size);
 }
 
 void
@@ -55,6 +58,10 @@ BassRedir::reset()
   lpf.reset();
   for (int i = 0; i < nch; i++)
     hpf[i].reset();
+
+  level = 0;
+  level_accum = 0;
+  level_samples = 0;
 }
 
 bool
@@ -73,16 +80,13 @@ BassRedir::process(Chunk &in, Chunk &out)
   if (out.is_dummy())
     return false;
  
-  if (!enabled)
+  if (!enabled ||
+      (spk.mask &  ch_mask) == 0 || // Do not filter if we have no channels to mix the bass to.
+      (spk.mask & ~ch_mask) == 0)   // Do not filter if we have no channels to filter
+  {
+    level = 0;
     return true;
-
-  // Do not filter if we have no channels to mix the bass to.
-  if ((spk.mask & ch_mask) == 0)
-    return true;
-
-  // Do not filter if we have no channels to filter
-  if ((spk.mask & ~ch_mask) == 0)
-    return true;
+  }
 
   int ch, nch = spk.nch();
   order_t order;
@@ -93,9 +97,9 @@ BassRedir::process(Chunk &in, Chunk &out)
   size_t pos = 0;
   while (pos < size)
   {
-    size_t block_size = size - pos;
-    if (block_size >= BUF_SIZE)
-      block_size = BUF_SIZE;
+    size_t block_size = buf.size();
+    if (block_size > size - pos)
+      block_size = size - pos;
 
     // Mix channels to be filtered
     // Skip channels where we want to mix the bass to
@@ -106,6 +110,16 @@ BassRedir::process(Chunk &in, Chunk &out)
 
     // Filter bass channel
     lpf.process(buf, block_size);
+
+    // Find bass level
+    level_accum = max_samples(level_accum, buf, block_size);
+    level_samples += block_size;
+    if (level_samples > level_period * spk.sample_rate)
+    {
+      level = level_accum / spk.level;
+      level_accum = 0;
+      level_samples = 0;
+    }
 
     // Mix bass and do high-pass filtering
     for (ch = 0; ch < nch; ch++)
@@ -145,6 +159,12 @@ bool
 BassRedir::is_active() const
 {
   return is_open() && enabled && ((spk.mask & ch_mask) != 0) && ((spk.mask & ~ch_mask) != 0);
+}
+
+sample_t
+BassRedir::get_level() const
+{
+  return level;
 }
 
 int
