@@ -70,7 +70,7 @@ protected:
   /////////////////////////////////////////////////////////
   // Resource allocation
 
-  bool open(WAVEFORMATEX *wfx);
+  bool open_wfx(WAVEFORMATEX *wfx);
   bool try_open(Speakers spk) const;
   bool try_open(WAVEFORMATEX *wf) const;
 
