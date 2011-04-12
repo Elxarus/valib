@@ -73,7 +73,7 @@ DSoundSink::close_dsound()
 }
 
 bool
-DSoundSink::open(WAVEFORMATEX *wf)
+DSoundSink::open_wfx(WAVEFORMATEX *wf)
 {
   // This function is called only from open() and therefore
   // we do not take any lock here.
@@ -354,11 +354,11 @@ DSoundSink::init()
   memset(&wfx, 0, sizeof(wfx));
 
   if (spk2wfx(spk, (WAVEFORMATEX*)(&wfx), true))
-    if (open((WAVEFORMATEX*)(&wfx)))
+    if (open_wfx((WAVEFORMATEX*)(&wfx)))
       return true;
 
   if (spk2wfx(spk, (WAVEFORMATEX*)&wfx, false))
-    if (open((WAVEFORMATEX*)(&wfx)))
+    if (open_wfx((WAVEFORMATEX*)(&wfx)))
       return true;
 
   close();
