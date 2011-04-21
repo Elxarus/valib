@@ -38,18 +38,18 @@ class Filter;
   large groups: linear and rawdata. Linear format is an internal representation
   that is convenient for fast processing. Rawdata formats are all other formats
   (including PCM). The general processing scenario is follow:
-  \li (optional) parse containter format / other rawdata transform
-  \li input data converted from rawdata format into linear
-  \li processing is done
-  \li output data converted from linear format into rawdata format
+  - (optional) parse containter format / other rawdata transform
+  - input data converted from rawdata format into linear
+  - processing is done
+  - output data converted from linear format into rawdata format
 
   Therefore, all filters may be classified by the format:
 
-  \li Linear filters. Most of audio processing filters. Accept linear format
+  - Linear filters. Most of audio processing filters. Accept linear format
     at input and produce linear output.
-  \li Rawdata filters. Operate on rawdata formats. Do data transformation,
+  - Rawdata filters. Operate on rawdata formats. Do data transformation,
     format detection, etc. 
-  \li Mixed. All other filters. Some filters do not care about the input format
+  - Mixed. All other filters. Some filters do not care about the input format
     at all. For example, Passthrough or Counter filters.
 
   Decoders may be classified as rawdata filters because of many common
@@ -60,21 +60,21 @@ class Filter;
   Filters may process data inplace, at the internal buffer or accumulate
   and process it in large blocks. This leads us directly to the following:
 
-  \li Inplace filters. These filters process data inplace at the buffer provided
+  - Inplace filters. These filters process data inplace at the buffer provided
     at input. Almost always one output chunk is produced for one input chunk
     and flushing is not required. Note, that inplace filter \b may contain
     internal buffer (see BassRedir, CacheFilter, Delay filters). Output data is
     available immediately, i.e. inplace filters do not introduce processing
     lag. Output chunk contains pointer to the input chunk's buffer. The last
     is very important feature, that must be always taken into account.
-  \li Immediate filters. These filters processe data at internal buffer.
+  - Immediate filters. These filters processe data at internal buffer.
     Because internal buffer is fixed in size in most cases, these filters may
     produce more than one output chunk for one input. Flushing is not required
     generally. Like inplace filters, immediate filters do not introduce
     processing lag and output data is available immediately. Output chunk
     contains poinrters to the internal buffer. Note, that the internal buffer
     returned may be changed by the following inplace filter!
-  \li Buffering filters. These filters require to accumulate some data to
+  - Buffering filters. These filters require to accumulate some data to
     process. Because input data is not required to persist in between of
     Filter::process() calls, filter has to copy it into the internal buffer.
     When filter has enougth data it produces one or more output chunks.
@@ -90,15 +90,15 @@ class Filter;
 
   Filters may break the output stream and start a new one. We may classify
   this behaviour:
-  \li Single stream filter. Output format is known immediately after open and
+  - Single stream filter. Output format is known immediately after open and
     does not change at all. In the simplest case output format equals to the
     input format. Filter settings may affect the output format but such
     change cannot be done on-the-fly, during the audio processing, and may
     require reset() or open() call.
-  \li Multiple streams. Output format is known immediately after open, but
+  - Multiple streams. Output format is known immediately after open, but
     filter may finish the output stream and start a new one. This may be a
     result of settings change or because of some internal reasons.
-  \li Data-driven output format. In this case, filter cannot determine the
+  - Data-driven output format. In this case, filter cannot determine the
     output format immediately after open. It has to receive some data to
     deduct it.
 
@@ -125,10 +125,10 @@ class Filter;
   subsequent data.
 
   Some general rules filter should follow:
-  \li No timestamp should be lost
-  \li Do not create new timestamps
-  \li Do not move timestamps when possible
-  \li Move timestamps \b forward when required
+  - No timestamp should be lost
+  - Do not create new timestamps
+  - Do not move timestamps when possible
+  - Move timestamps \b forward when required
 
   As a rule, timestamp handling for inplace and immediate filters is very
   simple: for each input chunk first output chunk is stamped with input
@@ -506,9 +506,9 @@ class Filter;
     passed to open(), and do this all the time until close() call.
 
     get_output() must return either:
-    \li Correct format for the next output chunk.
-    \li FORMAT_UNKNOWN when filer requires to receive some data to decide its
-    output format.
+    - Correct format for the next output chunk.
+    - FORMAT_UNKNOWN when filer requires to receive some data to decide its
+      output format.
 
   \fn void Filter::close()
     Close the filter and deallocate resources.
@@ -555,6 +555,26 @@ class Filter;
     calls with the same input chunk (filter may make several output chunks for
     one input chunk when it is too big).
 
+    Filer may change the input chunk in following ways:
+    - Drop timestamp. In most cases filter must do this to prevent processing
+      of the same timestamp several times, when process() is called several
+      times for the same input chunk.
+    - Move rawdata/samples pointers and update size respecively.
+    - Completely clear the chunk to indicate that all data was processed.
+
+    Sometimes it is required to determine the amount if input data processed.
+    Recommended method follows:
+
+    \code
+    uint8_t old_rawdata = chunk.rawdata;
+    size_t old_size = chunk.size;
+    if (filter->process(chunk, output))
+    {
+      size_t gone = chunk.size? chunk.rawdata - old_rawdata: old_size;
+      ...
+    }
+    \endcode
+
     Filter may have its own buffer. In this case output chunk points to this
     buffer. When the buffer is not big enough to process the whole input chunk
     at once filter may return several output chunks.
@@ -590,8 +610,8 @@ class Filter;
 
   \fn bool Filter::new_stream() const
     Filter returns a new stream. It may do this for the following reasons:
-    \li It want the downstream to flush and prepare to receive a new stream.
-    \li It wants to change the output format
+    - It want the downstream to flush and prepare to receive a new stream.
+    - It wants to change the output format
 
     Both process() and flush() calls may affect this flag
 
@@ -640,9 +660,9 @@ class Filter;
     output chunk.
 
     Output format may change to FORMAT_UNKNOWN:
-    \li After flushing (see flush())
-    \li When filter changes its output format (see new_stream())
-    \li After reset() call
+    - After flushing (see flush())
+    - When filter changes its output format (see new_stream())
+    - After reset() call
 
     Most filters do not change output format during the processing, but some
     can. To change output format filter must explicitly indicate this with
@@ -722,8 +742,8 @@ public:
     Calls init().
 
     After this call:
-    \li get_input() and get_output() return new_spk.
-    \li is_open() returns true
+    - get_input() and get_output() return new_spk.
+    - is_open() returns true
 
   \fn void SimpleFilter::close()
     Closes the filter.
@@ -731,8 +751,8 @@ public:
     Calls uninit().
 
     After this call:
-    \li get_input() and get_output() return spk_unknown.
-    \li is_open() returns false.
+    - get_input() and get_output() return spk_unknown.
+    - is_open() returns false.
 
   \fn bool SimpleFilter::is_open() const
     Returns true when filter is open and false otherwise.
@@ -849,9 +869,9 @@ public:
   \fn bool SamplesFilter::can_open(Speakers spk) const
     Return true for any fully-specified linear format. I.e. the format must
     meet following conditions:
-    \li Speakers::format == FORMAT_LINEAR
-    \li Speakers::mask != 0
-    \li Speakers::sample_rate != 0
+    - Speakers::format == FORMAT_LINEAR
+    - Speakers::mask != 0
+    - Speakers::sample_rate != 0
 
 ******************************************************************************/
 
