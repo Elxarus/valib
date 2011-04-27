@@ -329,13 +329,13 @@ inline void AudioProcessor::set_output_order(const order_t _order)
 // Master gain
 
 inline sample_t AudioProcessor::get_master() const
-{ return mixer.get_gain(); }
+{ return agc.master; }
 
 inline sample_t AudioProcessor::get_gain() const
-{ return mixer.get_gain() * agc.gain; }
+{ return agc.gain; }
 
 inline void AudioProcessor::set_master(sample_t _gain)
-{ mixer.set_gain(_gain); agc.gain = 1.0; }
+{ agc.master = _gain; agc.gain = _gain; }
 
 // AGC
 
