@@ -81,7 +81,7 @@ protected:
   SampleBuf buf;       //!< Cache buffer (circular buffer)
 
   vtime_t buf_size;    //!< Size of the buffer in time units
-  int buf_samples;     //!< Size fo the buffer in samples
+  int buf_samples;     //!< Size of the buffer in samples
   int cached_samples;  //!< Number of samples cached
   int pos;             //!< Position of the end of the circular buffer
 
