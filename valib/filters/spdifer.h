@@ -59,6 +59,7 @@ public:
 
   bool get_big_endian() const           { return spdif_parser.get_big_endian();     }
   void set_big_endian(bool _big_endian) { spdif_parser.set_big_endian(_big_endian); }
+  HeaderInfo raw_header_info() const    { return spdif_parser.header_info();        }
 };
 
 #endif
