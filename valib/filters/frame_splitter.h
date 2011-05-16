@@ -42,6 +42,9 @@
   \fn int FrameSplitter::get_frames() const
     Returns number of frames decoded since creation.
 
+  \fn string FrameSplitter::stream_info() const
+    Prints stream information.
+
   \fn HeaderInfo FrameSplitter::header_info() const
     Prints current frame info.
 ******************************************************************************/
@@ -65,6 +68,7 @@ public:
   const HeaderParser *get_parser() const;
 
   int get_frames() const         { return stream.get_frames();  }
+  string stream_info() const     { return stream.stream_info(); }
   HeaderInfo header_info() const { return stream.header_info(); }
 
   /////////////////////////////////////////////////////////

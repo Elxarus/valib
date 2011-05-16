@@ -47,6 +47,13 @@ public:
   void add(Filter *new_filter);
   void release();
 
+  /////////////////////////////////////////////////////////
+  // FrameSplitter wrapper
+
+  int get_frames() const         { return sync.get_frames();  }
+  string stream_info() const     { return sync.stream_info(); }
+  HeaderInfo header_info() const { return sync.header_info(); }
+
 protected:
   MultiHeader header;
   FrameSplitter sync;
