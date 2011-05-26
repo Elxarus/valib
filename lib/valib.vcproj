@@ -1148,6 +1148,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\iir\crossover.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\iir\crossover.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\iir\linkwitz_riley.cpp"
 				>
 			</File>
