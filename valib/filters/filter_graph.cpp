@@ -348,15 +348,18 @@ FilterGraph::reset()
     node->state = state_init;
     node->flushing = false;
 
-    if (node->rebuild != no_rebuild)
+    if (node->rebuild == check_rebuild)
       if (node->next->id != next_id(node->id, node->filter->get_output()))
-      {
-        if (!build_chain(node))
-          THROW(EChainRebuild());
-        break;
-      }
+        node->rebuild = do_rebuild;
       else
         node->rebuild = no_rebuild;
+
+    if (node->rebuild == do_rebuild)
+    {
+      if (!build_chain(node))
+        THROW(EChainRebuild());
+      break;
+    }
   }
 }
 
