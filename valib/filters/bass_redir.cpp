@@ -1,7 +1,7 @@
 #include <math.h>
 #include <boost/smart_ptr.hpp>
 #include "bass_redir.h"
-#include "../iir/linkwitz_riley.h"
+#include "../iir/crossover.h"
 
 static const size_t buf_size = 1024;
 static const vtime_t level_period = 0.1; // 100ms level average period
@@ -25,13 +25,16 @@ BassRedir::BassRedir()
 void
 BassRedir::update_filters()
 {
-  int nch = spk.nch();
+  int ch, nch = spk.nch();
   int sample_rate = spk.sample_rate;
+  order_t order;
+  spk.get_order(order);
 
   if (sample_rate)
   {
-    boost::scoped_ptr<IIRInstance> lpf_iir(IIRLinkwitzRiley(4, freq, true).make(sample_rate));
-    boost::scoped_ptr<IIRInstance> hpf_iir(IIRLinkwitzRiley(4, freq, false).make(sample_rate));
+    boost::scoped_ptr<IIRInstance> lpf_iir(IIRCrossover(4, freq, IIRCrossover::lowpass).make(sample_rate));
+    boost::scoped_ptr<IIRInstance> hpf_iir(IIRCrossover(4, freq, IIRCrossover::highpass).make(sample_rate));
+    boost::scoped_ptr<IIRInstance> apf_iir(IIRCrossover(4, freq, IIRCrossover::allpass).make(sample_rate));
 
     // When we mix basses to several channels we have to
     // adjust the gain to keep the resulting loudness
@@ -40,14 +43,20 @@ BassRedir::update_filters()
     lpf_iir->apply_gain(gain * ch_gain);
 
     lpf.init(lpf_iir.get());
-    for (int i = 0; i < nch; i++)
-      hpf[i].init(hpf_iir.get());
+    for (ch = 0; ch < nch; ch++)
+      if ((CH_MASK(order[ch]) & ch_mask) == 0)
+        f[ch].init(hpf_iir.get());
+      else
+        f[ch].init(apf_iir.get());
+
+    for (ch = nch; ch < NCHANNELS; ch++)
+      f[ch].drop();
   }
   else
   {
     lpf.drop();
     for (int i = 0; i < nch; i++)
-      hpf[i].drop();
+      f[i].drop();
   }
 }
 
@@ -56,8 +65,8 @@ BassRedir::reset()
 {
   int nch = spk.nch();
   lpf.reset();
-  for (int i = 0; i < nch; i++)
-    hpf[i].reset();
+  for (int ch = 0; ch < nch; ch++)
+    f[ch].reset();
 
   level = 0;
   level_accum = 0;
@@ -121,14 +130,19 @@ BassRedir::process(Chunk &in, Chunk &out)
       level_samples = 0;
     }
 
-    // Mix bass and do high-pass filtering
+    // Do filtering and mix bass
     for (ch = 0; ch < nch; ch++)
       if ((CH_MASK(order[ch]) & ch_mask) == 0)
+      {
         // High-pass filter
-        hpf[ch].process(samples[ch] + pos, block_size);
+        f[ch].process(samples[ch] + pos, block_size);
+      }
       else
-        // Mix bass
+      {
+        // Allpass and mix bass
+        f[ch].process(samples[ch] + pos, block_size);
         sum_samples(samples[ch] + pos, buf, block_size);
+      }
 
     // Next block
     pos += block_size;

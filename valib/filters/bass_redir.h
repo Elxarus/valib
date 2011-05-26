@@ -133,8 +133,8 @@ protected:
   size_t    level_samples;  //!< Number of samples accumulated
 
   Samples   buf;            //!< Bass channel buffer
-  IIRFilter hpf[NCHANNELS]; //!< High-pass filters for each channel
-  IIRFilter lpf;            //!< Low-pass filter
+  IIRFilter f[NCHANNELS];   //!< Channel filters
+  IIRFilter lpf;            //!< Bass channel lowpass filter
 
   void update_filters();    //!< Recalculate filters
 };
