@@ -51,7 +51,7 @@ int test_all_filters(Log *log)
   BassRedir      bass_redir_ip; // inplace
   BassRedir      bass_redir_ib; // immediate
   Levels         levels;
-  Syncer         dejitter;
+  Dejitter       dejitter;
 
   // Aggregate filters
   DVDGraph       dvd;

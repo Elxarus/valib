@@ -124,14 +124,14 @@ TestResult up_down(Log *log, int rate1, int rate2, double a, double q)
   SliceFilter ref_slice(trans_len, block_size - trans_len);
 
   FilterChain tst_chain;
-  tst_chain.add_back(&tst_conv, "Bandlimit");
-  tst_chain.add_back(&res1, "Upsample");
-  tst_chain.add_back(&res2, "Downsample");
-  tst_chain.add_back(&tst_slice, "Slice");
+  tst_chain.add_back(&tst_conv);
+  tst_chain.add_back(&res1);
+  tst_chain.add_back(&res2);
+  tst_chain.add_back(&tst_slice);
 
   FilterChain ref_chain;
-  ref_chain.add_back(&ref_conv, "Bandlimit");
-  ref_chain.add_back(&ref_slice, "Slice");
+  ref_chain.add_back(&ref_conv);
+  ref_chain.add_back(&ref_slice);
 
   // Resample introduces not more than -A dB of noise.
   // 2 resamples introduces twice more noise, -A + 6dB

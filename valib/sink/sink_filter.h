@@ -16,6 +16,8 @@ protected:
   Filter *filter;
 
 public:
+  struct Error : public Sink::Error {};
+
   SinkFilter():
   sink(0), filter(0)
   {}
@@ -104,7 +106,7 @@ public:
       {
         sink->flush();
         if (!sink->open(filter->get_output()))
-          throw Sink::Error(this, 0, "Cannot reopen sink");
+          THROW(Error());
       }
       sink->process(out);
     }
@@ -126,7 +128,7 @@ public:
       {
         sink->flush();
         if (!sink->open(filter->get_output()))
-          throw Sink::Error(this, 0, "Cannot reopen sink");
+          THROW(Error());
       }
       sink->process(out);
     }
