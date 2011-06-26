@@ -9,7 +9,6 @@
 
 #include "defs.h"
 #include "spk.h"
-#include "syncscan.h"
 
 /**************************************************************************//**
   \class PSParser
@@ -55,7 +54,6 @@
 class PSParser
 {
 private:
-  SyncScan scanner;
   enum { state_sync, state_header, state_drop } state;
   size_t data_size;     //!< Size of data at header[] buffer
 
