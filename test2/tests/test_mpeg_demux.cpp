@@ -192,6 +192,8 @@ BOOST_AUTO_TEST_CASE(demux)
 
   for (int ifile = 0; ifile < array_size(files); ifile++)
   {
+    BOOST_MESSAGE(files[ifile].pes);
+
     MemFile pes(files[ifile].pes);
     MemFile raw(files[ifile].raw);
 

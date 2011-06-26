@@ -2,7 +2,6 @@
 
 int test_bs_convert(Log *log);
 int test_crc(Log *log);
-int test_syncer(Log *log);
 int test_streambuffer(Log *log);
 int test_parser_filter(Log *log);
 
@@ -23,7 +22,6 @@ TEST(old_style, "Old-stlye tests")
   test_all_filters(log);
 
   test_crc(log);
-  test_syncer(log);
   test_streambuffer(log);
   test_bs_convert(log);
   test_parser_filter(log);
