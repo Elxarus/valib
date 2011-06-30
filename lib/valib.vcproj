@@ -408,6 +408,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\syncscan.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\syncscan.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\vargs.cpp"
 				>
 			</File>
