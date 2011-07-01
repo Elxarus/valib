@@ -5,9 +5,71 @@
 #include "syncscan.h"
 #include <boost/test/unit_test.hpp>
 
-static const int seed = 958745023;
-static const int noise_size = 1*1024*1024;
 using std::string;
+
+static const string test_trie("oix*R*OIL*AD");
+static bool test_sync[256] = 
+{
+  // 00xxxxxx - false [0-64)
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  // 01000xxx - true
+  true,  true,  true,  true,  true,  true,  true,  true,
+  // 0100100x - true
+  true,  true,
+  // 0100101x - false
+  false, false, 
+  // 0100110x - false
+  false, false, 
+  // 0100111x - true
+  true,  true,
+  // 010100xx - true
+  true,  true,  true,  true,
+  // 010101xx - false
+  false, false, false, false,
+  // 01011xxx - true
+  true,  true,  true,  true,  true,  true,  true,  true,
+  // 01100xxx - true
+  true,  true,  true,  true,  true,  true,  true,  true,
+  // 0110100x - true
+  true,  true,
+  // 0110101x - false
+  false, false, 
+  // 0110110x - false
+  false, false, 
+  // 0110111x - true
+  true,  true,
+  // 011100xx - true
+  true,  true,  true,  true,
+  // 011101xx - false
+  false, false, false, false,
+  // 01111xxx - true
+  true,  true,  true,  true,  true,  true,  true,  true,
+  // 1xxxxxxx - false [127-256)
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+  false, false, false, false, false, false, false, false, 
+};
+
 
 BOOST_AUTO_TEST_SUITE(sync_trie)
 
@@ -78,79 +140,28 @@ BOOST_AUTO_TEST_CASE(clear)
   BOOST_CHECK(t.get_size() == 0);
 }
 
-BOOST_AUTO_TEST_CASE(invert)
+BOOST_AUTO_TEST_CASE(is_sync)
 {
-  static const string trie("oix*R*OIL*AD");
-  static bool trie_test[256] = 
-  {
-    // 00xxxxxx - false [0-64)
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    // 01000xxx - true
-    true,  true,  true,  true,  true,  true,  true,  true,
-    // 0100100x - true
-    true,  true,
-    // 0100101x - false
-    false, false, 
-    // 0100110x - false
-    false, false, 
-    // 0100111x - true
-    true,  true,
-    // 010100xx - true
-    true,  true,  true,  true,
-    // 010101xx - false
-    false, false, false, false,
-    // 01011xxx - true
-    true,  true,  true,  true,  true,  true,  true,  true,
-    // 01100xxx - true
-    true,  true,  true,  true,  true,  true,  true,  true,
-    // 0110100x - true
-    true,  true,
-    // 0110101x - false
-    false, false, 
-    // 0110110x - false
-    false, false, 
-    // 0110111x - true
-    true,  true,
-    // 011100xx - true
-    true,  true,  true,  true,
-    // 011101xx - false
-    false, false, false, false,
-    // 01111xxx - true
-    true,  true,  true,  true,  true,  true,  true,  true,
-    // 1xxxxxxx - false [127-256)
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-    false, false, false, false, false, false, false, false, 
-  };
-
-  SyncTrie t(trie);
-  t.invert();
-  for (int i = 0; i < array_size(trie_test); i++)
+  SyncTrie t(test_trie);
+  for (int i = 0; i < array_size(test_sync); i++)
   {
     uint8_t sync[1];
     sync[0] = (uint8_t) i;
-    if (t.is_sync(sync) == trie_test[i])
-      BOOST_FAIL("value: " << i << " result must be: " << !trie_test[i]);
+    if (t.is_sync(sync) != test_sync[i])
+      BOOST_FAIL("value: " << i << " result must be: " << !test_sync[i]);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(invert)
+{
+  SyncTrie t(test_trie);
+  t.invert();
+  for (int i = 0; i < array_size(test_sync); i++)
+  {
+    uint8_t sync[1];
+    sync[0] = (uint8_t) i;
+    if (t.is_sync(sync) == test_sync[i])
+      BOOST_FAIL("value: " << i << " result must be: " << !test_sync[i]);
   }
 }
 
@@ -259,13 +270,73 @@ BOOST_AUTO_TEST_CASE(merge)
   // Run test cases
   for (size_t i = 0; i < array_size(tests); i++)
   {
+    BOOST_MESSAGE(tests[i].left_trie << " or " << tests[i].right_trie << " = " << tests[i].result_trie);
+
     t = SyncTrie(tests[i].left_trie);
     t.merge(SyncTrie(tests[i].right_trie));
-    BOOST_MESSAGE(tests[i].left_trie << " or " << tests[i].right_trie << " = " << tests[i].result_trie);
+    BOOST_CHECK_EQUAL(t.serialize(), tests[i].result_trie);
+    BOOST_CHECK_EQUAL(t.get_depth(), tests[i].result_depth);
+    BOOST_CHECK_EQUAL(t.get_size(), tests[i].result_size);
+
+    BOOST_MESSAGE(tests[i].right_trie << " or " << tests[i].left_trie << " = " << tests[i].result_trie);
+
+    t = SyncTrie(tests[i].right_trie);
+    t.merge(SyncTrie(tests[i].left_trie));
     BOOST_CHECK_EQUAL(t.serialize(), tests[i].result_trie);
     BOOST_CHECK_EQUAL(t.get_depth(), tests[i].result_depth);
     BOOST_CHECK_EQUAL(t.get_size(), tests[i].result_size);
   }
 }
+
+BOOST_AUTO_TEST_CASE(append)
+{
+  SyncTrie t;
+
+  // Append an empty trie to another empty trie
+  t.append(SyncTrie());
+  BOOST_CHECK(t.serialize() == string());
+  BOOST_CHECK(t.is_empty());
+  BOOST_CHECK(t.sync_size() == 0);
+  BOOST_CHECK(t.get_depth() == 0);
+  BOOST_CHECK(t.get_size() == 0);
+
+  // Append non-empty trie to an empty one
+  t.append(SyncTrie("I"));
+  BOOST_CHECK_EQUAL(t.serialize(), string("I"));
+  BOOST_CHECK(!t.is_empty());
+  BOOST_CHECK(t.sync_size() == 1);
+  BOOST_CHECK(t.get_depth() == 1);
+  BOOST_CHECK(t.get_size() == 1);
+
+  // Append an empty trie to non-empty one
+  t.append(SyncTrie());
+  BOOST_CHECK_EQUAL(t.serialize(), string("I"));
+  BOOST_CHECK(!t.is_empty());
+  BOOST_CHECK(t.sync_size() == 1);
+  BOOST_CHECK(t.get_depth() == 1);
+  BOOST_CHECK(t.get_size() == 1);
+
+  // Append an non-empty trie to non-empty one
+  t.append(SyncTrie("I"));
+  BOOST_CHECK_EQUAL(t.serialize(), string("iI"));
+  BOOST_CHECK(!t.is_empty());
+  BOOST_CHECK(t.sync_size() == 1);
+  BOOST_CHECK(t.get_depth() == 2);
+  BOOST_CHECK(t.get_size() == 2);
+
+  // Append to different types of nodes.
+  static const string trie("oix*R*OIL*AD");
+  static const string append("I");
+  static const string result("oix**I*oIiI**xIDI");
+
+  t = SyncTrie(trie);
+  t.append(SyncTrie(append));
+  BOOST_CHECK_EQUAL(t.serialize(), result);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+BOOST_AUTO_TEST_SUITE(sync_scan)
 
 BOOST_AUTO_TEST_SUITE_END()
