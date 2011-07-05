@@ -123,6 +123,10 @@ protected:
   friend class SyncScan;
 
 public:
+  struct EParseError {};
+  struct EUnexpectedSymbol: public EParseError {};
+  struct EUnexpectedEndOfData: public EParseError {};
+
   static const SyncTrie any;
   static const SyncTrie one;
   static const SyncTrie zero;
@@ -190,8 +194,6 @@ public:
     }
   }
 
-  void print(int node = 0);
-
   std::string serialize()
   {
     std::string result;
@@ -255,7 +257,8 @@ protected:
 public:
   SyncScan()
   {}
-  SyncScan(const SyncTrie &t)
+
+  explicit SyncScan(const SyncTrie &t)
   { init(t); }
 
   void clear();
