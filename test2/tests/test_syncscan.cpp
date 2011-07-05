@@ -2,10 +2,14 @@
   SyncTrie and SyncScan test.
 */
 
-#include "syncscan.h"
 #include <boost/test/unit_test.hpp>
+#include "../noise_buf.h"
+#include "syncscan.h"
 
 using std::string;
+
+static const int seed = 98374592;
+static const size_t noise_size = 1024; // for sync scan test
 
 // Test trie that contains all node types
 static const string test_trie("oix*R*OIL*AD");
@@ -448,11 +452,74 @@ BOOST_AUTO_TEST_SUITE(sync_scan)
 BOOST_AUTO_TEST_CASE(constructor)
 {
   SyncScan s;
+  BOOST_CHECK(s.get_trie().is_empty());
 }
 
 BOOST_AUTO_TEST_CASE(init_constructor)
 {
-  SyncScan(SyncTrie(test_trie));
+  SyncTrie t(test_trie);
+  SyncScan s(t);
+
+  t.optimize();
+  BOOST_CHECK_EQUAL(s.get_trie().serialize(), t.serialize());
+}
+
+BOOST_AUTO_TEST_CASE(set_trie)
+{
+  SyncTrie t(test_trie);
+  SyncScan s;
+  s.set_trie(t);
+
+  t.optimize();
+  BOOST_CHECK_EQUAL(s.get_trie().serialize(), t.serialize());
+}
+
+// Scan using an empty trie
+BOOST_AUTO_TEST_CASE(scan_empty)
+{
+  SyncScan s;
+
+  // Do not sync at all
+  size_t pos = 0;
+  RawNoise buf(noise_size, seed);
+  bool result = s.scan(buf.begin(), buf.size(), pos);
+
+  BOOST_CHECK(!result);
+  BOOST_CHECK_EQUAL(pos, noise_size);
+}
+
+// Scan using the test trie
+BOOST_AUTO_TEST_CASE(scan_trie)
+{
+  SyncTrie t(test_trie);
+  SyncScan s(t);
+
+  size_t pos = 0;
+  size_t sync_count = 0;
+  RawNoise buf(noise_size, seed);
+  while (s.scan(buf.begin(), buf.size(), pos))
+  {
+    if (!test_sync[buf[pos]])
+      BOOST_FAIL("Sync at a wrong value: " << buf[pos]);
+    pos++;
+    sync_count++;
+  }
+  BOOST_CHECK_EQUAL(sync_count, 213);
+  BOOST_CHECK_EQUAL(pos, noise_size);
+}
+
+// Ensure that pos is at the right place after scanning using a long trie.
+BOOST_AUTO_TEST_CASE(scan_pos)
+{
+  SyncTrie t("ooooooooiiiiiiiioooooooO");
+  SyncScan s(t);
+
+  size_t pos = 0;
+  RawNoise buf(noise_size, seed);
+  while (s.scan(buf.begin(), buf.size(), pos))
+    pos++;
+
+  BOOST_CHECK_EQUAL(pos, noise_size - t.sync_size() + 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

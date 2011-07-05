@@ -417,26 +417,23 @@ SyncScan::build_booster(uint16_t word, int node, int depth)
 }
 
 void
-SyncScan::init(const SyncTrie &gr)
+SyncScan::set_trie(const SyncTrie &gr)
 {
   graph = gr;
   graph.optimize();
   memset(booster, 0, sizeof(booster));
-  if (graph.graph.size() > 0)
+  if (!graph.is_empty())
     build_booster(0, 0, 0);
 }
 
-void
-SyncScan::clear()
-{
-  graph.clear();
-  memset(booster, 0, sizeof(booster));
-}
+SyncTrie
+SyncScan::get_trie() const
+{ return SyncTrie(graph); }
 
 bool
 SyncScan::scan(const uint8_t *buf, size_t size, size_t &pos) const
 {
-  if (!graph.is_empty())
+  if (graph.is_empty())
   {
     // Drop all input data (never sync)
     // when it is no graph

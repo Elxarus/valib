@@ -259,10 +259,11 @@ public:
   {}
 
   explicit SyncScan(const SyncTrie &t)
-  { init(t); }
+  { set_trie(t); }
 
-  void clear();
-  void init(const SyncTrie &t);
+  void set_trie(const SyncTrie &t);
+  SyncTrie get_trie() const;
+
   bool scan(const uint8_t *buf, size_t size, size_t &pos) const;
 };
 
