@@ -441,6 +441,23 @@ BOOST_AUTO_TEST_CASE(optimize)
   }
 }
 
+BOOST_AUTO_TEST_CASE(deserialize_bad)
+{
+  SyncTrie t;
+
+  // Unexpected end of data
+  BOOST_CHECK(!t.deserialize("o"));
+  BOOST_CHECK(!t.deserialize("i"));
+  BOOST_CHECK(!t.deserialize("x"));
+  BOOST_CHECK(!t.deserialize("L"));
+  BOOST_CHECK(!t.deserialize("R"));
+  BOOST_CHECK(!t.deserialize("*"));
+  BOOST_CHECK(!t.deserialize("*I"));
+
+  // Bad symbol
+  BOOST_CHECK(!t.deserialize("w"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 ///////////////////////////////////////////////////////////////////////////////
