@@ -108,17 +108,17 @@ protected:
   typedef std::vector<Node> Graph;
 
   Graph graph;
-  int depth;
+  size_t depth;
 
   static int insert_node(Graph &gr);
   static int copy(Graph &result, const Graph &gr, int node);
-  static int find_depth(Graph &gr, int node);
-  static int find_depth(Graph &gr);
+  static size_t find_depth(Graph &gr, int node);
+  static size_t find_depth(Graph &gr);
   static int merge(Graph &result, const Graph &gr1, int node1, const Graph &gr2, int node2);
   static int optimize(Graph &result, const Graph &gr, int node);
 
   void serialize(std::string &result, int node);
-  int  deserialize(const std::string &s, size_t &pos, int &depth);
+  int  deserialize(const std::string &s, size_t &pos, size_t &depth);
 
   friend class SyncScan;
 
@@ -216,7 +216,7 @@ public:
     }
   }
 
-  int get_depth() const { return depth; }
+  size_t get_depth() const { return depth; }
   size_t get_size() const { return graph.size(); }
 };
 
