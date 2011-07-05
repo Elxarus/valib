@@ -93,6 +93,15 @@ SyncTrie::find_depth(Graph &gr, int node)
 }
 
 int
+SyncTrie::find_depth(Graph &gr)
+{
+  if (gr.size())
+    return find_depth(gr, 0);
+  else
+    return 0;
+}
+
+int
 SyncTrie::merge(Graph &result, const Graph &gr1, int node1, const Graph &gr2, int node2)
 {
   int l1 = gr1[node1].left();
@@ -200,8 +209,10 @@ SyncTrie::merge(const SyncTrie &other)
   {
     Graph new_graph;
     merge(new_graph, graph, 0, other.graph, 0);
+    int new_depth = find_depth(new_graph);
+
     graph.swap(new_graph);
-    depth = find_depth(graph, 0);
+    depth = new_depth;
   }
 }
 
@@ -244,8 +255,16 @@ SyncTrie::optimize()
   if (graph.size() > 0)
   {
     Graph new_graph;
-    optimize(new_graph, graph, 0);
+    int new_depth = 0;
+    int result = optimize(new_graph, graph, 0);
+    // Add "always allow" node to the root to make "always allow" graph.
+    // Such trie has no sense, but we have to keep formal correctness.
+    if (result == node_allow)
+      new_graph.push_back(Node(node_allow, node_allow));
+    new_depth = find_depth(new_graph);
+
     graph.swap(new_graph);
+    depth = new_depth;
   }
 }
 
