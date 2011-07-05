@@ -7,7 +7,10 @@
 
 using std::string;
 
+// Test trie that contains all node types
 static const string test_trie("oix*R*OIL*AD");
+
+// Sync result for one byte using the test trie
 static bool test_sync[256] = 
 {
   // 00xxxxxx - false [0-64)
@@ -267,6 +270,18 @@ BOOST_AUTO_TEST_CASE(merge)
   t.merge(SyncTrie(0x55, 8));
   BOOST_CHECK_EQUAL(t.get_depth(), 16);
 
+  // Typical usage test
+  uint8_t sync[1];
+  t = SyncTrie(0x55, 8);
+  t.merge(SyncTrie(0xaa, 8));
+
+  sync[0] = 0;
+  BOOST_CHECK(!t.is_sync(sync));
+  sync[0] = 0x55;
+  BOOST_CHECK(t.is_sync(sync));
+  sync[0] = 0xaa;
+  BOOST_CHECK(t.is_sync(sync));
+
   // Run test cases
   for (size_t i = 0; i < array_size(tests); i++)
   {
@@ -324,7 +339,7 @@ BOOST_AUTO_TEST_CASE(append)
   BOOST_CHECK(t.get_depth() == 2);
   BOOST_CHECK(t.get_size() == 2);
 
-  // Append to different types of nodes.
+  // Append to different types of terminal nodes.
   static const string trie("oix*R*OIL*AD");
   static const string append("I");
   static const string result("oix**I*oIiI**xIDI");
@@ -332,6 +347,19 @@ BOOST_AUTO_TEST_CASE(append)
   t = SyncTrie(trie);
   t.append(SyncTrie(append));
   BOOST_CHECK_EQUAL(t.serialize(), result);
+
+  // Typical usage test
+  uint8_t sync[1];
+  t = SyncTrie(0x5, 4);
+  t.append(SyncTrie(0x5, 4));
+
+  sync[0] = 0x55;
+  BOOST_CHECK(t.is_sync(sync));
+
+  sync[0] = 0x5;
+  BOOST_CHECK(!t.is_sync(sync));
+  sync[0] = 0x5a;
+  BOOST_CHECK(!t.is_sync(sync));
 }
 
 BOOST_AUTO_TEST_CASE(optimize)
