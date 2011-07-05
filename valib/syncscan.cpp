@@ -76,11 +76,11 @@ SyncTrie::copy(Graph &result, const Graph &gr, int node)
   return new_node;
 }
 
-int
+size_t
 SyncTrie::find_depth(Graph &gr, int node)
 {
-  int left_depth = 0;
-  int right_depth = 0;
+  size_t left_depth = 0;
+  size_t right_depth = 0;
   int l = gr[node].left();
   int r = gr[node].right();
 
@@ -92,13 +92,10 @@ SyncTrie::find_depth(Graph &gr, int node)
   return 1 + MAX(left_depth, right_depth);
 }
 
-int
+size_t
 SyncTrie::find_depth(Graph &gr)
 {
-  if (gr.size())
-    return find_depth(gr, 0);
-  else
-    return 0;
+  return gr.size()? find_depth(gr, 0): 0;
 }
 
 int
@@ -215,7 +212,7 @@ SyncTrie::merge(const SyncTrie &other)
   {
     Graph new_graph;
     merge(new_graph, graph, 0, other.graph, 0);
-    int new_depth = find_depth(new_graph);
+    size_t new_depth = find_depth(new_graph);
 
     graph.swap(new_graph);
     depth = new_depth;
@@ -261,13 +258,14 @@ SyncTrie::optimize()
   if (graph.size() > 0)
   {
     Graph new_graph;
-    int new_depth = 0;
     int result = optimize(new_graph, graph, 0);
-    // Add "always allow" node to the root to build "always allow" graph.
+
+    // Add "always allow" as root node to build "always allow" graph.
     // Such trie has no sense, but nessesary to keep formal correctness.
     if (result == node_allow)
       new_graph.push_back(Node(node_allow, node_allow));
-    new_depth = find_depth(new_graph);
+
+    size_t new_depth = find_depth(new_graph);
 
     graph.swap(new_graph);
     depth = new_depth;
@@ -313,7 +311,7 @@ SyncTrie::serialize(std::string &result, int node)
 }
 
 int
-SyncTrie::deserialize(const std::string &s, size_t &pos, int &depth)
+SyncTrie::deserialize(const std::string &s, size_t &pos, size_t &depth)
 {
   if (pos >= s.size())
     throw EUnexpectedEndOfData();
@@ -363,7 +361,7 @@ SyncTrie::deserialize(const std::string &s, size_t &pos, int &depth)
     break;
   case '*':
   {
-    int depth1 = 0, depth2 = 0;
+    size_t depth1 = 0, depth2 = 0;
     l = deserialize(s, pos, depth1);
     r = deserialize(s, pos, depth2);
     depth += MAX(depth1, depth2);
