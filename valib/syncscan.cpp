@@ -125,17 +125,23 @@ SyncTrie::merge(Graph &result, const Graph &gr1, int node1, const Graph &gr2, in
   else // (l2 != node_deny)
     l = copy(result, gr2, l2);
 
-  // Merge right subtree
-  if (r1 == node_allow || r2 == node_allow)
-    r = node_allow;
-  else if (r1 == node_deny && r2 == node_deny)
-    r = node_deny;
-  else if (r1 != node_deny && r2 != node_deny)
-    r = merge(result, gr1, r1, gr2, r2);
-  else if (r1 != node_deny)
-    r = copy(result, gr1, r1);
-  else // (r2 != node_deny)
-    r = copy(result, gr2, r2);
+  if (l1 == r1 && l2 == r2)
+    // Both branches are equal
+    r = l;
+  else
+  {
+    // Merge right subtree
+    if (r1 == node_allow || r2 == node_allow)
+      r = node_allow;
+    else if (r1 == node_deny && r2 == node_deny)
+      r = node_deny;
+    else if (r1 != node_deny && r2 != node_deny)
+      r = merge(result, gr1, r1, gr2, r2);
+    else if (r1 != node_deny)
+      r = copy(result, gr1, r1);
+    else // (r2 != node_deny)
+      r = copy(result, gr2, r2);
+  }
 
   result[new_node] = Node(l, r);
   return new_node;
