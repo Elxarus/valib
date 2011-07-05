@@ -113,6 +113,7 @@ protected:
   static int insert_node(Graph &gr);
   static int copy(Graph &result, const Graph &gr, int node);
   static int find_depth(Graph &gr, int node);
+  static int find_depth(Graph &gr);
   static int merge(Graph &result, const Graph &gr1, int node1, const Graph &gr2, int node2);
   static int optimize(Graph &result, const Graph &gr, int node);
 

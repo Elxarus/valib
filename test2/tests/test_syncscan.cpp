@@ -334,9 +334,97 @@ BOOST_AUTO_TEST_CASE(append)
   BOOST_CHECK_EQUAL(t.serialize(), result);
 }
 
+BOOST_AUTO_TEST_CASE(optimize)
+{
+  static struct {
+    const char *trie;
+    const char *result_trie;
+    size_t result_size;
+    size_t result_depth;
+  } tests[] =
+  {
+    // Depth 1
+    { "O",   "O", 1, 1 },
+    { "I",   "I", 1, 1 },
+    { "A",   "A", 1, 1 },
+    { "D",   "",  0, 0 },
+    // Depth 2
+    { "oO",  "oO", 2, 2},
+    { "oI",  "oI", 2, 2},
+    { "oA",  "O",  1, 1},
+    { "oD",  "",   0, 0},
+    { "iO",  "iO", 2, 2},
+    { "iI",  "iI", 2, 2},
+    { "iA",  "I",  1, 1},
+    { "iD",  "",   0, 0},
+    { "xO",  "xO", 2, 2},
+    { "xI",  "xI", 2, 2},
+    { "xA",  "A",  1, 1},
+    { "xD",  "",   0, 0},
+    { "RO",  "RO", 2, 2},
+    { "RI",  "RI", 2, 2},
+    { "RA",  "A",  1, 1},
+    { "RD",  "O",  1, 1},
+    { "LO",  "LO", 2, 2},
+    { "LI",  "LI", 2, 2},
+    { "LA",  "A",  1, 1},
+    { "LD",  "I",  1, 1},
+    { "*OO", "*OO", 3, 2},
+    { "*OI", "*OI", 3, 2},
+    { "*OA", "LO",  2, 2},
+    { "*OD", "oO",  2, 2},
+    { "*IO", "*IO", 3, 2},
+    { "*II", "*II", 3, 2},
+    { "*IA", "LI",  2, 2},
+    { "*ID", "oI",  2, 2},
+    { "*AO", "RO",  2, 2},
+    { "*AI", "RI",  2, 2},
+    { "*AA", "A",   1, 1},
+    { "*AD", "O",   1, 1},
+    { "*DO", "iO",  2, 2},
+    { "*DI", "iI",  2, 2},
+    { "*DA", "I",   1, 1},
+    { "*DD", "",    0, 0},
+  };
+
+  // Optimize an empty trie
+  SyncTrie t;
+  t.optimize();
+  BOOST_CHECK(t.serialize() == string());
+  BOOST_CHECK(t.is_empty());
+  BOOST_CHECK(t.sync_size() == 0);
+  BOOST_CHECK(t.get_depth() == 0);
+  BOOST_CHECK(t.get_size() == 0);
+
+  // Run tests
+  for (int i = 0; i < array_size(tests); i++)
+  {
+    BOOST_MESSAGE("Optimize " << tests[i].trie << " -> " << tests[i].result_trie);
+
+    t = SyncTrie(tests[i].trie);
+    t.optimize();
+    BOOST_CHECK_EQUAL(t.serialize(), tests[i].result_trie);
+    BOOST_CHECK_EQUAL(t.get_depth(), tests[i].result_depth);
+    BOOST_CHECK_EQUAL(t.get_size(), tests[i].result_size);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
+///////////////////////////////////////////////////////////////////////////////
+// SyncScan test
+///////////////////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_SUITE(sync_scan)
+
+BOOST_AUTO_TEST_CASE(constructor)
+{
+  SyncScan s;
+}
+
+BOOST_AUTO_TEST_CASE(init_constructor)
+{
+  SyncScan(SyncTrie(test_trie));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
