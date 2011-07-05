@@ -263,8 +263,8 @@ SyncTrie::optimize()
     Graph new_graph;
     int new_depth = 0;
     int result = optimize(new_graph, graph, 0);
-    // Add "always allow" node to the root to make "always allow" graph.
-    // Such trie has no sense, but we have to keep formal correctness.
+    // Add "always allow" node to the root to build "always allow" graph.
+    // Such trie has no sense, but nessesary to keep formal correctness.
     if (result == node_allow)
       new_graph.push_back(Node(node_allow, node_allow));
     new_depth = find_depth(new_graph);
@@ -272,34 +272,6 @@ SyncTrie::optimize()
     graph.swap(new_graph);
     depth = new_depth;
   }
-}
-
-void
-SyncTrie::print(int node)
-{
-  if (graph.size() == 0)
-  {
-    cout << "No graph" << endl;
-    return;
-  }
-
-  int l = graph[node].left();
-  int r = graph[node].right();
-  cout << node << ": ";
-
-  if (l == node_allow) cout << "+ ";
-  else if (l == node_deny) cout << "- ";
-  else cout << l << " ";
-
-  if (r == node_allow) cout << "+ ";
-  else if (r == node_deny) cout << "- ";
-  else cout << r;
-
-  cout << endl;
-  if (l != node_allow && l != node_deny)
-    print(l);
-  if (r != node_allow && r != node_deny && r != l)
-    print(r);
 }
 
 void
@@ -344,7 +316,7 @@ int
 SyncTrie::deserialize(const std::string &s, size_t &pos, int &depth)
 {
   if (pos >= s.size())
-    throw "Unexpected end of data";
+    throw EUnexpectedEndOfData();
 
   int new_node = insert_node(graph);
   char c = s[pos];
@@ -398,7 +370,7 @@ SyncTrie::deserialize(const std::string &s, size_t &pos, int &depth)
     break;
   }
   default:
-    throw "Unexpected symbol";
+    throw EUnexpectedSymbol();
   }
   depth++;
   graph[new_node] = Node(l, r);
