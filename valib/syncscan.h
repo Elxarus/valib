@@ -18,6 +18,37 @@
   Holds a set of bit sequences that we search for during the synchronization.
   As named, it is a trie, that allows fast seach.
 
+  Each node is a pair of node references: left (zero) and right (one).
+  There're two special references:
+  - A (allow) - allow the value and terminate with positive result.
+  - D (deny) - deny the value and terminate with negative result.
+
+  Other values (M and N below) refers to the next node in the graph.
+
+  Node types:
+  - \c O {A,D} - Terminating zero. Allows zero, denies one. Terminal node (leaf).
+  - \c I {D,A} - Terminating one. Allows one, denies zero. Terminal node (leaf).
+  - \c A {A,A} - Allow anything. Terminal node (leaf).
+  - \c D {D,D} - Deny anything. Terminal node (leaf).
+  - \c o {N,D} - Zero only. Node has a left branch.
+  - \c i {D,N} - One only. Node has a right branch.
+  - \c L {N,A} - Left branch. One is allowed and terminating.
+  - \c R {A,N} - Right branch. Zero is allowed and terminating.
+  - \c x {N,N} - Any value. Both branches are equal.
+  - \c * {N,M} - Branching node. Branches are different.
+
+  Graph is serialized as follows:
+  - Terminal nodes printed as is.
+  - Nodes with one branch: [node][branch]
+  - Branching node: *[left branch][right branch]
+
+  Examples:
+  - Trie for value 0x51 is serialized as: 'oioioooI' (looks like binary
+    representation of the value).
+  - Trie for any value 8 long that ends with 0xA: 'xxxxioiO'.
+  - Trie for two values 0xff or 0x00: '*ooooooOiiiiiiI' where 'ooooooO' is the
+    left branch of the branching node and 'iiiiiiI' is the right branch.
+
   \fn SyncTrie::SyncTrie()
     Construct an empty trie. We'll never sync using an empty graph.
 
@@ -74,6 +105,9 @@
   \fn bool SyncTrie::is_sync(const uint8_t *buf) const;
     Returns true when 'buf' contains a sync sequence.
     'buf' must be at least sync_size() long.
+
+  \fn std::string SyncTrie::serialize()
+    Serialize the graph.
 
 ******************************************************************************/
 
@@ -230,13 +264,13 @@ public:
   \fn SyncScan::SyncScan(const SyncTrie &gr);
     Construct and initialize the scanner with the trie specified.
 
-  \fn void SyncScan::clear()
-    Drop the trie from the scanner.
-
-  \fn void SyncScan::init(const SyncTrie &gr)
+  \fn void SyncScan::set_trie(const SyncTrie &t)
     Init the scanner using the trie specified.
 
-  \fn bool SyncScan::scan(const uint8_t *buf, size_t size, size_t &pos) const
+  \fn SyncTrie SyncScan::get_trie() const
+    Returns the trie currently used.
+
+  \fn bool SyncScan::scan_pos(const uint8_t *buf, size_t size, size_t &pos) const
     Scan the buffer 'buf' of size 'size', starting from the position 'pos'.
 
     When scanner finds a syncpoint, it returns true and sets 'pos' to the
@@ -264,7 +298,14 @@ public:
   void set_trie(const SyncTrie &t);
   SyncTrie get_trie() const;
 
-  bool scan(const uint8_t *buf, size_t size, size_t &pos) const;
+  bool scan_pos(const uint8_t *buf, size_t size, size_t &pos) const;
+  bool scan_shift(uint8_t *buf, size_t &size) const;
+
+  bool is_sync(const uint8_t *buf) const
+  { return graph.is_sync(buf); }
+
+  size_t sync_size() const
+  { return graph.sync_size(); }
 };
 
 #endif

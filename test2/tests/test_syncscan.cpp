@@ -491,30 +491,31 @@ BOOST_AUTO_TEST_CASE(set_trie)
   BOOST_CHECK_EQUAL(s.get_trie().serialize(), t.serialize());
 }
 
-// Scan using an empty trie
-BOOST_AUTO_TEST_CASE(scan_empty)
+BOOST_AUTO_TEST_CASE(scan_pos)
 {
-  SyncScan s;
-
-  // Do not sync at all
-  size_t pos = 0;
   RawNoise buf(noise_size, seed);
-  bool result = s.scan(buf.begin(), buf.size(), pos);
+  SyncTrie t(test_trie);
+  SyncScan s;
+  size_t pos;
+
+  // Scan using an empty trie
+  pos = 0;
+  bool result = s.scan_pos(buf.begin(), buf.size(), pos);
 
   BOOST_CHECK(!result);
   BOOST_CHECK_EQUAL(pos, noise_size);
-}
 
-// Scan using the test trie
-BOOST_AUTO_TEST_CASE(scan_trie)
-{
-  SyncTrie t(test_trie);
-  SyncScan s(t);
+  // Empty trie and wrong pos
+  pos = buf.size() + 1;
+  s.scan_pos(buf.begin(), buf.size(), pos);
+  BOOST_CHECK_EQUAL(pos, buf.size());
 
-  size_t pos = 0;
+  // Scan using the test trie
+  s.set_trie(t);
+
+  pos = 0;
   size_t sync_count = 0;
-  RawNoise buf(noise_size, seed);
-  while (s.scan(buf.begin(), buf.size(), pos))
+  while (s.scan_pos(buf.begin(), buf.size(), pos))
   {
     if (!test_sync[buf[pos]])
       BOOST_FAIL("Sync at a wrong value: " << buf[pos]);
@@ -523,20 +524,34 @@ BOOST_AUTO_TEST_CASE(scan_trie)
   }
   BOOST_CHECK_EQUAL(sync_count, 213);
   BOOST_CHECK_EQUAL(pos, noise_size);
-}
 
-// Ensure that pos is at the right place after scanning using a long trie.
-BOOST_AUTO_TEST_CASE(scan_pos)
-{
-  SyncTrie t("ooooooooiiiiiiiioooooooO");
-  SyncScan s(t);
+  // Good trie and wrong pos
+  pos = buf.size() + 1;
+  s.scan_pos(buf.begin(), buf.size(), pos);
+  BOOST_CHECK_EQUAL(pos, buf.size());
 
-  size_t pos = 0;
-  RawNoise buf(noise_size, seed);
-  while (s.scan(buf.begin(), buf.size(), pos))
+  // Short buffer (< 4 bytes)
+  Rawdata short_buf(4);
+
+  short_buf.zero();
+  pos = 0;
+  BOOST_CHECK(!s.scan_pos(short_buf.begin(), short_buf.size(), pos));
+  BOOST_CHECK_EQUAL(pos, 4);
+
+  short_buf[0] = 0x40;
+  pos = 0;
+  BOOST_CHECK(s.scan_pos(short_buf.begin(), short_buf.size(), pos));
+  BOOST_CHECK_EQUAL(pos, 0);
+
+  // Ensure that pos is at the right place after scanning using a long trie.
+  SyncTrie long_trie("ooooooooiiiiiiiioooooooO");
+  s.set_trie(long_trie);
+
+  pos = 0;
+  while (s.scan_pos(buf.begin(), buf.size(), pos))
     pos++;
 
-  BOOST_CHECK_EQUAL(pos, noise_size - t.sync_size() + 1);
+  BOOST_CHECK_EQUAL(pos, noise_size - long_trie.sync_size() + 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

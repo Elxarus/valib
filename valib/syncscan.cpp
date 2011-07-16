@@ -431,17 +431,17 @@ SyncScan::get_trie() const
 { return SyncTrie(graph); }
 
 bool
-SyncScan::scan(const uint8_t *buf, size_t size, size_t &pos) const
+SyncScan::scan_pos(const uint8_t *buf, size_t size, size_t &pos) const
 {
-  if (graph.is_empty())
+  const size_t sync_size = graph.sync_size();
+
+  if (graph.is_empty() || pos >= size)
   {
-    // Drop all input data (never sync)
-    // when it is no graph
     pos = size;
     return false;
   }
 
-  if (size - pos < graph.sync_size())
+  if (size - pos < sync_size)
     // We need more data, do nothing.
     return false;
 
@@ -449,8 +449,8 @@ SyncScan::scan(const uint8_t *buf, size_t size, size_t &pos) const
   {
     // We have less than 4 bytes.
     // Scan without the booster.
-    while (size - pos < graph.sync_size())
-      if (graph.is_sync(buf+pos))
+    while (size - pos <= sync_size)
+      if (graph.is_sync(buf + pos))
         return true;
       else
         pos++;
@@ -475,4 +475,24 @@ SyncScan::scan(const uint8_t *buf, size_t size, size_t &pos) const
 
   pos = end;
   return false;
+}
+
+bool
+SyncScan::scan_shift(uint8_t *buf, size_t &size) const
+{
+  if (graph.is_empty())
+  {
+    size = 0;
+    return false;
+  }
+
+  if (size < graph.sync_size())
+    // We need more data, do nothing.
+    return false;
+
+  size_t pos = 0;
+  bool result = scan_pos(buf, size, pos);
+  memmove(buf, buf + pos, size - pos);
+  size -= pos;
+  return result;
 }
