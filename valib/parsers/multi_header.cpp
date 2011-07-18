@@ -22,6 +22,8 @@ MultiHeader::MultiHeader(const HeaderParser *const *new_parsers, size_t nparsers
 void
 MultiHeader::update()
 {
+  size_t i;
+  f_sync_trie.clear();
   f_header_size = 0;
   f_min_frame_size = 0;
   f_max_frame_size = 0;
@@ -30,6 +32,7 @@ MultiHeader::update()
 
   if (parsers.size() > 0)
   {
+    f_sync_trie = parsers[0]->sync_trie();
     f_header_size = parsers[0]->header_size();
     f_min_frame_size = parsers[0]->min_frame_size();
     f_max_frame_size = parsers[0]->max_frame_size();
@@ -40,8 +43,10 @@ MultiHeader::update()
     n = parsers.size();
   }
 
-  for (size_t i = 1; i < parsers.size(); i++)
+  for (i = 1; i < parsers.size(); i++)
   {
+    f_sync_trie |= parsers[i]->sync_trie();
+
     if (f_header_size < parsers[i]->header_size())
       f_header_size = parsers[i]->header_size();
 

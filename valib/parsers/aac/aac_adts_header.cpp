@@ -2,10 +2,13 @@
 
 const ADTSHeader adts_header;
 
+// see codegen/makesync.cpp
+static const SyncTrie ADTSTrie("iiiiiiiiiiiixooxxx***xLLIxLLI*xLLIxLLIo*xLLIxLLI");
+
 static const int sample_rates[] =
 {
   96000, 88200, 64000, 48000, 44100, 32000,
-  24000, 22050, 16000, 12000, 11025, 8000
+  24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
 
 static const int modes[] =
@@ -19,6 +22,10 @@ static const int modes[] =
   MODE_3_2_LFE,
   MODE_5_2_LFE
 };
+
+SyncTrie
+ADTSHeader::sync_trie() const
+{ return ADTSTrie; }
 
 bool
 ADTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const

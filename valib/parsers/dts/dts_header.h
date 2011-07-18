@@ -11,6 +11,7 @@ public:
   /////////////////////////////////////////////////////////
   // HeaderParser overrides
 
+  virtual SyncTrie sync_trie() const;
   virtual size_t   header_size()    const  { return 16;    }
   virtual size_t   min_frame_size() const  { return 96;    }
   virtual size_t   max_frame_size() const  { return 16384; }

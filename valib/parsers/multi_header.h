@@ -74,6 +74,7 @@ public:
   /////////////////////////////////////////////////////////
   // HeaderParser overrides
 
+  virtual SyncTrie sync_trie()      const { return f_sync_trie;      }
   virtual size_t   header_size()    const { return f_header_size;    }
   virtual size_t   min_frame_size() const { return f_min_frame_size; }
   virtual size_t   max_frame_size() const { return f_max_frame_size; }
@@ -84,6 +85,7 @@ public:
   virtual string   header_info(const uint8_t *hdr) const;
 
 protected:
+  SyncTrie f_sync_trie;    //!< sync trie
   size_t f_header_size;    //!< maximum header size
   size_t f_min_frame_size; //!< minimum min_frame_size() value
   size_t f_max_frame_size; //!< maximum max_frame_size() value

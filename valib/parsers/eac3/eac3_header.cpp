@@ -2,6 +2,9 @@
 
 const EAC3Header eac3_header;
 
+// 0x0b77 | 0x770b
+static const SyncTrie EAC3Trie = SyncTrie(0x0b77, 16) | SyncTrie(0x770b, 16);
+
 static const int srate_tbl[] =
 {
   48000, 48000, 48000, 48000, 
@@ -37,6 +40,11 @@ static const int mask_tbl[] =
   MODE_3_2,
   MODE_3_2 | CH_MASK_LFE,
 };
+
+
+SyncTrie
+EAC3Header::sync_trie() const
+{ return EAC3Trie; }
 
 bool
 EAC3Header::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
