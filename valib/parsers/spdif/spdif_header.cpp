@@ -5,6 +5,10 @@
 
 const SPDIFHeader spdif_header;
 
+static const SyncTrie SPDIFTrie =
+  (SyncTrie(0, 32) + SyncTrie(0, 32) + SyncTrie(0x72f81f4e, 32)) |
+  SyncTrie(0xfe7f0180, 32) | SyncTrie(0xff1f00e8, 32);
+
 inline static const HeaderParser *find_parser(int spdif_type)
 {
   switch (spdif_type)
@@ -24,6 +28,10 @@ inline static const HeaderParser *find_parser(int spdif_type)
     default: return 0;
   }
 }
+
+SyncTrie
+SPDIFHeader::sync_trie() const
+{ return SPDIFTrie; }
 
 bool
 SPDIFHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
@@ -149,4 +157,4 @@ SPDIFHeader::header_info(const uint8_t *hdr) const
   }
   else
     return "No SPDIF header found";
-};
+}

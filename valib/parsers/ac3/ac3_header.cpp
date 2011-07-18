@@ -2,6 +2,9 @@
 
 const AC3Header ac3_header;
 
+// 0x0b77 | 0x770b
+static const SyncTrie AC3Trie = SyncTrie(0x0b77, 16) | SyncTrie(0x770b, 16);
+
 static const int halfrate_tbl[12] = 
 { 
   0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3
@@ -35,6 +38,10 @@ static const int acmod2mask_tbl[] =
   MODE_2_2 | CH_MASK_LFE,
   MODE_3_2 | CH_MASK_LFE,
 };
+
+SyncTrie
+AC3Header::sync_trie() const
+{ return AC3Trie; }
 
 bool
 AC3Header::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const

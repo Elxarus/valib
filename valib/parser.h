@@ -8,6 +8,7 @@
 #define VALIB_PARSER_H
 
 #include "buffer.h"
+#include "syncscan.h"
 #include "spk.h"
 
 struct HeaderInfo;
@@ -220,6 +221,7 @@ public:
   HeaderParser() {};
   virtual ~HeaderParser() {};
 
+  virtual SyncTrie sync_trie() const = 0;
   virtual size_t   header_size() const = 0;
   virtual size_t   min_frame_size() const = 0;
   virtual size_t   max_frame_size() const = 0;

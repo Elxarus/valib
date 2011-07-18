@@ -24,6 +24,7 @@ public:
   // Minimum SPDIF frame size = 192 * 4 = 768
   // Maximum SPDIF frame size = 2048 * 4 = 8192
 
+  virtual SyncTrie sync_trie() const;
   virtual size_t   header_size()    const  { return 32;   }
   virtual size_t   min_frame_size() const  { return 768;  }
   virtual size_t   max_frame_size() const  { return 8192; }

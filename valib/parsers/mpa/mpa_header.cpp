@@ -19,6 +19,10 @@
 
 const MPAHeader mpa_header;
 
+// see codegen/makesync.cpp
+static const SyncTrie MPATrie("iiiiiiiiiiiix*ix***xROxRO*xROxRO**xROxRO*xROxROxx***xROxRO*xROxRO**xROxRO*xROxRO");
+
+
 union RAWHeader
 {
   RAWHeader() {};
@@ -70,6 +74,10 @@ static const int slots_tbl[2][3] =
   { 12, 144, 144 },  // MPEG1
   { 12, 144,  72 }   // MPEG2 LSF
 };
+
+SyncTrie
+MPAHeader::sync_trie() const
+{ return MPATrie; }
 
 bool
 MPAHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const

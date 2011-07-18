@@ -2,6 +2,10 @@
 
 const DTSHeader dts_header;
 
+static const SyncTrie DTSTrie = 
+  SyncTrie(0x7ffe8001, 32) | SyncTrie(0xfe7f0180, 32) |
+  SyncTrie(0x1fffe800, 32) | SyncTrie(0xff1f00e8, 32);
+
 static const int dts_sample_rates[] =
 {
   0, 8000, 16000, 32000, 0, 0, 11025, 22050, 44100, 0, 0,
@@ -20,6 +24,10 @@ static const int amode2rel_tbl[] =
   NO_RELATION,   NO_RELATION,  NO_RELATION,  NO_RELATION,      NO_RELATION,
 };
 
+
+SyncTrie
+DTSHeader::sync_trie() const
+{ return DTSTrie; }
 
 bool
 DTSHeader::parse_header(const uint8_t *hdr, HeaderInfo *hinfo) const
