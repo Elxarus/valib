@@ -23,7 +23,7 @@
   - A (allow) - allow the value and terminate with positive result.
   - D (deny) - deny the value and terminate with negative result.
 
-  Other values (M and N below) refers to the next node in the graph.
+  Other values (M and N below) refer to the next node in the graph.
 
   Node types:
   - \c O {A,D} - Terminating zero. Allows zero, denies one. Terminal node (leaf).
