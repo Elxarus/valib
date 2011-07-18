@@ -316,9 +316,14 @@ SyncTrie::deserialize(const std::string &s, size_t &pos, size_t &depth)
   if (pos >= s.size())
     throw EUnexpectedEndOfData();
 
+  // Get next character, skip whitespace
+  char c;
+  do {
+    c = s[pos];
+    pos++;
+  } while (c == ' ');
+
   int new_node = insert_node(graph);
-  char c = s[pos];
-  pos++;
 
   int l, r;
   switch (c)
