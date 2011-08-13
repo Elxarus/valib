@@ -389,7 +389,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -399,7 +399,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x64 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -408,7 +408,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -418,7 +418,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x64 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -431,7 +431,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -441,7 +441,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x64 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -450,7 +450,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -460,7 +460,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x64 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -478,7 +478,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -497,7 +497,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -520,7 +520,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
@@ -539,7 +539,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="lib /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
+						CommandLine="lib /machine:x86 /def:$(InputPath) /out:$(IntDir)\$(InputName).lib&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).lib"
 					/>
 				</FileConfiguration>
