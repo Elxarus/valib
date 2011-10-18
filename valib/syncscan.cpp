@@ -450,35 +450,38 @@ SyncScan::scan_pos(const uint8_t *buf, size_t size, size_t &pos) const
     // We need more data, do nothing.
     return false;
 
-  if (size - pos < 4)
-  {
-    // We have less than 4 bytes.
-    // Scan without the booster.
-    while (size - pos <= sync_size)
-      if (graph.is_sync(buf + pos))
-        return true;
-      else
-        pos++;
-  }
-
   ///////////////////////////////////////////////////////
   // Scan using the booster
 
-  uint32_t sync = (buf[pos] << 16) | (buf[pos+1] << 8) | buf[pos+2];
-  size_t end = size - graph.sync_size() + 1;
-
-  for (size_t i = pos + 3; i < end; i++)
+  if (size - pos >= 4)
   {
-    sync = (sync << 8) | buf[i];
-    if (booster[sync >> 21] & (0x80000000 >> ((sync >> 16) & 0x1f)))
-      if (graph.is_sync(buf+i-3))
-      {
-        pos = i - 3;
-        return true;
-      }
+    uint32_t sync = (buf[pos] << 16) | (buf[pos+1] << 8) | buf[pos+2];
+    size_t last = size;
+    if (sync_size > 4)
+      last = size - sync_size + 4;
+
+    for (size_t i = pos + 3; i < last; i++)
+    {
+      sync = (sync << 8) | buf[i];
+      if (booster[sync >> 21] & (0x80000000 >> ((sync >> 16) & 0x1f)))
+        if (graph.is_sync(buf+i-3))
+        {
+          pos = i - 3;
+          return true;
+        }
+    }
+    pos = last - 3;
   }
 
-  pos = end;
+  ///////////////////////////////////////////////////////
+  // Scan last bytes without the booster (if nessesary)
+
+  while (size - pos >= sync_size)
+    if (graph.is_sync(buf + pos))
+      return true;
+    else
+      pos++;
+
   return false;
 }
 
