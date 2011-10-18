@@ -510,48 +510,40 @@ BOOST_AUTO_TEST_CASE(scan_pos)
   s.scan_pos(buf.begin(), buf.size(), pos);
   BOOST_CHECK_EQUAL(pos, buf.size());
 
-  // Scan using the test trie
-  s.set_trie(t);
-
-  pos = 0;
-  size_t sync_count = 0;
-  while (s.scan_pos(buf.begin(), buf.size(), pos))
-  {
-    if (!test_sync[buf[pos]])
-      BOOST_FAIL("Sync at a wrong value: " << buf[pos]);
-    pos++;
-    sync_count++;
-  }
-  BOOST_CHECK_EQUAL(sync_count, 213);
-  BOOST_CHECK_EQUAL(pos, noise_size);
-
   // Good trie and wrong pos
+  s.set_trie(t);
   pos = buf.size() + 1;
   s.scan_pos(buf.begin(), buf.size(), pos);
   BOOST_CHECK_EQUAL(pos, buf.size());
 
-  // Short buffer (< 4 bytes)
-  Rawdata short_buf(4);
+  // Find a syncpoint
+  for (size_t buf_size = 1; buf_size < 16; buf_size++)
+    for (size_t sync_len = 1; sync_len <= buf_size; sync_len++)
+    {
+      SyncTrie trie(0xff, 8);
+      for (size_t i = 1; i < sync_len; i++)
+        trie += SyncTrie(0, 8);
+      s.set_trie(trie);
 
-  short_buf.zero();
-  pos = 0;
-  BOOST_CHECK(!s.scan_pos(short_buf.begin(), short_buf.size(), pos));
-  BOOST_CHECK_EQUAL(pos, 4);
+      buf.allocate(buf_size);
+      buf.zero();
+      for (size_t sync_pos = 0; sync_pos <= buf_size - sync_len; sync_pos++)
+      {
+        buf[sync_pos] = 0xff;
 
-  short_buf[0] = 0x40;
-  pos = 0;
-  BOOST_CHECK(s.scan_pos(short_buf.begin(), short_buf.size(), pos));
-  BOOST_CHECK_EQUAL(pos, 0);
+        pos = 0;
+        bool result = s.scan_pos(buf, buf_size, pos);
+        BOOST_CHECK_EQUAL(result, true);
+        BOOST_CHECK_EQUAL(pos, sync_pos);
 
-  // Ensure that pos is at the right place after scanning using a long trie.
-  SyncTrie long_trie("ooooooooiiiiiiiioooooooO");
-  s.set_trie(long_trie);
+        pos++;
+        result = s.scan_pos(buf, buf_size, pos);
+        BOOST_CHECK_EQUAL(result, false);
+        BOOST_CHECK_EQUAL(pos, buf_size - sync_len + 1);
 
-  pos = 0;
-  while (s.scan_pos(buf.begin(), buf.size(), pos))
-    pos++;
-
-  BOOST_CHECK_EQUAL(pos, noise_size - long_trie.sync_size() + 1);
+        buf[sync_pos] = 0;
+      }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
