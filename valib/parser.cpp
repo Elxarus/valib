@@ -121,6 +121,7 @@ StreamBuffer::set_parser(const HeaderParser *new_parser)
       new_parser->header_size() == 0)
     return;
 
+  scan.set_trie(new_parser->sync_trie());
   buf.allocate(new_parser->max_frame_size() * 3 + new_parser->header_size() * 2);
 
   parser         = new_parser;
@@ -131,13 +132,14 @@ StreamBuffer::set_parser(const HeaderParser *new_parser)
   header_buf = buf.begin();
   sync_buf   = buf.begin() + header_size;
   sync_size  = max_frame_size * 3 + header_size;
+
+  reset();
 }
 
 void 
 StreamBuffer::release_parser()
 {
-  reset();
-
+  scan.set_trie(SyncTrie());
   parser = 0;
   header_size = 0;
   min_frame_size = 0;
@@ -146,6 +148,8 @@ StreamBuffer::release_parser()
   header_buf = 0;
   sync_buf = 0;
   sync_size = 0;
+
+  reset();
 }
 
 
@@ -369,18 +373,17 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
   // Try to locate next syncpoint and return data up to the poistion found
   // as debris.
 
-  uint8_t *pos = frame1;
-  uint8_t *pos_max = sync_buf + sync_data - header_size;
-  while (pos <= pos_max)
+  size_t pos = frame1 - sync_buf;
+  while (scan.scan_pos(sync_buf, sync_data - header_size, pos))
   {
-    if (parser->parse_header(pos))
+    if (parser->parse_header(sync_buf + pos))
       break;
     pos++;
   }
 
   pre_frame = 0;
   debris = sync_buf;
-  debris_size = pos - sync_buf;
+  debris_size = pos;
   return true;
 }
 

@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(sync)
     };
 
     const size_t junk_size[] = {
-      1, 2, 3, 4, 5,
+      0, 1, 2, 3, 4, 5,
       // Junk sizes around the header size
       header_size / 2, header_size * 2,
       header_size, header_size + 1, header_size - 1
