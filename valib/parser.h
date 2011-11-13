@@ -601,6 +601,7 @@ protected:
   size_t header_size;            //!< cached header size
   size_t min_frame_size;         //!< cached min frame size
   size_t max_frame_size;         //!< cached max frame size
+  SyncScan scan;                 //!< syncpoint scanner
 
   // Buffers
   // We need a header of a previous frame to load next one, but frame data of
