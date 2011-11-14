@@ -186,7 +186,7 @@
 
     Returns current file position in the units specified.
 
-    To use FrameParser::frames and FrameParser::time units, stat() must be
+    To use FileParser::frames and FileParser::time units, stat() must be
     called before.
 
   \fn fsize_t FileParser::get_size() const
@@ -197,7 +197,7 @@
 
     Returns the file size in the units specified.
   
-    To use FrameParser::frames and FrameParser::time units, stat() must be
+    To use FileParser::frames and FileParser::time units, stat() must be
     called before.
 
   \fn int FileParser::seek(fsize_t pos)
@@ -211,7 +211,7 @@
 
     Moves the current file position to the position \c pos in units specified.
 
-    To use FrameParser::frames and FrameParser::time units, stat() must be
+    To use FileParser::frames and FileParser::time units, stat() must be
     called before.
 
   \name Info
