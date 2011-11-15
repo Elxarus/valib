@@ -275,10 +275,10 @@ public:
 
     When scanner finds a syncpoint, it returns true and sets 'pos' to the
     position of the syncpoint found. Otherwise, it returns false and sets
-    'pos' to the position size - trie.sync_size() + 1. Note, that last
+    'pos' to: pos = size - trie.sync_size() + 1. Note, that last
     trie.sync_size() - 1 bytes may belong to a syncpoint, but we cannot check
     this because we need more data to continue scanning. Therefore, if you
-    have more data to scan, you have to save this bytes.
+    have more data to scan, you have to save these bytes.
 ******************************************************************************/
 
 class SyncScan
