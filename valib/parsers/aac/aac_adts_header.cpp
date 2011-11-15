@@ -3,7 +3,7 @@
 const ADTSHeader adts_header;
 
 // see codegen/makesync.cpp
-static const SyncTrie ADTSTrie("iiiiiiiiiiiixooxxx***xLLIxLLI*xLLIxLLIo*xLLIxLLI");
+static const SyncTrie ADTSTrie("iiiiiiiiiiiixooxxx***xxLLIxxLLI*xxLLIxxLLIo*xxLLIxxLLI");
 
 static const int sample_rates[] =
 {

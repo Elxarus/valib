@@ -64,7 +64,7 @@ int main()
   for (i = 1; i < 8; i++)
     ADTSChannels |= SyncTrie(i, 3);
 
-  ADTSTrie += ADTSRate + ADTSChannels;
+  ADTSTrie += ADTSRate + SyncTrie::any + ADTSChannels;
   ADTSTrie.optimize();
   cout << "AAC ADTS: " << ADTSTrie.serialize() << endl;
 
