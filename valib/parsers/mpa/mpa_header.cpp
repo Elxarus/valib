@@ -17,16 +17,12 @@
 */
 
 
-const MPAHeader mpa_header;
-
-// see codegen/makesync.cpp
-static const SyncTrie MPATrie("iiiiiiiiiiiix*ix***xROxRO*xROxRO**xROxRO*xROxROxx***xROxRO*xROxRO**xROxRO*xROxRO");
-
-
 union RAWHeader
 {
-  RAWHeader() {};
-  RAWHeader(uint32_t i) { raw = i; }
+  RAWHeader()
+  {}
+  RAWHeader(uint32_t h)
+  { raw = h; }
 
   uint32_t raw;
   struct
@@ -74,6 +70,146 @@ static const int slots_tbl[2][3] =
   { 12, 144, 144 },  // MPEG1
   { 12, 144,  72 }   // MPEG2 LSF
 };
+
+// see codegen/makesync.cpp
+const SyncTrie MPAFrameParser::sync_trie
+("iiiiiiiiiiiix*ix***xROxRO*xROxRO**xROxRO*xROxROxx***xROxRO*xROxRO**xROxRO*xROxRO");
+
+bool
+MPAFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
+{
+  RAWHeader h;
+  int bs_type;
+
+  // MPA big and low endians have ambigous headers
+  // so first we check big endian as most used and only
+  // then try low endian
+
+  // 8 bit or 16 bit big endian stream sync
+  if ((hdr[0] == 0xff)         && // sync
+     ((hdr[1] & 0xf0) == 0xf0) && // sync
+     ((hdr[1] & 0x06) != 0x00) && // layer
+     ((hdr[2] & 0xf0) != 0xf0) && // bitrate
+     ((hdr[2] & 0x0c) != 0x0c))   // sample rate
+  {
+    uint32_t header = *(uint32_t *)hdr;
+    h = swab_u32(header);
+    bs_type = BITSTREAM_8;
+  }
+  else
+  // 16 bit low endian stream sync
+  if ((hdr[1] == 0xff)         && // sync
+     ((hdr[0] & 0xf0) == 0xf0) && // sync
+     ((hdr[0] & 0x06) != 0x00) && // layer
+     ((hdr[3] & 0xf0) != 0xf0) && // bitrate
+     ((hdr[3] & 0x0c) != 0x0c))   // sample rate
+  {
+    uint32_t header = *(uint32_t *)hdr;
+    h = (header >> 16) | (header << 16);
+    bs_type = BITSTREAM_16LE;
+  }
+  else
+    return false;
+
+  if (!finfo)
+    return true;
+
+  // common information
+  int ver = 1 - h.version;
+  int layer = 3 - h.layer;
+  int bitrate = bitrate_tbl[ver][layer][h.bitrate_index] * 1000;
+  int sample_rate = freq_tbl[ver][h.sampling_frequency];
+
+  finfo->spk = Speakers(FORMAT_MPA, (h.mode == 3)? MODE_MONO: MODE_STEREO, sample_rate);
+
+  if (bitrate)
+    finfo->frame_size = bitrate * slots_tbl[ver][layer] / sample_rate + h.padding;
+  else
+    finfo->frame_size = 0;
+
+  if (layer == 0) // MPA_LAYER_I
+    finfo->frame_size *= 4;
+
+  finfo->nsamples = layer == 0? 384: 1152;
+  finfo->bs_type = bs_type;
+
+  if (ver)
+  {
+    // MPEG2 LSF
+    if (layer == 0)
+      finfo->spdif_type = 0x0008; // Pc burst-info (data type = MPEG2 Layer I LSF) 
+    else
+      finfo->spdif_type = 0x0009; // Pc burst-info (data type = MPEG2 Layer II/III LSF) 
+  }
+  else
+  {
+    // MPEG1
+    if (layer == 0)
+      finfo->spdif_type = 0x0004; // Pc burst-info (data type = MPEG1 Layer I) 
+    else
+      finfo->spdif_type = 0x0005; // Pc burst-info (data type = MPEG1/2 Layer II/III) 
+  }
+
+  return true;
+}
+
+bool
+MPAFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
+{
+  // Compare following fields:
+  // * layer
+  // * protection bit
+  // * sample rate
+  // * mode must indicate the same number of channles (mono or stereo)
+  static const int nch[4] = { 2, 2, 2, 1 };
+
+  // 8 bit or 16 bit big endian stream sync
+  if ((hdr1[0] == 0xff)         && // sync
+     ((hdr1[1] & 0xf0) == 0xf0) && // sync
+     ((hdr1[1] & 0x06) != 0x00) && // layer
+     ((hdr1[2] & 0xf0) != 0xf0) && // bitrate
+     ((hdr1[2] & 0x0c) != 0x0c))   // sample rate
+  {
+    return 
+      hdr1[0] == hdr2[0] && 
+      hdr1[1] == hdr2[1] &&
+      (hdr1[2] & 0x0c) == (hdr2[2] & 0x0c) && // sample rate
+      nch[hdr1[3] >> 6] == nch[hdr2[3] >> 6]; // number of channels
+  }
+  else
+  // 16 bit low endian stream sync
+  if ((hdr1[1] == 0xff)         && // sync
+     ((hdr1[0] & 0xf0) == 0xf0) && // sync
+     ((hdr1[0] & 0x06) != 0x00) && // layer
+     ((hdr1[3] & 0xf0) != 0xf0) && // bitrate
+     ((hdr1[3] & 0x0c) != 0x0c))   // sample rate
+  {
+    return
+      hdr1[1] == hdr2[1] && 
+      hdr1[0] == hdr2[0] &&
+      (hdr1[3] & 0x0c) == (hdr2[3] & 0x0c) && // sample rate
+      nch[hdr1[2] >> 6] == nch[hdr2[2] >> 6]; // number of channels
+  }
+  else
+    return false;
+}
+
+SyncInfo
+MPAFrameParser::build_syncinfo(const uint8_t *frame, size_t size, const FrameInfo &finfo) const
+{
+  uint32_t mpa_sync = (frame[0] << 8) | frame[1];
+
+  SyncInfo result = sync_info();
+  result.sync_trie = SyncTrie(mpa_sync, 32);
+  return result;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+const MPAHeader mpa_header;
+
+// see codegen/makesync.cpp
+static const SyncTrie MPATrie("iiiiiiiiiiiix*ix***xROxRO*xROxRO**xROxRO*xROxROxx***xROxRO*xROxRO**xROxRO*xROxRO");
 
 SyncTrie
 MPAHeader::sync_trie() const

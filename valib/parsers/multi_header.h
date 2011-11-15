@@ -55,6 +55,59 @@
 
 ******************************************************************************/
 
+class MultiFrameParser : public FrameParser
+{
+public:
+  typedef std::vector<FrameParser *> list_t;
+
+  MultiFrameParser();
+  MultiFrameParser(const list_t &parsers);
+  MultiFrameParser(FrameParser *const *parsers, size_t nparsers);
+
+  void add_parser(FrameParser *parser);
+  void remove_parser(FrameParser *parser);
+
+  void set_parsers(const list_t &parsers);
+  void set_parsers(FrameParser *const *parsers, size_t nparsers);
+  void release_parsers();
+  list_t get_parsers() const;
+
+  /////////////////////////////////////////////////////////
+  // FrameParser overrides
+
+  virtual bool      can_parse(int format) const;
+  virtual SyncInfo  sync_info() const;
+  virtual SyncInfo  sync_info2() const;
+
+  // Frame header operations
+  virtual size_t    header_size() const;
+  virtual bool      parse_header(const uint8_t *hdr, FrameInfo *finfo = 0) const;
+  virtual bool      compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const;
+
+  // Frame operations
+  virtual bool      first_frame(const uint8_t *frame, size_t size);
+  virtual bool      next_frame(const uint8_t *frame, size_t size);
+  virtual void      reset();
+
+  virtual bool      in_sync() const;
+  virtual FrameInfo frame_info() const;
+  virtual string    stream_info() const;
+
+protected:
+  list_t parsers;   //!< list of parsers
+  FrameParser **p;  //!< raw list of parsers
+  size_t n;         //!< number of parsers
+
+  SyncInfo sinfo;
+  size_t   max_header_size;
+
+  FrameParser *parser;
+
+  void update();
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
 class MultiHeader : public HeaderParser
 {
 public:

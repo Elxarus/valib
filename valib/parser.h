@@ -11,6 +11,112 @@
 #include "syncscan.h"
 #include "spk.h"
 
+
+
+///////////////////////////////////////////////////////////////////////////////
+// New
+///////////////////////////////////////////////////////////////////////////////
+
+struct SyncInfo;
+struct FrameInfo;
+class FrameParser;
+
+struct SyncInfo
+{
+  SyncTrie sync_trie;
+  size_t min_frame_size;
+  size_t max_frame_size;
+
+  SyncInfo(): min_frame_size(0), max_frame_size(0)
+  {}
+
+  SyncInfo(const SyncTrie &sync_trie_, size_t min_frame_size_, size_t max_frame_size_):
+  sync_trie(sync_trie_), min_frame_size(min_frame_size_), max_frame_size(max_frame_size_)
+  {}
+};
+
+struct FrameInfo
+{
+  Speakers spk;
+  size_t   frame_size;
+  size_t   nsamples;
+  int      bs_type;
+  uint16_t spdif_type;
+
+  FrameInfo(): 
+    spk(spk_unknown),
+    frame_size(0),
+    nsamples(0),
+    bs_type(BITSTREAM_NONE),
+    spdif_type(0)
+  {}
+
+  size_t bitrate() const
+  {
+    return nsamples? frame_size * 8 * spk.sample_rate / nsamples: 0;
+  }
+
+  bool is_good() const
+  {
+    return !spk.is_unknown();
+  }
+};
+
+class FrameParser
+{
+public:
+  FrameParser() {}
+  virtual ~FrameParser() {}
+
+  virtual bool      can_parse(int format) const = 0;
+  virtual SyncInfo  sync_info() const = 0;
+  virtual SyncInfo  sync_info2() const = 0;
+
+  // Frame header operations
+  virtual size_t    header_size() const = 0;
+  virtual bool      parse_header(const uint8_t *hdr, FrameInfo *finfo = 0) const = 0;
+  virtual bool      compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
+
+  // Frame operations
+  virtual bool      first_frame(const uint8_t *frame, size_t size) = 0;
+  virtual bool      next_frame(const uint8_t *frame, size_t size) = 0;
+  virtual void      reset() = 0;
+
+  virtual bool      in_sync() const = 0;
+  virtual FrameInfo frame_info() const = 0;
+  virtual string    stream_info() const = 0;
+};
+
+class BasicFrameParser : public FrameParser
+{
+public:
+  BasicFrameParser() {}
+
+  virtual SyncInfo  sync_info2() const
+  { return in_sync()? sinfo: sync_info(); }
+
+  virtual bool      first_frame(const uint8_t *frame, size_t size);
+  virtual bool      next_frame(const uint8_t *frame, size_t size);
+  virtual void      reset();
+
+  virtual bool      in_sync() const { return finfo.is_good(); }
+  virtual FrameInfo frame_info() const { return finfo; }
+  virtual string    stream_info() const;
+
+protected:
+  virtual SyncInfo build_syncinfo(const uint8_t *frame, size_t size, const FrameInfo &finfo) const
+  { return sync_info(); }
+
+  Rawdata   header;
+  SyncInfo  sinfo;
+  FrameInfo finfo;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Old
+///////////////////////////////////////////////////////////////////////////////
+
 struct HeaderInfo;
 class HeaderParser;
 class StreamBuffer;
@@ -684,6 +790,95 @@ public:
   int get_frames() const { return frames; }
   string stream_info() const;
   HeaderInfo header_info() const { return hinfo; }
+};
+
+class StreamBuffer2
+{
+protected:
+  // Parser info (constant)
+
+  FrameParser *parser;           //!< frame parser
+  FrameInfo finfo;               //!< last frame info
+  SyncInfo  sinfo;               //!< cached synchronization info
+  SyncScan  scan;                //!< syncpoint scanner
+
+  // Buffers
+  // We need a header of a previous frame to load next one, but frame data of
+  // the frame loaded may be changed by in-place frame processing. Therefore
+  // we have to keep a copy of the header. So we need 2 buffers: header buffer
+  // and sync buffer. Header buffer size is always header_size.
+
+  Rawdata  buf;
+  uint8_t *sync_buf;             //!< sync buffer pointer
+  size_t   sync_size;            //!< size of the sync buffer
+  size_t   sync_data;            //!< size of data loaded at the sync buffer
+  size_t   pre_frame;            //!< amount of pre-frame data allowed
+                                 //!< (see comment to sync() function)
+
+  // Data (frame data and debris)
+
+  uint8_t   *debris;             //!< pointer to the start of debris data
+  size_t     debris_size;        //!< size of debris data
+
+  uint8_t   *frame;              //!< pointer to the start of the frame
+  size_t     frame_size;         //!< size of the frame loaded
+
+  // Flags
+
+  bool in_sync;                  //!< we're in sync with the stream
+  bool new_stream;               //!< frame loaded belongs to a new stream
+  int  frames;                   //!< number of frames loaded
+
+  inline bool load_buffer(uint8_t **data, uint8_t *end, size_t required_size);
+  inline void drop_buffer(size_t size);
+
+  void resync();
+  bool sync(uint8_t **data, uint8_t *data_end);
+
+public:
+  StreamBuffer2();
+  StreamBuffer2(FrameParser *parser);
+  virtual ~StreamBuffer2();
+
+  /////////////////////////////////////////////////////////
+  // Init
+
+  void set_parser(FrameParser *parser);
+  const FrameParser *get_parser() const { return parser; }
+  void release_parser();
+
+  /////////////////////////////////////////////////////////
+  // Processing
+
+  void reset();
+  bool load(uint8_t **data, uint8_t *end);
+  bool load_frame(uint8_t **data, uint8_t *end);
+  bool flush();
+
+  /////////////////////////////////////////////////////////
+  // State flags
+
+  bool is_in_sync()             const { return in_sync;         }
+  bool is_new_stream()          const { return new_stream;      }
+  bool has_frame()              const { return frame_size  > 0; }
+  bool has_debris()             const { return debris_size > 0; }
+
+  /////////////////////////////////////////////////////////
+  // Data access
+
+  const uint8_t *get_buffer()   const { return sync_buf;       }
+  size_t   get_buffer_size()    const { return sync_data;      }
+
+  uint8_t *get_debris()         const { return debris;         }
+  size_t   get_debris_size()    const { return debris_size;    }
+
+  Speakers get_spk()            const { return finfo.spk;      }
+  uint8_t *get_frame()          const { return frame;          }
+  size_t   get_frame_size()     const { return frame_size;     }
+
+  FrameInfo frame_info() const { return finfo; }
+  int get_frames() const { return frames; }
+  string stream_info() const;
 };
 
 #endif

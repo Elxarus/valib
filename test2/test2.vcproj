@@ -387,6 +387,10 @@
 			Name="parsers"
 			>
 			<File
+				RelativePath=".\tests\parsers\test_multi_frame_parser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\parsers\test_multi_header.cpp"
 				>
 			</File>
@@ -395,6 +399,10 @@
 				>
 				<File
 					RelativePath=".\tests\parsers\aac\test_aac_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\parsers\aac\test_adts_frame_parser.cpp"
 					>
 				</File>
 				<File
@@ -409,6 +417,10 @@
 			<Filter
 				Name="ac3"
 				>
+				<File
+					RelativePath=".\tests\parsers\ac3\test_ac3_frame_parser.cpp"
+					>
+				</File>
 				<File
 					RelativePath=".\tests\parsers\ac3\test_ac3_parser.cpp"
 					>
