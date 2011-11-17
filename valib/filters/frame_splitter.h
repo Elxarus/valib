@@ -59,17 +59,17 @@ protected:
 
 public:
   FrameSplitter();
-  FrameSplitter(const HeaderParser *parser);
+  FrameSplitter(FrameParser *parser);
 
   /////////////////////////////////////////////////////////
   // Own interface
 
-  void set_parser(const HeaderParser *parser);
-  const HeaderParser *get_parser() const;
+  void set_parser(FrameParser *parser);
+  const FrameParser *get_parser() const;
 
   int get_frames() const         { return stream.get_frames();  }
   string stream_info() const     { return stream.stream_info(); }
-  HeaderInfo header_info() const { return stream.header_info(); }
+  FrameInfo frame_info() const   { return stream.frame_info();  }
 
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides

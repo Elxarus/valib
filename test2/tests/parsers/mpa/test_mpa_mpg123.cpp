@@ -11,7 +11,7 @@
 #include "source/wav_source.h"
 #include "../../../suite.h"
 
-const size_t block_size = 65536;
+static const size_t block_size = 65536;
 
 BOOST_AUTO_TEST_SUITE(mpa_mpg123)
 
@@ -26,7 +26,8 @@ BOOST_AUTO_TEST_CASE(decode)
   // FileParser -> MPAParser -> Converter
 
   FileParser f;
-  f.open_probe("a.mp2.005.mp2", &mpa_header);
+  MPAFrameParser frame_parser;
+  f.open_probe("a.mp2.005.mp2", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   MPG123Parser mpa;
@@ -51,7 +52,8 @@ BOOST_AUTO_TEST_CASE(decode)
 BOOST_AUTO_TEST_CASE(streams_frames)
 {
   FileParser f;
-  f.open_probe("a.mp2.mix.mp2", &mpa_header);
+  MPAFrameParser frame_parser;
+  f.open_probe("a.mp2.mix.mp2", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   MPG123Parser parser;

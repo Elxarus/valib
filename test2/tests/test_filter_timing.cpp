@@ -396,7 +396,8 @@ BOOST_AUTO_TEST_CASE(dvd_graph_pcm)
 
 BOOST_AUTO_TEST_CASE(frame_splitter_ac3)
 {
-  FrameSplitter filter(&ac3_header);
+  AC3FrameParser frame_parser;
+  FrameSplitter filter(&frame_parser);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
 }
 
@@ -430,8 +431,9 @@ BOOST_AUTO_TEST_CASE(mixer_buffered)
 BOOST_AUTO_TEST_CASE(parser_filter_ac3)
 {
   ParserFilter filter;
+  AC3FrameParser ac3_frame_parser;
   AC3Parser ac3_parser;
-  filter.add(&ac3_header, &ac3_parser);
+  filter.add(&ac3_frame_parser, &ac3_parser);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
 }
 
@@ -488,19 +490,20 @@ BOOST_AUTO_TEST_CASE(spectrum)
 
 BOOST_AUTO_TEST_CASE(aac_adts_parser)
 {
+  ADTSFrameParser frame_parser;
   ADTSParser filter;
   FileParser source;
-  source.open_probe("a.aac.03f.adts", &adts_header);
+  source.open_probe("a.aac.03f.adts", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(aac_parser)
 {
+  ADTSFrameParser frame_parser;
   AACParser filter;
-
   FileParser f;
-  f.open("a.aac.03f.adts", &adts_header);
+  f.open("a.aac.03f.adts", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   ADTSParser adts;
@@ -517,9 +520,10 @@ BOOST_AUTO_TEST_CASE(aac_parser)
 
 BOOST_AUTO_TEST_CASE(ac3_parser)
 {
+  AC3FrameParser frame_parser;
   AC3Parser filter;
   FileParser source;
-  source.open_probe("a.ac3.03f.ac3", &ac3_header);
+  source.open_probe("a.ac3.03f.ac3", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }
@@ -535,54 +539,60 @@ BOOST_AUTO_TEST_CASE(ac3_enc)
 
 BOOST_AUTO_TEST_CASE(dts_parser)
 {
+  DTSFrameParser frame_parser;
   DTSParser filter;
   FileParser source;
-  source.open_probe("a.dts.03f.dts", &dts_header);
+  source.open_probe("a.dts.03f.dts", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(eac3_parser)
 {
+  EAC3FrameParser frame_parser;
   EAC3Parser filter;
   FileParser source;
-  source.open_probe("test.eac3.03f.eac3", &eac3_header);
+  source.open_probe("test.eac3.03f.eac3", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(mpa_parser)
 {
+  MPAFrameParser frame_parser;
   MPAParser filter;
   FileParser source;
-  source.open_probe("a.mp2.005.mp2", &mpa_header);
+  source.open_probe("a.mp2.005.mp2", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(mpg123_parser)
 {
+  MPAFrameParser frame_parser;
   MPG123Parser filter;
   FileParser source;
-  source.open_probe("a.mp2.005.mp2", &mpa_header);
+  source.open_probe("a.mp2.005.mp2", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(spdif_parser)
 {
+  SPDIFFrameParser frame_parser;
   SPDIFParser filter;
   FileParser source;
-  source.open_probe("a.ac3.03f.spdif", &spdif_header);
+  source.open_probe("a.ac3.03f.spdif", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }
 
 BOOST_AUTO_TEST_CASE(spdif_wrapper)
 {
+  AC3FrameParser frame_parser;
   SPDIFWrapper filter;
   FileParser source;
-  source.open_probe("a.ac3.03f.ac3", &ac3_header);
+  source.open_probe("a.ac3.03f.ac3", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
 }

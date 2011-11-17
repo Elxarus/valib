@@ -20,8 +20,9 @@ BOOST_AUTO_TEST_CASE(constructor)
 
 BOOST_AUTO_TEST_CASE(init_constructor)
 {
-  FrameSplitter f(&ac3_header);
-  BOOST_CHECK_EQUAL(f.get_parser(), &ac3_header);
+  AC3FrameParser frame_parser;
+  FrameSplitter f(&frame_parser);
+  BOOST_CHECK_EQUAL(f.get_parser(), &frame_parser);
   BOOST_CHECK_EQUAL(f.get_frames(), 0);
   BOOST_CHECK(f.can_open(Speakers(FORMAT_RAWDATA, 0, 0)));
   BOOST_CHECK(f.can_open(Speakers(FORMAT_AC3, 0, 0)));
@@ -29,9 +30,10 @@ BOOST_AUTO_TEST_CASE(init_constructor)
 
 BOOST_AUTO_TEST_CASE(set_parser)
 {
+  AC3FrameParser frame_parser;
   FrameSplitter f;
-  f.set_parser(&ac3_header);
-  BOOST_CHECK_EQUAL(f.get_parser(), &ac3_header);
+  f.set_parser(&frame_parser);
+  BOOST_CHECK_EQUAL(f.get_parser(), &frame_parser);
   BOOST_CHECK_EQUAL(f.get_frames(), 0);
 }
 
@@ -45,7 +47,8 @@ BOOST_AUTO_TEST_CASE(get_chunk)
   RAWSource raw_file(spk, "a.ac3.mix.ac3");
   BOOST_REQUIRE(raw_file.is_open());
 
-  FrameSplitter f(&ac3_header);
+  AC3FrameParser frame_parser;
+  FrameSplitter f(&frame_parser);
   f.open(spk);
   BOOST_REQUIRE(f.is_open());
   BOOST_CHECK(f.get_output().is_unknown());
@@ -74,7 +77,8 @@ BOOST_AUTO_TEST_CASE(passthrough)
 {
   RAWSource raw(Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.mix.ac3");
   RAWSource ref(Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.mix.ac3");
-  FrameSplitter f(&ac3_header);
+  AC3FrameParser frame_parser;
+  FrameSplitter f(&frame_parser);
   compare(&raw, &f, &ref, 0);
 }
 

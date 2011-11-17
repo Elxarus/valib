@@ -3,6 +3,10 @@
 #include "../ac3/ac3_header.h"
 #include "../dts/dts_header.h"
 
+const SyncTrie SPDIFFrameParser::sync_trie =
+  (SyncTrie(0, 32) + SyncTrie(0, 32) + SyncTrie(0x72f81f4e, 32)) |
+  SyncTrie(0xfe7f0180, 32) | SyncTrie(0xff1f00e8, 32);
+
 const FrameParser *
 SPDIFFrameParser::find_parser(int spdif_type) const
 {

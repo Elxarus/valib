@@ -40,11 +40,13 @@ static void compare_file(const char *raw_file, const char *spdif_file)
   BOOST_MESSAGE("Transform " << spdif_file << " -> " << raw_file);
 
   FileParser f_raw;
-  f_raw.open_probe(raw_file, spdifable_header());
+  SpdifableFrameParser frame_parser_raw;
+  f_raw.open_probe(raw_file, &frame_parser_raw);
   BOOST_REQUIRE(f_raw.is_open());
 
   FileParser f_spdif;
-  f_spdif.open_probe(spdif_file, &spdif_header);
+  SPDIFFrameParser frame_parser_spdif;
+  f_spdif.open_probe(spdif_file, &frame_parser_spdif);
   BOOST_REQUIRE(f_spdif.is_open());
 
   SPDIFWrapper spdifer;
@@ -56,7 +58,8 @@ static void test_streams_frames(const char *filename, int streams, int frames)
   BOOST_MESSAGE("Count frames at " << filename);
 
   FileParser f;
-  f.open_probe(filename, spdifable_header());
+  SpdifableFrameParser frame_parser;
+  f.open_probe(filename, &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   SPDIFWrapper parser;
@@ -203,11 +206,13 @@ BOOST_AUTO_TEST_CASE(dts_options)
     // Reference chain: FrameParser->DTSFrameResizer
 
     FileParser f_test;
-    f_test.open_probe(tests[i].filename, &dts_header);
+    DTSFrameParser frame_parser_test;
+    f_test.open_probe(tests[i].filename, &frame_parser_test);
     BOOST_REQUIRE(f_test.is_open());
 
     FileParser f_ref;
-    f_ref.open_probe(tests[i].ref_filename, &dts_header);
+    DTSFrameParser frame_parser_ref;
+    f_ref.open_probe(tests[i].ref_filename, &frame_parser_ref);
     BOOST_REQUIRE(f_ref.is_open());
 
     DTSFrameResize resize(tests[i].frame_size);

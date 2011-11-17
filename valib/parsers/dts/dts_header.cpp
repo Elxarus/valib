@@ -188,6 +188,52 @@ DTSFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
     return false;
 }
 
+bool
+DTSFrameParser::first_frame(const uint8_t *frame, size_t size)
+{
+  FrameInfo new_finfo;
+
+  reset();
+  if (!parse_header(frame, &new_finfo))
+    return false;
+
+  new_finfo.frame_size = size;
+
+  header.allocate(header_size());
+  memcpy(header, frame, header_size());
+
+  finfo = new_finfo;
+  sinfo = build_syncinfo(frame, size, finfo);
+  return true;
+}
+
+bool
+DTSFrameParser::next_frame(const uint8_t *frame, size_t size)
+{
+  FrameInfo new_finfo;
+
+  if (!compare_headers(header, frame))
+    return false;
+
+  if (!parse_header(frame, &new_finfo))
+    return false;
+
+  if (size != finfo.frame_size)
+    return false;
+
+  new_finfo.frame_size = finfo.frame_size;
+  finfo = new_finfo;
+  return true;
+}
+
+void
+DTSFrameParser::reset()
+{
+  header.zero();
+  finfo = FrameInfo();
+  sinfo = sync_info();
+}
+
 SyncInfo
 DTSFrameParser::build_syncinfo(const uint8_t *frame, size_t size, const FrameInfo &finfo) const
 {

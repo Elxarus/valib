@@ -7,10 +7,7 @@
 
 #include "parser_filter.h"
 
-#include "../parsers/aac/aac_adts_header.h"
-#include "../parsers/ac3_eac3/ac3_eac3_header.h"
-#include "../parsers/dts/dts_header.h"
-#include "../parsers/mpa/mpa_header.h"
+#include "../parsers/uni/uni_frame_parser.h"
 
 #include "../parsers/aac/aac_parser.h"
 #include "../parsers/ac3/ac3_parser.h"
@@ -21,6 +18,7 @@
 class AudioDecoder : public ParserFilter
 {
 public:
+  UniFrameParser uni_frame_parser;
   AACParser aac;
   AC3Parser ac3;
   DTSParser dts;
@@ -29,12 +27,11 @@ public:
 
   AudioDecoder()
   {
-    add(&adts_header, &aac);
-    add(0, &ac3);
-    add(0, &eac3);
-    add(ac3_eac3_header(), 0);
-    add(&dts_header, &dts);
-    add(&mpa_header, &mpa);
+    add(&uni_frame_parser.adts, &aac);
+    add(&uni_frame_parser.ac3,  &ac3);
+    add(&uni_frame_parser.eac3, &eac3);
+    add(&uni_frame_parser.dts,  &dts);
+    add(&uni_frame_parser.mpa,  &mpa);
   }
 };
 

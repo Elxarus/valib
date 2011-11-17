@@ -1007,6 +1007,14 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="uni"
+				>
+				<File
+					RelativePath="..\valib\parsers\uni\uni_frame_parser.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="sink"

@@ -39,11 +39,11 @@ public:
   ParserFilter()
   {}
 
-  ParserFilter(const HeaderParser *new_header, Filter *new_filter)
+  ParserFilter(FrameParser *new_header, Filter *new_filter)
   { add(new_header, new_filter); }
 
-  void add(const HeaderParser *new_header, Filter *new_filter);
-  void add(const HeaderParser *new_header);
+  void add(FrameParser *new_header, Filter *new_filter);
+  void add(FrameParser *new_header);
   void add(Filter *new_filter);
   void release();
 
@@ -52,10 +52,10 @@ public:
 
   int get_frames() const         { return sync.get_frames();  }
   string stream_info() const     { return sync.stream_info(); }
-  HeaderInfo header_info() const { return sync.header_info(); }
+  FrameInfo frame_info() const   { return sync.frame_info(); }
 
 protected:
-  MultiHeader header;
+  MultiFrameParser parser;
   FrameSplitter sync;
   FilterSwitch filter;
 

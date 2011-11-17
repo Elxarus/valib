@@ -24,13 +24,14 @@
 class Spdifer : public ParserFilter
 {
 protected:
+  SpdifableFrameParser frame_parser;
   SPDIFWrapper spdif_wrapper;
 
 public:
   Spdifer(int dts_mode = DTS_MODE_AUTO, int dts_conv = DTS_CONV_NONE):
   spdif_wrapper(dts_mode, dts_conv)
   {
-    add(spdifable_header(), &spdif_wrapper);
+    add(&frame_parser, &spdif_wrapper);
   }
 
   /////////////////////////////////////////////////////////
@@ -49,12 +50,13 @@ public:
 class Despdifer : public ParserFilter
 {
 protected:
-  SPDIFParser  spdif_parser;
+  SPDIFFrameParser frame_parser;
+  SPDIFParser spdif_parser;
 
 public:
   Despdifer(): spdif_parser(true)
   {
-    add(&spdif_header, &spdif_parser);
+    add(&frame_parser, &spdif_parser);
   }
 
   bool get_big_endian() const           { return spdif_parser.get_big_endian();     }

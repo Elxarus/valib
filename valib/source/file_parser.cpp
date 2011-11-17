@@ -38,7 +38,7 @@ FileParser::FileParser()
   buf_end = buf.begin();
 
   stat_size = 0;
-  avg_frame_interval = 0;
+  avg_frame_size = 0;
   avg_bitrate = 0;
 
   max_scan = 0;
@@ -51,7 +51,7 @@ FileParser::~FileParser()
 // File operations
 
 bool 
-FileParser::open(const string &new_filename, const HeaderParser *new_parser, size_t new_max_scan)
+FileParser::open(const string &new_filename, FrameParser *new_parser, size_t new_max_scan)
 {
   if (is_open()) 
     close();
@@ -71,7 +71,7 @@ FileParser::open(const string &new_filename, const HeaderParser *new_parser, siz
 }
 
 bool 
-FileParser::open_probe(const string &new_filename, const HeaderParser *new_parser, size_t new_max_scan)
+FileParser::open_probe(const string &new_filename, FrameParser *new_parser, size_t new_max_scan)
 {
   if (!open(new_filename, new_parser, new_max_scan))
     return false;
@@ -93,7 +93,7 @@ FileParser::close()
   is_new_stream = false;
 
   stat_size = 0;
-  avg_frame_interval = 0;
+  avg_frame_size = 0;
   avg_bitrate = 0;
 
   max_scan = 0;
@@ -130,7 +130,7 @@ FileParser::stats(vtime_t precision, unsigned min_measurements, unsigned max_mea
 
   double precision_squared = precision * precision / 4;
   stat_size = 0;
-  avg_frame_interval = 0;
+  avg_frame_size = 0;
   avg_bitrate = 0;
 
   std::vector<double> bitrate_stat;
@@ -144,13 +144,12 @@ FileParser::stats(vtime_t precision, unsigned min_measurements, unsigned max_mea
     ///////////////////////////////////////////////////////
     // Update stats
 
-    HeaderInfo hinfo = stream.header_info();
+    FrameInfo finfo = stream.frame_info();
 
     stat_size++;
-    double bitrate = double(stream.get_frame_interval() * 8 * hinfo.spk.sample_rate) / hinfo.nsamples;
-    avg_frame_interval += stream.get_frame_interval();
-    avg_bitrate        += bitrate;
-    bitrate_stat.push_back(bitrate);
+    avg_frame_size += finfo.frame_size;
+    avg_bitrate    += finfo.bitrate();
+    bitrate_stat.push_back(finfo.bitrate());
 
     ///////////////////////////////////////////////////////
     // Stop measure when we have enough accuracy
@@ -192,8 +191,8 @@ FileParser::stats(vtime_t precision, unsigned min_measurements, unsigned max_mea
 
   if (stat_size)
   {
-    avg_frame_interval /= stat_size;
-    avg_bitrate        /= stat_size;
+    avg_frame_size /= stat_size;
+    avg_bitrate    /= stat_size;
   }
 
   seek(old_pos);
@@ -217,7 +216,7 @@ FileParser::file_info() const
       << int(get_size(time)) % 3600 / 60 << ":"
       << int(get_size(time)) % 60 << endl;
     result << "Frames: " << int(get_size(frames)) << endl;
-    result << "Frame interval: " << int(avg_frame_interval) << endl;
+    result << "Frame size: " << int(avg_frame_size) << endl;
     result << "Bitrate: " << int(avg_bitrate / 1000) << "kbps" << endl;
   }
 
@@ -239,7 +238,7 @@ FileParser::units_factor(units_t units) const
   if (stat_size)
     switch (units)
     {
-      case frames:  return 1.0 / avg_frame_interval;
+      case frames:  return 1.0 / avg_frame_size;
       case time:    return 8.0 / avg_bitrate;
     }
 

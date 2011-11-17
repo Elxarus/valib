@@ -256,7 +256,7 @@ protected:
   uint8_t *buf_end;          //!< End of buffer data pointer
 
   size_t stat_size;          //!< Number of measurments done by stat() call
-  double avg_frame_interval; //!< Average frame interval
+  double avg_frame_size;     //!< Average frame size
   double avg_bitrate;        //!< Average bitrate
 
   bool load_frame();
@@ -275,8 +275,8 @@ public:
   /////////////////////////////////////////////////////////////////////////////
   // File operations
 
-  bool open(const string &filename, const HeaderParser *parser, size_t max_scan = 0);
-  bool open_probe(const string &filename, const HeaderParser *parser, size_t max_scan = 0);
+  bool open(const string &filename, FrameParser *parser, size_t max_scan = 0);
+  bool open_probe(const string &filename, FrameParser *parser, size_t max_scan = 0);
   void close();
 
   bool probe();
@@ -286,7 +286,7 @@ public:
   bool eof() const { return f.eof() && (buf_pos >= buf_end) && !stream.has_frame(); }
 
   const string get_filename() const { return filename; }
-  const HeaderParser *get_parser() const { return stream.get_parser(); }
+  const FrameParser *get_parser() const { return stream.get_parser(); }
 
   /////////////////////////////////////////////////////////////////////////////
   // Positioning
@@ -303,11 +303,10 @@ public:
   /////////////////////////////////////////////////////////////////////////////
   // Info
 
-  int        get_frames()  const { return stream.get_frames();  }
-  HeaderInfo header_info() const { return stream.header_info(); }
-  size_t     get_frame_interval() const { return stream.get_frame_interval(); }
+  int        get_frames() const { return stream.get_frames(); }
+  FrameInfo  frame_info() const { return stream.frame_info(); }
 
-  double     get_avg_frame_interval() const { return avg_frame_interval; }
+  double     get_avg_frame_size() const { return avg_frame_size; }
   double     get_avg_bitrate() const { return avg_bitrate; }
 
   string     stream_info() const { return stream.stream_info(); }
