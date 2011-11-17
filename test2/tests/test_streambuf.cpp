@@ -24,12 +24,7 @@
 #include "auto_file.h"
 #include "../noise_buf.h"
 
-#include "parsers\ac3\ac3_header.h"
-#include "parsers\dts\dts_header.h"
-#include "parsers\mpa\mpa_header.h"
-#include "parsers\spdif\spdif_header.h"
-#include "parsers\multi_header.h"
-
+#include "parsers/uni/uni_frame_parser.h"
 #include <boost/test/unit_test.hpp>
 
 static const int seed = 958745023;
@@ -41,7 +36,7 @@ static const int noise_size = 1*1024*1024;
 // The size of the junk before the stream equals to junk_size. Feed the parser
 // with chunks of size chunk_size.
 
-static void sync_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size, size_t junk_size, size_t chunk_size)
+static void sync_test(FrameParser *parser, uint8_t *buf, size_t buf_size, size_t junk_size, size_t chunk_size)
 {
   // setup pointers
   uint8_t *ptr = buf;
@@ -51,7 +46,7 @@ static void sync_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size
   uint8_t *frame, *debris;
   size_t frame_size, debris_size;
 
-  StreamBuffer streambuf(hparser);
+  StreamBuffer streambuf(parser);
   while (ptr < buf + buf_size && !streambuf.is_in_sync())
   {
     if (chunk_size)
@@ -97,7 +92,7 @@ static void sync_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size
     BOOST_FAIL("Frame ends after the end of the reference file");
 }
 
-static void passthrough_test(const HeaderParser *hparser, uint8_t *buf, size_t buf_size, int file_streams, int file_frames)
+static void passthrough_test(FrameParser *parser, uint8_t *buf, size_t buf_size, int file_streams, int file_frames)
 {
   // setup pointers
   uint8_t *ptr = buf;
@@ -109,7 +104,7 @@ static void passthrough_test(const HeaderParser *hparser, uint8_t *buf, size_t b
 
   int frames = 0;
   int streams = 0;
-  StreamBuffer streambuf(hparser);
+  StreamBuffer streambuf(parser);
 
   while (ptr < end)
   {
@@ -163,9 +158,10 @@ BOOST_AUTO_TEST_CASE(constructor)
 
 BOOST_AUTO_TEST_CASE(init_constructor)
 {
-  StreamBuffer buf(&ac3_header);
+  AC3FrameParser frame_parser;
+  StreamBuffer buf(&frame_parser);
 
-  BOOST_CHECK(buf.get_parser() == &ac3_header);
+  BOOST_CHECK(buf.get_parser() == &frame_parser);
 
   BOOST_CHECK(!buf.is_in_sync());
   BOOST_CHECK(!buf.is_new_stream());
@@ -175,17 +171,20 @@ BOOST_AUTO_TEST_CASE(init_constructor)
 
 BOOST_AUTO_TEST_CASE(set_parser)
 {
-  MultiHeader bad_parser; // MultiHeader without parsers set
+  AC3FrameParser frame_parser1;
+  DTSFrameParser frame_parser2;
+
+  MultiFrameParser bad_parser; // MultiHeader without parsers set
   StreamBuffer buf;
 
   buf.set_parser(&bad_parser);
   BOOST_CHECK(buf.get_parser() == 0);
 
-  buf.set_parser(&ac3_header);
-  BOOST_CHECK_EQUAL(buf.get_parser(), &ac3_header);
+  buf.set_parser(&frame_parser1);
+  BOOST_CHECK_EQUAL(buf.get_parser(), &frame_parser1);
 
-  buf.set_parser(&dts_header);
-  BOOST_CHECK_EQUAL(buf.get_parser(), &dts_header);
+  buf.set_parser(&frame_parser2);
+  BOOST_CHECK_EQUAL(buf.get_parser(), &frame_parser2);
 
   buf.release_parser();
   BOOST_CHECK(buf.get_parser() == 0);
@@ -224,21 +223,20 @@ BOOST_AUTO_TEST_CASE(null_parser)
 
 BOOST_AUTO_TEST_CASE(sync)
 {
-  const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
-  const MultiHeader multi_header(headers, array_size(headers));
+  UniFrameParser uni;
 
   const struct {
     const char *filename;
     const char *parser_name;
-    const HeaderParser *parser;
+    FrameParser *parser;
   } parsers[] = {
-    { "a.mp2.002.mp2",   "MPAHeader",   &mpa_header   },
-    { "a.ac3.005.ac3",   "AC3Header",   &ac3_header   },
-    { "a.dts.03f.dts",   "DTSHeader",   &dts_header   },
-    { "a.ac3.03f.spdif", "SPDIFHeader", &spdif_header },
-    { "a.mp2.002.mp2",   "MultiHeader", &multi_header },
-    { "a.ac3.005.ac3",   "MultiHeader", &multi_header },
-    { "a.dts.03f.dts",   "MultiHeader", &multi_header }
+    { "a.mp2.002.mp2",   "MPAFrameParser",   &uni.mpa   },
+    { "a.ac3.005.ac3",   "AC3FrameParser",   &uni.ac3   },
+    { "a.dts.03f.dts",   "DTSFrameParser",   &uni.dts   },
+    { "a.ac3.03f.spdif", "SPDIFFrameParser", &uni.spdif },
+    { "a.mp2.002.mp2",   "UniFrameParser",   &uni },
+    { "a.ac3.005.ac3",   "UniFrameParser",   &uni },
+    { "a.dts.03f.dts",   "UniFrameParser",   &uni }
   };
 
   for (size_t iparser = 0; iparser < array_size(parsers); iparser++)
@@ -280,32 +278,31 @@ BOOST_AUTO_TEST_CASE(sync)
 
 BOOST_AUTO_TEST_CASE(file_passthrough)
 {
-  const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
-  const MultiHeader multi_header(headers, array_size(headers));
+  UniFrameParser uni;
 
   struct {
     const char *filename;
     const char *parser_name;
-    const HeaderParser *hparser;
+    FrameParser *parser;
     int streams;
     int frames;
   } parsers[] = {
-    { "a.mp2.002.mp2",   "MPAHeader", &mpa_header, 1, 500 },
-    { "a.mp2.005.mp2",   "MPAHeader", &mpa_header, 1, 500 },
-    { "a.mp2.mix.mp2",   "MPAHeader", &mpa_header, 3, 1500 },
-    { "a.ac3.005.ac3",   "AC3Header", &ac3_header, 1, 375 },
-    { "a.ac3.03f.ac3",   "AC3Header", &ac3_header, 1, 375 },
-    { "a.ac3.mix.ac3",   "AC3Header", &ac3_header, 3, 1500 },
-    { "a.dts.03f.dts",   "DTSHeader", &dts_header, 1, 1125 },
+    { "a.mp2.002.mp2",   "MPAFrameParser",   &uni.mpa, 1, 500  },
+    { "a.mp2.005.mp2",   "MPAFrameParser",   &uni.mpa, 1, 500  },
+    { "a.mp2.mix.mp2",   "MPAFrameParser",   &uni.mpa, 3, 1500 },
+    { "a.ac3.005.ac3",   "AC3FrameParser",   &uni.ac3, 1, 375  },
+    { "a.ac3.03f.ac3",   "AC3FrameParser",   &uni.ac3, 1, 375  },
+    { "a.ac3.mix.ac3",   "AC3FrameParser",   &uni.ac3, 3, 1500 },
+    { "a.dts.03f.dts",   "DTSFrameParser",   &uni.dts, 1, 1125 },
     // We cannot load the last frame of SPDIF/DTS stream.
     // See note at StreamBuffer class comments.
-    { "a.dts.03f.spdif", "DTSHeader", &dts_header, 1, 1124 },
-    { "a.mp2.005.spdif", "SPDIFHeader", &spdif_header, 1, 500 },
-    { "a.ac3.03f.spdif", "SPDIFHeader", &spdif_header, 1, 375 },
-    { "a.dts.03f.spdif", "SPDIFHeader", &spdif_header, 1, 1125 },
-    { "a.mad.mix.spdif", "SPDIFHeader", &spdif_header, 7, 4375 },
-    { "a.mad.mix.mad",   "SPDIFHeader", &multi_header, 7, 4375 },
-    { "a.mad.mix.spdif", "SPDIFHeader", &multi_header, 7, 4375 },
+    { "a.dts.03f.spdif", "DTSFrameParser",   &uni.dts,   1, 1124 },
+    { "a.mp2.005.spdif", "SPDIFFrameParser", &uni.spdif, 1, 500  },
+    { "a.ac3.03f.spdif", "SPDIFFrameParser", &uni.spdif, 1, 375  },
+    { "a.dts.03f.spdif", "SPDIFFrameParser", &uni.spdif, 1, 1125 },
+    { "a.mad.mix.spdif", "SPDIFFrameParser", &uni.spdif, 7, 4375 },
+    { "a.mad.mix.mad",   "UniFrameParser",   &uni,       7, 4375 },
+    { "a.mad.mix.spdif", "UniFrameParser",   &uni,       7, 4375 },
   };
 
   for (size_t iparser = 0; iparser < array_size(parsers); iparser++)
@@ -314,21 +311,20 @@ BOOST_AUTO_TEST_CASE(file_passthrough)
 
     MemFile f(parsers[iparser].filename);
     BOOST_REQUIRE(f);
-    passthrough_test(parsers[iparser].hparser, f, f.size(), parsers[iparser].streams, parsers[iparser].frames);
+    passthrough_test(parsers[iparser].parser, f, f.size(), parsers[iparser].streams, parsers[iparser].frames);
   }
 }
 
 BOOST_AUTO_TEST_CASE(noise_passthrough)
 {
-  const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
-  const MultiHeader multi_header(headers, array_size(headers));
+  UniFrameParser uni;
 
   RawNoise noise(noise_size, seed);
-  passthrough_test(&mpa_header, noise, noise.size(), 0, 0);
-  passthrough_test(&ac3_header, noise, noise.size(), 0, 0);
-  passthrough_test(&dts_header, noise, noise.size(), 0, 0);
-  passthrough_test(&spdif_header, noise, noise.size(), 0, 0);
-  passthrough_test(&multi_header, noise, noise.size(), 0, 0);
+  passthrough_test(&uni.mpa,   noise, noise.size(), 0, 0);
+  passthrough_test(&uni.ac3,   noise, noise.size(), 0, 0);
+  passthrough_test(&uni.dts,   noise, noise.size(), 0, 0);
+  passthrough_test(&uni.spdif, noise, noise.size(), 0, 0);
+  passthrough_test(&uni,       noise, noise.size(), 0, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

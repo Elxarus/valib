@@ -37,8 +37,6 @@ public:
   virtual bool      compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const;
 
 protected:
-  virtual SyncInfo build_syncinfo(const uint8_t *frame, size_t size, const FrameInfo &finfo) const;
-
   AC3FrameParser ac3_parser;
   DTSFrameParser dts_parser;
   MPAFrameParser mpa_parser;

@@ -10,7 +10,7 @@
 #include "source/wav_source.h"
 #include "../../../suite.h"
 
-const size_t block_size = 65536;
+static const size_t block_size = 65536;
 
 BOOST_AUTO_TEST_SUITE(ac3_parser)
 
@@ -25,7 +25,8 @@ BOOST_AUTO_TEST_CASE(decode)
   // FileParser -> AC3Parser
 
   FileParser f;
-  f.open_probe("a.ac3.03f.ac3", &ac3_header);
+  AC3FrameParser frame_parser;
+  f.open_probe("a.ac3.03f.ac3", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   AC3Parser ac3;
@@ -51,7 +52,8 @@ BOOST_AUTO_TEST_CASE(decode)
 BOOST_AUTO_TEST_CASE(streams_frames)
 {
   FileParser f;
-  f.open_probe("a.ac3.mix.ac3", &ac3_header);
+  AC3FrameParser frame_parser;
+  f.open_probe("a.ac3.mix.ac3", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   AC3Parser parser;

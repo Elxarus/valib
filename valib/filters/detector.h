@@ -15,14 +15,14 @@
 #include "../filter.h"
 #include "../parser.h"
 #include "../sync.h"
-#include "../parsers/multi_header.h"
+#include "../parsers/uni/uni_frame_parser.h"
 
 
 
 class Detector : public SimpleFilter
 {
 protected:
-  MultiHeader uni_header;
+  UniFrameParser uni_parser;
 
   enum state_t { state_load, state_frame };
 
@@ -34,7 +34,7 @@ protected:
   bool     do_flush; // need flushing
   bool     is_new_stream;
 
-  const HeaderParser *find_parser(Speakers spk) const;
+  FrameParser *find_parser(Speakers spk);
   void load(Chunk &in);
 
 public:
@@ -43,8 +43,8 @@ public:
   /////////////////////////////////////////////////////////
   // Own interface
 
-  int  get_frames() const { return stream.get_frames(); }
-  HeaderInfo header_info() const { return stream.header_info(); }
+  int get_frames() const { return stream.get_frames(); }
+  FrameInfo frame_info() const { return stream.frame_info(); }
 
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides

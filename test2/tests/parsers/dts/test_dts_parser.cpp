@@ -10,7 +10,7 @@
 #include "source/wav_source.h"
 #include "../../../suite.h"
 
-const size_t block_size = 65536;
+static const size_t block_size = 65536;
 
 BOOST_AUTO_TEST_SUITE(dts_parser)
 
@@ -25,7 +25,8 @@ BOOST_AUTO_TEST_CASE(decode)
   // FileParser -> DTSParser
 
   FileParser f;
-  f.open_probe("a.dts.03f.dts", &dts_header);
+  DTSFrameParser frame_parser;
+  f.open_probe("a.dts.03f.dts", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   DTSParser dts;
@@ -51,7 +52,8 @@ BOOST_AUTO_TEST_CASE(decode)
 BOOST_AUTO_TEST_CASE(streams_frames)
 {
   FileParser f;
-  f.open_probe("a.dts.03f.mix", &dts_header);
+  DTSFrameParser frame_parser;
+  f.open_probe("a.dts.03f.mix", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   DTSParser parser;

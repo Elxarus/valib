@@ -10,7 +10,7 @@
 #include "source/wav_source.h"
 #include "../../../suite.h"
 
-const size_t block_size = 65536;
+static const size_t block_size = 65536;
 
 BOOST_AUTO_TEST_SUITE(eac3_parser)
 
@@ -22,7 +22,8 @@ BOOST_AUTO_TEST_CASE(constructor)
 BOOST_AUTO_TEST_CASE(streams_frames)
 {
   FileParser f;
-  f.open_probe("test.eac3.03f.eac3", &eac3_header);
+  EAC3FrameParser frame_parser;
+  f.open_probe("test.eac3.03f.eac3", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   EAC3Parser parser;

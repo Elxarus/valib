@@ -3,19 +3,19 @@
 FrameSplitter::FrameSplitter()
 {}
 
-FrameSplitter::FrameSplitter(const HeaderParser *new_parser)
+FrameSplitter::FrameSplitter(FrameParser *new_parser)
 {
   set_parser(new_parser);
 }
 
 void
-FrameSplitter::set_parser(const HeaderParser *new_parser)
+FrameSplitter::set_parser(FrameParser *new_parser)
 {
   reset();
   stream.set_parser(new_parser);
 }
 
-const HeaderParser *
+const FrameParser *
 FrameSplitter::get_parser() const
 {
   return stream.get_parser();

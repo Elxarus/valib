@@ -1,5 +1,8 @@
 #include "eac3_header.h"
 
+// 0x0b77 | 0x770b
+const SyncTrie EAC3FrameParser::sync_trie = SyncTrie(0x0b77, 16) | SyncTrie(0x770b, 16);
+
 static const int srate_tbl[] =
 {
   48000, 48000, 48000, 48000, 
@@ -126,6 +129,16 @@ EAC3FrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
            hdr1[5] == hdr2[5] && (hdr1[4] & 0xf8) == (hdr2[4] & 0xf8);
   }
   return false;
+}
+
+SyncInfo
+EAC3FrameParser::build_syncinfo(const uint8_t *frame, size_t size, const FrameInfo &finfo) const
+{
+  uint32_t eac3_sync = (frame[0] << 8) | frame[1];
+
+  SyncInfo result = sync_info();
+  result.sync_trie = SyncTrie(eac3_sync, 16);
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -26,7 +26,8 @@ BOOST_AUTO_TEST_CASE(info)
   Chunk chunk;
 
   FileParser f;
-  f.open("a.aac.03f.adts", &adts_header);
+  ADTSFrameParser frame_parser;
+  f.open("a.aac.03f.adts", &frame_parser);
   BOOST_REQUIRE(f.is_open());
   BOOST_REQUIRE(f.get_chunk(chunk));
 
@@ -38,7 +39,8 @@ BOOST_AUTO_TEST_CASE(info)
 BOOST_AUTO_TEST_CASE(streams_frames)
 {
   FileParser f;
-  f.open("a.aac.03f.adts", &adts_header);
+  ADTSFrameParser frame_parser;
+  f.open("a.aac.03f.adts", &frame_parser);
   BOOST_REQUIRE(f.is_open());
 
   ADTSParser adts;

@@ -21,6 +21,8 @@ BOOST_AUTO_TEST_CASE(constructor)
 
 BOOST_AUTO_TEST_CASE(add_release)
 {
+  AC3FrameParser ac3;
+  DTSFrameParser dts;
   Speakers spk_ac3(FORMAT_AC3, 0, 0);
   Speakers spk_dts(FORMAT_DTS, 0, 0);
 
@@ -28,11 +30,11 @@ BOOST_AUTO_TEST_CASE(add_release)
   BOOST_CHECK(!dec.can_open(spk_ac3));
   BOOST_CHECK(!dec.can_open(spk_dts));
 
-  dec.add(&ac3_header, 0);
+  dec.add(&ac3, 0);
   BOOST_CHECK(dec.can_open(spk_ac3));
   BOOST_CHECK(!dec.can_open(spk_dts));
 
-  dec.add(&dts_header, 0);
+  dec.add(&dts, 0);
   BOOST_CHECK(dec.can_open(spk_ac3));
   BOOST_CHECK(dec.can_open(spk_dts));
 
@@ -46,13 +48,15 @@ BOOST_AUTO_TEST_CASE(decode)
   // Test chain: RAWSource -> ParserFilter(AC3Parser)
   RAWSource raw(Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.03f.ac3");
   BOOST_REQUIRE(raw.is_open());
-  AC3Parser ac3_test;
+  AC3FrameParser ac3_frame_parser;
+  AC3Parser ac3_decoder;
   ParserFilter dec;
-  dec.add(&ac3_header, &ac3_test);
+  dec.add(&ac3_frame_parser, &ac3_decoder);
 
   // Reference chain: FileParser(AC3Header) -> AC3Parser
   FileParser f;
-  f.open("a.ac3.03f.ac3", &ac3_header);
+  AC3FrameParser frame_parser;
+  f.open("a.ac3.03f.ac3", &frame_parser);
   BOOST_REQUIRE(f.is_open());
   AC3Parser ac3_ref;
 

@@ -1,51 +1,22 @@
 #include "detector.h"
-#include "../parsers/spdif/spdif_header.h"
-#include "../parsers/aac/aac_adts_header.h"
-#include "../parsers/ac3/ac3_header.h"
-#include "../parsers/ac3_eac3/ac3_eac3_header.h"
-#include "../parsers/dts/dts_header.h"
-#include "../parsers/eac3/eac3_header.h"
-#include "../parsers/mpa/mpa_header.h"
+#include "../parsers/uni/uni_frame_parser.h"
 
 
 Detector::Detector()
 {
-  static const HeaderParser *uni_parsers[] =
-  {
-    &spdif_header,
-    &adts_header,
-    &ac3_header,
-    ac3_eac3_header(),
-    &dts_header,
-    &eac3_header,
-    &mpa_header
-  };
-
   out_spk = spk_unknown;
   state = state_load;
   do_flush = false;
-
-  uni_header.set_parsers(uni_parsers, array_size(uni_parsers));
 }
 
-const HeaderParser *
-Detector::find_parser(Speakers spk) const
+FrameParser *
+Detector::find_parser(Speakers spk)
 {
-  switch (spk.format)
-  {
-    case FORMAT_RAWDATA: return &uni_header;
-    case FORMAT_PCM16:   return &spdif_header;
-    case FORMAT_SPDIF:   return &spdif_header;
+  int format = spk.format;
+  if (spk.format == FORMAT_PCM16)
+    format = FORMAT_SPDIF;
 
-    case FORMAT_AAC_ADTS:return &adts_header;
-    case FORMAT_AC3:     return &ac3_header;
-    case FORMAT_AC3_EAC3:return ac3_eac3_header();
-    case FORMAT_DTS:     return &dts_header;
-    case FORMAT_EAC3:    return &eac3_header;
-    case FORMAT_MPA:     return &mpa_header;
-  };
-
-  return 0;
+  return uni_parser.find_parser(format);
 }
 
 bool
@@ -55,17 +26,17 @@ Detector::can_open(Speakers new_spk) const
   if (new_spk.format == FORMAT_PCM16)
     return new_spk.mask == MODE_STEREO && new_spk.sample_rate > 0;
 
-  return find_parser(new_spk) != 0;
+  return uni_parser.can_parse(new_spk.format);
 }
 
 bool
 Detector::init()
 {
-  const HeaderParser *hparser = find_parser(spk);
-  if (!hparser)
+  FrameParser *parser = find_parser(spk);
+  if (!parser)
     return false;
 
-  stream.set_parser(hparser);
+  stream.set_parser(parser);
   reset();
   return true;
 }
