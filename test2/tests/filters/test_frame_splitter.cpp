@@ -69,6 +69,19 @@ BOOST_AUTO_TEST_CASE(get_chunk)
       frames++;
     }
   }
+
+  while (f.flush(frame))
+  {
+    if (f.new_stream())
+    {
+      streams++;
+      BOOST_CHECK_EQUAL(f.get_output().format, FORMAT_AC3);
+    }
+    if (!ac3_header.parse_header(frame.rawdata))
+      BOOST_FAIL("Not a frame output");
+    frames++;
+  }
+
   BOOST_CHECK_EQUAL(frames, 1500);
   BOOST_CHECK_EQUAL(streams, 3);
 }

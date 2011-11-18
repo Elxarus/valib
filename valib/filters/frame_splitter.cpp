@@ -55,6 +55,19 @@ FrameSplitter::process(Chunk &in, Chunk &out)
 }
 
 bool
+FrameSplitter::flush(Chunk &out)
+{
+  while (stream.flush())
+    if (stream.has_frame())
+    {
+      out.set_rawdata(stream.get_frame(), stream.get_frame_size());
+      sync.send_frame_sync(out);
+      return true;
+    }
+  return false;
+}
+
+bool
 FrameSplitter::load_frame(Chunk &in)
 {
   uint8_t *buf = in.rawdata;

@@ -78,6 +78,7 @@ public:
   virtual void reset();
 
   virtual bool process(Chunk &in, Chunk &out);
+  virtual bool flush(Chunk &out);
 
   virtual bool new_stream() const
   { return stream.is_new_stream(); }
