@@ -106,10 +106,13 @@ static void passthrough_test(FrameParser *parser, uint8_t *buf, size_t buf_size,
   int streams = 0;
   StreamBuffer streambuf(parser);
 
-  while (ptr < end)
+  while (ptr < end || streambuf.is_in_sync())
   {
     // process data
-    streambuf.load(&ptr, end);
+    if (ptr < end)
+      streambuf.load(&ptr, end);
+    else
+      streambuf.flush();
 
     // count streams & frames
     if (streambuf.is_new_stream())  streams++;
