@@ -322,6 +322,12 @@ FileParser::load_frame()
     if (max_scan && scan_size > max_scan)
       return false;
   }
+
+  if (stream.is_in_sync())
+    while (stream.flush())
+      if (stream.has_frame())
+        return true;
+
   return false;
 }
 
