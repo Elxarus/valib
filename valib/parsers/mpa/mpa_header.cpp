@@ -200,7 +200,7 @@ MPAFrameParser::build_syncinfo(const uint8_t *frame, size_t size, const FrameInf
   uint32_t mpa_sync = (frame[0] << 8) | frame[1];
 
   SyncInfo result = sync_info();
-  result.sync_trie = SyncTrie(mpa_sync, 32);
+  result.sync_trie = SyncTrie(mpa_sync, 16);
   return result;
 }
 
