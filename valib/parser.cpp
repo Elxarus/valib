@@ -184,6 +184,9 @@ StreamBuffer::set_parser(FrameParser *new_parser)
   if (!new_parser)
     return;
 
+  if (!new_parser->sync_info().is_good())
+    return;
+
   parser = new_parser;
   sinfo = parser->sync_info();
 
@@ -490,24 +493,23 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
     sync_data += load_size;
     *data += load_size;
   }
- 
+
   /////////////////////////////////////////////////////////////////////////////
   // Load next frame
 
   size_t header_size = parser->header_size();
   size_t sync_size = sinfo.sync_trie.sync_size();
-  if (sync_data < sinfo.min_frame_size + header_size ||
-      sync_data < sinfo.min_frame_size + sync_size)
-    // need at least min_frame_size bytes
-    return false;
 
   size_t pos = sinfo.min_frame_size;
-  size_t scan_size = sync_data;
-  if (header_size > sync_size)
-    scan_size -= header_size - sync_size;
+  size_t scan_size = sinfo.max_frame_size + sync_size;
+  if (sync_data < scan_size)
+    scan_size = sync_data;
 
   while (scan.scan_pos(sync_buf, scan_size, pos))
   {
+    if (sync_data < pos + header_size)
+      return false;
+
     if (parser->parse_header(sync_buf + pos) &&
         parser->next_frame(sync_buf, pos))
     {
@@ -518,6 +520,9 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
     }
     pos++;
   }
+
+  if (pos < sinfo.max_frame_size)
+    return false;
 
   /////////////////////////////////////////////////////////////////////////////
   // No correct syncpoint found. Resync.
@@ -541,7 +546,7 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
 bool
 StreamBuffer::flush()
 {
-  if (!parser)
+  if (!in_sync)
     return false;
 
   DROP(debris_size + frame_size);

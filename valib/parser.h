@@ -33,6 +33,11 @@ struct SyncInfo
   SyncInfo(const SyncTrie &sync_trie_, size_t min_frame_size_, size_t max_frame_size_):
   sync_trie(sync_trie_), min_frame_size(min_frame_size_), max_frame_size(max_frame_size_)
   {}
+
+  bool is_good() const
+  {
+    return min_frame_size > 0 && max_frame_size >= min_frame_size;
+  }
 };
 
 struct FrameInfo
