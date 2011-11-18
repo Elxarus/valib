@@ -49,6 +49,7 @@ ADTSFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
     finfo->nsamples = 1024;
     finfo->bs_type = bs_type;
     finfo->spdif_type = 0;
+    return true;
   }
 
   return false;
