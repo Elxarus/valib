@@ -120,6 +120,58 @@ Detector::flush(Chunk &out)
   if (!do_flush)
     return false;
 
+  do_flush = true;
+  is_new_stream = false;
+  while (1) switch (state)
+  {
+    case state_load:
+      stream.flush();
+
+      if (stream.is_in_sync())
+      {
+        if (out_spk.is_unknown() || stream.is_new_stream())
+          is_new_stream = true;
+        out_spk = stream.get_spk();
+
+        if (stream.has_debris())
+        {
+          out.set_rawdata(stream.get_debris(), stream.get_debris_size());
+          state = state_frame;
+          return true;
+        }
+        else if (stream.has_frame())
+        {
+          out.set_rawdata(stream.get_frame(), stream.get_frame_size());
+          sync.send_frame_sync(out);
+          return true;
+        }
+      }
+      else if (stream.has_debris())
+      {
+        if (out_spk.is_unknown() || out_spk != spk)
+          is_new_stream = true;
+        out_spk = spk;
+
+        out.set_rawdata(stream.get_debris(), stream.get_debris_size());
+        if (spk.format == FORMAT_PCM16)
+          sync.send_sync(out, 1.0/(4 * spk.sample_rate));
+        else
+          sync.send_frame_sync(out);
+        return true;
+      }
+
+      do_flush = false;
+      is_new_stream = false;
+      return false;
+
+    case state_frame:
+      assert(stream.has_frame());
+      out.set_rawdata(stream.get_frame(), stream.get_frame_size());
+      sync.send_frame_sync(out);
+      state = state_load;
+      return true;
+  }
+
   switch (state)
   {
     case state_load:
