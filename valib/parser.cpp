@@ -189,6 +189,7 @@ StreamBuffer::set_parser(FrameParser *new_parser)
 
   parser = new_parser;
   sinfo = parser->sync_info();
+  scan.set_trie(sinfo.sync_trie);
 
   buf.allocate(sinfo.max_frame_size * 3 + parser->header_size());
   sync_buf  = buf.begin();
@@ -286,14 +287,9 @@ void
 StreamBuffer::resync()
 {
   finfo = FrameInfo();
-  sinfo = SyncInfo();
   
   if (parser)
-  {
     parser->reset();
-    sinfo = parser->sync_info();
-    scan.set_trie(sinfo.sync_trie);
-  }
 
   pre_frame = sinfo.max_frame_size;
 
@@ -365,9 +361,17 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
       if (sync_buf + sync_data < pos2 + header_size)
         return false;
 
-      if (!parser->parse_header(pos2) ||
-          !parser->compare_headers(pos1, pos2) ||
-          !parser->first_frame(pos1, pos2 - pos1))
+      if (!parser->parse_header(pos2))
+      {
+        pos2++;
+        continue;
+      }
+      if (!parser->compare_headers(pos1, pos2))
+      {
+        pos2++;
+        continue;
+      }
+      if (!parser->first_frame(pos1, pos2 - pos1))
       {
         pos2++;
         continue;
@@ -397,8 +401,6 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
 
         parser->first_frame(pos1, pos2 - pos1);
         finfo = parser->frame_info();
-        sinfo = parser->sync_info2();
-        scan.set_trie(sinfo.sync_trie);
 
         debris = sync_buf;
         debris_size = pos1 - sync_buf;
@@ -510,8 +512,7 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
     if (sync_data < pos + header_size)
       return false;
 
-    if (parser->parse_header(sync_buf + pos) &&
-        parser->next_frame(sync_buf, pos))
+    if (parser->next_frame(sync_buf, pos))
     {
       finfo = parser->frame_info();
       frame = sync_buf;
@@ -546,7 +547,7 @@ StreamBuffer::load_frame(uint8_t **data, uint8_t *end)
 bool
 StreamBuffer::flush()
 {
-  if (!in_sync)
+  if (!sync_data)
     return false;
 
   DROP(debris_size + frame_size);
@@ -564,20 +565,21 @@ StreamBuffer::flush()
       return true;
   }
 
+  // Last frame?
   if (sync_data > parser->header_size())
-    // Last frame?
     if (parser->next_frame(sync_buf, sync_data))
     {
       frame = sync_buf;
       frame_size = sync_data;
       return true;
     }
-    else
-    {
-      debris = sync_buf;
-      debris_size = sync_data;
-      return true;
-    }
+
+  if (sync_data)
+  {
+    debris = sync_buf;
+    debris_size = sync_data;
+    return true;
+  }
 
   resync();
   return false;
