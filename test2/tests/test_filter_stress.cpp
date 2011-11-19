@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(ac3_parser)
   open_stress_test(&filter);
 
   FileParser source;
-  ADTSFrameParser frame_parser;
+  AC3FrameParser frame_parser;
   source.open_probe("a.ac3.03f.ac3", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   filter_stress_test(&filter, &source);
