@@ -633,6 +633,11 @@ public:
 
     Returns true when data is available and false otherwise.
 
+    Note, that you may have to call this function several times to flush all
+    the data buffered. When StreamBuffer have no more data to flush it goes
+    out of sync (i.e. is_in_sync() returns false). Or you may call flush()
+    until it returns false.
+
   \name State flags
 
   \fn bool StreamBuffer::is_in_sync() const
@@ -773,6 +778,7 @@ public:
   bool is_new_stream()          const { return new_stream;      }
   bool has_frame()              const { return frame_size  > 0; }
   bool has_debris()             const { return debris_size > 0; }
+  bool need_flushing()          const { return sync_data > 0;   }
 
   /////////////////////////////////////////////////////////
   // Data access

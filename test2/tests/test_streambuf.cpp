@@ -106,7 +106,7 @@ static void passthrough_test(FrameParser *parser, uint8_t *buf, size_t buf_size,
   int streams = 0;
   StreamBuffer streambuf(parser);
 
-  while (ptr < end || streambuf.is_in_sync())
+  while (ptr < end || streambuf.need_flushing())
   {
     // process data
     if (ptr < end)
@@ -139,6 +139,8 @@ static void passthrough_test(FrameParser *parser, uint8_t *buf, size_t buf_size,
     if (ref_ptr > end)
       BOOST_FAIL("Frame ends after the end of the reference file");
   }
+
+  BOOST_CHECK_MESSAGE(ref_ptr == end, "Reference is longer than output");
 
   // Check stream and frame counters
   if (file_streams) BOOST_CHECK_EQUAL(streams, file_streams);
