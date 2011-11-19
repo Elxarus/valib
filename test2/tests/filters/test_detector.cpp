@@ -18,6 +18,36 @@ BOOST_AUTO_TEST_CASE(constructor)
   Detector f;
 }
 
+BOOST_AUTO_TEST_CASE(open)
+{
+  static const Speakers good[] =
+  {
+    Speakers(FORMAT_RAWDATA, 0, 0),
+    Speakers(FORMAT_PCM16, MODE_STEREO, 48000),
+    Speakers(FORMAT_AAC_ADTS, 0, 0),
+    Speakers(FORMAT_AC3,   0, 0),
+    Speakers(FORMAT_EAC3,  0, 0),
+    Speakers(FORMAT_DTS,   0, 0),
+    Speakers(FORMAT_MPA,   0, 0),
+    Speakers(FORMAT_SPDIF, 0, 0)
+  };
+  static const Speakers bad[] =
+  {
+    Speakers(FORMAT_UNKNOWN, MODE_STEREO, 48000),
+    Speakers(FORMAT_PCM16, MODE_5_1, 48000),
+    Speakers(FORMAT_LINEAR, MODE_STEREO, 48000)
+  };
+
+  int i;
+  Detector f;
+
+  for (i = 0; i < array_size(good); i++)
+    BOOST_CHECK_MESSAGE(f.open(good[i]), "Cannot open good format " << good[i].print());
+
+  for (i = 0; i < array_size(bad); i++)
+    BOOST_CHECK_MESSAGE(!f.open(bad[i]), "Can open bad format " << bad[i].print());
+}
+
 BOOST_AUTO_TEST_CASE(pcm_passthrough)
 {
   Speakers spk(FORMAT_PCM16, MODE_STEREO, 48000);

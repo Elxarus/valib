@@ -12,11 +12,13 @@ Detector::Detector()
 FrameParser *
 Detector::find_parser(Speakers spk)
 {
-  int format = spk.format;
   if (spk.format == FORMAT_PCM16)
-    format = FORMAT_SPDIF;
+    return &uni_parser.spdif;
 
-  return uni_parser.find_parser(format);
+  if (spk.format == FORMAT_RAWDATA)
+    return &uni_parser;
+
+  return uni_parser.find_parser(spk.format);
 }
 
 bool
@@ -25,6 +27,9 @@ Detector::can_open(Speakers new_spk) const
   // Only stereo PCM16 is allowed for SPDIF detection
   if (new_spk.format == FORMAT_PCM16)
     return new_spk.mask == MODE_STEREO && new_spk.sample_rate > 0;
+
+  if (new_spk.format == FORMAT_RAWDATA)
+    return true;
 
   return uni_parser.can_parse(new_spk.format);
 }
