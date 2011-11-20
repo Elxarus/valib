@@ -711,12 +711,18 @@ public:
 class StreamBuffer
 {
 protected:
-  // Parser info (constant)
+  // Parser info
+  // (1) set at parser change
+  // (2) set after successful synchronization
+  // (3) changes each frame
 
   FrameParser *parser;           //!< frame parser
-  FrameInfo finfo;               //!< last frame info
-  SyncInfo  sinfo;               //!< cached synchronization info
-  SyncScan  scan;                //!< syncpoint scanner
+  size_t    header_size;         //!< header size (1)
+  SyncInfo  sinfo;               //!< synchronization info (1)
+  SyncScan  scan;                //!< syncpoint scanner (1)
+
+  size_t    const_frame_size;    //!< frame size if constant, zero otherwise (2)
+  FrameInfo finfo;               //!< last frame info (3)
 
   // Buffers
   // We need a header of a previous frame to load next one, but frame data of

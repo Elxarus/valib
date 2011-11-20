@@ -135,6 +135,8 @@ HeaderParser::header_info(const uint8_t *hdr) const
 StreamBuffer::StreamBuffer()
 {
   parser = 0;
+  header_size = 0;
+  const_frame_size = 0;
 
   sync_buf = 0;
   sync_size = 0;
@@ -155,6 +157,8 @@ StreamBuffer::StreamBuffer()
 StreamBuffer::StreamBuffer(FrameParser *parser_)
 {
   parser = 0;
+  header_size = 0;
+  const_frame_size = 0;
 
   sync_buf = 0;
   sync_size = 0;
@@ -188,6 +192,7 @@ StreamBuffer::set_parser(FrameParser *new_parser)
     return;
 
   parser = new_parser;
+  header_size = parser->header_size();
   sinfo = parser->sync_info();
   scan.set_trie(sinfo.sync_trie);
 
@@ -202,9 +207,12 @@ void
 StreamBuffer::release_parser()
 {
   parser = 0;
-  finfo = FrameInfo();
+  header_size = 0;
   sinfo = SyncInfo();
   scan.set_trie(SyncTrie());
+
+  const_frame_size = 0;
+  finfo = FrameInfo();
 
   sync_buf = 0;
   sync_size = 0;
@@ -286,6 +294,7 @@ StreamBuffer::drop_buffer(size_t size)
 void
 StreamBuffer::resync()
 {
+  const_frame_size = 0;
   finfo = FrameInfo();
   
   if (parser)
@@ -331,7 +340,6 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
   /////////////////////////////////////////////////////////////////////////////
   // Search 1st syncpoint
 
-  const size_t header_size = parser->header_size();
   const size_t sync_size = sinfo.sync_trie.sync_size();
 
   FrameInfo temp_finfo;
@@ -439,6 +447,12 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
         parser->first_frame(sync_buf + pos1, pos2 - pos1);
         finfo = parser->frame_info();
 
+        SyncInfo sinfo2 = parser->sync_info2();
+        if (sinfo2.min_frame_size == sinfo2.max_frame_size &&
+            sinfo2.min_frame_size == pos2 - pos1 &&
+            sinfo2.min_frame_size == pos3 - pos2)
+          const_frame_size = sinfo2.min_frame_size;
+
         debris = sync_buf;
         debris_size = pos1;
 
@@ -523,7 +537,49 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
   new_stream = false;
 
   /////////////////////////////////////////////////////////////////////////////
-  // Cache data (as much as possible)
+  // Const frame size
+
+  if (const_frame_size)
+  {
+    LOAD(const_frame_size);
+    if (!parser->next_frame(sync_buf, const_frame_size))
+    {
+      resync();
+      return sync(data, end);
+    }
+    finfo = parser->frame_info();
+    frame = sync_buf;
+    frame_size = const_frame_size;
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Frame size known from the header
+
+  LOAD(header_size);
+  FrameInfo temp_finfo;
+  if (!parser->parse_header(sync_buf, &temp_finfo))
+  {
+    resync();
+    return sync(data, end);
+  }
+
+  if (temp_finfo.frame_size)
+  {
+    LOAD(temp_finfo.frame_size);
+    if (!parser->next_frame(sync_buf, temp_finfo.frame_size))
+    {
+      resync();
+      return sync(data, end);
+    }
+    finfo = parser->frame_info();
+    frame = sync_buf;
+    frame_size = temp_finfo.frame_size;
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Unknown frame size (scan for next syncpoint).
 
   if (sync_data < sync_size)
   {
@@ -533,13 +589,8 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
     *data += load_size;
   }
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Load next frame
-
-  const size_t sync_size = sinfo.sync_trie.sync_size();
-
   size_t pos = sinfo.min_frame_size;
-  size_t scan_size = sinfo.max_frame_size + sync_size;
+  size_t scan_size = sinfo.max_frame_size + sinfo.sync_trie.sync_size();
   if (sync_data < scan_size)
     scan_size = sync_data;
 
@@ -557,9 +608,6 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
 
   if (pos < sinfo.max_frame_size)
     return false;
-
-  /////////////////////////////////////////////////////////////////////////////
-  // No correct syncpoint found. Resync.
 
   resync();
   return sync(data, end);
