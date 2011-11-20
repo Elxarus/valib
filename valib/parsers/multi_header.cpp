@@ -23,7 +23,7 @@ MultiFrameParser::update()
 {
   size_t i;
 
-  sinfo = SyncInfo();
+  sinfo.clear();
   max_header_size = 0;
   p = 0;
   n = 0;
@@ -105,7 +105,7 @@ MultiFrameParser::release_parsers()
   p = 0;
   n = 0;
 
-  sinfo = SyncInfo();
+  sinfo.clear();
   max_header_size = 0;
 }
 
