@@ -440,15 +440,15 @@ SyncScan::scan_pos(const uint8_t *buf, size_t size, size_t &pos) const
 {
   const size_t sync_size = graph.sync_size();
 
-  if (graph.is_empty() || pos >= size)
+  if (pos > size || size - pos < sync_size)
+    // We need more data, do nothing.
+    return false;
+
+  if (graph.is_empty())
   {
     pos = size;
     return false;
   }
-
-  if (size - pos < sync_size)
-    // We need more data, do nothing.
-    return false;
 
   ///////////////////////////////////////////////////////
   // Scan using the booster
