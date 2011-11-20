@@ -197,32 +197,34 @@ public:
 
   inline bool is_sync(const uint8_t *buf) const
   {
+    // Performance trick: debug build runs MUCH faster with this.
+    const Node *g = &graph[0];
     int node = 0;
     while (true)
     {
       uint8_t test = *buf++;
-      node = graph[node].children[(test >> 7) & 1];
+      node = g[node].children[(test >> 7) & 1];
       if (node == node_allow) return true;
       if (node == node_deny) return false;
-      node = graph[node].children[(test >> 6) & 1];
+      node = g[node].children[(test >> 6) & 1];
       if (node == node_allow) return true;
       if (node == node_deny) return false;
-      node = graph[node].children[(test >> 5) & 1];
+      node = g[node].children[(test >> 5) & 1];
       if (node == node_allow) return true;
       if (node == node_deny) return false;
-      node = graph[node].children[(test >> 4) & 1];
+      node = g[node].children[(test >> 4) & 1];
       if (node == node_allow) return true;
       if (node == node_deny) return false;
-      node = graph[node].children[(test >> 3) & 1];
+      node = g[node].children[(test >> 3) & 1];
       if (node == node_allow) return true;
       if (node == node_deny) return false;
-      node = graph[node].children[(test >> 2) & 1];
+      node = g[node].children[(test >> 2) & 1];
       if (node == node_allow) return true;
       if (node == node_deny) return false;
-      node = graph[node].children[(test >> 1) & 1];
+      node = g[node].children[(test >> 1) & 1];
       if (node == node_allow) return true;
       if (node == node_deny) return false;
-      node = graph[node].children[(test >> 0) & 1];
+      node = g[node].children[(test >> 0) & 1];
       if (node == node_allow) return true;
       if (node == node_deny) return false;
     }
