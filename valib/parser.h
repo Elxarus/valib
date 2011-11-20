@@ -34,6 +34,13 @@ struct SyncInfo
   sync_trie(sync_trie_), min_frame_size(min_frame_size_), max_frame_size(max_frame_size_)
   {}
 
+  void clear()
+  {
+    sync_trie.clear();
+    min_frame_size = 0;
+    max_frame_size = 0;
+  }
+
   bool is_good() const
   {
     return min_frame_size > 0 && max_frame_size >= min_frame_size;
@@ -55,6 +62,15 @@ struct FrameInfo
     bs_type(BITSTREAM_NONE),
     spdif_type(0)
   {}
+
+  void clear()
+  {
+    spk = Speakers();
+    frame_size = 0;
+    nsamples = 0;
+    bs_type = 0;
+    spdif_type = 0;
+  }
 
   size_t bitrate() const
   {

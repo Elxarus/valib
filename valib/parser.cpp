@@ -50,8 +50,8 @@ void
 BasicFrameParser::reset()
 {
   header.zero();
-  finfo = FrameInfo();
-  sinfo = sync_info();
+  finfo.clear();
+//  sinfo.clear();
 }
 
 string
@@ -208,11 +208,11 @@ StreamBuffer::release_parser()
 {
   parser = 0;
   header_size = 0;
-  sinfo = SyncInfo();
+  sinfo.clear();
   scan.set_trie(SyncTrie());
 
   const_frame_size = 0;
-  finfo = FrameInfo();
+  finfo.clear();
 
   sync_buf = 0;
   sync_size = 0;
@@ -295,7 +295,7 @@ void
 StreamBuffer::resync()
 {
   const_frame_size = 0;
-  finfo = FrameInfo();
+  finfo.clear();
   
   if (parser)
     parser->reset();
@@ -647,7 +647,7 @@ StreamBuffer::flush()
   }
 
   // Last frame?
-  if (sync_data > parser->header_size())
+  if (in_sync && sync_data > parser->header_size())
     if (parser->next_frame(sync_buf, sync_data))
     {
       frame = sync_buf;

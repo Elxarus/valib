@@ -230,8 +230,8 @@ void
 DTSFrameParser::reset()
 {
   header.zero();
-  finfo = FrameInfo();
-  sinfo = sync_info();
+  finfo.clear();
+  sinfo.clear();
 }
 
 SyncInfo

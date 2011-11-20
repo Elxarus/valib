@@ -84,10 +84,12 @@ public:
 
   virtual bool parse_header(const uint8_t *hdr, FrameInfo *finfo = 0) const
   {
-    bool result = MPAFrameParser::parse_header(hdr, finfo);
-    if (result && finfo)
-      assert(finfo->frame_size > 0);
-    return result;
+    FrameInfo temp_finfo;
+    bool result = MPAFrameParser::parse_header(hdr, &temp_finfo);
+    if (!result) return false;
+    if (temp_finfo.frame_size == 0) return false;
+    if (finfo) *finfo = temp_finfo;
+    return true;
   }
 };
 
