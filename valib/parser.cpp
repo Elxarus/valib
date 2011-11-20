@@ -331,20 +331,33 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
   /////////////////////////////////////////////////////////////////////////////
   // Search 1st syncpoint
 
-  uint8_t *pos1, *pos2, *pos3;
-  uint8_t *pos1_max, *pos2_max, *pos3_max;
+  const size_t header_size = parser->header_size();
+  const size_t sync_size = sinfo.sync_trie.sync_size();
 
-  pos1 = sync_buf;
-  pos1_max = sync_buf + pre_frame;
+  FrameInfo temp_finfo;
+  size_t pos1, pos2, pos3;
+  size_t pos1_max, pos2_max, pos3_max;
 
-  size_t header_size = parser->header_size();
-  size_t sync_size = sinfo.sync_trie.sync_size();
+  pos1 = 0;
+  pos1_max = pre_frame;
+
   while (pos1 <= pos1_max)
   {
-    if (sync_buf + sync_data < pos1 + header_size)
+    if (pos1_max - pos1 > 0)
+    {
+      size_t scan_size = pos1_max + sync_size;
+      if (sync_data < scan_size)
+        scan_size = sync_data;
+
+      if (!scan.scan_pos(sync_buf, scan_size, pos1))
+        if (pos1 <= pos1_max)
+          return false;
+    }
+
+    if (sync_data < pos1 + header_size)
       return false;
 
-    if (!parser->parse_header(pos1))
+    if (!parser->parse_header(sync_buf + pos1, &temp_finfo))
     {
       pos1++;
       continue;
@@ -353,25 +366,33 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
     ///////////////////////////////////////////////////////////////////////////
     // Search 2nd syncpoint
 
-    pos2 = pos1 + sinfo.min_frame_size;
-    pos2_max = pos1 + sinfo.max_frame_size;
+    if (temp_finfo.frame_size)
+      pos2 = pos2_max = pos1 + temp_finfo.frame_size;
+    else
+    {
+      pos2 = pos1 + sinfo.min_frame_size;
+      pos2_max = pos1 + sinfo.max_frame_size;
+    }
 
     while (pos2 <= pos2_max)
     {
-      if (sync_buf + sync_data < pos2 + header_size)
+      if (pos2_max - pos2 > 0)
+      {
+        size_t scan_size = pos2_max + sync_size;
+        if (sync_data < scan_size)
+          scan_size = sync_data;
+
+        if (!scan.scan_pos(sync_buf, scan_size, pos2))
+          if (pos2 <= pos2_max)
+            return false;
+      }
+
+      if (sync_data < pos2 + header_size)
         return false;
 
-      if (!parser->parse_header(pos2))
-      {
-        pos2++;
-        continue;
-      }
-      if (!parser->compare_headers(pos1, pos2))
-      {
-        pos2++;
-        continue;
-      }
-      if (!parser->first_frame(pos1, pos2 - pos1))
+      if (!parser->parse_header(sync_buf + pos2, &temp_finfo) ||
+          !parser->compare_headers(sync_buf + pos1, sync_buf + pos2) ||
+          !parser->first_frame(sync_buf + pos1, pos2 - pos1))
       {
         pos2++;
         continue;
@@ -380,17 +401,33 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
       /////////////////////////////////////////////////////////////////////////
       // Search 3rd syncpoint
 
-      pos3 = pos2 + sinfo.min_frame_size;
-      pos3_max = pos2 + sinfo.max_frame_size;
+      if (temp_finfo.frame_size)
+        pos3 = pos3_max = pos2 + temp_finfo.frame_size;
+      else
+      {
+        pos3 = pos2 + sinfo.min_frame_size;
+        pos3_max = pos2 + sinfo.max_frame_size;
+      }
 
       while (pos3 <= pos3_max)
       {
-        if (sync_buf + sync_data < pos3 + header_size)
+        if (pos3_max - pos3 > 0)
+        {
+          size_t scan_size = pos3_max + sync_size;
+          if (sync_data < scan_size)
+            scan_size = sync_data;
+
+          if (!scan.scan_pos(sync_buf, scan_size, pos3))
+            if (pos3 <= pos3_max)
+              return false;
+        }
+
+        if (sync_data < pos3 + header_size)
           return false;
 
-        if (!parser->parse_header(pos3) ||
-            !parser->compare_headers(pos2, pos3) ||
-            !parser->next_frame(pos2, pos3 - pos2))
+        if (!parser->parse_header(sync_buf + pos3) ||
+            !parser->compare_headers(sync_buf + pos2, sync_buf + pos3) ||
+            !parser->next_frame(sync_buf + pos2, pos3 - pos2))
         {
           pos3++;
           continue;
@@ -399,13 +436,13 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
         ///////////////////////////////////////////////////////////////////////
         // DONE! Prepare first frame output.
 
-        parser->first_frame(pos1, pos2 - pos1);
+        parser->first_frame(sync_buf + pos1, pos2 - pos1);
         finfo = parser->frame_info();
 
         debris = sync_buf;
-        debris_size = pos1 - sync_buf;
+        debris_size = pos1;
 
-        frame = pos1;
+        frame = sync_buf + pos1;
         frame_size = pos2 - pos1;
 
         in_sync = true;
@@ -439,7 +476,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
   // Try to locate next syncpoint and return data up to the poistion found
   // as debris.
 
-  size_t pos = pos1 - sync_buf;
+  size_t pos = pos1;
   size_t scan_size = sync_data;
   if (header_size > sync_size)
     scan_size -= header_size - sync_size;
@@ -499,8 +536,7 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
   /////////////////////////////////////////////////////////////////////////////
   // Load next frame
 
-  size_t header_size = parser->header_size();
-  size_t sync_size = sinfo.sync_trie.sync_size();
+  const size_t sync_size = sinfo.sync_trie.sync_size();
 
   size_t pos = sinfo.min_frame_size;
   size_t scan_size = sinfo.max_frame_size + sync_size;
@@ -509,9 +545,6 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
 
   while (scan.scan_pos(sync_buf, scan_size, pos))
   {
-    if (sync_data < pos + header_size)
-      return false;
-
     if (parser->next_frame(sync_buf, pos))
     {
       finfo = parser->frame_info();
