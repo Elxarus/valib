@@ -508,13 +508,13 @@ BOOST_AUTO_TEST_CASE(scan_pos)
   // Empty trie and wrong pos
   pos = buf.size() + 1;
   s.scan_pos(buf.begin(), buf.size(), pos);
-  BOOST_CHECK_EQUAL(pos, buf.size());
+  BOOST_CHECK_EQUAL(pos, buf.size() + 1);
 
   // Good trie and wrong pos
   s.set_trie(t);
   pos = buf.size() + 1;
   s.scan_pos(buf.begin(), buf.size(), pos);
-  BOOST_CHECK_EQUAL(pos, buf.size());
+  BOOST_CHECK_EQUAL(pos, buf.size() + 1);
 
   // Find a syncpoint
   for (size_t buf_size = 1; buf_size < 16; buf_size++)
