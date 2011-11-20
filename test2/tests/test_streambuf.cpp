@@ -1,6 +1,18 @@
 /*
   Streambuf class test
 
+  StreamBuffer supports 3 modes of operation:
+  * Const frame size: FrameParser::sync_info2() returns equal min_frame_size
+    and max_frame_size. The fastest frame loading algorithm.
+  * Header frame size: FrameParser::parse_header() returns non-zero frame size.
+    Not too much slower than const frame size algorithm.
+  * Unknown frame size: uses scannikng to find next syncpoint. Much slower
+    than other algorithms.
+
+  To test this modes 3 mock frame parsers are used: ConstFrameSize,
+  HeaderFrameSize, UnknownFrameSize. All are based on MPAFrameParser and must
+  be fed with CBR mp2 files.
+
   Passthrough test
   ================
 
@@ -11,12 +23,10 @@
   To simulate such processing we zap the frame buffer after comparing.
 
   We also count and check number of streams and frames in a file.
- 
+
   Notes
   -----
   * we load the whole file into memory
-  * SPDIF parser uses scanning
-  * DTS parser has unknown frame size
   * DTS parser can work with both raw DTS and SPDIF/DTS, but cannot load the
     last frame of SPDIF/DTS stream (see notes for StreamBuffer class)
 */
@@ -29,6 +39,72 @@
 
 static const int seed = 958745023;
 static const int noise_size = 1*1024*1024;
+
+///////////////////////////////////////////////////////////////////////////////
+// Mock parsers
+
+class ConstFrameSize : public MPAFrameParser
+{
+public:
+  ConstFrameSize(): frame_size(0)
+  {}
+
+  virtual void reset()
+  {
+    MPAFrameParser::reset();
+    frame_size = 0;
+  }
+
+  virtual bool first_frame(const uint8_t *frame, size_t size)
+  {
+    if (!MPAFrameParser::first_frame(frame, size))
+      return false;
+
+    frame_size = size;
+    sinfo.min_frame_size = size;
+    sinfo.max_frame_size = size;
+    return true;
+  }
+
+  virtual FrameInfo frame_info() const
+  {
+    assert(finfo.frame_size == frame_size);
+    return finfo;
+  }
+
+protected:
+  size_t frame_size;
+};
+
+class HeaderFrameSize : public MPAFrameParser
+{
+public:
+  HeaderFrameSize()
+  {}
+
+  virtual bool parse_header(const uint8_t *hdr, FrameInfo *finfo = 0) const
+  {
+    bool result = MPAFrameParser::parse_header(hdr, finfo);
+    if (result && finfo)
+      assert(finfo->frame_size > 0);
+    return result;
+  }
+};
+
+class UnknownFrameSize : public MPAFrameParser
+{
+public:
+  UnknownFrameSize()
+  {}
+
+  virtual bool parse_header(const uint8_t *hdr, FrameInfo *finfo = 0) const
+  {
+    bool result = MPAFrameParser::parse_header(hdr, finfo);
+    if (result && finfo)
+      finfo->frame_size = 0;
+    return result;
+  }
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Sync test
@@ -92,6 +168,9 @@ static void sync_test(FrameParser *parser, uint8_t *buf, size_t buf_size, size_t
     BOOST_FAIL("Frame ends after the end of the reference file");
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Passthrough test
+
 static void passthrough_test(FrameParser *parser, uint8_t *buf, size_t buf_size, int file_streams, int file_frames)
 {
   // setup pointers
@@ -146,6 +225,8 @@ static void passthrough_test(FrameParser *parser, uint8_t *buf, size_t buf_size,
   if (file_streams) BOOST_CHECK_EQUAL(streams, file_streams);
   if (file_frames)  BOOST_CHECK_EQUAL(frames, file_frames);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_SUITE(stream_buffer)
 
@@ -228,20 +309,33 @@ BOOST_AUTO_TEST_CASE(null_parser)
 
 BOOST_AUTO_TEST_CASE(sync)
 {
-  UniFrameParser uni;
+  ConstFrameSize   const_frame_size;
+  HeaderFrameSize  header_frame_size;
+  UnknownFrameSize unknown_frame_size;
+  UniFrameParser   uni;
 
   const struct {
     const char *filename;
     const char *parser_name;
     FrameParser *parser;
   } parsers[] = {
-    { "a.mp2.002.mp2",   "MPAFrameParser",   &uni.mpa   },
-    { "a.ac3.005.ac3",   "AC3FrameParser",   &uni.ac3   },
-    { "a.dts.03f.dts",   "DTSFrameParser",   &uni.dts   },
-    { "a.ac3.03f.spdif", "SPDIFFrameParser", &uni.spdif },
-    { "a.mp2.002.mp2",   "UniFrameParser",   &uni },
-    { "a.ac3.005.ac3",   "UniFrameParser",   &uni },
-    { "a.dts.03f.dts",   "UniFrameParser",   &uni }
+    // Mock parsers
+    { "a.mp2.002.mp2",   "ConstFrameSize",   &const_frame_size   },
+    { "a.mp2.002.mp2",   "HeaderFrameSize",  &header_frame_size  },
+    { "a.mp2.002.mp2",   "UnknownFrameSize", &unknown_frame_size },
+    // Real parsers
+    { "a.aac.03f.adts",     "ADTSFrameParser",  &uni.adts  },
+    { "a.ac3.005.ac3",      "AC3FrameParser",   &uni.ac3   },
+    { "test.eac3.03f.eac3", "EAC3FrameParser",  &uni.eac3  },
+    { "a.dts.03f.dts",      "DTSFrameParser",   &uni.dts   },
+    { "a.mp2.002.mp2",      "MPAFrameParser",   &uni.mpa   },
+    { "a.ac3.03f.spdif",    "SPDIFFrameParser", &uni.spdif },
+    // MultiFrameParser
+    { "a.aac.03f.adts",     "UniFrameParser",   &uni },
+    { "a.ac3.005.ac3",      "UniFrameParser",   &uni },
+    { "test.eac3.03f.eac3", "UniFrameParser",   &uni },
+    { "a.dts.03f.dts",      "UniFrameParser",   &uni },
+    { "a.mp2.002.mp2",      "UniFrameParser",   &uni },
   };
 
   for (size_t iparser = 0; iparser < array_size(parsers); iparser++)
@@ -283,7 +377,10 @@ BOOST_AUTO_TEST_CASE(sync)
 
 BOOST_AUTO_TEST_CASE(file_passthrough)
 {
-  UniFrameParser uni;
+  ConstFrameSize   const_frame_size;
+  HeaderFrameSize  header_frame_size;
+  UnknownFrameSize unknown_frame_size;
+  UniFrameParser   uni;
 
   struct {
     const char *filename;
@@ -292,22 +389,32 @@ BOOST_AUTO_TEST_CASE(file_passthrough)
     int streams;
     int frames;
   } parsers[] = {
-    { "a.mp2.002.mp2",   "MPAFrameParser",   &uni.mpa, 1, 500  },
-    { "a.mp2.005.mp2",   "MPAFrameParser",   &uni.mpa, 1, 500  },
-    { "a.mp2.mix.mp2",   "MPAFrameParser",   &uni.mpa, 3, 1500 },
-    { "a.ac3.005.ac3",   "AC3FrameParser",   &uni.ac3, 1, 375  },
-    { "a.ac3.03f.ac3",   "AC3FrameParser",   &uni.ac3, 1, 375  },
-    { "a.ac3.mix.ac3",   "AC3FrameParser",   &uni.ac3, 3, 1500 },
-    { "a.dts.03f.dts",   "DTSFrameParser",   &uni.dts, 1, 1125 },
+    // Mock parsers
+    { "a.mp2.mix.mp2", "ConstFrameSize",   &const_frame_size,   3, 1500 },
+    { "a.mp2.mix.mp2", "HeaderFrameSize",  &header_frame_size,  3, 1500 },
+    { "a.mp2.mix.mp2", "UnknownFrameSize", &unknown_frame_size, 3, 1500 },
+
+    // Real parsers
+    { "a.aac.03f.adts",     "ADTSFrameParser",  &uni.adts,1, 564  },
+    { "a.ac3.005.ac3",      "AC3FrameParser",   &uni.ac3, 1, 375  },
+    { "a.ac3.03f.ac3",      "AC3FrameParser",   &uni.ac3, 1, 375  },
+    { "a.ac3.mix.ac3",      "AC3FrameParser",   &uni.ac3, 3, 1500 },
+    { "test.eac3.03f.eac3", "EAC3FrameParser",  &uni.eac3,1, 819  },
+    { "a.dts.03f.dts",      "DTSFrameParser",   &uni.dts, 1, 1125 },
     // We cannot load the last frame of SPDIF/DTS stream.
     // See note at StreamBuffer class comments.
-    { "a.dts.03f.spdif", "DTSFrameParser",   &uni.dts,   1, 1124 },
-    { "a.mp2.005.spdif", "SPDIFFrameParser", &uni.spdif, 1, 500  },
-    { "a.ac3.03f.spdif", "SPDIFFrameParser", &uni.spdif, 1, 375  },
-    { "a.dts.03f.spdif", "SPDIFFrameParser", &uni.spdif, 1, 1125 },
-    { "a.mad.mix.spdif", "SPDIFFrameParser", &uni.spdif, 7, 4375 },
-    { "a.mad.mix.mad",   "UniFrameParser",   &uni,       7, 4375 },
-    { "a.mad.mix.spdif", "UniFrameParser",   &uni,       7, 4375 },
+    { "a.dts.03f.spdif",    "DTSFrameParser",   &uni.dts, 1, 1124 },
+    { "a.mp2.002.mp2",      "MPAFrameParser",   &uni.mpa, 1, 500  },
+    { "a.mp2.005.mp2",      "MPAFrameParser",   &uni.mpa, 1, 500  },
+    { "a.mp2.mix.mp2",      "MPAFrameParser",   &uni.mpa, 3, 1500 },
+    { "a.mp2.005.spdif",    "SPDIFFrameParser", &uni.spdif, 1, 500  },
+    { "a.ac3.03f.spdif",    "SPDIFFrameParser", &uni.spdif, 1, 375  },
+    { "a.dts.03f.spdif",    "SPDIFFrameParser", &uni.spdif, 1, 1125 },
+
+    // Mixed streams
+    { "a.mad.mix.spdif",    "SPDIFFrameParser", &uni.spdif, 7, 4375 },
+    { "a.mad.mix.mad",      "UniFrameParser",   &uni,       7, 4375 },
+    { "a.mad.mix.spdif",    "UniFrameParser",   &uni,       7, 4375 },
   };
 
   for (size_t iparser = 0; iparser < array_size(parsers); iparser++)
@@ -322,12 +429,22 @@ BOOST_AUTO_TEST_CASE(file_passthrough)
 
 BOOST_AUTO_TEST_CASE(noise_passthrough)
 {
-  UniFrameParser uni;
+  ConstFrameSize   const_frame_size;
+  HeaderFrameSize  header_frame_size;
+  UnknownFrameSize unknown_frame_size;
+  UniFrameParser   uni;
 
   RawNoise noise(noise_size, seed);
-  passthrough_test(&uni.mpa,   noise, noise.size(), 0, 0);
+  // Mock parsers
+  passthrough_test(&const_frame_size,   noise, noise.size(), 0, 0);
+  passthrough_test(&header_frame_size,  noise, noise.size(), 0, 0);
+  passthrough_test(&unknown_frame_size, noise, noise.size(), 0, 0);
+  // Real parsers
+  passthrough_test(&uni.adts,  noise, noise.size(), 0, 0);
   passthrough_test(&uni.ac3,   noise, noise.size(), 0, 0);
+  passthrough_test(&uni.eac3,  noise, noise.size(), 0, 0);
   passthrough_test(&uni.dts,   noise, noise.size(), 0, 0);
+  passthrough_test(&uni.mpa,   noise, noise.size(), 0, 0);
   passthrough_test(&uni.spdif, noise, noise.size(), 0, 0);
   passthrough_test(&uni,       noise, noise.size(), 0, 0);
 }
