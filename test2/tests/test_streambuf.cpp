@@ -106,6 +106,24 @@ public:
       finfo->frame_size = 0;
     return result;
   }
+
+  virtual bool first_frame(const uint8_t *frame, size_t size)
+  {
+    FrameInfo temp_finfo;
+    bool result = MPAFrameParser::parse_header(frame, &temp_finfo);
+    if (!temp_finfo.frame_size || temp_finfo.frame_size != size)
+      return false;
+    return MPAFrameParser::first_frame(frame, size);
+  }
+
+  virtual bool next_frame(const uint8_t *frame, size_t size)
+  {
+    FrameInfo temp_finfo;
+    bool result = MPAFrameParser::parse_header(frame, &temp_finfo);
+    if (!temp_finfo.frame_size || temp_finfo.frame_size != size)
+      return false;
+    return MPAFrameParser::next_frame(frame, size);
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////

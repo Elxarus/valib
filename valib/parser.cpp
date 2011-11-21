@@ -14,10 +14,14 @@ BasicFrameParser::first_frame(const uint8_t *frame, size_t size)
   FrameInfo new_finfo;
 
   reset();
+
+  if (size < header_size())
+    return false;
+    
   if (!parse_header(frame, &new_finfo))
     return false;
 
-  if (size != new_finfo.frame_size)
+  if (new_finfo.frame_size && new_finfo.frame_size != size)
     return false;
 
   header.allocate(header_size());
@@ -33,13 +37,16 @@ BasicFrameParser::next_frame(const uint8_t *frame, size_t size)
 {
   FrameInfo new_finfo;
 
+  if (size < header_size())
+    return false;
+
   if (!compare_headers(header, frame))
     return false;
 
   if (!parse_header(frame, &new_finfo))
     return false;
 
-  if (size != new_finfo.frame_size)
+  if (new_finfo.frame_size && new_finfo.frame_size != size)
     return false;
 
   finfo = new_finfo;
