@@ -390,10 +390,6 @@
 				RelativePath=".\tests\parsers\test_multi_frame_parser.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\tests\parsers\test_multi_header.cpp"
-				>
-			</File>
 			<Filter
 				Name="aac"
 				>
