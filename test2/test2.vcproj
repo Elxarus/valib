@@ -406,10 +406,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\tests\parsers\aac\test_adts_header.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\tests\parsers\aac\test_adts_parser.cpp"
 					>
 				</File>
