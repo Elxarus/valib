@@ -40,8 +40,45 @@ static const uint8_t good[][8] =
   { 0x77, 0x0b, 0x00, 0x00, 0x59, 0x63, 0x00, 0xa1 }, //  01    10 0011   0101 1   001   101   0 0001
   { 0x77, 0x0b, 0x00, 0x00, 0x42, 0xa4, 0x00, 0xc4 }, //  10    10 0100   0100 0   010   110   0 0100
   { 0x77, 0x0b, 0x00, 0x00, 0x43, 0x25, 0x00, 0xe1 }, //  00    10 0101   0100 0   011   111   0 0001
-};                                                               
-                                                            
+};
+
+static const Speakers good_spk[] =
+{
+  Speakers(FORMAT_AC3, MODE_2_0, 48000),
+  Speakers(FORMAT_AC3, MODE_1_0, 22050),
+  Speakers(FORMAT_AC3, MODE_2_0,  8000),
+  Speakers(FORMAT_AC3, MODE_3_0,  6000),
+  Speakers(FORMAT_AC3, MODE_2_1, 44100),
+  Speakers(FORMAT_AC3, MODE_3_1, 32000),
+  Speakers(FORMAT_AC3, MODE_2_2, 24000),
+  Speakers(FORMAT_AC3, MODE_3_2, 11025),
+  Speakers(FORMAT_AC3, MODE_2_0 | CH_MASK_LFE,  4000),
+  Speakers(FORMAT_AC3, MODE_1_0 | CH_MASK_LFE, 48000),
+  Speakers(FORMAT_AC3, MODE_2_0 | CH_MASK_LFE, 44100),
+  Speakers(FORMAT_AC3, MODE_3_0 | CH_MASK_LFE, 16000),
+  Speakers(FORMAT_AC3, MODE_2_1 | CH_MASK_LFE, 12000),
+  Speakers(FORMAT_AC3, MODE_3_1 | CH_MASK_LFE,  5512),
+  Speakers(FORMAT_AC3, MODE_2_2 | CH_MASK_LFE, 32000),
+  Speakers(FORMAT_AC3, MODE_3_2 | CH_MASK_LFE, 48000),
+
+  Speakers(FORMAT_AC3, MODE_2_0, 48000),
+  Speakers(FORMAT_AC3, MODE_1_0, 22050),
+  Speakers(FORMAT_AC3, MODE_2_0,  8000),
+  Speakers(FORMAT_AC3, MODE_3_0,  6000),
+  Speakers(FORMAT_AC3, MODE_2_1, 44100),
+  Speakers(FORMAT_AC3, MODE_3_1, 32000),
+  Speakers(FORMAT_AC3, MODE_2_2, 24000),
+  Speakers(FORMAT_AC3, MODE_3_2, 11025),
+  Speakers(FORMAT_AC3, MODE_2_0 | CH_MASK_LFE,  4000),
+  Speakers(FORMAT_AC3, MODE_1_0 | CH_MASK_LFE, 48000),
+  Speakers(FORMAT_AC3, MODE_2_0 | CH_MASK_LFE, 44100),
+  Speakers(FORMAT_AC3, MODE_3_0 | CH_MASK_LFE, 16000),
+  Speakers(FORMAT_AC3, MODE_2_1 | CH_MASK_LFE, 12000),
+  Speakers(FORMAT_AC3, MODE_3_1 | CH_MASK_LFE,  5512),
+  Speakers(FORMAT_AC3, MODE_2_2 | CH_MASK_LFE, 32000),
+  Speakers(FORMAT_AC3, MODE_3_2 | CH_MASK_LFE, 48000),
+};
+
 static const uint8_t bad[][8] =
 {
   { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, // null header
@@ -84,12 +121,16 @@ BOOST_AUTO_TEST_CASE(sync_info)
 //    BOOST_CHECK(!sinfo.sync_trie.is_sync(bad[i]));
 }
 
-BOOST_AUTO_TEST_CASE(check_header)
+BOOST_AUTO_TEST_CASE(parse_header)
 {
+  FrameInfo finfo;
   AC3FrameParser parser;
 
   for (int i = 0; i < array_size(good); i++)
-    BOOST_CHECK_MESSAGE(parser.parse_header(good[i]), "good header N" << i);
+  {
+    BOOST_CHECK_MESSAGE(parser.parse_header(good[i], &finfo), "good header N" << i);
+    BOOST_CHECK(good_spk[i] == finfo.spk);
+  }
 
   for (int i = 0; i < array_size(bad); i++)
     BOOST_CHECK_MESSAGE(!parser.parse_header(bad[i]), "bad header N" << i);
