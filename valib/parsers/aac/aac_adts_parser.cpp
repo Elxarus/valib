@@ -1,5 +1,4 @@
 #include <sstream>
-#include "aac_adts_header.h"
 #include "aac_adts_parser.h"
 
 static const int sample_rates[] =

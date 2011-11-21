@@ -63,12 +63,16 @@ BOOST_AUTO_TEST_CASE(sync_info)
     BOOST_CHECK(!sinfo.sync_trie.is_sync(bad[i]));
 }
 
-BOOST_AUTO_TEST_CASE(check_header)
+BOOST_AUTO_TEST_CASE(parse_header)
 {
+  FrameInfo finfo;
   ADTSFrameParser parser;
 
   for (int i = 0; i < array_size(good); i++)
-    BOOST_CHECK(parser.parse_header(good[i]));
+  {
+    BOOST_CHECK(parser.parse_header(good[i], &finfo));
+    BOOST_CHECK(good_spk[i] == finfo.spk);
+  }
 
   for (int i = 0; i < array_size(bad); i++)
     BOOST_CHECK(!parser.parse_header(bad[i]));
