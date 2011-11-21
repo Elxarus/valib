@@ -27,7 +27,6 @@ static const char *profile_str[] =
 
 ADTSParser::ADTSParser()
 {
-  header.allocate(adts_header.header_size());
   reset();
 }
 
@@ -52,7 +51,7 @@ ADTSParser::reset()
 {
   out_spk = spk_unknown;
   new_stream_flag = false;
-  header.zero();
+  frame_parser.reset();
   frame_length = 0;
 }
 
@@ -65,7 +64,7 @@ ADTSParser::process(Chunk &in, Chunk &out)
   size_t   size  = in.size;
   in.clear();
 
-  if (size < adts_header.header_size())
+  if (size < frame_parser.header_size())
     return false;
 
   /////////////////////////////////////////////////////////
@@ -82,6 +81,12 @@ ADTSParser::process(Chunk &in, Chunk &out)
     sampling_frequency_index = (frame[2] >> 2) & 0xf;
     channel_configuration = ((frame[2] & 1) << 2) | (frame[3] >> 6);
     frame_length = ((frame[3] & 3) << 11) | (frame[4] << 3) | (frame[5] >> 5);
+    if (size < frame_length)
+    {
+      // resync
+      reset();
+      return false;
+    }
   }
   else
     return false;
@@ -89,19 +94,29 @@ ADTSParser::process(Chunk &in, Chunk &out)
   /////////////////////////////////////////////////////////
   // Format change
 
-  if (adts_header.compare_headers(frame, header))
-    new_stream_flag = false;
-  else
+  if (frame_parser.in_sync())
   {
-    new_stream_flag = true;
-    memcpy(header, frame, adts_header.header_size());
+    if (frame_parser.next_frame(frame, frame_length))
+      new_stream_flag = false;
+    else
+      reset();
+  }
 
-    uint8_t audio_specific_config[2];
-    audio_specific_config[0] = ((profile+1) << 3) | (sampling_frequency_index >> 1);
-    audio_specific_config[1] = ((sampling_frequency_index & 1) << 7) | (channel_configuration << 3);
+  if (!frame_parser.in_sync())
+  {
+    if (frame_parser.first_frame(frame, frame_length))
+    {
+      new_stream_flag = true;
 
-    out_spk = Speakers(FORMAT_AAC_FRAME, modes[channel_configuration], sample_rates[sampling_frequency_index]);
-    out_spk.set_format_data(audio_specific_config, 2);
+      uint8_t audio_specific_config[2];
+      audio_specific_config[0] = ((profile+1) << 3) | (sampling_frequency_index >> 1);
+      audio_specific_config[1] = ((sampling_frequency_index & 1) << 7) | (channel_configuration << 3);
+
+      out_spk = Speakers(FORMAT_AAC_FRAME, modes[channel_configuration], sample_rates[sampling_frequency_index]);
+      out_spk.set_format_data(audio_specific_config, 2);
+    }
+    else
+      return false;
   }
 
   /////////////////////////////////////////////////////////

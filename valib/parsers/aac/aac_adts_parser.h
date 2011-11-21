@@ -3,6 +3,7 @@
 
 #include "../../buffer.h"
 #include "../../filter.h"
+#include "aac_adts_header.h"
 
 class ADTSParser : public SimpleFilter
 {
@@ -29,9 +30,9 @@ public:
 protected:
   Speakers out_spk;
   bool new_stream_flag;
-  Rawdata header;
+  ADTSFrameParser frame_parser;
 
-  int frame_length;
+  size_t frame_length;
   int protection_absent;
   int profile;
   int sampling_frequency_index;
