@@ -2,9 +2,7 @@
 #define VALIB_SPDIF_HEADER_H
 
 #include "../../parser.h"
-#include "../ac3/ac3_header.h"
-#include "../dts/dts_header.h"
-#include "../mpa/mpa_header.h"
+#include "spdifable_header.h"
 
 /////////////////////////////////////////////////////////
 // Max frame size for SPDIF 8192
@@ -37,10 +35,7 @@ public:
   virtual bool      compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const;
 
 protected:
-  AC3FrameParser ac3_parser;
-  DTSFrameParser dts_parser;
-  MPAFrameParser mpa_parser;
-  inline const FrameParser *find_parser(int spdif_type) const;
+  SpdifableFrameParser spdifable_parser;
 
   struct spdif_header_s
   {

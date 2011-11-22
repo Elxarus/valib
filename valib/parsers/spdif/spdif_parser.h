@@ -8,9 +8,7 @@
 
 #include "../../filter.h"
 #include "../../parser.h"
-#include "../mpa/mpa_header.h"
-#include "../ac3/ac3_header.h"
-#include "../dts/dts_header.h"
+#include "spdifable_header.h"
 
 /**************************************************************************//**
   \class SPDIFParser
@@ -81,10 +79,7 @@ public:
   string info() const;
 
 protected:
-  AC3FrameParser ac3_parser;
-  DTSFrameParser dts_parser;
-  MPAFrameParser mpa_parser;
-  inline FrameParser *find_parser(int spdif_type);
+  SpdifableFrameParser spdifable_parser;
 
   bool big_endian;
   FrameInfo finfo;

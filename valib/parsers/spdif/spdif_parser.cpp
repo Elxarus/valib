@@ -19,27 +19,6 @@ SPDIFParser::SPDIFParser(bool big_endian_)
   reset();
 }
 
-FrameParser *
-SPDIFParser::find_parser(int spdif_type)
-{
-  switch (spdif_type)
-  {
-    // AC3
-    case 1: return &ac3_parser;
-    // MPA
-    case 4:
-    case 5:
-    case 8:
-    case 9: return &mpa_parser;
-    // DTS
-    case 11:
-    case 12:
-    case 13: return &dts_parser;
-    // Unknown
-    default: return 0;
-  }
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // SimpleFilter overrides
 
@@ -59,6 +38,7 @@ SPDIFParser::init()
 void 
 SPDIFParser::reset()
 {
+  spdifable_parser.reset();
   finfo.clear();
   new_stream_flag = false;
 }
@@ -73,7 +53,7 @@ SPDIFParser::process(Chunk &in, Chunk &out)
   in.clear();
 
   // DTS
-  FrameParser *parser = &dts_parser;
+  FrameParser *parser = &spdifable_parser.dts;
   uint8_t *payload = frame;
   size_t payload_size = size;
 
@@ -88,7 +68,7 @@ SPDIFParser::process(Chunk &in, Chunk &out)
     const spdif_header_s *spdif_header = (spdif_header_s *)frame;
     payload = frame + sizeof(spdif_header_s);
     payload_size = (spdif_header->len + 7) / 8;
-    parser = find_parser(spdif_header->type);
+    parser = spdifable_parser.find_parser(spdif_header->type);
     if (!parser || size < sizeof(spdif_header_s) + payload_size)
       return false;
   }
