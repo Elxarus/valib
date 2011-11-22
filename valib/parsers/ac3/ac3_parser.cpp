@@ -40,7 +40,6 @@ AC3Parser::AC3Parser()
   // allocate buffers
   samples.allocate(AC3_NCHANNELS, AC3_FRAME_SAMPLES);
   delay.allocate(AC3_NCHANNELS, AC3_BLOCK_SAMPLES);
-  header.allocate(ac3_header.header_size());
 
   reset();
 }
@@ -67,13 +66,12 @@ AC3Parser::reset()
   memset((AC3Info*)this, 0, sizeof(AC3Info));
   memset((AC3FrameState*)this, 0, sizeof(AC3FrameState));
 
+  frame_parser.reset();
+  finfo.clear(); 
   out_spk = spk_unknown;
   frame = 0;
   frame_size = 0;
-  bs_type = 0;
   new_stream_flag = false;
-  header.zero();
-  hinfo.clear();
 
   block = 0;
   samples.zero();
@@ -84,29 +82,44 @@ AC3Parser::reset()
 bool
 AC3Parser::process(Chunk &in, Chunk &out)
 {
-  bool sync = in.sync;
+  bool    sync = in.sync;
   vtime_t time = in.time;
-  in.set_sync(false, 0);
-
-  if (in.size == 0)
-    return false;
-
-  if (!parse_frame(in.rawdata, in.size))
-  {
-    in.clear();
-    errors++;
-    return false;
-  }
-
-  if (ac3_header.compare_headers(in.rawdata, header))
-    new_stream_flag = false;
-  else
-  {
-    new_stream_flag = true;
-    memcpy(header, in.rawdata, ac3_header.header_size());
-  }
-
+  frame = in.rawdata;
+  frame_size = in.size;
   in.clear();
+
+  if (frame_size < frame_parser.header_size())
+    return false;
+
+  if (frame_parser.in_sync())
+  {
+    if (frame_parser.next_frame(frame, frame_size))
+      new_stream_flag = false;
+    else
+      reset();
+  }
+
+  if (!frame_parser.in_sync())
+  {
+    if (frame_parser.first_frame(frame, frame_size))
+    {
+      out_spk = frame_parser.frame_info().spk;
+      out_spk.format = FORMAT_LINEAR;
+      new_stream_flag = true;
+    }
+    else
+      return false;
+  }
+
+  finfo = frame_parser.frame_info();
+
+  if (finfo.bs_type != BITSTREAM_8)
+    if (bs_convert(frame, frame_size, finfo.bs_type, frame, BITSTREAM_8) == 0)
+      return false;
+
+  if (!parse_frame())
+    return false;
+
   out.set_linear(samples, AC3_FRAME_SAMPLES, sync, time);
   frames++;
   return true;
@@ -116,13 +129,13 @@ string
 AC3Parser::info() const 
 {
   using std::endl;
-  int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * hinfo.spk.sample_rate / 512000;
-  int cpl_freq = cplinu? cplstrtmant * hinfo.spk.sample_rate / 512000: max_freq;
+  int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * finfo.spk.sample_rate / 512000;
+  int cpl_freq = cplinu? cplstrtmant * finfo.spk.sample_rate / 512000: max_freq;
 
   std::stringstream result;
-  result << "Format: " << hinfo.spk.print() << endl;
+  result << "Format: " << finfo.spk.print() << endl;
   result << "Bitrate: " << bitrate << "kbps" << endl;
-  result << "Stream: " << (bs_type == BITSTREAM_8? "byte stream": "16bit low endian") << endl;
+  result << "Stream: " << (finfo.bs_type == BITSTREAM_8? "byte stream": "16bit low endian") << endl;
   result << "Frame size: " << frame_size << endl;
   result << "Samples: " << AC3_FRAME_SAMPLES << endl;
   result << "bsid: " << bsid << endl;
@@ -137,27 +150,8 @@ AC3Parser::info() const
 // AC3 parse
 
 bool
-AC3Parser::parse_frame(uint8_t *_frame, size_t _size)
+AC3Parser::parse_frame()
 {
-  if (_size < ac3_header.header_size())
-    return false;
-
-  if (!ac3_header.parse_header(_frame, &hinfo))
-    return false;
-
-  if (hinfo.frame_size > _size)
-    return false;
-
-  out_spk = hinfo.spk;
-  out_spk.format = FORMAT_LINEAR;
-  frame = _frame;
-  frame_size = hinfo.frame_size;
-  bs_type = hinfo.bs_type;
-
-  if (bs_type != BITSTREAM_8)
-    if (bs_convert(frame, _size, bs_type, frame, BITSTREAM_8) == 0)
-      return false;
-
   if (do_crc)
     if (!crc_check())
       return false;
