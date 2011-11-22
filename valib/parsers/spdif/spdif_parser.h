@@ -8,6 +8,9 @@
 
 #include "../../filter.h"
 #include "../../parser.h"
+#include "../mpa/mpa_header.h"
+#include "../ac3/ac3_header.h"
+#include "../dts/dts_header.h"
 
 /**************************************************************************//**
   \class SPDIFParser
@@ -58,7 +61,7 @@ public:
   bool get_big_endian() const           { return big_endian;        }
   void set_big_endian(bool _big_endian) { big_endian = _big_endian; }
 
-  HeaderInfo header_info() const        { return hinfo; }
+  FrameInfo frame_info() const          { return finfo; }
 
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
@@ -73,15 +76,18 @@ public:
   { return new_stream_flag; }
 
   Speakers get_output() const
-  { return hinfo.spk; }
+  { return finfo.spk; }
 
   string info() const;
 
 protected:
-  bool big_endian;
+  AC3FrameParser ac3_parser;
+  DTSFrameParser dts_parser;
+  MPAFrameParser mpa_parser;
+  inline FrameParser *find_parser(int spdif_type);
 
-  Rawdata     header;
-  HeaderInfo  hinfo;
+  bool big_endian;
+  FrameInfo finfo;
   bool new_stream_flag;
 
   struct spdif_header_s
