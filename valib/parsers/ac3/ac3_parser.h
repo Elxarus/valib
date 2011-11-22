@@ -7,6 +7,7 @@
 #include "../../parser.h"
 #include "ac3_defs.h"
 #include "ac3_imdct.h"
+#include "ac3_header.h"
 
 // todo: decode_block() for per-block decode
 
@@ -178,14 +179,14 @@ public:
   /////////////////////////////////////////////////////////
   // AC3 parse
 
+  AC3FrameParser frame_parser;
+  FrameInfo finfo;
+
   Speakers  out_spk;    // output format
+  bool      new_stream_flag;
+
   uint8_t  *frame;      // frame data
   size_t    frame_size; // frame size
-  int       bs_type;    // bitstream type
-  bool      new_stream_flag;
-  Rawdata   header;
-  HeaderInfo hinfo;
-
 
   SampleBuf samples;    // samples buffer
   SampleBuf delay;      // delayed samples buffer
@@ -196,7 +197,7 @@ public:
 
   int block;
 
-  bool parse_frame(uint8_t *frame, size_t size);
+  bool parse_frame();
   bool crc_check();
   bool decode_block();
   bool parse_header();

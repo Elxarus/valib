@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(get_chunk)
         streams++;
         BOOST_CHECK_EQUAL(f.get_output().format, FORMAT_AC3);
       }
-      if (!ac3_header.parse_header(frame.rawdata))
+      if (!frame_parser.parse_header(frame.rawdata))
         BOOST_FAIL("Not a frame output");
       frames++;
     }
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(get_chunk)
       streams++;
       BOOST_CHECK_EQUAL(f.get_output().format, FORMAT_AC3);
     }
-    if (!ac3_header.parse_header(frame.rawdata))
+    if (!frame_parser.parse_header(frame.rawdata))
       BOOST_FAIL("Not a frame output");
     frames++;
   }
