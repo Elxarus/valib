@@ -1,30 +1,6 @@
 #include "spdif_parser.h"
 
 #include "../../bitstream.h"
-#include "../mpa/mpa_header.h"
-#include "../ac3/ac3_header.h"
-#include "../dts/dts_header.h"
-
-
-inline static const HeaderParser *find_parser(int spdif_type)
-{
-  switch (spdif_type)
-  {
-    // AC3
-    case 1: return &ac3_header;
-    // MPA
-    case 4:
-    case 5:
-    case 8:
-    case 9: return &mpa_header;
-    // DTS
-    case 11:
-    case 12:
-    case 13: return &dts_header;
-    // Unknown
-    default: return 0;
-  }
-}
 
 inline static const int to_big_endian(int bs_type)
 {
@@ -37,18 +13,31 @@ inline static const int to_big_endian(int bs_type)
   }
 }
 
-
 SPDIFParser::SPDIFParser(bool big_endian_)
 {
-  size_t header_size[] = {
-    ac3_header.header_size(),
-    dts_header.header_size(),
-    mpa_header.header_size()
-  };
-
   big_endian = big_endian_;
-  header.allocate(*std::max_element(header_size, header_size + array_size(header_size)));
   reset();
+}
+
+FrameParser *
+SPDIFParser::find_parser(int spdif_type)
+{
+  switch (spdif_type)
+  {
+    // AC3
+    case 1: return &ac3_parser;
+    // MPA
+    case 4:
+    case 5:
+    case 8:
+    case 9: return &mpa_parser;
+    // DTS
+    case 11:
+    case 12:
+    case 13: return &dts_parser;
+    // Unknown
+    default: return 0;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,8 +59,7 @@ SPDIFParser::init()
 void 
 SPDIFParser::reset()
 {
-  hinfo.clear();
-  header.zero();
+  finfo.clear();
   new_stream_flag = false;
 }
 
@@ -85,11 +73,11 @@ SPDIFParser::process(Chunk &in, Chunk &out)
   in.clear();
 
   // DTS
-  const HeaderParser *parser = &dts_header;
+  FrameParser *parser = &dts_parser;
   uint8_t *payload = frame;
   size_t payload_size = size;
 
-  if (size < 16)
+  if (size < sizeof(spdif_header_s))
     return false;
 
   if ((frame[0] == 0x00) && (frame[1] == 0x00) && (frame[2]  == 0x00) && (frame[3]  == 0x00) &&
@@ -108,27 +96,31 @@ SPDIFParser::process(Chunk &in, Chunk &out)
   if (payload_size < parser->header_size())
     return false;
 
-  if (parser->parse_header(payload, &hinfo))
+  if (parser->in_sync())
   {
-    if (parser->compare_headers(payload, header))
+    if (parser->next_frame(payload, payload_size))
       new_stream_flag = false;
     else
-    {
-      memcpy(header.begin(), payload, parser->header_size());
-      new_stream_flag = true;
-    }
-
-    if (big_endian)
-    {
-      bs_convert(payload, payload_size, hinfo.bs_type, payload, to_big_endian(hinfo.bs_type));
-      hinfo.bs_type = to_big_endian(hinfo.bs_type);
-    }
-
-    out.set_rawdata(payload, payload_size, sync, time);
-    return true;
+      parser->reset();
   }
 
-  return false;
+  if (!parser->in_sync())
+  {
+    if (parser->first_frame(payload, payload_size))
+      new_stream_flag = true;
+    else
+      return false;
+  }
+
+  finfo = parser->frame_info();
+  if (big_endian)
+  {
+    bs_convert(payload, payload_size, finfo.bs_type, payload, to_big_endian(finfo.bs_type));
+    finfo.bs_type = to_big_endian(finfo.bs_type);
+  }
+
+  out.set_rawdata(payload, payload_size, sync, time);
+  return true;
 }
 
 string
