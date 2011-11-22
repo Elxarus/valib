@@ -442,6 +442,10 @@
 				Name="spdif"
 				>
 				<File
+					RelativePath=".\tests\parsers\spdif\test_spdif_frame_parser.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\parsers\spdif\test_spdif_parser.cpp"
 					>
 				</File>
