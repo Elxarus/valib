@@ -5,7 +5,7 @@
 #include "../../bitstream.h"
 #include "spdifable_header.h"
 
-#define MAX_SPDIF_FRAME_SIZE 8192
+static const size_t max_spdif_frame_size = 8192;
 
 
 inline bool is_14bit(int bs_type)
@@ -20,9 +20,7 @@ const size_t SPDIFWrapper::header_size = sizeof(SPDIFWrapper::spdif_header_s);
 SPDIFWrapper::SPDIFWrapper(int _dts_mode, int _dts_conv)
 :dts_mode(_dts_mode), dts_conv(_dts_conv)
 {
-  buf.allocate(MAX_SPDIF_FRAME_SIZE);
-  parser = spdifable_header();
-  header.allocate(parser->header_size());
+  buf.allocate(max_spdif_frame_size);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,7 +29,7 @@ SPDIFWrapper::SPDIFWrapper(int _dts_mode, int _dts_conv)
 bool
 SPDIFWrapper::can_open(Speakers spk) const
 {
-  return parser->can_parse(spk.format);
+  return parser.can_parse(spk.format);
 }
 
 bool
@@ -44,11 +42,10 @@ SPDIFWrapper::init()
 void 
 SPDIFWrapper::reset()
 {
+  parser.reset();
   out_spk = spk_unknown;
   passthrough = false;
   new_stream_flag = false;
-  hinfo.clear();
-  header.zero();
 }
 
 bool
@@ -68,55 +65,62 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
   /////////////////////////////////////////////////////////
   // Determine frame's characteristics
 
-  if (size < parser->header_size())
+  if (size < parser.header_size())
     return false;
 
-  if (!parser->parse_header(frame, &hinfo))
-    // unknown format
-    return false;
+  if (parser.in_sync())
+  {
+    if (parser.next_frame(frame, size))
+      new_stream_flag = false;
+    else
+      parser.reset();
+  }
 
-  if (!hinfo.spdif_type)
+  if (!parser.in_sync())
+  {
+    if (parser.first_frame(frame, size))
+    {
+      out_spk = parser.frame_info().spk;
+      out_spk.format = FORMAT_SPDIF;
+      new_stream_flag = true;
+    }
+    else
+      return false;
+  }
+
+  finfo = parser.frame_info();
+  if (finfo.spdif_type == 0)
   {
     // passthrough non-spdifable format
     passthrough = true;
     new_stream_flag = true;
-    out_spk = hinfo.spk;
+    out_spk = finfo.spk;
     return true;
-  }
-
-  if (parser->compare_headers(frame, header))
-    new_stream_flag = false;
-  else
-  {
-    memcpy(header.begin(), frame, parser->header_size());
-    new_stream_flag = true;
-    out_spk = hinfo.spk;
-    out_spk.format = FORMAT_SPDIF;
   }
 
   /////////////////////////////////////////////////////////
   // SPDIF frame size
 
-  size_t spdif_frame_size = hinfo.nsamples * 4;
-  if (spdif_frame_size > MAX_SPDIF_FRAME_SIZE)
+  size_t spdif_frame_size = finfo.nsamples * 4;
+  if (spdif_frame_size > max_spdif_frame_size)
   {
     // impossible to send over spdif
     // passthrough non-spdifable data
     passthrough = true;
     new_stream_flag = true;
-    out_spk = hinfo.spk;
+    out_spk = finfo.spk;
     return true;
   }
 
   /////////////////////////////////////////////////////////
   // Determine output bitstream type and header usage
 
-  if (hinfo.spk.format == FORMAT_DTS)
+  if (finfo.spk.format == FORMAT_DTS)
   {
     // DTS frame may grow if conversion to 14bit stream format is used
-    bool frame_grows = (dts_conv == DTS_CONV_14BIT) && !is_14bit(hinfo.bs_type);
+    bool frame_grows = (dts_conv == DTS_CONV_14BIT) && !is_14bit(finfo.bs_type);
     // DTS frame may shrink if conversion to 16bit stream format is used
-    bool frame_shrinks = (dts_conv == DTS_CONV_16BIT) && is_14bit(hinfo.bs_type);
+    bool frame_shrinks = (dts_conv == DTS_CONV_16BIT) && is_14bit(finfo.bs_type);
 
     switch (dts_mode)
     {
@@ -127,14 +131,14 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       else if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size - header_size))
         spdif_bs = BITSTREAM_16LE;
       else if (size <= spdif_frame_size - header_size)
-        spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
+        spdif_bs = is_14bit(finfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
       {
         // impossible to wrap
         // passthrough non-spdifable data
         passthrough = true;
         new_stream_flag = true;
-        out_spk = hinfo.spk;
+        out_spk = finfo.spk;
         return true;
       }
       break;
@@ -146,14 +150,14 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       else if (frame_shrinks && (size * 7 / 8 <= spdif_frame_size))
         spdif_bs = BITSTREAM_16LE;
       else if (size <= spdif_frame_size)
-        spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
+        spdif_bs = is_14bit(finfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       else
       {
         // impossible to send over spdif
         // passthrough non-spdifable data
         passthrough = true;
         new_stream_flag = true;
-        out_spk = hinfo.spk;
+        out_spk = finfo.spk;
         return true;
       }
       break;
@@ -183,12 +187,12 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       else if (size <= spdif_frame_size - header_size)
       {
         use_header = true;
-        spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
+        spdif_bs = is_14bit(finfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       }
       else if (size <= spdif_frame_size)
       {
         use_header = false;
-        spdif_bs = is_14bit(hinfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
+        spdif_bs = is_14bit(finfo.bs_type)? BITSTREAM_14LE: BITSTREAM_16LE;
       }
       else
       {
@@ -196,7 +200,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
         // passthrough non-spdifable data
         passthrough = true;
         new_stream_flag = true;
-        out_spk = hinfo.spk;
+        out_spk = finfo.spk;
         return true;
       }
       break;
@@ -215,7 +219,7 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       // passthrough non-spdifable data
       passthrough = true;
       new_stream_flag = true;
-      out_spk = hinfo.spk;
+      out_spk = finfo.spk;
       return true;
     }
   }
@@ -226,8 +230,8 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
   size_t payload_size;
   if (use_header)
   {
-    payload_size = bs_convert(frame, size, hinfo.bs_type, buf + header_size, spdif_bs);
-    assert(payload_size < MAX_SPDIF_FRAME_SIZE - header_size);
+    payload_size = bs_convert(frame, size, finfo.bs_type, buf + header_size, spdif_bs);
+    assert(payload_size < max_spdif_frame_size - header_size);
     memset(buf + header_size + payload_size, 0, spdif_frame_size - header_size - payload_size);
 
     // We must correct DTS synword when converting to 14bit
@@ -235,12 +239,12 @@ SPDIFWrapper::process(Chunk &in, Chunk &out)
       buf[header_size + 3] = 0xe8;
 
     spdif_header_s *header = (spdif_header_s *)buf.begin();
-    header->set(hinfo.spdif_type, (uint16_t)payload_size * 8);
+    header->set(finfo.spdif_type, (uint16_t)payload_size * 8);
   }
   else
   {
-    payload_size = bs_convert(frame, size, hinfo.bs_type, buf, spdif_bs);
-    assert(payload_size < MAX_SPDIF_FRAME_SIZE);
+    payload_size = bs_convert(frame, size, finfo.bs_type, buf, spdif_bs);
+    assert(payload_size < max_spdif_frame_size);
     memset(buf + payload_size, 0, spdif_frame_size - payload_size);
 
     // We must correct DTS synword when converting to 14bit
