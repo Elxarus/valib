@@ -18,27 +18,6 @@ inline static const int is_spdif_bitstream(int bs_type)
   return false;
 }
 
-const FrameParser *
-SPDIFFrameParser::find_parser(int spdif_type) const
-{
-  switch (spdif_type)
-  {
-    // AC3
-    case 1: return &ac3_parser;
-    // MPA
-    case 4:
-    case 5:
-    case 8:
-    case 9: return &mpa_parser;
-    // DTS
-    case 11:
-    case 12:
-    case 13: return &dts_parser;
-    // Unknown
-    default: return 0;
-  }
-}
-
 bool
 SPDIFFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
 {
@@ -53,19 +32,19 @@ SPDIFFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
     // Parse SPDIF header
     const spdif_header_s *spdif_header = (spdif_header_s *)hdr;
     payload = hdr + sizeof(spdif_header_s);
-    parser = find_parser(spdif_header->type);
+    parser = spdifable_parser.find_parser(spdif_header->type);
     if (!parser)
       return false;
   }
   // DTS 16 bits low endian bitstream
   else if (hdr[0] == 0xfe && hdr[1] == 0x7f &&
            hdr[2] == 0x01 && hdr[3] == 0x80)
-    parser = &dts_parser;
+    parser = &spdifable_parser.dts;
   // DTS 14 bits low endian bitstream
   else if (hdr[0] == 0xff && hdr[1] == 0x1f &&
            hdr[2] == 0x00 && hdr[3] == 0xe8 &&
           (hdr[4] & 0xf0) == 0xf0 && hdr[5] == 0x07)
-    parser = &dts_parser;
+    parser = &spdifable_parser.dts;
   else
     return false;
 
@@ -101,8 +80,8 @@ SPDIFFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) cons
       (hdr2[4] == 0x00) && (hdr2[5] == 0x00) && (hdr2[6]  == 0x00) && (hdr2[7]  == 0x00) &&
       (hdr2[8] == 0x72) && (hdr2[9] == 0xf8) && (hdr2[10] == 0x1f) && (hdr2[11] == 0x4e))
   {
-    const FrameParser *parser1 = find_parser(((spdif_header_s *)hdr1)->type);
-    const FrameParser *parser2 = find_parser(((spdif_header_s *)hdr2)->type);
+    const FrameParser *parser1 = spdifable_parser.find_parser(((spdif_header_s *)hdr1)->type);
+    const FrameParser *parser2 = spdifable_parser.find_parser(((spdif_header_s *)hdr2)->type);
     return parser1 && parser1 == parser2 && parser1->compare_headers(
       hdr1 + sizeof(spdif_header_s),
       hdr2 + sizeof(spdif_header_s));
@@ -112,7 +91,7 @@ SPDIFFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) cons
            hdr1[2] == 0x01 && hdr1[3] == 0x80 &&
            hdr2[0] == 0xfe && hdr2[1] == 0x7f &&
            hdr2[2] == 0x01 && hdr2[3] == 0x80)
-    return dts_parser.compare_headers(hdr1, hdr2);
+    return spdifable_parser.dts.compare_headers(hdr1, hdr2);
   // DTS 14 bits low endian bitstream
   else if (hdr1[0] == 0xff && hdr1[1] == 0x1f &&
            hdr1[2] == 0x00 && hdr1[3] == 0xe8 &&
@@ -120,7 +99,7 @@ SPDIFFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) cons
            hdr2[0] == 0xff && hdr2[1] == 0x1f &&
            hdr2[2] == 0x00 && hdr2[3] == 0xe8 &&
           (hdr2[4] & 0xf0) == 0xf0 && hdr2[5] == 0x07)
-    return dts_parser.compare_headers(hdr1, hdr2);
+    return spdifable_parser.dts.compare_headers(hdr1, hdr2);
   else
     return false;
 }
