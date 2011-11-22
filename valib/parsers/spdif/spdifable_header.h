@@ -58,9 +58,4 @@ public:
   }
 };
 
-///////////////////////////////////////////////////////////////////////////////
-
-#include "../../parser.h"
-const HeaderParser *spdifable_header();
-
 #endif
