@@ -7,6 +7,17 @@ const SyncTrie SPDIFFrameParser::sync_trie =
   (SyncTrie(0, 32) + SyncTrie(0, 32) + SyncTrie(0x72f81f4e, 32)) |
   SyncTrie(0xfe7f0180, 32) | SyncTrie(0xff1f00e8, 32);
 
+inline static const int is_spdif_bitstream(int bs_type)
+{
+  switch (bs_type)
+  {
+    case BITSTREAM_16LE:
+    case BITSTREAM_14LE:
+      return true;
+  }
+  return false;
+}
+
 const FrameParser *
 SPDIFFrameParser::find_parser(int spdif_type) const
 {
@@ -62,6 +73,9 @@ SPDIFFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
   if (!parser->parse_header(payload, &subinfo))
     return false;
 
+  if (!is_spdif_bitstream(subinfo.bs_type))
+    return false;
+
   // SPDIF frame size equals to number of samples in contained frame
   // multiplied by 4 (see Spdifer class for more details)
 
@@ -87,9 +101,9 @@ SPDIFFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) cons
       (hdr2[4] == 0x00) && (hdr2[5] == 0x00) && (hdr2[6]  == 0x00) && (hdr2[7]  == 0x00) &&
       (hdr2[8] == 0x72) && (hdr2[9] == 0xf8) && (hdr2[10] == 0x1f) && (hdr2[11] == 0x4e))
   {
-    const spdif_header_s *header = (spdif_header_s *)hdr1;
-    const FrameParser *parser = find_parser(header->type);
-    return parser && parser->compare_headers(
+    const FrameParser *parser1 = find_parser(((spdif_header_s *)hdr1)->type);
+    const FrameParser *parser2 = find_parser(((spdif_header_s *)hdr2)->type);
+    return parser1 && parser1 == parser2 && parser1->compare_headers(
       hdr1 + sizeof(spdif_header_s),
       hdr2 + sizeof(spdif_header_s));
   }
