@@ -43,8 +43,8 @@ public:
   int        get_dts_conv()                  const { return spdif_wrapper.dts_conv;       }
   void       set_dts_conv(int dts_conv)            { spdif_wrapper.dts_conv = dts_conv;   }
 
+  FrameInfo  frame_info()                    const { return spdif_wrapper.frame_info();   }
   string     info()                          const { return spdif_wrapper.info();         }
-  HeaderInfo header_info()                   const { return spdif_wrapper.header_info();  }
 };
 
 class Despdifer : public ParserFilter

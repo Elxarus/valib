@@ -8,6 +8,7 @@
 
 #include "../../filter.h"
 #include "../../parser.h"
+#include "spdifable_header.h"
 
 #define DTS_MODE_AUTO    0
 #define DTS_MODE_WRAPPED 1
@@ -76,7 +77,7 @@ public:
 
   SPDIFWrapper(int dts_mode = DTS_MODE_AUTO, int dts_conv = DTS_CONV_NONE);
 
-  HeaderInfo header_info() const { return hinfo; }
+  FrameInfo frame_info() const { return finfo; }
 
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
@@ -96,14 +97,13 @@ public:
   string info() const;
 
 protected:
+  SpdifableFrameParser parser;
+  FrameInfo finfo;
+
   Rawdata     buf;          // output frame buffer
   Speakers    out_spk;      // output format
   bool        passthrough;  // passthrough mode
   bool        new_stream_flag;
-
-  const HeaderParser *parser;// Spdifable format header
-  HeaderInfo  hinfo;        // input raw frame info
-  Rawdata     header;
 
   bool use_header;          // use SPDIF header
   int spdif_bs;             // SPDIF bitstream type

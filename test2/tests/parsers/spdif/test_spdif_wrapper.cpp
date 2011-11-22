@@ -37,7 +37,7 @@ static const char *dts_conv_text(int i)
 
 static void compare_file(const char *raw_file, const char *spdif_file)
 {
-  BOOST_MESSAGE("Transform " << spdif_file << " -> " << raw_file);
+  BOOST_MESSAGE("Transform " << raw_file << " -> " << spdif_file);
 
   FileParser f_raw;
   SpdifableFrameParser frame_parser_raw;
