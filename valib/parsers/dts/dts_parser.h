@@ -8,6 +8,7 @@
 #include "../../bitstream.h"
 #include "../../buffer.h"
 #include "../../filter.h"
+#include "dts_header.h"
 #include "dts_defs.h"
 
 class DTSInfo
@@ -18,6 +19,7 @@ public:
   int samples_deficit;    // deficit sample count
   int crc_present;        // crc is present in the bitstream
   int sample_blocks;      // number of PCM sample blocks
+  int frame_length;
   int amode;              // audio channels arrangement
   int sample_rate;        // audio sampling rate
   int bit_rate;           // transmission bit rate
@@ -109,12 +111,11 @@ protected:
   /////////////////////////////////////////////////////////
   // DTS parse
 
+  DTSFrameParser frame_parser;
+  FrameInfo finfo;
+
   Speakers  out_spk;
-  size_t    frame_size;
-  size_t    nsamples;
-  int       bs_type;
   bool      new_stream_flag;
-  Rawdata   header;
 
   ReadBS    bs;
   Rawdata   frame_buf;
@@ -128,7 +129,7 @@ protected:
   void init_cosmod();
 
   // parse functions
-  bool parse_frame(uint8_t *frame, size_t size);
+  bool parse_frame();
   bool parse_frame_header();
   bool parse_subframe_header();
   bool parse_subsubframe();

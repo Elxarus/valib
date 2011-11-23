@@ -23,15 +23,15 @@ public:
 
   bool process(Chunk &in, Chunk &out)
   {
-    HeaderInfo hinfo;
+    FrameInfo finfo;
     Chunk temp = in;
     in.clear();
 
-    if (temp.size < dts_header.header_size())
+    if (temp.size < dts.header_size())
       return false;
-    if (!dts_header.parse_header(temp.rawdata, &hinfo))
+    if (!dts.parse_header(temp.rawdata, &finfo))
       return false;
-    if (temp.size < hinfo.frame_size || in.size > frame.size())
+    if (temp.size < finfo.frame_size || in.size > frame.size())
       return false;
 
     memcpy(frame.begin(), temp.rawdata, temp.size);
@@ -41,6 +41,7 @@ public:
   }
 
 protected:
+  DTSFrameParser dts;
   Rawdata frame;
 };
 
