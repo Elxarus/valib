@@ -1,7 +1,6 @@
 #include <sstream>
 #include "../../../3rdparty/libmpg123/mpg123.h"
 #include "mpa_mpg123.h"
-#include "mpa_header.h"
 
 class MPG123Init
 {

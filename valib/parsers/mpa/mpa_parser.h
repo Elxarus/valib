@@ -9,6 +9,7 @@
 #include "../../bitstream.h"
 #include "../../buffer.h"
 #include "../../filter.h"
+#include "mpa_header.h"
 #include "mpa_defs.h"
 #include "mpa_synth.h"
 
@@ -85,11 +86,14 @@ public:
   string info() const;
 
 private:
+  MPAFrameParser frame_parser;
+  FrameInfo finfo;
+
   Speakers  out_spk;    // output format
+  bool      new_stream_flag;
+
   SampleBuf samples;    // samples buffer
   ReadBS    bs;         // bitstream reader
-  bool      new_stream_flag;
-  Rawdata   header;
 
   SynthBuffer *synth[MPA_NCH]; // synthesis buffers
   int II_table;         // Layer II allocation table number 
