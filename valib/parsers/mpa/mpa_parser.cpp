@@ -27,7 +27,6 @@ MPAParser::MPAParser()
   errors = 0;
 
   samples.allocate(2, MPA_NSAMPLES);
-  header.allocate(mpa_header.header_size());
   synth[0] = new SynthBufferFPU();
   synth[1] = new SynthBufferFPU();
 
@@ -60,10 +59,13 @@ MPAParser::init()
 void 
 MPAParser::reset()
 {
+  frame_parser.reset();
+  finfo.clear();
+
   out_spk = spk_unknown;
   new_stream_flag = false;
+
   samples.zero();
-  header.zero();
   if (synth[0]) synth[0]->reset();
   if (synth[1]) synth[1]->reset();
 }
@@ -71,30 +73,45 @@ MPAParser::reset()
 bool
 MPAParser::process(Chunk &in, Chunk &out)
 {
-  bool sync = in.sync;
-  vtime_t time = in.time;
-  in.set_sync(false, 0);
-
-  if (in.size == 0)
-    return false;
-
-  if (!parse_frame(in.rawdata, in.size))
-  {
-    in.clear();
-    errors++;
-    return false;
-  }
-
-  if (mpa_header.compare_headers(in.rawdata, header))
-    new_stream_flag = false;
-  else
-  {
-    new_stream_flag = true;
-    memcpy(header, in.rawdata, mpa_header.header_size());
-  }
-
+  bool     sync  = in.sync;
+  vtime_t  time  = in.time;
+  uint8_t *frame = in.rawdata;
+  size_t   size   = in.size;
   in.clear();
-  out.set_linear(samples, bsi.nsamples, sync, time);
+
+  if (size < frame_parser.header_size())
+    return false;
+
+  if (frame_parser.in_sync())
+  {
+    if (frame_parser.next_frame(frame, size))
+      new_stream_flag = false;
+    else
+      reset();
+  }
+
+  if (!frame_parser.in_sync())
+  {
+    if (frame_parser.first_frame(frame, size))
+    {
+      out_spk = frame_parser.frame_info().spk;
+      out_spk.format = FORMAT_LINEAR;
+      new_stream_flag = true;
+    }
+    else
+      return false;
+  }
+
+  finfo = frame_parser.frame_info();
+
+  if (finfo.bs_type != BITSTREAM_8)
+    if (bs_convert(frame, size, finfo.bs_type, frame, BITSTREAM_8) == 0)
+      return false;
+
+  if (!parse_frame(frame, size))
+    return false;
+
+  out.set_linear(samples, finfo.nsamples, sync, time);
   frames++;
   return true;
 }
@@ -123,11 +140,6 @@ MPAParser::parse_frame(uint8_t *frame, size_t size)
 {
   if (!parse_header(frame, size))
     return false;
-
-  // convert bitstream format
-  if (bsi.bs_type != BITSTREAM_8)
-    if (bs_convert(frame, size, bsi.bs_type, frame, BITSTREAM_8) == 0)
-      return false;
 
   bs.set(frame, 0, size * 8);
   bs.get(32); // skip header
