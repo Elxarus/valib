@@ -1,7 +1,6 @@
 #include <sstream>
 #include <math.h>
 #include "dts_parser.h"
-#include "dts_header.h"
 
 #include "dts_tables.h"
 #include "dts_tables_huffman.h"
@@ -90,7 +89,6 @@ DTSParser::DTSParser()
 
   init_cosmod();
   samples.allocate(DTS_NCHANNELS, DTS_MAX_SAMPLES);
-  header.allocate(dts_header.header_size());
   reset();
 }
 
@@ -133,11 +131,11 @@ DTSParser::init()
 void 
 DTSParser::reset()
 {
+  frame_parser.reset();
+  finfo.clear();
+
   out_spk = spk_unknown;
-  frame_size = 0;
-  nsamples = 0;
   new_stream_flag = false;
-  header.zero();
 
   frame_type      = 0;
   samples_deficit = 0;
@@ -156,30 +154,66 @@ DTSParser::reset()
 bool
 DTSParser::process(Chunk &in, Chunk &out)
 {
-  bool sync = in.sync;
-  vtime_t time = in.time;
-  in.set_sync(false, 0);
+  bool     sync  = in.sync;
+  vtime_t  time  = in.time;
+  uint8_t *frame = in.rawdata;
+  size_t   size  = in.size;
+  in.clear();
 
-  if (in.size == 0)
+  if (size < frame_parser.header_size())
     return false;
-
-  if (!parse_frame(in.rawdata, in.size))
+  if (frame_parser.in_sync())
   {
-    in.clear();
-    errors++;
-    return false;
+    if (frame_parser.next_frame(frame, size))
+      new_stream_flag = false;
+    else
+      reset();
   }
 
-  if (dts_header.compare_headers(in.rawdata, header))
-    new_stream_flag = false;
+  if (!frame_parser.in_sync())
+  {
+    if (frame_parser.first_frame(frame, size))
+    {
+      out_spk = frame_parser.frame_info().spk;
+      out_spk.format = FORMAT_LINEAR;
+      new_stream_flag = true;
+    }
+    else
+      return false;
+  }
+
+  finfo = frame_parser.frame_info();
+
+  /////////////////////////////////////////////////////////
+  // Convert the bitstream type
+  // Note that we have to allocate a buffer for 14bit
+  // stream, because the size of the stream increases
+  // during conversion.
+
+  if (finfo.bs_type == BITSTREAM_14BE || finfo.bs_type == BITSTREAM_14LE)
+  {
+    // Buffered conversion
+    frame_buf.allocate(size * 8 / 7);
+    size_t data_size = bs_convert(frame, size, finfo.bs_type, frame_buf, BITSTREAM_8);
+    if (data_size == 0)
+      return false;
+
+    bs.set(frame_buf, 0, data_size * 8);
+  }
   else
   {
-    new_stream_flag = true;
-    memcpy(header, in.rawdata, dts_header.header_size());
+    // Inplace conversion
+    size_t data_size = bs_convert(frame, size, finfo.bs_type, frame, BITSTREAM_8);
+    if (data_size == 0)
+      return false;
+
+    bs.set(frame, 0, data_size * 8);
   }
 
-  in.clear();
-  out.set_linear(samples, nsamples, sync, time);
+  if (!parse_frame())
+    return false;
+
+  out.set_linear(samples, finfo.nsamples, sync, time);
   frames++;
   return true;
 }
@@ -190,7 +224,7 @@ DTSParser::info() const
   using std::endl;
 
   char *stream = "???";
-  switch (bs_type)
+  switch (finfo.bs_type)
   {
     case BITSTREAM_16BE: stream = "16bit BE"; break;
     case BITSTREAM_16LE: stream = "16bit LE"; break;
@@ -202,8 +236,8 @@ DTSParser::info() const
   result << "Format: " << out_spk.print() << endl;
   result << "Bitrate: " << dts_bit_rates[bit_rate] / 1000 << endl;
   result << "Stream: " << stream << endl;
-  result << "Frame size: " << frame_size << endl;
-  result << "NSamples: " << nsamples << endl;
+  result << "Frame size: " << finfo.frame_size << endl;
+  result << "NSamples: " << finfo.nsamples << endl;
   result << "amode: " << amode << endl;
   result << (crc_present? "CRC protected\n": "No CRC") << endl;
   return result.str();
@@ -216,47 +250,8 @@ DTSParser::info() const
 
 
 bool
-DTSParser::parse_frame(uint8_t *frame, size_t size)
+DTSParser::parse_frame()
 {
-  HeaderInfo hinfo;
-  if (!dts_header.parse_header(frame, &hinfo))
-    return false;
-
-  if (hinfo.frame_size > size)
-    return false;
-
-  out_spk = hinfo.spk;
-  out_spk.format = FORMAT_LINEAR;
-  frame_size = hinfo.frame_size;
-  nsamples = hinfo.nsamples;
-  bs_type = hinfo.bs_type;
-
-  /////////////////////////////////////////////////////////
-  // Convert the bitstream type
-  // Note that we have to allocate a buffer for 14bit
-  // stream, because the size of the stream increases
-  // during conversion.
-
-  if (bs_type == BITSTREAM_14BE || bs_type == BITSTREAM_14LE)
-  {
-    // Buffered conversion
-    frame_buf.allocate(size * 8 / 7);
-    size_t data_size = bs_convert(frame, size, bs_type, frame_buf, BITSTREAM_8);
-    if (data_size == 0)
-      return false;
-
-    bs.set(frame_buf, 0, data_size * 8);
-  }
-  else
-  {
-    // Inplace conversion
-    size_t data_size = bs_convert(frame, size, bs_type, frame, BITSTREAM_8);
-    if (data_size == 0)
-      return false;
-
-    bs.set(frame, 0, data_size * 8);
-  }
-
   if (!parse_frame_header())
     return false;
 
@@ -317,7 +312,7 @@ DTSParser::parse_frame_header()
   samples_deficit   = bs.get(5)  + 1;
   crc_present       = bs.get(1);
   sample_blocks     = bs.get(7)  + 1;
-  frame_size        = bs.get(14) + 1;
+  frame_length      = bs.get(14) + 1;
   amode             = bs.get(6);
   sample_rate       = bs.get(4);
   bit_rate          = bs.get(5);
