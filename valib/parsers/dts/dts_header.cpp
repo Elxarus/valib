@@ -87,7 +87,7 @@ DTSFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
   // Constraints
 
   if (nblks < 6) return false;            // constraint
-  if (amode > 0xc) return false;          // we don't work with more than 6 channels
+  if (amode >= array_size(amode2mask_tbl)) return false;
   if (dts_sample_rates[sfreq] == 0)       // constraint
     return false; 
   if (lff == 3) return false;             // constraint
@@ -127,6 +127,7 @@ DTSFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
   // * AMODE
   // * SFREQ
   // * LFF (do not compare interpolation type)
+  // * LFF != 3
 
   // 16 bits big endian bitstream
   if      (hdr1[0] == 0x7f && hdr1[1] == 0xfe &&
@@ -139,6 +140,7 @@ DTSFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       (hdr1[7] & 0x0f) == (hdr2[7] & 0x0f) &&     // AMODE
       (hdr1[8] & 0xfc) == (hdr2[8] & 0xfc) &&     // AMODE, SFREQ
 
+      ((hdr1[10] & 0x06) != 0x06) && ((hdr2[10] & 0x06) != 0x06) &&
       ((hdr1[10] & 0x06) != 0) == ((hdr2[10] & 0x06) != 0); // LFF
   }
   // 16 bits low endian bitstream
@@ -148,9 +150,11 @@ DTSFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
     return 
       hdr1[0] == hdr2[0] && hdr1[1] == hdr2[1] && // syncword
       hdr1[2] == hdr2[2] && hdr1[3] == hdr2[3] && // syncword
+
       (hdr1[6] & 0x0f) == (hdr2[6] & 0x0f) &&     // AMODE
       (hdr1[9] & 0xfc) == (hdr2[9] & 0xfc) &&     // AMODE, SFREQ
 
+      ((hdr1[11] & 0x06) != 0x06) && ((hdr2[11] & 0x06) != 0x06) &&
       ((hdr1[11] & 0x06) != 0) == ((hdr2[11] & 0x06) != 0); // LFF
   }
   // 14 bits big endian bitstream
@@ -166,6 +170,7 @@ DTSFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       (hdr1[8] & 0x03) == (hdr2[8] & 0x03) &&     // AMODE
       hdr1[9] == hdr2[9] &&                       // AMODE, SFREQ
 
+      ((hdr1[12] & 0x18) != 0x18) && ((hdr2[12] & 0x18) != 0x18) &&
       ((hdr1[12] & 0x18) != 0) == ((hdr2[12] & 0x18) != 0); // LFF
   }
   // 14 bits low endian bitstream
@@ -181,6 +186,7 @@ DTSFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       (hdr1[9] & 0x03) == (hdr2[9] & 0x03) &&     // AMODE
       hdr1[8] == hdr2[8] &&                       // AMODE, SFREQ
 
+      ((hdr1[12] & 0x18) != 0x18) && ((hdr2[12] & 0x18) != 0x18) &&
       ((hdr1[13] & 0x18) != 0) == ((hdr2[13] & 0x18) != 0); // LFF
   }
   // no sync
@@ -239,7 +245,6 @@ DTSFrameParser::build_syncinfo(const uint8_t *frame, size_t size, const FrameInf
 {
   uint32_t dts_sync = (frame[0] << 24) | (frame[1] << 16) | (frame[2] << 8) | frame[3];
 
-  SyncInfo result = sync_info();
-  result.sync_trie = SyncTrie(dts_sync, 32);
-  return result;
+  // Constant frame size
+  return SyncInfo(SyncTrie(dts_sync, 32), size, size);
 }

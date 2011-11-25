@@ -422,6 +422,10 @@
 				Name="dts"
 				>
 				<File
+					RelativePath=".\tests\parsers\dts\test_dts_frame_parser.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\parsers\dts\test_dts_parser.cpp"
 					>
 				</File>
