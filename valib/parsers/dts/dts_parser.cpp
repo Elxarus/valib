@@ -9,17 +9,6 @@
 #include "dts_tables_fir.h"
 #include "dts_tables_vq.h"
 
-#define DTS_MODE_MONO           0
-#define DTS_MODE_CHANNEL        1
-#define DTS_MODE_STEREO         2
-#define DTS_MODE_STEREO_SUMDIFF 3
-#define DTS_MODE_STEREO_TOTAL   4
-#define DTS_MODE_3F             5
-#define DTS_MODE_2F1R           6
-#define DTS_MODE_3F1R           7
-#define DTS_MODE_2F2R           8
-#define DTS_MODE_3F2R           9
-
 static const int amode2mask_tbl[] = 
 {
   MODE_MONO, 
@@ -32,20 +21,6 @@ static const int amode2mask_tbl[] =
   MODE_3_1,
   MODE_2_2,
   MODE_3_2
-};
-
-static const int amode2rel_tbl[] = 
-{
-  NO_RELATION,
-  NO_RELATION,
-  NO_RELATION,
-  RELATION_SUMDIFF,
-  RELATION_DOLBY,
-  NO_RELATION,
-  NO_RELATION,
-  NO_RELATION,
-  NO_RELATION,
-  NO_RELATION,
 };
 
 inline int 
@@ -68,10 +43,6 @@ decode_blockcode(int code, int levels, int *values)
     return 0;
   }
 }
-
-
-
-
 
 
 
