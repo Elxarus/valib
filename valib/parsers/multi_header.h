@@ -106,48 +106,4 @@ protected:
   void update();
 };
 
-///////////////////////////////////////////////////////////////////////////////
-
-class MultiHeader : public HeaderParser
-{
-public:
-  typedef std::vector<const HeaderParser *> list_t;
-
-  MultiHeader();
-  MultiHeader(const list_t &parsers);
-  MultiHeader(const HeaderParser *const *parsers, size_t nparsers);
-
-  void set_parsers(const list_t &parsers);
-  void set_parsers(const HeaderParser *const *parsers, size_t nparsers);
-  void add_parser(const HeaderParser *parser);
-  void remove_parser(const HeaderParser *parser);
-  void release_parsers();
-  list_t get_parsers() const;
-
-  /////////////////////////////////////////////////////////
-  // HeaderParser overrides
-
-  virtual SyncTrie sync_trie()      const { return f_sync_trie;      }
-  virtual size_t   header_size()    const { return f_header_size;    }
-  virtual size_t   min_frame_size() const { return f_min_frame_size; }
-  virtual size_t   max_frame_size() const { return f_max_frame_size; }
-  virtual bool     can_parse(int format) const;
-
-  virtual bool     parse_header(const uint8_t *hdr, HeaderInfo *hinfo = 0) const;
-  virtual bool     compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const;
-  virtual string   header_info(const uint8_t *hdr) const;
-
-protected:
-  SyncTrie f_sync_trie;    //!< sync trie
-  size_t f_header_size;    //!< maximum header size
-  size_t f_min_frame_size; //!< minimum min_frame_size() value
-  size_t f_max_frame_size; //!< maximum max_frame_size() value
-
-  list_t parsers;          //!< list of parsers
-  const HeaderParser **p;  //!< raw list of parsers
-  size_t n;                //!< number of parsers
-
-  void update();
-};
-
 #endif
