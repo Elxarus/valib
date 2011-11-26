@@ -1,8 +1,14 @@
+#include "../../bitstream.h"
 #include "dts_header.h"
 
 const SyncTrie DTSFrameParser::sync_trie = 
   SyncTrie(0x7ffe8001, 32) | SyncTrie(0xfe7f0180, 32) |
   SyncTrie(0x1fffe800, 32) | SyncTrie(0xff1f00e8, 32);
+
+static const size_t dts_min_frame_size = 96;
+static const size_t dts_max_frame_size = 16384;
+static const size_t ma_min_frame_size = 10;    // unknown
+static const size_t ma_max_frame_size = 65536; // unknown
 
 static const int dts_sample_rates[] =
 {
@@ -200,15 +206,21 @@ DTSFrameParser::first_frame(const uint8_t *frame, size_t size)
   FrameInfo new_finfo;
 
   reset();
+
+  if (size < header_size())
+    return false;
+    
   if (!parse_header(frame, &new_finfo))
     return false;
 
-  new_finfo.frame_size = size;
+  if (!check_first_frame_size(frame, size))
+    return false;
 
   header.allocate(header_size());
   memcpy(header, frame, header_size());
 
   finfo = new_finfo;
+  finfo.frame_size = size;
   sinfo = build_syncinfo(frame, size, finfo);
   return true;
 }
@@ -218,17 +230,20 @@ DTSFrameParser::next_frame(const uint8_t *frame, size_t size)
 {
   FrameInfo new_finfo;
 
-  if (!compare_headers(header, frame))
+  if (size < header_size())
     return false;
 
   if (!parse_header(frame, &new_finfo))
     return false;
 
-  if (size != finfo.frame_size)
+  if (!compare_headers(header, frame))
     return false;
 
-  new_finfo.frame_size = finfo.frame_size;
+  if (!check_next_frame_size(frame, size))
+    return false;
+
   finfo = new_finfo;
+  finfo.frame_size = size;
   return true;
 }
 
@@ -237,7 +252,87 @@ DTSFrameParser::reset()
 {
   header.zero();
   finfo.clear();
-  sinfo.clear();
+//  sinfo.clear();
+
+  master_audio = false;
+  dts_size = 0;
+}
+
+bool
+DTSFrameParser::check_first_frame_size(const uint8_t *frame, size_t size)
+{
+  static const uint32_t ma_sync = 0x64582025;
+
+  if (size < dts_min_frame_size)
+    return false;
+
+  // Search for Master Audio frame
+  uint32_t sync = be2uint32(*(uint32_t *)frame + dts_min_frame_size);
+  size_t pos = dts_min_frame_size + 4;
+
+  while (pos < size)
+  {
+    if (sync == ma_sync)
+    {
+      size_t header_size, hd_size;
+
+      ReadBS bs(frame + pos, 0, (size - pos) * 8);
+      bs.get(8); // unknown
+      bs.get(2); // Substream index
+      bool blown_up_header = bs.get_bool();
+      if (blown_up_header)
+      {
+        header_size = bs.get(12);
+        hd_size = bs.get(20) + 1;
+      }
+      else
+      {
+        header_size = bs.get(8);
+        hd_size = bs.get(16) + 1;
+      }
+
+      master_audio = true;
+      dts_size = pos-4;
+      if (dts_size + hd_size == size)
+        return true;
+    }
+    sync = (sync << 8) | frame[pos++];
+  }
+
+  // Master Audio not found
+  master_audio = false;
+  dts_size = size;
+  return true;
+}
+
+bool
+DTSFrameParser::check_next_frame_size(const uint8_t *frame, size_t size)
+{
+  if (master_audio)
+  {
+    size_t header_size, hd_size;
+    if (size < dts_size + ma_min_frame_size)
+      return false;
+    
+    ReadBS bs(frame + dts_size + 4, 0, (size - dts_size - 4) * 8);
+    bs.get(8); // unknown
+    bs.get(2); // Substream index
+    bool blown_up_header = bs.get_bool();
+    if (blown_up_header)
+    {
+      header_size = bs.get(12);
+      hd_size = bs.get(20) + 1;
+    }
+    else
+    {
+      header_size = bs.get(8);
+      hd_size = bs.get(16) + 1;
+    }
+
+    return size == (dts_size + hd_size);
+  }
+
+  return size == dts_size;
 }
 
 SyncInfo
@@ -245,6 +340,15 @@ DTSFrameParser::build_syncinfo(const uint8_t *frame, size_t size, const FrameInf
 {
   uint32_t dts_sync = (frame[0] << 24) | (frame[1] << 16) | (frame[2] << 8) | frame[3];
 
+  if (master_audio)
+  {
+    return SyncInfo(
+      SyncTrie(dts_sync, 32),
+      dts_size + ma_min_frame_size,
+      dts_size + ma_max_frame_size
+    );
+  }
+
   // Constant frame size
-  return SyncInfo(SyncTrie(dts_sync, 32), size, size);
+  return SyncInfo(SyncTrie(dts_sync, 32), dts_size, dts_size);
 }
