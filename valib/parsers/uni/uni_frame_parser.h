@@ -4,6 +4,7 @@
 #include "../multi_header.h"
 #include "../aac/aac_adts_header.h"
 #include "../ac3/ac3_header.h"
+#include "../ac3_eac3/ac3_eac3_header.h"
 #include "../dts/dts_header.h"
 #include "../eac3/eac3_header.h"
 #include "../mpa/mpa_header.h"
@@ -19,9 +20,13 @@ public:
   MPAFrameParser   mpa;
   SPDIFFrameParser spdif;
 
+  // Composite parsers.
+  // It's possible to use existing parsers (maybe later).
+  AC3_EAC3_FrameParser ac3_eac3;
+
   UniFrameParser()
   {
-    FrameParser *parsers[] = { &adts, &ac3, &dts, &eac3, &mpa, &spdif };
+    FrameParser *parsers[] = { &adts, &ac3, &dts, &eac3, &mpa, &spdif, &ac3_eac3 };
     set_parsers(parsers, array_size(parsers));
   }
 
@@ -32,6 +37,7 @@ public:
       case FORMAT_RAWDATA: return this;
       case FORMAT_AAC_ADTS:return &adts;
       case FORMAT_AC3:     return &ac3;
+      case FORMAT_AC3_EAC3:return &ac3_eac3;
       case FORMAT_DTS:     return &dts;
       case FORMAT_EAC3:    return &eac3;
       case FORMAT_MPA:     return &mpa;

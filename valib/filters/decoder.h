@@ -32,6 +32,7 @@ public:
     add(&uni_frame_parser.eac3, &eac3);
     add(&uni_frame_parser.dts,  &dts);
     add(&uni_frame_parser.mpa,  &mpa);
+    add(&uni_frame_parser.ac3_eac3);
   }
 };
 
