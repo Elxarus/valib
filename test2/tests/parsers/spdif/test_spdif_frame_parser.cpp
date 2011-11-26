@@ -82,6 +82,12 @@ static const uint8_t bad[][32] =
 
 BOOST_AUTO_TEST_SUITE(spdif_frame_parser)
 
+BOOST_AUTO_TEST_CASE(can_parse)
+{
+  SPDIFFrameParser parser;
+  BOOST_CHECK(parser.can_parse(FORMAT_SPDIF));
+}
+
 BOOST_AUTO_TEST_CASE(sync_info)
 {
   SyncInfo sinfo = SPDIFFrameParser().sync_info();
