@@ -24,6 +24,12 @@ public:
   virtual void      reset();
 
 protected:
+  bool master_audio;
+  size_t dts_size;
+
+  bool check_first_frame_size(const uint8_t *frame, size_t size);
+  bool check_next_frame_size(const uint8_t *frame, size_t size);
+
   virtual SyncInfo build_syncinfo(const uint8_t *frame, size_t size, const FrameInfo &finfo) const;
 };
 
