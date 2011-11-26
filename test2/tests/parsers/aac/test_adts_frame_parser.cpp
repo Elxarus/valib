@@ -52,6 +52,12 @@ static const uint8_t bad[][8] =
 
 BOOST_AUTO_TEST_SUITE(adts_frame_parser)
 
+BOOST_AUTO_TEST_CASE(can_parse)
+{
+  ADTSFrameParser parser;
+  BOOST_CHECK(parser.can_parse(FORMAT_AAC_ADTS));
+}
+
 BOOST_AUTO_TEST_CASE(sync_info)
 {
   SyncInfo sinfo = ADTSFrameParser().sync_info();

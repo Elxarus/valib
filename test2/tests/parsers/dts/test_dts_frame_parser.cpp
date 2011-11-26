@@ -116,6 +116,12 @@ static const uint8_t bad[][16] =
 
 BOOST_AUTO_TEST_SUITE(dts_frame_parser)
 
+BOOST_AUTO_TEST_CASE(can_parse)
+{
+  DTSFrameParser parser;
+  BOOST_CHECK(parser.can_parse(FORMAT_DTS));
+}
+
 BOOST_AUTO_TEST_CASE(sync_info)
 {
   SyncInfo sinfo = DTSFrameParser().sync_info();
