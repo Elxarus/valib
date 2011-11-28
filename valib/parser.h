@@ -3,7 +3,6 @@
   \brief Abstract parser interface
 ******************************************************************************/
 
-
 #ifndef VALIB_PARSER_H
 #define VALIB_PARSER_H
 
@@ -12,16 +11,107 @@
 #include "spk.h"
 
 
-
-///////////////////////////////////////////////////////////////////////////////
-// New
-///////////////////////////////////////////////////////////////////////////////
-
 struct SyncInfo;
 struct FrameInfo;
-class FrameParser;
 
-struct SyncInfo
+class FrameParser;
+class BasicFrameParser;
+
+class StreamBuffer;
+
+
+/**************************************************************************//**
+  \struct SyncInfo
+  \brief Synchronization information.
+
+  Basic idea of synchronization is to search a certain pattern at the given
+  range. Syncword of a next audio frame must appear at the range between
+  minimum and maximum frame sizes. This structure holds this information
+  required for synchronization. This information is also independent of
+  the algorithm used for synchronization. You may use it to scan directly with
+  help of SyncTrie::is_sync(), use SyncScan that uses some tricks to scan
+  faster, or use StreamBuffer to use an advanced 3-point synchronization and
+  frame loading.
+
+  It must be noted that we may need data that exceeds the range because of the
+  size of the syncword. Here is an illustration of the frame of the max size:
+
+  \verbatim
+  first syncword          next syncword
+  V                       V
+  +-----------------------+----+
+   <--- max_frame_size --> <-->
+                           syncword size
+  \endverbatim
+
+  The syncword size may be obtained with sync_trie.sync_size().
+
+  Correct SyncInfo must be fully defined, i.e. contain non-empty trie, min and
+  max frame sizes. (In fact, trie must not degenerate with SyncTrie::optimize(), 
+  but this cannot be checked fast). Correctness may be checked with
+  is_good() function. Default constructor creates an incorrect
+  SyncInfo. clear() makes the structure incorrect in a correct way :).
+
+  Minimum frame size must be >= 1 because scanning starts from old_syncpoint +
+  min_frame_size. Endless cycle is possible when min_frame_size is zero.
+
+  When min_frame_size == max_frame_size, scanning is not nessesary because
+  frame size is constant and known explicitly. This important special case may
+  be tested with const_frame_size() function.
+
+  Two SyncInfo's may be combined together with combime() function or
+  with 'or' operator (|).
+
+  \code
+    SyncInfo s, s1, s2, s3, s4;
+
+    ...
+    s1.combine(s2);
+    s1 |= s3;
+    s = s1 | s4;
+
+    if (s.is_sync(data)) // match any pattern s1-s4
+    {
+      ...
+    }
+  \endcode
+
+  \var SyncTrie SyncInfo::sync_trie;
+    Synchronization pattern.
+
+  \var size_t SyncInfo::min_frame_size;
+    Minimum frame size.
+
+  \var size_t SyncInfo::max_frame_size;
+    Maximum frame size.
+
+  \fn SyncInfo::SyncInfo()
+    Constructs an invalid SyncInfo.
+
+  \fn SyncInfo::SyncInfo(const SyncTrie &sync_trie, size_t min_frame_size, size_t max_frame_size):
+    \param sync_trie      Synchronization pattern
+    \param min_frame_size Minimum frame size
+    \param max_frame_size Maximum frame size
+
+    Construct a fully-defined SyncInfo. Validity depends on the data given.
+
+  \fn void SyncInfo::clear()
+    Make the structure incorrect.
+
+  \fn bool SyncInfo::is_good() const
+    Returns true when SyncInfo is fully defined and correct.
+
+  \fn bool SyncInfo::const_frame_size() const
+    Returns true when frame size is constant.
+
+  \fn void SyncInfo::combine(const SyncInfo &other)
+    Combine this structure with another. The resulting SyncInfo may be used to
+    search for both types of syncpoints.
+
+******************************************************************************/
+
+struct SyncInfo :
+  boost::orable<SyncInfo>
 {
   SyncTrie sync_trie;
   size_t min_frame_size;
@@ -43,9 +133,68 @@ struct SyncInfo
 
   bool is_good() const
   {
-    return min_frame_size > 0 && max_frame_size >= min_frame_size;
+    return !sync_trie.is_empty() &&
+           min_frame_size > 0 &&
+           max_frame_size >= min_frame_size;
   }
+
+  bool const_frame_size() const
+  {
+    return min_frame_size > 0 && min_frame_size == max_frame_size;
+  }
+
+  void combine(const SyncInfo &other)
+  {
+    if (!is_good())
+      *this = other;
+    else if (other.is_good())
+    {
+      sync_trie |= other.sync_trie;
+      if (other.min_frame_size < min_frame_size)
+        min_frame_size = other.min_frame_size;
+      if (other.max_frame_size > max_frame_size)
+        max_frame_size = other.max_frame_size;
+    }
+  }
+ 
+  SyncInfo &operator |=(const SyncInfo &other)
+  { combine(other); return *this; }
 };
+
+
+
+/**************************************************************************//**
+  \struct FrameInfo
+  \brief Audio frame information.
+
+  This structure holds the most important information about an audio frame.
+
+  The information may be partially filled, therefore you have to check it
+  for correctness before use.
+
+  \var Speakers FrameInfo::spk;
+    Format of the stream. FORMAT_UNKNOWN if not filled.
+
+  \var size_t FrameInfo::frame_size;
+    Frame size. Zero if not filled.
+
+  \var size_t FrameInfo::nsamples;
+    Number of samples at the frame. Zero if not filled.
+
+  \var int FrameInfo::bs_type;
+    Bitstream type. BITSTREAM_NONE if not filled.
+
+  \var uint16_t FrameInfo::spdif_type;
+    If given format is spdifable it defines spdif packet type (Pc burst-info).
+    Zero otherwise. This field may be used to determine spdifable format.
+
+  \fn void FrameInfo::clear();
+    Clear all information.
+
+  \fn size_t FrameInfo::bitrate() const;
+    Find the bitrate of the stream. Zero if information required is not filled.
+
+******************************************************************************/
 
 struct FrameInfo
 {
@@ -76,209 +225,136 @@ struct FrameInfo
   {
     return nsamples? frame_size * 8 * spk.sample_rate / nsamples: 0;
   }
-
-  bool is_good() const
-  {
-    return !spk.is_unknown();
-  }
-};
-
-class FrameParser
-{
-public:
-  FrameParser() {}
-  virtual ~FrameParser() {}
-
-  virtual bool      can_parse(int format) const = 0;
-  virtual SyncInfo  sync_info() const = 0;
-  virtual SyncInfo  sync_info2() const = 0;
-
-  // Frame header operations
-  virtual size_t    header_size() const = 0;
-  virtual bool      parse_header(const uint8_t *hdr, FrameInfo *finfo = 0) const = 0;
-  virtual bool      compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
-
-  // Frame operations
-  virtual bool      first_frame(const uint8_t *frame, size_t size) = 0;
-  virtual bool      next_frame(const uint8_t *frame, size_t size) = 0;
-  virtual void      reset() = 0;
-
-  virtual bool      in_sync() const = 0;
-  virtual FrameInfo frame_info() const = 0;
-  virtual string    stream_info() const = 0;
-};
-
-class BasicFrameParser : public FrameParser
-{
-public:
-  BasicFrameParser() {}
-
-  virtual SyncInfo  sync_info2() const
-  { return in_sync()? sinfo: sync_info(); }
-
-  virtual bool      first_frame(const uint8_t *frame, size_t size);
-  virtual bool      next_frame(const uint8_t *frame, size_t size);
-  virtual void      reset();
-
-  virtual bool      in_sync() const { return finfo.is_good(); }
-  virtual FrameInfo frame_info() const { return finfo; }
-  virtual string    stream_info() const;
-
-protected:
-  virtual SyncInfo build_syncinfo(const uint8_t *frame, size_t size, const FrameInfo &finfo) const
-  { return sync_info(); }
-
-  Rawdata   header;
-  SyncInfo  sinfo;
-  FrameInfo finfo;
-};
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Old
-///////////////////////////////////////////////////////////////////////////////
-
-struct HeaderInfo;
-class HeaderParser;
-class StreamBuffer;
-
-/**************************************************************************//**
-  \struct HeaderInfo
-  \brief Header information structure.
-
-  We distinguish 2 stream types:
-  \li Stream with known frame size. For this kind of strean we can determine
-    the frame size by parsing the header. Variable bitrate stream with
-    different frame sizes is also possible, because size of each frame is known
-    form the frame itself.
-  \li Stream with unknown frame size (free-format). For this type of stream
-    frame size is unknown from the header. So we must determine inter-frame
-    distance. After that we suppose that frame size is constant and expect
-    next header right after the end of the frame. Threfore, free-format stream
-    is always constant-bitrate.
-
-  Sparse stream is the stream where some gap (or padding) is present in 
-  between of two frames. To locate next syncpoint we should scan input data
-  after the end of the first frame to locate the next. To limit such scanning
-  we should know how much data to scan. Parser can specify the exact amount
-  of data to scan after the current frame.
-
-  Only known frame size stream is allowed to be sparse (because free-format
-  stream is known to have the same frame size). But free-format stream can
-  specify scan_size to limit scanning during inter-frame interval detection.
-  If scan_size for free-format stream is unspecified we should scan up to 
-  max_frame_size.
-
-  \sa HeaderParser
-
-  \var Speakers HeaderInfo::spk;
-    Format of the stream. FORMAT_UNKNOWN indicates a parsing error.
-
-  \var size_t HeaderInfo::frame_size;
-    Frame size (including the header):
-    \li \b 0   frame size is unknown (free-format stream)
-    \li \b >0  known frame size
-
-  \var size_t HeaderInfo::scan_size;
-    Use scanning to locate next syncpoint
-    \li \b 0   do not use scanning
-    \li \b >0  maximum distance between syncpoints
-
-  \var size_t HeaderInfo::nsamples;
-    Number of samples at the frame.
-
-    We can derive current bitrate for known frame size stream as follows:
-
-    bitrate = spk.sample_rate * frame_size * 8 / nsamples;
-
-    But note that actual bitrate may be larger for sparce stream.
-
-  \var int HeaderInfo::bs_type;
-    Bitstream type. BITSTREAM_XXXX constants.
-
-  \var uint16_t HeaderInfo::spdif_type;
-    If given format is spdifable it defines spdif packet type (Pc burst-info).
-    Zero otherwise. This field may be used to determine spdifable format.
-
-  \fn void HeaderInfo::clear();
-    Clear header information.
-******************************************************************************/
- 
-struct HeaderInfo
-{
-  Speakers spk;
-  size_t   frame_size;
-  size_t   scan_size;
-  size_t   nsamples;
-  int      bs_type;
-  uint16_t spdif_type;
-
-  HeaderInfo(): 
-    spk(spk_unknown),
-    frame_size(0),
-    scan_size(0),
-    nsamples(0),
-    bs_type(BITSTREAM_NONE),
-    spdif_type(0)
-  {}
-
-  inline void clear()
-  {
-    spk        = spk_unknown;
-    frame_size = 0;
-    scan_size  = 0;
-    nsamples   = 0;
-    bs_type    = BITSTREAM_NONE;
-    spdif_type = 0;
-  }
 };
 
 
 
 /**************************************************************************//**
-  \class HeaderParser
-  \brief Abstract interface for scanning and detecting compressed stream.
+  \class FrameParser
+  \brief Abstract interface for frame operations.
 
-  Sometimes we need to scan the stream without actual decoding. Of course, 
-  parser can do this, but we don't need most of its features, buffers, tables,
-  etc in this case. For example, application that just detects format of a
-  compressed stream will contain all the code required to decode it and create
-  unneeded memory buffers. To avoid this we need a lightweight interface to
-  work only with frame headers.
+  This class allows to separate synchronization algorithms from the
+  format-depedent code. It consists of a set of data and atomic operations
+  required for synchronization. Interface is designed to be lightweight and
+  contain only elementary and fast operations. Implementation should not
+  contain large buffers, big tables and other heavy decoder/encoder stuff.
 
-  Therefore implementation of HeaderParser should be separated from other
-  parser parts so we can use it alone. Ideally it should be 2 files (.h and
-  .cpp) without other files required.
+  We use the following terminology:
+  - \b Syncpoint (synchronization point) is a point at the stream that matches
+    certain pattern (defined by SyncTrie). Beginning of the frame and
+    <b>frame header</b>. Syncpoint that does not start a frame is a
+    <b>false syncpoint</b>.
 
-  Header parser is a class without internal state, just a set of functoins.
-  So we may create one constant class and use it everywhere. Therefore all
-  pointers to HeaderParser objects must be const.
+  - <b>Frame header</b> is a set of parameters placed at the beginning of the
+    frame that allows to determine frame characteristics. Header validation
+    also allows to decrease false-sync probability. Includes synchronization
+    word. In some cases header does not allow to determine frame
+    characteristics.
 
-  Frame parser should return a pointer to a header parser that corresponds
-  to the given frame parser.
+  The task of synchronization is to divide a byte stream into a sequence of
+  frames of the same format.
 
-  HeaderParser interface allows nesting, so several header parsers may be
-  represented as one parser (see MultiHeader class). Threrfore  instead of 
-  list of parsers we can use only one parser pointer everywhere.
+  To find a frame we may search for 2 consequtive syncpoints:
 
-  \sa HeaderInfo
+  \verbatim
+        p1                     p2      p3       p4
+        V                      V       V        V
+  ------+------------------------------+-------------
+        | hdr1 |      frame 1          | hdr2 |  frame 2
+  ------+------------------------------+-------------
+  \endverbatim
 
-  \fn size_t HeaderParser::header_size() const;
-    Minimum number of bytes required to parse header.
+  But second syncpoint (p2) may appear at the middle of the frame (false sync).
+  Header validation is the first of the methods to exclude p2 and avoid false
+  sync.
+  
+  If first header (hdr1) contains the frame size we can check the placement of
+  the second syncpoint directly:
 
-  \fn size_t HeaderParser::min_frame_size() const;
-    Minimum frame size possible. Must be >= header size.
+  \verbatim
+        p1                     p2      p3       p4
+        V                      V       V        V
+  ------+------------------------------+-------------
+        | hdr1 |      frame 1          | hdr2 |  frame 2
+  ------+------------------------------+-------------
+        |                              ^
+        +- - - - - - - - - - - - - - - +
+                frame_size (hdr1)
+  \endverbatim
 
-  \fn size_t HeaderParser::max_frame_size() const;
-    Maximum frame size possible. Must be >= minimum frame size.
-    Note that for spdifable formats we must take in account maximum spdif
-    frame size to be able to parse spdif-padded format.
+  This allows to exclude p2 and p4 and ensure that p1 is a correct syncpoint.
+  An example of false sync at p1 and good sync at p2:
 
-  \fn bool HeaderParser::can_parse(int format) const;
+  \verbatim
+        p1           p2                    p3
+        V            V                     V
+  ------+------------+---------------------+----------
+        | hdr |      | hdr1 |  frame 1     | hdr2 |  frame 2
+  ------+------------+---------------------+----------
+        |                              ^   ^
+        +- - - - - - - - - - - - - - - +   |
+                frame_size (hdr)           |
+                                           |
+                     |                     |
+                     +- - - - - - - - - - -+
+                        frame_size (hdr1)
+  \endverbatim
+
+  At last, we must ensure that consecutive frames belong to the same stream
+  and have the same format. For example, the following does not form a correct
+  audio stream:
+
+  \verbatim
+        p1                             p2
+        V                              V
+  ------+------------------------------+------------------
+        | hdr1 (mono) |                | hdr2 (stereo) |
+  ------+------------------------------+------------------
+        |                              ^
+        +- - - - - - - - - - - - - - - +
+                frame_size (hdr1)
+        p1                             p2
+        V                              V
+  ------+------------------------------+------------------
+        | hdr1 (ac3) |                 | hdr2 (dts) |
+  ------+------------------------------+------------------
+        |                              ^
+        +- - - - - - - - - - - - - - - +
+                frame_size (hdr1)
+  \endverbatim
+
+  So, it should be a way to compare headers.
+
+  As the result, we have 3 basic operations:
+  - Syncpoint matching. Done with help of SyncInfo provided by sync_info()
+    function.
+  - Header validation and parsing. Done by parse_header() function.
+  - Header comparison. Done by compare_headers() function.
+
+
+
+  All methods may be divided into several groups:
+  - Synchronization info.
+  - Stateless frame header functions. These functions operate only on frame
+    header. Stateless, but may not provide accurate info in some cases.
+  - Stateful frame operations. Validate whole frames and track the sequence of
+    frames.
+
+  Frame parsers may be divided into:
+  - Frame information is fully known from the header. In this case all
+    information abount a frame (including the frame size) is known from the
+    frame header. In this case we don't have to scan for the next frame.
+  - Frame size unknown from the header. In this case frame size is not known
+    from the header.
+    - Constant frame size.
+    - Variable frame size.
+
+  \name Synchronization info
+
+  \fn bool FrameParser::can_parse(int format) const = 0;
     \param format Format to test
 
-    Determine that we can parse the format given, or parser can detect
-    this format. Example:
+    Determine that we can parse the format given:
 
     \code
     if (parser.can_parse(FORMAT_AC3))
@@ -287,9 +363,17 @@ struct HeaderInfo
     }
     \endcode
 
-  \fn bool HeaderParser::parse_header(const uint8_t *hdr, HeaderInfo *info = 0) const = 0;
+  \fn SyncInfo FrameParser::sync_info() const = 0;
+    Returns synchronization info.
+
+  \name Frame header operations
+
+  \fn size_t FrameParser::header_size() const = 0;
+    Minimum amount of data in bytes required to parse a frame header.
+
+  \fn bool FrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo = 0) const = 0;
     \param hdr Pointer to the start of the header
-    \param info Optional pointer to HeaderInfo structure that receives info
+    \param finfo Optional pointer to FrameInfo structure that receives information
       about the header given
     \return True when header is successfully parsed and false otherwise.
 
@@ -301,7 +385,7 @@ struct HeaderInfo
     Note, that this method does not provide reliable synchronization, only the
     fast check.
 
-  \fn bool HeaderParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const;
+  \fn bool FrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
     \param hdr1 First header
     \param hdr2 Second header
     \return True when both headers belong to the same stream and false
@@ -317,13 +401,13 @@ struct HeaderInfo
     Note that when headers are equal, format of both headers must be same:
 
     \code
-    parse_header(phdr1, hdr1);
-    parse_header(phdr2, hdr2);
-    if (compare_headers(phdr1, phdr2))
+    parser.parse_header(hdr1, &finfo1);
+    parser.parse_header(hdr2, &finfo2);
+    if (compare_headers(hdr1, hdr2))
     {
-      assert(hdr1.spk == hdr2.spk);
-      assert(hdr1.bs_type == hdr2.bs_type);
-      assert(hdr1.spdif_type == hdr2.spdif_type);
+      assert(finfo1.spk == finfo2.spk);
+      assert(finfo1.bs_type == finfo2.bs_type);
+      assert(finfo1.spdif_type == finfo2.spdif_type);
       // frame size may differ for variable bitrate
       // nsamples may differ
     }
@@ -332,33 +416,67 @@ struct HeaderInfo
     Size of header buffers given must be >= header_size() (it is not verified
     and may lead to memory fault).
 
-  \fn string HeaderParser::header_info(const uint8_t *hdr) const;
-    \param hdr Header to dump info for.
+  \name Frame operations
 
-    Dump stream information that may be useful to track problems. Default
-    implementation shows HeaderInfo parameters.
+  \fn bool FrameParser::first_frame(const uint8_t *frame, size_t size) = 0;
+  \fn bool FrameParser::next_frame(const uint8_t *frame, size_t size) = 0;
+  \fn void FrameParser::reset() = 0;
 
-    Size of header buffer given must be >= header_size() (it is not verified
-    and may lead to memory fault).
+  \fn bool FrameParser::in_sync() const = 0;
+  \fn SyncInfo FrameParser::sync_info2() const = 0;
+  \fn FrameInfo FrameParser::frame_info() const = 0;
+  \fn string FrameParser::stream_info() const = 0;
+
 ******************************************************************************/
 
-class HeaderParser
+class FrameParser
 {
 public:
-  HeaderParser() {};
-  virtual ~HeaderParser() {};
+  FrameParser() {}
+  virtual ~FrameParser() {}
 
-  virtual SyncTrie sync_trie() const = 0;
-  virtual size_t   header_size() const = 0;
-  virtual size_t   min_frame_size() const = 0;
-  virtual size_t   max_frame_size() const = 0;
-  virtual bool     can_parse(int format) const = 0;
+  // Synchronization info
+  virtual bool      can_parse(int format) const = 0;
+  virtual SyncInfo  sync_info() const = 0;
 
-  virtual bool     parse_header(const uint8_t *hdr, HeaderInfo *info = 0) const = 0;
-  virtual bool     compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
-  virtual string   header_info(const uint8_t *hdr) const;
+  // Frame header operations
+  virtual size_t    header_size() const = 0;
+  virtual bool      parse_header(const uint8_t *hdr, FrameInfo *finfo = 0) const = 0;
+  virtual bool      compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const = 0;
+
+  // Frame operations
+  virtual bool      first_frame(const uint8_t *frame, size_t size) = 0;
+  virtual bool      next_frame(const uint8_t *frame, size_t size) = 0;
+  virtual void      reset() = 0;
+
+  virtual bool      in_sync() const = 0;
+  virtual SyncInfo  sync_info2() const = 0;
+  virtual FrameInfo frame_info() const = 0;
+  virtual string    stream_info() const = 0;
 };
 
+class BasicFrameParser : public FrameParser
+{
+public:
+  BasicFrameParser() {}
+
+  virtual bool      first_frame(const uint8_t *frame, size_t size);
+  virtual bool      next_frame(const uint8_t *frame, size_t size);
+  virtual void      reset();
+
+  virtual bool      in_sync() const { return !finfo.spk.is_unknown(); }
+  virtual SyncInfo  sync_info2() const { return in_sync()? sinfo: sync_info(); }
+  virtual FrameInfo frame_info() const { return finfo; }
+  virtual string    stream_info() const;
+
+protected:
+  virtual SyncInfo build_syncinfo(const uint8_t *frame, size_t size, const FrameInfo &finfo) const
+  { return sync_info(); }
+
+  Rawdata   header;
+  SyncInfo  sinfo;
+  FrameInfo finfo;
+};
 
 
 /**************************************************************************//**

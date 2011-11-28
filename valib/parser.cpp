@@ -93,49 +93,6 @@ BasicFrameParser::stream_info() const
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-// HeaderParser
-///////////////////////////////////////////////////////////////////////////////
-
-string
-HeaderParser::header_info(const uint8_t *hdr) const
-{
-  HeaderInfo h;
-  if (!parse_header(hdr, &h))
-    return string("No header found\n");
-
-  std::stringstream result;
-
-  result << "Stream format: " << h.spk.print() << endl;
-
-  switch (h.bs_type)
-  {
-    case BITSTREAM_8:    result << "Bitstream type: byte stream" << endl; break;
-    case BITSTREAM_16BE: result << "Bitstream type: 16bit big endian" << endl; break;
-    case BITSTREAM_16LE: result << "Bitstream type: 16bit low endian" << endl; break;
-    case BITSTREAM_14BE: result << "Bitstream type: 14bit big endian" << endl; break;
-    case BITSTREAM_14LE: result << "Bitstream type: 14bit low endian" << endl; break;
-    default:             result << "Bitstream type: unknown" << endl; break;
-  }
-
-  if (h.frame_size)
-    result << "Frame size: " << h.frame_size << endl;
-  else
-    result << "Frame size: free format" << endl;
-
-  result << "Samples: " << h.nsamples << endl;
-
-  if (h.frame_size > 0 && h.nsamples > 0)
-    result << "Bitrate: " << int(h.frame_size * h.spk.sample_rate * 8 / h.nsamples / 1000) << "kbps" << endl;
-  else
-    result << "Bitrate: unknown" << endl;
-
-  if (h.spdif_type)
-    result << "SPDIF stream type: 0x" << std::hex << h.spdif_type << endl;
-
-  return result.str();
-};
-
-///////////////////////////////////////////////////////////////////////////////
 // StreamBuffer
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -455,7 +412,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
         finfo = parser->frame_info();
 
         SyncInfo sinfo2 = parser->sync_info2();
-        if (sinfo2.min_frame_size == sinfo2.max_frame_size &&
+        if (sinfo2.const_frame_size() &&
             sinfo2.min_frame_size == pos2 - pos1 &&
             sinfo2.min_frame_size == pos3 - pos2)
           const_frame_size = sinfo2.min_frame_size;

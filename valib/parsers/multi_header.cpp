@@ -41,17 +41,9 @@ MultiFrameParser::update()
 
   for (i = 1; i < parsers.size(); i++)
   {
-    SyncInfo new_sinfo = parsers[i]->sync_info();
-    sinfo.sync_trie |= new_sinfo.sync_trie;
-
+    sinfo |= parsers[i]->sync_info();
     if (max_header_size < parsers[i]->header_size())
       max_header_size = parsers[i]->header_size();
-
-    if (sinfo.min_frame_size > new_sinfo.min_frame_size)
-      sinfo.min_frame_size = new_sinfo.min_frame_size;
-
-    if (sinfo.max_frame_size < new_sinfo.max_frame_size)
-      sinfo.max_frame_size = new_sinfo.max_frame_size;
   }
 
   sinfo.sync_trie.optimize();

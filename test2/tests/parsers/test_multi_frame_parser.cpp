@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(constructor)
   BOOST_CHECK_EQUAL(parser.next_frame(0, 0), false);
 
   BOOST_CHECK_EQUAL(parser.in_sync(), false);
-  BOOST_CHECK_EQUAL(parser.frame_info().is_good(), false);
+  BOOST_CHECK_EQUAL(parser.frame_info().spk.is_unknown(), true);
   BOOST_CHECK_EQUAL(parser.stream_info(), string());
 }
 
