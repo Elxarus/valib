@@ -23,29 +23,6 @@ extern const int win_order[CH_NAMES] =
 // Tables for Speakers class
 ///////////////////////////////////////////////////////////////////////////////
 
-extern const int sample_size_tbl[32] = 
-{
-  0,                // FORMAT_RAWDATA
-  sizeof(sample_t), // FORMAT_LINEAR
-
-  sizeof(int16_t),  // FORMAT_PCM16
-  sizeof(int24_t),  // FORMAT_PCM24
-  sizeof(int32_t),  // FORMAT_PCM32
-
-  sizeof(int16_t),  // FORMAT_PCM16_BE
-  sizeof(int24_t),  // FORMAT_PCM24_BE
-  sizeof(int32_t),  // FORMAT_PCM32_BE
-
-  sizeof(float),    // FORMAT_PCMFLOAT
-  sizeof(double),   // FORMAT_PCMDOUBLE
-
-  1, 1,             // PES/SPDIF
-  1, 1, 1,          // MPA, AC3, DTS
-  5, 6,             // DVD LPCM 20/24 bit
-  
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
 static const struct { int mask; const char *text; } mode_map[] =
 {
   { 0,              "-" },

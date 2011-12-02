@@ -572,9 +572,45 @@ sample_t rms_diff(sample_t *s1, sample_t *s2, size_t size);
 
 inline int sample_size(int format)
 {
-  extern const int sample_size_tbl[32];
-  assert(format >= 0 && format < 32);
-  return sample_size_tbl[format & 0x1f];
+  switch (format)
+  {
+    // Special formats
+    case FORMAT_RAWDATA: return 0;
+    case FORMAT_LINEAR:  return sizeof(sample_t);
+
+    // PCM formats
+    case FORMAT_PCM16_BE:
+    case FORMAT_PCM16:   return sizeof(int16_t);
+    case FORMAT_PCM24_BE:
+    case FORMAT_PCM24:   return sizeof(int24_t);
+    case FORMAT_PCM32_BE:
+    case FORMAT_PCM32:   return sizeof(int32_t);
+
+    case FORMAT_PCMFLOAT:  return sizeof(float);
+    case FORMAT_PCMDOUBLE: return sizeof(double);
+    
+    // LPCM: size of the pack of 2 samples
+    case FORMAT_LPCM20: return 5;
+    case FORMAT_LPCM24: return 6;
+
+    // Container formats
+    case FORMAT_PES:
+    case FORMAT_SPDIF:
+    case FORMAT_AAC_ADTS:
+      return 1;
+
+    // Packed formats
+    case FORMAT_AAC_FRAME:
+    case FORMAT_AC3:
+    case FORMAT_AC3_EAC3:
+    case FORMAT_EAC3:
+    case FORMAT_DTS:
+    case FORMAT_MPA:
+      return 1;
+
+    default:
+      return 0;
+  }
 }
 
 inline int mask_nch(int mask)
