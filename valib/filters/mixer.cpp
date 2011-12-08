@@ -2,6 +2,10 @@
 #include <string.h>
 #include "mixer.h"
 
+static const sample_t LEVEL_SIDE_OF_CENTER_TO_SIDE = sample_t(0.86602540378443864676372317075294);
+static const sample_t LEVEL_SIDE_OF_CENTER_TO_FAR_SIDE = 0.5;
+
+
 typedef void (Mixer::*io_mixfunc_t)(samples_t, samples_t, size_t); // input-output mixing
 typedef void (Mixer::*ip_mixfunc_t)(samples_t, size_t);            // in-place mixing
 
@@ -172,9 +176,6 @@ Mixer::calc_matrix()
   int in_nfront  = ((in_mask >> CH_L)  & 1) + ((in_mask >> CH_C)  & 1) + ((in_mask >> CH_R) & 1);
   int in_nrear   = ((in_mask >> CH_SL) & 1) + ((in_mask >> CH_SR) & 1);
 
-  int out_nfront = ((out_mask >> CH_L)  & 1) + ((out_mask >> CH_C)  & 1) + ((out_mask >> CH_R) & 1);
-  int out_nrear  = ((out_mask >> CH_SL) & 1) + ((out_mask >> CH_SR) & 1);
-
   int in_dolby  = NO_RELATION;
   int out_dolby = NO_RELATION;
 
@@ -185,10 +186,13 @@ Mixer::calc_matrix()
   if (out_spk.relation == RELATION_DOLBY ||
       out_spk.relation == RELATION_DOLBY2)
     out_dolby = out_spk.relation;
-  
+
   for (int i = 0; i < CH_NAMES; i++)
     for (int j = 0; j < CH_NAMES; j++)
       matrix[i][j] = 0;
+
+  /////////////////////////////////////////////////////////
+  // Downmixing
 
   // Dolby modes are backwards-compatible
   if (in_dolby && out_dolby)
@@ -237,7 +241,7 @@ Mixer::calc_matrix()
   }
   else
   {
-    // direct route equal channels
+    // Direct routes
     if (in_mask & out_mask & CH_MASK_L)  matrix[CH_L] [CH_L]  = 1.0;
     if (in_mask & out_mask & CH_MASK_R)  matrix[CH_R] [CH_R]  = 1.0;
     if (in_mask & out_mask & CH_MASK_C)  matrix[CH_C] [CH_C]  = clev;
@@ -248,146 +252,178 @@ Mixer::calc_matrix()
     if (in_mask & out_mask & CH_MASK_BL) matrix[CH_BL][CH_BL] = slev;
     if (in_mask & out_mask & CH_MASK_BC) matrix[CH_BC][CH_BC] = slev;
     if (in_mask & out_mask & CH_MASK_BR) matrix[CH_BR][CH_BR] = slev;
+    if (in_mask & out_mask & CH_MASK_LFE) matrix[CH_LFE][CH_LFE] = lfelev;
 
-    // mix front channels
-    if (out_nfront == 1 && in_nfront > 1)
-    {
-      matrix[CH_L][CH_M] = 1;
-      matrix[CH_R][CH_M] = 1;
-    }
-    if (out_nfront == 2 && in_nfront != 2)
-    {
-      matrix[CH_C][CH_L] = LEVEL_3DB * clev;
-      matrix[CH_C][CH_R] = LEVEL_3DB * clev;
-    }
+    // Mix center
+    if (in_mask & ~out_mask & CH_MASK_C)
+      if ((out_mask & CH_MASK_CL) && (out_mask & CH_MASK_CR))
+      {
+        matrix[CH_C][CH_CL] = LEVEL_3DB * clev;
+        matrix[CH_C][CH_CR] = LEVEL_3DB * clev;
+      }
+      else if ((out_mask & CH_MASK_L) && (out_mask & CH_MASK_R))
+      {
+        matrix[CH_C][CH_L] = LEVEL_3DB * clev;
+        matrix[CH_C][CH_R] = LEVEL_3DB * clev;
+      }
 
-    // mix rear into front channels
-    if (out_nrear == 0)
-    {
-      if (in_nrear == 1 && out_nfront == 1)
+    // Mix left & light
+    if (in_mask & ~out_mask & CH_MASK_L)
+      if (out_mask & CH_MASK_C)
+        matrix[CH_L][CH_C] = 1;
+
+    if (in_mask & ~out_mask & CH_MASK_R)
+      if (out_mask & CH_MASK_C)
+        matrix[CH_R][CH_C] = 1;
+
+    // Mix left of center & right of center
+    if (in_mask & ~out_mask & CH_MASK_CL)
+      if ((out_mask & CH_MASK_L) && (out_mask & CH_MASK_C))
       {
-        matrix[CH_S][CH_M] = clev;
+        matrix[CH_CL][CH_L] = LEVEL_3DB;
+        matrix[CH_CL][CH_C] = LEVEL_3DB;
       }
-      if (in_nrear == 1 && out_nfront != 1)
+      else if ((out_mask & CH_MASK_L) && (out_mask & CH_MASK_R))
       {
-        matrix[CH_S][CH_L] = LEVEL_3DB * slev;
-        matrix[CH_S][CH_R] = LEVEL_3DB * slev;
+        matrix[CH_CL][CH_L] = LEVEL_SIDE_OF_CENTER_TO_SIDE;
+        matrix[CH_CL][CH_R] = LEVEL_SIDE_OF_CENTER_TO_FAR_SIDE;
       }
-      if (in_nrear == 2 && out_nfront == 1)
+      else if (out_mask & CH_MASK_C)
+        matrix[CH_CL][CH_C] = 1;
+
+    if (in_mask & ~out_mask & CH_MASK_CR)
+      if ((out_mask & CH_MASK_R) && (out_mask & CH_MASK_C))
       {
-        matrix[CH_SL][CH_M] = slev;
-        matrix[CH_SR][CH_M] = slev;
+        matrix[CH_CR][CH_R] = LEVEL_3DB;
+        matrix[CH_CR][CH_C] = LEVEL_3DB;
       }
-      if (in_nrear == 2 && out_nfront != 1)
+      else if ((out_mask & CH_MASK_L) && (out_mask & CH_MASK_R))
       {
+        matrix[CH_CR][CH_R] = LEVEL_SIDE_OF_CENTER_TO_SIDE;
+        matrix[CH_CR][CH_L] = LEVEL_SIDE_OF_CENTER_TO_FAR_SIDE;
+      }
+      else if (out_mask & CH_MASK_C)
+        matrix[CH_CR][CH_C] = 1;
+
+    // Mix side left & side right
+    if (in_mask & ~out_mask & CH_MASK_SL)
+      if (out_mask & CH_MASK_BL)
+        matrix[CH_SL][CH_BL] = slev;
+      else if (out_mask & CH_MASK_BC)
+        matrix[CH_SL][CH_BC] = slev;
+      else if (out_mask & CH_MASK_L)
         matrix[CH_SL][CH_L] = slev;
-        matrix[CH_SR][CH_R] = slev;
-      }
-    }
+      else if (out_mask & CH_MASK_C)
+        matrix[CH_SL][CH_C] = slev;
 
-    // mix rear channels
-    if (out_nrear == 1 && in_nrear == 2)
-    {
-      matrix[CH_SL][CH_S] = slev;
-      matrix[CH_SR][CH_S] = slev;
-    }
-    if (out_nrear == 2 && in_nrear == 1)
-    {
-      matrix[CH_S][CH_SL] = LEVEL_3DB * slev;
-      matrix[CH_S][CH_SR] = LEVEL_3DB * slev;
-    }
+    if (in_mask & ~out_mask & CH_MASK_SR)
+      if (out_mask & CH_MASK_BR)
+        matrix[CH_SR][CH_BR] = slev;
+      else if (out_mask & CH_MASK_BC)
+        matrix[CH_SR][CH_BC] = slev;
+      else if (out_mask & CH_MASK_R)
+        matrix[CH_SR][CH_R] = slev;
+      else if (out_mask & CH_MASK_C)
+        matrix[CH_SR][CH_C] = slev;
+
+    // Mix back left & back right
+    if (in_mask & ~out_mask & CH_MASK_BL)
+      if (out_mask & CH_MASK_SL)
+        matrix[CH_BL][CH_SL] = slev;
+      else if (out_mask & CH_MASK_BC)
+        matrix[CH_BL][CH_BC] = slev;
+      else if (out_mask & CH_MASK_L)
+        matrix[CH_BL][CH_L] = slev;
+      else if (out_mask & CH_MASK_C)
+        matrix[CH_BL][CH_C] = slev;
+
+    if (in_mask & ~out_mask & CH_MASK_BR)
+      if (out_mask & CH_MASK_SR)
+        matrix[CH_BR][CH_SR] = slev;
+      else if (out_mask & CH_MASK_BC)
+        matrix[CH_BR][CH_BC] = slev;
+      else if (out_mask & CH_MASK_R)
+        matrix[CH_BR][CH_R] = slev;
+      else if (out_mask & CH_MASK_C)
+        matrix[CH_BR][CH_C] = slev;
+
+    // Mix back center
+    if (in_mask & ~out_mask & CH_MASK_BC)
+      if ((out_mask & CH_MASK_BL) && (out_mask & CH_MASK_BR))
+      {
+        matrix[CH_BC][CH_BL] = LEVEL_3DB * slev;
+        matrix[CH_BC][CH_BR] = LEVEL_3DB * slev;
+      }
+      else if ((out_mask & CH_MASK_SL) && (out_mask & CH_MASK_SR))
+      {
+        matrix[CH_BC][CH_SL] = LEVEL_3DB * slev;
+        matrix[CH_BC][CH_SR] = LEVEL_3DB * slev;
+      }
+      else if ((out_mask & CH_MASK_L) && (out_mask & CH_MASK_R))
+      {
+        matrix[CH_BC][CH_L] = LEVEL_3DB * slev;
+        matrix[CH_BC][CH_R] = LEVEL_3DB * slev;
+      }
+      else if (out_mask & CH_MASK_C)
+        matrix[CH_BC][CH_C] = slev;
+
+    // Mix LFE
+    if (in_mask & ~out_mask & CH_MASK_LFE)
+      if ((out_mask & CH_MASK_L) && (out_mask & CH_MASK_R))
+      {
+        matrix[CH_LFE][CH_L] = LEVEL_3DB * lfelev;
+        matrix[CH_LFE][CH_R] = LEVEL_3DB * lfelev;
+      }
+      else if (out_mask & CH_MASK_C)
+        matrix[CH_LFE][CH_C] = lfelev;
   }
 
-  // Expand stereo & Voice control
-  bool expand_stereo_allowed = expand_stereo && !in_nrear;
-  bool voice_control_allowed = voice_control && (in_nfront == 2);
-
-  if ((voice_control_allowed || expand_stereo_allowed) && !out_dolby)
+  if (expand_stereo)
   {
-    if (voice_control_allowed && out_nfront != 2)
+    if (~in_mask & out_mask & CH_MASK_C)
     {
-      // C' = clev * (L + R) * LEVEL_3DB
       matrix[CH_L][CH_C] = clev * LEVEL_3DB;
       matrix[CH_R][CH_C] = clev * LEVEL_3DB;
     }
-
-    if (expand_stereo_allowed && in_nfront == 2 && out_nrear)
+    if ((~in_mask & out_mask & CH_MASK_SL) && (~in_mask & out_mask & CH_MASK_SR))
     {
-      if (out_nrear == 1)
-      {
-        // S' = slev * (L - R)
-        matrix[CH_L][CH_S] = + slev;
-        matrix[CH_R][CH_S] = - slev;
-      }
-      if (out_nrear == 2)
-      {
-        // SL' = slev * 1/2 (L - R)
-        // SR' = slev * 1/2 (R - L)
-        matrix[CH_L][CH_SL] = + 0.5 * slev;
-        matrix[CH_R][CH_SL] = - 0.5 * slev;
-        matrix[CH_L][CH_SR] = - 0.5 * slev;
-        matrix[CH_R][CH_SR] = + 0.5 * slev;
-      }
+      matrix[CH_L][CH_SL] = +slev * 0.5;
+      matrix[CH_R][CH_SL] = -slev * 0.5;
+      matrix[CH_L][CH_SR] = -slev * 0.5;
+      matrix[CH_R][CH_SR] = +slev * 0.5;
     }
-
-    if (in_nfront != 1)
+    if ((~in_mask & out_mask & CH_MASK_BL) && (~in_mask & out_mask & CH_MASK_BR))
     {
-      if (expand_stereo_allowed && voice_control_allowed)
-      {
-        // L' = L * 1/2 (slev + clev) - R * 1/2 (slev - clev)
-        // R' = R * 1/2 (slev + clev) - L * 1/2 (slev - clev)
-        matrix[CH_L][CH_L] = + 0.5 * (slev + clev);
-        matrix[CH_R][CH_L] = - 0.5 * (slev - clev);
-        matrix[CH_L][CH_R] = - 0.5 * (slev - clev);
-        matrix[CH_R][CH_R] = + 0.5 * (slev + clev);
-      }
-      else if (expand_stereo_allowed)
-      {
-        matrix[CH_L][CH_L] = + 0.5 * (slev + 1);
-        matrix[CH_R][CH_L] = - 0.5 * (slev - 1);
-        matrix[CH_L][CH_R] = - 0.5 * (slev - 1);
-        matrix[CH_R][CH_R] = + 0.5 * (slev + 1);
-      }
-      else // if (voice_control_allowed)
-      {
-        matrix[CH_L][CH_L] = + 0.5 * (1 + clev);
-        matrix[CH_R][CH_L] = - 0.5 * (1 - clev);
-        matrix[CH_L][CH_R] = - 0.5 * (1 - clev);
-        matrix[CH_R][CH_R] = + 0.5 * (1 + clev);
-      }
+      matrix[CH_L][CH_BL] = +slev * 0.5;
+      matrix[CH_R][CH_BL] = -slev * 0.5;
+      matrix[CH_L][CH_BR] = -slev * 0.5;
+      matrix[CH_R][CH_BR] = +slev * 0.5;
+    }
+    if (~in_mask & out_mask & CH_MASK_BC)
+    {
+      matrix[CH_L][CH_BR] = +slev * LEVEL_3DB;
+      matrix[CH_R][CH_BR] = -slev * LEVEL_3DB;
     }
   }
 
-  // Mix LFE channel
+  /////////////////////////////////////////////////////////
+  // Voice control
 
-  if (in_mask & out_mask & CH_MASK_LFE) 
-     matrix[CH_LFE][CH_LFE] = lfelev;
-
-  if (in_mask & ~out_mask & CH_MASK_LFE)
+  if (voice_control &&
+     // Input has left & right but not center
+     (~in_mask & CH_MASK_C) && (in_mask & CH_MASK_L) && (in_mask & CH_MASK_R) &&\
+     // Output has left & right but not center
+     (out_mask & CH_MASK_L) && (out_mask & CH_MASK_R) &&
+     (!expand_stereo || (~out_mask & CH_MASK_C)))
   {
-    // To preserve the resulting loudness, we should apply sqrt(N) gain when 
-    // mixing LFE channel (N is number of output channels we mix LFE to).
-
-    double lfenorm = 0;
-    if (out_spk.mask & CH_MASK_L)  lfenorm += 1;
-    if (out_spk.mask & CH_MASK_R)  lfenorm += 1;
-    if (out_spk.mask & CH_MASK_SL) lfenorm += 1;
-    if (out_spk.mask & CH_MASK_SR) lfenorm += 1;
-
-    if (lfenorm > 0)
-    {
-      lfenorm = 1.0 / sqrt(lfenorm);
-      if (out_spk.mask & CH_MASK_L)  matrix[CH_LFE][CH_L]  = lfenorm * lfelev;
-      if (out_spk.mask & CH_MASK_R)  matrix[CH_LFE][CH_R]  = lfenorm * lfelev;
-      if (out_spk.mask & CH_MASK_SL) matrix[CH_LFE][CH_SL] = lfenorm * lfelev;
-      if (out_spk.mask & CH_MASK_SR) matrix[CH_LFE][CH_SR] = lfenorm * lfelev;
-    }
-
-    // Mix LFE to the center channel only when it is the only output channel
-
-    if (in_mask & CH_MASK_C && out_nfront == 1)  
-      matrix[CH_LFE][CH_C]  = lfelev;
+    matrix[CH_L][CH_L] = + 0.5 * (1 + clev);
+    matrix[CH_R][CH_L] = - 0.5 * (1 - clev);
+    matrix[CH_L][CH_R] = - 0.5 * (1 - clev);
+    matrix[CH_R][CH_R] = + 0.5 * (1 + clev);
   }
+
+  /////////////////////////////////////////////////////////
+  // Matrix normalization
 
   if (normalize_matrix)
   {
