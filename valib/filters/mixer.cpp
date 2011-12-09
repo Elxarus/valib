@@ -401,8 +401,8 @@ Mixer::calc_matrix()
     }
     if (~in_mask & out_mask & CH_MASK_BC)
     {
-      matrix[CH_L][CH_BR] = +slev * LEVEL_3DB;
-      matrix[CH_R][CH_BR] = -slev * LEVEL_3DB;
+      matrix[CH_L][CH_BC] = +slev * LEVEL_3DB;
+      matrix[CH_R][CH_BC] = -slev * LEVEL_3DB;
     }
   }
 
