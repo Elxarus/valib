@@ -364,6 +364,12 @@ using std::string;
 #define CH_MASK_BC   512   // Back center
 #define CH_MASK_BR   1024  // Back right
 
+// channel pairs
+#define CH_MASK_L_R   (CH_MASK_L  | CH_MASK_R)
+#define CH_MASK_SL_SR (CH_MASK_SL | CH_MASK_SR)
+#define CH_MASK_BL_BR (CH_MASK_BL | CH_MASK_BR)
+#define CH_MASK_CL_CR (CH_MASK_CL | CH_MASK_CR)
+
 // synonyms
 #define CH_MASK_M    CH_MASK_C  // Mono channel
 #define CH_MASK_S    CH_MASK_BC // Single surround channel
@@ -373,32 +379,49 @@ using std::string;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Common channel configs
+// Name has 2 forms:
+// * MODE_A_B[_LFE]
+// * MODE_A_B_C[_LFE]
+// Where
+//   A - number of front channels (1, 3, 5)
+//   B - number of surround side channels (0, 1, 2)
+//   C - number of surround back channels (1, 2, 3)
+//   LFE - optional low-frequency channel
+//
+// Note, that back center and single surround is the same channel. So
+// MODE_A_0_1 and MODE_A_1 is the same layout and only the last form is used.
 ///////////////////////////////////////////////////////////////////////////////
 
 #define MODE_UNDEFINED 0
 #define MODE_1_0     (CH_MASK_M)
 #define MODE_2_0     (CH_MASK_L | CH_MASK_R)
 #define MODE_3_0     (CH_MASK_L | CH_MASK_C  | CH_MASK_R)
+#define MODE_5_0     (MODE_3_0  | CH_MASK_CL | CH_MASK_CR)
 #define MODE_2_1     (MODE_2_0  | CH_MASK_S)
 #define MODE_3_1     (MODE_3_0  | CH_MASK_S)
 #define MODE_2_2     (MODE_2_0  | CH_MASK_SL | CH_MASK_SR)
 #define MODE_3_2     (MODE_3_0  | CH_MASK_SL | CH_MASK_SR)
-#define MODE_1_0_LFE (CH_MASK_M | CH_MASK_LFE)
-#define MODE_2_0_LFE (CH_MASK_L | CH_MASK_R  | CH_MASK_LFE)
-#define MODE_3_0_LFE (CH_MASK_L | CH_MASK_C  | CH_MASK_R  | CH_MASK_LFE)
-#define MODE_2_1_LFE (MODE_2_0  | CH_MASK_S  | CH_MASK_LFE)
-#define MODE_3_1_LFE (MODE_3_0  | CH_MASK_S  | CH_MASK_LFE)
-#define MODE_2_2_LFE (MODE_2_0  | CH_MASK_SL | CH_MASK_SR | CH_MASK_LFE)
-#define MODE_3_2_LFE (MODE_3_0  | CH_MASK_SL | CH_MASK_SR | CH_MASK_LFE)
+#define MODE_5_2     (MODE_3_2  | CH_MASK_CL | CH_MASK_CR)
+#define MODE_1_0_LFE (MODE_1_0  | CH_MASK_LFE)
+#define MODE_2_0_LFE (MODE_2_0  | CH_MASK_LFE)
+#define MODE_3_0_LFE (MODE_3_0  | CH_MASK_LFE)
+#define MODE_5_0_LFE (MODE_5_0  | CH_MASK_LFE)
+#define MODE_2_1_LFE (MODE_2_1  | CH_MASK_LFE)
+#define MODE_3_1_LFE (MODE_3_1  | CH_MASK_LFE)
+#define MODE_2_2_LFE (MODE_2_2  | CH_MASK_LFE)
+#define MODE_3_2_LFE (MODE_3_2  | CH_MASK_LFE)
+#define MODE_5_2_LFE (MODE_5_2  | CH_MASK_LFE)
 
+#define MODE_2_0_2     (MODE_2_0   | CH_MASK_BL | CH_MASK_BR)
 #define MODE_3_0_2     (MODE_3_0   | CH_MASK_BL | CH_MASK_BR)
+#define MODE_5_0_2     (MODE_5_0   | CH_MASK_BL | CH_MASK_BR)
 #define MODE_3_2_1     (MODE_3_2   | CH_MASK_BC)
 #define MODE_3_2_2     (MODE_3_2   | CH_MASK_BL | CH_MASK_BR)
-#define MODE_5_2       (MODE_3_2   | CH_MASK_CL | CH_MASK_CR)
+#define MODE_2_0_2_LFE (MODE_2_0_2 | CH_MASK_LFE)
 #define MODE_3_0_2_LFE (MODE_3_0_2 | CH_MASK_LFE)
+#define MODE_5_0_2_LFE (MODE_5_0_2 | CH_MASK_LFE)
 #define MODE_3_2_1_LFE (MODE_3_2_1 | CH_MASK_LFE)
 #define MODE_3_2_2_LFE (MODE_3_2_2 | CH_MASK_LFE)
-#define MODE_5_2_LFE   (MODE_5_2   | CH_MASK_LFE)
 
 // synonyms
 #define MODE_MONO    MODE_1_0
