@@ -378,48 +378,62 @@ Mixer::calc_matrix()
         matrix[CH_LFE][CH_C] = lfelev;
   }
 
+  /////////////////////////////////////////////////////////
+  // Expand stereo
+
   if (expand_stereo)
   {
-    if (~in_mask & out_mask & CH_MASK_C)
+    if ((~in_mask & out_mask & CH_MASK_C) && out_mask != MODE_MONO)
     {
       matrix[CH_L][CH_C] = clev * LEVEL_3DB;
       matrix[CH_R][CH_C] = clev * LEVEL_3DB;
     }
-    if ((~in_mask & out_mask & CH_MASK_SL) && (~in_mask & out_mask & CH_MASK_SR))
+
+    // No surround at input
+    if ((in_mask & (CH_MASK_SL_SR | CH_MASK_BL_BR | CH_MASK_BC)) == 0)
     {
-      matrix[CH_L][CH_SL] = +slev * 0.5;
-      matrix[CH_R][CH_SL] = -slev * 0.5;
-      matrix[CH_L][CH_SR] = -slev * 0.5;
-      matrix[CH_R][CH_SR] = +slev * 0.5;
-    }
-    if ((~in_mask & out_mask & CH_MASK_BL) && (~in_mask & out_mask & CH_MASK_BR))
-    {
-      matrix[CH_L][CH_BL] = +slev * 0.5;
-      matrix[CH_R][CH_BL] = -slev * 0.5;
-      matrix[CH_L][CH_BR] = -slev * 0.5;
-      matrix[CH_R][CH_BR] = +slev * 0.5;
-    }
-    if (~in_mask & out_mask & CH_MASK_BC)
-    {
-      matrix[CH_L][CH_BC] = +slev * LEVEL_3DB;
-      matrix[CH_R][CH_BC] = -slev * LEVEL_3DB;
+      if ((out_mask & CH_MASK_SL) && (out_mask & CH_MASK_SR))
+      {
+        matrix[CH_L][CH_SL] = +slev * 0.5;
+        matrix[CH_R][CH_SL] = -slev * 0.5;
+        matrix[CH_L][CH_SR] = -slev * 0.5;
+        matrix[CH_R][CH_SR] = +slev * 0.5;
+      }
+      if ((out_mask & CH_MASK_BL) && (out_mask & CH_MASK_BR))
+      {
+        matrix[CH_L][CH_BL] = +slev * 0.5;
+        matrix[CH_R][CH_BL] = -slev * 0.5;
+        matrix[CH_L][CH_BR] = -slev * 0.5;
+        matrix[CH_R][CH_BR] = +slev * 0.5;
+      }
+      if (out_mask & CH_MASK_BC)
+      {
+        matrix[CH_L][CH_BC] = +slev * LEVEL_3DB;
+        matrix[CH_R][CH_BC] = -slev * LEVEL_3DB;
+      }
     }
   }
 
   /////////////////////////////////////////////////////////
   // Voice control
 
-  if (voice_control &&
-     // Input has left & right but not center
-     (~in_mask & CH_MASK_C) && (in_mask & CH_MASK_L) && (in_mask & CH_MASK_R) &&\
-     // Output has left & right but not center
-     (out_mask & CH_MASK_L) && (out_mask & CH_MASK_R) &&
-     (!expand_stereo || (~out_mask & CH_MASK_C)))
+  if (voice_control)
   {
-    matrix[CH_L][CH_L] = + 0.5 * (1 + clev);
-    matrix[CH_R][CH_L] = - 0.5 * (1 - clev);
-    matrix[CH_L][CH_R] = - 0.5 * (1 - clev);
-    matrix[CH_R][CH_R] = + 0.5 * (1 + clev);
+    sample_t center_level = 0;
+    for (int i = 0; i < CH_NAMES; i++)
+      center_level += fabs(matrix[i][CH_C]);
+
+    if (
+      // Input has left & right but not center
+      (in_mask & CH_MASK_L) && (in_mask & CH_MASK_R) && (~in_mask & CH_MASK_C) &&
+      // Output has left & right but not center
+      (out_mask & CH_MASK_L) && (out_mask & CH_MASK_R) && center_level == 0)
+    {
+      matrix[CH_L][CH_L] = + 0.5 * (1 + clev);
+      matrix[CH_R][CH_L] = - 0.5 * (1 - clev);
+      matrix[CH_L][CH_R] = - 0.5 * (1 - clev);
+      matrix[CH_R][CH_R] = + 0.5 * (1 + clev);
+    }
   }
 
   /////////////////////////////////////////////////////////

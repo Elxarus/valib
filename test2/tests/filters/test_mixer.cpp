@@ -318,10 +318,10 @@ BOOST_AUTO_TEST_CASE(expand_stereo)
   // Do not fill the center
   BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_STEREO, MODE_MONO),  "l_c:1.0 r_c:1.0");
   // Do not fill side channels
-  BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_2_1,    MODE_2_2),   "l_l:1.0 r_r:1.0 bc_sl:2.0 bc_sr:2.0");
+  BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_2_1,    MODE_2_2),   "l_l:1.0 r_r:1.0 bc_sl:1.4 bc_sr:1.4");
   BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_2_0_2,  MODE_2_2),   "l_l:1.0 r_r:1.0 bl_sl:2.0 br_sr:2.0");
   // Do not fill back channels
-  BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_2_1,    MODE_2_0_2), "l_l:1.0 r_r:1.0 bc_bl:2.0 bc_br:2.0");
+  BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_2_1,    MODE_2_0_2), "l_l:1.0 r_r:1.0 bc_bl:1.4 bc_br:1.4");
   BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_2_2,    MODE_2_0_2), "l_l:1.0 r_r:1.0 sl_bl:2.0 sr_br:2.0");
   // Do not fill surround channel
   BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_2_2,    MODE_2_1),   "l_l:1.0 r_r:1.0 sl_bc:2.0 sr_bc:2.0");
