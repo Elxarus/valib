@@ -48,11 +48,7 @@
 #include "source\raw_source.h"
 #include "win32\cpu.h"
 
-#include "parsers\ac3\ac3_header.h"
-#include "parsers\dts\dts_header.h"
-#include "parsers\mpa\mpa_header.h"
-#include "parsers\spdif\spdif_header.h"
-#include "parsers\multi_header.h"
+#include "parsers\uni\uni_frame_parser.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Test constants
@@ -78,78 +74,78 @@ public:
 
   int test()
   {
-    const HeaderParser *headers[] = { &spdif_header, &ac3_header, &mpa_header, &dts_header };
-    MultiHeader multi_header(headers, array_size(headers));
+    UniFrameParser uni;
 
     log->open_group("StreamBuffer test");
 
     log->open_group("Passthrough test");
 
     log->msg("MPAHeader");
-    passthrough("a.mp2.002.mp2",   &mpa_header, 1, 500);
-    passthrough("a.mp2.005.mp2",   &mpa_header, 1, 500);
-    passthrough("a.mp2.mix.mp2",   &mpa_header, 3, 1500);
+    passthrough("a.mp2.002.mp2",   &uni.mpa, 1, 500);
+    passthrough("a.mp2.005.mp2",   &uni.mpa, 1, 500);
+    passthrough("a.mp2.mix.mp2",   &uni.mpa, 3, 1500);
                                    
     log->msg("AC3Header");
-    passthrough("a.ac3.005.ac3",   &ac3_header, 1, 375);
-    passthrough("a.ac3.03f.ac3",   &ac3_header, 1, 375);
-    passthrough("a.ac3.mix.ac3",   &ac3_header, 3, 1500);
+    passthrough("a.ac3.005.ac3",   &uni.ac3, 1, 375);
+    passthrough("a.ac3.03f.ac3",   &uni.ac3, 1, 375);
+    passthrough("a.ac3.mix.ac3",   &uni.ac3, 3, 1500);
                                    
     // We cannot load the last frame of SPDIF/DTS stream.
     // See note at StreamBuffer class comments.
     log->msg("DTSHeader");
-    passthrough("a.dts.03f.dts",   &dts_header, 1, 1125);
-    passthrough("a.dts.03f.spdif", &dts_header, 1, 1124);
+    passthrough("a.dts.03f.dts",   &uni.dts, 1, 1125);
+    passthrough("a.dts.03f.spdif", &uni.dts, 1, 1124);
                                    
     // SPDIFHeader must work with SPDIF/DTS stream correctly
     log->msg("SPDIFHeader");
-    passthrough("a.mp2.005.spdif", &spdif_header, 1, 500);
-    passthrough("a.ac3.03f.spdif", &spdif_header, 1, 375);
-    passthrough("a.dts.03f.spdif", &spdif_header, 1, 1125);
-    passthrough("a.mad.mix.spdif", &spdif_header, 7, 4375);
+    passthrough("a.mp2.005.spdif", &uni.spdif, 1, 500);
+    passthrough("a.ac3.03f.spdif", &uni.spdif, 1, 375);
+    passthrough("a.dts.03f.spdif", &uni.spdif, 1, 1125);
+    passthrough("a.mad.mix.spdif", &uni.spdif, 7, 4375);
                                    
     log->msg("MultiHeader");
-    passthrough("a.mad.mix.mad",   &multi_header, 7, 4375);
-    passthrough("a.mad.mix.spdif", &multi_header, 7, 4375);
+    passthrough("a.mad.mix.mad",   &uni, 7, 4375);
+    passthrough("a.mad.mix.spdif", &uni, 7, 4375);
 
     log->close_group();
 
     log->open_group("Speed test");
 
-    speed_noise(&dts_header);
+    speed_noise(&uni.dts);
 
     log->msg("MPAHeader");
-    speed_file("a.mp2.002.mp2",   &mpa_header);
-    speed_file("a.mp2.005.mp2",   &mpa_header);
-    speed_file("a.mp2.mix.mp2",   &mpa_header);
+    speed_file("a.mp2.002.mp2",   &uni.mpa);
+    speed_file("a.mp2.005.mp2",   &uni.mpa);
+    speed_file("a.mp2.mix.mp2",   &uni.mpa);
 
     log->msg("AC3Header");
-    speed_file("a.ac3.005.ac3",   &ac3_header);
-    speed_file("a.ac3.03f.ac3",   &ac3_header);
-    speed_file("a.ac3.mix.ac3",   &ac3_header);
+    speed_file("a.ac3.005.ac3",   &uni.ac3);
+    speed_file("a.ac3.03f.ac3",   &uni.ac3);
+    speed_file("a.ac3.mix.ac3",   &uni.ac3);
 
     log->msg("DTSHeader");
-    speed_file("a.dts.03f.dts",   &dts_header);
-    speed_file("a.dts.03f.spdif", &dts_header);
+    speed_file("a.dts.03f.dts",   &uni.dts);
+    speed_file("a.dts.03f.spdif", &uni.dts);
 
     log->msg("SPDIFHeader");
-    speed_file("a.mp2.005.spdif", &spdif_header);
-    speed_file("a.ac3.03f.spdif", &spdif_header);
-    speed_file("a.dts.03f.spdif", &spdif_header);
-    speed_file("a.mad.mix.spdif", &spdif_header);
+    speed_file("a.mp2.005.spdif", &uni.spdif);
+    speed_file("a.ac3.03f.spdif", &uni.spdif);
+    speed_file("a.dts.03f.spdif", &uni.spdif);
+    speed_file("a.mad.mix.spdif", &uni.spdif);
 
     log->msg("MultiHeader");
-    speed_file("a.mad.mix.mad",   &multi_header);
-    speed_file("a.mad.mix.spdif", &multi_header);
+    speed_file("a.mad.mix.mad",   &uni);
+    speed_file("a.mad.mix.spdif", &uni);
 
     log->close_group();
     return log->close_group();
   }
 
 
-  int passthrough(const char *filename, const HeaderParser *hparser, int file_streams, int file_frames)
+  int passthrough(const char *filename, FrameParser *frame_parser, int file_streams, int file_frames)
   {
-    const size_t chunk_size[] = { 0, 1, 2, hparser->max_frame_size(), hparser->max_frame_size() + 1, hparser->max_frame_size() - 1 };
+    const SyncInfo sinfo = frame_parser->sync_info();
+    const size_t chunk_size[] = { 0, 1, 2, sinfo.max_frame_size, sinfo.max_frame_size + 1, sinfo.max_frame_size - 1 };
 
     MemFile f(filename);
     if (!f)
@@ -157,7 +153,7 @@ public:
 
     log->msg("Passthrough test %s", filename);
 
-    streambuf.set_parser(hparser);
+    streambuf.set_parser(frame_parser);
     for (int i = 0; i < array_size(chunk_size); i++)
       passthrough_int(f, f.size(), file_streams, file_frames, chunk_size[i]);
 
@@ -254,9 +250,9 @@ public:
     return log->get_errors();
   }
 
-  int speed_noise(const HeaderParser *hparser)
+  int speed_noise(FrameParser *frame_parser)
   {
-    streambuf.set_parser(hparser);
+    streambuf.set_parser(frame_parser);
 
     CPUMeter cpu;
     Chunk chunk;
@@ -288,14 +284,14 @@ public:
     return 0;
   }
 
-  int speed_file(const char *filename, const HeaderParser *hparser)
+  int speed_file(const char *filename, FrameParser *frame_parser)
   {
     CPUMeter cpu;
     MemFile f(filename);
     if (!f)
       return log->err("Cannot open file %s", filename);
 
-    streambuf.set_parser(hparser);
+    streambuf.set_parser(frame_parser);
 
     int runs = 0;
     cpu.reset();

@@ -28,6 +28,10 @@ protected:
   AC3Parser ac3;
   DTSParser dts;
   MPAParser mpa;
+  AC3FrameParser ac3_frame;
+  DTSFrameParser dts_frame;
+  MPAFrameParser mpa_frame;
+  SPDIFFrameParser spdif_frame;
   SPDIFParser spdif;
 
   Log *log;
@@ -40,22 +44,23 @@ public:
 
   int test()
   {
+
     log->open_group("ParserFilter timing test");
-    test_timing("a.ac3.03f.ac3", &ac3_header, &ac3);
-    test_timing("a.dts.03f.dts", &dts_header, &dts);
-    test_timing("a.mp2.005.mp2", &mpa_header, &mpa);
-    test_timing("a.ac3.03f.spdif", &spdif_header, &spdif);
-    test_timing("a.dts.03f.spdif", &spdif_header, &spdif);
-    test_timing("a.mp2.005.spdif", &spdif_header, &spdif);
+    test_timing("a.ac3.03f.ac3", &ac3_frame, &ac3);
+    test_timing("a.dts.03f.dts", &dts_frame, &dts);
+    test_timing("a.mp2.005.mp2", &mpa_frame, &mpa);
+    test_timing("a.ac3.03f.spdif", &spdif_frame, &spdif);
+    test_timing("a.dts.03f.spdif", &spdif_frame, &spdif);
+    test_timing("a.mp2.005.spdif", &spdif_frame, &spdif);
     return log->close_group();
   }
 
-  void test_timing(const char *file_name, const HeaderParser *header_parser, Filter *decoder)
+  void test_timing(const char *file_name, FrameParser *frame_parser, Filter *decoder)
   {
     log->msg("Timing test %s", file_name);
 
     parser.release();
-    parser.add(header_parser, decoder);
+    parser.add(frame_parser, decoder);
 
     // Load the file into memory
 
@@ -72,14 +77,14 @@ public:
     uint8_t *end = ptr + f.size();
 
     StreamBuffer stream;
-    stream.set_parser(header_parser);
+    stream.set_parser(frame_parser);
     if (!stream.load_frame(&ptr, end))
     {
       log->err("Cannot determine frame interval for file %s", file_name);
       return;
     }
 
-    if (f.size() < 10 * stream.get_frame_interval())
+    if (f.size() < 10 * stream.get_frame_size())
     {
       log->err("File %s is too small for the test", file_name);
       return;
@@ -87,8 +92,8 @@ public:
 
     // Work constants
 
-    const size_t frame_interval = stream.get_frame_interval();
-    const size_t max_frame_size = header_parser->max_frame_size();
+    const size_t frame_interval = stream.get_frame_size();
+    const size_t max_frame_size = frame_parser->sync_info().max_frame_size;
 
     // Prepare noise buffer
     Chunk noise_chunk;
