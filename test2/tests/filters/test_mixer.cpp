@@ -230,6 +230,8 @@ BOOST_AUTO_TEST_CASE(voice_level)
   mixer.set_voice_control(false);
 
   mixer.set_clev(0.5);
+  BOOST_CHECK_EQUAL(mixer.get_clev(), 0.5);
+
   // No mix, just gain the center.
   BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_3_2, MODE_3_2), "l_l:1.0 c_c:0.5 r_r:1.0 sl_sl:1.0 sr_sr:1.0");
   BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_MONO, MODE_MONO), "c_c:0.5");
@@ -249,6 +251,8 @@ BOOST_AUTO_TEST_CASE(surround_level)
   mixer.set_voice_control(true);
 
   mixer.set_slev(0.5);
+  BOOST_CHECK_EQUAL(mixer.get_slev(), 0.5);
+
   // No mix, just gain the surround.
   BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_3_2, MODE_3_2), "l_l:1.0 c_c:1.0 r_r:1.0 sl_sl:0.5 sr_sr:0.5");
   // Downmix to mono. Gain surround, do not gain other channels.
@@ -267,6 +271,8 @@ BOOST_AUTO_TEST_CASE(lfe_level)
   mixer.set_voice_control(true);
 
   mixer.set_lfelev(0.5);
+  BOOST_CHECK_EQUAL(mixer.get_lfelev(), 0.5);
+
   // No mix, just gain LFE channel.
   BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_2_0_LFE, MODE_2_0_LFE), "l_l:1.0 r_r:1.0 lfe_lfe:0.5");
   // Downmix to mono
@@ -333,7 +339,21 @@ BOOST_AUTO_TEST_CASE(expand_stereo)
 
 BOOST_AUTO_TEST_CASE(normalize)
 {
-  BOOST_FAIL("Not implemented");
+  Mixer mixer(1024);
+  mixer.set_normalize_matrix(true);
+  mixer.set_expand_stereo(false);
+  mixer.set_voice_control(true);
+
+  // No normalization
+  BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_STEREO, MODE_STEREO), "l_l:1.0 r_r:1.0");
+  // Decrease loudness
+  BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_STEREO, MODE_MONO), "l_c:0.5 r_c:0.5");
+  // Increase loudness
+  mixer.set_clev(0.5);
+  BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_MONO, MODE_MONO), "c_c:1.0");
+  mixer.set_clev(1.0);
+  // 5.1 -> stereo
+  BOOST_CHECK_EQUAL(serialize_matrix(mixer, MODE_5_1, MODE_STEREO), "l_l:0.3 c_l:0.2 c_r:0.2 r_r:0.3 sl_l:0.3 sr_r:0.3 lfe_l:0.2 lfe_r:0.2");
 }
 
 BOOST_AUTO_TEST_CASE(gain)
