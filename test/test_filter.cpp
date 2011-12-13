@@ -27,12 +27,7 @@ int test_all_filters(Log *log)
   Converter      conv_lr(2048);
   Converter      conv_rl(2048);
 
-  AudioDecoder   dec_mpa;
-  AudioDecoder   dec_mpa_mix;
-  AudioDecoder   dec_ac3;
-  AudioDecoder   dec_ac3_mix;
-  AudioDecoder   dec_dts;
-  AudioDecoder   dec_mix;
+  AudioDecoder   decoder;
 
   Demux          demux;
   Spdifer        spdifer;
@@ -103,27 +98,27 @@ int test_all_filters(Log *log)
 
   // Rawdata (ofdd) filters
 
-  test_filter(log, &dec_mpa, "AudioDecoder (MPA)",
+  test_filter(log, &decoder, "AudioDecoder (MPA)",
     Speakers(FORMAT_MPA, MODE_STEREO, 48000), "a.mp2.005.mp2",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.mp2.002.mp2",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_filter(log, &dec_mpa_mix, "AudioDecoder (MPA mix)",
+  test_filter(log, &decoder, "AudioDecoder (MPA mix)",
     Speakers(FORMAT_MPA, 0, 48000), "a.mp2.mix.mp2",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.mp2.002.mp2",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_filter(log, &dec_ac3, "AudioDecoder (AC3)",
+  test_filter(log, &decoder, "AudioDecoder (AC3)",
     Speakers(FORMAT_AC3, MODE_STEREO, 48000), "a.ac3.03f.ac3",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.005.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_filter(log, &dec_ac3_mix, "AudioDecoder (AC3 mix)",
+  test_filter(log, &decoder, "AudioDecoder (AC3 mix)",
     Speakers(FORMAT_AC3, 0, 48000), "a.ac3.mix.ac3",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.005.ac3",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_filter(log, &dec_dts, "AudioDecoder (DTS)",
+  test_filter(log, &decoder, "AudioDecoder (DTS)",
     Speakers(FORMAT_DTS, MODE_5_1, 48000), "a.dts.03f.dts",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.dts.03f.dts",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
@@ -133,7 +128,7 @@ int test_all_filters(Log *log)
     Speakers(FORMAT_PES, MODE_STEREO, 48000), "a.ac3.03f.pes",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
 
-  test_filter(log, &dec_mix, "AudioDecoder (mix)",
+  test_filter(log, &decoder, "AudioDecoder (mix)",
     Speakers(FORMAT_RAWDATA, 0, 48000), "a.mad.mix.mad",
     Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad",
     Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
