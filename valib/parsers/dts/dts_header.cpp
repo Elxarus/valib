@@ -99,7 +99,7 @@ DTSFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
   if (lff == 3) return false;             // constraint
 
   /////////////////////////////////////////////////////////
-  // Fill HeaderInfo
+  // Fill FrameInfo
 
   if (!finfo)
     return true;

@@ -26,9 +26,9 @@
        +---------------+      +--------------+
                |                      |
                V                      V
-         HeaderParser 1           Decoder 1
-         HeaderParser 2           Decoder 2
-         HeaderParser 3           Decoder 3
+         FrameParser 1            Decoder 1
+         FrameParser 2            Decoder 2
+         FrameParser 3            Decoder 3
   \endverbatim
 
 ******************************************************************************/

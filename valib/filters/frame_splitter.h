@@ -14,13 +14,13 @@
   \class FrameSplitter
   \brief Synchronize and split raw stream into frames.
 
-  Uses StreamBuffer and HeaderParser to do reliable synchronization and split
+  Uses StreamBuffer and FrameParser to do reliable synchronization and split
   raw stream.
 
-  Accepts FORMAT_RAWDATA and formats passed HeaderParser::can_parse() check.
+  Accepts FORMAT_RAWDATA and formats passed FrameParser::can_parse() check.
 
   Output is done one frame per chunk. Output format is data-dependent and
-  determined by HeaderParser::parse_header().
+  determined by StreamBuffer after synchronization.
 
   <b>Example</b>
   \code
@@ -33,11 +33,11 @@
   }
   \endcode
 
-  \fn bool FrameSplitter::set_parser(const HeaderParser *parser)
-    Sets header parser to use.
+  \fn bool FrameSplitter::set_parser(FrameParser *parser)
+    Sets parser to use.
 
-  \fn const HeaderParser *FrameSplitter::get_parser() const
-    Returns header parser currently used.
+  \fn const FrameParser *FrameSplitter::get_parser() const
+    Returns parser currently used.
 
   \fn int FrameSplitter::get_frames() const
     Returns number of frames decoded since creation.
@@ -45,8 +45,8 @@
   \fn string FrameSplitter::stream_info() const
     Prints stream information.
 
-  \fn HeaderInfo FrameSplitter::header_info() const
-    Prints current frame info.
+  \fn FrameInfo FrameSplitter::frame_info() const
+    Returns last frame info.
 ******************************************************************************/
 
 class FrameSplitter : public SimpleFilter

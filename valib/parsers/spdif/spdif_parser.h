@@ -43,8 +43,8 @@
     stream to big endian format. Otherwise it keeps the little endian format
     unchanged.
 
-  \fn HeaderInfo SPDIFParser::header_info() const
-    Returns the header info of the output stream.
+  \fn FrameInfo SPDIFParser::frame_info() const
+    Returns the info about the last frame.
 
 ******************************************************************************/
 

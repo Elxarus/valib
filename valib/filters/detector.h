@@ -5,7 +5,7 @@
   its format. Does 2 jobs:
   * Detects SPDIF stream at PCM16 data.
   * Finds the full format specification (sample rate and channel configuration)
-    using HeaderParser. This allows the downstream to make decisions based on
+    using FrameParser. This allows the downstream to make decisions based on
     this info. For instance, do SPDIF passthrough only for 48kHz streams.
 */
 

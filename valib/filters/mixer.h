@@ -43,7 +43,7 @@
   Mixer may work inplace when number of output channels is less or equal than
   number of input channels. Otherwise it uses buffer for output data. Size of
   the buffer is set at constructor, or with \c buffer_size parameter. So, it is
-  inplace/immediate filter, depending on the mixing mode. \is_buffered() allows
+  inplace/immediate filter, depending on the mixing mode. is_buffered() allows
   to know current mode. Buffer is allocated only buffered mode.
 
   Mixer also allows to gain each input/output channel and all channels at once.
