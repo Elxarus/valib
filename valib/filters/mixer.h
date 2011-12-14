@@ -1,31 +1,7 @@
-/*
-  Matrix Mixer filter
-  Apply matrix conversion 
-    O = M * I 
-  where 
-    O - output sample vector [output_channels]
-    I - input sample vector [input_channels]
-    M - conversion matrix [output_channels, input_channels]
-  
-  Speakers: can change mask
-  Input formats:  Linear
-  Buffering: yes/no
-  Timing: unchanged
-  Parameters:
-    output           - output speakers config
-    buffer_size      - internal buffer size
-    matrix           - conversion matrix
-    auto_matrix      - update matrix automatically
-    normalize_matrix - normalize matrix so output gain <= 1.0 (matrix parameter)
-    voice_control    - allow center gain change even if it is no center channel at input (matrix parameter)
-    expand_stereo    - allow surround gain change even if it is no surround channels at input (matrix parameter)
-    clev             - center mix level (matrix parameter)
-    slev             - surround mix level (matrix parameter)
-    lfelev           - LFE mix level (matrix parameter)
-    gain             - global gain (can change independently of matrix)
-    input_gains      - input channel's gains (can change independently of matrix)
-    output_gain      - output channel's gains (can change independently of matrix)
-*/
+/**************************************************************************//**
+  \file mixer.h
+  \brief Mixer: Matrix mixer filter.
+******************************************************************************/
 
 #ifndef VALIB_MIXER_H
 #define VALIB_MIXER_H
@@ -33,45 +9,194 @@
 #include "../buffer.h"
 #include "../filter.h"
 
+/**************************************************************************//**
+  \class Mixer
+  \brief Matrix mixer filter.
 
-///////////////////////////////////////////////////////////////////////////////
-// Mixer class
-///////////////////////////////////////////////////////////////////////////////
+  Mixer applies following matrix conversion:
+
+  O = M * I
+
+  Where:
+  - O - output sample vector, dimension is out_nch (output number of channels).
+  - I - input sample vector, dimension is in_nch (input number of channels).
+  - M - conversion matrix, dimension is in_nch x out_nch.
+
+  Input format for the conversion is set by Filter::open() function. Output
+  format is set by set_output(), but Speakers::sample_rate is ignored. Mixer
+  also converts levels by applying gain: out_spk.level / in_spk.level.
+
+  Matrix may be found automatically, or set directly by the user. This depends
+  on \c auto_matrix parameter.
+
+  Automatic matrix generation depends on the following parameters:
+  - \c clev - Voice level
+  - \c slev - Surround level
+  - \c lfelev - LFE level
+  - \c expand_stereo - Expand stereo option (upmixing)
+  - \c voice_control - Voice control option (allows control of virtual center)
+  - \c normalize_matrix - Matrix normalization
+
+  See http://ac3filter.net/wiki/Mixing for more information about automatic
+  matrix calculation.
+
+  Mixer may work inplace when number of output channels is less or equal than
+  number of input channels. Otherwise it uses buffer for output data. Size of
+  the buffer is set at constructor, or with \c buffer_size parameter. So, it is
+  inplace/immediate filter, depending on the mixing mode. \is_buffered() allows
+  to know current mode. Buffer is allocated only buffered mode.
+
+  Mixer also allows to gain each input/output channel and all channels at once.
+  Gains are applied to both automatic and manual matrices. Thus, actual matrix
+  is following:
+
+  M' = g * g_lev * (I * G_out) * M * (I * G_in)
+
+  Where:
+  - \c g - global gain.
+  - \c g_lev - level conversion gain (out_spk.level / in_spk.level).
+  - \c M - manual or automatic matrix.
+  - \c G_in - input_gains, vector of gains for each input channel.
+  - \c G_out - output_gains, vector of gains for each output channel.
+
+  \fn Mixer::Mixer(size_t nsamples = 1024);
+    \param nsamples Buffer size in samples.
+
+    Constructor with buffer specification. Note that buffer is not allocated
+    at the constructor. It is allocated at open() or set_output() in case when
+    it is actually required.
+
+  \fn Speakers Mixer::get_output() const;
+    Returns the format set at set_output(). Note, mixer does not alter sample
+    rate, so sample rate is set from the format passed to open() call.
+
+  \fn bool Mixer::set_output(Speakers spk);
+    \param spk Output format.
+
+    Set output format for the mixer. Mixer converts everything, except
+    sample_rate. Sample rate is ignored here and set from input format.
+
+  \fn bool Mixer::is_buffered() const;
+    Returns true when mixer works in buffered mode, i.e. number of output
+    channels is greater than number of input channels.
+
+  \fn size_t Mixer::get_buffer_size() const;
+    Returns the size of the buffer for conversion in buffered mode.
+
+  \fn void Mixer::set_buffer_size(size_t nsamples);
+    \param nsamples Buffer size in samples.
+
+    Sets the buffer size for conversion in buffered mode.
+
+  \fn void Mixer::calc_matrix()
+    Recalculate automatic matrix forcibly. Works even with auto_matrix off.
+
+  \fn void Mixer::get_matrix(matrix_t &matrix) const;
+    \param matrix Resulting matrix.
+
+    Returns current matrix, either automatic (auto_matrix enabled) or set
+    with set_matrix() (auto_matrix disabled).
+
+  \fn bool Mixer::get_auto_matrix() const;
+    Returns current auto_matrix property ('Auto matrix' option).
+
+  \fn bool Mixer::get_normalize_matrix() const;
+    Returns current normalize_matrix property ('Normalize matrix' option).
+
+  \fn bool Mixer::get_voice_control() const;
+    Retruns current voice_control property ('Voice control option' option).
+
+  \fn bool Mixer::get_expand_stereo() const;
+    Returns current expand_stereo property ('Expand stereo' option).
+
+  \fn sample_t Mixer::get_clev() const;
+    Retruns current clev property ('Voice level' option).
+
+  \fn sample_t Mixer::get_slev() const;
+    Retruns current slev property ('Surround level' option).
+
+  \fn sample_t Mixer::get_lfelev() const;
+    Retruns current lfelev property ('LFE level' option).
+
+  \fn sample_t Mixer::get_gain() const;
+    Retruns gain applied by the mixer.
+
+  \fn void Mixer::get_input_gains(sample_t input_gains[CH_NAMES]) const;
+    \param input_gains Array to receive gains.
+
+    Returns per-channel gains for each input channel.
+
+  \fn void Mixer::get_output_gains(sample_t output_gains[CH_NAMES]) const;
+    \param output_gains Array to receive gains.
+
+    Returns per-channel gains for each output channel.
+
+  \fn void Mixer::set_matrix(const matrix_t &matrix);
+    \param matrix Matrix to set.
+
+    Set custom mixing matrix. This function works only when auto_matrix is off,
+    otherwise this function does nothing.
+
+  \fn void Mixer::set_auto_matrix(bool auto_matrix);
+    Set auto_matrix property ('Auto matrix' option).
+    
+    When turning auto_matrix on, existing matrix is replaced with automatically
+    calculated matrix. See http://ac3filter.net/wiki/Mixing for more info about
+    automatic matrix calculation.
+
+    When turning auto_matrix off, matrix does not change. I.e. it does not
+    revert the matrix set with set_matrix(), but it becomes possible to change
+    the matrix.
+
+  \fn void Mixer::set_normalize_matrix(bool normalize_matrix);
+    Set normalize_matrix property ('Normalize matrix' option). Martix is
+    updated immediately.
+
+  \fn void Mixer::set_voice_control(bool voice_control);
+    Set voice_control property ('Voice control' option). Martix is updated
+    immediately.
+
+  \fn void Mixer::set_expand_stereo(bool expand_stereo);
+    Set expand_stereo property ('Expand stereo' option). Martix is updated
+    immediately.
+
+  \fn void Mixer::set_clev(sample_t clev);
+    Set clev property ('Voice level' option). Martix is updated immediately.
+
+  \fn void Mixer::set_slev(sample_t slev);
+    Set slev property ('Surround level' option). Martix is updated immediately.
+
+  \fn void Mixer::set_lfelev(sample_t lfelev);
+    Set lfelev property ('LFE level' option). Martix is updated immediately.
+
+  \fn void Mixer::set_gain(sample_t gain);
+    Set gain.
+    
+    This gain is always applied, even for matrix manually set by set_matrix().
+    It is not shown at the matrix returned by get_matrix().
+
+  \fn void Mixer::set_input_gains(const sample_t input_gains[CH_NAMES]);
+    \param input_gains Array of gains for each input channel.
+
+    Set individual gains for each input channel.
+
+    This gains are always applied, even for matrix manually set by
+    set_matrix(). They are not shown at the matrix returned by get_matrix().
+
+  \fn void Mixer::set_output_gains(const sample_t output_gains[CH_NAMES]);
+    \param output_gains Array of gains for each output channel.
+
+    Set individual gains for each output channel.
+
+    This gains are always applied, even for matrix manually set by
+    set_matrix(). They are not shown at the matrix returned by get_matrix().
+
+******************************************************************************/
 
 class Mixer : public SamplesFilter
 {
-protected:
-  // Speakers
-  Speakers out_spk;                  // output speakers config
-
-  // Buffer
-  SampleBuf buf;                     // sample buffer
-  size_t nsamples;                   // buffer size (in samples)
-                                  
-  // Options                      
-  bool     auto_matrix;              // update matrix automatically
-  bool     normalize_matrix;         // normalize matrix
-  bool     voice_control;            // voice control option
-  bool     expand_stereo;            // expand stereo option
-                                  
-  // Matrix params                
-  sample_t clev;                     // center mix level
-  sample_t slev;                     // surround mix level
-  sample_t lfelev;                   // lfe mix level
-
-  // Gains
-  sample_t gain;                     // general gain
-  sample_t input_gains[CH_NAMES];    // input channel gains
-  sample_t output_gains[CH_NAMES];   // output channel gains
-
-  // Matrix
-  matrix_t matrix;                   // mixing matrix
-  matrix_t m;                        // reordered mixing matrix (internal)
-
-  void prepare_matrix();
-
 public:
-  Mixer(size_t nsamples);
+  Mixer(size_t nsamples = 1024);
 
   /////////////////////////////////////////////////////////
   // SamplesFilter overrides
@@ -90,8 +215,8 @@ public:
 
   // buffer size
   inline bool   is_buffered() const;
-  inline size_t get_buffer() const;
-  inline void   set_buffer(size_t nsamples);
+  inline size_t get_buffer_size() const;
+  inline void   set_buffer_size(size_t nsamples);
 
   // matrix calculation
   void calc_matrix();
@@ -121,6 +246,37 @@ public:
   inline void     set_input_gains(const sample_t input_gains[CH_NAMES]);
   inline void     set_output_gains(const sample_t output_gains[CH_NAMES]);
 
+protected:
+  // Speakers
+  Speakers out_spk;                //!< output speakers config
+
+  // Buffer
+  SampleBuf buf;                   //!< sample buffer
+  size_t nsamples;                 //!< buffer size (in samples)
+
+  // Options                      
+  bool     auto_matrix;            //!< update matrix automatically
+  bool     normalize_matrix;       //!< normalize matrix
+  bool     voice_control;          //!< voice control option
+  bool     expand_stereo;          //!< expand stereo option
+
+  // Matrix params                
+  sample_t clev;                   //!< center mix level
+  sample_t slev;                   //!< surround mix level
+  sample_t lfelev;                 //!< lfe mix level
+
+  // Gains
+  sample_t gain;                   //!< general gain
+  sample_t input_gains[CH_NAMES];  //!< input channel gains
+  sample_t output_gains[CH_NAMES]; //!< output channel gains
+
+  // Matrix
+  matrix_t matrix;                 //!< mixing matrix
+  matrix_t m;                      //!< internal matrix representation
+
+  void prepare_matrix();           //!< find internal matrix represenation
+
+public:
   // mixing functions
   void io_mix11(samples_t input, samples_t output, size_t nsamples);
   void io_mix12(samples_t input, samples_t output, size_t nsamples);
@@ -266,13 +422,13 @@ Mixer::is_buffered() const
 }
 
 inline size_t
-Mixer::get_buffer() const
+Mixer::get_buffer_size() const
 {
   return nsamples;
 }
 
 inline void 
-Mixer::set_buffer(size_t _nsamples)
+Mixer::set_buffer_size(size_t _nsamples)
 {
   nsamples = _nsamples;
   if (is_buffered())
