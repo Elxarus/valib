@@ -101,7 +101,7 @@
 
   \name File operations
 
-  \fn bool FileParser::open(const string &filename, const HeaderParser *parser, size_t max_scan = 0)
+  \fn bool FileParser::open(const string &filename, FrameParser *parser, size_t max_scan = 0)
     \param filename Name of the file to open
     \param parser   Parser to use
     \param max_scan Limit amount of data for synchronization
@@ -123,7 +123,7 @@
     size is about 1Mb. It is enough to sychronize even when file has a header
     (WAV file for instance) and does not take a much of time to scan.
 
-  \fn bool FileParser::open_probe(const string &filename, const HeaderParser *parser, size_t max_scan = 0)
+  \fn bool FileParser::open_probe(const string &filename, FrameParser *parser, size_t max_scan = 0)
     \param filename Name of the file to open
     \param parser   Parser to use
     \param max_scan Limit amount of data for synchronization
@@ -173,7 +173,7 @@
   \fn string FileParser::get_filename() const
     Returns the name of the file.
 
-  \fn const HeaderParser *FileParser::get_parser() const
+  \fn const FrameParser *FileParser::get_parser() const
     Returns header parser used.
 
   \name Positioning
@@ -219,14 +219,11 @@
   \fn int FileParser::get_frames() const
     Returns number of frames loaded since construction.
 
-  \fn HeaderInfo FileParser::header_info() const
-    Returns current frame's info.
+  \fn FrameInfo FileParser::frame_info() const
+    Returns last frame info.
 
-  \fn size_t FileParser::get_frame_interval() const
-    Returns current frame interval.
-
-  \fn double FileParser::get_avg_frame_interval() const
-    Returns average frame interval. stats() must be called before.
+  \fn double FileParser::get_avg_frame_size() const
+    Returns average frame size. stats() must be called before.
 
   \fn double FileParser::get_avg_bitrate() const
     Returns average bitrate interval. stats() must be called before.

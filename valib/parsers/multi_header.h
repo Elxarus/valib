@@ -1,6 +1,6 @@
 /**************************************************************************//**
   \file multi_header.h
-  \brief MultiHeader: Represents a list of header parsers as a single parser.
+  \brief MultiFrameParser: Represents a list of header parsers as a single parser.
 ******************************************************************************/
 
 #ifndef VALIB_MULTI_HEADER_H
@@ -10,22 +10,22 @@
 #include "../parser.h"
 
 /**************************************************************************//**
-  \class MultiHeader
-  \brief Represents a set of header parsers as a single parser.
+  \class MultiFrameParser
+  \brief Represents a set of frame parsers as a single parser.
 
-  A set of HeaderParser objects may be represented as a single HeaderParser
-  object that can parse and compare headers of any format.
+  A set of FrameParser objects may be represented as a single FrameParser that
+  can parse multiple formats.
 
-  MultiHeader provides this. Given a list of parsers it represents a single
-  HeaderParser object.
+  MultiFrameParser provides this functionality. Given a list of parsers it
+  represents this list as a single FrameParser object.
 
-  \fn void MultiHeader::set_parsers(const list_t &parsers)
+  \fn void MultiFrameParser::set_parsers(const list_t &parsers)
     \param parsers List of parsers
 
     Sets the list of parsers to represent.
     Null pointers are removed from the list.
 
-  \fn void MultiHeader::set_parsers(const HeaderParser *const *parsers, size_t nparsers)
+  \fn void MultiFrameParser::set_parsers(FrameParser *const *parsers, size_t nparsers)
     \param parsers  Pointer to an array of parsers
     \param nparsers Number of parsers in the array
 
@@ -33,24 +33,24 @@
     Null pointers are removed from the list.
 
     \code
-      const HeaderParser *parsers[] = { &ac3_header, &dts_header, &mpa_header };
-      MultiHeader multi_header(parsers, array_size(parsers));
+      FrameParser *parsers[] = { &ac3_frame, &dts_frame, &mpa_frame };
+      MultiFrameParser multi_header(parsers, array_size(parsers));
     \endcode
 
-  \fn void MultiHeader::add_parser(const HeaderParser *parser)
+  \fn void MultiFrameParser::add_parser(FrameParser *parser)
     \param parser Parser to add
 
     Adds a single parser to the list. Null value is ignored.
 
-  \fn void MultiHeader::remove_parser(const HeaderParser *parser)
+  \fn void MultiFrameParser::remove_parser(FrameParser *parser)
     \param parser Parser to remove
 
     Removes the parser from the list.
 
-  \fn void MultiHeader::release_parsers()
+  \fn void MultiFrameParser::release_parsers()
     Clear the set of parsers.
 
-  \fn list_t MultiHeader::get_parsers() const
+  \fn list_t MultiFrameParser::get_parsers() const
     Returns the list of parsers
 
 ******************************************************************************/
