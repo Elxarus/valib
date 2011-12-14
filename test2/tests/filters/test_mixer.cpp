@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(constructor)
   Mixer mixer(1024);
 
   // Default values
-  BOOST_CHECK_EQUAL(mixer.get_buffer(), 1024);
+  BOOST_CHECK_EQUAL(mixer.get_buffer_size(), 1024);
 
   BOOST_CHECK_EQUAL(mixer.get_auto_matrix(), true);
   BOOST_CHECK_EQUAL(mixer.get_normalize_matrix(), true);
