@@ -11,8 +11,9 @@ shift
 shift
 
 cd ..\..\samples\test
-%TEST% %*
-cd %DIR%
+"%TEST%" %*
+if %ERRORLEVEL% neq 0 cd "%DIR%" && goto fail
+cd "%DIR%"
 goto end
 
 
