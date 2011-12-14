@@ -161,13 +161,14 @@ BOOST_AUTO_TEST_CASE(bass_at_subwoofer)
   sub_only.set_output(spk_0_1);
 
   // RMS of the uniform nosie in range (-1..1) is sqrt(1/3)
-  // RMS of the filtered signal must about rms_noise * sqrt(freq / nyquist) =
-  // = sqrt(2 * freq / 3 * srate).
+  // RMS of the filtered signal must be about
+  // rms_noise * sqrt(freq / nyquist) = sqrt(2 * freq / 3 * srate).
+  //
   // Note, that actual integral of LR4 low-pass filter does not equal to
-  // freq/nyquist, therefore 20% threshold is used.
+  // freq/nyquist, so empirical value is used.
   double rms = calc_rms(&noise, &FilterChain(&add_sub, &bass_redir, &sub_only));
-  double test_rms = sqrt(double(2 * freq) / (3 * sample_rate));
-  BOOST_CHECK_CLOSE(rms, test_rms, 20);
+  double test_rms = 0.0479;
+  BOOST_CHECK_CLOSE(rms, test_rms, 0.5);
 }
 
 BOOST_AUTO_TEST_CASE(equal_power)
@@ -176,7 +177,7 @@ BOOST_AUTO_TEST_CASE(equal_power)
   // 2.0 noise -> Add subwoofer -> Bass redirection -> Find RMS
   // RMS of the uniform nosie in range (-1..1) is sqrt(1/3).
   // Original signal has 2 channels, but result has 3 channels. Therefore,
-  // resulting RMS equals to original * sqrt(2/3) = sqrt(1/3) * sqrt(2/3)
+  // resulting RMS equals to: original * sqrt(2/3) = sqrt(1/3) * sqrt(2/3)
 
   NoiseGen noise(spk_2_0, seed, block_size);
   BassRedir bass_redir;
@@ -188,7 +189,7 @@ BOOST_AUTO_TEST_CASE(equal_power)
   add_sub.set_output(spk_2_1);
 
   double rms = calc_rms(&noise, &FilterChain(&add_sub, &bass_redir));
-  double test_rms = sqrt(2.0/9);
+  double test_rms = sqrt(2.0)/3;
   BOOST_CHECK_CLOSE(rms, test_rms, 0.5);
 }
 
