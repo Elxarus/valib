@@ -56,7 +56,7 @@ void compare(Source *src, Source *ref)
       // compare linear format
       for (int ch = 0; ch < src_spk.nch(); ch++)
         for (size_t i = 0; i < len; i++)
-          if (src_chunk.samples[ch][i] != ref_chunk.samples[ch][i])
+          if (!EQUAL_SAMPLES(src_chunk.samples[ch][i], ref_chunk.samples[ch][i]))
             BOOST_FAIL("Data differs at channel = " << ch << " pos = " << pos + i);
 
       src_chunk.drop_samples(len);
