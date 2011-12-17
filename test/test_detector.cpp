@@ -86,7 +86,7 @@ public:
 
   int speed_noise()
   {
-    Speakers spk = Speakers(FORMAT_PCM16, 0, 0);
+    Speakers spk = Speakers(FORMAT_PCM16, MODE_STEREO, 48000);
 
     /////////////////////////////////////////////////////////
     // Noise speed test
