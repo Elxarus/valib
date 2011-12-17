@@ -4,6 +4,14 @@
 
 #include <boost/test/unit_test.hpp>
 #include "filters/mixer.h"
+#include "filters/gain.h"
+#include "filters/filter_graph.h"
+#include "source/generator.h"
+#include "../../suite.h"
+
+static const int seed = 934759385;
+static const size_t block_size = 65536;
+
 
 static inline const char *ch_text(int ch)
 {
@@ -358,11 +366,41 @@ BOOST_AUTO_TEST_CASE(normalize)
 
 BOOST_AUTO_TEST_CASE(gain)
 {
-  BOOST_FAIL("Not implemented");
+  // Mixer with gain must work as a mixer without gain plus gain.
+  // Tested chain:    Mixer
+  // Reference chain: Mixer -> Gain
+  const double gain = 0.3;
+  const Speakers in_spk(FORMAT_LINEAR, MODE_5_1, 48000);
+  const Speakers out_spk(FORMAT_LINEAR, MODE_STEREO, 48000);
+  
+  Mixer test;
+  Mixer mixer;
+  Gain  gain_filter;
+
+  NoiseGen test_src(in_spk, seed, block_size);
+  NoiseGen ref_src(in_spk, seed, block_size);
+
+  test.set_output(out_spk);
+  test.set_gain(gain);
+
+  mixer.set_output(out_spk);
+  gain_filter.gain = gain;
+
+  compare(&test_src, &test, &ref_src, &FilterChain(&mixer, &gain_filter));
 }
 
 BOOST_AUTO_TEST_CASE(gains)
 {
+  // Test input/output gains effect.
+  // Set gain and check the effect for each channel.
+  BOOST_FAIL("Not implemented");
+}
+
+BOOST_AUTO_TEST_CASE(matrix)
+{
+  // Test mixing matrix works right
+  // Set custom matrix and check the effect.
+  // Test each mixing mode, inplace/buffered modes.
   BOOST_FAIL("Not implemented");
 }
 
