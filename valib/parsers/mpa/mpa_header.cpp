@@ -199,7 +199,17 @@ MPAFrameParser::build_syncinfo(const uint8_t *frame, size_t size, const FrameInf
 {
   uint32_t mpa_sync = (frame[0] << 8) | frame[1];
 
-  SyncInfo result = sync_info();
+  SyncInfo result = MPAFrameParser::sync_info();
+  if (finfo.frame_size == 0)
+  {
+    // Constant bitrate!
+    // It's very important, otherwise any frame size
+    // is allowed and false sync is *highly* posible.
+    // Finds 3-point sync even at usual DTS stream.
+    result.min_frame_size = size;
+    result.max_frame_size = size;
+  }
+
   result.sync_trie = SyncTrie(mpa_sync, 16);
   return result;
 }
