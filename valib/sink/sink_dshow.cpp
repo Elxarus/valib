@@ -166,6 +166,7 @@ DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
 
   send_mt = false;
   send_dc = false;
+  preroll = false;
   hr = S_OK;
 }
 
@@ -358,6 +359,10 @@ DShowSink::process(const Chunk &chunk)
       sample->SetDiscontinuity(true);
       send_dc = false;
     }
+    
+    // Preroll
+    if (preroll)
+      sample->SetPreroll(true);
     
     // Other sample flags
     sample->SetSyncPoint(true);

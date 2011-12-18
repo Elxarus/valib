@@ -17,6 +17,7 @@ class DShowSink : public CTransformOutputPin, public SimpleSink
 protected:
   bool send_mt;             // send media type with next sample
   bool send_dc;             // send discontinuity with next sample
+  bool preroll;             // mark output samples as preroll
   HRESULT hr;               // result of sending sample
 
   bool query_downstream(const CMediaType *mt) const;
@@ -33,6 +34,8 @@ public:
 
   void send_discontinuity()          { send_dc = true; }
   void send_mediatype()              { send_mt = true; }
+  void set_preroll()                 { preroll = true; }
+  void unset_preroll()               { preroll = false; }
 
   void reset_hresult()               { hr = S_OK;      }
   HRESULT get_hresult()              { return hr;      }
