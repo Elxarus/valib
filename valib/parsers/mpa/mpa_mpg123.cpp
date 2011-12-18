@@ -131,7 +131,7 @@ MPG123Parser::process(Chunk &in, Chunk &out)
     switch (r)
     {
     case MPG123_OK:
-      if (new_stream_state == new_stream_next)
+      if (out_spk.is_unknown() || new_stream_state == new_stream_next)
       {
         new_stream_state = new_stream_now;
         out_spk = get_format(mh);
