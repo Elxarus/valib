@@ -384,7 +384,9 @@ public:
       if (in.is_dummy())
         if (!src->get_chunk(in))
           break;
-      dvd.process(in, out);
+
+      while (dvd.process(in, out))
+        /* do nothing*/;
     }
 
     if (dvd.get_spdif_status() != status)
