@@ -24,11 +24,20 @@ BasicFrameParser::first_frame(const uint8_t *frame, size_t size)
   if (new_finfo.frame_size && new_finfo.frame_size != size)
     return false;
 
+  if (!new_finfo.frame_size && 
+     // use sync_info() because sinfo is not available yet
+     (size < sync_info().min_frame_size || size > sync_info().max_frame_size))
+    return false;
+
   header.allocate(header_size());
   memcpy(header, frame, header_size());
 
   finfo = new_finfo;
-  sinfo = build_syncinfo(frame, size, finfo);
+  finfo.frame_size = size;
+
+  // new_finfo must be passed because it may contain zero frame size.
+  // VBR/CBR parsers may rely on this to report constant bitrate.
+  sinfo = build_syncinfo(frame, size, new_finfo);
   return true;
 }
 
@@ -49,7 +58,13 @@ BasicFrameParser::next_frame(const uint8_t *frame, size_t size)
   if (new_finfo.frame_size && new_finfo.frame_size != size)
     return false;
 
+  if (!new_finfo.frame_size && 
+     // use sinfo (!) to check range
+     (size < sinfo.min_frame_size || size > sinfo.max_frame_size))
+    return false;
+
   finfo = new_finfo;
+  finfo.frame_size = size;
   return true;
 }
 
