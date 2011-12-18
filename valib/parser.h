@@ -241,7 +241,7 @@ struct FrameInfo
 
   We use the following terminology:
   - \b Syncpoint (synchronization point) is a point at the stream that matches
-    certain pattern (defined by SyncTrie). Beginning of the frame and
+    certain pattern (defined by SyncTrie). It's a beginning of the frame and
     <b>frame header</b>. Syncpoint that does not start a frame is a
     <b>false syncpoint</b>.
 
@@ -286,18 +286,18 @@ struct FrameInfo
   An example of false sync at p1 and good sync at p2:
 
   \verbatim
-        p1           p2                    p3
-        V            V                     V
-  ------+------------+---------------------+----------
-        | hdr |      | hdr1 |  frame 1     | hdr2 |  frame 2
-  ------+------------+---------------------+----------
-        |                              ^   ^
-        +- - - - - - - - - - - - - - - +   |
-                frame_size (hdr)           |
-                                           |
-                     |                     |
-                     +- - - - - - - - - - -+
-                        frame_size (hdr1)
+        p1                 p2                    p3
+        V                  V                     V
+  ------+------------------+---------------------+------------------
+        | false hdr |      | hdr1 |  frame 1     | hdr2 |  frame 2
+  ------+------------------+---------------------+------------------
+        |                              ^         ^
+        +- - - - - - - - - - - - - - - +         |
+              frame_size (false hdr)             |
+                                                 |
+                           |                     |
+                           +- - - - - - - - - - -+
+                              frame_size (hdr1)
   \endverbatim
 
   At last, we must ensure that consecutive frames belong to the same stream
@@ -331,8 +331,6 @@ struct FrameInfo
   - Header validation and parsing. Done by parse_header() function.
   - Header comparison. Done by compare_headers() function.
 
-
-
   All methods may be divided into several groups:
   - Synchronization info.
   - Stateless frame header functions. These functions operate only on frame
@@ -342,7 +340,7 @@ struct FrameInfo
 
   Frame parsers may be divided into:
   - Frame information is fully known from the header. In this case all
-    information abount a frame (including the frame size) is known from the
+    information about a frame (including the frame size) is known from the
     frame header. In this case we don't have to scan for the next frame.
   - Frame size unknown from the header. In this case frame size is not known
     from the header.
