@@ -83,13 +83,6 @@ public:
     compare_file(log, Speakers(FORMAT_AC3, 0, 0), "a.ac3.005.ac3", &spdifer, "a.ac3.005.spdif");
     compare_file(log, Speakers(FORMAT_DTS, 0, 0), "a.dts.03f.dts", &spdifer, "a.dts.03f.spdif");
     compare_file(log, Speakers(FORMAT_RAWDATA, 0, 0), "a.mad.mix.mad", &spdifer, "a.mad.mix.spdif");
-    // spdif stream -> spdif stream
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mp2.005.spdif", &spdifer, "a.mp2.005.spdif");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mp2.002.spdif", &spdifer, "a.mp2.002.spdif");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.ac3.03f.spdif", &spdifer, "a.ac3.03f.spdif");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.ac3.005.spdif", &spdifer, "a.ac3.005.spdif");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.dts.03f.spdif", &spdifer, "a.dts.03f.spdif");
-    compare_file(log, Speakers(FORMAT_SPDIF, 0, 0), "a.mad.mix.spdif", &spdifer, "a.mad.mix.spdif");
   }
 
   void speed_noise()
