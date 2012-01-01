@@ -554,14 +554,6 @@
 				</FileConfiguration>
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\valib\parsers\eac3\eac3_parser.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\valib\parsers\eac3\eac3_parser.h"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
