@@ -772,6 +772,14 @@
 			Name="parsers"
 			>
 			<File
+				RelativePath="..\valib\parsers\ffmpeg_decoder.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\parsers\ffmpeg_decoder.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\parsers\multi_header.cpp"
 				>
 			</File>
@@ -903,6 +911,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\valib\parsers\mpa\mpa_mpg123.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\mpa\mpa_mpg123.h"
+					>
+				</File>
+				<File
 					RelativePath="..\valib\parsers\mpa\mpa_parser.cpp"
 					>
 				</File>
@@ -982,6 +998,14 @@
 					RelativePath="..\valib\parsers\aac\aac_adts_parser.h"
 					>
 				</File>
+				<File
+					RelativePath="..\valib\parsers\aac\aac_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\aac\aac_parser.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="eac3"
@@ -992,6 +1016,14 @@
 				</File>
 				<File
 					RelativePath="..\valib\parsers\eac3\eac3_header.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\eac3\eac3_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\eac3\eac3_parser.h"
 					>
 				</File>
 			</Filter>

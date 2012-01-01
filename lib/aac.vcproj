@@ -679,14 +679,6 @@
 				</File>
 			</Filter>
 		</Filter>
-		<File
-			RelativePath="..\valib\parsers\aac\aac_parser.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\valib\parsers\aac\aac_parser.h"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

@@ -490,14 +490,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\valib\parsers\mpa\mpa_mpg123.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\valib\parsers\mpa\mpa_mpg123.h"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
