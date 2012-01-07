@@ -125,7 +125,6 @@ Detector::flush(Chunk &out)
   if (!do_flush)
     return false;
 
-  do_flush = true;
   is_new_stream = false;
   while (1) switch (state)
   {
@@ -141,7 +140,8 @@ Detector::flush(Chunk &out)
         if (stream.has_debris())
         {
           out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-          state = state_frame;
+          if (stream.has_frame())
+            state = state_frame;
           return true;
         }
         else if (stream.has_frame())
@@ -175,31 +175,6 @@ Detector::flush(Chunk &out)
       sync.send_frame_sync(out);
       state = state_load;
       return true;
-  }
-
-  switch (state)
-  {
-    case state_load:
-      do_flush = false;
-      is_new_stream = false;
-
-      stream.flush();
-      if (!stream.has_debris())
-        return false;
-
-      out.set_rawdata(stream.get_debris(), stream.get_debris_size());
-      if (out_spk.format == FORMAT_PCM16)
-        sync.send_sync(out, 1.0/(4 * spk.sample_rate));
-      else
-        sync.send_frame_sync(out);
-      sync.reset();
-      return true;
-
-    case state_frame:
-      // We have data in the buffer
-      // Do dummy processing
-      Chunk dummy;
-      return process(dummy, out);
   }
   assert(false);
   return false;
