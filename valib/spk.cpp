@@ -101,6 +101,7 @@ Speakers::format_text() const
     case FORMAT_AC3_EAC3:    return "AC3/EAC3";
     case FORMAT_MPA:         return "MPEG Audio";
     case FORMAT_DTS:         return "DTS";
+    case FORMAT_FLAC:        return "Flac";
 
     case FORMAT_LPCM20:      return "LPCM 20bit";
     case FORMAT_LPCM24:      return "LPCM 24bit";

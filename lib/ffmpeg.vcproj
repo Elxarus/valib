@@ -263,126 +263,10 @@
 	</References>
 	<Files>
 		<Filter
-			Name="libavcodec"
-			>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavcodec\avcodec.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavcodec\avfft.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavcodec\dxva2.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavcodec\opt.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavcodec\vaapi.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavcodec\vdpau.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavcodec\xvmc.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="libavutil"
-			>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\adler32.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\attributes.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\avconfig.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\avstring.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\avutil.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\base64.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\common.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\crc.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\error.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\fifo.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\intfloat_readwrite.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\log.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\lzo.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\mathematics.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\md5.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\mem.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\pixdesc.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\pixfmt.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\rational.h"
-				>
-			</File>
-			<File
-				RelativePath="..\3rdparty\ffmpeg\include\libavutil\sha1.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="32bit"
 			>
 			<File
-				RelativePath="..\3rdparty\ffmpeg\lib\avcodec-52.def"
+				RelativePath="..\3rdparty\ffmpeg\lib\avcodec-53.def"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -424,7 +308,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\3rdparty\ffmpeg\lib\avutil-50.def"
+				RelativePath="..\3rdparty\ffmpeg\lib\avutil-51.def"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -470,7 +354,7 @@
 			Name="64bit"
 			>
 			<File
-				RelativePath="..\3rdparty\ffmpeg\lib\x64\avcodec64-52.def"
+				RelativePath="..\3rdparty\ffmpeg\lib\x64\avcodec64-53.def"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -512,7 +396,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\3rdparty\ffmpeg\lib\x64\avutil64-50.def"
+				RelativePath="..\3rdparty\ffmpeg\lib\x64\avutil64-51.def"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

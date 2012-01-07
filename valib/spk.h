@@ -259,7 +259,8 @@ using std::string;
 #define FORMAT_DTS        14
 #define FORMAT_EAC3       15
 #define FORMAT_AC3_EAC3   16 // AC3 or EAC3 stream
-
+                             // Later: include Dolby TrueHD and rename to
+                             // FORMAT_DOLBY
 // DVD LPCM
 // Note: the sample size for this formats is doubled because
 // LPCM samples are packed into blocks of 2 samples.
@@ -269,6 +270,8 @@ using std::string;
 // AAC
 #define FORMAT_AAC_FRAME  19
 #define FORMAT_AAC_ADTS   20
+
+#define FORMAT_FLAC       21
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format masks
@@ -303,6 +306,7 @@ using std::string;
 #define FORMAT_MASK_AC3          FORMAT_MASK(FORMAT_AC3)
 #define FORMAT_MASK_MPA          FORMAT_MASK(FORMAT_MPA)
 #define FORMAT_MASK_DTS          FORMAT_MASK(FORMAT_DTS)
+#define FORMAT_MASK_FLAC         FORMAT_MASK(FORMAT_FLAC)
 
 // DVD LPCM
 #define FORMAT_MASK_LPCM20       FORMAT_MASK(FORMAT_LPCM20)

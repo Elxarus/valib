@@ -1,5 +1,8 @@
 syntax:glob
 
+# Mercurial
+*.orig
+
 # Build files
 **\Debug
 **\Release
