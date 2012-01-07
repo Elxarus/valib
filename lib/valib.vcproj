@@ -1047,6 +1047,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="flac"
+				>
+				<File
+					RelativePath="..\valib\parsers\flac\flac_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\flac\flac_parser.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="sink"

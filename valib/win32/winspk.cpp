@@ -316,6 +316,10 @@ wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
         format = FORMAT_AAC_FRAME;
         break;
 
+      case WAVE_FORMAT_FLAC:
+        format = FORMAT_FLAC;
+        break;
+
       default:
         return false;
     }
