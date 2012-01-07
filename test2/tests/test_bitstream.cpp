@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(bs_read_write)
   {
     int bits = rng.get_range(32);
     if (total_bits + bits > size_bits)
-      bits = size_bits - total_bits;
+      bits = (int)(size_bits - total_bits);
     uint32_t value = reader.get(bits);
     writer.put(bits, value);
     total_bits += bits;

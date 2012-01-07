@@ -79,7 +79,7 @@ AACParser::init_decoder()
   NeAACDecSetConfiguration(h_aac, c);
 
   if (spk.data_size)
-    NeAACDecInit2(h_aac, spk.format_data.get(), spk.data_size, &freq, &channels);
+    NeAACDecInit2(h_aac, spk.format_data.get(), (unsigned long)spk.data_size, &freq, &channels);
   // This allows not to drop the first frame
   NeAACDecPostSeekReset(h_aac, 1);
 
@@ -130,7 +130,7 @@ AACParser::process(Chunk &in, Chunk &out)
   while (in.size)
   {
     is_fresh = false;
-    void *data = NeAACDecDecode(h_aac, &info, in.rawdata, in.size);
+    void *data = NeAACDecDecode(h_aac, &info, in.rawdata, (unsigned long)in.size);
     if (info.error ||                 // error happen
         info.bytesconsumed == 0 ||    // prevent infinite loop
         info.bytesconsumed > in.size) // decoder used more bytes than we have

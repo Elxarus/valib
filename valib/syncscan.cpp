@@ -52,7 +52,7 @@ int
 SyncTrie::insert_node(Graph &gr)
 {
   gr.push_back(Node());
-  return gr.size() - 1;
+  return (int)(gr.size() - 1);
 }
 
 int

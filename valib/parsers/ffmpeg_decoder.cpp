@@ -109,8 +109,8 @@ FfmpegDecoder::process(Chunk &in, Chunk &out)
   {
     av_init_packet(&avpkt);
     avpkt.data = in.rawdata;
-    avpkt.size = in.size;
-    int out_size = buf.size();
+    avpkt.size = (int)in.size;
+    int out_size = (int)buf.size();
     int gone = avcodec_decode_audio3(avctx, (int16_t *)buf.begin(), &out_size, &avpkt);
     if (gone < 0 || gone == 0)
       return false;
