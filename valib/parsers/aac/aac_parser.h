@@ -21,18 +21,20 @@ public:
   AACParser();
   ~AACParser();
 
-  bool can_open(Speakers spk) const;
-  bool init();
-  void uninit();
+  virtual bool can_open(Speakers spk) const;
+  virtual bool init();
+  virtual void uninit();
 
-  void reset();
-  bool process(Chunk &in, Chunk &out);
+  virtual void reset();
+  virtual bool process(Chunk &in, Chunk &out);
 
-  bool new_stream() const
+  virtual bool new_stream() const
   { return new_stream_flag; }
 
-  Speakers get_output() const
+  virtual Speakers get_output() const
   { return out_spk; }
+
+  virtual string info() const;
 };
 
 #endif
