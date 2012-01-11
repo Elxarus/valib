@@ -90,6 +90,14 @@ public:
       return;
     }
 
+    // Open filter
+
+    if (!parser.open(stream.get_spk()))
+    {
+      log->err("Cannot open filter with format %s", stream.get_spk().print().c_str());
+      return;
+    }
+
     // Work constants
 
     const size_t frame_interval = stream.get_frame_size();
