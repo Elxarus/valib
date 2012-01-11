@@ -68,6 +68,8 @@ static inline bool compare_time(vtime_t t1, vtime_t t2)
 
 static void test_first_timestamp1(Source *src, Filter *f)
 {
+  BOOST_MESSAGE("First timestamp test 1");
+
   // Scenario:
   // 1) reset()
   // 2) Timestamp the first input chunk
@@ -100,6 +102,8 @@ static void test_first_timestamp1(Source *src, Filter *f)
 
 static void test_first_timestamp2(Source *src, Filter *f, bool frame_sync)
 {
+  BOOST_MESSAGE("First timestamp test 2");
+
   // Scenario:
   // 1) reset();
   // 2) Fill the filter and get first output chunk(s)
@@ -166,6 +170,8 @@ static void test_first_timestamp2(Source *src, Filter *f, bool frame_sync)
 
 static void test_first_timestamp3(Source *src, Filter *f)
 {
+  BOOST_MESSAGE("First timestamp test 3");
+
   // Scenario:
   // 1) reset()
   // 2) Timestamp the first *empty* input chunk
@@ -197,6 +203,8 @@ static void test_first_timestamp3(Source *src, Filter *f)
 
 static void test_buffering(Source *src, Filter *f, bool frame_sync)
 {
+  BOOST_MESSAGE("Buffering test");
+
   // Test buffering filter.
   // Scenario:
   // 1) reset();
@@ -289,12 +297,14 @@ static void test_timing(Speakers spk, Filter *f, const char *filename = 0, bool 
   BOOST_REQUIRE(f->open(spk));
   if (filename)
   {
+    BOOST_MESSAGE("Testing on file: " << filename);
     RAWSource raw(spk, filename);
     BOOST_REQUIRE(raw.is_open());
     test_timing(&raw, f, frame_sync, tests);
   }
   else
   {
+    BOOST_MESSAGE("Testing on noise");
     NoiseGen noise(spk, seed, noise_size);
     test_timing(&noise, f, frame_sync, tests);
   }
@@ -320,6 +330,8 @@ static void test_timing(Speakers spk, Filter *f, const char *filename = 0, bool 
 
 static void parser_timing(Speakers spk, Filter *filter, const char *filename, FrameParser *frame_parser)
 {
+  BOOST_MESSAGE("Parser timing test on file: " << filename);
+
   const size_t noise_size = 1000;
   const int frames_required = 10;
 
