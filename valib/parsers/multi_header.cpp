@@ -121,7 +121,7 @@ MultiFrameParser::sync_info() const
 SyncInfo
 MultiFrameParser::sync_info2() const
 {
-  return parser? parser->sync_info(): sinfo;
+  return parser? parser->sync_info2(): sinfo;
 }
 
 size_t

@@ -74,6 +74,8 @@ public:
   /////////////////////////////////////////////////////////
   // SimpleFilter overrides
 
+  virtual bool init();
+
   virtual bool can_open(Speakers spk) const;
   virtual void reset();
 

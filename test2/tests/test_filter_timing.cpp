@@ -11,6 +11,7 @@
 #include "source/raw_source.h"
 #include "source/source_filter.h"
 #include "../all_filters.h"
+#include "../noise_buf.h"
 
 static const int seed = 9873457;
 static const size_t noise_size = 1024*1024;
@@ -22,8 +23,8 @@ static const vtime_t time2 = 321;
 #define FIRST_TIMESTAMP3 4
 #define BUFFERING        8
 
-#define ALL_TESTS        0xf
-#define PARSER_TESTS     3
+#define ALL_TESTS        (FIRST_TIMESTAMP1 | FIRST_TIMESTAMP2 | FIRST_TIMESTAMP3 | BUFFERING)
+#define PARSER_TESTS     (FIRST_TIMESTAMP1 | FIRST_TIMESTAMP2)
 
 
 static const vtime_t size2time(Speakers spk, size_t size)
@@ -273,10 +274,12 @@ static void test_timing(Source *src, Filter *f, bool frame_sync = false, int tes
     f->open(src->get_output());
   BOOST_REQUIRE(f->is_open());
 
+  // Buffering test must be firest. Parser filters require this test to begin
+  // with a frame boundary.
+  if (tests & BUFFERING)        test_buffering(src, f, frame_sync);
   if (tests & FIRST_TIMESTAMP1) test_first_timestamp1(src, f);
   if (tests & FIRST_TIMESTAMP2) test_first_timestamp2(src, f, frame_sync);
   if (tests & FIRST_TIMESTAMP3) test_first_timestamp3(src, f);
-  if (tests & BUFFERING)        test_buffering(src, f, frame_sync);
 }
 
 static void test_timing(Speakers spk, Filter *f, const char *filename = 0, bool frame_sync = false, int tests = ALL_TESTS)
@@ -295,6 +298,180 @@ static void test_timing(Speakers spk, Filter *f, const char *filename = 0, bool 
     test_timing(&noise, f, frame_sync, tests);
   }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Parser timing test
+// This test may be applied to FrameSplitter, ParserFilter and Detector.
+//
+// t1                                        t2        t3        t4        t5                      t6        t7        t8        none
+// v                                         v         v         v         v                       v         v         v         V
+// +-----------------------------------------+---------+---------+---------+-----------------------+---------+---------+---------+---------+
+// |                  Chunk 1                | Chunk 2 | Chunk 3 | Chunk 4 |       Chunk 5         | Chunk 6 | Chunk 7 | Chunk 8 | Chunk 9 |
+// +-----+---------+---------+---------+-----+---------+-----+---+---------+-+---------+---------+-+---------+---------+---------+---------+
+// | *** | Frame 1 | Frame 2 | Frame 3 | *** | ******* | *** |    Frame 4    | Frame 5 | Frame 6 |       Frame 7       | Frame 8 | Frame 9 |
+// +-----+---------+---------+---------+-----+---------+-----+---------------+---------+---------+---------------------+---------+---------+
+//       ^         ^         ^                               ^               ^         ^         ^                     ^         ^
+//       t1        none      none                            t3              t5        none      none                  t8        none
+//
+// Chunk N - input chunks
+// Frame N - output chunks
+// *** - Noise data at input, no output
+
+static void parser_timing(Speakers spk, Filter *filter, const char *filename, FrameParser *frame_parser)
+{
+  const size_t noise_size = 1000;
+  const int frames_required = 10;
+
+  MemFile f(filename);
+  BOOST_REQUIRE(f);
+
+  // Find frame positions
+  StreamBuffer stream;
+  stream.set_parser(frame_parser);
+
+  size_t frame_pos[frames_required];
+  size_t pos = 0;
+  size_t frames = 0;
+
+  uint8_t *ptr = f;
+  uint8_t *end = ptr + f.size();
+  while (frames < frames_required)
+  {
+    BOOST_REQUIRE(stream.load(&ptr, end));
+
+    if (stream.has_debris())
+      pos += stream.get_debris_size();
+
+    if (stream.has_frame())
+    {
+      frame_pos[frames++] = pos;
+      pos += stream.get_frame_size();
+    }
+  }
+
+  // Prepare test stream
+
+  RawNoise noise(noise_size, seed);
+  Rawdata test_buf(frame_pos[9] + 2 * noise_size);
+
+  memcpy(test_buf, noise, noise_size);
+  pos = noise_size;
+
+  memcpy(test_buf + pos, f + frame_pos[0], frame_pos[3] - frame_pos[0]);
+  pos += frame_pos[3] - frame_pos[0];
+
+  memcpy(test_buf + pos, noise, noise_size);
+  pos += noise_size;
+
+  memcpy(test_buf + pos, f + frame_pos[3], frame_pos[9] - frame_pos[3]);
+
+  // Prepare input chunks
+
+  Chunk chunks[9];
+  size_t chunk_size;
+
+  chunk_size = noise_size + frame_pos[3] - frame_pos[0] + noise_size / 3;
+  chunks[0].set_rawdata(test_buf, chunk_size, true, 0);
+  pos = chunk_size;
+
+  chunk_size = noise_size / 3;
+  chunks[1].set_rawdata(test_buf + pos, chunk_size, true, 1000);
+  pos += chunk_size;
+
+  chunk_size = noise_size / 3 + (frame_pos[4] - frame_pos[3]) / 3;
+  chunks[2].set_rawdata(test_buf + pos, chunk_size, true, 2000);
+  pos += chunk_size;
+
+  chunk_size = (frame_pos[4] - frame_pos[3]) / 3;
+  chunks[3].set_rawdata(test_buf + pos, chunk_size, true, 3000);
+  pos += chunk_size;
+
+  chunk_size = (frame_pos[4] - frame_pos[3]) / 3 + (frame_pos[6] - frame_pos[4]) + (frame_pos[7] - frame_pos[6]) / 3;
+  chunks[4].set_rawdata(test_buf + pos, chunk_size, true, 4000);
+  pos += chunk_size;
+
+  chunk_size = (frame_pos[7] - frame_pos[6]) / 3;
+  chunks[5].set_rawdata(test_buf + pos, chunk_size, true, 5000);
+  pos += chunk_size;
+
+  chunk_size = frame_pos[7] + 2 * noise_size - pos;
+  chunks[6].set_rawdata(test_buf + pos, chunk_size, true, 6000);
+  pos += chunk_size;
+
+  chunk_size = frame_pos[8] - frame_pos[7];
+  chunks[7].set_rawdata(test_buf + pos, chunk_size, true, 7000);
+  pos += chunk_size;
+
+  chunk_size = frame_pos[9] - frame_pos[8];
+  chunks[8].set_rawdata(test_buf + pos, chunk_size);
+
+  // List of output chunks
+
+  struct OutputChunk {
+    bool new_stream;
+    bool sync;
+    vtime_t time;
+  };
+  
+  OutputChunk parser_chunks[9] =
+  {
+    { true,  true,  0    },
+    { false, false, 0    },
+    { false, false, 0    },
+    { true,  true,  2000 },
+    { false, true,  4000 },
+    { false, false, 0    },
+    { false, false, 0    },
+    { false, true,  7000 },
+    { false, false, 0    }
+  };
+
+  OutputChunk detector_chunks[] =
+  {
+    { true,  false, 0    }, // Pre-frame junk
+    { false, true,  0    }, // First frame
+    { false, false, 0    }, // Frame 2
+    { false, false, 0    }, // Frame 3
+    { true,  false, 0    }, // Pre-frame junk of a new stream
+    { false, true,  2000 }, // Frame 4
+    { false, true,  4000 },
+    { false, false, 0    },
+    { false, false, 0    },
+    { false, true,  7000 },
+    { false, false, 0    }
+  };
+
+  // Process
+  Chunk in, out;
+  frames = 0;
+  OutputChunk *out_chunks = parser_chunks;
+  size_t n_out_chunks = array_size(parser_chunks);
+
+  BOOST_REQUIRE(filter->open(spk));
+  for (int i = 0; i < array_size(chunks); i++)
+  {
+    in = chunks[i];
+    while (filter->process(in, out))
+    {
+      if (frames == 0 && !out.sync)
+      {
+        // It's Detector
+        out_chunks = detector_chunks;
+        n_out_chunks = array_size(detector_chunks);
+      }
+
+      BOOST_REQUIRE(frames < n_out_chunks);
+      BOOST_CHECK_EQUAL(filter->new_stream(), out_chunks[frames].new_stream);
+      BOOST_CHECK_EQUAL(out.sync, out_chunks[frames].sync);
+      if (out.sync && out_chunks[frames].sync)
+        BOOST_CHECK_EQUAL(out.time, out_chunks[frames].time);
+      frames++;
+    }
+  }
+  BOOST_CHECK_EQUAL(frames, n_out_chunks);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 BOOST_AUTO_TEST_SUITE(filter_timing)
 
@@ -346,12 +523,6 @@ BOOST_AUTO_TEST_CASE(convolver_mch)
   test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
 
-BOOST_AUTO_TEST_CASE(audio_decoder_ac3)
-{
-  AudioDecoder filter;
-  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
-}
-
 BOOST_AUTO_TEST_CASE(decoder_graph_spdif)
 {
   DecoderGraph filter;
@@ -394,13 +565,6 @@ BOOST_AUTO_TEST_CASE(dvd_graph_pcm)
   test_timing(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter);
 }
 
-BOOST_AUTO_TEST_CASE(frame_splitter_ac3)
-{
-  AC3FrameParser frame_parser;
-  FrameSplitter filter(&frame_parser);
-  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
-}
-
 BOOST_AUTO_TEST_CASE(gain)
 {
   Gain filter;
@@ -426,15 +590,6 @@ BOOST_AUTO_TEST_CASE(mixer_buffered)
   Mixer filter(1024);
   filter.set_output(Speakers(FORMAT_LINEAR, MODE_5_1, 48000));
   test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
-}
-
-BOOST_AUTO_TEST_CASE(parser_filter_ac3)
-{
-  ParserFilter filter;
-  AC3FrameParser ac3_frame_parser;
-  AC3Parser ac3_parser;
-  filter.add(&ac3_frame_parser, &ac3_parser);
-  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
 }
 
 BOOST_AUTO_TEST_CASE(audio_processor)
@@ -595,6 +750,95 @@ BOOST_AUTO_TEST_CASE(spdif_wrapper)
   source.open_probe("a.ac3.03f.ac3", &frame_parser);
   BOOST_REQUIRE(source.is_open());
   test_timing(&source, &filter, true, PARSER_TESTS);
+}
+
+///////////////////////////////////////////////////////////
+// Parsers
+
+BOOST_AUTO_TEST_CASE(frame_splitter)
+{
+  UniFrameParser uni;
+  FrameSplitter filter(&uni);
+
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", true);
+
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", &AC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", &DTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", &MPAFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", &SPDIFFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", &SPDIFFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", &SPDIFFrameParser());
+}
+
+BOOST_AUTO_TEST_CASE(parser_filter)
+{
+  UniFrameParser uni;
+
+  AC3Parser ac3;
+  DTSParser dts;
+  MPAParser mpa;
+  SPDIFParser spdif;
+
+  ParserFilter filter;
+  filter.add(&uni.ac3, &ac3);
+  filter.add(&uni.dts, &dts);
+  filter.add(&uni.mpa, &mpa);
+  filter.add(&uni.spdif, &spdif);
+
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", true);
+
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", &AC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", &DTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", &MPAFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", &SPDIFFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", &SPDIFFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", &SPDIFFrameParser());
+}
+
+BOOST_AUTO_TEST_CASE(audio_decoder)
+{
+  AudioDecoder filter;
+
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true);
+
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", &AC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", &DTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", &MPAFrameParser());
+}
+
+BOOST_AUTO_TEST_CASE(detector)
+{
+  // Detector does not pass test_first_timestamp1() and test_first_timestamp3()
+  // because it does not stamp first chunk filled with pre-frame junk.
+  const int tests = ALL_TESTS & ~FIRST_TIMESTAMP1 & ~FIRST_TIMESTAMP3;
+  Detector filter;
+
+  test_timing(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", true, tests);
+
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", &AC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", &DTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", &MPAFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", &SPDIFFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", &SPDIFFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", &SPDIFFrameParser());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
