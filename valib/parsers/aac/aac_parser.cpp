@@ -203,6 +203,8 @@ static const char *channel_configuration_tbl[16] =
 string
 AACParser::info() const
 {
+  using std::endl;
+
   if (spk.format != FORMAT_AAC_FRAME)
     return string("No sync");
 
@@ -212,7 +214,7 @@ AACParser::info() const
   result << "Format data:";
   for (size_t i = 0; i < spk.data_size; i++)
     result << ' ' << digit[format_data[i] >> 4] << digit[format_data[i] & 0xf];
-  result << "\n";
+  result << endl;
 
   ReadBS bs(format_data, 0, spk.data_size * 8);
   int object_type = bs.get(5);
@@ -222,17 +224,18 @@ AACParser::info() const
     sampling_frequency = bs.get(24);
   int channel_configuration = bs.get(4);
 
-  result << "Audio Specific Config:\n";
+  result << "Audio Specific Config:" << endl;
   result << "  Object type: ";
   switch (object_type)
   {
-    case 1:  result << "AAC Main\n"; break;
-    case 2:  result << "AAC LC\n";   break;
-    case 3:  result << "AAC SSR\n";  break;
-    case 4:  result << "AAC LTP\n";  break;
-    default: result << object_type << "\n"; break;
+    case 1:  result << "AAC Main"; break;
+    case 2:  result << "AAC LC";   break;
+    case 3:  result << "AAC SSR";  break;
+    case 4:  result << "AAC LTP";  break;
+    default: result << object_type; break;
   }
-  result << "  Sampling frequency: " << sampling_frequency << "\n";
-  result << "  Channel configuration: " << channel_configuration_tbl[channel_configuration] << "\n\n";
+  result << endl;
+  result << "  Sampling frequency: " << sampling_frequency << endl;
+  result << "  Channel configuration: " << channel_configuration_tbl[channel_configuration];
   return result.str();
 }
