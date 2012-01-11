@@ -796,15 +796,19 @@ BOOST_AUTO_TEST_CASE(parser_filter)
 {
   UniFrameParser uni;
 
-  AC3Parser ac3;
-  DTSParser dts;
-  MPAParser mpa;
+  ADTSParser  adts;
+  AC3Parser   ac3;
+  DTSParser   dts;
+  EAC3Parser  eac3;
+  MPAParser   mpa;
   SPDIFParser spdif;
 
   ParserFilter filter;
-  filter.add(&uni.ac3, &ac3);
-  filter.add(&uni.dts, &dts);
-  filter.add(&uni.mpa, &mpa);
+  filter.add(&uni.ac3,   &ac3);
+  filter.add(&uni.adts,  &adts);
+  filter.add(&uni.dts,   &dts);
+  filter.add(&uni.eac3,  &eac3);
+  filter.add(&uni.mpa,   &mpa);
   filter.add(&uni.spdif, &spdif);
 
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
@@ -831,13 +835,15 @@ BOOST_AUTO_TEST_CASE(audio_decoder)
   AudioDecoder filter;
 
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
-  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts", true);
+  // Currently AAC/ADTS is not supported by AudioDecoder because
+  // it requires an additional demuxer (ADTSParser)
+  //test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true);
 
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3",  &AC3FrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts", &ADTSFrameParser());
+  //parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts", &ADTSFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts",  &DTSFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", &EAC3FrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2",  &MPAFrameParser());
