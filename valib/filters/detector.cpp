@@ -186,6 +186,8 @@ Detector::load(Chunk &in)
   uint8_t *buf = in.rawdata;
   uint8_t *end = buf + in.size;
   size_t old_data_size = stream.get_buffer_size();
+  if (stream.is_in_sync())
+    old_data_size -= stream.get_debris_size();
 
   stream.load(&buf, end);
   size_t gone = buf - in.rawdata;
@@ -193,4 +195,6 @@ Detector::load(Chunk &in)
 
   sync.put(gone);
   sync.drop(old_data_size + gone - stream.get_buffer_size());
+  if (stream.is_in_sync())
+    sync.drop(stream.get_debris_size());
 }
