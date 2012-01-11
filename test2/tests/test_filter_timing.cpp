@@ -250,6 +250,7 @@ static void test_buffering(Source *src, Filter *f, bool frame_sync)
     if (!src->get_chunk(in))
       BOOST_FAIL("Cannot fill the filter");
 
+  BOOST_CHECK(out1.sync);
   BOOST_CHECK_EQUAL(out1.time, time1);
 
   // Get the second output chunk
@@ -761,15 +762,19 @@ BOOST_AUTO_TEST_CASE(frame_splitter)
   FrameSplitter filter(&uni);
 
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", true);
 
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", &AC3FrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", &DTSFrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", &MPAFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3",   &AC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts",  &ADTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts",   &DTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", &EAC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2",   &MPAFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", &SPDIFFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", &SPDIFFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", &SPDIFFrameParser());
@@ -791,15 +796,19 @@ BOOST_AUTO_TEST_CASE(parser_filter)
   filter.add(&uni.spdif, &spdif);
 
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", true);
 
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", &AC3FrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", &DTSFrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", &MPAFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3",   &AC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts",  &ADTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts",   &DTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", &EAC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2",   &MPAFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", &SPDIFFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", &SPDIFFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", &SPDIFFrameParser());
@@ -810,12 +819,16 @@ BOOST_AUTO_TEST_CASE(audio_decoder)
   AudioDecoder filter;
 
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", true);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true);
 
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", &AC3FrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", &DTSFrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", &MPAFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3",  &AC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts", &ADTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts",  &DTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", &EAC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2",  &MPAFrameParser());
 }
 
 BOOST_AUTO_TEST_CASE(detector)
@@ -826,16 +839,20 @@ BOOST_AUTO_TEST_CASE(detector)
   Detector filter;
 
   test_timing(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter);
-  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", true, tests);
-  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", true, tests);
-  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3",   true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts",  true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts",   true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", true, tests);
+  test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2",   true, tests);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", true, tests);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", true, tests);
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", true, tests);
 
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3", &AC3FrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts", &DTSFrameParser());
-  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2", &MPAFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3",   &AC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.aac.03f.adts",  &ADTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.dts",   &DTSFrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "test.eac3.03f.eac3", &EAC3FrameParser());
+  parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.mp2",   &MPAFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.spdif", &SPDIFFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", &SPDIFFrameParser());
   parser_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.mp2.005.spdif", &SPDIFFrameParser());
