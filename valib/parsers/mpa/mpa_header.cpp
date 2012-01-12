@@ -168,6 +168,7 @@ MPAFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
      ((hdr1[1] & 0xf0) == 0xf0) && // sync
      ((hdr1[1] & 0x06) != 0x00) && // layer
      ((hdr1[2] & 0xf0) != 0xf0) && // bitrate
+     ((hdr2[2] & 0xf0) != 0xf0) && // bitrate
      ((hdr1[2] & 0x0c) != 0x0c))   // sample rate
   {
     return 
@@ -182,6 +183,7 @@ MPAFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
      ((hdr1[0] & 0xf0) == 0xf0) && // sync
      ((hdr1[0] & 0x06) != 0x00) && // layer
      ((hdr1[3] & 0xf0) != 0xf0) && // bitrate
+     ((hdr2[3] & 0xf0) != 0xf0) && // bitrate
      ((hdr1[3] & 0x0c) != 0x0c))   // sample rate
   {
     return

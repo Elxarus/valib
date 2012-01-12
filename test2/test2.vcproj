@@ -434,6 +434,10 @@
 				Name="mpa"
 				>
 				<File
+					RelativePath=".\tests\parsers\mpa\test_mpa_frame_parser.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\tests\parsers\mpa\test_mpa_mpg123.cpp"
 					>
 				</File>
