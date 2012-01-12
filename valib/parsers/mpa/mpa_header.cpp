@@ -72,8 +72,13 @@ static const int slots_tbl[2][3] =
 };
 
 // see codegen/makesync.cpp
-const SyncTrie MPAFrameParser::sync_trie
-("iiiiiiiiiiiix*ix***xROxRO*xROxRO**xROxRO*xROxROxx***xROxRO*xROxRO**xROxRO*xROxRO");
+const SyncTrie MPAFrameParser::sync_trie(
+"iiii**ixiiiiiiii***xROxRO*xROxRO**xROxRO*xROxROxxiiiiiiii***xROxRO*xROxRO**"
+"xROxRO*xROxRO*ixiiiiiiii***xROxRO*xROxRO**xROxRO*xROxRO*xiiiiiiii***xROxRO*"
+"xROxRO**xROxRO*xROxRO*iiiiiiii***xROxRO*xROxRO**xROxRO*xROxROiiii**ix***xRO"
+"xRO*xROxRO**xROxRO*xROxROxx***xROxRO*xROxRO**xROxRO*xROxRO*ix***xROxRO*xROx"
+"RO**xROxRO*xROxRO*x***xROxRO*xROxRO**xROxRO*xROxRO****xROxRO*xROxRO**xROxRO"
+"*xROxRO***xROxRO*xROxRO**xROxRO*xROxRO");
 
 bool
 MPAFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
