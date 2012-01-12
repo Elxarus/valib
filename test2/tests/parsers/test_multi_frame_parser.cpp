@@ -16,7 +16,18 @@ static MPAFrameParser mpa;
 
 static FrameParser *parsers_with_null[] = { &ac3, 0, &dts, &mpa };
 static FrameParser *parsers[] = { &ac3, &dts, &mpa };
-static const char *files[] = { "a.ac3.03f.ac3", "a.dts.03f.dts", "a.mp2.005.mp2" };
+
+static const struct {
+  const char *filename;
+  FrameParser *parser;
+  Speakers spk;
+  size_t frame1_size, frame2_size;
+} files[] =
+{
+  { "a.ac3.03f.ac3", &ac3, Speakers(FORMAT_AC3, MODE_5_1, 48000), 1792, 1792 },
+  { "a.dts.03f.dts", &dts, Speakers(FORMAT_DTS, MODE_5_1, 48000), 1008, 1008 },
+  { "a.mp2.005.mp2", &mpa, Speakers(FORMAT_MPA, MODE_STEREO, 48000), 1152, 1152 }
+};
 
 BOOST_AUTO_TEST_SUITE(multi_frame_parser)
 
@@ -156,9 +167,13 @@ BOOST_AUTO_TEST_CASE(parse_header)
   MultiFrameParser parser(parsers, array_size(parsers));
   for (int i = 0; i < array_size(parsers); i++)
   {
-    MemFile f(files[i]);
+    FrameInfo finfo;
+    MemFile f(files[i].filename);
     BOOST_REQUIRE(f);
-    BOOST_CHECK(parser.parse_header(f));
+    BOOST_CHECK(parser.parse_header(f, &finfo));
+    BOOST_CHECK(finfo.spk == files[i].spk);
+    if (finfo.frame_size)
+      BOOST_CHECK_EQUAL(finfo.frame_size, files[i].frame1_size);
   }
 }
 
@@ -168,12 +183,59 @@ BOOST_AUTO_TEST_CASE(compare_headers)
   for (int i = 0; i < array_size(parsers); i++)
     for (int j = 0; j < array_size(parsers); j++)
     {
-      MemFile f1(files[i]);
-      MemFile f2(files[j]);
+      MemFile f1(files[i].filename);
+      MemFile f2(files[j].filename);
       BOOST_REQUIRE(f1);
       BOOST_REQUIRE(f2);
       BOOST_CHECK_EQUAL(parser.compare_headers(f1, f2), i == j);
     }
+}
+
+///////////////////////////////////////////////////////////
+// Stateful operations
+
+BOOST_AUTO_TEST_CASE(frame_ops)
+{
+  MultiFrameParser parser(parsers, array_size(parsers));
+  for (int i = 0; i < array_size(parsers); i++)
+  {
+    MemFile f(files[i].filename);
+    BOOST_REQUIRE(f);
+
+    BOOST_CHECK(parser.first_frame(f, files[i].frame1_size));
+    BOOST_CHECK(parser.in_sync());
+    BOOST_CHECK(parser.frame_info().spk == files[i].spk);
+    BOOST_CHECK(parser.frame_info().frame_size == files[i].frame1_size);
+
+    BOOST_CHECK(parser.next_frame(f + files[i].frame1_size, files[i].frame2_size));
+    BOOST_CHECK(parser.in_sync());
+    BOOST_CHECK(parser.frame_info().spk == files[i].spk);
+    BOOST_CHECK(parser.frame_info().frame_size == files[i].frame2_size);
+
+    // Here's no reset() to check first_frame() does
+    // correct format transition on the next file.
+  }
+
+  parser.reset();
+  BOOST_CHECK(!parser.in_sync());
+}
+
+BOOST_AUTO_TEST_CASE(sync_info2)
+{
+  MultiFrameParser parser(parsers, array_size(parsers));
+  for (int i = 0; i < array_size(parsers); i++)
+  {
+    MemFile f(files[i].filename);
+    BOOST_REQUIRE(f);
+
+    BOOST_REQUIRE(files[i].parser->first_frame(f, files[i].frame1_size));
+    SyncInfo sinfo2 = files[i].parser->sync_info2();
+
+    BOOST_CHECK(parser.first_frame(f, files[i].frame1_size));
+    BOOST_CHECK_EQUAL(parser.sync_info2().sync_trie.serialize(), sinfo2.sync_trie.serialize());
+    BOOST_CHECK_EQUAL(parser.sync_info2().min_frame_size, sinfo2.min_frame_size);
+    BOOST_CHECK_EQUAL(parser.sync_info2().max_frame_size, sinfo2.max_frame_size);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
