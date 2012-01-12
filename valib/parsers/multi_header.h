@@ -19,6 +19,9 @@
   MultiFrameParser provides this functionality. Given a list of parsers it
   represents this list as a single FrameParser object.
 
+  Note! When MultiFrameParser add/remove parser functions do not release
+  active parser. You have to call reset() to explicitly release active parser.
+
   \fn void MultiFrameParser::set_parsers(const list_t &parsers)
     \param parsers List of parsers
 

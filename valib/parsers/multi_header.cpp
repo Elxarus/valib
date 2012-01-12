@@ -10,11 +10,13 @@ MultiFrameParser::MultiFrameParser()
 
 MultiFrameParser::MultiFrameParser(const list_t &new_parsers)
 {
+  parser = 0;
   set_parsers(new_parsers);
 }
 
 MultiFrameParser::MultiFrameParser(FrameParser *const *new_parsers, size_t nparsers)
 {
+  parser = 0;
   set_parsers(new_parsers, nparsers);
 }
 
