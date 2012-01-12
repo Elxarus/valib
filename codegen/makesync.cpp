@@ -29,7 +29,7 @@ int main()
 
   SyncTrie MPARate = SyncTrie(0x0, 2) | SyncTrie(0x1, 2) | SyncTrie(0x2, 2);
 
-  SyncTrie MPATrie =
+  SyncTrie MPATrie1 =
     SyncTrie(0xfff, 12) + // Sync
     SyncTrie::any + // version
     MPALayer +      // layer != 0
@@ -37,6 +37,17 @@ int main()
     MPABitrate +    // bitrate != 0xf
     MPARate;        // rate != 0x3
 
+  SyncTrie MPATrie2 =
+    SyncTrie(0xf, 4) + // Sync
+    SyncTrie::any + // version
+    MPALayer +      // layer != 0
+    SyncTrie::any + // protection
+    SyncTrie(0xff, 8) + // Sync
+    SyncTrie("xxxxxxxx") +
+    MPABitrate +    // bitrate != 0xf
+    MPARate;        // rate != 0x3
+
+  SyncTrie MPATrie = MPATrie1 | MPATrie2;
   MPATrie.optimize();
   cout << "MPA: " << MPATrie.serialize() << endl;
 
