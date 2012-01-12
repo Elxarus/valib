@@ -6,14 +6,10 @@ class MPG123Init
 {
 public:
   MPG123Init()
-  {
-    mpg123_init();
-  }
+  { mpg123_init(); }
 
   ~MPG123Init()
-  {
-    mpg123_exit();
-  }
+  { mpg123_exit(); }
 };
 
 volatile static MPG123Init init;
@@ -89,9 +85,7 @@ MPG123Parser::reset()
   mpg123_open_feed((mpg123_handle*)mh);
   state = state_feed;
   new_stream_state = no_new_stream;
-  sync = false;
-  time = 0;
-
+  sync.reset();
   out_spk = spk_unknown;
 }
 
@@ -103,13 +97,7 @@ MPG123Parser::process(Chunk &in, Chunk &out)
   size_t bytes;
   int r;
 
-  if (!sync && in.sync)
-  {
-    sync = true;
-    time = in.time;
-  }
-  in.set_sync(false, 0);
-
+  sync.receive_sync(in);
   while (true) switch (state)
   {
   case state_feed:
@@ -153,9 +141,8 @@ MPG123Parser::process(Chunk &in, Chunk &out)
     if (bytes == 0)
       continue;
 
-    out.set_rawdata(audio, bytes, sync, time);
-    sync = false;
-    time = 0;
+    out.set_rawdata(audio, bytes);
+    sync.send_frame_sync(out);
     frames++;
     return true;
   }
