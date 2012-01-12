@@ -7,6 +7,7 @@
 
 #include "../../buffer.h"
 #include "../../filter.h"
+#include "../../sync.h"
 
 class MPG123Parser : public SimpleFilter
 {
@@ -39,10 +40,9 @@ private:
 
   enum { state_feed, state_decode } state;
   enum { new_stream_next, new_stream_now, no_new_stream} new_stream_state;
-  bool sync;
-  vtime_t time;
 
-  Speakers  out_spk; // output format
+  SyncHelper sync;
+  Speakers out_spk; // output format
 };
 
 #endif
