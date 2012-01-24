@@ -33,4 +33,36 @@ sample_t calc_diff(Source *s1, Filter *f1, Source *s2, Filter *f2);
 double calc_rms_diff(Source *s1, Source *s2);
 double calc_rms_diff(Source *s1, Filter *f1, Source *s2, Filter *f2);
 
+///////////////////////////////////////////////////////////////////////////////
+// Boost::Test specific
+///////////////////////////////////////////////////////////////////////////////
+
+// Make BOOST_TEST_EQUAL to work with Speakers
+
+#include <ostream>
+inline std::ostream &operator <<(std::ostream& o, const Speakers &spk)
+{ 
+  return o << spk.print().c_str();
+}
+
+// Make BOOST_TEST_EQUAL to work with Chunk
+
+inline std::ostream &operator <<(std::ostream& o, const Chunk &chunk)
+{
+  o << "Chunk(size = " << chunk.size;
+
+  if (chunk.size)
+  {
+    if (chunk.rawdata)
+      o << ", rawdata = " << chunk.rawdata;
+    else
+      o << ", samples = " << chunk.samples.samples;
+  }
+
+  if (chunk.sync)
+    o << ", sync = true, time = " << chunk.time;
+
+  return o << ")";
+}
+
 #endif
