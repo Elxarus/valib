@@ -555,11 +555,15 @@ struct samples_t
   inline samples_t operator +(size_t n) const { samples_t s(*this); return s += n; }
   inline samples_t operator -(size_t n) const { samples_t s(*this); return s -= n; }
 
+  inline bool operator ==(const samples_t &other) const;
+  inline bool operator !=(const samples_t &other) const;
+
   inline samples_t &zero();
 
   void reorder_to_std(Speakers spk, const order_t order);
   void reorder_from_std(Speakers spk, const order_t order);
   void reorder(Speakers spk, const order_t input_order, const order_t output_order);
+
 };
 
 void zero_samples(sample_t *s, size_t size);
@@ -762,6 +766,20 @@ samples_t::zero()
   for (int i = 0; i < NCHANNELS; i++)
     samples[i] = 0;
   return *this;
+}
+
+inline bool
+samples_t::operator ==(const samples_t &other) const
+{
+  for (int i = 0; i < NCHANNELS; i++)
+    if (samples[i] != other.samples[i])
+      return false;
+  return true;
+}
+inline bool
+samples_t::operator !=(const samples_t &other) const
+{
+  return !(*this == other);
 }
 
 #endif

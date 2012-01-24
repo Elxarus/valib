@@ -230,6 +230,20 @@ public:
     size -= drop_size;
     sync = false;
   };
+
+  inline bool operator ==(const Chunk &other) const
+  {
+    return
+      size == other.size &&
+      rawdata == other.rawdata &&
+      samples == other.samples &&
+      sync == other.sync && (!sync || time == other.time);
+  }
+
+  inline bool operator !=(const Chunk &other) const
+  {
+    return !(*this == other);
+  }
 };
 
 #endif
