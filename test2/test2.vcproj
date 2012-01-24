@@ -386,6 +386,10 @@
 				RelativePath=".\tests\source\test_list_source.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\tests\source\test_source_filter.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="parsers"
