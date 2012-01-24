@@ -1,20 +1,20 @@
 /**************************************************************************//**
-  \file sink_log.h
-  \brief LogSink class
+  \file log_filter.h
+  \brief LogFilter class
 ******************************************************************************/
 
-#ifndef SINK_LOG_H
-#define SINK_LOG_H
+#ifndef LOG_FILTER_H
+#define LOG_FILTER_H
 
 #include <vector>
-#include "../sink.h"
+#include "passthrough.h"
 
 /**************************************************************************//**
-  \class LogSink
+  \class LogFilter
   \brief Logs incoming chunks for debugging/testing.
 ******************************************************************************/
 
-class LogSink : public SimpleSink
+class LogFilter : public Passthrough
 {
 public:
   enum entry_type_t {
@@ -54,16 +54,13 @@ public:
 
   std::vector<LogEntry> log;
 
-  LogSink()
+  LogFilter()
   {}
 
   string print() const;
 
   /////////////////////////////////////////////////////////
-  // Sink interface
-
-  virtual bool can_open(Speakers spk_) const
-  { return true; }
+  // Filter interface
 
   virtual bool init()
   {
@@ -81,14 +78,16 @@ public:
     log.push_back(LogEntry(entry_reset, spk));
   }
 
-  virtual void process(const Chunk &in)
+  virtual bool process(Chunk &in, Chunk &out)
   {
     log.push_back(LogEntry(in, spk));
+    return Passthrough::process(in, out);
   }
 
-  virtual void flush()
+  virtual bool flush(Chunk &out)
   {
     log.push_back(LogEntry(entry_flush, spk));
+    return Passthrough::flush(out);
   }
 };
 

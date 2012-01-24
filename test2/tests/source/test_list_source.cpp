@@ -5,10 +5,6 @@
 #include <boost/test/unit_test.hpp>
 #include "source/list_source.h"
 #include "../../suite.h"
-#include "../../noise_buf.h"
-
-static const uint32_t seed = 9342857;
-static const size_t block_size = 100;
 
 static const Speakers init_spk(FORMAT_RAWDATA, 0, 0);
 
@@ -99,17 +95,19 @@ BOOST_AUTO_TEST_CASE(process_fchunks)
   Chunk chunk;
   ListSource src(init_spk, flist);
 
-  Speakers out_spk = init_spk;
+  Speakers spk = init_spk;
   for (size_t i = 0; i < flist.size(); i++)
   {
     BOOST_CHECK_EQUAL(src.get_pos(), i);
     BOOST_CHECK_EQUAL(src.get_chunk(chunk), true);
-    if (src.new_stream())
-      out_spk = src.get_output();
-
     BOOST_CHECK_EQUAL(chunk, flist[i].chunk);
     BOOST_CHECK_EQUAL(src.new_stream(), flist[i].new_stream);
-    BOOST_CHECK_EQUAL(src.get_output(), out_spk);
+    if (src.new_stream())
+    {
+      BOOST_CHECK_EQUAL(src.get_output(), fchunks[i].spk);
+      spk = src.get_output();
+    }
+    BOOST_CHECK_EQUAL(src.get_output(), spk);
   }
 }
 

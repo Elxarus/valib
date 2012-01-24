@@ -648,6 +648,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\log_filter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\log_filter.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\mixer.cpp"
 				>
 			</File>

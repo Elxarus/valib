@@ -503,6 +503,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tests\filters\test_log_filter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\filters\test_mixer.cpp"
 				>
 			</File>
