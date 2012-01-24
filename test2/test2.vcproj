@@ -382,6 +382,10 @@
 				RelativePath=".\tests\source\test_file_parser.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\tests\source\test_list_source.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="parsers"
@@ -512,6 +516,14 @@
 			</File>
 			<File
 				RelativePath=".\tests\filters\test_slice_filter.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="sink"
+			>
+			<File
+				RelativePath=".\tests\sink\test_log_sink.cpp"
 				>
 			</File>
 		</Filter>
