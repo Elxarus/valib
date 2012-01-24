@@ -716,6 +716,18 @@ public:
 
   virtual string name() const;
   virtual string info() const { return string(); }
+
+  /////////////////////////////////////////////////////////
+  // Utilities
+
+  inline void open_throw(Speakers spk)
+  {
+    assert(!spk.is_unknown());
+    if (!open(spk))
+      THROW(EOpenFilter() 
+        << errinfo_spk(spk)
+        << errinfo_obj_name(name()));
+  }
 };
 
 

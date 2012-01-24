@@ -70,7 +70,7 @@ class SimpleSink;
   \fn void Sink::reset()
     Reset the sink state, clean all internal buffers and prepare to a new
     stream. Do not deallocate resources, because we're awaiting new data.
-    This call should be equivalent to filter.open(filter.get_input()), but we
+    This call should be equivalent to sink.open(filter.get_input()), but we
     do not need to allocate resources once again, just set the internal state
     to initial values.
 
@@ -143,6 +143,33 @@ public:
 
   virtual string name() const;
   virtual string info() const { return string(); }
+
+  /////////////////////////////////////////////////////////
+  // Utilities
+
+  inline void open_throw(Speakers spk)
+  {
+    assert(!spk.is_unknown());
+    if (!open(spk))
+      THROW(EOpenSink() 
+        << errinfo_spk(spk)
+        << errinfo_obj_name(name()));
+  }
+
+  inline bool flush_open(Speakers spk)
+  {
+    assert(!spk.is_unknown());
+    flush();
+    return open(spk);
+  }
+
+  inline void flush_open_throw(Speakers spk)
+  {
+    assert(!spk.is_unknown());
+    flush();
+    open_throw(spk);
+  }
+
 };
 
 
