@@ -1084,6 +1084,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\sink\sink_log.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\sink\sink_log.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\sink\sink_null.h"
 				>
 			</File>
@@ -1125,6 +1133,14 @@
 			</File>
 			<File
 				RelativePath="..\valib\source\generator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\source\list_source.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\source\list_source.h"
 				>
 			</File>
 			<File
