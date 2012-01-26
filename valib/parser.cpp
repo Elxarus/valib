@@ -350,6 +350,13 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
       continue;
     }
 
+    // avoid endless loop
+    if (temp_finfo.frame_size && temp_finfo.frame_size > sinfo.max_frame_size)
+    {
+      pos1++;
+      continue;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Search 2nd syncpoint
 
@@ -382,6 +389,13 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
           !parser->first_frame(sync_buf + pos1, pos2 - pos1))
       {
         pos2++;
+        continue;
+      }
+
+      // avoid endless loop
+      if (temp_finfo.frame_size && temp_finfo.frame_size > sinfo.max_frame_size)
+      {
+        pos1++;
         continue;
       }
 

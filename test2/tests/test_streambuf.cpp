@@ -126,6 +126,18 @@ public:
   }
 };
 
+// Frame parser that returns frame size > max frame size.
+// Endless loop was possible in this case.
+class BadFrameParser : public MPAFrameParser
+{
+public:
+  BadFrameParser()
+  {}
+
+  virtual SyncInfo sync_info() const { return SyncInfo(sync_trie, 32, 32); }
+  virtual SyncInfo sync_info2() const { return sync_info(); }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Sync test
 // Sync on a stream starting at some distance from the start of the buffer.
@@ -467,6 +479,27 @@ BOOST_AUTO_TEST_CASE(noise_passthrough)
   passthrough_test(&uni.mpa,   noise, noise.size(), 0, 0);
   passthrough_test(&uni.spdif, noise, noise.size(), 0, 0);
   passthrough_test(&uni,       noise, noise.size(), 0, 0);
+}
+
+BOOST_AUTO_TEST_CASE(bad_parser)
+{
+  // Endless loop was possible when frame parser return frame size > max frame size.
+  // i.e. FrameInfo::frame_size > FrameParser::sync_info().max_frame_size()
+  BadFrameParser parser;
+  StreamBuffer streambuf(&parser);
+
+  MemFile data("a.mp2.005.mp2");
+  BOOST_REQUIRE(data.size() > 0);
+
+  uint8_t *pos = data;
+  uint8_t *end = pos + data.size();
+  while (pos < end)
+  {
+    uint8_t *old_pos = pos;
+    streambuf.load(&pos, end);
+    if (old_pos == pos && !streambuf.has_frame() && !streambuf.has_debris())
+      BOOST_FAIL("Endless loop");
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
