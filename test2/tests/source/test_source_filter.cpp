@@ -3,12 +3,17 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include "source/generator.h"
 #include "source/list_source.h"
 #include "source/source_filter.h"
+#include "filters/gain.h"
 #include "filters/log_filter.h"
 #include "../../suite.h"
 
+static const int seed = 834753495;
+static const size_t noise_size = 1024*1024; // for noise passthrough test
 static uint8_t rawdata[] = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7 };
+static const ListSource::fchunk_list_t empty_list;
 
 BOOST_AUTO_TEST_SUITE(source_filter)
 
@@ -42,7 +47,6 @@ BOOST_AUTO_TEST_CASE(set_release)
 {
   const Speakers spk1(FORMAT_RAWDATA, 0, 0);
   const Speakers spk2(FORMAT_RAWDATA, MODE_STEREO, 48000);
-  const ListSource::fchunk_list_t empty_list;
 
   Chunk chunk;
   LogFilter filter;
@@ -130,11 +134,82 @@ BOOST_AUTO_TEST_CASE(set_release)
   BOOST_CHECK_EQUAL(filter.print(), "");
 }
 
+BOOST_AUTO_TEST_CASE(reset)
+{
+  const Speakers spk1(FORMAT_RAWDATA, 0, 0);
+  const Speakers spk2(FORMAT_RAWDATA, MODE_STEREO, 48000);
+
+  ListSource source;
+  LogFilter filter;
+  SourceFilter src;
+
+  // Do not reset if both filter and source are not open
+  src.set(&source, &filter);
+  src.reset();
+  BOOST_CHECK_EQUAL(filter.print(), "");
+
+  // Do not reset if filter is open and source is not
+  // (filter will be open with the source / on format change)
+  filter.open(spk1);
+  filter.log.clear();
+  src.reset();
+  BOOST_CHECK_EQUAL(filter.print(), "");
+
+  // Open a closed filter if source was open externally
+  filter.close();
+  filter.log.clear();
+  source.set(spk1, empty_list);
+  src.reset();
+  BOOST_CHECK_EQUAL(filter.print(), "open(Raw data - 0)");
+
+  // Reopen filter if source was open externally with a different format
+  filter.log.clear();
+  source.set(spk2, empty_list);
+  src.reset();
+  BOOST_CHECK_EQUAL(filter.print(), "open(Raw data Stereo 48000)");
+
+  // Just reset if source and filter have equal formats
+  filter.log.clear();
+  src.reset();
+  BOOST_CHECK_EQUAL(filter.print(), "reset()");
+}
+
+BOOST_AUTO_TEST_CASE(passthrough)
+{
+  Speakers spk(FORMAT_LINEAR, MODE_STEREO, 48000);
+  
+  Passthrough pass_filter;
+  Gain        zero_filter(0.0);
+
+  NoiseGen src_noise(spk, seed, noise_size);;
+  NoiseGen ref_noise(spk, seed, noise_size);;
+  ZeroGen  ref_zero(spk, noise_size);
+
+  SourceFilter src;
+
+  // Noise source == Noise source (no filter)
+  src.set(&src_noise, 0);
+  src.reset();
+  ref_noise.reset();
+  compare(&src, &ref_noise);
+
+  // Noise source + Passthrough == Noise source
+  src.set(&src_noise, &pass_filter);
+  src.reset();
+  ref_noise.reset();
+  compare(&src, &ref_noise);
+
+  // Noise source + ZeroFilter == Zero source
+  src.set(&src_noise, &zero_filter);
+  src.reset();
+  ref_zero.reset();
+  compare(&src, &ref_zero);
+}
+
 BOOST_AUTO_TEST_CASE(flushing)
 {
   const Speakers spk1(FORMAT_RAWDATA, 0, 0);
   const Speakers spk2(FORMAT_RAWDATA, MODE_STEREO, 48000);
-  const ListSource::fchunk_list_t empty_list;
 
   Chunk chunk;
   LogFilter filter;
