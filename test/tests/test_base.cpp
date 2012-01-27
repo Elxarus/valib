@@ -152,16 +152,12 @@ TEST(base_source_filter, "SourceFilter")
   CHECK(src_filter.get_source() == &ref_zero);
   CHECK(src_filter.get_filter() == &zero_filter);
 
-  // Fail without a source
-
-  CHECK(src_filter.set(0, 0) == false);
-
   // Noise source == Noise source (no filter)
 
   src_noise.init(spk, seed, noise_size);
   ref_noise.init(spk, seed, noise_size);
 
-  CHECK(src_filter.set(&src_noise, 0) == true);
+  src_filter.set(&src_noise, 0);
   CHECK(compare(log, &src_filter, &ref_noise) == 0);
 
   // Noise source + Passthrough == Noise source
@@ -170,7 +166,7 @@ TEST(base_source_filter, "SourceFilter")
   ref_noise.init(spk, seed, noise_size);
   pass_filter.reset();
 
-  CHECK(src_filter.set(&src_noise, &pass_filter) == true);
+  src_filter.set(&src_noise, &pass_filter);
   CHECK(compare(log, &src_filter, &ref_noise) == 0);
 
   // Noise source + ZeroFilter == Zero source
@@ -179,7 +175,7 @@ TEST(base_source_filter, "SourceFilter")
   ref_zero.init(spk, noise_size);
   zero_filter.reset();
 
-  CHECK(src_filter.set(&src_noise, &zero_filter) == true);
+  src_filter.set(&src_noise, &zero_filter);
   CHECK(compare(log, &src_filter, &ref_zero) == 0);
   
 TEST_END(base_source_filter);
