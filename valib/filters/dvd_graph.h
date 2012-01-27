@@ -61,7 +61,6 @@ class DVDGraph : public FilterGraph
 public:
   Demux          demux;
   Detector       detector;
-  Despdifer      despdifer;
   Spdifer        spdifer_pt;
   AudioDecoder   dec;
   AudioProcessor proc;
@@ -171,7 +170,6 @@ protected:
   { 
     state_demux = 0,
     state_detector,
-    state_despdif,
     state_spdif_pt,
     state_decode,
     state_proc,

@@ -1,51 +1,40 @@
 /*
-  Demuxer - demux MPEG container (filter wrapper for MPEGDemux class)
-  MPEG1/2 PES supported 
-  todo: MPEG2 transport stream
-
-  Input:     PES
-  Output:    AC3, MPA, DTS, PCM16_LE PCM24_LE
-  OFDD:      yes
-  Buffering: inplace
-  Timing:    passthrough
-  Parameters:
-    [ro] stream - current stream number
-    [ro] substream - current substream number
+  Demux - extract raw audio stream from a container stream.
+  Currently supported:
+  * ADTS
+  * MPEG PES
+  * SPDIF
 */
 
 #ifndef VALIB_DEMUX_H
 #define VALIB_DEMUX_H
 
-#include "../filter.h"
-#include "../mpeg_demux.h"
+#include "parser_filter.h"
+#include "../parsers/aac/aac_adts_header.h"
+#include "../parsers/aac/aac_adts_parser.h"
+#include "../parsers/pes/pes_frame_parser.h"
+#include "../parsers/pes/pes_parser.h"
+#include "../parsers/spdif/spdif_header.h"
+#include "../parsers/spdif/spdif_parser.h"
 
-class Demux : public SimpleFilter
+class Demux : public ParserFilter
 {
 protected:
-  PSParser ps;          // MPEG Program Stream parser
-  Speakers out_spk;     // current output format
-  int      stream;      // current stream
-  int      substream;   // current substream
-  bool is_new_stream;   // stream change flag
+  ADTSFrameParser  adts_frame;
+  PESFrameParser   pes_frame;
+  SPDIFFrameParser spdif_frame;
+
+  ADTSParser  adts_parser;
+  PESParser   pes_parser;
+  SPDIFParser spdif_parser;
 
 public:
-  Demux();
-
-  inline int get_stream()    const { return stream;    }
-  inline int get_substream() const { return substream; }
-
-  /////////////////////////////////////////////////////////
-  // SimpleFilter overrides
-
-  virtual bool can_open(Speakers spk) const;
-  virtual bool process(Chunk &in, Chunk &out);
-  virtual void reset();
-
-  virtual Speakers get_output() const
-  { return out_spk; }
-
-  virtual bool new_stream() const
-  { return is_new_stream; }
+  Demux()
+  {
+    add(&adts_frame,  &adts_parser);
+    add(&pes_frame,   &pes_parser);
+    add(&spdif_frame, &spdif_parser);
+  }
 };
 
 #endif
