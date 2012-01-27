@@ -79,5 +79,21 @@ int main()
   ADTSTrie.optimize();
   cout << "AAC ADTS: " << ADTSTrie.serialize() << endl;
 
+  /////////////////////////////////////////////////////////////////////////////
+  // MPEG PES
+  // A: 24 - syncword = 0x00 0x00 0x01
+  // B: 8  - stream number >= 0xB9
+
+  SyncTrie PESTrie("oooo oooo oooo oooo oooo oooI");
+
+  SyncTrie PESStream;
+  for (i = 0xb9; i <= 0xff; i++)
+    PESStream |= SyncTrie(i, 8);
+
+  PESTrie += PESStream;
+  PESTrie.optimize();
+
+  cout << "MPEG PES: " << PESTrie.serialize() << endl;
+
   return 0;
 }

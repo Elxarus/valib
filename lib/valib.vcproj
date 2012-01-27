@@ -1067,6 +1067,34 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="pes"
+				>
+				<File
+					RelativePath="..\valib\parsers\pes\pes_frame_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\pes\pes_frame_parser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\pes\pes_header.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\pes\pes_header.h"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\pes\pes_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\pes\pes_parser.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="sink"
