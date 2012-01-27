@@ -31,6 +31,8 @@ PESParser::reset()
 {
   out_spk = spk_unknown;
   new_stream_flag = false;
+  stream = 0;
+  substream = 0;
 }
 
 bool
@@ -42,38 +44,47 @@ PESParser::process(Chunk &in, Chunk &out)
   size_t   size  = in.size;
   in.clear();
 
-  if (size < frame_parser.header_size())
+  if (size < 6)
     return false;
-
-  if (frame_parser.in_sync())
-  {
-    if (frame_parser.next_frame(frame, size))
-      new_stream_flag = false;
-    else
-      reset();
-  }
-
-  if (!frame_parser.in_sync())
-  {
-    if (frame_parser.first_frame(frame, size))
-      new_stream_flag = true;
-    else
-      return false;
-  }
 
   PESHeader header;
-  if (!header.parse(frame))
+  if (!header.parse(frame, size))
     return false;
+
+  if (size < header.packet_size)
+    return false;
+
+  if (!stream ||
+      (stream && stream != header.stream) || 
+      (stream && substream && substream != header.substream))
+  {
+    // New stream
+    out_spk = header.spk;
+    new_stream_flag = true;
+    stream = header.stream;
+    substream = header.substream;
+  }
+  else
+    new_stream_flag = false;
 
   out.set_rawdata(frame + header.payload_pos, header.payload_size, sync, time);
   out_spk = header.spk;
-
   return true;
-
 }
 
 string
 PESParser::info() const 
 {
-  return string();
+  std::stringstream s;
+  if (stream)
+  {
+    s << std::hex;
+    s << "Stream: 0x" << stream;
+    if (substream)
+      s << "\nSubstream: 0x" << substream;
+    s << "Format: " << spk.print();
+  }
+  else
+    s << "No sync";
+  return s.str();
 }

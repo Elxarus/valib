@@ -15,7 +15,7 @@ struct PESHeader
   size_t payload_pos;
   size_t payload_size;
 
-  bool parse(const uint8_t *header);
+  bool parse(const uint8_t *header, size_t size);
   bool operator == (const PESHeader &other) const;
   bool operator != (const PESHeader &other) const;
 

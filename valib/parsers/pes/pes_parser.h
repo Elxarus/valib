@@ -29,7 +29,9 @@ public:
 protected:
   Speakers out_spk;
   bool new_stream_flag;
-  PESFrameParser frame_parser;
+
+  int stream;
+  int substream;
 };
 
 #endif
