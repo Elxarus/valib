@@ -478,6 +478,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="pes"
+				>
+				<File
+					RelativePath=".\tests\parsers\pes\test_pes_frame_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\parsers\pes\test_pes_parser.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="filters"

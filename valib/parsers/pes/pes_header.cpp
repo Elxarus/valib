@@ -69,7 +69,7 @@ PESHeader::is_audio_stream(int stream)
 }
 
 bool
-PESHeader::parse(const uint8_t *hdr)
+PESHeader::parse(const uint8_t *hdr, size_t size)
 {
   uint32_t sync = be2uint32(*(uint32_t *)hdr);
   if (sync > 0x000001ff || sync < 0x000001b9)
@@ -90,15 +90,17 @@ PESHeader::parse(const uint8_t *hdr)
     else 
     {
       // MPEG1
-      while (hdr[pos] == 0xff && pos < MPEG1_MAX_STUFFING)
+      while (hdr[pos] == 0xff && pos < MPEG1_MAX_STUFFING && pos < size)
         pos++;
 
       if (pos >= MPEG1_MAX_STUFFING)
         return false;
 
+      if (pos >= size) return false;
       if ((hdr[pos] & 0xc0) == 0x40)
         pos += 2;
 
+      if (pos >= size) return false;
       if ((hdr[pos] & 0xf0) == 0x20)
         pos += 5;
       else if ((hdr[pos] & 0xf0) == 0x30)
@@ -112,6 +114,7 @@ PESHeader::parse(const uint8_t *hdr)
 
   if (stream == PRIVATE_STREAM_1)
   {
+    if (pos >= size) return false;
     substream = hdr[pos++];
     substream_header_pos = pos;
     pos += 3; // skip substream header
@@ -122,6 +125,7 @@ PESHeader::parse(const uint8_t *hdr)
     substream_header_pos = 0;
   }
 
+  if (pos + 3 >= size) return false;
   spk = get_format(stream, substream, hdr + substream_header_pos);
   if (spk.is_unknown())
     return false;
@@ -130,6 +134,8 @@ PESHeader::parse(const uint8_t *hdr)
     // Skip LPCM header
     pos += 3;
 
+  if (pos > size) return false;
+  if (pos >= packet_size) return false;
   payload_pos = pos;
   payload_size = packet_size - pos;
   return true;
