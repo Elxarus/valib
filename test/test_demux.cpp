@@ -74,9 +74,9 @@ public:
     /////////////////////////////////////////////////////////
     // Noise speed test
 
-    Chunk in, out;
+    Chunk in, out, noise_chunk;
     NoiseGen noise(Speakers(FORMAT_PES, 0, 0), seed, noise_size, noise_size);
-    noise.get_chunk(in);
+    noise.get_chunk(noise_chunk);
 
     CPUMeter cpu;
     cpu.reset();
@@ -89,12 +89,15 @@ public:
     {
       runs++;
       demux.reset();
+      Chunk in = noise_chunk;
       while (demux.process(in, out))
+        /*do nothing*/;
+      while (demux.flush(out))
         /*do nothing*/;
     }
     cpu.stop();
 
-    log->msg("Demux speed on noise: %iMB/demux, Data: %i, Empty: %i", 
+    log->msg("Demux speed on noise: %iMB/s", 
       int(double(noise_size) * runs / cpu.get_thread_time() / 1000000));
   }
 
@@ -121,10 +124,13 @@ public:
       while (f.get_chunk(in))
         while (demux.process(in, out))
           /*do nothing*/;
+
+      while (demux.flush(out))
+        /*do nothing*/;
     }
     cpu.stop();
 
-    log->msg("Demux speed on file %demux: %iMB/demux", file_name,
+    log->msg("Demux speed on file %s: %iMB/s", file_name,
       int(double(f.size()) * runs / cpu.get_thread_time() / 1000000));
   }
 
