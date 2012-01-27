@@ -145,7 +145,8 @@ TEST(convolver_mch, "ConvolverMch test")
   ref_tone.init(spk, freq - df, 0, noise_size + 2 * filter_len);
   ref_slice.init(filter_len, filter_len + noise_size);
   conv.set_all_firs(lpf_all);
-  conv.reset();
+  test_src.reset();
+  ref_src.reset();
 
   diff = calc_diff(&test_src, &ref_src);
   CHECK(diff > 0);
@@ -156,7 +157,7 @@ TEST(convolver_mch, "ConvolverMch test")
   tone.init(spk, freq + df, 0, noise_size + 2 * filter_len);
   slice.init(filter_len, noise_size + filter_len);
   conv.set_all_firs(lpf_all);
-  conv.reset();
+  test_src.reset();
 
   level = calc_peak(&test_src);
   CHECK(level > 0);
@@ -182,7 +183,8 @@ TEST(convolver_mch, "ConvolverMch test")
   ref_tone.init(spk, freq - df, 0, noise_size + 2 * filter_len);
   ref_slice.init(filter_len, filter_len + noise_size);
   conv.set_all_firs(mix_pass);
-  conv.reset();
+  test_src.reset();
+  ref_src.reset();
 
   diff = calc_diff(&test_src, &ref_src);
   CHECK(diff > 0);
@@ -203,7 +205,7 @@ TEST(convolver_mch, "ConvolverMch test")
   tone.init(spk, freq + df, 0, noise_size + 2 * filter_len);
   slice.init(filter_len, noise_size + filter_len);
   conv.set_all_firs(mix_zero);
-  conv.reset();
+  test_src.reset();
 
   level = calc_peak(&test_src);
   CHECK(level > 0);
