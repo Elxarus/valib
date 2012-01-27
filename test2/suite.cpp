@@ -45,7 +45,10 @@ void compare(Source *src, Source *ref)
     ref_spk = ref->get_output();
     if (ref_spk != src_spk)
       if (src_spk.is_linear() || ref_spk.format != FORMAT_RAWDATA)
-        BOOST_FAIL("Different speaker configurations");
+      {
+        BOOST_ERROR("Different speaker configurations");
+        return;
+      }
 
     ///////////////////////////////////////////////////////
     // Compare data
@@ -57,7 +60,10 @@ void compare(Source *src, Source *ref)
       for (int ch = 0; ch < src_spk.nch(); ch++)
         for (size_t i = 0; i < len; i++)
           if (!EQUAL_SAMPLES(src_chunk.samples[ch][i], ref_chunk.samples[ch][i]))
-            BOOST_FAIL("Data differs at channel = " << ch << " pos = " << pos + i);
+          {
+            BOOST_ERROR("Data differs at channel = " << ch << " pos = " << pos + i);
+            return;
+          }
 
       src_chunk.drop_samples(len);
       ref_chunk.drop_samples(len);
@@ -66,7 +72,10 @@ void compare(Source *src, Source *ref)
     {
       for (size_t i = 0; i < len; i++)
         if (src_chunk.rawdata[i] != ref_chunk.rawdata[i])
-          BOOST_FAIL("Data differs at pos = " << pos + i);
+        {
+          BOOST_ERROR("Data differs at pos = " << pos + i);
+          return;
+        }
 
       src_chunk.drop_rawdata(len);
       ref_chunk.drop_rawdata(len);
@@ -84,10 +93,10 @@ void compare(Source *src, Source *ref)
     ref->get_chunk(ref_chunk);
 
   if (src_chunk.size)
-    BOOST_FAIL("Output is longer than reference");
+    BOOST_ERROR("Output is longer than reference");
 
   if (ref_chunk.size)
-    BOOST_FAIL("Reference is longer than output");
+    BOOST_ERROR("Reference is longer than output");
 }
 
 void compare(Source *src, Filter *src_filter, Source *ref, Filter *ref_filter)
