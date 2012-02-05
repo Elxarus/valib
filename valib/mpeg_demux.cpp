@@ -156,10 +156,12 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
   size_t required_size = 0;
 
   #define REQUIRE(bytes)       \
-  if (data_size < (bytes))     \
   {                            \
-    required_size = (bytes);   \
-    continue;                  \
+    if (data_size < (bytes))   \
+    {                          \
+      required_size = (bytes); \
+      continue;                \
+    }                          \
   }
 
   #define DROP                 \
@@ -334,6 +336,7 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
               pos++;
 
             if (pos == data_size)
+            {
               if (data_size < 24)
                 REQUIRE(pos+1)
               else
@@ -342,6 +345,7 @@ PSParser::parse(uint8_t **buf, uint8_t *end)
                 errors++; 
                 RESYNC(1);
               }
+            }
 
             if ((header[pos] & 0xc0) == 0x40)
             {

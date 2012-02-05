@@ -68,8 +68,7 @@ void
 DSoundSink::close_dsound()
 {
   close();
-  if (ds)
-    SAFE_RELEASE(ds);
+  SAFE_RELEASE(ds);
 }
 
 bool

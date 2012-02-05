@@ -330,7 +330,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
 
   while (pos1 <= pos1_max)
   {
-    if (pos1_max - pos1 > 0)
+    if (pos1_max > pos1)
     {
       size_t scan_size = pos1_max + sync_size;
       if (sync_data < scan_size)
@@ -370,7 +370,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
 
     while (pos2 <= pos2_max)
     {
-      if (pos2_max - pos2 > 0)
+      if (pos2_max > pos2)
       {
         size_t scan_size = pos2_max + sync_size;
         if (sync_data < scan_size)
@@ -412,7 +412,7 @@ StreamBuffer::sync(uint8_t **data, uint8_t *end)
 
       while (pos3 <= pos3_max)
       {
-        if (pos3_max - pos3 > 0)
+        if (pos3_max > pos3)
         {
           size_t scan_size = pos3_max + sync_size;
           if (sync_data < scan_size)

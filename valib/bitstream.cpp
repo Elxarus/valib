@@ -193,7 +193,7 @@ bs_conv_t bs_conversion(int bs_from, int bs_to)
     }
 
   if (ibs_from == -1 || ibs_to == -1)
-    return false;
+    return 0;
   else
     return conv[ibs_from][ibs_to];
 }
