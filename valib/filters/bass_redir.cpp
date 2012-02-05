@@ -38,8 +38,8 @@ BassRedir::update_filters()
 
     // When we mix basses to several channels we have to
     // adjust the gain to keep the resulting loudness
-    double bass_nch = mask_nch(ch_mask);
-    double ch_gain = bass_nch? 1.0 / sqrt(bass_nch) : 1.0;
+    int bass_nch = mask_nch(ch_mask);
+    double ch_gain = bass_nch? 1.0 / sqrt((double)bass_nch) : 1.0;
     lpf_iir->apply_gain(gain * ch_gain);
 
     lpf.init(lpf_iir.get());

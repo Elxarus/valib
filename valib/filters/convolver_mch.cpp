@@ -28,7 +28,7 @@ ConvolverMch::ConvolverMch():
   for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
     ver[ch_name] = gen[ch_name].version();
 
-  for (int ch = 0; ch < CH_NAMES; ch++)
+  for (int ch = 0; ch < NCHANNELS; ch++)
   {
     fir[ch] = 0;
     type[ch] = type_pass;

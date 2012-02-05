@@ -25,6 +25,7 @@ class SynthBufferFPU;
 class SynthBuffer
 {
 public:
+  virtual ~SynthBuffer() {}
   virtual void synth(sample_t samples[32]) = 0;
   virtual void reset() = 0;
 };

@@ -680,7 +680,7 @@ AC3Parser::parse_block()
     for (ch = 0; ch < nfchans; ch++)
     {
       deltbae[ch] = bs.get(2);                // 'deltbae[ch]' - delta bit allocation exists
-      if (deltbae == DELTA_BIT_REUSE && block == 0)
+      if (deltbae[ch] == DELTA_BIT_REUSE && block == 0)
         return false;                         // deltbae[ch] <> 0 in block 0 (constraint p45 s5.4.3.49)
     }
 
