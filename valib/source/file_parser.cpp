@@ -180,7 +180,7 @@ FileParser::stats(vtime_t precision, unsigned min_measurements, unsigned max_mea
       // Break when we reach enough accuracy
       double error_squared = 0;
       double bitrate = avg_bitrate / stat_size;
-      for (int j = 0; j < stat_size; j++)
+      for (size_t j = 0; j < stat_size; j++)
         error_squared += (bitrate - bitrate_stat[j])*(bitrate - bitrate_stat[j]);
       error_squared /= stat_size * (stat_size - 1);
       error_squared *= f.size()*f.size()*64 / (bitrate*bitrate*bitrate*bitrate);
