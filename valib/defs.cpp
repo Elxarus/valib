@@ -1,5 +1,6 @@
 #include <sstream>
 #include "defs.h"
+#include "version.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // matrix_t
@@ -48,8 +49,6 @@ matrix_t::operator !=(const matrix_t &m) const
 ///////////////////////////////////////////////////////////////////////////////
 // Build info
 
-static char info_str[1024];
-
 const char *valib_build_info()
 {
   using std::endl;
@@ -75,6 +74,12 @@ const char *valib_build_info()
     "Release" << endl;
   #endif
 
+  #ifdef VALIB_HG_CHANGESET
+    stream << "Revision: " << VALIB_HG_CHANGESET;
+    if (VALIB_HG_LOCAL_MODIFICATIONS)
+      stream << " (modified)";
+    stream << endl;
+  #endif
   stream << "Build date: " << __DATE__ " " __TIME__ << endl;
   stream << "Number of channels: " << NCHANNELS << endl;
   stream << "Sample format: " <<
@@ -107,4 +112,13 @@ const char *valib_credits()
     "\n"
     "Media Player Classic - best media player\n"
     "http://sourceforge.net/projects/guliverkli\n";
+}
+
+const char *valib_revision()
+{
+#ifdef VALIB_HG_CHANGESET
+  return VALIB_HG_CHANGESET;
+#else
+  return "";
+#endif
 }
