@@ -27,6 +27,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="cscript make_version.jse"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -1268,6 +1269,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\make_version.jse"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

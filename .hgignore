@@ -28,3 +28,6 @@ cmd\config.cmd
 
 # Generated docs
 doc/valib/*
+
+# Generated files
+valib/version.h
