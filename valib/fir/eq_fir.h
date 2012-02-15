@@ -30,6 +30,8 @@ struct EqBand
   Filter is built as a set of step filters. Band in between of center
   frequencies of adjacent bands is considered to be a transition band. Ripple
   at pass-bands is limited and may be adjusted (less ripple, longer the filter).
+  Steps less than ripple are ignored, so ripple also acts as a minimum step
+  size.
 
   Example of 4-bands equalizer:
 
@@ -82,12 +84,15 @@ struct EqBand
     Drop all bands from the filter.
 
   \fn double EqFIR::get_ripple() const
-    Returns passband ripple.
+    Returns passband ripple in dB.
 
   \fn void EqFIR::set_ripple(double ripple_db)
     \param ripple_db Passband ripple in dB.
 
     Set passband ripple.
+
+  \fn bool EqFIR::is_equalized() const
+    Return true when any band has gain <> 1.0 (+- ripple)
 
 ******************************************************************************/
 
@@ -115,6 +120,8 @@ public:
 
   double get_ripple() const;
   void   set_ripple(double ripple_db);
+
+  bool   is_equalized() const;
 
   /////////////////////////////////////////////////////////
   // FIRGen interface

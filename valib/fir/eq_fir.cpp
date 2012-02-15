@@ -129,6 +129,17 @@ EqFIR::set_ripple(double new_ripple)
   }
 }
 
+bool
+EqFIR::is_equalized() const
+{
+  double min = 1 / db2value(ripple);
+  double max = 1 * db2value(ripple);
+  for (size_t i = 0; i < nbands; i++)
+    if (bands[i].gain > max || bands[i].gain < min)
+      return true;
+  return false;
+}
+
 void
 EqFIR::clear_bands()
 {
@@ -146,8 +157,9 @@ EqFIR::version() const
 const FIRInstance *
 EqFIR::make(int sample_rate) const
 {
-  size_t i;
-  double q = db2value(ripple) - 1;
+  size_t i, j;
+  double r = db2value(ripple);
+  double q = r - 1;
   StepFilter step;
 
   /////////////////////////////////////////////////////////
@@ -158,12 +170,10 @@ EqFIR::make(int sample_rate) const
     max_band++;
 
   /////////////////////////////////////////////////////////
-  // Trivial cases
+  // Trivial case: no bands
 
   if (max_band == 0)
     return new IdentityFIRInstance(sample_rate);
-  else if (max_band == 1)
-    return new GainFIRInstance(sample_rate, bands[0].gain);
 
   /////////////////////////////////////////////////////////
   // Find the filter length
@@ -175,13 +185,29 @@ EqFIR::make(int sample_rate) const
 
   int max_n = 1;
   int max_c = 0;
-  for (i = 0; i < max_band - 1; i++)
-    if (bands[i].gain != bands[i+1].gain)
+  for (i = 0; i < max_band; i = j)
+  {
+    for (j = i + 1; j < max_band; j++)
+      if (bands[j].gain > bands[i].gain * r ||
+          bands[j].gain < bands[i].gain / r)
+        break;
+
+    if (j < max_band)
     {
-      step.calc(bands[i], bands[i+1], q, min_g, sample_rate);
+      step.calc(bands[i], bands[j], q, min_g, sample_rate);
       if (step.n > max_n) max_n = step.n;
+      break;
     }
+  }
   max_c = max_n / 2;
+
+  /////////////////////////////////////////////////////////
+  // Trivial case: All bands are equal (+-ripple)
+
+  if (max_n == 1 && min_g < r && min_g > 1.0/r)
+    return new IdentityFIRInstance(sample_rate);
+  else if (max_n == 1)
+    return new GainFIRInstance(sample_rate, min_g);
 
   /////////////////////////////////////////////////////////
   // Build the filter
@@ -191,14 +217,21 @@ EqFIR::make(int sample_rate) const
 
   double *data = fir->buf;
   data[max_c] += bands[max_band-1].gain;
-  for (i = 0; i < max_band - 1; i++)
-    if (bands[i].gain != bands[i+1].gain)
+  for (i = 0; i < max_band; i = j)
+  {
+    for (j = i + 1; j < max_band; j++)
+      if (bands[j].gain > bands[i].gain * r ||
+          bands[j].gain < bands[i].gain / r)
+        break;
+
+    if (j < max_band)
     {
-      step.calc(bands[i], bands[i+1], q, min_g, sample_rate);
+      step.calc(bands[i], bands[j], q, min_g, sample_rate);
       double alpha = kaiser_alpha(step.a);
       for (int j = -step.c; j <= step.c; j++)
         data[max_c + j] += step.dg * lpf(j, step.cf) * kaiser_window(j, step.n, alpha);
     }
+  }
 
   return fir;
 }
