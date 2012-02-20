@@ -1,6 +1,9 @@
 #include "sink_dshow.h"
 #include "../win32/winspk.h"
 #include "../win32/hresult_exception.h"
+#include "../log.h"
+
+static const string log_module = "DShowSink";
 
 DEFINE_GUID(MEDIASUBTYPE_AVI_AC3, 
 0x00002000, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
@@ -162,8 +165,6 @@ bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx)
 DShowSink::DShowSink(CTransformFilter *pTransformFilter, HRESULT * phr)
 : CTransformOutputPin(NAME("DShowSink"), pTransformFilter, phr, L"Out")
 {
-  DbgLog((LOG_TRACE, 3, "DShowSink(%x)::DShowSink()", this));
-
   send_mt = false;
   send_dc = false;
   preroll = false;
@@ -277,17 +278,17 @@ DShowSink::can_open(Speakers _spk) const
   CMediaType mt;
   if (spk2mt(_spk, mt, true) && query_downstream(&mt))
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s extensible): Ok", this, _spk.print().c_str()));
+    valib_log(log_event, log_module, "query_input(%s extensible): Ok", _spk.print().c_str());
     return true;
   }
   else if (spk2mt(_spk, mt, false) && query_downstream(&mt))
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s): Ok", this, _spk.print().c_str()));
+    valib_log(log_event, log_module, "query_input(%s): Ok", _spk.print().c_str());
     return true;
   }
   else
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::query_input(%s): format refused", this, _spk.print().c_str()));
+    valib_log(log_event, log_module, "query_input(%s): format refused", _spk.print().c_str());
     return false;
   }
 }
@@ -302,17 +303,17 @@ DShowSink::init()
   CMediaType mt;
   if (spk2mt(spk, mt, true) && set_downstream(&mt))
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s extensible): Ok %s", this, spk.print().c_str(), send_mt? "(send mediatype)": ""));
+    valib_log(log_event, log_module, "open(%s extensible): Ok %s", spk.print().c_str(), send_mt? "(send mediatype)": "");
     return true;
   } 
   else if (spk2mt(spk, mt, false) && set_downstream(&mt))
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s): Ok %s", this, spk.print().c_str(), send_mt? "(send mediatype)": ""));
+    valib_log(log_event, log_module, "open(%s): Ok %s", spk.print().c_str(), send_mt? "(send mediatype)": "");
     return true;
   }
   else
   {
-    DbgLog((LOG_TRACE, 3, "DShowSink(%x)::set_input(%s): Failed", this, spk.print().c_str()));
+    valib_log(log_event, log_module, "open(%s): Failed", spk.print().c_str());
     return false;
   }
 };
@@ -346,7 +347,7 @@ DShowSink::process(const Chunk &chunk)
     // Dynamic format change
     if (send_mt)
     {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Sending media type...", this));
+      valib_log(log_event, log_module, "process(): Sending media type...");
       query_downstream(&m_mt);
       sample->SetMediaType(&m_mt);
       send_mt = false;
@@ -355,7 +356,7 @@ DShowSink::process(const Chunk &chunk)
     // Discontinuity
     if (send_dc)
     {
-      DbgLog((LOG_TRACE, 3, "DShowSink(%x)::process(): Sending discontiniuity...", this));
+      valib_log(log_event, log_module, "process(): Sending discontiniuity...");
       sample->SetDiscontinuity(true);
       send_dc = false;
     }

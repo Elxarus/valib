@@ -1,17 +1,12 @@
 #include <math.h>
 #include <numeric>
+#include "../log.h"
 #include "dejitter.h"
-
-// uncomment this to log timing information into DirectShow log
-//#define SYNCER_LOG_TIMING
-
-#ifdef SYNCER_LOG_TIMING
-#include <streams.h>
-#endif
 
 static const int format_mask_dejitter = FORMAT_CLASS_PCM | FORMAT_MASK_LINEAR | FORMAT_MASK_SPDIF;
 static const size_t stat_size = 50;
 static const size_t min_stat_size = 10;
+static string log_module = "Dejitter";
 
 ///////////////////////////////////////////////////////////
 // SyncerStat
@@ -141,9 +136,7 @@ Dejitter::init()
 void 
 Dejitter::reset()
 {
-  #ifdef SYNCER_LOG_TIMING
-    DbgLog((LOG_TRACE, 3, "sync drop"));
-  #endif
+  valib_log(log_event, log_module, "reset()");
   continuous_sync = false;
   continuous_time = 0.0;
   istat.reset();
@@ -170,9 +163,7 @@ Dejitter::process(Chunk &in, Chunk &out)
   vtime_t time = out.time;
   if (!continuous_sync)
   {
-    #ifdef SYNCER_LOG_TIMING
-      DbgLog((LOG_TRACE, 3, "sync catch: %ims", int(time * 1000)));
-    #endif
+    valib_log(log_event, log_module, "sync catch: %ims", int(time * 1000));
     out.set_sync(true, time * time_factor + time_shift);
     continuous_sync = true;
     continuous_time = time + out.size * size2time;
@@ -195,9 +186,7 @@ Dejitter::process(Chunk &in, Chunk &out)
 
     if (fabs(delta) > threshold)
     {
-      #ifdef SYNCER_LOG_TIMING
-        DbgLog((LOG_TRACE, 3, "sync lost; resync: %ims", int(time * 1000)));
-      #endif
+      valib_log(log_event, log_module, "sync lost; resync: %ims", int(time * 1000));
       continuous_sync = true;
       continuous_time = time;
       istat.reset();
@@ -301,10 +290,8 @@ Dejitter::process(Chunk &in, Chunk &out)
     istat.push(delta);
     ostat.push(correction);
 
-    #ifdef SYNCER_LOG_TIMING
-      DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time*1000, delta*1000, istat.stddev()*1000, istat.mean()*1000));
-      DbgLog((LOG_TRACE, 3, "output: %-6.0f correction: %-6.0f", continuous_time*1000, correction*1000));
-    #endif
+    valib_log(log_trace, log_module, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time*1000, delta*1000, istat.stddev()*1000, istat.mean()*1000);
+    valib_log(log_trace, log_module, "output: %-6.0f correction: %-6.0f", continuous_time*1000, correction*1000);
 
     out.set_sync(continuous_sync, continuous_time * time_factor + time_shift);
   }
@@ -313,9 +300,7 @@ Dejitter::process(Chunk &in, Chunk &out)
     istat.push(delta);
     ostat.push(delta);
 
-    #ifdef SYNCER_LOG_TIMING
-      DbgLog((LOG_TRACE, 3, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time, delta, istat.stddev(), istat.mean()));
-    #endif
+    valib_log(log_trace, log_module, "input:  %-6.0f delta: %-6.0f stddev: %-6.0f mean: %-6.0f", time, delta, istat.stddev(), istat.mean());
 
     out.set_sync(true, time * time_factor + time_shift);
   }
