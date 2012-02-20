@@ -27,13 +27,18 @@ LogEntry::print() const
   time_t t = (time_t)timestamp;
   tm *pt = gmtime(&t);
 
-  char buf[20] = "0000-00-00 00:00:00";
+  // On 64bit system max int value length is 19 chars + 1 char sign.
+  // Other string is 25 chars + 1 char trailing zero.
+  // 46 chars total. 64 just in case...
+  char buf[64] = "0000-00-00 00:00:00 | 0 | ";
+  size_t len = 0;
   if (pt)
-    sprintf(buf, "%04i-%02i-%02i %02i:%02i:%02i",
+    len = _snprintf(buf, array_size(buf), "%04i-%02i-%02i %02i:%02i:%02i | %i | ",
       pt->tm_year + 1900, pt->tm_mon + 1, pt->tm_mday, 
-      pt->tm_hour, pt->tm_min, pt->tm_sec);
+      pt->tm_hour, pt->tm_min, pt->tm_sec, 
+      level);
 
-  return string(buf) + string(" | " ) + message;
+  return string(buf, len) + message;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,7 +51,7 @@ void LogDispatcher::log(const LogEntry &entry)
     sinks[i]->receive(entry);
 }
 
-void LogDispatcher::log(int level, std::string message)
+void LogDispatcher::log(int level, const std::string &message)
 {
   AutoLock lock(&sink_lock);
   log(LogEntry(level, message));
