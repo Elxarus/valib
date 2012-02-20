@@ -9,7 +9,7 @@ BOOST_AUTO_TEST_CASE(log_sink)
 {
   uint8_t rawdata[] = { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7 };
 
-  LogSink sink;
+  LoggerSink sink;
   BOOST_CHECK_EQUAL(sink.print(), "");
 
   sink.open(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000));
