@@ -1,0 +1,33 @@
+syntax:glob
+
+# Mercurial
+*.orig
+
+# Build files
+**\Debug
+**\Release
+**\Debug_Libc
+**\Release_Libc
+**\Perf
+
+# Visual studio intermediate files
+*.aps
+*.ncb
+*.plg
+*.opt
+*.dep
+*.suo
+*.user
+
+# Test
+test\*.exe
+test\*.log
+
+# cmd
+cmd\config.cmd
+
+# Generated docs
+doc/valib/*
+
+# Generated files
+valib/version.h
