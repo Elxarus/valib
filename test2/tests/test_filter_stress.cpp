@@ -19,8 +19,9 @@
 #include "source/generator.h"
 #include "source/raw_source.h"
 #include "source/source_filter.h"
-#include "../all_filters.h"
 #include "fir/param_fir.h"
+#include "../all_filters.h"
+#include "../suite.h"
 #include <boost/test/unit_test.hpp>
 
 static const int seed = 457934875;
@@ -275,8 +276,6 @@ void noise_stress_test(Speakers spk, Filter *filter)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-BOOST_TEST_DONT_PRINT_LOG_VALUE(Speakers);
 
 BOOST_AUTO_TEST_SUITE(filter_stress)
 
