@@ -20,8 +20,8 @@ public:
   { last_entry = entry; }
 };
 
-static const LogEntry entry1(1, 2, "test1");
-static const LogEntry entry2(2, 1, "test2");
+static const LogEntry entry1(1, 2, "module1", "test1");
+static const LogEntry entry2(2, 1, "module2", "test2");
 static const char *log_test_file = "log_test_file.log";
 
 BOOST_AUTO_TEST_SUITE(test_log)
@@ -32,6 +32,7 @@ BOOST_AUTO_TEST_CASE(sink_constructor)
 
   LogTest *sink = new LogTest(&source);
   BOOST_CHECK(source.is_subscribed(sink));
+  BOOST_CHECK(sink->is_subscribed());
   source.log(entry1);
   BOOST_CHECK(sink->last_entry == entry1);
   delete sink;
@@ -42,6 +43,23 @@ BOOST_AUTO_TEST_CASE(sink_constructor)
   source.log(entry2);
 }
 
+BOOST_AUTO_TEST_CASE(destruct_dispatcher_first)
+{
+  LogTest sink;
+
+  LogDispatcher *source = new LogDispatcher();
+  sink.subscribe(source);
+  BOOST_CHECK(source->is_subscribed(&sink));
+  BOOST_CHECK(sink.is_subscribed());
+  source->log(entry1);
+  BOOST_CHECK(sink.last_entry == entry1);
+  delete source;
+
+  // Now sink is destructed
+  // Source must be unsubscribed
+  BOOST_CHECK(!sink.is_subscribed());
+}
+
 BOOST_AUTO_TEST_CASE(subscribe)
 {
   LogDispatcher source;
@@ -49,11 +67,13 @@ BOOST_AUTO_TEST_CASE(subscribe)
 
   sink.subscribe(&source);
   BOOST_CHECK(source.is_subscribed(&sink));
+  BOOST_CHECK(sink.is_subscribed());
   source.log(entry1);
   BOOST_CHECK(sink.last_entry == entry1);
 
   sink.unsubscribe();
   BOOST_CHECK(!source.is_subscribed(&sink));
+  BOOST_CHECK(!sink.is_subscribed());
   source.log(entry2);
   BOOST_CHECK(sink.last_entry == entry1);
 }
@@ -68,23 +88,25 @@ BOOST_AUTO_TEST_CASE(log_funcs)
   source.log(entry2);
   BOOST_CHECK_EQUAL(sink.last_entry, entry2);
 
-  source.log(entry1.level, entry1.message);
+  source.log(entry1.level, entry1.module, entry1.message);
   BOOST_CHECK(local_time() - sink.last_entry.timestamp < 1);
   BOOST_CHECK_EQUAL(sink.last_entry.level, entry1.level);
+  BOOST_CHECK_EQUAL(sink.last_entry.module, entry1.module);
   BOOST_CHECK_EQUAL(sink.last_entry.message, entry1.message);
 
-  source.log(entry2.level, entry2.message.c_str());
+  source.log(entry2.level, entry2.module, entry2.message.c_str());
   BOOST_CHECK(local_time() - sink.last_entry.timestamp < 1);
   BOOST_CHECK_EQUAL(sink.last_entry.level, entry2.level);
+  BOOST_CHECK_EQUAL(sink.last_entry.module, entry2.module);
   BOOST_CHECK_EQUAL(sink.last_entry.message, entry2.message);
 
   // formatted string
-  source.log(entry1.level, "%s%i", "test", 1);
+  source.log(entry1.level, entry1.module, "%s%i", "test", 1);
   BOOST_CHECK_EQUAL(sink.last_entry.message, string("test1"));
 
   // very long string
   string s = string("L") + string(8192, 'o') + string("ngcat");
-  source.log(entry1.level, "%s", s.c_str());
+  source.log(entry1.level, entry1.module, "%s", s.c_str());
   BOOST_CHECK_EQUAL(sink.last_entry.message, s);
 }
 
@@ -92,14 +114,16 @@ BOOST_AUTO_TEST_CASE(valib_log)
 {
   LogTest sink(&valib_log_dispatcher);
 
-  ::valib_log(entry1.level, entry1.message);
+  ::valib_log(entry1.level, entry1.module, entry1.message);
   BOOST_CHECK(local_time() - sink.last_entry.timestamp < 1);
   BOOST_CHECK_EQUAL(sink.last_entry.level, entry1.level);
+  BOOST_CHECK_EQUAL(sink.last_entry.module, entry1.module);
   BOOST_CHECK_EQUAL(sink.last_entry.message, entry1.message);
 
-  ::valib_log(entry2.level, entry2.message.c_str());
+  ::valib_log(entry2.level, entry2.module, entry2.message.c_str());
   BOOST_CHECK(local_time() - sink.last_entry.timestamp < 1);
   BOOST_CHECK_EQUAL(sink.last_entry.level, entry2.level);
+  BOOST_CHECK_EQUAL(sink.last_entry.module, entry2.module);
   BOOST_CHECK_EQUAL(sink.last_entry.message, entry2.message);
 }
 

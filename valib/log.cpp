@@ -15,7 +15,7 @@ static const size_t def_message_size(256);
 ///////////////////////////////////////////////////////////////////////////////
 
 LogDispatcher valib_log_dispatcher;
-#ifdef _WIN32
+#if defined(_WIN32) && defined(_DEBUG)
 static LogWindowsDebug windows_debug(&valib_log_dispatcher);
 #endif
 
@@ -40,7 +40,7 @@ LogEntry::print() const
       pt->tm_hour, pt->tm_min, pt->tm_sec, 
       level);
 
-  return string(buf, len) + message;
+  return string(buf, len) + module + string(": ") + message;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,6 +58,11 @@ LogDispatcher::LogDispatcher(): p(new LogDispatcher::Private())
 
 LogDispatcher::~LogDispatcher()
 {
+  // Unsubscribe all listeners
+  AutoLock lock(&p->sink_lock);
+  std::vector<LogSink *> copy = p->sinks;
+  for (size_t i = 0; i < copy.size(); i++)
+    copy[i]->unsubscribe();
   delete p;
 }
 
@@ -68,22 +73,22 @@ void LogDispatcher::log(const LogEntry &entry)
     p->sinks[i]->receive(entry);
 }
 
-void LogDispatcher::log(int level, const std::string &message)
+void LogDispatcher::log(int level, const std::string &module, const std::string &message)
 {
   AutoLock lock(&p->sink_lock);
-  log(LogEntry(level, message));
+  log(LogEntry(local_time(), level, module, message));
 }
 
-void LogDispatcher::log(int level, const char *format, ...)
+void LogDispatcher::log(int level, const std::string &module, const char *format, ...)
 {
   AutoLock lock(&p->sink_lock);
   va_list args;
   va_start(args, format);
-  vlog(level, format, args);
+  vlog(level, module, format, args);
   va_end(args);
 }
 
-void LogDispatcher::vlog(int level, const char *format, va_list args)
+void LogDispatcher::vlog(int level, const std::string &module, const char *format, va_list args)
 {
   AutoLock lock(&p->sink_lock);
   std::vector<char> buf(def_message_size);
@@ -96,7 +101,7 @@ void LogDispatcher::vlog(int level, const char *format, va_list args)
     buf.resize(buf.size() * 2);
   }
   buf.resize(len); // do not include trailing zero!
-  log(LogEntry(level, string(buf.begin(), buf.end())));
+  log(LogEntry(local_time(), level, module, string(buf.begin(), buf.end())));
 }
 
 bool LogDispatcher::is_subscribed(LogSink *sink)
@@ -134,11 +139,11 @@ void LogWindowsDebug::receive(const LogEntry &entry)
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef VALIB_NO_LOG
-void valib_log(int level, const char *format, ...)
+void valib_log(int level, const string &module, const char *format, ...)
 {
   va_list args;
   va_start(args, format);
-  valib_log_dispatcher.vlog(level, format, args);
+  valib_log_dispatcher.vlog(level, module, format, args);
   va_end(args);
 }
 #endif

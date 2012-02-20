@@ -83,21 +83,24 @@ struct LogEntry
 {
   vtime_t timestamp;
   int level;
+  std::string module;
   std::string message;
 
   LogEntry(): timestamp(local_time()), level(0)
   {}
 
   LogEntry(const LogEntry &other):
-  timestamp(other.timestamp), level(other.level), message(other.message)
+    timestamp(other.timestamp),
+    level(other.level),
+    module(other.module),
+    message(other.message)
   {}
 
-  LogEntry(vtime_t timestamp_, int level_, const std::string &message_):
-  timestamp(timestamp_), level(level_), message(message_)
-  {}
-
-  LogEntry(int level_, const std::string &message_):
-  timestamp(local_time()), level(level_), message(message_)
+  LogEntry(vtime_t timestamp_, int level_, const std::string &module_, const std::string &message_):
+    timestamp(timestamp_),
+    level(level_),
+    module(module_),
+    message(message_)
   {}
 
   bool operator ==(const LogEntry &other) const
@@ -105,6 +108,7 @@ struct LogEntry
     return
       timestamp == other.timestamp && 
       level == other.level &&
+      module == other.module &&
       message == other.message;
   }
 
@@ -120,9 +124,9 @@ public:
   virtual ~LogDispatcher();
 
   void log(const LogEntry &entry);
-  void log(int level, const std::string &message);
-  void log(int level, const char *format, ...);
-  void vlog(int level, const char *format, va_list args);
+  void log(int level, const std::string &module, const std::string &message);
+  void log(int level, const std::string &module, const char *format, ...);
+  void vlog(int level, const std::string &module, const char *format, va_list args);
   bool is_subscribed(LogSink *sink);
 
 protected:
@@ -159,6 +163,9 @@ public:
     source = 0;
   }
 
+  bool is_subscribed() const
+  { return source != 0; }
+
   virtual void receive(const LogEntry &entry) = 0;
 
 private:
@@ -170,7 +177,8 @@ private:
 class LogFile : public LogSink
 {
 public:
-  LogFile()
+  LogFile(LogDispatcher *source = 0):
+  LogSink(source)
   {}
 
   LogFile(const char *filename, LogDispatcher *source = 0):
@@ -237,15 +245,15 @@ extern LogDispatcher valib_log_dispatcher;
 
 #ifndef VALIB_NO_LOG
 
-inline void valib_log(int level, const std::string &message)
-{ valib_log_dispatcher.log(level, message); }
+inline void valib_log(int level, const std::string &module, const std::string &message)
+{ valib_log_dispatcher.log(level, module, message); }
 
-void valib_log(int level, const char *format, ...);
+void valib_log(int level, const std::string &module, const char *format, ...);
 
 #else
 
-inline void valib_log(int, const std::string &) {}
-inline void valib_log(int, const char *, ...) {}
+inline void valib_log(int, const std::string &, const std::string &) {}
+inline void valib_log(int, const std::string &, const char *, ...) {}
 
 #endif
 
