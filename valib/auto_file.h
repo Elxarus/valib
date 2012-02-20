@@ -180,6 +180,7 @@ public:
 
   inline size_t  read(void *buf, size_t size)        { return fread(buf, 1, size, f);  }
   inline size_t  write(const void *buf, size_t size) { return fwrite(buf, 1, size, f); }
+  inline int     flush()                             { fflush(f);                      }
 
   inline bool    is_open()  const { return f != 0;                }
   inline bool    eof()      const { return f? feof(f) != 0: true; }
