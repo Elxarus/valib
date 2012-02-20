@@ -1,7 +1,116 @@
+#include <algorithm>
 #include <stdarg.h>
 #include <time.h>
 #include "log.h"
 
+using std::string;
+
+// Default message buffer size for sprintf.
+// Buffer grows if message exceeds this limit, but this process is not effective.
+// See LogDispatcher::vlog()
+static const size_t def_message_size(256);
+
+///////////////////////////////////////////////////////////////////////////////
+
+LogDispatcher valib_log_dispatcher;
+#ifdef _WIN32
+static LogWindowsDebug windows_debug(&valib_log_dispatcher);
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+// LogEntry
+
+string
+LogEntry::print() const
+{
+  // timestamp
+  time_t t = (time_t)timestamp;
+  tm *pt = gmtime(&t);
+
+  char buf[20] = "0000-00-00 00:00:00";
+  if (pt)
+    sprintf(buf, "%04i-%02i-%02i %02i:%02i:%02i",
+      pt->tm_year + 1900, pt->tm_mon + 1, pt->tm_mday, 
+      pt->tm_hour, pt->tm_min, pt->tm_sec);
+
+  return string(buf) + string(" | " ) + message;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LogDispatcher
+
+void LogDispatcher::log(const LogEntry &entry)
+{
+  AutoLock lock(&sink_lock);
+  for (size_t i = 0; i < sinks.size(); i++)
+    sinks[i]->receive(entry);
+}
+
+void LogDispatcher::log(int level, std::string message)
+{
+  AutoLock lock(&sink_lock);
+  log(LogEntry(level, message));
+}
+
+void LogDispatcher::log(int level, const char *format, ...)
+{
+  AutoLock lock(&sink_lock);
+  va_list args;
+  va_start(args, format);
+  vlog(level, format, args);
+  va_end(args);
+}
+
+void LogDispatcher::vlog(int level, const char *format, va_list args)
+{
+  AutoLock lock(&sink_lock);
+  std::vector<char> buf(def_message_size);
+  size_t len = 0;
+  while (true)
+  {
+    len = vsnprintf(&(buf[0]), buf.size(), format, args);
+    if (len < buf.size())
+      break;
+    buf.resize(buf.size() * 2);
+  }
+  buf.resize(len); // do not include trailing zero!
+  log(LogEntry(level, string(buf.begin(), buf.end())));
+}
+
+bool LogDispatcher::is_subscribed(LogSink *sink)
+{
+  AutoLock lock(&sink_lock);
+  return std::find(sinks.begin(), sinks.end(), sink) != sinks.end();
+}
+
+void LogDispatcher::add_sink(LogSink *sink)
+{
+  AutoLock lock(&sink_lock);
+  if (sink && std::find(sinks.begin(), sinks.end(), sink) == sinks.end())
+    sinks.push_back(sink);
+}
+
+void LogDispatcher::remove_sink(LogSink *sink)
+{
+  AutoLock lock(&sink_lock);
+  sinks.erase(
+    std::remove(sinks.begin(), sinks.end(), sink),
+    sinks.end());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// LogWindowsDebug
+
+#ifdef _WIN32
+void LogWindowsDebug::receive(const LogEntry &entry)
+{
+  OutputDebugString(entry.print().c_str());
+  OutputDebugString("\r\n");
+}
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+// Obsolete
 
 static const char *statuses[] = { "* ", "- ", "\\ ", "| ", "/ " };
 
