@@ -1,6 +1,6 @@
 /**************************************************************************//**
   \file sink_log.h
-  \brief LogSink class
+  \brief LoggerSink class
 ******************************************************************************/
 
 #ifndef SINK_LOG_H
@@ -10,11 +10,11 @@
 #include "../sink.h"
 
 /**************************************************************************//**
-  \class LogSink
+  \class LoggerSink
   \brief Logs incoming chunks for debugging/testing.
 ******************************************************************************/
 
-class LogSink : public SimpleSink
+class LoggerSink : public SimpleSink
 {
 public:
   enum entry_type_t {
@@ -54,7 +54,7 @@ public:
 
   std::vector<LogEntry> log;
 
-  LogSink()
+  LoggerSink()
   {}
 
   string print() const;

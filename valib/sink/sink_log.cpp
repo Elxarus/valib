@@ -2,7 +2,7 @@
 #include "sink_log.h"
 
 string
-LogSink::LogEntry::print() const
+LoggerSink::LogEntry::print() const
 {
   switch (type)
   {
@@ -34,7 +34,7 @@ LogSink::LogEntry::print() const
 }
 
 string
-LogSink::print() const
+LoggerSink::print() const
 {
   if (log.size() == 0)
     return string();
