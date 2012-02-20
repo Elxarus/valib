@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <vector>
 #include <stdarg.h>
 #include <time.h>
+#include "win32/thread.h"
 #include "log.h"
 
 using std::string;
@@ -44,22 +46,37 @@ LogEntry::print() const
 ///////////////////////////////////////////////////////////////////////////////
 // LogDispatcher
 
+class LogDispatcher::Private
+{
+public:
+  std::vector<LogSink *> sinks;
+  CritSec sink_lock;
+};
+
+LogDispatcher::LogDispatcher(): p(new LogDispatcher::Private())
+{}
+
+LogDispatcher::~LogDispatcher()
+{
+  delete p;
+}
+
 void LogDispatcher::log(const LogEntry &entry)
 {
-  AutoLock lock(&sink_lock);
-  for (size_t i = 0; i < sinks.size(); i++)
-    sinks[i]->receive(entry);
+  AutoLock lock(&p->sink_lock);
+  for (size_t i = 0; i < p->sinks.size(); i++)
+    p->sinks[i]->receive(entry);
 }
 
 void LogDispatcher::log(int level, const std::string &message)
 {
-  AutoLock lock(&sink_lock);
+  AutoLock lock(&p->sink_lock);
   log(LogEntry(level, message));
 }
 
 void LogDispatcher::log(int level, const char *format, ...)
 {
-  AutoLock lock(&sink_lock);
+  AutoLock lock(&p->sink_lock);
   va_list args;
   va_start(args, format);
   vlog(level, format, args);
@@ -68,7 +85,7 @@ void LogDispatcher::log(int level, const char *format, ...)
 
 void LogDispatcher::vlog(int level, const char *format, va_list args)
 {
-  AutoLock lock(&sink_lock);
+  AutoLock lock(&p->sink_lock);
   std::vector<char> buf(def_message_size);
   size_t len = 0;
   while (true)
@@ -84,23 +101,23 @@ void LogDispatcher::vlog(int level, const char *format, va_list args)
 
 bool LogDispatcher::is_subscribed(LogSink *sink)
 {
-  AutoLock lock(&sink_lock);
-  return std::find(sinks.begin(), sinks.end(), sink) != sinks.end();
+  AutoLock lock(&p->sink_lock);
+  return std::find(p->sinks.begin(), p->sinks.end(), sink) != p->sinks.end();
 }
 
 void LogDispatcher::add_sink(LogSink *sink)
 {
-  AutoLock lock(&sink_lock);
-  if (sink && std::find(sinks.begin(), sinks.end(), sink) == sinks.end())
-    sinks.push_back(sink);
+  AutoLock lock(&p->sink_lock);
+  if (sink && std::find(p->sinks.begin(), p->sinks.end(), sink) == p->sinks.end())
+    p->sinks.push_back(sink);
 }
 
 void LogDispatcher::remove_sink(LogSink *sink)
 {
-  AutoLock lock(&sink_lock);
-  sinks.erase(
-    std::remove(sinks.begin(), sinks.end(), sink),
-    sinks.end());
+  AutoLock lock(&p->sink_lock);
+  p->sinks.erase(
+    std::remove(p->sinks.begin(), p->sinks.end(), sink),
+    p->sinks.end());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -111,6 +128,18 @@ void LogWindowsDebug::receive(const LogEntry &entry)
 {
   OutputDebugString(entry.print().c_str());
   OutputDebugString("\r\n");
+}
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef VALIB_NO_LOG
+void valib_log(int level, const char *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  valib_log_dispatcher.vlog(level, format, args);
+  va_end(args);
 }
 #endif
 

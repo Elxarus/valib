@@ -5,11 +5,9 @@
 #ifndef VALIB_LOG_H
 #define VALIB_LOG_H
 
-#include <vector>
 #include <string>
 #include "auto_file.h"
 #include "vtime.h"
-#include "win32/thread.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Logging is done using LogDispatcher. Listeners may connect to a dispatcher
@@ -118,11 +116,8 @@ struct LogEntry
 class LogDispatcher
 {
 public:
-  LogDispatcher()
-  {}
-
-  ~LogDispatcher()
-  {}
+  LogDispatcher();
+  virtual ~LogDispatcher();
 
   void log(const LogEntry &entry);
   void log(int level, const std::string &message);
@@ -135,8 +130,8 @@ protected:
   void remove_sink(LogSink *sink);
   friend class LogSink;
 
-  CritSec sink_lock;
-  std::vector<LogSink *> sinks;
+  class Private;
+  Private *p;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -245,13 +240,7 @@ extern LogDispatcher valib_log_dispatcher;
 inline void valib_log(int level, const std::string &message)
 { valib_log_dispatcher.log(level, message); }
 
-inline void valib_log(int level, const char *format, ...)
-{
-  va_list args;
-  va_start(args, format);
-  valib_log_dispatcher.log(level, format, args);
-  va_end(args);
-}
+void valib_log(int level, const char *format, ...);
 
 #else
 
