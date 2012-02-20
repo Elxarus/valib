@@ -12,6 +12,28 @@
 #include "win32/thread.h"
 
 ///////////////////////////////////////////////////////////////////////////////
+// Logging is done using LogDispatcher. Listeners may connect to a dispatcher
+// and receive logging events. This way we can log to any:
+// * Windows debug output
+// * Log file
+// * Screen
+// * Other (BugTrap logging)
+//
+// Many log sources may exist at the same time. Default log for valib is
+// valib_log_dispatcher. It may be routed like any other log source. For
+// example, if you like to print log to stderr, add this to begin of main():
+//
+// int main(int argc, conat char **argv)
+// {
+//   LogStderr (&valib_log_dispatcher);
+//   // use valib
+//   // ...
+// }
+// 
+// By default valib log is dispatched to Windows debug output.
+//
+// valib_log() functions do default valib logging. Define VALIB_NO_LOG globally
+// to disable logging in release builds.
 
 struct LogEntry;
 class LogDispatcher;
@@ -32,21 +54,24 @@ enum levels {
   // Assertion fails and similar.
   log_critical = 0,
 
+  // Exceptions
+  log_exception = 1,
+
   // 'Normal' error.
   // File open, resource allocation etc.
-  log_error = 1,
+  log_error = 2,
 
   // Event that require special attention.
   // Indicates possible error in code.
-  log_warning = 2,
+  log_warning = 3,
 
   // Event happen during execution.
   // Must appear relatively rare.
-  log_event = 3,
+  log_event = 4,
 
   // Event that may appear frequently.
   // Data chunks, algorithm steps, etc.
-  log_trace = 4,
+  log_trace = 5,
 
   // Function call enter/exit.
   // Note, that some function calls may be considered as
@@ -100,7 +125,7 @@ public:
   {}
 
   void log(const LogEntry &entry);
-  void log(int level, std::string message);
+  void log(int level, const std::string &message);
   void log(int level, const char *format, ...);
   void vlog(int level, const char *format, va_list args);
   bool is_subscribed(LogSink *sink);
@@ -217,7 +242,7 @@ extern LogDispatcher valib_log_dispatcher;
 
 #ifndef VALIB_NO_LOG
 
-inline void valib_log(int level, std::string message)
+inline void valib_log(int level, const std::string &message)
 { valib_log_dispatcher.log(level, message); }
 
 inline void valib_log(int level, const char *format, ...)
@@ -230,9 +255,8 @@ inline void valib_log(int level, const char *format, ...)
 
 #else
 
-void valib_log(int level, std::string message) {}
-void valib_log(int level, const char *message) {}
-void valib_log(int level, const char *format, ...) {}
+inline void valib_log(int, const std::string &) {}
+inline void valib_log(int, const char *, ...) {}
 
 #endif
 
