@@ -12,6 +12,10 @@ using std::string;
 // See LogDispatcher::vlog()
 static const size_t def_message_size(256);
 
+// Max message buffer size for sprintf
+// See LogDispatcher::vlog()
+static const size_t max_message_size = 16384;
+
 ///////////////////////////////////////////////////////////////////////////////
 
 LogDispatcher valib_log_dispatcher;
@@ -59,7 +63,8 @@ LogDispatcher::LogDispatcher(): p(new LogDispatcher::Private())
 LogDispatcher::~LogDispatcher()
 {
   // Unsubscribe all listeners
-  AutoLock lock(&p->sink_lock);
+  // Do not lock here! Critical section is to be deleted.
+  // If destructor needs locking it's a bug of its lifetime.
   std::vector<LogSink *> copy = p->sinks;
   for (size_t i = 0; i < copy.size(); i++)
     copy[i]->unsubscribe();
@@ -91,17 +96,22 @@ void LogDispatcher::log(int level, const std::string &module, const char *format
 void LogDispatcher::vlog(int level, const std::string &module, const char *format, va_list args)
 {
   AutoLock lock(&p->sink_lock);
-  std::vector<char> buf(def_message_size);
+
+  // Allocate message buffer only once
+  // Expand it only when required up to max_message_size.
+  static std::vector<char> buf(def_message_size);
+
   size_t len = 0;
   while (true)
   {
     len = vsnprintf(&(buf[0]), buf.size(), format, args);
-    if (len < buf.size())
+    if (len < buf.size() || buf.size() >= max_message_size)
       break;
     buf.resize(buf.size() * 2);
   }
-  buf.resize(len); // do not include trailing zero!
-  log(LogEntry(local_time(), level, module, string(buf.begin(), buf.end())));
+
+  // Do not include trailing zero! (test will fail)
+  log(LogEntry(local_time(), level, module, string(&buf.front(), len)));
 }
 
 bool LogDispatcher::is_subscribed(LogSink *sink)
