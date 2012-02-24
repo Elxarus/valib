@@ -20,8 +20,8 @@ public:
   { last_entry = entry; }
 };
 
-static const LogEntry entry1(1, 2, "module1", "test1");
-static const LogEntry entry2(2, 1, "module2", "test2");
+static const LogEntry entry1(1, 1, "module1", "test1");
+static const LogEntry entry2(2, 2, "module2", "test2");
 static const char *log_test_file = "log_test_file.log";
 
 BOOST_AUTO_TEST_SUITE(test_log)
@@ -76,6 +76,28 @@ BOOST_AUTO_TEST_CASE(subscribe)
   BOOST_CHECK(!sink.is_subscribed());
   source.log(entry2);
   BOOST_CHECK(sink.last_entry == entry1);
+}
+
+BOOST_AUTO_TEST_CASE(source_log_level)
+{
+  LogDispatcher source;
+  LogTest sink(&source);
+
+  source.set_max_log_level(1);
+  source.log(entry1);
+  source.log(entry2);
+  BOOST_CHECK_EQUAL(sink.last_entry, entry1);
+}
+
+BOOST_AUTO_TEST_CASE(sink_log_level)
+{
+  LogDispatcher source;
+  LogTest sink(&source);
+
+  sink.set_max_log_level(1);
+  source.log(entry1);
+  source.log(entry2);
+  BOOST_CHECK_EQUAL(sink.last_entry, entry1);
 }
 
 BOOST_AUTO_TEST_CASE(log_funcs)
