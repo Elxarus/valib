@@ -31,3 +31,12 @@ EqualizerMch::clear_bands(int ch_name)
   if (ch_name < 0 || ch_name > CH_NAMES) return;
   ch_eq[ch_name].clear_bands();
 }
+
+bool
+EqualizerMch::is_equalized(int ch_name) const
+{
+  if (ch_name == CH_NONE)
+    return master.is_equalized();
+  if (ch_name < 0 || ch_name > CH_NAMES) return false;
+  return ch_eq[ch_name].is_equalized();
+}

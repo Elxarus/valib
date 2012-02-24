@@ -64,6 +64,9 @@ public:
   size_t set_bands(int ch_name, const EqBand *bands, size_t nbands);
   size_t get_bands(int ch_name, EqBand *bands, size_t first_band, size_t nbands) const;
   void clear_bands(int ch_name);
+
+  // Is channel equalized?
+  bool is_equalized(int ch_name) const;
 };
 
 #endif

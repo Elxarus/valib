@@ -249,6 +249,7 @@ public:
   inline size_t   get_eq_nbands(int ch) const;
   inline size_t   get_eq_bands(int ch, EqBand *bands, size_t first_band, size_t nbands) const;
   inline size_t   set_eq_bands(int ch, const EqBand *bands, size_t nbands);
+  inline bool     get_eq_equalized(int ch) const;
 
   // Bass redirection
 
@@ -492,6 +493,9 @@ inline size_t AudioProcessor::get_eq_bands(int ch, EqBand *bands, size_t first_b
 
 inline size_t AudioProcessor::set_eq_bands(int ch, const EqBand *bands, size_t nbands)
 { return equalizer.set_bands(ch, bands, nbands); }
+
+inline bool AudioProcessor::get_eq_equalized(int ch) const
+{ return equalizer.is_equalized(ch); }
 
 // Bass redirection
 

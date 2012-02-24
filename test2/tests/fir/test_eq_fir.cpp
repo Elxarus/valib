@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE(constructor)
   EqFIR fir;
   BOOST_CHECK_EQUAL(fir.get_nbands(), 0);
   BOOST_CHECK_EQUAL(fir.get_bands(&band, 0, 1), 0);
+  BOOST_CHECK_EQUAL(fir.is_equalized(), false);
 }
 
 BOOST_AUTO_TEST_CASE(init_constructor)
@@ -35,6 +36,7 @@ BOOST_AUTO_TEST_CASE(init_constructor)
 
   BOOST_CHECK_EQUAL(fir.get_nbands(), nbands);
   BOOST_CHECK_EQUAL(fir.get_bands(result_bands, 0, nbands), nbands);
+  BOOST_CHECK_EQUAL(fir.is_equalized(), true);
   for (size_t i = 0; i < nbands; i++)
   {
     BOOST_CHECK_EQUAL(result_bands[i].freq, bands[i].freq);
@@ -97,17 +99,58 @@ BOOST_AUTO_TEST_CASE(set_ripple)
 }
 
 // Uninitialized filter produces passthrough response
-BOOST_AUTO_TEST_CASE(make_identity)
+BOOST_AUTO_TEST_CASE(make_identity1)
 {
   EqFIR fir;
   boost::scoped_ptr<const FIRInstance> inst;
 
   inst.reset(fir.make(sample_rate));
   BOOST_CHECK_EQUAL(inst->type(), firt_identity);
+  BOOST_CHECK_EQUAL(fir.is_equalized(), false);
+}
+
+// Filter with one band set to 1.0 +-ripple produces passthrough response
+BOOST_AUTO_TEST_CASE(make_identity2)
+{
+  EqFIR fir;
+  boost::scoped_ptr<const FIRInstance> inst;
+  const double k = db2value(fir.get_ripple() / 2);
+  const EqBand bands1[] = { { sample_rate / 4, k } };
+  const EqBand bands2[] = { { sample_rate / 4, 1.0 / k } };
+
+  fir.set_bands(bands1, array_size(bands1));
+  inst.reset(fir.make(sample_rate));
+  BOOST_CHECK_EQUAL(inst->type(), firt_identity);
+  BOOST_CHECK_EQUAL(fir.is_equalized(), false);
+
+  fir.set_bands(bands2, array_size(bands1));
+  inst.reset(fir.make(sample_rate));
+  BOOST_CHECK_EQUAL(inst->type(), firt_identity);
+  BOOST_CHECK_EQUAL(fir.is_equalized(), false);
+}
+
+// Filter with all bands set to +-ripple produces passthrough response
+BOOST_AUTO_TEST_CASE(make_identity3)
+{
+  EqFIR fir;
+  boost::scoped_ptr<const FIRInstance> inst;
+
+  const double k = db2value(fir.get_ripple() / 2);
+  const EqBand bands[] = { 
+    { 100, 1.0 }, 
+    { 200, k }, 
+    { 300, 1.0/k }, 
+    { 400, 1.0 }
+  };
+
+  fir.set_bands(bands, array_size(bands));
+  inst.reset(fir.make(sample_rate));
+  BOOST_CHECK_EQUAL(inst->type(), firt_identity);
+  BOOST_CHECK_EQUAL(fir.is_equalized(), false);
 }
 
 // Equalizer with one band set produces gain response
-BOOST_AUTO_TEST_CASE(make_gain)
+BOOST_AUTO_TEST_CASE(make_gain1)
 {
   const double gain = 2.0;
   const EqBand band = { sample_rate / 4, gain };
@@ -119,6 +162,28 @@ BOOST_AUTO_TEST_CASE(make_gain)
   inst.reset(fir.make(sample_rate));
   BOOST_CHECK_EQUAL(inst->type(), firt_gain);
   BOOST_CHECK_EQUAL(inst->data[0], gain);
+  BOOST_CHECK_EQUAL(fir.is_equalized(), true);
+}
+
+// Filter with one band set to gain +-ripple produces gain response
+BOOST_AUTO_TEST_CASE(make_gain2)
+{
+  EqFIR fir;
+  boost::scoped_ptr<const FIRInstance> inst;
+
+  const double gain = 2.0;
+  const double k = db2value(fir.get_ripple() / 2);
+  const EqBand bands[] = { 
+    { 100, gain }, 
+    { 200, gain*k }, 
+    { 300, gain/k }, 
+    { 400, gain }
+  };
+
+  fir.set_bands(bands, array_size(bands));
+  inst.reset(fir.make(sample_rate));
+  BOOST_CHECK_EQUAL(inst->type(), firt_gain);
+  BOOST_CHECK_EQUAL(fir.is_equalized(), true);
 }
 
 // Equalizer with multiple bands.

@@ -21,6 +21,8 @@ int main()
   cout << "DTS: " << DTSTrie.serialize() << endl;
 
   // MPATrie
+  SyncTrie MPAVersion = SyncTrie(0x0, 2) | SyncTrie(0x2, 2) | SyncTrie(0x3, 2);
+
   SyncTrie MPALayer = SyncTrie(0x1, 2) | SyncTrie(0x2, 2) | SyncTrie(0x3, 2);
 
   SyncTrie MPABitrate;
@@ -29,17 +31,18 @@ int main()
 
   SyncTrie MPARate = SyncTrie(0x0, 2) | SyncTrie(0x1, 2) | SyncTrie(0x2, 2);
 
-  SyncTrie MPATrie1 =
-    SyncTrie(0xfff, 12) + // Sync
-    SyncTrie::any + // version
+  // MPEG2.5 support only for big endian
+  SyncTrie MPATrieBigEndian =
+    SyncTrie(0x7ff, 11) + // Sync
+    MPAVersion +    // version with MPEG2.5 support
     MPALayer +      // layer != 0
     SyncTrie::any + // protection
     MPABitrate +    // bitrate != 0xf
     MPARate;        // rate != 0x3
 
-  SyncTrie MPATrie2 =
+  SyncTrie MPATrieLittleEndian =
     SyncTrie(0xf, 4) + // Sync
-    SyncTrie::any + // version
+    SyncTrie::any + // version w/o MPEG2.5 support
     MPALayer +      // layer != 0
     SyncTrie::any + // protection
     SyncTrie(0xff, 8) + // Sync
@@ -47,7 +50,7 @@ int main()
     MPABitrate +    // bitrate != 0xf
     MPARate;        // rate != 0x3
 
-  SyncTrie MPATrie = MPATrie1 | MPATrie2;
+  SyncTrie MPATrie = MPATrieBigEndian | MPATrieLittleEndian;
   MPATrie.optimize();
   cout << "MPA: " << MPATrie.serialize() << endl;
 
