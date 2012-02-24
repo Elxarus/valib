@@ -5,6 +5,7 @@
 #ifndef VALIB_LOG_H
 #define VALIB_LOG_H
 
+#include <stdarg.h>
 #include <string>
 #include "auto_file.h"
 #include "vtime.h"
@@ -71,10 +72,14 @@ enum levels {
   // Data chunks, algorithm steps, etc.
   log_trace = 5,
 
-  // Function call enter/exit.
+  // Function call logging
   // Note, that some function calls may be considered as
   // log_event (global state changes, etc).
-  log_function_call = 6
+  log_func = 6,
+
+  // Maximum log level
+  // Guaranteed to be larger than other log levels
+  log_all = 100
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -116,6 +121,11 @@ struct LogEntry
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+// LogDispatcher
+// Logging functions are inline to avoid overhead of logging when not
+// requested. When logging level is low the only overhead is level checking.
+//
+// Default log level is log_all (do not filter).
 
 class LogDispatcher
 {
@@ -123,31 +133,83 @@ public:
   LogDispatcher();
   virtual ~LogDispatcher();
 
-  void log(const LogEntry &entry);
-  void log(int level, const std::string &module, const std::string &message);
-  void log(int level, const std::string &module, const char *format, ...);
-  void vlog(int level, const std::string &module, const char *format, va_list args);
+  inline void set_max_log_level(int log_level);
+  inline int  get_max_log_level() const;
+
+  inline void log(const LogEntry &entry);
+  inline void log(int level, const std::string &module, const std::string &message);
+  inline void log(int level, const std::string &module, const char *format, ...);
+  inline void vlog(int level, const std::string &module, const char *format, va_list args);
   bool is_subscribed(LogSink *sink);
 
 protected:
+  void log_impl(const LogEntry &entry);
+  void vlog_impl(int level, const std::string &module, const char *format, va_list args);
+
   void add_sink(LogSink *sink);
   void remove_sink(LogSink *sink);
   friend class LogSink;
 
+  int max_log_level;
   class Private;
   Private *p;
 };
+
+inline void LogDispatcher::set_max_log_level(int log_level)
+{
+  max_log_level = log_level;
+}
+
+inline int LogDispatcher::get_max_log_level() const
+{
+  return max_log_level;
+}
+
+inline void LogDispatcher::log(const LogEntry &entry)
+{
+  if (entry.level <= max_log_level)
+    log_impl(entry);
+}
+
+inline void LogDispatcher::log(int level, const std::string &module, const std::string &message)
+{
+  if (level <= max_log_level)
+    log_impl(LogEntry(local_time(), level, module, message));
+}
+
+inline void LogDispatcher::log(int level, const std::string &module, const char *format, ...)
+{
+  if (level <= max_log_level)
+  {
+    va_list args;
+    va_start(args, format);
+    vlog_impl(level, module, format, args);
+    va_end(args);
+  }
+}
+
+inline void LogDispatcher::vlog(int level, const std::string &module, const char *format, va_list args)
+{
+  if (level <= max_log_level)
+    vlog_impl(level, module, format, args);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class LogSink
 {
 public:
-  LogSink(LogDispatcher *source_ = 0): source(0)
+  LogSink(LogDispatcher *source_ = 0): max_log_level(log_all), source(0)
   { if (source_) subscribe(source_); }
 
   virtual ~LogSink()
   { unsubscribe(); }
+
+  void set_max_log_level(int log_level)
+  { max_log_level = log_level; }
+
+  int get_max_log_level() const
+  { return max_log_level; }
 
   void subscribe(LogDispatcher *new_source)
   {
@@ -169,7 +231,28 @@ public:
   virtual void receive(const LogEntry &entry) = 0;
 
 private:
+  int max_log_level;
   LogDispatcher *source;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+class LogMem : public LogSink
+{
+public:
+  LogMem(size_t max_size, LogDispatcher *source = 0);
+
+  void resize(size_t max_size);
+  size_t size() const;
+  const LogEntry &operator [](size_t i) const;
+
+  std::string log_text() const;
+
+  virtual void receive(const LogEntry &entry);
+
+protected:
+  class Private;
+  Private *p;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -246,9 +329,21 @@ extern LogDispatcher valib_log_dispatcher;
 #ifndef VALIB_NO_LOG
 
 inline void valib_log(int level, const std::string &module, const std::string &message)
-{ valib_log_dispatcher.log(level, module, message); }
+{
+  if (level <= valib_log_dispatcher.get_max_log_level())
+    valib_log_dispatcher.log(level, module, message);
+}
 
-void valib_log(int level, const std::string &module, const char *format, ...);
+inline void valib_log(int level, const std::string &module, const char *format, ...)
+{
+  if (level <= valib_log_dispatcher.get_max_log_level())
+  {
+    va_list args;
+    va_start(args, format);
+    valib_log_dispatcher.vlog(level, module, format, args);
+    va_end(args);
+  }
+}
 
 #else
 

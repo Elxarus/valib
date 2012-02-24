@@ -127,6 +127,50 @@ BOOST_AUTO_TEST_CASE(valib_log)
   BOOST_CHECK_EQUAL(sink.last_entry.message, entry2.message);
 }
 
+BOOST_AUTO_TEST_CASE(log_mem)
+{
+  const string endl("\n");
+  string test_log;
+
+  LogDispatcher source;
+  LogMem sink(2, &source);
+
+  BOOST_CHECK_EQUAL(sink.size(), 0);
+  BOOST_CHECK_EQUAL(sink.log_text(), string());
+  
+  source.log(entry1);
+  test_log = entry1.print() + endl;
+  BOOST_CHECK_EQUAL(sink.size(), 1);
+  BOOST_CHECK_EQUAL(sink.log_text(), test_log);
+  BOOST_CHECK_EQUAL(sink[0], entry1);
+
+  source.log(entry2);
+  test_log = entry1.print() + endl + entry2.print() + endl;
+  BOOST_CHECK_EQUAL(sink.size(), 2);
+  BOOST_CHECK_EQUAL(sink.log_text(), test_log);
+  BOOST_CHECK_EQUAL(sink[0], entry1);
+  BOOST_CHECK_EQUAL(sink[1], entry2);
+
+  source.log(entry2);
+  test_log = entry2.print() + endl + entry2.print() + endl;
+  BOOST_CHECK_EQUAL(sink.log_text(), test_log);
+
+  sink.resize(3);
+  BOOST_CHECK_EQUAL(sink.size(), 2);
+  BOOST_CHECK_EQUAL(sink.log_text(), test_log);
+
+  source.log(entry2);
+  source.log(entry1);
+  test_log = entry2.print() + endl + entry2.print() + endl + entry1.print() + endl;
+  BOOST_CHECK_EQUAL(sink.size(), 3);
+  BOOST_CHECK_EQUAL(sink.log_text(), test_log);
+
+  sink.resize(2);
+  test_log = entry2.print() + endl + entry1.print() + endl;
+  BOOST_CHECK_EQUAL(sink.size(), 2);
+  BOOST_CHECK_EQUAL(sink.log_text(), test_log);
+}
+
 BOOST_AUTO_TEST_CASE(log_file)
 {
   LogDispatcher source;
