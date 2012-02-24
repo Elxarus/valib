@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <vector>
-#include <stdarg.h>
 #include <time.h>
 #include "win32/thread.h"
 #include "log.h"
@@ -57,7 +56,7 @@ public:
   CritSec sink_lock;
 };
 
-LogDispatcher::LogDispatcher(): p(new LogDispatcher::Private())
+LogDispatcher::LogDispatcher(): max_log_level(log_trace), p(new LogDispatcher::Private())
 {}
 
 LogDispatcher::~LogDispatcher()
@@ -71,29 +70,15 @@ LogDispatcher::~LogDispatcher()
   delete p;
 }
 
-void LogDispatcher::log(const LogEntry &entry)
+void LogDispatcher::log_impl(const LogEntry &entry)
 {
   AutoLock lock(&p->sink_lock);
   for (size_t i = 0; i < p->sinks.size(); i++)
-    p->sinks[i]->receive(entry);
+    if (entry.level <= p->sinks[i]->get_max_log_level())
+      p->sinks[i]->receive(entry);
 }
 
-void LogDispatcher::log(int level, const std::string &module, const std::string &message)
-{
-  AutoLock lock(&p->sink_lock);
-  log(LogEntry(local_time(), level, module, message));
-}
-
-void LogDispatcher::log(int level, const std::string &module, const char *format, ...)
-{
-  AutoLock lock(&p->sink_lock);
-  va_list args;
-  va_start(args, format);
-  vlog(level, module, format, args);
-  va_end(args);
-}
-
-void LogDispatcher::vlog(int level, const std::string &module, const char *format, va_list args)
+void LogDispatcher::vlog_impl(int level, const std::string &module, const char *format, va_list args)
 {
   AutoLock lock(&p->sink_lock);
 
@@ -136,6 +121,81 @@ void LogDispatcher::remove_sink(LogSink *sink)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// LogMem
+
+class LogMem::Private
+{
+public:
+  LogMem::Private(): pos(0), max_size(0)
+  {}
+
+  size_t pos;
+  size_t max_size;
+  std::vector<LogEntry> entries;
+};
+
+LogMem::LogMem(size_t max_size, LogDispatcher *source): LogSink(source), p(new LogMem::Private)
+{
+  p->max_size = max_size;
+}
+
+void LogMem::resize(size_t max_size)
+{
+  size_t i, j;
+  size_t size = MIN(max_size, p->entries.size());
+  std::vector<LogEntry> entries(size);
+
+  if (max_size < p->entries.size())
+    p->pos += p->entries.size() - max_size;
+
+  for (i = 0, j = p->pos; i < size && j < p->entries.size(); i++, j++)
+    entries[i] = p->entries[j];
+  for (j = 0; i < size && j < p->pos; i++, j++)
+    entries[i] = p->entries[j];
+
+  p->pos = 0;
+  p->max_size = max_size;
+  p->entries = entries;
+}
+
+size_t LogMem::size() const
+{
+  return p->entries.size();
+}
+
+const LogEntry &LogMem::operator [](size_t i) const
+{
+  i += p->pos;
+  while (i >= p->entries.size())
+    i -= p->entries.size();
+  return p->entries[i];
+}
+
+string LogMem::log_text() const
+{
+  size_t i;
+  string s;
+  const string endl("\n");
+  for (i = p->pos; i < p->entries.size(); i++)
+    s += p->entries[i].print() + endl;
+  for (i = 0; i < p->pos; i++)
+    s += p->entries[i].print() + endl;
+  return s;
+}
+
+void LogMem::receive(const LogEntry &entry)
+{
+  if (p->entries.size() < p->max_size)
+    p->entries.push_back(entry);
+  else if (p->max_size != 0)
+  {
+    p->entries[p->pos++] = entry;
+    if (p->pos >= p->entries.size())
+      p->pos = 0;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // LogWindowsDebug
 
 #ifdef _WIN32
@@ -143,18 +203,6 @@ void LogWindowsDebug::receive(const LogEntry &entry)
 {
   OutputDebugString(entry.print().c_str());
   OutputDebugString("\r\n");
-}
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifndef VALIB_NO_LOG
-void valib_log(int level, const string &module, const char *format, ...)
-{
-  va_list args;
-  va_start(args, format);
-  valib_log_dispatcher.vlog(level, module, format, args);
-  va_end(args);
 }
 #endif
 
