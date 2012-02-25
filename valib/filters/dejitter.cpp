@@ -1,3 +1,5 @@
+#include <sstream>
+#include <iomanip>
 #include <math.h>
 #include <numeric>
 #include "../log.h"
@@ -307,4 +309,16 @@ Dejitter::process(Chunk &in, Chunk &out)
 
   continuous_time += out.size * size2time;
   return true;
+}
+
+string
+Dejitter::info() const
+{
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  s << "Enabled: " << dejitter << nl
+    << "Threshold: " << int(threshold * 1000) << "ms" << nl
+    << "Time shift: " << int(time_shift * 1000) << "ms" << nl
+    << "Time scale: " << time_factor << nl;
+  return s.str();
 }
