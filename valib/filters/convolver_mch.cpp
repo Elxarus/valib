@@ -385,3 +385,35 @@ ConvolverMch::flush(Chunk &out)
   sync.send_sync_linear(out, spk.sample_rate);
   return true;
 }
+
+string
+ConvolverMch::info() const
+{
+  if (!is_open())
+    return string();
+
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  if (trivial)
+    s << "Trivial processing (no convolution)\n";
+  else
+    s << "Filter length: " << n << nl
+      << "Filter center: " << c << nl;
+
+  order_t order;
+  spk.get_order(order);
+  for (int ch = 0; ch < spk.nch(); ch++)
+  {
+    s << ch_name_short(order[ch]) << ": ";
+    switch (type[ch])
+    {
+      case type_pass: s << "passthrough"; break;
+      case type_gain: s << "gain " << value2db(fir[ch]->data[0]); break;
+      case type_zero: s << "zero"; break;
+      case type_conv: s << "convolution"; break;
+    }
+    s << nl;
+  }
+
+  return s.str();
+}
