@@ -130,7 +130,6 @@ public:
   /////////////////////////////////////////////////////////
   // AudioProcessior interface
 
-  size_t get_info(char *buf, size_t len) const;
   bool query_user(Speakers user_spk) const;
   bool set_user(Speakers user_spk);
   Speakers get_user() const;
@@ -154,6 +153,9 @@ public:
   // Filter state
   virtual Speakers get_input() const;
   virtual Speakers get_output() const;
+
+  // Filter info
+  virtual string info() const;
 
   /////////////////////////////////////////////////////////
   // Options
