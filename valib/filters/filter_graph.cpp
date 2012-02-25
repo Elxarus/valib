@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <boost/lexical_cast.hpp>
 #include "filter_graph.h"
 
 using std::find;

@@ -18,14 +18,6 @@ AudioProcessor::AudioProcessor(size_t _nsamples)
   rebuild_chain();
 }
 
-size_t
-AudioProcessor::get_info(char *_buf, size_t _len) const
-{
-  return 0;
-//  return chain.chain_text(_buf, _len);
-}
-
-
 bool 
 AudioProcessor::query_user(Speakers new_user_spk) const
 {
@@ -50,6 +42,29 @@ Speakers
 AudioProcessor::get_user() const
 {
   return user_spk;
+}
+
+string
+AudioProcessor::info() const
+{
+  double level = dithering_level();
+
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  s << "User format: " << user_spk.print() << nl;
+  s << "Dithering mode: ";
+  switch (dithering)
+  {
+    case DITHER_NONE:   s << "no dithering"; break;
+    case DITHER_AUTO:   s << (level == 0? "auto (disabled)": "auto (enabled)"); break;
+    case DITHER_ALWAYS: s << "always dither"; break;
+    default:            s << "unknown"; break;
+  }
+  s << nl;
+  if (level != 0)
+    s << "Dithering level: " << std::setprecision(0) << value2db(level) << "dB" << nl;
+  s << "Filter chain:\n" << chain.info();
+  return s.str();
 }
 
 Speakers 
