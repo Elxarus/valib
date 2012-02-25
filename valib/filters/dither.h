@@ -28,33 +28,8 @@ public:
   /////////////////////////////////////////////////////////
   // SamplesFilter overrides
 
-  virtual bool process(Chunk &in, Chunk &out)
-  {
-    out = in;
-    in.clear();
-    if (out.is_dummy())
-      return false;
-
-    if (level > 0.0)
-    {
-      if (EQUAL_SAMPLES(level * spk.level, 1.0))
-      {
-        // most probable convert-to-pcm dithering
-        for (int ch = 0; ch < spk.nch(); ch++)
-          for (size_t s = 0; s < out.size; s++)
-            out.samples[ch][s] += rng.get_sample();
-      }
-      else
-      {
-        // custom dithering
-        double factor = level * spk.level;
-        for (int ch = 0; ch < spk.nch(); ch++)
-          for (size_t s = 0; s < out.size; s++)
-            out.samples[ch][s] += rng.get_sample() * factor;
-      }
-    }
-    return true;
-  }
+  virtual bool process(Chunk &in, Chunk &out);
+  virtual string info() const;
 };
 
 #endif
