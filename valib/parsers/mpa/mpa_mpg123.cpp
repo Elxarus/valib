@@ -185,17 +185,16 @@ static const char *mode_text(mpg123_mode mode)
 string
 MPG123Parser::info() const 
 {
-  using std::endl;
   std::stringstream result;
-  result << "Format: " << Speakers(FORMAT_MPA, out_spk.mask, out_spk.sample_rate).print() << endl;
+  result << "Format: " << Speakers(FORMAT_MPA, out_spk.mask, out_spk.sample_rate).print() << nl;
 
   mpg123_frameinfo info;
   if (mpg123_info((mpg123_handle*)mh, &info) == MPG123_OK)
   {
-    result << "Version: " << ver_text(info.version) << " " << layer_text(info.layer) << endl;
-    result << "Mode: " << mode_text(info.mode) << endl;
-    result << "Frame size: " << info.framesize << endl;
-    result << "Bitrate: " << info.bitrate << "kbps" << endl;
+    result << "Version: " << ver_text(info.version) << " " << layer_text(info.layer) << nl;
+    result << "Mode: " << mode_text(info.mode) << nl;
+    result << "Frame size: " << info.framesize << nl;
+    result << "Bitrate: " << info.bitrate << "kbps" << nl;
   }
   return result.str();
 }

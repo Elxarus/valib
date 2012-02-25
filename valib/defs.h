@@ -216,6 +216,8 @@ public:
 //                       zeroes the pointer
 //   align32(ptr)        32bit_aligned_pointer = ptr - align32(ptr);
 //   round<INT>(value)   round value to the nearest integer: static_cast<INT>(value + 0.5)
+//
+//   nl                  newline constant (\n)
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef MIN
@@ -238,6 +240,8 @@ inline size_t align32(const void *ptr)
 template <typename INTEGER>
 inline INTEGER round(double value)
 { return static_cast<INTEGER>(value + 0.5); }
+
+static const char nl = '\n';
 
 ///////////////////////////////////////////////////////////////////////////////
 // Byte-swap functions

@@ -202,22 +202,21 @@ FileParser::stats(vtime_t precision, unsigned min_measurements, unsigned max_mea
 string
 FileParser::file_info() const
 {
-  using std::endl;
   std::stringstream result;
 
-  result << "File: " << filename << endl;
+  result << "File: " << filename << nl;
   result << "Size: " << f.size()
-         << " (" << compact_size(f.size()) << " " << compact_suffix(f.size()) << "B)" << endl;
+         << " (" << compact_size(f.size()) << " " << compact_suffix(f.size()) << "B)" << nl;
 
   if (stat_size)
   {
     result << "Length: "
       << int(get_size(time)) / 3600 << ":"
       << int(get_size(time)) % 3600 / 60 << ":"
-      << int(get_size(time)) % 60 << endl;
-    result << "Frames: " << int(get_size(frames)) << endl;
-    result << "Frame size: " << int(avg_frame_size) << endl;
-    result << "Bitrate: " << int(avg_bitrate / 1000) << "kbps" << endl;
+      << int(get_size(time)) % 60 << nl;
+    result << "Frames: " << int(get_size(frames)) << nl;
+    result << "Frame size: " << int(avg_frame_size) << nl;
+    result << "Bitrate: " << int(avg_bitrate / 1000) << "kbps" << nl;
   }
 
   return result.str();

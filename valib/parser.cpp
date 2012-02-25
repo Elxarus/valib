@@ -2,7 +2,6 @@
 #include "parser.h"
 
 using std::stringstream;
-using std::endl;
 
 ///////////////////////////////////////////////////////////////////////////////
 // BasicFrameParser
@@ -85,24 +84,24 @@ BasicFrameParser::stream_info() const
   FrameInfo i = frame_info();
   std::stringstream result;
 
-  result << "Stream format: " << i.spk.print() << endl;
+  result << "Stream format: " << i.spk.print() << nl;
 
   switch (i.bs_type)
   {
-    case BITSTREAM_8:    result << "Bitstream type: byte stream" << endl; break;
-    case BITSTREAM_16BE: result << "Bitstream type: 16bit big endian" << endl; break;
-    case BITSTREAM_16LE: result << "Bitstream type: 16bit low endian" << endl; break;
-    case BITSTREAM_14BE: result << "Bitstream type: 14bit big endian" << endl; break;
-    case BITSTREAM_14LE: result << "Bitstream type: 14bit low endian" << endl; break;
-    default:             result << "Bitstream type: unknown" << endl; break;
+    case BITSTREAM_8:    result << "Bitstream type: byte stream\n"; break;
+    case BITSTREAM_16BE: result << "Bitstream type: 16bit big endian\n"; break;
+    case BITSTREAM_16LE: result << "Bitstream type: 16bit low endian\n"; break;
+    case BITSTREAM_14BE: result << "Bitstream type: 14bit big endian\n"; break;
+    case BITSTREAM_14LE: result << "Bitstream type: 14bit low endian\n"; break;
+    default:             result << "Bitstream type: unknown\n"; break;
   }
 
-  result << "Frame size: " << i.frame_size << endl;
-  result << "Samples: " << i.nsamples << endl;
-  result << "Bitrate: " << int(i.bitrate() / 1000) << "kbps" << endl;
+  result << "Frame size: " << i.frame_size << nl;
+  result << "Samples: " << i.nsamples << nl;
+  result << "Bitrate: " << int(i.bitrate() / 1000) << "kbps\n";
 
   if (i.spdif_type)
-    result << "SPDIF stream type: 0x" << std::hex << i.spdif_type << endl;
+    result << "SPDIF stream type: 0x" << std::hex << i.spdif_type << nl;
 
   return result.str();
 };

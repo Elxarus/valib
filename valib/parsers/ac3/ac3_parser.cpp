@@ -128,21 +128,20 @@ AC3Parser::process(Chunk &in, Chunk &out)
 string
 AC3Parser::info() const 
 {
-  using std::endl;
   int max_freq = (cplinu? MAX(endmant[0], cplendmant): endmant[0]) * finfo.spk.sample_rate / 512000;
   int cpl_freq = cplinu? cplstrtmant * finfo.spk.sample_rate / 512000: max_freq;
 
   std::stringstream result;
-  result << "Format: " << finfo.spk.print() << endl;
-  result << "Bitrate: " << bitrate << "kbps" << endl;
-  result << "Stream: " << (finfo.bs_type == BITSTREAM_8? "byte stream": "16bit low endian") << endl;
-  result << "Frame size: " << frame_size << endl;
-  result << "Samples: " << AC3_FRAME_SAMPLES << endl;
-  result << "bsid: " << bsid << endl;
-  result << "clev: " << std::setprecision(1) << value2db(clev) << "dB (" << std::setprecision(4) << clev << ")" << endl;
-  result << "slev: " << std::setprecision(1) << value2db(slev) << "dB (" << std::setprecision(4) << slev << ")" << endl;
-  result << "dialnorm: " << -dialnorm << "dB" << endl;
-  result << "bandwidth: " << cpl_freq << "kHz/" << max_freq << "kHz" << endl;
+  result << "Format: " << finfo.spk.print() << nl;
+  result << "Bitrate: " << bitrate << "kbps" << nl;
+  result << "Stream: " << (finfo.bs_type == BITSTREAM_8? "byte stream": "16bit low endian") << nl;
+  result << "Frame size: " << frame_size << nl;
+  result << "Samples: " << AC3_FRAME_SAMPLES << nl;
+  result << "bsid: " << bsid << nl;
+  result << "clev: " << std::setprecision(1) << value2db(clev) << "dB (" << std::setprecision(4) << clev << ")" << nl;
+  result << "slev: " << std::setprecision(1) << value2db(slev) << "dB (" << std::setprecision(4) << slev << ")" << nl;
+  result << "dialnorm: " << -dialnorm << "dB" << nl;
+  result << "bandwidth: " << cpl_freq << "kHz/" << max_freq << "kHz" << nl;
   return result.str();
 }
 

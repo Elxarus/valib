@@ -192,8 +192,6 @@ DTSParser::process(Chunk &in, Chunk &out)
 string
 DTSParser::info() const
 {
-  using std::endl;
-
   char *stream = "???";
   switch (finfo.bs_type)
   {
@@ -204,13 +202,13 @@ DTSParser::info() const
   }
 
   std::stringstream result;
-  result << "Format: " << out_spk.print() << endl;
-  result << "Bitrate: " << dts_bit_rates[bit_rate] / 1000 << endl;
-  result << "Stream: " << stream << endl;
-  result << "Frame size: " << finfo.frame_size << endl;
-  result << "NSamples: " << finfo.nsamples << endl;
-  result << "amode: " << amode << endl;
-  result << (crc_present? "CRC protected\n": "No CRC") << endl;
+  result << "Format: " << out_spk.print() << nl;
+  result << "Bitrate: " << dts_bit_rates[bit_rate] / 1000 << nl;
+  result << "Stream: " << stream << nl;
+  result << "Frame size: " << finfo.frame_size << nl;
+  result << "NSamples: " << finfo.nsamples << nl;
+  result << "amode: " << amode << nl;
+  result << (crc_present? "CRC protected\n": "No CRC") << nl;
   return result.str();
 }
 

@@ -315,16 +315,15 @@ DVDGraph::get_spdif_status() const
 string
 DVDGraph::info() const
 {
-  using std::endl;
   std::stringstream result;
 
-  result << "Input format: " << get_input().print() << endl;
-  result << "User format: " << user_spk.print() << endl;
-  result << "Output format: " << get_output().print() << endl;
+  result << "Input format: " << get_input().print() << nl;
+  result << "User format: " << user_spk.print() << nl;
+  result << "Output format: " << get_output().print() << nl;
 
   if (use_spdif)
   {
-    result << endl << "Use SPDIF" << endl;
+    result << "\nUse SPDIF\n";
 
     // SPDIF status
 
@@ -350,7 +349,7 @@ DVDGraph::info() const
 
       default: result << "Unknown"; break;
     }
-    result << endl;
+    result << nl;
 
     // SPDIF passthrough formats
 
@@ -359,7 +358,7 @@ DVDGraph::info() const
     if (spdif_pt & FORMAT_MASK_AC3) result << " AC3";
     if (spdif_pt & FORMAT_MASK_DTS) result << " DTS";
     if (spdif_pt == 0) result << " -";
-    result << endl;
+    result << nl;
 
     // Encode to AC3 option
 
@@ -368,12 +367,12 @@ DVDGraph::info() const
         spdif_stereo_pt? "(do not encode stereo PCM)": "(encode stereo PCM)";
     else
       result << "  Do not use AC3 encoder";
-    result << endl;
+    result << nl;
 
     // SPDIF as PCM option
 
     if (spdif_as_pcm)
-      result << "  SPDIF as PCM output" << endl;
+      result << "  SPDIF as PCM output" << nl;
 
     // Check SPDIF sample rate
 
@@ -392,7 +391,7 @@ DVDGraph::info() const
     }
     else
       result << "  Do not check SPDIF sample rate";
-    result << endl;
+    result << nl;
 
     // Query sink option
 
@@ -400,10 +399,10 @@ DVDGraph::info() const
       result << "  Query for SPDIF output support";
     else
       result << "  Do not query for SPDIF output support";
-    result << endl;
+    result << nl;
   }
 
-  result << endl << "Filter chain:" << endl << FilterGraph::info();
+  result << "\nFilter chain:\n" << FilterGraph::info();
   return result.str();
 }
 

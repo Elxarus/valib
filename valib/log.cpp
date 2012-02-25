@@ -175,11 +175,10 @@ string LogMem::log_text() const
 {
   size_t i;
   string s;
-  const string endl("\n");
   for (i = p->pos; i < p->entries.size(); i++)
-    s += p->entries[i].print() + endl;
+    s += p->entries[i].print() + nl;
   for (i = 0; i < p->pos; i++)
-    s += p->entries[i].print() + endl;
+    s += p->entries[i].print() + nl;
   return s;
 }
 
