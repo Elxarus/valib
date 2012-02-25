@@ -103,6 +103,7 @@ public:
   virtual void uninit();
   virtual void reset();
   virtual bool process(Chunk &in, Chunk &out);
+  virtual string info() const;
 };
 
 #endif

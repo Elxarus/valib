@@ -222,3 +222,12 @@ CacheFilter::process(Chunk &in, Chunk &out)
 
   return true;
 }
+
+string
+CacheFilter::info() const
+{
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  s << "Buffer size: " << int(buf_size * 1000) << "ms (" << buf_samples << " samples)\n";
+  return s.str();
+}
