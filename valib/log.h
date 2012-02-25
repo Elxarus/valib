@@ -241,6 +241,7 @@ class LogMem : public LogSink
 {
 public:
   LogMem(size_t max_size, LogDispatcher *source = 0, int log_level = log_all);
+  ~LogMem();
 
   void resize(size_t max_size);
   size_t size() const;

@@ -139,6 +139,11 @@ LogMem::LogMem(size_t max_size, LogDispatcher *source, int log_level): LogSink(s
   p->max_size = max_size;
 }
 
+LogMem::~LogMem()
+{
+  delete p;
+}
+
 void LogMem::resize(size_t max_size)
 {
   size_t i, j;
