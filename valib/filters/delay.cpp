@@ -158,3 +158,27 @@ Delay::process(Chunk &in, Chunk &out)
   first_half = !first_half;
   return true;
 }
+
+string
+Delay::info() const
+{
+  const char *units_text = "";
+  switch (units)
+  {
+    case DELAY_SP: units_text = "samples"; break;
+    case DELAY_MS: units_text = "ms"; break;
+    case DELAY_M:  units_text = "m"; break;
+    case DELAY_CM: units_text = "cm"; break;
+    case DELAY_FT: units_text = "ft"; break;
+    case DELAY_IN: units_text = "in"; break;
+  }
+
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  s << "Enabled: " << enabled << nl;
+  s << "Units: " << units_text << nl;
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
+    if (delays[ch_name] != 0)
+      s << ch_name_short(ch_name) << ": " << delays[ch_name] << " " << units_text << nl;
+  return s.str();
+}
