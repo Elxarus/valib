@@ -122,6 +122,7 @@ public:
   virtual void reset();
   virtual bool init();
   virtual bool process(Chunk &in, Chunk &out);
+  virtual string info() const;
 
 protected:
   bool      enabled;        //!< Enabled flag
