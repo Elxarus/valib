@@ -281,3 +281,18 @@ Converter::reset()
 {
   part_size = 0;
 }
+
+string
+Converter::info() const
+{
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  s << "Output format: " << format_text(format) << nl;
+  s << "Channel order:";
+  for (int ch = 0; ch < NCHANNELS; ch++)
+    if (order[ch] != CH_NONE)
+      s << " " << ch_name_short(order[ch]);
+  s << nl;
+  s << "Buffer size: " << nsamples << " samples" << nl;
+  return s.str();
+}
