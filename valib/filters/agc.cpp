@@ -1,3 +1,5 @@
+#include <sstream>
+#include <iomanip>
 #include <math.h>
 #include <string.h>
 #include "agc.h"
@@ -269,4 +271,18 @@ AGC::flush(Chunk &out)
 
   sample[block] = 0;
   return true;
+}
+
+string
+AGC::info() const
+{
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  s << "Auto gain: " << auto_gain << nl
+    << "Normalize: " << normalize << nl
+    << "Master gain: " << value2db(master) << nl
+    << "DRC: " << drc << nl
+    << "Attack: " << attack << "dB/s" << nl
+    << "Release: " << release << "dB/s" << nl;
+  return s.str();
 }
