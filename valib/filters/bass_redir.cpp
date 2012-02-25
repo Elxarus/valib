@@ -1,3 +1,5 @@
+#include <sstream>
+#include <iomanip>
 #include <math.h>
 #include <boost/smart_ptr.hpp>
 #include "bass_redir.h"
@@ -149,6 +151,25 @@ BassRedir::process(Chunk &in, Chunk &out)
   }
 
   return true;
+}
+
+string
+BassRedir::info() const
+{
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  s << "Enabled: " << enabled << (is_active()? " (active)": " (inactive)") << nl;
+  s << "Crossover frequency: " << freq << "Hz" << nl;
+  s << "Bass destination: ";
+  if (ch_mask == MODE_STEREO)
+    s << "front channels";
+  else if (ch_mask == CH_MASK_LFE)
+    s << "subwoofer";
+  else
+    s << "0x" << std::hex << ch_mask << std::dec;
+  s << nl;
+  s << "Bass gain: " << value2db(gain) << "dB" << nl;
+  return s.str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
