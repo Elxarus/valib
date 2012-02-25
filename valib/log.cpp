@@ -19,7 +19,7 @@ static const size_t max_message_size = 16384;
 
 LogDispatcher valib_log_dispatcher;
 #if defined(_WIN32) && defined(_DEBUG)
-static LogWindowsDebug windows_debug(&valib_log_dispatcher);
+static LogWindowsDebug windows_debug(&valib_log_dispatcher, log_event);
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ public:
   std::vector<LogEntry> entries;
 };
 
-LogMem::LogMem(size_t max_size, LogDispatcher *source): LogSink(source), p(new LogMem::Private)
+LogMem::LogMem(size_t max_size, LogDispatcher *source, int log_level): LogSink(source, log_level), p(new LogMem::Private)
 {
   p->max_size = max_size;
 }

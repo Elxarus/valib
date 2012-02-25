@@ -199,7 +199,7 @@ inline void LogDispatcher::vlog(int level, const std::string &module, const char
 class LogSink
 {
 public:
-  LogSink(LogDispatcher *source_ = 0): max_log_level(log_all), source(0)
+  LogSink(LogDispatcher *source_ = 0, int log_level = log_all): max_log_level(log_level), source(0)
   { if (source_) subscribe(source_); }
 
   virtual ~LogSink()
@@ -240,7 +240,7 @@ private:
 class LogMem : public LogSink
 {
 public:
-  LogMem(size_t max_size, LogDispatcher *source = 0);
+  LogMem(size_t max_size, LogDispatcher *source = 0, int log_level = log_all);
 
   void resize(size_t max_size);
   size_t size() const;
@@ -264,12 +264,12 @@ public:
   LogSink(source)
   {}
 
-  LogFile(const char *filename, LogDispatcher *source = 0):
-  LogSink(source)
+  LogFile(const char *filename, LogDispatcher *source = 0, int log_level = log_all):
+  LogSink(source, log_level)
   { open(filename); }
 
-  LogFile(FILE *f, bool take_ownership, LogDispatcher *source = 0):
-  LogSink(source)
+  LogFile(FILE *f, bool take_ownership, LogDispatcher *source = 0, int log_level = log_all):
+  LogSink(source, log_level)
   { open(f, take_ownership); }
 
   bool open(const char *filename)
@@ -304,7 +304,7 @@ protected:
 class LogStderr : public LogFile
 {
 public:
-  LogStderr(LogDispatcher *source = 0): LogFile(stderr, false, source)
+  LogStderr(LogDispatcher *source = 0, int log_level = log_all): LogFile(stderr, false, source, log_level)
   {}
 };
 
@@ -314,8 +314,8 @@ public:
 class LogWindowsDebug : public LogSink
 {
 public:
-  LogWindowsDebug(LogDispatcher *source = 0):
-  LogSink(source)
+  LogWindowsDebug(LogDispatcher *source = 0, int log_level = log_all):
+  LogSink(source, log_level)
   {}
 
   virtual void receive(const LogEntry &entry);
