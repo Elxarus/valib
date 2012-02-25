@@ -78,6 +78,8 @@ public:
   virtual void reset();
 
   virtual Speakers get_output() const;
+
+  virtual string info() const;
 };
 
 #endif
