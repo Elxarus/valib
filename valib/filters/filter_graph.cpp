@@ -48,12 +48,13 @@ FilterGraph::print_chain() const
 
   for (Node *node = start.next; node->id != node_end; node = node->next)
   {
-    // print input format
-    spk = node->filter->get_input();
-    text += string() + '(' + spk.print() + ')';
-
-    // print filter name
-    text += string() + " -> " + node->filter->name() + " -> ";
+    Speakers new_spk = node->filter->get_input();
+    if (new_spk != spk)
+      text += string() + '(' + new_spk.print() + ')' + 
+                       + " -> " + node->filter->name() + " -> ";
+    else
+      text += string() + node->filter->name() + " -> ";
+    spk = new_spk;
   }
 
   // Output format
