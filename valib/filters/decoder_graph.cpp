@@ -17,14 +17,13 @@ DecoderGraph::reset()
 string
 DecoderGraph::info() const
 {
-  using std::endl;
   std::stringstream result;
 
-  result << "Input format: " << get_input().print() << endl;
-  result << "User format: " << proc.get_user().print() << endl;
-  result << "Output format: " << get_output().print() << endl;
+  result << "Input format: " << get_input().print() << nl;
+  result << "User format: " << proc.get_user().print() << nl;
+  result << "Output format: " << get_output().print() << nl;
 
-  result << endl << "Filter chain:" << endl << FilterGraph::info();
+  result << "\nFilter chain:\n" << FilterGraph::info();
   return result.str();
 }
 

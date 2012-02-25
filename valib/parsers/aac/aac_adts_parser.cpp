@@ -135,12 +135,11 @@ ADTSParser::info() const
   if (frame_length == 0)
     return string();
 
-  using std::endl;
   std::stringstream result;
   int sample_rate = sample_rates[sampling_frequency_index];
-  result << "Format: " << Speakers(FORMAT_AAC_ADTS, modes[channel_configuration], sample_rate).print() << endl;
-  result << "Profile: " << profile_str[profile] << endl;
-  result << "Frame size: " << frame_length << endl;
-  result << "Bitrate: " << int(frame_length * sample_rate * 8 / 1024 / 1000) << "kbps" << endl;
+  result << "Format: " << Speakers(FORMAT_AAC_ADTS, modes[channel_configuration], sample_rate).print() << nl;
+  result << "Profile: " << profile_str[profile] << nl;
+  result << "Frame size: " << frame_length << nl;
+  result << "Bitrate: " << int(frame_length * sample_rate * 8 / 1024 / 1000) << "kbps" << nl;
   return result.str();
 }

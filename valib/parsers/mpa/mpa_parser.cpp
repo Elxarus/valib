@@ -119,15 +119,14 @@ MPAParser::process(Chunk &in, Chunk &out)
 string
 MPAParser::info() const 
 {
-  using std::endl;
   std::stringstream result;
-  result << "Format: " << Speakers(FORMAT_MPA, out_spk.mask, out_spk.sample_rate).print() << endl;
-  result << layer_text(bsi.layer) << endl;
-  result << "Ver: " << (bsi.ver? "MPEG2 LSF": "MPEG1") << endl;
-  result << "Frame size: " << bsi.frame_size << endl;
-  result << "Stream: " << (bsi.bs_type == BITSTREAM_8? "byte stream": "16bit low endian") << endl;
-  result << "Bitrate: " << bsi.bitrate / 1000 << "kbps" << endl;
-  result << "Bandwidth: " << bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2 << "kHz/" << bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2 << "kHz" << endl;
+  result << "Format: " << Speakers(FORMAT_MPA, out_spk.mask, out_spk.sample_rate).print() << nl;
+  result << layer_text(bsi.layer) << nl;
+  result << "Ver: " << (bsi.ver? "MPEG2 LSF": "MPEG1") << nl;
+  result << "Frame size: " << bsi.frame_size << nl;
+  result << "Stream: " << (bsi.bs_type == BITSTREAM_8? "byte stream": "16bit low endian") << nl;
+  result << "Bitrate: " << bsi.bitrate / 1000 << "kbps" << nl;
+  result << "Bandwidth: " << bsi.jsbound * bsi.freq / SBLIMIT / 1000 / 2 << "kHz/" << bsi.sblimit * bsi.freq / SBLIMIT / 1000 / 2 << "kHz" << nl;
   return result.str();
 }
 

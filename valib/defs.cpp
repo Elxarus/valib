@@ -51,7 +51,6 @@ matrix_t::operator !=(const matrix_t &m) const
 
 const char *valib_build_info()
 {
-  using std::endl;
   static const char *info = 0;
   static std::string str;
 
@@ -60,35 +59,35 @@ const char *valib_build_info()
   std::stringstream stream;
   stream << "Compiler: " <<
   #if defined(_MSC_VER)
-    "MSVC " << _MSC_VER << endl;
+    "MSVC " << _MSC_VER << nl;
   #elif defined(__GNUC__)
-    "GCC " << __VERSION__ << endl;
+    "GCC " << __VERSION__ << nl;
   #else
-    "Unknown" << endl;
+    "Unknown" << nl;
   #endif
 
   stream << "Build: " <<
   #ifdef _DEBUG
-    "Debug" << endl;
+    "Debug" << nl;
   #else
-    "Release" << endl;
+    "Release" << nl;
   #endif
 
   #ifdef VALIB_HG_CHANGESET
     stream << "Revision: " << VALIB_HG_CHANGESET;
     if (VALIB_HG_LOCAL_MODIFICATIONS)
       stream << " (modified)";
-    stream << endl;
+    stream << nl;
   #endif
-  stream << "Build date: " << __DATE__ " " __TIME__ << endl;
-  stream << "Number of channels: " << NCHANNELS << endl;
+  stream << "Build date: " << __DATE__ " " __TIME__ << nl;
+  stream << "Number of channels: " << NCHANNELS << nl;
   stream << "Sample format: " <<
   #ifdef FLOAT_SAMPLE
-    "float" << endl;
+    "float" << nl;
   #else
-    "double" << endl;
+    "double" << nl;
   #endif
-  stream << "Sample size: " << sizeof(sample_t) << endl;
+  stream << "Sample size: " << sizeof(sample_t) << nl;
 
   str = stream.str();
   info = str.c_str();

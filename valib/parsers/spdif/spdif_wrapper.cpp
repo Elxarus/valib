@@ -275,11 +275,10 @@ SPDIFWrapper::info() const
     case BITSTREAM_14LE: bitstream = "14bit LE"; break;
   }
 
-  using std::endl;
   std::stringstream result;
-  result << "Output format: " << out_spk.print() << endl;
-  result << "SPDIF format: " << (use_header? "wrapped": "padded") << endl;
-  result << "Bitstream: " << bitstream << endl;
-//  result << "Frame size: " << spdif_size << endl;
+  result << "Output format: " << out_spk.print() << nl;
+  result << "SPDIF format: " << (use_header? "wrapped": "padded") << nl;
+  result << "Bitstream: " << bitstream << nl;
+//  result << "Frame size: " << spdif_size << nl;
   return result.str();
 }
