@@ -13,7 +13,7 @@ class LogTest : public LogSink
 public:
   LogEntry last_entry;
 
-  LogTest(LogDispatcher *source = 0): LogSink(source)
+  LogTest(LogDispatcher *source = 0, int log_level = log_all): LogSink(source, log_level)
   {}
 
   virtual void receive(const LogEntry &entry)
@@ -26,7 +26,7 @@ static const char *log_test_file = "log_test_file.log";
 
 BOOST_AUTO_TEST_SUITE(test_log)
 
-BOOST_AUTO_TEST_CASE(sink_constructor)
+BOOST_AUTO_TEST_CASE(sink_init_constructor)
 {
   LogDispatcher source;
 
@@ -81,7 +81,8 @@ BOOST_AUTO_TEST_CASE(subscribe)
 BOOST_AUTO_TEST_CASE(source_log_level)
 {
   LogDispatcher source;
-  LogTest sink(&source);
+  LogTest sink(&source, 2);
+  BOOST_CHECK_EQUAL(sink.get_max_log_level(), 2);
 
   source.set_max_log_level(1);
   source.log(entry1);
