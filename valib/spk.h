@@ -566,6 +566,10 @@ struct samples_t
 
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// Samples functions
+///////////////////////////////////////////////////////////////////////////////
+
 void zero_samples(sample_t *s, size_t size);
 void zero_samples(samples_t s, int nch, size_t size);
 
@@ -598,51 +602,15 @@ sample_t peak_diff(sample_t *s1, sample_t *s2, size_t size);
 sample_t rms_diff(sample_t *s1, sample_t *s2, size_t size);
 
 ///////////////////////////////////////////////////////////////////////////////
-// Speakers class inlines
+// Format and channel functions
 ///////////////////////////////////////////////////////////////////////////////
 
-inline int sample_size(int format)
-{
-  switch (format)
-  {
-    // Special formats
-    case FORMAT_RAWDATA: return 0;
-    case FORMAT_LINEAR:  return sizeof(sample_t);
+int sample_size(int format);
+void channel_order(int mask, int order[CH_NAMES]);
 
-    // PCM formats
-    case FORMAT_PCM16_BE:
-    case FORMAT_PCM16:   return sizeof(int16_t);
-    case FORMAT_PCM24_BE:
-    case FORMAT_PCM24:   return sizeof(int24_t);
-    case FORMAT_PCM32_BE:
-    case FORMAT_PCM32:   return sizeof(int32_t);
-
-    case FORMAT_PCMFLOAT:  return sizeof(float);
-    case FORMAT_PCMDOUBLE: return sizeof(double);
-    
-    // LPCM: size of the pack of 2 samples
-    case FORMAT_LPCM20: return 5;
-    case FORMAT_LPCM24: return 6;
-
-    // Container formats
-    case FORMAT_PES:
-    case FORMAT_SPDIF:
-    case FORMAT_AAC_ADTS:
-      return 1;
-
-    // Packed formats
-    case FORMAT_AAC_FRAME:
-    case FORMAT_AC3:
-    case FORMAT_AC3_EAC3:
-    case FORMAT_EAC3:
-    case FORMAT_DTS:
-    case FORMAT_MPA:
-      return 1;
-
-    default:
-      return 0;
-  }
-}
+const char *format_text(int format);
+const char *ch_name_short(int ch_name);
+const char *ch_name_long(int ch_name);
 
 inline int mask_nch(int mask)
 {
@@ -656,16 +624,9 @@ inline int mask_nch(int mask)
   return nch & 0xff;
 }
 
-inline void channel_order(int mask, int order[CH_NAMES])
-{
-  int ch_index = 0;
-  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
-    if ((mask >> ch_name) & 1)
-      order[ch_index++] = ch_name;
-
-  for (; ch_index < CH_NAMES; ch_index++)
-    order[ch_index] = CH_NONE;
-}
+///////////////////////////////////////////////////////////////////////////////
+// Speakers inlines
+///////////////////////////////////////////////////////////////////////////////
 
 inline bool Speakers::is_unknown() const
 { return format == FORMAT_UNKNOWN; }

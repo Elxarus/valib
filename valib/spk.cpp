@@ -57,24 +57,87 @@ static const char *custom_modes[] =
   "Custom 8ch", "Custom 9ch", "Custom 10ch", "Custom 11ch"
 };
 
-void 
-Speakers::set_format_data(uint8_t *format_data_, size_t data_size_)
+static const char *short_ch_names[CH_NAMES] =
 {
-  if (format_data_ && data_size_)
+  "L", "C", "R", "SL", "SR", "LF", "CL", "CR", "BL", "BC", "BR",
+};
+
+static const char *long_ch_names[CH_NAMES] = 
+{
+  "Left",
+  "Center",
+  "Right",
+  "Left surround",
+  "Right surround",
+  "Low frequency",
+  "Left of center",
+  "Right of center",
+  "Left back",
+  "Center back",
+  "Right back",
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// Format and channel functions
+///////////////////////////////////////////////////////////////////////////////
+
+int sample_size(int format)
+{
+  switch (format)
   {
-    format_data = boost::shared_ptr<uint8_t>(new uint8_t[data_size_]);
-    memcpy(format_data.get(), format_data_, data_size_);
-    data_size = data_size_;
-  }
-  else
-  {
-    format_data.reset();
-    data_size = 0;
+    // Special formats
+    case FORMAT_RAWDATA: return 0;
+    case FORMAT_LINEAR:  return sizeof(sample_t);
+
+    // PCM formats
+    case FORMAT_PCM16_BE:
+    case FORMAT_PCM16:   return sizeof(int16_t);
+    case FORMAT_PCM24_BE:
+    case FORMAT_PCM24:   return sizeof(int24_t);
+    case FORMAT_PCM32_BE:
+    case FORMAT_PCM32:   return sizeof(int32_t);
+
+    case FORMAT_PCMFLOAT:  return sizeof(float);
+    case FORMAT_PCMDOUBLE: return sizeof(double);
+    
+    // LPCM: size of the pack of 2 samples
+    case FORMAT_LPCM20: return 5;
+    case FORMAT_LPCM24: return 6;
+
+    // Container formats
+    case FORMAT_PES:
+    case FORMAT_SPDIF:
+    case FORMAT_AAC_ADTS:
+      return 1;
+
+    // Packed formats
+    case FORMAT_AAC_FRAME:
+    case FORMAT_AC3:
+    case FORMAT_AC3_EAC3:
+    case FORMAT_EAC3:
+    case FORMAT_DTS:
+    case FORMAT_MPA:
+      return 1;
+
+    default:
+      return 0;
   }
 }
 
+void channel_order(int mask, int order[CH_NAMES])
+{
+  int ch_index = 0;
+  for (int ch_name = 0; ch_name < CH_NAMES; ch_name++)
+    if ((mask >> ch_name) & 1)
+      order[ch_index++] = ch_name;
+
+  for (; ch_index < CH_NAMES; ch_index++)
+    order[ch_index] = CH_NONE;
+}
+
+
 const char *
-Speakers::format_text() const
+format_text(int format)
 {
   switch (format)
   {
@@ -110,6 +173,46 @@ Speakers::format_text() const
   };
 }
 
+const char *ch_name_short(int ch_name)
+{
+  if (ch_name >= 0 && ch_name < CH_NAMES)
+    return short_ch_names[ch_name];
+  return "?";
+}
+
+const char *ch_name_long(int ch_name)
+{
+  if (ch_name >= 0 && ch_name < CH_NAMES)
+    return long_ch_names[ch_name];
+  return "Unknown";
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Speakers class
+///////////////////////////////////////////////////////////////////////////////
+
+void 
+Speakers::set_format_data(uint8_t *format_data_, size_t data_size_)
+{
+  if (format_data_ && data_size_)
+  {
+    format_data = boost::shared_ptr<uint8_t>(new uint8_t[data_size_]);
+    memcpy(format_data.get(), format_data_, data_size_);
+    data_size = data_size_;
+  }
+  else
+  {
+    format_data.reset();
+    data_size = 0;
+  }
+}
+
+const char *
+Speakers::format_text() const
+{
+  return ::format_text(format);
+}
+
 const char *
 Speakers::mode_text() const
 {
@@ -139,7 +242,6 @@ Speakers::print() const
          string(mode_text()) + space +
          boost::lexical_cast<string>(sample_rate);
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // samples_t
@@ -204,6 +306,10 @@ samples_t::reorder(Speakers _spk, const order_t _input_order, const order_t _out
     if (mask & CH_MASK(_output_order[i]))
       samples[ch++] = tmp[_output_order[i]];
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Samples functions
+///////////////////////////////////////////////////////////////////////////////
 
 void zero_samples(sample_t *s, size_t size)
 {
