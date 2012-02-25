@@ -83,6 +83,7 @@ public:
   virtual bool process(Chunk &in, Chunk &out);
   virtual bool flush(Chunk &out);
   virtual void reset();
+  virtual string info() const;
 };
 
 
