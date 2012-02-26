@@ -1,3 +1,5 @@
+#include <sstream>
+#include <iomanip>
 #include <math.h>
 #include <string.h>
 #include "mixer.h"
@@ -161,6 +163,79 @@ Mixer::process(Chunk &in, Chunk &out)
     in.clear();
     return !out.is_dummy();
   }
+}
+
+string
+Mixer::info() const
+{
+  int ch_name, in_ch, out_ch;
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  if (is_open())
+  {
+    s << "Input:" ;
+    for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
+      if (CH_MASK(ch_name) & out_spk.mask)
+        s << " " << ch_name_short(ch_name);
+    s << nl;
+  }
+  s << "Output:";
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
+    if (CH_MASK(ch_name) & out_spk.mask)
+      s << " " << ch_name_short(ch_name);
+  s << nl;
+
+  s << "Buffered: " << (is_open() && is_buffered()) << nl;
+  if (is_open() && is_buffered())
+    s << "Buffer size: " << nsamples << " samples" << nl;
+  s << "Auto matrix: " << auto_matrix << nl
+    << "Normalize matrix: " << auto_matrix << nl
+    << "Vaoice control: " << voice_control << nl
+    << "Expand stereo: " << expand_stereo << nl
+    << "Center level: " << value2db(clev) << " dB" << nl
+    << "Surround level: " << value2db(slev) << " dB" << nl
+    << "LFE level: " << value2db(lfelev) << " dB" << nl;
+  s << "Gain: " << value2db(gain) << " dB" << nl;
+  s << "Input gains:" << nl;
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
+    if (!EQUAL_SAMPLES(input_gains[ch_name], 1.0))
+      s << ch_name_short(ch_name) << ": " << value2db(input_gains[ch_name]) << " dB" << nl;
+  s << "Output gains:" << nl;
+  for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
+    if (!EQUAL_SAMPLES(output_gains[ch_name], 1.0))
+      s << ch_name_short(ch_name) << ": " << value2db(output_gains[ch_name]) << " dB" << nl;
+  s << "User matrix:" << nl;
+  s << "    ";
+  for (in_ch = 0; in_ch < CH_NAMES; in_ch++)
+    s << ch_name_short(in_ch) << " ";
+  s << nl;
+  for (out_ch = 0; out_ch < CH_NAMES; out_ch++)
+  {
+    s << ch_name_short(out_ch) << ":";
+    for (in_ch = 0; in_ch < CH_NAMES; in_ch++)
+      s << " " << matrix[out_ch][in_ch];
+    s << nl;
+  }
+  if (is_open())
+  {
+    s << "Resulting matrix:" << nl;
+    order_t input_order;
+    order_t output_order;
+    spk.get_order(input_order);
+    out_spk.get_order(output_order);
+    s << "    ";
+    for (in_ch = 0; in_ch < spk.nch(); in_ch++)
+      s << ch_name_short(input_order[in_ch]) << " ";
+    s << nl;
+    for (out_ch = 0; out_ch < out_spk.nch(); out_ch++)
+    {
+      s << ch_name_short(output_order[out_ch]) << ":";
+      for (in_ch = 0; in_ch < spk.nch(); in_ch++)
+        s << " " << m[out_ch][in_ch];
+      s << nl;
+    }
+  }
+  return s.str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
