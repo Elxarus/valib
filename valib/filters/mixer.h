@@ -207,6 +207,8 @@ public:
   virtual Speakers get_output() const
   { return out_spk; }
 
+  virtual string info() const;
+
   /////////////////////////////////////////////////////////
   // Mixer interface
 
