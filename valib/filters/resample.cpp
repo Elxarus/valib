@@ -4,6 +4,8 @@
   of the block.
 */
 
+#include <sstream>
+#include <iomanip>
 #include <math.h>
 #include "resample.h"
 #include "../dsp/kaiser.h"
@@ -554,6 +556,38 @@ Resample::flush(Chunk &out)
   sync = false;
   time = 0;
   return true;
+}
+
+string
+Resample::info() const
+{
+  std::stringstream s;
+  s << std::boolalpha << std::fixed << std::setprecision(1);
+  if (is_open())
+    s << "Soruce sample rate: " << spk.sample_rate << "Hz" << nl;
+  s << "Sample rate: " << sample_rate << "Hz" << nl
+    << "Attenuation: " << a << "dB" << nl
+    << "Quality: " << q << nl;
+
+  if (!is_open())
+    return s.str();
+
+  if (passthrough())
+  {
+    s << "Passthrough (no conversion)" << nl;
+    return s.str();
+  }
+
+  s << "Conversion rate: " << l << "/" << m << nl
+    << "Stage1 rate: " << l1 << "/" << m1 << nl
+    << "Stage2 rate: " << l1 << "/" << m2 << nl
+    << "Stage1 filter: length=" << n1 << " (" << n1x << "x" << n1y << ") center="
+                                << c1 << " (" << c1x << ", " << c1y << ")" << nl
+    << "Stage2 filter: length=" << n2 << " center=" << c2 << nl
+    << "Stage1 buffer size: " << nch << "x" << buf1.nsamples() << nl
+    << "Stage2 buffer size: " << nch << "x" << buf2.nsamples() << nl
+    << "Stage2 delay buffer: " << nch << "x" << delay2.nsamples() << nl;
+  return s.str();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
