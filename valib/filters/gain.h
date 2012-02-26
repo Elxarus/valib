@@ -18,20 +18,8 @@ public:
   /////////////////////////////////////////////////////////
   // SamplesFilter overrides
 
-  virtual bool process(Chunk &in, Chunk &out)
-  {
-    out = in;
-    in.clear();
-    if (out.is_dummy())
-      return false;
-
-    const size_t size = out.size;
-    if (!EQUAL_SAMPLES(gain, 1.0))
-      for (int ch = 0; ch < spk.nch(); ch++)
-        for (size_t s = 0; s < size; s++)
-          out.samples[ch][s] *= gain;
-    return true;
-  }
+  virtual bool process(Chunk &in, Chunk &out);
+  virtual string info() const;
 };
 
 #endif
