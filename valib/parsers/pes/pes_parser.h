@@ -2,7 +2,6 @@
 #define PES_PARSER_H
 
 #include "../../filter.h"
-#include "pes_frame_parser.h"
 
 class PESParser : public SimpleFilter
 {
@@ -27,6 +26,8 @@ public:
   string info() const;
 
 protected:
+  bool sync;
+  vtime_t time;
   Speakers out_spk;
   bool new_stream_flag;
 

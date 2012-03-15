@@ -62,6 +62,7 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   }
 
   if (type == MEDIATYPE_MPEG2_PES ||
+      type == MEDIATYPE_MPEG2_PACK ||
       type == MEDIATYPE_DVD_ENCRYPTED_PACK)
     if (subtype == MEDIASUBTYPE_DOLBY_AC3 ||
         subtype == MEDIASUBTYPE_DTS ||

@@ -3,6 +3,9 @@
 
 const SyncTrie PESFrameParser::sync_trie("oooooooooooooooooooooooiiLiiiLLI");
 
+#define PACK_HEADER_CODE 0xba
+#define SYSTEM_HEADER_CODE 0xbb
+
 ///////////////////////////////////////////////////////////////////////////////
 // PESFrameParser
 
@@ -13,7 +16,11 @@ PESFrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
   if (sync > 0x000001ff || sync < 0x000001b9)
     return false;
 
-  uint16_t packet_size = ((hdr[4] << 8) | hdr[5]) + 6;
+  uint8_t stream = hdr[3];
+  uint16_t packet_size = 0;
+  if (stream != PACK_HEADER_CODE)
+    packet_size = ((hdr[4] << 8) | hdr[5]) + 6;
+
   if (finfo)
   {
     finfo->spk = Speakers(FORMAT_PES, 0, 0);
@@ -35,7 +42,12 @@ PESFrameParser::compare_headers(const uint8_t *hdr1, const uint8_t *hdr2) const
       sync2 > 0x000001ff || sync2 < 0x000001b9)
     return false;
 
-  // Check stream number only
+  uint8_t id1 = hdr1[3];
+  uint8_t id2 = hdr2[3];
+  if (id1 == PACK_HEADER_CODE || id2 == PACK_HEADER_CODE ||
+      id1 == SYSTEM_HEADER_CODE || id2 == SYSTEM_HEADER_CODE)
+    return true;
+
   return hdr1[3] == hdr2[3];
 }
 
