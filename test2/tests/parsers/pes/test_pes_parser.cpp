@@ -60,6 +60,8 @@ BOOST_AUTO_TEST_CASE(parse)
   compare_file("a.pcm.005.pes", "a.pcm.005.lpcm");
   compare_file("a.mad.mix.pes", "a.mad.mix.mad");
   compare_file("a.madp.mix.pes", "a.madp.mix.madp");
+  // Pack stream
+  compare_file("test.mp2.005.pack", "a.mp2.005.mp2");
 }
 
 BOOST_AUTO_TEST_CASE(streams_frames)
@@ -74,6 +76,8 @@ BOOST_AUTO_TEST_CASE(streams_frames)
   test_streams_frames("a.pcm.005.pes", 1, 1148);
   test_streams_frames("a.mad.mix.pes", 7, 2702);
   test_streams_frames("a.madp.mix.pes", 13, 7330);
+  // Pack stream
+  test_streams_frames("test.mp2.005.pack", 1, 286);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

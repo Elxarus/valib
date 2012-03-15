@@ -2,6 +2,8 @@
 
 #define PRIVATE_STREAM_1 0xbd
 #define PRIVATE_STREAM_2 0xbf
+#define PACK_HEADER_CODE 0xba
+#define SYSTEM_HEADER_CODE 0xbb
 #define MPEG1_MAX_STUFFING 24
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -75,11 +77,36 @@ PESHeader::parse(const uint8_t *hdr, size_t size)
   if (sync > 0x000001ff || sync < 0x000001b9)
     return false;
 
+  // Clear all
+  packet_size = 0;
   stream = hdr[3];
+  substream = 0;
+  substream_header_pos = 0;
+  spk = spk_unknown;
+  payload_pos = 0;
+  payload_size = 0;
+
+  // Pack header
+  if (stream == PACK_HEADER_CODE)
+  {
+    if (size < 14) return false;
+    packet_size = 14 + (hdr[13] & 7);
+    if (size < packet_size) return false;
+    return true;
+  }
+  // System header
+  else if (stream == SYSTEM_HEADER_CODE)
+  {
+    packet_size = ((hdr[4] << 8) | hdr[5]) + 6;
+    if (size < packet_size) return false;
+    return true;
+  }
+
+  // Packet
   packet_size = ((hdr[4] << 8) | hdr[5]) + 6;
 
+  // Skip optional fields
   size_t pos = 6;
-  size_t substream_header_pos = 0;
   if (stream != PRIVATE_STREAM_2)
   {
     if ((hdr[pos] & 0xc0) == 0x80)
@@ -118,11 +145,6 @@ PESHeader::parse(const uint8_t *hdr, size_t size)
     substream = hdr[pos++];
     substream_header_pos = pos;
     pos += 3; // skip substream header
-  }
-  else
-  {
-    substream = 0;
-    substream_header_pos = 0;
   }
 
   if (pos + 3 >= size) return false;

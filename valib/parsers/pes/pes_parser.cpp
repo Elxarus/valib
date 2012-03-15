@@ -1,6 +1,11 @@
 #include <sstream>
+#include "../../log.h"
 #include "pes_parser.h"
 #include "pes_header.h"
+
+#define PACK_HEADER_CODE 0xba
+#define SYSTEM_HEADER_CODE 0xbb
+static const string log_module = "PESParser";
 
 ///////////////////////////////////////////////////////////////////////////////
 // PESParser
@@ -29,6 +34,8 @@ PESParser::init()
 void 
 PESParser::reset()
 {
+  sync = false;
+  time = 0;
   out_spk = spk_unknown;
   new_stream_flag = false;
   stream = 0;
@@ -38,8 +45,11 @@ PESParser::reset()
 bool
 PESParser::process(Chunk &in, Chunk &out)
 {
-  bool     sync  = in.sync;
-  vtime_t  time  = in.time;
+  if (in.sync)
+  {
+    sync = true;
+    time = in.time;
+  }
   uint8_t *frame = in.rawdata;
   size_t   size  = in.size;
   in.clear();
@@ -49,9 +59,19 @@ PESParser::process(Chunk &in, Chunk &out)
 
   PESHeader header;
   if (!header.parse(frame, size))
+  {
+    valib_log(log_error, log_module, "Cannot parse");
     return false;
+  }
 
   if (size < header.packet_size)
+  {
+    valib_log(log_error, log_module, "Packet size (%i) > chunk size (%i)", header.packet_size, size);
+    return false;
+  }
+
+  // Skip pack header and system header (not an error)
+  if (header.stream == PACK_HEADER_CODE || header.stream == SYSTEM_HEADER_CODE)
     return false;
 
   if (!stream ||
@@ -69,6 +89,8 @@ PESParser::process(Chunk &in, Chunk &out)
 
   out.set_rawdata(frame + header.payload_pos, header.payload_size, sync, time);
   out_spk = header.spk;
+  sync = false;
+  time = 0;
   return true;
 }
 
@@ -82,7 +104,7 @@ PESParser::info() const
     s << "Stream: 0x" << stream;
     if (substream)
       s << "\nSubstream: 0x" << substream;
-    s << "Format: " << spk.print();
+    s << "\nFormat: " << out_spk.print();
   }
   else
     s << "No sync";
