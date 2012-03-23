@@ -4,6 +4,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "parsers/pes/pes_parser.h"
+#include "parsers/pes/pes_frame_parser.h"
 #include "parsers/uni/uni_frame_parser.h"
 #include "source/file_parser.h"
 #include "source/raw_source.h"
