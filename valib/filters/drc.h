@@ -1,35 +1,19 @@
 /*
-  Automatic Gain Control filter
-  todo: remove master gain?
-
-  Speakers: unchanged
-  Input formats: Linear
-  Output formats: Linear
-  Buffer: +
-  Inline: -
-  Delay: nsamples
-  Timing: unchanged
-  Paramters:
-    buffer       // processing buffer length in samples [offline]
-    auto_gain    // automatic gain control [online]
-    normalize    // one-pass normalize [online]
-    master       // desired gain [online]
-    gain         // current gain [online]
-    release      // release speed (dB/s) [online]
+  Dynamic range compression
 */
 
-#ifndef VALIB_AGC_H
-#define VALIB_AGC_H
+#ifndef VALIB_DRC_H
+#define VALIB_DRC_H
 
 #include "../buffer.h"
 #include "../filter.h"
 #include "../sync.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// AGC class
+// DRC class
 ///////////////////////////////////////////////////////////////////////////////
 
-class AGC : public SamplesFilter
+class DRC : public SamplesFilter
 {
 protected:
   SampleBuf w;
@@ -40,6 +24,7 @@ protected:
   size_t    sample[2];            // number of samples filled
   size_t    nsamples;             // number of samples per block
 
+  sample_t  factor;               // previous block factor
   sample_t  level;                // previous block level (not scaled)
 
   inline size_t next_block();
@@ -48,21 +33,18 @@ protected:
   void process();
 
 public:
-  // Options
-  bool auto_gain;                 // [rw] automatic gain control
-  bool normalize;                 // [rw] one-pass normalize
+  bool     drc;        // [rw] DRC enabled
+  sample_t drc_power;  // [rw] DRC power (dB)
+  sample_t drc_level;  // [r]  current DRC gain level (read-only)
 
-  // Gain control
-  sample_t master;                // [rw] desired gain
-  sample_t gain;                  // [r]  current gain
+  sample_t gain;       // [rw] desired gain
+  double   attack;     // [rw] attack speed (dB/s)
+  double   release;    // [rw] release speed (dB/s)
 
-  double attack;                  // [rw] attack speed (dB/s)
-  double release;                 // [rw] release speed (dB/s)
-
-  AGC(size_t nsamples);
+  DRC(size_t nsamples);
 
   /////////////////////////////////////////////////////////
-  // AGC interface
+  // DRC interface
 
   // buffer size
   size_t get_buffer() const;

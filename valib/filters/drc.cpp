@@ -2,25 +2,28 @@
 #include <iomanip>
 #include <math.h>
 #include <string.h>
-#include "agc.h"
+#include "drc.h"
 
-AGC::AGC(size_t _nsamples)
+#define LEVEL_MINUS_50DB 0.0031622776601683793319988935444327
+#define LEVEL_MINUS_100DB 0.00001
+#define LEVEL_PLUS_100DB 100000.0
+
+DRC::DRC(size_t _nsamples)
 {
-  block       = 0;
+  block     = 0;
 
-  sample[0]   = 0;
-  sample[1]   = 0;
+  sample[0] = 0;
+  sample[1] = 0;
 
   nsamples  = 0;
 
   level     = 0;
+  factor    = 0;
 
-  // Options
-  auto_gain = true;
-  normalize = false;
+  drc       = false;
+  drc_power = 0;     // dB; this value has meaning of loudness raise at -50dB level
+  drc_level = 1.0;   // factor
 
-  // Gain control
-  master    = 1.0;   // factor
   gain      = 1.0;   // factor
   attack    = 50.0;  // dB/s
   release   = 50.0;  // dB/s
@@ -30,7 +33,7 @@ AGC::AGC(size_t _nsamples)
 }
 
 void
-AGC::set_buffer(size_t _nsamples)
+DRC::set_buffer(size_t _nsamples)
 {
   // allocate buffers
   nsamples = _nsamples;
@@ -51,13 +54,13 @@ AGC::set_buffer(size_t _nsamples)
 }
 
 size_t
-AGC::get_buffer() const
+DRC::get_buffer() const
 {
   return nsamples;
 }
 
 bool 
-AGC::fill_buffer(Chunk &chunk)
+DRC::fill_buffer(Chunk &chunk)
 {
   size_t n = MIN(chunk.size, nsamples - sample[block]);
   copy_samples(buf[block], sample[block], chunk.samples, 0, spk.nch(), n);
@@ -69,17 +72,16 @@ AGC::fill_buffer(Chunk &chunk)
 }
 
 void 
-AGC::process()
+DRC::process()
 {
   size_t s;
   int ch, nch = spk.nch();
   sample_t spk_level = spk.level;
 
   ///////////////////////////////////////
-  // Gain, Limiter, DRC
+  // DRC, gain
 
-  sample_t old_gain = gain;
-  sample_t old_level = level;
+  sample_t old_factor = factor;
   sample_t release_factor;
   sample_t attack_factor;
 
@@ -102,36 +104,29 @@ AGC::process()
   // it larger. Our task is to decrease the global gain to make the output 
   // level <= 1.0.
 
-  if (!auto_gain)
-    gain = master;
-  else if (!normalize)
+  // DRC
+
+  if (drc)
   {
-    // release
-    if (gain * release_factor > master)
-      gain = master;
+    sample_t compressed_level;
+
+    if (level > LEVEL_MINUS_50DB)
+      compressed_level = pow(level, -drc_power/50.0);
     else
-      gain *= release_factor;
+      compressed_level = pow(level * LEVEL_PLUS_100DB, drc_power/50.0);
+    sample_t released_level = drc_level * release_factor;
+
+    if (level < LEVEL_MINUS_100DB)
+      drc_level = 1.0;
+    else if (released_level > compressed_level)
+      drc_level = compressed_level;
+    else
+      drc_level = released_level;
   }
+  else
+    drc_level = 1.0;
 
-  // adjust gain on overflow
-
-  sample_t max = MAX(level, old_level) * gain;
-  if (auto_gain)
-    if (max > 1.0)
-    {
-      if (max < attack_factor)
-      {
-        // corrected with no overflow
-        gain /= max;
-        max  = 1.0;
-      }
-      else
-      {
-        // overflow, will be clipped
-        gain /= attack_factor;
-        max  /= attack_factor;
-      }
-    }
+  factor = gain * drc_level;
 
   ///////////////////////////////////////
   // Switch blocks
@@ -147,46 +142,18 @@ AGC::process()
   // * simple gain when gain is applied
   // * no windowing when no gain is applied
 
-  if (!EQUAL_SAMPLES(old_gain, gain))
+  if (!EQUAL_SAMPLES(old_factor, factor))
   {
     // windowing
     for (ch = 0; ch < nch; ch++)
     {
       sample_t *sptr = buf[block][ch];
       for (s = 0; s < nsamples; s++, sptr++)
-        *sptr = *sptr * (old_gain * w[1][s] + gain * w[0][s]);
+        *sptr = *sptr * (old_factor * w[1][s] + factor * w[0][s]);
     }
   }
-  else if (!EQUAL_SAMPLES(gain, 1.0))
-    gain_samples(gain, buf[block], nch, nsamples);
-
-  ///////////////////////////////////////
-  // Clipping
-  // Note that we must clip even in case
-  // of previous block overflow...
-
-  if (level * gain > 1.0 || old_level * old_gain > 1.0)
-    for (ch = 0; ch < nch; ch++)
-    {
-      sample_t *sptr = buf[block][ch];
-      for (s = 0; s < nsamples; s++, sptr++)
-        if (*sptr > +spk_level) 
-          *sptr = +spk_level;
-        else
-        if (*sptr < -spk_level) 
-          *sptr = -spk_level;
-    }
-
-  ///////////////////////////////////////
-  // Debug
-
-#ifdef _DEBUG
-  for (ch = 0; ch < nch; ch++)
-  {
-    sample_t test_level = fabs(max_samples(0, buf[block][ch], nsamples));
-    assert(test_level / spk.level - 1.0 < SAMPLE_THRESHOLD); // floating point
-  }
-#endif
+  else if (!EQUAL_SAMPLES(factor, 1.0))
+    gain_samples(factor, buf[block], nch, nsamples);
 
 }
 
@@ -194,18 +161,18 @@ AGC::process()
 // Filter interface
 
 void 
-AGC::reset()
+DRC::reset()
 {
   block     = 0;
   sample[0] = 0;
   sample[1] = 0;
   level     = 1.0;
-  gain      = 1.0;
+  factor    = 1.0;
   sync.reset();
 }
 
 bool 
-AGC::process(Chunk &in, Chunk &out)
+DRC::process(Chunk &in, Chunk &out)
 {
   sync.receive_sync(in);
   while (fill_buffer(in))
@@ -227,7 +194,7 @@ AGC::process(Chunk &in, Chunk &out)
 }
 
 bool 
-AGC::flush(Chunk &out)
+DRC::flush(Chunk &out)
 {
   if (!sample[0] && !sample[1])
     return false;
@@ -250,20 +217,20 @@ AGC::flush(Chunk &out)
 }
 
 string
-AGC::info() const
+DRC::info() const
 {
   std::stringstream s;
   s << std::boolalpha << std::fixed << std::setprecision(1);
-  s << "Gain: " << value2db(master) << nl
-    << "Auto gain: " << auto_gain << nl
-    << "Normalize: " << normalize << nl
+  s << "Gain: " << value2db(gain) << nl
+    << "DRC: " << drc << nl
+    << "DRC power: " << drc_power << nl
     << "Attack: " << attack << "dB/s" << nl
     << "Release: " << release << "dB/s" << nl;
   return s.str();
 }
 
 size_t 
-AGC::next_block()
+DRC::next_block()
 {
   return (block + 1) & 1;
 }

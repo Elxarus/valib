@@ -23,8 +23,8 @@ struct AudioProcessorState
   // AGC options
   bool auto_gain;
   bool normalize;
-  sample_t attack;
-  sample_t release;
+  double attack;
+  double release;
 
   // DRC
   bool     drc;

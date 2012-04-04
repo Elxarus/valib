@@ -82,6 +82,7 @@
 #include "resample.h"
 #include "bass_redir.h"
 #include "agc.h"
+#include "drc.h"
 #include "delay.h"
 #include "dither.h"
 #include "convert.h"
@@ -115,6 +116,7 @@ protected:
   Dither       dither;
   BassRedir    bass_redir;
   AGC          agc;
+  DRC          drc;
   Delay        delay;
 
   Levels       out_levels;
@@ -332,13 +334,13 @@ inline void AudioProcessor::set_output_order(const order_t _order)
 // Master gain
 
 inline sample_t AudioProcessor::get_master() const
-{ return agc.master; }
+{ return drc.gain; }
 
 inline sample_t AudioProcessor::get_gain() const
-{ return agc.gain; }
+{ return drc.gain * agc.gain; }
 
 inline void AudioProcessor::set_master(sample_t _gain)
-{ agc.master = _gain; agc.gain = _gain; }
+{ drc.gain = _gain; agc.gain = 1.0; }
 
 // AGC
 
@@ -361,27 +363,27 @@ inline void AudioProcessor::set_normalize(bool _normalize)
 { agc.normalize = _normalize; }
 
 inline void AudioProcessor::set_attack(sample_t _attack)
-{ agc.attack = _attack; }
+{ agc.attack = _attack; drc.attack = _attack; }
 
 inline void AudioProcessor::set_release(sample_t _release)
-{ agc.release = _release; }
+{ agc.release = _release; drc.release = _release; }
 
 // DRC
 
 inline bool AudioProcessor::get_drc() const
-{ return agc.drc; }
+{ return drc.drc; }
 
 inline sample_t AudioProcessor::get_drc_power() const
-{ return agc.drc_power; }
+{ return drc.drc_power; }
 
 inline sample_t AudioProcessor::get_drc_level() const
-{ return agc.drc_level; }
+{ return drc.drc_level; }
 
 inline void AudioProcessor::set_drc(bool _drc)
-{ agc.drc = _drc; }
+{ drc.drc = _drc; }
 
 inline void AudioProcessor::set_drc_power(sample_t _drc_power)
-{ agc.drc_power = _drc_power; }
+{ drc.drc_power = _drc_power; }
 
 // Matrix
 
