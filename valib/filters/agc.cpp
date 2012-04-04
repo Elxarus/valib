@@ -104,14 +104,6 @@ AGC::process()
 
   if (!auto_gain)
     gain = master;
-  else if (!normalize)
-  {
-    // release
-    if (gain * release_factor > master)
-      gain = master;
-    else
-      gain *= release_factor;
-  }
 
   // adjust gain on overflow
 
@@ -120,17 +112,22 @@ AGC::process()
     if (max > 1.0)
     {
       if (max < attack_factor)
-      {
         // corrected with no overflow
         gain /= max;
-        max  = 1.0;
-      }
       else
-      {
         // overflow, will be clipped
         gain /= attack_factor;
-        max  /= attack_factor;
-      }
+    }
+    else if (!normalize)
+    {
+      // release
+      if (max * release_factor > 1.0) // max < 1
+        release_factor = 1.0 / max;
+
+      if (gain * release_factor > master)
+        gain = master;
+      else
+        gain *= release_factor;
     }
 
   ///////////////////////////////////////
