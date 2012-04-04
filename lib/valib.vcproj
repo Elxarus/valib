@@ -589,6 +589,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\filters\drc.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\filters\drc.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\filters\dvd_graph.cpp"
 				>
 			</File>

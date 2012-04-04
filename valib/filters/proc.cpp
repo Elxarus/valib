@@ -8,7 +8,7 @@ static const int format_mask =
   FORMAT_MASK_LPCM20 | FORMAT_MASK_LPCM24;
 
 AudioProcessor::AudioProcessor(size_t _nsamples)
-:in_conv(_nsamples), mixer(_nsamples), agc(_nsamples), out_conv(_nsamples)
+:in_conv(_nsamples), mixer(_nsamples), agc(_nsamples), drc(_nsamples), out_conv(_nsamples)
 {
   rebuild = false;
   new_stream_state = no_new_stream;
@@ -161,6 +161,7 @@ AudioProcessor::rebuild_chain()
   }
   chain.add_back(&bass_redir);
   chain.add_back(&equalizer);
+  chain.add_back(&drc);
   chain.add_back(&dither);
   chain.add_back(&agc);
   chain.add_back(&delay);
