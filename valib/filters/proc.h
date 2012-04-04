@@ -453,13 +453,14 @@ inline void AudioProcessor::set_input_gains(const sample_t _input_gains[CH_NAMES
 inline void AudioProcessor::set_output_gains(const sample_t _output_gains[CH_NAMES])
 {
   mixer.set_output_gains(_output_gains);
-  bass_redir.set_gain(_output_gains[CH_LFE]);
+  if (bass_redir.get_channels() & CH_MASK_LFE)
+    bass_redir.set_gain(_output_gains[CH_LFE]);
 }
 
 // Input/output levels
 
 inline void AudioProcessor::get_input_levels(vtime_t _time, sample_t _input_levels[CH_NAMES])
-{ in_levels.get_levels(_time, _input_levels); };
+{ in_levels.get_levels(_time, _input_levels); }
 
 inline void AudioProcessor::get_output_levels(vtime_t _time, sample_t _output_levels[CH_NAMES])
 { out_levels.get_levels(_time, _output_levels); }
@@ -522,7 +523,17 @@ inline void AudioProcessor::set_bass_freq(int _bass_freq)
 { bass_redir.set_freq(_bass_freq); }
 
 inline void AudioProcessor::set_bass_channels(int _bass_channels)
-{ bass_redir.set_channels(_bass_channels); }
+{
+  bass_redir.set_channels(_bass_channels);
+  if (_bass_channels & CH_MASK_LFE)
+  {
+    sample_t output_gains[CH_NAMES];
+    mixer.get_output_gains(output_gains);
+    bass_redir.set_gain(output_gains[CH_LFE]);
+  }
+  else
+    bass_redir.set_gain(1.0);
+}
 
 // Delays
 
