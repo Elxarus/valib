@@ -38,17 +38,32 @@ static const Speakers get_format(AVCodecContext *avctx)
     default: return Speakers();
   }
   int mask = 0;
-  if (avctx->channel_layout & CH_FRONT_LEFT) mask |= CH_MASK_L;
-  if (avctx->channel_layout & CH_FRONT_RIGHT) mask |= CH_MASK_R;
-  if (avctx->channel_layout & CH_FRONT_CENTER) mask |= CH_MASK_C;
-  if (avctx->channel_layout & CH_LOW_FREQUENCY) mask |= CH_MASK_LFE;
-  if (avctx->channel_layout & CH_BACK_LEFT) mask |= CH_MASK_BL;
-  if (avctx->channel_layout & CH_BACK_RIGHT) mask |= CH_MASK_BR;
-  if (avctx->channel_layout & CH_FRONT_LEFT_OF_CENTER) mask |= CH_MASK_CL;
-  if (avctx->channel_layout & CH_FRONT_RIGHT_OF_CENTER) mask |= CH_MASK_CR;
-  if (avctx->channel_layout & CH_BACK_CENTER) mask |= CH_MASK_BC;
-  if (avctx->channel_layout & CH_SIDE_LEFT) mask |= CH_MASK_SL;
-  if (avctx->channel_layout & CH_SIDE_RIGHT) mask |= CH_MASK_SR;
+  if (avctx->channel_layout == 0)
+  {
+    if      (avctx->channels == 1) mask = MODE_MONO;
+    else if (avctx->channels == 2) mask = MODE_STEREO;
+    else if (avctx->channels == 3) mask = MODE_2_1;
+    else if (avctx->channels == 4) mask = MODE_QUADRO;
+    else if (avctx->channels == 5) mask = MODE_3_2;
+    else if (avctx->channels == 6) mask = MODE_5_1;
+    else if (avctx->channels == 7) mask = MODE_6_1;
+    else if (avctx->channels == 8) mask = MODE_7_1;
+    else return Speakers();
+  }
+  else
+  {
+    if (avctx->channel_layout & CH_FRONT_LEFT) mask |= CH_MASK_L;
+    if (avctx->channel_layout & CH_FRONT_RIGHT) mask |= CH_MASK_R;
+    if (avctx->channel_layout & CH_FRONT_CENTER) mask |= CH_MASK_C;
+    if (avctx->channel_layout & CH_LOW_FREQUENCY) mask |= CH_MASK_LFE;
+    if (avctx->channel_layout & CH_BACK_LEFT) mask |= CH_MASK_BL;
+    if (avctx->channel_layout & CH_BACK_RIGHT) mask |= CH_MASK_BR;
+    if (avctx->channel_layout & CH_FRONT_LEFT_OF_CENTER) mask |= CH_MASK_CL;
+    if (avctx->channel_layout & CH_FRONT_RIGHT_OF_CENTER) mask |= CH_MASK_CR;
+    if (avctx->channel_layout & CH_BACK_CENTER) mask |= CH_MASK_BC;
+    if (avctx->channel_layout & CH_SIDE_LEFT) mask |= CH_MASK_SL;
+    if (avctx->channel_layout & CH_SIDE_RIGHT) mask |= CH_MASK_SR;
+  }
   return Speakers(format, mask, avctx->sample_rate);
 }
 
