@@ -4,11 +4,13 @@
 #include <string.h>
 #include "drc.h"
 
+static const vtime_t def_loudness_interval = 0.050; // 50ms
+
 #define LEVEL_MINUS_50DB 0.0031622776601683793319988935444327
 #define LEVEL_MINUS_100DB 0.00001
 #define LEVEL_PLUS_100DB 100000.0
 
-DRC::DRC(size_t _nsamples)
+DRC::DRC()
 {
   block     = 0;
 
@@ -27,18 +29,32 @@ DRC::DRC(size_t _nsamples)
   gain      = 1.0;   // factor
   attack    = 50.0;  // dB/s
   release   = 50.0;  // dB/s
+  loudness_interval = def_loudness_interval;
+}
 
-  // rebuild window
-  set_buffer(_nsamples);
+vtime_t
+DRC::get_loudness_interval() const
+{
+  return loudness_interval;
 }
 
 void
-DRC::set_buffer(size_t _nsamples)
+DRC::set_loudness_interval(vtime_t new_loudness_interval)
 {
+  loudness_interval = new_loudness_interval;
+  if (loudness_interval <= 0)
+    loudness_interval = def_loudness_interval;
+}
+
+bool
+DRC::init()
+{
+  const int nch = spk.nch();
+
   // allocate buffers
-  nsamples = _nsamples;
-  buf[0].allocate(NCHANNELS, nsamples);
-  buf[1].allocate(NCHANNELS, nsamples);
+  nsamples = loudness_interval * spk.sample_rate;
+  buf[0].allocate(nch, nsamples);
+  buf[1].allocate(nch, nsamples);
   w.allocate(2, nsamples);
 
   // hann window
@@ -49,14 +65,8 @@ DRC::set_buffer(size_t _nsamples)
     w[1][i] = 0.5 * (1 - cos((i+nsamples)*f));
   }
 
-  // reset
   reset();
-}
-
-size_t
-DRC::get_buffer() const
-{
-  return nsamples;
+  return true;
 }
 
 bool 
@@ -76,7 +86,6 @@ DRC::process()
 {
   size_t s;
   int ch, nch = spk.nch();
-  sample_t spk_level = spk.level;
 
   ///////////////////////////////////////
   // DRC, gain
@@ -94,15 +103,15 @@ DRC::process()
 
   // block level
 
-  level = 0;
+  double level = 0;
   for (ch = 0; ch < nch; ch++)
-    level = max_samples(level, buf[block][ch], nsamples);
-  level = level / spk_level;
-
-  // Here 'level' is block peak-level. Normally, this level should not be 
-  // greater than 1.0 (0dB) but it is possible that some post-processing made
-  // it larger. Our task is to decrease the global gain to make the output 
-  // level <= 1.0.
+  {
+    sample_t sum = 0;
+    for (s = 0; s < nsamples; s++)
+      sum += buf[block][ch][s] * buf[block][ch][s];
+    level += sqrt(sum / nsamples);
+  }
+  level /= spk.level;
 
   // DRC
 
