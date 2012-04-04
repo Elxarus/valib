@@ -32,6 +32,8 @@
 class AGC : public SamplesFilter
 {
 protected:
+  vtime_t loudness_interval;      // loudness measurement interval
+
   SampleBuf w;
   SampleBuf buf[2];               // sample buffers
   SyncHelper sync;                // sync helper
@@ -59,18 +61,19 @@ public:
   double attack;                  // [rw] attack speed (dB/s)
   double release;                 // [rw] release speed (dB/s)
 
-  AGC(size_t nsamples);
+  AGC();
 
   /////////////////////////////////////////////////////////
   // AGC interface
 
-  // buffer size
-  size_t get_buffer() const;
-  void   set_buffer(size_t nsamples);
+  // loudness measurement interval
+  vtime_t get_loudness_interval() const;
+  void    set_loudness_interval(vtime_t loudness_interval);
 
   /////////////////////////////////////////////////////////
   // Filter interface
 
+  virtual bool init();
   virtual bool process(Chunk &in, Chunk &out);
   virtual bool flush(Chunk &out);
   virtual void reset();

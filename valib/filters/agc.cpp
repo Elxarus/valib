@@ -4,12 +4,14 @@
 #include <string.h>
 #include "agc.h"
 
-AGC::AGC(size_t _nsamples)
-{
-  block       = 0;
+static const vtime_t def_loudness_interval = 0.050; // 50ms
 
-  sample[0]   = 0;
-  sample[1]   = 0;
+AGC::AGC()
+{
+  block     = 0;
+
+  sample[0] = 0;
+  sample[1] = 0;
 
   nsamples  = 0;
 
@@ -24,18 +26,32 @@ AGC::AGC(size_t _nsamples)
   gain      = 1.0;   // factor
   attack    = 50.0;  // dB/s
   release   = 50.0;  // dB/s
+  loudness_interval = def_loudness_interval;
+}
 
-  // rebuild window
-  set_buffer(_nsamples);
+vtime_t
+AGC::get_loudness_interval() const
+{
+  return loudness_interval;
 }
 
 void
-AGC::set_buffer(size_t _nsamples)
+AGC::set_loudness_interval(vtime_t new_loudness_interval)
 {
+  loudness_interval = new_loudness_interval;
+  if (loudness_interval <= 0)
+    loudness_interval = def_loudness_interval;
+}
+
+bool
+AGC::init()
+{
+  const int nch = spk.nch();
+
   // allocate buffers
-  nsamples = _nsamples;
-  buf[0].allocate(NCHANNELS, nsamples);
-  buf[1].allocate(NCHANNELS, nsamples);
+  nsamples = loudness_interval * spk.sample_rate;
+  buf[0].allocate(nch, nsamples);
+  buf[1].allocate(nch, nsamples);
   w.allocate(2, nsamples);
 
   // hann window
@@ -46,14 +62,8 @@ AGC::set_buffer(size_t _nsamples)
     w[1][i] = 0.5 * (1 - cos((i+nsamples)*f));
   }
 
-  // reset
   reset();
-}
-
-size_t
-AGC::get_buffer() const
-{
-  return nsamples;
+  return true;
 }
 
 bool 
