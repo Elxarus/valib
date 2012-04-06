@@ -182,6 +182,17 @@ static const char *mode_text(mpg123_mode mode)
   }
 }
 
+static const char *bitrate_text(mpg123_vbr vbr)
+{
+	switch (vbr)
+  {
+    case MPG123_CBR: return "CBR";
+    case MPG123_VBR: return "VBR";
+    case MPG123_ABR: return "(average)";
+    default: return "";
+  }
+}
+
 string
 MPG123Parser::info() const 
 {
@@ -194,7 +205,11 @@ MPG123Parser::info() const
     result << "Version: " << ver_text(info.version) << " " << layer_text(info.layer) << nl;
     result << "Mode: " << mode_text(info.mode) << nl;
     result << "Frame size: " << info.framesize << nl;
-    result << "Bitrate: " << info.bitrate << "kbps" << nl;
+    result << "Bitrate: " << info.bitrate << "kbps, " << bitrate_text(info.vbr) << nl;
+    if (info.flags & MPG123_CRC)       result << "CRC present" << nl;
+    if (info.flags & MPG123_COPYRIGHT) result << "Copyright bit" << nl;
+    if (info.flags & MPG123_PRIVATE)   result << "Private bit" << nl;
+    if (info.flags & MPG123_ORIGINAL)  result << "Original" << nl;
   }
   return result.str();
 }
