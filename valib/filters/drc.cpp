@@ -233,6 +233,7 @@ DRC::info() const
   s << "Gain: " << value2db(gain) << nl
     << "DRC: " << drc << nl
     << "DRC power: " << drc_power << nl
+    << "Loudness interval: " << int(loudness_interval * 1000) << "ms (" << nsamples << "samples)" << nl
     << "Attack: " << attack << "dB/s" << nl
     << "Release: " << release << "dB/s" << nl;
   return s.str();
