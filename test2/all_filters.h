@@ -12,6 +12,7 @@
 #include "filters/demux.h"
 #include "filters/detector.h"
 #include "filters/dither.h"
+#include "filters/drc.h"
 #include "filters/dvd_graph.h"
 #include "filters/equalizer.h"
 #include "filters/equalizer_mch.h"

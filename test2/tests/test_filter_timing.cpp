@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_SUITE(filter_timing)
 
 BOOST_AUTO_TEST_CASE(agc)
 {
-  AGC filter(1024);
+  AGC filter;
   test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
 
@@ -570,6 +570,12 @@ BOOST_AUTO_TEST_CASE(detector_spdif)
 {
   Detector filter;
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", true);
+}
+
+BOOST_AUTO_TEST_CASE(drc)
+{
+  DRC filter;
+  test_timing(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(dvd_graph_pcm)

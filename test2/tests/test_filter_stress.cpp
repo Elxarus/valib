@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_SUITE(filter_stress)
 
 BOOST_AUTO_TEST_CASE(agc)
 {
-  AGC filter(1024);
+  AGC filter;
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
@@ -393,6 +393,13 @@ BOOST_AUTO_TEST_CASE(detector_spdif)
   open_stress_test(&filter);
   filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif");
   noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
+}
+
+BOOST_AUTO_TEST_CASE(drc)
+{
+  DRC filter;
+  open_stress_test(&filter);
+  filter_stress_test(Speakers(FORMAT_LINEAR, MODE_STEREO, 48000), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(dvd_graph)
