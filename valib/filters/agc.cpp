@@ -263,6 +263,7 @@ AGC::info() const
   s << std::boolalpha << std::fixed << std::setprecision(1);
   s << "Gain: " << value2db(master) << nl
     << "Auto gain: " << auto_gain << nl
+    << "Loudness interval: " << int(loudness_interval * 1000) << "ms (" << nsamples << "samples)" << nl
     << "Normalize: " << normalize << nl
     << "Attack: " << attack << "dB/s" << nl
     << "Release: " << release << "dB/s" << nl;
