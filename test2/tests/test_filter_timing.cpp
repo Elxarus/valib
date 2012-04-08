@@ -228,7 +228,7 @@ static void test_buffering(Source *src, Filter *f, bool frame_sync)
 
   static const size_t min_block_size = 1;
 
-  Chunk in, out1, out2;
+  Chunk in, out;
   if (!f->is_open())
     f->open(src->get_output());
   BOOST_REQUIRE(f->is_open());
@@ -254,26 +254,32 @@ static void test_buffering(Source *src, Filter *f, bool frame_sync)
   in.set_sync(true, time2);
 
   // Get the first output chunk
-  while (!f->process(in, out1))
+  while (!f->process(in, out))
     if (!src->get_chunk(in))
       BOOST_FAIL("Cannot fill the filter");
 
-  BOOST_CHECK(out1.sync);
-  BOOST_CHECK_EQUAL(out1.time, time1);
+  BOOST_CHECK(out.sync);
+  BOOST_CHECK_EQUAL(out.time, time1);
 
-  // Get the second output chunk
-  while (!f->process(in, out2))
-    if (!src->get_chunk(in))
-      BOOST_FAIL("Cannot fill the filter");
+  // Get the second sync
+  size_t delta_size = out.size;
+  out.clear();
+  while (!out.sync)
+  {
+    while (!f->process(in, out))
+      if (!src->get_chunk(in))
+        BOOST_FAIL("Cannot fill the filter");
+    delta_size += out.size;
+  }
+  delta_size -= out.size;
 
-  BOOST_CHECK(out2.sync);
   if (frame_sync)
-    BOOST_CHECK_EQUAL(out2.time, time2);
+    BOOST_CHECK_EQUAL(out.time, time2);
   else
   {
     vtime_t in_pos_time = size2time(f->get_input(), min_block_size);
-    vtime_t out_pos_time = size2time(f->get_output(), out1.size);
-    BOOST_CHECK(compare_time(out2.time - time2, out_pos_time - in_pos_time));
+    vtime_t out_pos_time = size2time(f->get_output(), delta_size);
+    BOOST_CHECK(compare_time(out.time - time2, out_pos_time - in_pos_time));
   }
 }
 
@@ -542,7 +548,7 @@ BOOST_AUTO_TEST_CASE(decoder_graph_spdif)
   // DecoderGraph Does not pass BUFFERING test because it does a complex time
   // shift. Despdifer applies frame time shift and AudioProcessor does buffering.
   test_timing(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif", true,
-    ALL_TESTS & ~BUFFERING);
+    ALL_TESTS & ~BUFFERING & ~FIRST_TIMESTAMP2);
 }
 
 BOOST_AUTO_TEST_CASE(delay)
