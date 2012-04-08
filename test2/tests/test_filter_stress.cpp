@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(audio_processor)
   filter.set_user(Speakers(FORMAT_PCM16, 0, 0));
 
   open_stress_test(&filter);
-  filter_stress_test(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter, 0, 131072);
+  filter_stress_test(Speakers(FORMAT_PCM16, MODE_STEREO, 48000), &filter, 0, 262144);
 }
 
 BOOST_AUTO_TEST_CASE(resample_up)
