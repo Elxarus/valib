@@ -13,7 +13,7 @@
 #include <boost/test/unit_test.hpp>
 
 static const int sample_rate = 48000;
-static const EqBand bands[] = { { 1000, 1.0 }, { 2000, 2.0 }, { 3000, 1e-5 }, { 4000, 1.0 } };
+static const EqBand bands[] = { { 1000, 1.0 }, { 1500, 1.0 }, { 2000, 2.0 }, { 2100, 1e-5 }, { 4000, 1.0 } };
 static const size_t nbands = array_size(bands);
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(EqBand);
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(make_eq)
 
     double diff = calc_diff(&tone, &test, &ref_tone, &ref);
     BOOST_CHECK_GT(diff, 0);
-    BOOST_CHECK_LT(value2db(diff), fir.get_ripple());
+    BOOST_CHECK_LT(value2db(1.0 + diff), fir.get_ripple());
   }
 }
 
