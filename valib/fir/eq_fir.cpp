@@ -194,9 +194,11 @@ EqFIR::make(int sample_rate) const
 
     if (j < max_band)
     {
-      step.calc(bands[i], bands[j], q, min_g, sample_rate);
+      EqBand band_from;
+      band_from.freq = bands[j-1].freq;
+      band_from.gain = bands[i].gain;
+      step.calc(band_from, bands[j], q, min_g, sample_rate);
       if (step.n > max_n) max_n = step.n;
-      break;
     }
   }
   max_c = max_n / 2;
@@ -226,10 +228,13 @@ EqFIR::make(int sample_rate) const
 
     if (j < max_band)
     {
-      step.calc(bands[i], bands[j], q, min_g, sample_rate);
+      EqBand band_from;
+      band_from.freq = bands[j-1].freq;
+      band_from.gain = bands[i].gain;
+      step.calc(band_from, bands[j], q, min_g, sample_rate);
       double alpha = kaiser_alpha(step.a);
-      for (int j = -step.c; j <= step.c; j++)
-        data[max_c + j] += step.dg * lpf(j, step.cf) * kaiser_window(j, step.n, alpha);
+      for (int k = -step.c; k <= step.c; k++)
+        data[max_c + k] += step.dg * lpf(k, step.cf) * kaiser_window(k, step.n, alpha);
     }
   }
 
