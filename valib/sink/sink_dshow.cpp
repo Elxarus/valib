@@ -1,15 +1,10 @@
 #include "sink_dshow.h"
+#include "../win32/guids.h"
 #include "../win32/winspk.h"
 #include "../win32/hresult_exception.h"
 #include "../log.h"
 
 static const string log_module = "DShowSink";
-
-DEFINE_GUID(MEDIASUBTYPE_AVI_AC3, 
-0x00002000, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-
-DEFINE_GUID(MEDIASUBTYPE_AVI_DTS, 
-0x00002001, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class format can be converted to DirectShow media type in number
@@ -59,6 +54,22 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   {
     wf = (WAVEFORMATEX *)mt.Format();
     sample_rate = wf->nSamplesPerSec;
+  }
+
+  if (type == MEDIATYPE_Audio &&
+      subtype == MEDIASUBTYPE_HDMV_LPCM_AUDIO &&
+      wf && wf->wFormatTag == 1)
+  {
+    if (!wfx2spk(wf, spk))
+      return false;
+
+    switch (spk.format)
+    {
+      case FORMAT_PCM16: spk.format = FORMAT_PCM16_BE; return true;
+      case FORMAT_PCM24: spk.format = FORMAT_PCM24_BE; return true;
+      case FORMAT_PCM32: spk.format = FORMAT_PCM32_BE; return true;
+      default: return false;
+    }
   }
 
   if (type == MEDIATYPE_MPEG2_PES ||
