@@ -1225,6 +1225,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\win32\guids.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\win32\guids.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\win32\hresult_exception.cpp"
 				>
 			</File>
