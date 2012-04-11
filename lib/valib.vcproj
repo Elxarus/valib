@@ -88,6 +88,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="cscript make_version.jse"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -150,6 +151,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="cscript make_version.jse"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -212,6 +214,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="cscript make_version.jse"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
