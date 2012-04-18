@@ -611,6 +611,7 @@ void channel_order(int mask, int order[CH_NAMES]);
 const char *format_text(int format);
 const char *ch_name_short(int ch_name);
 const char *ch_name_long(int ch_name);
+int nch2mask(int nch);
 
 inline int mask_nch(int mask)
 {

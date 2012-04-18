@@ -55,6 +55,36 @@ typedef struct {
 #define WAVE_FORMAT_DOLBY_AC3_SPDIF 0x0092
 #define WAVE_FORMAT_FLAC 0xF1AC
 
+///////////////////////////////////////////////////////////////////////////////
+// Cast different WAVEFORMAT's with size check.
+// WAVEFORMATEX conversion ensures that additional data does not exceed total
+// structure size. WAVEFORMATEXTERNSIBLE conversion also checks wFormatTag.
+
+template<class T>
+T *wf_cast(WAVEFORMAT *wf, size_t size)
+{
+  if (wf == 0 || size < sizeof(T)) return 0;
+  return (T*)wf;
+}
+
+template<>
+WAVEFORMATEX *wf_cast<WAVEFORMATEX>(WAVEFORMAT *wf, size_t size);
+
+template<>
+WAVEFORMATEXTENSIBLE *wf_cast<WAVEFORMATEXTENSIBLE>(WAVEFORMAT *wf, size_t size);
+
+///////////////////////////////////////////////////////////////////////////////
+// Conversion between DirestSound channel mask and Speakers::mask
+
+int ds2mask(int ds_mask);
+int mask2ds(int spk_mask);
+
+///////////////////////////////////////////////////////////////////////////////
+// Conversion between WAVEFORMAT and Speakers.
+
+Speakers wf2spk(WAVEFORMAT *wave_format, size_t size);
+WAVEFORMATEX *spk2wfe(Speakers spk, int i);
+
 bool wfx2spk(WAVEFORMATEX *wfx, Speakers &spk);
 bool spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible);
 bool is_compatible(Speakers spk, WAVEFORMATEX *wfx);
