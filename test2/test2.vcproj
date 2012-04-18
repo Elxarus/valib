@@ -547,6 +547,14 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="win32"
+			>
+			<File
+				RelativePath=".\tests\win32\test_winspk.cpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\main.cpp"
 			>

@@ -187,6 +187,23 @@ const char *ch_name_long(int ch_name)
   return "Unknown";
 }
 
+
+int nch2mask(int nch)
+{
+  switch (nch)
+  {
+    case 1: return MODE_MONO;
+    case 2: return MODE_STEREO;
+    case 3: return MODE_2_0_LFE;
+    case 4: return MODE_QUADRO;
+    case 5: return MODE_3_2;
+    case 6: return MODE_5_1;
+    case 7: return MODE_6_1;
+    case 8: return MODE_7_1;
+    default: return 0;
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class
 ///////////////////////////////////////////////////////////////////////////////

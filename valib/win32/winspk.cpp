@@ -3,6 +3,7 @@
 static const GUID GUID_DOLBY_AC3_SPDIF    = { 0x00000092, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
 static const GUID GUID_SUBTYPE_PCM        = { 0x00000001, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
 static const GUID GUID_SUBTYPE_IEEE_FLOAT = { 0x00000003, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
+static const WORD extensible_size = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
 
 #define SPEAKER_FRONT_LEFT              0x1
 #define SPEAKER_FRONT_RIGHT             0x2
@@ -57,6 +58,292 @@ int mask2ds(int spk_mask)
       ds_mask |= mask_tbl[i][1];
   return ds_mask;
 }
+
+template<>
+WAVEFORMATEX *wf_cast<WAVEFORMATEX>(WAVEFORMAT *wf, size_t size)
+{
+  if (wf == 0 || size < sizeof(WAVEFORMATEX)) return 0;
+  WAVEFORMATEX *wfe = (WAVEFORMATEX *)wf;
+  if (size < sizeof(WAVEFORMATEX) + wfe->cbSize) return 0;
+  return wfe;
+}
+
+template<>
+WAVEFORMATEXTENSIBLE *wf_cast<WAVEFORMATEXTENSIBLE>(WAVEFORMAT *wf, size_t size)
+{
+  if (wf == 0 || size < sizeof(WAVEFORMATEXTENSIBLE)) return 0;
+  WAVEFORMATEXTENSIBLE *wfx = (WAVEFORMATEXTENSIBLE *)wf;
+  if (wfx->Format.wFormatTag != WAVE_FORMAT_EXTENSIBLE) return 0;
+  if (wfx->Format.cbSize < sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX)) return 0;
+  return wfx;
+}
+
+inline void
+fill_wfe(WAVEFORMATEX *wfe, WORD wFormatTag, WORD nChannels, DWORD nSamplesPerSec, WORD wBitsPerSample, WORD cbSize = 0)
+{
+  wfe->wFormatTag = wFormatTag;
+  wfe->nChannels = nChannels;
+  wfe->nSamplesPerSec = nSamplesPerSec;
+  wfe->wBitsPerSample = wBitsPerSample;
+  wfe->nBlockAlign = wBitsPerSample / 8 * wfe->nChannels;
+  wfe->nAvgBytesPerSec = wfe->nSamplesPerSec * wfe->nBlockAlign;
+  wfe->cbSize = cbSize;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PCM conversions
+
+WAVEFORMATEX *pcm2waveformatex(Speakers spk)
+{
+  WAVEFORMATEX *wfe = new WAVEFORMATEX;
+  memset(wfe, 0, sizeof(*wfe));
+  fill_wfe(wfe, 
+    spk.is_floating_point()? WAVE_FORMAT_IEEE_FLOAT: WAVE_FORMAT_PCM,
+    spk.nch(), spk.sample_rate, spk.sample_size() * 8);
+  return wfe;
+}
+
+WAVEFORMATEX *pcm2waveformatextensible(Speakers spk)
+{
+  WAVEFORMATEXTENSIBLE *wfx = new WAVEFORMATEXTENSIBLE;
+  memset(wfx, 0, sizeof(*wfx));
+  fill_wfe(&wfx->Format, 
+    WAVE_FORMAT_EXTENSIBLE,
+    spk.nch(), spk.sample_rate, spk.sample_size() * 8);
+
+  wfx->Format.cbSize = extensible_size;
+  wfx->SubFormat = spk.is_floating_point()? GUID_SUBTYPE_IEEE_FLOAT: GUID_SUBTYPE_PCM;
+  wfx->Samples.wValidBitsPerSample = spk.sample_size() * 8;
+  wfx->dwChannelMask = mask2ds(spk.mask);
+  return &wfx->Format;
+}
+
+WAVEFORMATEX *pcm2wfe(Speakers spk, int i)
+{
+  // Return only WAVEFORMATEX for simple formats (mono/stereo 16bit pcm)
+  // Return WAVEFORMATEXTENSIBLE on the first place.
+  bool simple_format = ((spk.mask == MODE_MONO) || (spk.mask == MODE_STEREO)) && (spk.format == FORMAT_PCM16);
+
+  if (i == 0 && !simple_format)
+    return pcm2waveformatextensible(spk);
+  if ((i == 0 && simple_format) || ((i == 1) && (!simple_format)))
+    return pcm2waveformatex(spk);
+  return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SPDIF conversions
+
+WAVEFORMATEX *spdif2waveformatex(Speakers spk)
+{
+  WAVEFORMATEX *wfe = new WAVEFORMATEX;
+  memset(wfe, 0, sizeof(*wfe));
+  fill_wfe(wfe, 
+    WAVE_FORMAT_DOLBY_AC3_SPDIF,
+    2, spk.sample_rate, 16);
+  return wfe;
+}
+
+WAVEFORMATEX *spdif2waveformatextensible(Speakers spk)
+{
+  WAVEFORMATEXTENSIBLE *wfx = new WAVEFORMATEXTENSIBLE;
+  memset(wfx, 0, sizeof(WAVEFORMATEXTENSIBLE));
+  fill_wfe(&wfx->Format, 
+    WAVE_FORMAT_EXTENSIBLE,
+    2, spk.sample_rate, 16);
+  wfx->Format.cbSize = extensible_size;
+  wfx->SubFormat = GUID_DOLBY_AC3_SPDIF;
+  wfx->Samples.wValidBitsPerSample = 16;
+  wfx->dwChannelMask = mask2ds(spk.mask);
+  return &wfx->Format;
+}
+
+WAVEFORMATEX *
+spdif2wfe(Speakers spk, int i)
+{
+  if (i == 0) return spdif2waveformatextensible(spk);
+  if (i == 1) return spdif2waveformatex(spk);
+  return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static struct {
+  int format;
+  WAVEFORMATEX * (*convert)(Speakers spk, int i);
+}
+spk2wfe_tbl[] =
+{
+  { FORMAT_PCM16,     pcm2wfe },
+  { FORMAT_PCM24,     pcm2wfe },
+  { FORMAT_PCM32,     pcm2wfe },
+  { FORMAT_PCMFLOAT,  pcm2wfe },
+  { FORMAT_PCMDOUBLE, pcm2wfe },
+  { FORMAT_SPDIF,     spdif2wfe },
+};
+
+WAVEFORMATEX *
+spk2wfe(Speakers spk, int i)
+{
+  for (int j = 0; j < array_size(spk2wfe_tbl); j++)
+    if (spk2wfe_tbl[j].format == spk.format)
+      return spk2wfe_tbl[j].convert(spk, i);
+  return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+waveformatextensible2pcm(WAVEFORMAT *wf, size_t size, Speakers &spk)
+{
+  WAVEFORMATEXTENSIBLE *wfx = wf_cast<WAVEFORMATEXTENSIBLE>(wf, size);
+  if (wfx == 0) return false;
+  WAVEFORMATEX *wfe = &wfx->Format;
+
+  int format;
+  if (wfx->SubFormat == GUID_SUBTYPE_IEEE_FLOAT)
+    switch (wfe->wBitsPerSample)
+    {
+      case 32: format = FORMAT_PCMFLOAT;  break;
+      case 64: format = FORMAT_PCMDOUBLE; break;
+      default: return false;
+    }
+  else if (wfx->SubFormat == GUID_SUBTYPE_PCM)
+    switch (wfe->wBitsPerSample)
+    {
+      case 16: format = FORMAT_PCM16; break;
+      case 24: format = FORMAT_PCM24; break;
+      case 32: format = FORMAT_PCM32; break;
+      default: return false;
+    }
+  else
+    return false;
+
+  int mask = ds2mask(wfx->dwChannelMask);
+  int sample_rate = wfe->nSamplesPerSec;
+  spk = Speakers(format, mask, sample_rate);
+  return true;
+}
+
+bool
+pcmwaveformat2pcm(WAVEFORMAT *wf, size_t size, Speakers &spk)
+{
+  PCMWAVEFORMAT *pcmwf = wf_cast<PCMWAVEFORMAT>(wf, size);
+  if (pcmwf == 0) return false;
+
+  int format;
+  if (wf->wFormatTag == WAVE_FORMAT_IEEE_FLOAT)
+    switch (pcmwf->wBitsPerSample)
+    {
+      case 32: format = FORMAT_PCMFLOAT;  break;
+      case 64: format = FORMAT_PCMDOUBLE; break;
+      default: return false;
+    }
+  else if (wf->wFormatTag == WAVE_FORMAT_PCM)
+    switch (pcmwf->wBitsPerSample)
+    {
+      case 16: format = FORMAT_PCM16; break;
+      case 24: format = FORMAT_PCM24; break;
+      case 32: format = FORMAT_PCM32; break;
+      default: return false;
+    }
+  else
+    return false;
+
+  int mask = nch2mask(wf->nChannels);
+  int sample_rate = wf->nSamplesPerSec;
+  spk = Speakers(format, mask, sample_rate);
+  return true;
+}
+
+bool
+waveformat2spdif(WAVEFORMAT *wf, size_t size, Speakers &spk)
+{
+  if (wf->wFormatTag == WAVE_FORMAT_DOLBY_AC3_SPDIF)
+  {
+    spk = Speakers(FORMAT_SPDIF, 0, wf->nSamplesPerSec);
+    return true;
+  }
+  else if (wf->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+  {
+    WAVEFORMATEXTENSIBLE *wfx = wf_cast<WAVEFORMATEXTENSIBLE>(wf, size);
+    if (wfx == 0 || wfx->SubFormat != GUID_DOLBY_AC3_SPDIF)
+      return false;
+    spk = Speakers(FORMAT_SPDIF, ds2mask(wfx->dwChannelMask), wf->nSamplesPerSec);
+    return true;
+  }
+  return false;
+}
+
+bool
+waveformat2spk(WAVEFORMAT *wf, size_t size, Speakers &spk)
+{
+  int format;
+  switch (wf->wFormatTag)
+  {
+    case WAVE_FORMAT_AVI_AC3:
+      format = FORMAT_AC3_EAC3;
+      break;
+
+    case WAVE_FORMAT_AVI_DTS:
+      format = FORMAT_DTS;
+      break;
+
+    case WAVE_FORMAT_MPEGLAYER3:
+    case WAVE_FORMAT_MPEG:
+      format = FORMAT_MPA;
+      break;
+
+    case WAVE_FORMAT_AVI_AAC:
+      format = FORMAT_AAC_FRAME;
+      break;
+
+    case WAVE_FORMAT_FLAC:
+      format = FORMAT_FLAC;
+      break;
+
+    default:
+      return false;
+  }
+
+  int mask = nch2mask(wf->nChannels);
+  int sample_rate = wf->nSamplesPerSec;
+  spk = Speakers(format, mask, sample_rate);
+  
+  // format data
+  WAVEFORMATEX *wfe = wf_cast<WAVEFORMATEX>(wf, size);
+  if (wfe && wfe->cbSize)
+  {
+    uint8_t *format_data = reinterpret_cast<uint8_t *>(wfe+1);
+    size_t data_size = wfe->cbSize;
+    spk.set_format_data(format_data, data_size);
+  }
+
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static bool (*wf2spk_converters[])(WAVEFORMAT *, size_t, Speakers &) = 
+{
+  pcmwaveformat2pcm,
+  waveformat2spk,
+  waveformatextensible2pcm,
+  waveformat2spdif
+};
+
+Speakers wf2spk(WAVEFORMAT *wf, size_t size)
+{
+  if (size < sizeof(WAVEFORMAT)) return Speakers();
+  Speakers result;
+  for (int i = 0; i < array_size(wf2spk_converters); i++)
+    if (wf2spk_converters[i](wf, size, result))
+      return result;
+  return Speakers();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Depreciated
 
 bool 
 spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
