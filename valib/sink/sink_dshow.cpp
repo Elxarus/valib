@@ -1,3 +1,4 @@
+#include <memory>
 #include "sink_dshow.h"
 #include "../win32/guids.h"
 #include "../win32/winspk.h"
@@ -47,22 +48,26 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   const GUID type = *mt.Type();
   const GUID subtype = *mt.Subtype();
 
-  WAVEFORMATEX *wf = 0;
+  WAVEFORMAT *wf = 0;
+  size_t wf_size = 0;
   int sample_rate = 0;
 
-  if (*mt.FormatType() == FORMAT_WaveFormatEx)
+  if ((*mt.FormatType() == FORMAT_WaveFormatEx) &&
+      (mt.FormatLength() > sizeof(WAVEFORMAT)))
   {
-    wf = (WAVEFORMATEX *)mt.Format();
+    wf = (WAVEFORMAT *)mt.Format();
+    wf_size = mt.FormatLength();
     sample_rate = wf->nSamplesPerSec;
   }
+
+  /////////////////////////////////////////////////////////
+  // HD LPCM
 
   if (type == MEDIATYPE_Audio &&
       subtype == MEDIASUBTYPE_HDMV_LPCM_AUDIO &&
       wf && wf->wFormatTag == 1)
   {
-    if (!wfx2spk(wf, spk))
-      return false;
-
+    spk = wf2spk(wf, wf_size);
     switch (spk.format)
     {
       case FORMAT_PCM16: spk.format = FORMAT_PCM16_BE; return true;
@@ -71,6 +76,9 @@ bool mt2spk(CMediaType mt, Speakers &spk)
       default: return false;
     }
   }
+
+  /////////////////////////////////////////////////////////
+  // Compressed formats
 
   if (type == MEDIATYPE_MPEG2_PES ||
       type == MEDIATYPE_MPEG2_PACK ||
@@ -112,63 +120,62 @@ bool mt2spk(CMediaType mt, Speakers &spk)
     return true;
   }
 
-  if (sample_rate && subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO)
+  /////////////////////////////////////////////////////////
+  // LPCM
+
+  if (subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO)
   {
+    PCMWAVEFORMAT *pcmwf = wf_cast<PCMWAVEFORMAT>(wf, wf_size);
+    if (!pcmwf) return false;
+
     int format, mode;
-    switch (wf->wBitsPerSample)
+    switch (pcmwf->wBitsPerSample)
     {
       case 16: format = FORMAT_PCM16_BE; break;
       case 20: format = FORMAT_LPCM20; break;
       case 24: format = FORMAT_LPCM24; break;
       default: return false;
     }
-
     switch (wf->nChannels)
     {
       case 1: mode = MODE_MONO; break;
       case 2: mode = MODE_STEREO; break;
       default: return false;
     }
-
     spk = Speakers(format, mode, sample_rate);
     return true;
   }
 
-  if (!wfx2spk(wf, spk))
-    return false;
+  /////////////////////////////////////////////////////////
+  // General WAVEFORMAT conversion
 
-  return true;
+  spk = Speakers();
+  if (wf)
+    spk = wf2spk(wf, wf_size);
+  return !spk.is_unknown();
 }
 
 bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx)
 {
-  WAVEFORMATEXTENSIBLE wfx;
+  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, use_wfx? 0: 1));
+  if (!wfe.get())
+    return false;
 
   if (spk.format == FORMAT_SPDIF)
   {
     // SPDIF media types
-
-    mt.SetType(&MEDIATYPE_Audio);
-    if (!spk2wfx(spk, (WAVEFORMATEX *)&wfx, false))
-      return false;
-
     if (use_wfx)
       mt.SetSubtype(&MEDIASUBTYPE_PCM);
     else
       mt.SetSubtype(&MEDIASUBTYPE_DOLBY_AC3_SPDIF);
   }
   else
-  {
     // PCM Media types
-
-    mt.SetType(&MEDIATYPE_Audio);
     mt.SetSubtype(&MEDIASUBTYPE_PCM);
-    if (!spk2wfx(spk, (WAVEFORMATEX *)&wfx, use_wfx))
-      return false;
-  }
 
+  mt.SetType(&MEDIATYPE_Audio);
   mt.SetFormatType(&FORMAT_WaveFormatEx);
-  mt.SetFormat((BYTE*)&wfx, sizeof(WAVEFORMATEX) + wfx.Format.cbSize);
+  mt.SetFormat((BYTE*)&wfe, sizeof(WAVEFORMATEX) + wfe->cbSize);
   return true;
 };
 
@@ -284,7 +291,7 @@ bool
 DShowSink::can_open(Speakers _spk) const
 {
   if (*m_mt.FormatType() == FORMAT_WaveFormatEx)
-    if (is_compatible(_spk, (WAVEFORMATEX *)m_mt.Format()))
+    if (is_compatible(_spk, (WAVEFORMAT*)m_mt.Format(), m_mt.FormatLength()))
       return true;
 
   CMediaType mt;
@@ -309,7 +316,7 @@ bool
 DShowSink::init()
 {
   if (*m_mt.FormatType() == FORMAT_WaveFormatEx)
-    if (is_compatible(spk, (WAVEFORMATEX *)m_mt.Format()))
+    if (is_compatible(spk, (WAVEFORMAT *)m_mt.Format(), m_mt.FormatLength()))
       return true;
 
   CMediaType mt;

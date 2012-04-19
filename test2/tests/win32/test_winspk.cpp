@@ -159,6 +159,10 @@ wfe_flac_48000 =
   }
 };
 
+// Non-WAVEFORMATEX
+
+WAVEFORMAT wf_ac3_48000 = { WAVE_FORMAT_AVI_AC3, 0, 48000, 0, 0 };
+PCMWAVEFORMAT pcmwf_pcm16_2_48000 = { WAVE_FORMAT_PCM, 2, 48000, 192000, 4, 16 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -323,6 +327,168 @@ BOOST_AUTO_TEST_CASE(test_wf2spk)
     Speakers bad_spk = wf2spk(wf2spk_tbl[i].wf, wf2spk_tbl[i].bad_size);
     BOOST_CHECK(bad_spk.is_unknown());
   }
+}
+
+BOOST_AUTO_TEST_CASE(test_wf_cast)
+{
+  WAVEFORMAT *wf_good = &wf_ac3_48000;
+  PCMWAVEFORMAT *pcmwf_good = &pcmwf_pcm16_2_48000;
+  WAVEFORMATEX *wfe_good = &wfe_pcm16_2_48000;
+  WAVEFORMATEXTENSIBLE *wfx_good = &wfx_pcm16_2_48000;
+
+  // We cannot cast small structure to bigger one
+  BOOST_CHECK(0 == wf_cast<PCMWAVEFORMAT>(wf_good, wf_size));
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEX>(wf_good, wf_size));
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEXTENSIBLE>(wf_good, wf_size));
+
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEX>(pcmwf_good, pcmwf_size));
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEXTENSIBLE>(pcmwf_good, pcmwf_size));
+
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEXTENSIBLE>(wfe_good, wfe_size + wfe_good->cbSize));
+
+  // we can cast big structure to itself and to smaller one
+  BOOST_CHECK(0 != wf_cast<WAVEFORMATEXTENSIBLE>(wfx_good, wfx_size));
+  
+  BOOST_CHECK(0 != wf_cast<WAVEFORMATEX>(wfx_good, wfx_size));
+  BOOST_CHECK(0 != wf_cast<WAVEFORMATEX>(wfe_good, wfe_size + wfe_good->cbSize));
+
+  BOOST_CHECK(0 != wf_cast<PCMWAVEFORMAT>(pcmwf_good, pcmwf_size));
+
+  BOOST_CHECK(0 != wf_cast<WAVEFORMAT>(wfx_good, wfx_size));
+  BOOST_CHECK(0 != wf_cast<WAVEFORMAT>(wfe_good, wfe_size + wfe_good->cbSize));
+  BOOST_CHECK(0 != wf_cast<WAVEFORMAT>(pcmwf_good, pcmwf_size));
+  BOOST_CHECK(0 != wf_cast<WAVEFORMAT>(wf_good, wf_size));
+
+  /////////////////////////////////////////////////////////
+  // Conversion to WAVEFORMATEX
+  // Cannot comvert when data exceeds structure size
+  // Convert when structure size is equal or bigger than required.
+
+  WAVEFORMATEX *wfe_data = (WAVEFORMATEX *)&wfe_flac_48000;
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEX>(wfe_data, wfe_size));
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEX>(wfe_data, sizeof(wfe_flac_48000) - 1));
+  BOOST_CHECK(0 != wf_cast<WAVEFORMATEX>(wfe_data, sizeof(wfe_flac_48000)));
+  BOOST_CHECK(0 != wf_cast<WAVEFORMATEX>(wfe_data, sizeof(wfe_flac_48000) + 1));
+
+  /////////////////////////////////////////////////////////
+  // Conversion to WAVEFORMATEXTENSIBLE
+
+  WAVEFORMATEXTENSIBLE wfx;
+
+  // Bad format tag
+  wfx = wfx_pcm16_2_48000;
+  wfx.Format.wFormatTag = WAVE_FORMAT_PCM;
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEXTENSIBLE>(&wfx, wfx_size));
+
+  // Bad cbSize
+  wfx = wfx_pcm16_2_48000;
+  wfx.Format.cbSize -= 1;
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEXTENSIBLE>(&wfx, wfx_size));
+  wfx.Format.cbSize += 2;
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEXTENSIBLE>(&wfx, wfx_size + 1));
+
+  // Bad structure size (cbSize exceeds structure size)
+  wfx = wfx_pcm16_2_48000;
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEXTENSIBLE>(&wfx, wfx_size - 1));
+
+  // Bad structure size (cbSize does not exceed structure size)
+  wfx = wfx_pcm16_2_48000;
+  wfx.Format.cbSize -= 1;
+  BOOST_CHECK(0 == wf_cast<WAVEFORMATEXTENSIBLE>(&wfx, wfx_size - 1));
+
+  // Convert when structure size if bigger than required
+  wfx = wfx_pcm16_2_48000;
+  BOOST_CHECK(0 != wf_cast<WAVEFORMATEXTENSIBLE>(&wfx, wfx_size + 1));
+}
+
+BOOST_AUTO_TEST_CASE(test_wf_equal)
+{
+  WAVEFORMAT *wf_good    = (WAVEFORMAT *)&wf_ac3_48000;
+  WAVEFORMAT *pcmwf_good = (WAVEFORMAT *)&pcmwf_pcm16_2_48000;
+  WAVEFORMAT *wfe_good   = (WAVEFORMAT *)&wfe_pcm16_2_48000;
+  WAVEFORMAT *wfx_good   = (WAVEFORMAT *)&wfx_pcm16_2_48000;
+
+  WAVEFORMAT *wfe_big = (WAVEFORMAT *)&wfe_flac_48000;
+  size_t wfe_big_size = sizeof(wfe_flac_48000);
+
+  // Compare good structures of different size
+  BOOST_CHECK( wf_equal(wf_good,    wf_size,      wf_good,     wf_size));
+  BOOST_CHECK(!wf_equal(wf_good,    wf_size,      pcmwf_good,  pcmwf_size));
+  BOOST_CHECK(!wf_equal(wf_good,    wf_size,      wfe_good,    wfe_size));
+  BOOST_CHECK(!wf_equal(wf_good,    wf_size,      wfx_good,    wfx_size));
+  BOOST_CHECK(!wf_equal(wf_good,    wf_size,      wfe_big,     wfe_big_size));
+
+  BOOST_CHECK(!wf_equal(pcmwf_good, pcmwf_size,   wf_good,     wf_size));
+  BOOST_CHECK( wf_equal(pcmwf_good, pcmwf_size,   pcmwf_good,  pcmwf_size));
+  BOOST_CHECK(!wf_equal(pcmwf_good, pcmwf_size,   wfe_good,    wfe_size));
+  BOOST_CHECK(!wf_equal(pcmwf_good, pcmwf_size,   wfx_good,    wfx_size));
+  BOOST_CHECK(!wf_equal(pcmwf_good, pcmwf_size,   wfe_big,     wfe_big_size));
+
+  BOOST_CHECK(!wf_equal(wfe_good,   wfe_size,     wf_good,     wf_size));
+  BOOST_CHECK(!wf_equal(wfe_good,   wfe_size,     pcmwf_good,  pcmwf_size));
+  BOOST_CHECK( wf_equal(wfe_good,   wfe_size,     wfe_good,    wfe_size));
+  BOOST_CHECK(!wf_equal(wfe_good,   wfe_size,     wfx_good,    wfx_size));
+  BOOST_CHECK(!wf_equal(wfe_good,   wfe_size,     wfe_big,     wfe_big_size));
+
+  BOOST_CHECK(!wf_equal(wfx_good,   wfx_size,     wf_good,     wf_size));
+  BOOST_CHECK(!wf_equal(wfx_good,   wfx_size,     pcmwf_good,  pcmwf_size));
+  BOOST_CHECK(!wf_equal(wfx_good,   wfx_size,     wfe_good,    wfe_size));
+  BOOST_CHECK( wf_equal(wfx_good,   wfx_size,     wfx_good,    wfx_size));
+  BOOST_CHECK(!wf_equal(wfx_good,   wfx_size,     wfe_big,     wfe_big_size));
+
+  BOOST_CHECK(!wf_equal(wfe_big,    wfe_big_size, wf_good,     wf_size));
+  BOOST_CHECK(!wf_equal(wfe_big,    wfe_big_size, pcmwf_good,  pcmwf_size));
+  BOOST_CHECK(!wf_equal(wfe_big,    wfe_big_size, wfe_good,    wfe_size));
+  BOOST_CHECK(!wf_equal(wfe_big,    wfe_big_size, wfx_good,    wfx_size));
+  BOOST_CHECK( wf_equal(wfe_big,    wfe_big_size, wfe_big,     wfe_big_size));
+
+  // Compare with null
+  BOOST_CHECK(!wf_equal(0, wfe_size, 0, wfe_size));
+  BOOST_CHECK(!wf_equal(0, wfe_size, wfe_good, wfe_size));
+  BOOST_CHECK(!wf_equal(wfe_good, wfe_size, 0, wfe_size));
+
+  // Compare with structure of zero size
+  BOOST_CHECK(!wf_equal(wfe_good, wfe_size, 0, 0));
+  BOOST_CHECK(!wf_equal(wfe_good, wfe_size, wfe_good, 0));
+  BOOST_CHECK(!wf_equal(0, 0, wfe_good, wfe_size));
+  BOOST_CHECK(!wf_equal(wfe_good, 0, wfe_good, wfe_size));
+
+  // Compare zero-sized (uninitialized) structures
+  BOOST_CHECK(wf_equal(0, 0, 0, 0));
+  BOOST_CHECK(wf_equal(0, 0, wf_good, 0));
+  BOOST_CHECK(wf_equal(wfe_good, 0, 0, 0));
+  BOOST_CHECK(wf_equal(wfe_good, 0, wf_good, 0));
+
+  // Pre-WAVEFORMATEX structures must be of equal size
+  BOOST_CHECK(!wf_equal(wf_good,    wf_size+1,    wf_good,     wf_size));
+  BOOST_CHECK(!wf_equal(wf_good,    wf_size,      wf_good,     wf_size+1));
+  BOOST_CHECK(!wf_equal(pcmwf_good, pcmwf_size+1, pcmwf_good,  pcmwf_size));
+  BOOST_CHECK(!wf_equal(pcmwf_good, pcmwf_size,   pcmwf_good,  pcmwf_size+1));
+
+  // It's good when one WAVEFORMATEX is bigger than another
+  BOOST_CHECK(wf_equal(wfe_good,   wfe_size+1,   wfe_good,    wfe_size));
+  BOOST_CHECK(wf_equal(wfe_good,   wfe_size,     wfe_good,    wfe_size+1));
+  BOOST_CHECK(wf_equal(wfx_good,   wfx_size+1,   wfx_good,    wfx_size));
+  BOOST_CHECK(wf_equal(wfx_good,   wfx_size,     wfx_good,    wfx_size+1));
+  BOOST_CHECK(wf_equal(wfe_big,    wfe_big_size+1, wfe_big,   wfe_big_size));
+  BOOST_CHECK(wf_equal(wfe_big,    wfe_big_size,   wfe_big,   wfe_big_size+1));
+
+  // Compare with short WAVEFORMATEX
+  BOOST_CHECK(!wf_equal(wfe_big, wfe_big_size, wfe_big, wfe_big_size - 1));
+  BOOST_CHECK(!wf_equal(wfe_big, wfe_big_size - 1, wfe_big, wfe_big_size));
+}
+
+BOOST_AUTO_TEST_CASE(test_is_compatible)
+{
+  BOOST_CHECK(is_compatible(
+    Speakers(FORMAT_PCM24, MODE_STEREO, 48000),
+    (WAVEFORMAT *)&wfe_pcm24_2_48000, sizeof(wfe_pcm24_2_48000)));
+  BOOST_CHECK(is_compatible(
+    Speakers(FORMAT_PCM24, MODE_STEREO, 48000),
+    (WAVEFORMAT *)&wfx_pcm24_2_48000, sizeof(wfx_pcm24_2_48000)));
+  BOOST_CHECK(!is_compatible(
+    Speakers(FORMAT_PCM24, MODE_STEREO, 44100),
+    (WAVEFORMAT *)&wfe_pcm24_2_48000, sizeof(wfe_pcm24_2_48000)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

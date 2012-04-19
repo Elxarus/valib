@@ -60,21 +60,14 @@ int mask2ds(int spk_mask)
 }
 
 template<>
-WAVEFORMATEX *wf_cast<WAVEFORMATEX>(WAVEFORMAT *wf, size_t size)
-{
-  if (wf == 0 || size < sizeof(WAVEFORMATEX)) return 0;
-  WAVEFORMATEX *wfe = (WAVEFORMATEX *)wf;
-  if (size < sizeof(WAVEFORMATEX) + wfe->cbSize) return 0;
-  return wfe;
-}
-
-template<>
-WAVEFORMATEXTENSIBLE *wf_cast<WAVEFORMATEXTENSIBLE>(WAVEFORMAT *wf, size_t size)
+WAVEFORMATEXTENSIBLE *wf_cast<WAVEFORMATEXTENSIBLE>(void *wf, size_t size)
 {
   if (wf == 0 || size < sizeof(WAVEFORMATEXTENSIBLE)) return 0;
   WAVEFORMATEXTENSIBLE *wfx = (WAVEFORMATEXTENSIBLE *)wf;
+  if (sizeof(WAVEFORMATEX) + wfx->Format.cbSize > size) return 0;
+  // WAVEFORMATEXTENSIBLE specific
   if (wfx->Format.wFormatTag != WAVE_FORMAT_EXTENSIBLE) return 0;
-  if (wfx->Format.cbSize < sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX)) return 0;
+  if (wfx->Format.cbSize != extensible_size) return 0;
   return wfx;
 }
 
@@ -343,320 +336,31 @@ Speakers wf2spk(WAVEFORMAT *wf, size_t size)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Depreciated
 
-bool 
-spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible)
+bool wf_equal(WAVEFORMAT *wf1, size_t size1, WAVEFORMAT *wf2, size_t size2)
 {
-  if (spk.is_spdif())
-  {
-    // SPDIF format
-    wfx->wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
-    wfx->nChannels = 2;
-    wfx->nSamplesPerSec = spk.sample_rate;
-    wfx->wBitsPerSample = 16;
-    wfx->nBlockAlign = 4;
-    wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
-    wfx->cbSize = 0;
-
-    if (use_extensible)
-    {
-      WAVEFORMATEXTENSIBLE *ext = (WAVEFORMATEXTENSIBLE *)wfx;
-      wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-      wfx->cbSize = 22;
-
-      ext->SubFormat = GUID_DOLBY_AC3_SPDIF;
-      ext->Samples.wValidBitsPerSample = 16;
-      ext->dwChannelMask = mask2ds(MODE_STEREO);
-    }
-    return true;
-  }
-
-  WAVEFORMATEXTENSIBLE *ext = (WAVEFORMATEXTENSIBLE *)wfx;
-
-  // always use WAVEFORMATEX for mono/stereo 16bit format
-  use_extensible &= (spk.nch() > 2) || (spk.format != FORMAT_PCM16);
-
-  if (use_extensible)
-    memset(wfx, 0, sizeof(WAVEFORMATEXTENSIBLE));
-  else
-    memset(wfx, 0, sizeof(WAVEFORMATEX));
-
-  int nchannels = spk.nch();
-
-  switch (spk.format)
-  {
-    case FORMAT_AC3:
-    case FORMAT_DTS:
-    case FORMAT_MPA:
-      switch (spk.format)
-      {
-        case FORMAT_AC3: wfx->wFormatTag = WAVE_FORMAT_AVI_AC3; break;
-        case FORMAT_DTS: wfx->wFormatTag = WAVE_FORMAT_AVI_DTS; break;
-        case FORMAT_MPA: wfx->wFormatTag = WAVE_FORMAT_MPEG;    break;
-        default: return false;
-      }
-  
-      wfx->nChannels = nchannels;
-      wfx->nSamplesPerSec = spk.sample_rate;
-      wfx->wBitsPerSample = 0;
-      wfx->nBlockAlign = 1;
-      wfx->nAvgBytesPerSec = 0;
-      wfx->cbSize = 0;
-      break;
-
-    case FORMAT_PCM16:
-      wfx->wFormatTag = WAVE_FORMAT_PCM;
-      wfx->nChannels = nchannels;
-      wfx->nSamplesPerSec = spk.sample_rate;
-      wfx->wBitsPerSample = 16;
-      wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
-      wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
-      wfx->cbSize = 0;
-
-      if (use_extensible)
-      {
-        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-        wfx->cbSize = 22;
-
-        ext->SubFormat = GUID_SUBTYPE_PCM;
-        ext->Samples.wValidBitsPerSample = 16;
-        ext->dwChannelMask = mask2ds(spk.mask);
-      }
-      break;
-
-    case FORMAT_PCM24:
-      wfx->wFormatTag = WAVE_FORMAT_PCM;
-      wfx->nChannels = nchannels;
-      wfx->nSamplesPerSec = spk.sample_rate;
-      wfx->wBitsPerSample = 24;
-      wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
-      wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
-      wfx->cbSize = 0;
-
-      if (use_extensible)
-      {
-        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-        wfx->cbSize = 22;
-
-        ext->SubFormat = GUID_SUBTYPE_PCM;
-        ext->Samples.wValidBitsPerSample = 24;
-        ext->dwChannelMask = mask2ds(spk.mask);
-      }
-      break;
-
-    case FORMAT_PCM32:
-      wfx->wFormatTag = WAVE_FORMAT_PCM;
-      wfx->nChannels = nchannels;
-      wfx->nSamplesPerSec = spk.sample_rate;
-      wfx->wBitsPerSample = 32;
-      wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
-      wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
-      wfx->cbSize = 0;
-
-      if (use_extensible)
-      {
-        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-        wfx->cbSize = 22;
-
-        ext->SubFormat = GUID_SUBTYPE_PCM;
-        ext->Samples.wValidBitsPerSample = 32;
-        ext->dwChannelMask = mask2ds(spk.mask);
-      }
-      break;
-
-    case FORMAT_PCMFLOAT:
-      wfx->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
-      wfx->nChannels = nchannels;
-      wfx->nSamplesPerSec = spk.sample_rate;
-      wfx->wBitsPerSample = 32;
-      wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
-      wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
-      wfx->cbSize = 0;
-
-      if (use_extensible)
-      {
-        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-        wfx->cbSize = 22;
-
-        ext->SubFormat = GUID_SUBTYPE_IEEE_FLOAT;
-        ext->Samples.wValidBitsPerSample = 32;
-        ext->dwChannelMask = mask2ds(spk.mask);
-      }
-      break;
-
-    case FORMAT_PCMDOUBLE:
-      wfx->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
-      wfx->nChannels = nchannels;
-      wfx->nSamplesPerSec = spk.sample_rate;
-      wfx->wBitsPerSample = 64;
-      wfx->nBlockAlign = wfx->wBitsPerSample / 8 * wfx->nChannels;
-      wfx->nAvgBytesPerSec = wfx->nSamplesPerSec * wfx->nBlockAlign;
-      wfx->cbSize = 0;
-
-      if (use_extensible)
-      {
-        wfx->wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-        wfx->cbSize = 22;
-
-        ext->SubFormat = GUID_SUBTYPE_IEEE_FLOAT;
-        ext->Samples.wValidBitsPerSample = 64;
-        ext->dwChannelMask = mask2ds(spk.mask);
-      }
-      break;
-
-    default:
-      // unknown format
-      return false;
-  }
-
-  return true;
-};
-
-bool
-wfx2spk(WAVEFORMATEX *wfx, Speakers &spk)
-{
-  int format, mask;
-  WAVEFORMATEXTENSIBLE *wfex = 0;
-  uint8_t *format_data = 0;
-  size_t data_size = 0;
-
-  if (!wfx)
-    return false;
-
-  if (wfx->wFormatTag == WAVE_FORMAT_DOLBY_AC3_SPDIF)
-  {
-    spk = Speakers(FORMAT_SPDIF, 0, wfx->nSamplesPerSec);
-    return true;
-  }
-
-  if (wfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
-  {
-    // extensible
-    if (wfx->cbSize < 22)
-      return false;
-
-    wfex = (WAVEFORMATEXTENSIBLE *)wfx;
-
-    // determine sample format
-    if (wfex->SubFormat == GUID_SUBTYPE_IEEE_FLOAT)
-      switch (wfx->wBitsPerSample)
-      {
-        case 32: format = FORMAT_PCMFLOAT;  break;
-        case 64: format = FORMAT_PCMDOUBLE; break;
-        default: return false;
-      }
-    else if (wfex->SubFormat == GUID_SUBTYPE_PCM)
-      switch (wfx->wBitsPerSample)
-      {
-        case 16: format = FORMAT_PCM16; break;
-        case 24: format = FORMAT_PCM24; break;
-        case 32: format = FORMAT_PCM32; break;
-        default: return false;
-      }
-    else if (wfex->SubFormat == GUID_DOLBY_AC3_SPDIF)
-      format = FORMAT_SPDIF;
-    else
-      return false;
-
-    // determine audio mode
-    mask = ds2mask(wfex->dwChannelMask);
-  }
-  else
-  {
-    // determine sample format
-    switch (wfx->wFormatTag)
-    {
-      case WAVE_FORMAT_IEEE_FLOAT:
-        switch (wfx->wBitsPerSample)
-        {
-          case 32: format = FORMAT_PCMFLOAT;  break;
-          case 64: format = FORMAT_PCMDOUBLE; break;
-          default: return false;
-        }
-        break;
-
-      case WAVE_FORMAT_PCM:
-        switch (wfx->wBitsPerSample)
-        {
-          case 16: format = FORMAT_PCM16; break;
-          case 24: format = FORMAT_PCM24; break;
-          case 32: format = FORMAT_PCM32; break;
-          default: return false;
-        }
-        break;
-
-      case WAVE_FORMAT_AVI_AC3:
-        format = FORMAT_AC3_EAC3;
-        break;
-
-      case WAVE_FORMAT_AVI_DTS:
-        format = FORMAT_DTS;
-        break;
-
-      case WAVE_FORMAT_MPEGLAYER3:
-      case WAVE_FORMAT_MPEG:
-        format = FORMAT_MPA;
-        break;
-
-      case WAVE_FORMAT_AVI_AAC:
-        format = FORMAT_AAC_FRAME;
-        break;
-
-      case WAVE_FORMAT_FLAC:
-        format = FORMAT_FLAC;
-        break;
-
-      default:
-        return false;
-    }
-
-    // determine audio mode
-    mask = 0;
-    if (FORMAT_MASK(format) & FORMAT_CLASS_PCM)
-      switch (wfx->nChannels)
-      {
-        case 1: mask = MODE_MONO;   break;
-        case 2: mask = MODE_STEREO; break;
-        case 3: mask = MODE_2_0_LFE;break;
-        case 4: mask = MODE_QUADRO; break;
-        case 5: mask = MODE_3_2;    break;
-        case 6: mask = MODE_5_1;    break;
-        case 7: mask = MODE_6_1;    break;
-        case 8: mask = MODE_7_1;    break;
-        default: return false;
-      }
-
-    // format data
-    if (wfx->cbSize)
-    {
-      format_data = reinterpret_cast<uint8_t *>(wfx+1);
-      data_size = wfx->cbSize;
-    }
-  }
-
-  spk = Speakers(format, mask, wfx->nSamplesPerSec);
-  spk.set_format_data(format_data, data_size);
-  return true;
+  if (size1 == 0 && size2 == 0) return true; // uninitialized structures are equal
+  if (wf1 == 0 || wf2 == 0) return false;    // null pointers check
+  // Compare pre-WAVEFORMATEX structures
+  if (size1 < sizeof(WAVEFORMATEX) && size1 == size2)
+    return memcmp(wf1, wf2, size1) == 0;
+  // Compare WAVEFORMATEXs
+  WAVEFORMATEX *wfe1 = wf_cast<WAVEFORMATEX>(wf1, size1);
+  WAVEFORMATEX *wfe2 = wf_cast<WAVEFORMATEX>(wf2, size2);
+  if (wfe1 && wfe2 && wfe1->cbSize == wfe2->cbSize)
+    return memcmp(wfe1, wfe2, sizeof(WAVEFORMATEX) + wfe1->cbSize) == 0;
+  return false;
 }
 
-bool is_compatible(Speakers _spk, WAVEFORMATEX *_wfx)
+bool is_compatible(Speakers spk, WAVEFORMAT *wf, size_t size)
 {
-  WAVEFORMATEXTENSIBLE wfx_tmp;
-
-  if (!spk2wfx(_spk, (WAVEFORMATEX *)&wfx_tmp, true)) 
-    return false;
-
-  if (_wfx->cbSize == wfx_tmp.Format.cbSize)
-    if (!memcmp(_wfx, &wfx_tmp, sizeof(WAVEFORMATEX) + wfx_tmp.Format.cbSize))
+  int i = 0;
+  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, 0));
+  while (wfe.get())
+  {
+    if (wf_equal((WAVEFORMAT *)wfe.get(), sizeof(WAVEFORMATEX) + wfe->cbSize, wf, size))
       return true;
-
-  if (!spk2wfx(_spk, (WAVEFORMATEX *)&wfx_tmp, false)) 
-    return false;
-
-  if (_wfx->cbSize == wfx_tmp.Format.cbSize)
-    if (!memcmp(_wfx, &wfx_tmp, sizeof(WAVEFORMATEX) + wfx_tmp.Format.cbSize))
-      return true;
-
+    wfe.reset(spk2wfe(spk, ++i));
+  }
   return false;
-};
+}

@@ -1,3 +1,4 @@
+#include <memory>
 #include <memory.h>
 #include "../win32/winspk.h"
 #include "sink_wav.h"
@@ -10,8 +11,7 @@ WAVSink::WAVSink()
   spk = spk_unknown;
   header_size = 0;
   data_size = 0;
-  file_format = (uint8_t*) new WAVEFORMATEXTENSIBLE;
-  memset(file_format, 0, sizeof(WAVEFORMATEXTENSIBLE));
+  file_format = 0;
 }
 
 WAVSink::WAVSink(const char *_file_name)
@@ -19,8 +19,7 @@ WAVSink::WAVSink(const char *_file_name)
   spk = spk_unknown;
   header_size = 0;
   data_size = 0;
-  file_format = (uint8_t*) new WAVEFORMATEXTENSIBLE;
-  memset(file_format, 0, sizeof(WAVEFORMATEXTENSIBLE));
+  file_format = 0;
 
   open_file(_file_name);
 }
@@ -34,8 +33,8 @@ WAVSink::~WAVSink()
 void
 WAVSink::init_riff()
 {
-  WAVEFORMATEX *wfx = (WAVEFORMATEX *)file_format;
-  uint32_t format_size = sizeof(WAVEFORMATEX) + wfx->cbSize;
+  WAVEFORMATEX *wfe = (WAVEFORMATEX *)file_format;
+  uint32_t format_size = sizeof(WAVEFORMATEX) + wfe->cbSize;
   f.seek(0);
 
   // RIFF header
@@ -83,10 +82,10 @@ WAVSink::close_riff()
     uint32_t riff_size32 = 0xffffffff;
     uint32_t data_size32 = 0xffffffff;
 
-    WAVEFORMATEX *wfx = (WAVEFORMATEX *)file_format;
+    WAVEFORMATEX *wfe = (WAVEFORMATEX *)file_format;
     uint64_t sample_count = data_size;
-    if (wfx->nBlockAlign > 0)
-      sample_count = data_size / wfx->nBlockAlign;
+    if (wfe->nBlockAlign > 0)
+      sample_count = data_size / wfe->nBlockAlign;
 
     // RF64 header
     f.seek(0);
@@ -114,7 +113,7 @@ WAVSink::open_file(const char *_file_name)
     return false;
 
   data_size = 0;
-  memset(file_format, 0, sizeof(WAVEFORMATEXTENSIBLE));
+  safe_delete(file_format);
   return true;
 }
 
@@ -130,7 +129,7 @@ WAVSink::close_file()
 
   header_size = 0;
   data_size = 0;
-  memset(file_format, 0, sizeof(WAVEFORMATEXTENSIBLE));
+  safe_delete(file_format);
 }
 
 bool
@@ -146,39 +145,29 @@ WAVSink::is_file_open() const
 bool
 WAVSink::can_open(Speakers new_spk) const
 {
-  WAVEFORMATEXTENSIBLE wfx;
-  bool use_wfx = false;
-
-  if (new_spk.format & FORMAT_CLASS_PCM)
-    if (new_spk.mask != MODE_MONO && new_spk.mask != MODE_STEREO)
-      use_wfx = true;
-
-  if (!spk2wfx(new_spk, (WAVEFORMATEX *)&wfx, use_wfx))
-    return false;
-
-  return true;
+  // Use first (main) WAVEFROMATEX only
+  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, 0));
+  return wfe.get() != 0;
 }
 
 bool
 WAVSink::init()
 {
-  WAVEFORMATEXTENSIBLE wfx;
-  bool use_wfx = false;
-
-  if (FORMAT_MASK(spk.format) & FORMAT_CLASS_PCM)
-    if (spk.mask != MODE_MONO && spk.mask != MODE_STEREO)
-      use_wfx = true;
-
-  if (!spk2wfx(spk, (WAVEFORMATEX *)&wfx, use_wfx))
+  WAVEFORMATEX *wfe = (WAVEFORMATEX *)file_format;
+  WAVEFORMATEX *new_wfe = spk2wfe(spk, 0);
+  if (!new_wfe)
     return false;
 
-  // Reset the file only in case when formats are not compatible
-  if (memcmp(&wfx, file_format, sizeof(WAVEFORMATEX) + wfx.Format.cbSize))
+  // Reset the file only in case when formats are not equal
+  if (!wfe || wfe->cbSize != new_wfe->cbSize || 
+      memcmp(wfe, new_wfe, sizeof(WAVEFORMATEX) + wfe->cbSize) != 0)
   {
-    data_size = 0;
-    memcpy(file_format, &wfx, sizeof(WAVEFORMATEX) + wfx.Format.cbSize);
+    safe_delete(file_format);
+    file_format = (uint8_t *)new_wfe;
     init_riff();
   }
+  else
+    safe_delete(new_wfe);
 
   return true;
 }

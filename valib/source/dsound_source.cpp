@@ -1,3 +1,4 @@
+#include <memory>
 #include <dsound.h>
 #include <mmreg.h>
 #include <ks.h>
@@ -46,16 +47,14 @@ DSoundSource::open(Speakers _spk, size_t _buf_size_ms, LPCGUID _device)
 {
   spk = _spk;
 
-  WAVEFORMATEXTENSIBLE wfx;
-  memset(&wfx, 0, sizeof(wfx));
-
-  if (spk2wfx(_spk, (WAVEFORMATEX*)(&wfx), true))
-    if (open((WAVEFORMATEX*)(&wfx), _buf_size_ms, _device))
+  int i = 0;
+  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, 0));
+  while (wfe.get())
+  {
+    if (open(wfe.get(), _buf_size_ms, _device))
       return true;
-
-  if (spk2wfx(_spk, (WAVEFORMATEX*)&wfx, false))
-    if (open((WAVEFORMATEX*)(&wfx), _buf_size_ms, _device))
-      return true;
+    wfe.reset(spk2wfe(spk, ++i));
+  }
 
   zero_all();
   return false;

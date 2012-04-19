@@ -139,7 +139,8 @@ WAVSource::open_riff()
         return false;
 
       // Determine output format
-      if (!wfx2spk((WAVEFORMATEX *)format.begin(), spk))
+      spk = wf2spk((WAVEFORMAT *)format.begin(), format.size());
+      if (spk.is_unknown())
         spk = Speakers(FORMAT_RAWDATA, 0, 0);
 
       have_fmt = true;
