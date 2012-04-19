@@ -139,17 +139,14 @@ DSoundSink::try_open(Speakers new_spk) const
   // This function do not use shared DirectSound buffer and
   // therefore we do not take any lock here.
 
-  WAVEFORMATEXTENSIBLE wfx;
-  memset(&wfx, 0, sizeof(wfx));
-
-  if (spk2wfx(new_spk, (WAVEFORMATEX*)(&wfx), true))
-    if (try_open((WAVEFORMATEX*)(&wfx)))
+  int i = 0;
+  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(new_spk, 0));
+  while (wfe.get())
+  {
+    if (try_open(wfe.get()))
       return true;
-
-  if (spk2wfx(new_spk, (WAVEFORMATEX*)&wfx, false))
-    if (try_open((WAVEFORMATEX*)(&wfx)))
-      return true;
-
+    wfe.reset(spk2wfe(new_spk, ++i));
+  }
   return false;
 }
 
@@ -349,17 +346,14 @@ DSoundSink::init()
   if (!ds) return false;
   AutoLock autolock(&dsound_lock);
 
-  WAVEFORMATEXTENSIBLE wfx;
-  memset(&wfx, 0, sizeof(wfx));
-
-  if (spk2wfx(spk, (WAVEFORMATEX*)(&wfx), true))
-    if (open_wfx((WAVEFORMATEX*)(&wfx)))
+  int i = 0;
+  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, 0));
+  while (wfe.get())
+  {
+    if (open_wfx(wfe.get()))
       return true;
-
-  if (spk2wfx(spk, (WAVEFORMATEX*)&wfx, false))
-    if (open_wfx((WAVEFORMATEX*)(&wfx)))
-      return true;
-
+    wfe.reset(spk2wfe(spk, ++i));
+  }
   close();
   return false;
 }

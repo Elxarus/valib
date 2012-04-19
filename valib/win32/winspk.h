@@ -57,21 +57,29 @@ typedef struct {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cast different WAVEFORMAT's with size check.
-// WAVEFORMATEX conversion ensures that additional data does not exceed total
-// structure size. WAVEFORMATEXTERNSIBLE conversion also checks wFormatTag.
+// Any structure with size >= sizeof(WAVEFORMATEX) is considered to be an
+// extension of WAVEFORMATEX and conversion ensures that additional data does
+// not exceed the total structure size. WAVEFORMATEXTERNSIBLE conversion also
+// checks wFormatTag.
 
 template<class T>
-T *wf_cast(WAVEFORMAT *wf, size_t size)
+T *wf_cast(void *wf, size_t size)
 {
   if (wf == 0 || size < sizeof(T)) return 0;
+
+  // consider any structure with size >= sizeof(WAVEFORMATEX) as WAVEFORMATEX
+  // and check destination structure size.
+  if (sizeof(T) >= sizeof(WAVEFORMATEX))
+  {
+    WAVEFORMATEX *wfe = (WAVEFORMATEX *)wf;
+    if (sizeof(WAVEFORMATEX) + wfe->cbSize > size)
+      return 0;
+  }
   return (T*)wf;
 }
 
 template<>
-WAVEFORMATEX *wf_cast<WAVEFORMATEX>(WAVEFORMAT *wf, size_t size);
-
-template<>
-WAVEFORMATEXTENSIBLE *wf_cast<WAVEFORMATEXTENSIBLE>(WAVEFORMAT *wf, size_t size);
+WAVEFORMATEXTENSIBLE *wf_cast<WAVEFORMATEXTENSIBLE>(void *wf, size_t size);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Conversion between DirestSound channel mask and Speakers::mask
@@ -85,8 +93,30 @@ int mask2ds(int spk_mask);
 Speakers wf2spk(WAVEFORMAT *wave_format, size_t size);
 WAVEFORMATEX *spk2wfe(Speakers spk, int i);
 
-bool wfx2spk(WAVEFORMATEX *wfx, Speakers &spk);
-bool spk2wfx(Speakers spk, WAVEFORMATEX *wfx, bool use_extensible);
-bool is_compatible(Speakers spk, WAVEFORMATEX *wfx);
+///////////////////////////////////////////////////////////////////////////////
+// Compare 2 WAVEFORMAT structures
+// Returns true if structures are equal and false otherwize.
+// * Structures with size < WAVEFORMATEX are always compared binary. Structures
+//   with different sizes are considered as different.
+// * Structures with size >= WAVEFORMATEX are considered as WAVEFORMATEX
+//   extensions. Compared binary up to cbSize extra bytes. Structures with
+//   different cbSize are considered as different. If wf_cast() to WAVEFORMATEX
+//   fails for any structure, structures considered as different. (I.e.
+//   comparison of incorrect structures always fails).
+// * Comparison if two zero sized structures is considered as comparison of two
+//   uninitialized WAVEFORMAT's and thus equal. This case includes null for
+//   both or one of pointers.
+// * If at least one of the pointers is null, comparison fails and result is
+//   false (with exception when both sizes are zero, see previous case).
+
+bool wf_equal(WAVEFORMAT *wf1, size_t size1, WAVEFORMAT *wf2, size_t size2);
+
+///////////////////////////////////////////////////////////////////////////////
+// Compare WAVEFORMATEX and Speakers
+// Speakers may be converted into WAVEFORMATEX in several ways, and thus we
+// cannot compare it directly. Speakers and WAVEFORMAT are *compatible* when
+// Speakers may be converted into structure that is equal to WAVEFORMAT given.
+
+bool is_compatible(Speakers spk, WAVEFORMAT *wf, size_t size);
 
 #endif
