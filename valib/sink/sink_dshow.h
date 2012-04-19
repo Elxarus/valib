@@ -10,7 +10,7 @@
 #include "../sink.h"
 
 bool mt2spk(CMediaType mt, Speakers &spk);
-bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx);
+bool spk2mt(Speakers spk, CMediaType &mt, int i);
 
 class DShowSink : public CTransformOutputPin, public SimpleSink
 {

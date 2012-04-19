@@ -136,7 +136,7 @@ bool mt2spk(CMediaType mt, Speakers &spk)
       case 24: format = FORMAT_LPCM24; break;
       default: return false;
     }
-    switch (wf->nChannels)
+    switch (pcmwf->wf.nChannels)
     {
       case 1: mode = MODE_MONO; break;
       case 2: mode = MODE_STEREO; break;
@@ -155,27 +155,29 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   return !spk.is_unknown();
 }
 
-bool spk2mt(Speakers spk, CMediaType &mt, bool use_wfx)
+bool spk2mt(Speakers spk, CMediaType &mt, int i)
 {
-  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, use_wfx? 0: 1));
+  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, i));
   if (!wfe.get())
     return false;
 
   if (spk.format == FORMAT_SPDIF)
   {
     // SPDIF media types
-    if (use_wfx)
+    if (wfe->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
       mt.SetSubtype(&MEDIASUBTYPE_PCM);
     else
       mt.SetSubtype(&MEDIASUBTYPE_DOLBY_AC3_SPDIF);
   }
-  else
+  else if (FORMAT_MASK(spk.format) & FORMAT_CLASS_PCM)
     // PCM Media types
     mt.SetSubtype(&MEDIASUBTYPE_PCM);
+  else
+    return false;
 
   mt.SetType(&MEDIATYPE_Audio);
   mt.SetFormatType(&FORMAT_WaveFormatEx);
-  mt.SetFormat((BYTE*)&wfe, sizeof(WAVEFORMATEX) + wfe->cbSize);
+  mt.SetFormat((BYTE*)wfe.get(), sizeof(WAVEFORMATEX) + wfe->cbSize);
   return true;
 };
 
@@ -295,21 +297,19 @@ DShowSink::can_open(Speakers _spk) const
       return true;
 
   CMediaType mt;
-  if (spk2mt(_spk, mt, true) && query_downstream(&mt))
-  {
-    valib_log(log_event, log_module, "query_input(%s extensible): Ok", _spk.print().c_str());
-    return true;
-  }
-  else if (spk2mt(_spk, mt, false) && query_downstream(&mt))
-  {
-    valib_log(log_event, log_module, "query_input(%s): Ok", _spk.print().c_str());
-    return true;
-  }
+  int i = 0;
+  while (spk2mt(_spk, mt, i++))
+    if (query_downstream(&mt))
+    {
+      valib_log(log_event, log_module, "can_open(%s[%i]): Ok", _spk.print().c_str(), i);
+      return true;
+    }
+
+  if (i == 0)
+    valib_log(log_event, log_module, "can_open(%s): cannot convert to media type", _spk.print().c_str());
   else
-  {
-    valib_log(log_event, log_module, "query_input(%s): format refused", _spk.print().c_str());
-    return false;
-  }
+    valib_log(log_event, log_module, "can_open(%s): format refused by downstream", _spk.print().c_str());
+  return false;
 }
 
 bool 
@@ -320,21 +320,19 @@ DShowSink::init()
       return true;
 
   CMediaType mt;
-  if (spk2mt(spk, mt, true) && set_downstream(&mt))
-  {
-    valib_log(log_event, log_module, "open(%s extensible): Ok %s", spk.print().c_str(), send_mt? "(send mediatype)": "");
-    return true;
-  } 
-  else if (spk2mt(spk, mt, false) && set_downstream(&mt))
-  {
-    valib_log(log_event, log_module, "open(%s): Ok %s", spk.print().c_str(), send_mt? "(send mediatype)": "");
-    return true;
-  }
+  int i = 0;
+  while (spk2mt(spk, mt, i++))
+    if (set_downstream(&mt))
+    {
+      valib_log(log_event, log_module, "open(%s[%i]): Ok %s", spk.print().c_str(), i, send_mt? "(send mediatype)": "");
+      return true;
+    }
+
+  if (i == 0)
+    valib_log(log_event, log_module, "open(%s): cannot convert to media type", spk.print().c_str());
   else
-  {
-    valib_log(log_event, log_module, "open(%s): Failed", spk.print().c_str());
-    return false;
-  }
+    valib_log(log_event, log_module, "open(%s): format refused by downstream", spk.print().c_str());
+  return false;
 };
 
 void 
