@@ -1228,6 +1228,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\win32\dshow_spk.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\win32\dshow_spk.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\win32\guids.cpp"
 				>
 			</File>
