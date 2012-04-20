@@ -15,7 +15,7 @@ protected:
   bool send_mt;             // send media type with next sample
   bool send_dc;             // send discontinuity with next sample
   bool preroll;             // mark output samples as preroll
-  HRESULT hr;               // result of sending sample
+  HRESULT hr;               // error code from last process() call
 
   bool query_downstream(const CMediaType *mt) const;
   bool set_downstream(const CMediaType *mt);
@@ -33,8 +33,6 @@ public:
   void send_mediatype()              { send_mt = true; }
   void set_preroll()                 { preroll = true; }
   void unset_preroll()               { preroll = false; }
-
-  void reset_hresult()               { hr = S_OK;      }
   HRESULT get_hresult()              { return hr;      }
 
   /////////////////////////////////////////////////////////
