@@ -176,14 +176,15 @@ DShowSink::process(const Chunk &chunk)
 
   uint8_t *chunk_buf = chunk.rawdata;
   size_t chunk_size = chunk.size;
-  HRESULT temp_hr;
 
   hr = E_FAIL;
   while (chunk_size)
   {
     // Allocate output sample
-    if FAILED(temp_hr = GetDeliveryBuffer(&sample, 0, 0, 0))
-      THROW(Error() << boost::errinfo_api_function("CBaseOutputPin::GetDeliveryBuffer()") << errinfo_hresult(temp_hr));
+    if FAILED(hr = GetDeliveryBuffer(&sample, 0, 0, 0))
+      THROW(Error() <<
+        boost::errinfo_api_function("CBaseOutputPin::GetDeliveryBuffer()") <<
+        errinfo_hresult(hr));
 
     // Dynamic format change
     if (send_mt)
@@ -213,10 +214,12 @@ DShowSink::process(const Chunk &chunk)
     // Data
     sample->GetPointer((BYTE**)&sample_buf);
     sample_size = (long)MIN((size_t)sample->GetSize(), chunk_size);
-    if FAILED(temp_hr = sample->SetActualDataLength(sample_size))
+    if FAILED(hr = sample->SetActualDataLength(sample_size))
     {
       sample->Release();
-      THROW(Error() << boost::errinfo_api_function("IMediaSample::SetActualDataLength()") << errinfo_hresult(temp_hr));
+      THROW(Error() <<
+        boost::errinfo_api_function("IMediaSample::SetActualDataLength()") <<
+        errinfo_hresult(hr));
     }
     memcpy(sample_buf, chunk_buf, sample_size);
     chunk_buf  += sample_size;
@@ -245,6 +248,10 @@ DShowSink::process(const Chunk &chunk)
     hr = Deliver(sample);
     sample->Release();
     if FAILED(hr)
-      THROW(Error() << boost::errinfo_api_function("CBaseOutputPin::Deliver()") << errinfo_hresult(hr));
+      THROW(Error() <<
+        boost::errinfo_api_function("CBaseOutputPin::Deliver()") <<
+        errinfo_hresult(hr));
   }
+
+  hr = S_OK;
 }
