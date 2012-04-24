@@ -348,41 +348,41 @@ void zero_samples(samples_t s, size_t offset, int nch, size_t size)
     memset(s[ch] + offset, 0, size * sizeof(sample_t));
 }
 
-void copy_samples(sample_t *dst, sample_t *src, size_t size)
+void copy_samples(sample_t *dst, const sample_t *src, size_t size)
 {
   memcpy(dst, src, size * sizeof(sample_t));
 }
-void copy_samples(samples_t dst, samples_t src, int nch, size_t size)
+void copy_samples(samples_t dst, const samples_t src, int nch, size_t size)
 {
   for (int ch = 0; ch < nch; ch++)
     copy_samples(dst[ch], src[ch], size);
 }
 
-void copy_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size)
+void copy_samples(sample_t *dst, size_t dst_offset, const sample_t *src, size_t src_offset, size_t size)
 {
   memcpy(dst + dst_offset, src + src_offset, size * sizeof(sample_t));
 }
-void copy_samples(samples_t dst, size_t dst_offset, samples_t src, size_t src_offset, int nch, size_t size)
+void copy_samples(samples_t dst, size_t dst_offset, const samples_t src, size_t src_offset, int nch, size_t size)
 {
   for (int ch = 0; ch < nch; ch++)
     copy_samples(dst[ch] + dst_offset, src[ch] + src_offset, size);
 }
 
-void move_samples(sample_t *dst, sample_t *src, size_t size)
+void move_samples(sample_t *dst, const sample_t *src, size_t size)
 {
   memmove(dst, src, size * sizeof(sample_t));
 }
-void move_samples(samples_t dst, samples_t src, int nch, size_t size)
+void move_samples(samples_t dst, const samples_t src, int nch, size_t size)
 {
   for (int ch = 0; ch < nch; ch++)
     move_samples(dst[ch], src[ch], size);
 }
 
-void move_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size)
+void move_samples(sample_t *dst, size_t dst_offset, const sample_t *src, size_t src_offset, size_t size)
 {
   memmove(dst + dst_offset, src + src_offset, size * sizeof(sample_t));
 }
-void move_samples(samples_t dst, size_t dst_offset, samples_t src, size_t src_offset, int nch, size_t size)
+void move_samples(samples_t dst, size_t dst_offset, const samples_t src, size_t src_offset, int nch, size_t size)
 {
   for (int ch = 0; ch < nch; ch++)
     move_samples(dst[ch] + dst_offset, src[ch] + src_offset, size);
@@ -418,19 +418,19 @@ void gain_samples(sample_t gain, samples_t s, size_t offset, int nch, size_t siz
   }
 }
 
-void sum_samples(sample_t *dst, sample_t *src, size_t size)
+void sum_samples(sample_t *dst, const sample_t *src, size_t size)
 {
   for (size_t i = 0; i < size; i++)
     dst[i] += src[i];
 }
 
-void mul_samples(sample_t *dst, sample_t *src, size_t size)
+void mul_samples(sample_t *dst, const sample_t *src, size_t size)
 {
   for (size_t i = 0; i < size; i++)
     dst[i] *= src[i];
 }
 
-sample_t max_samples(sample_t max, sample_t *s, size_t size)
+sample_t max_samples(sample_t max, const sample_t *s, size_t size)
 {
   for (size_t i = 0; i < size; i++)
     if (fabs(s[i]) > max)
@@ -438,7 +438,7 @@ sample_t max_samples(sample_t max, sample_t *s, size_t size)
   return max;
 }
 
-sample_t peak_diff(sample_t *s1, sample_t *s2, size_t size)
+sample_t peak_diff(const sample_t *s1, const sample_t *s2, size_t size)
 {
   sample_t diff = 0;
   for (size_t i = 0; i < size; i++)
@@ -447,7 +447,7 @@ sample_t peak_diff(sample_t *s1, sample_t *s2, size_t size)
   return diff;
 }
 
-sample_t rms_diff(sample_t *s1, sample_t *s2, size_t size)
+sample_t rms_diff(const sample_t *s1, const sample_t *s2, size_t size)
 {
   sample_t sum = 0;
   for (size_t i = 0; i < size; i++)

@@ -576,17 +576,17 @@ void zero_samples(samples_t s, int nch, size_t size);
 void zero_samples(sample_t *s, size_t offset, size_t size);
 void zero_samples(samples_t s, size_t offset, int nch, size_t size);
 
-void copy_samples(sample_t *dst, sample_t *src, size_t size);
-void copy_samples(samples_t dst, samples_t src, int nch, size_t size);
+void copy_samples(sample_t *dst, const sample_t *src, size_t size);
+void copy_samples(samples_t dst, const samples_t src, int nch, size_t size);
 
-void copy_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size);
-void copy_samples(samples_t dst, size_t dst_offset, samples_t src, size_t src_offset, int nch, size_t size);
+void copy_samples(sample_t *dst, size_t dst_offset, const sample_t *src, size_t src_offset, size_t size);
+void copy_samples(samples_t dst, size_t dst_offset, const samples_t src, size_t src_offset, int nch, size_t size);
 
-void move_samples(sample_t *dst, sample_t *src, size_t size);
-void move_samples(samples_t dst, samples_t src, int nch, size_t size);
+void move_samples(sample_t *dst, const sample_t *src, size_t size);
+void move_samples(samples_t dst, const samples_t src, int nch, size_t size);
 
-void move_samples(sample_t *dst, size_t dst_offset, sample_t *src, size_t src_offset, size_t size);
-void move_samples(samples_t dst, size_t dst_offset, samples_t src, size_t src_offset, int nch, size_t size);
+void move_samples(sample_t *dst, size_t dst_offset, const sample_t *src, size_t src_offset, size_t size);
+void move_samples(samples_t dst, size_t dst_offset, const samples_t src, size_t src_offset, int nch, size_t size);
 
 void gain_samples(sample_t gain, sample_t *s, size_t size);
 void gain_samples(sample_t gain, samples_t s, int nch, size_t size);
@@ -594,12 +594,12 @@ void gain_samples(sample_t gain, samples_t s, int nch, size_t size);
 void gain_samples(sample_t gain, sample_t *s, size_t offset, size_t size);
 void gain_samples(sample_t gain, samples_t s, size_t offset, int nch, size_t size);
 
-void sum_samples(sample_t *dst, sample_t *src, size_t size);
-void mul_samples(sample_t *dst, sample_t *src, size_t size);
+void sum_samples(sample_t *dst, const sample_t *src, size_t size);
+void mul_samples(sample_t *dst, const sample_t *src, size_t size);
 
-sample_t max_samples(sample_t max, sample_t *s, size_t size);
-sample_t peak_diff(sample_t *s1, sample_t *s2, size_t size);
-sample_t rms_diff(sample_t *s1, sample_t *s2, size_t size);
+sample_t max_samples(sample_t max, const sample_t *s, size_t size);
+sample_t peak_diff(const sample_t *s1, const sample_t *s2, size_t size);
+sample_t rms_diff(const sample_t *s1, const sample_t *s2, size_t size);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format and channel functions
