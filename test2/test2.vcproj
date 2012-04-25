@@ -555,6 +555,14 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="dsp"
+			>
+			<File
+				RelativePath=".\tests\dsp\test_src.cpp"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\main.cpp"
 			>
