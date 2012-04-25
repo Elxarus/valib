@@ -471,6 +471,14 @@
 				RelativePath="..\valib\dsp\kaiser.h"
 				>
 			</File>
+			<File
+				RelativePath="..\valib\dsp\src.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\dsp\src.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="filters"
