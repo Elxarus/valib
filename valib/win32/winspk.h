@@ -91,6 +91,8 @@ int mask2ds(int spk_mask);
 // Conversion between WAVEFORMAT and Speakers.
 
 Speakers wf2spk(WAVEFORMAT *wave_format, size_t size);
+Speakers wf2spk(WAVEFORMATEX *wave_format, size_t size);
+Speakers wf2spk(WAVEFORMATEXTENSIBLE *wave_format, size_t size);
 WAVEFORMATEX *spk2wfe(Speakers spk, int i);
 
 ///////////////////////////////////////////////////////////////////////////////

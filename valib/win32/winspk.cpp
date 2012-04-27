@@ -327,13 +327,19 @@ static bool (*wf2spk_converters[])(WAVEFORMAT *, size_t, Speakers &) =
 
 Speakers wf2spk(WAVEFORMAT *wf, size_t size)
 {
-  if (size < sizeof(WAVEFORMAT)) return Speakers();
+  if (!wf || size < sizeof(WAVEFORMAT)) return Speakers();
   Speakers result;
   for (int i = 0; i < array_size(wf2spk_converters); i++)
     if (wf2spk_converters[i](wf, size, result))
       return result;
   return Speakers();
 }
+
+Speakers wf2spk(WAVEFORMATEX *wave_format, size_t size)
+{ return wf2spk((WAVEFORMAT *)wave_format, size); }
+
+Speakers wf2spk(WAVEFORMATEXTENSIBLE *wave_format, size_t size)
+{ return wf2spk((WAVEFORMAT *)wave_format, size); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
