@@ -3,7 +3,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "source/generator.h"
+#include "rng.h"
 #include "source/chunk_source.h"
 #include "filters/filter_graph.h"
 #include "filters/convolver.h"
@@ -35,11 +35,6 @@ static SRCParams bad_list[] =
 
 static const int transform_rates[][2] =
 {
-  {  64000,  4000 }, // 16/1
-
-
-
-
   { 192000, 11025 }, // 2560/147
   { 192000,  4000 }, // 48/1
 
@@ -162,12 +157,9 @@ static sample_t diff_resampled(const SRCParams &params, sample_t *buf1, sample_t
 
 static void streaming_up_down_test(const SRCParams &params)
 {
-  Chunk chunk;
-  NoiseGen noise_gen(Speakers(FORMAT_LINEAR, MODE_MONO, params.fs), seed, noise_size, noise_size);
-  noise_gen.get_chunk(chunk);
-  sample_t *noise = chunk.samples[0];
-  size_t noise_size = chunk.size;
-
+  // Source noise
+  Samples noise(noise_size);
+  RNG(seed).fill_samples(noise, noise_size);
   // Upsampled buffer
   Samples buf1(size_t(double(noise_size + 1) * params.fd / params.fs) + 1);
   // Downsampled buffer
@@ -192,12 +184,9 @@ static void streaming_up_down_test(const SRCParams &params)
 
 static void equivalence_test(const SRCParams &params)
 {
-  Chunk chunk;
-  NoiseGen noise_gen(Speakers(FORMAT_LINEAR, MODE_MONO, params.fs), seed, noise_size, noise_size);
-  noise_gen.get_chunk(chunk);
-  sample_t *noise = chunk.samples[0];
-  size_t noise_size = chunk.size;
-
+  // Source noise
+  Samples noise(noise_size);
+  RNG(seed).fill_samples(noise, noise_size);
   // Upsampled buffer
   Samples buf1(size_t(double(noise_size + 1) * params.fd / params.fs) + 1);
   // Downsampled buffer
