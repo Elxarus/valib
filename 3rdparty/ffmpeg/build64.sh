@@ -14,7 +14,8 @@ cd build_x64
 --disable-everything \
 --enable-parser=ac3 --enable-parser=mlp \
 --enable-decoder=ac3 --enable-decoder=eac3 --enable-decoder=truehd --enable-decoder=mlp \
---enable-decoder=flac 
+--enable-decoder=aac --enable-decoder=dca --enable-decoder=vorbis \
+--enable-decoder=ape --enable-decoder=alac --enable-decoder=flac 
 
 make
 
