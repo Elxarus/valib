@@ -56,7 +56,7 @@ VorbisParser::init_context(AVCodecContext *avctx)
   }
 
   avctx->extradata = format_data.begin();
-  avctx->extradata_size = format_data.size();
+  avctx->extradata_size = (int)format_data.size();
 
   // FFMPEG 0.8.9 has a bug:
   // without number of channels set, vorbis decoder does not open.

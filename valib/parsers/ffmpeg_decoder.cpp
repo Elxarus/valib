@@ -96,7 +96,7 @@ FfmpegDecoder::init_context(AVCodecContext *avctx)
   if (spk.data_size)
   {
     avctx->extradata = spk.format_data.get();
-    avctx->extradata_size = spk.data_size;
+    avctx->extradata_size = (int)spk.data_size;
   }
   return true;
 }
