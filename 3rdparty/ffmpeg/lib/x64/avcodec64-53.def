@@ -1,76 +1,76 @@
 EXPORTS
-    MPV_common_init_mmx @1
-    align_put_bits @2
-    audio_resample @3
-    audio_resample_close @4
-    av_audio_convert @5
-    av_audio_convert_alloc @6
-    av_audio_convert_free @7
-    av_audio_resample_init @8
-    av_bitstream_filter_close @9
-    av_bitstream_filter_filter @10
-    av_bitstream_filter_init @11
-    av_bitstream_filter_next @12
-    av_codec_next @13
-    av_destruct_packet @14
-    av_destruct_packet_nofree @15
-    av_dup_packet @16
-    av_fast_malloc @17
-    av_fast_realloc @18
-    av_fft_calc @19
-    av_fft_end @20
-    av_fft_init @21
-    av_fft_permute @22
-    av_free_packet @23
-    av_get_bits_per_sample @24
-    av_get_bits_per_sample_format @25
-    av_get_codec_tag_string @26
-    av_get_pict_type_char @27
-    av_get_profile_name @28
-    av_grow_packet @29
-    av_hwaccel_next @30
-    av_imdct_calc @31
-    av_imdct_half @32
-    av_init_packet @33
-    av_lockmgr_register @34
-    av_log_ask_for_sample @35
-    av_log_missing_feature @36
-    av_mdct_calc @37
-    av_mdct_end @38
-    av_mdct_init @39
-    av_new_packet @40
-    av_packet_get_side_data @41
-    av_packet_merge_side_data @42
-    av_packet_new_side_data @43
-    av_packet_split_side_data @44
-    av_parser_change @45
-    av_parser_close @46
-    av_parser_init @47
-    av_parser_next @48
-    av_parser_parse2 @49
-    av_picture_copy @50
-    av_picture_crop @51
-    av_picture_pad @52
-    av_register_bitstream_filter @53
-    av_register_codec_parser @54
-    av_register_hwaccel @55
-    av_resample @56
-    av_resample_close @57
-    av_resample_compensate @58
-    av_resample_init @59
-    av_shrink_packet @60
-    av_xiphlacing @61
-    avcodec_align_dimensions @62
-    avcodec_align_dimensions2 @63
-    avcodec_alloc_context @64
-    avcodec_alloc_context2 @65
-    avcodec_alloc_context3 @66
-    avcodec_alloc_frame @67
-    avcodec_channel_layout_num_channels @68
-    avcodec_close @69
-    avcodec_configuration @70
-    avcodec_copy_context @71
-    avcodec_decode_audio3 @72
+    audio_resample @1
+    audio_resample_close @2
+    av_audio_convert @3
+    av_audio_convert_alloc @4
+    av_audio_convert_free @5
+    av_audio_resample_init @6
+    av_bitstream_filter_close @7
+    av_bitstream_filter_filter @8
+    av_bitstream_filter_init @9
+    av_bitstream_filter_next @10
+    av_codec_next @11
+    av_destruct_packet @12
+    av_destruct_packet_nofree @13
+    av_dup_packet @14
+    av_fast_malloc @15
+    av_fast_padded_malloc @16
+    av_fast_realloc @17
+    av_fft_calc @18
+    av_fft_end @19
+    av_fft_init @20
+    av_fft_permute @21
+    av_free_packet @22
+    av_get_bits_per_sample @23
+    av_get_bits_per_sample_format @24
+    av_get_codec_tag_string @25
+    av_get_pict_type_char @26
+    av_get_profile_name @27
+    av_grow_packet @28
+    av_hwaccel_next @29
+    av_imdct_calc @30
+    av_imdct_half @31
+    av_init_packet @32
+    av_lockmgr_register @33
+    av_log_ask_for_sample @34
+    av_log_missing_feature @35
+    av_mdct_calc @36
+    av_mdct_end @37
+    av_mdct_init @38
+    av_new_packet @39
+    av_packet_get_side_data @40
+    av_packet_merge_side_data @41
+    av_packet_new_side_data @42
+    av_packet_split_side_data @43
+    av_parser_change @44
+    av_parser_close @45
+    av_parser_init @46
+    av_parser_next @47
+    av_parser_parse2 @48
+    av_picture_copy @49
+    av_picture_crop @50
+    av_picture_pad @51
+    av_register_bitstream_filter @52
+    av_register_codec_parser @53
+    av_register_hwaccel @54
+    av_resample @55
+    av_resample_close @56
+    av_resample_compensate @57
+    av_resample_init @58
+    av_shrink_packet @59
+    av_xiphlacing @60
+    avcodec_align_dimensions @61
+    avcodec_align_dimensions2 @62
+    avcodec_alloc_context @63
+    avcodec_alloc_context2 @64
+    avcodec_alloc_context3 @65
+    avcodec_alloc_frame @66
+    avcodec_channel_layout_num_channels @67
+    avcodec_close @68
+    avcodec_configuration @69
+    avcodec_copy_context @70
+    avcodec_decode_audio3 @71
+    avcodec_decode_audio4 @72
     avcodec_decode_subtitle2 @73
     avcodec_decode_video2 @74
     avcodec_default_execute @75
@@ -81,394 +81,107 @@ EXPORTS
     avcodec_default_reget_buffer @80
     avcodec_default_release_buffer @81
     avcodec_encode_audio @82
-    avcodec_encode_subtitle @83
-    avcodec_encode_video @84
-    avcodec_find_best_pix_fmt @85
-    avcodec_find_decoder @86
-    avcodec_find_decoder_by_name @87
-    avcodec_find_encoder @88
-    avcodec_find_encoder_by_name @89
-    avcodec_flush_buffers @90
-    avcodec_get_channel_layout @91
-    avcodec_get_channel_layout_string @92
-    avcodec_get_chroma_sub_sample @93
-    avcodec_get_context_defaults @94
-    avcodec_get_context_defaults2 @95
-    avcodec_get_context_defaults3 @96
-    avcodec_get_edge_width @97
-    avcodec_get_frame_defaults @98
-    avcodec_get_pix_fmt_loss @99
-    avcodec_get_pix_fmt_name @100
-    avcodec_get_sample_fmt @101
-    avcodec_get_sample_fmt_name @102
-    avcodec_guess_channel_layout @103
-    avcodec_init @104
-    avcodec_license @105
-    avcodec_open @106
-    avcodec_open2 @107
-    avcodec_pix_fmt_to_codec_tag @108
-    avcodec_register @109
-    avcodec_register_all @110
-    avcodec_sample_fmt_string @111
-    avcodec_set_dimensions @112
-    avcodec_string @113
-    avcodec_thread_init @114
-    avcodec_version @115
-    avpicture_alloc @116
-    avpicture_deinterlace @117
-    avpicture_fill @118
-    avpicture_free @119
-    avpicture_get_size @120
-    avpicture_layout @121
-    avsubtitle_free @122
-    dsputil_init @123
-    dsputil_init_mmx @124
-    dsputil_init_pix_mmx @125
-    dsputil_static_init @126
-    ff_aac_ac3_parse @127
-    ff_aac_codebook_vector_idx @128 DATA
-    ff_aac_codebook_vector_vals @129 DATA
-    ff_aac_codebook_vectors @130 DATA
-    ff_aac_kbd_long_1024 @131 DATA
-    ff_aac_kbd_short_128 @132 DATA
-    ff_aac_num_swb_1024 @133 DATA
-    ff_aac_num_swb_128 @134 DATA
-    ff_aac_parse_header @135
-    ff_aac_pow2sf_tab @136 DATA
-    ff_aac_pred_sfb_max @137 DATA
-    ff_aac_sbr_ctx_close @138
-    ff_aac_sbr_ctx_init @139
-    ff_aac_sbr_init @140
-    ff_aac_scalefactor_bits @141 DATA
-    ff_aac_scalefactor_code @142 DATA
-    ff_aac_spectral_bits @143 DATA
-    ff_aac_spectral_codes @144 DATA
-    ff_aac_spectral_sizes @145 DATA
-    ff_aac_tableinit @146
-    ff_ac3_band_start_tab @147 DATA
-    ff_ac3_bap_bits @148 DATA
-    ff_ac3_bap_tab @149 DATA
-    ff_ac3_bin_to_band_tab @150 DATA
-    ff_ac3_bit_alloc_calc_mask @151
-    ff_ac3_bit_alloc_calc_psd @152
-    ff_ac3_bitrate_tab @153 DATA
-    ff_ac3_channel_layout_tab @154 DATA
-    ff_ac3_channels_tab @155 DATA
-    ff_ac3_common_init @156
-    ff_ac3_db_per_bit_tab @157 DATA
-    ff_ac3_dec_channel_map @158 DATA
-    ff_ac3_downmix_c @159
-    ff_ac3_enc_channel_map @160 DATA
-    ff_ac3_fast_decay_tab @161 DATA
-    ff_ac3_fast_gain_tab @162 DATA
-    ff_ac3_floor_tab @163 DATA
-    ff_ac3_frame_size_tab @164 DATA
-    ff_ac3_hearing_threshold_tab @165 DATA
-    ff_ac3_log_add_tab @166 DATA
-    ff_ac3_parse_header @167
-    ff_ac3_rematrix_band_tab @168 DATA
-    ff_ac3_sample_rate_tab @169 DATA
-    ff_ac3_slow_decay_tab @170 DATA
-    ff_ac3_slow_gain_tab @171 DATA
-    ff_ac3_ungroup_3_in_5_bits_tab @172 DATA
-    ff_ac3_window @173 DATA
-    ff_ac3dsp_init @174
-    ff_ac3dsp_init_x86 @175
-    ff_add_pixels_clamped_c @176
-    ff_add_pixels_clamped_mmx @177
-    ff_alternate_horizontal_scan @178 DATA
-    ff_alternate_vertical_scan @179 DATA
-    ff_avg_cavs_qpel16_mc00_mmx2 @180
-    ff_avg_cavs_qpel8_mc00_mmx2 @181
-    ff_avg_pixels16x16_10_c @182
-    ff_avg_pixels16x16_8_c @183
-    ff_avg_pixels16x16_9_c @184
-    ff_avg_pixels8x8_10_c @185
-    ff_avg_pixels8x8_8_c @186
-    ff_avg_pixels8x8_9_c @187
-    ff_avg_qpel16_mc11_old_c @188
-    ff_avg_qpel16_mc12_old_c @189
-    ff_avg_qpel16_mc13_old_c @190
-    ff_avg_qpel16_mc31_old_c @191
-    ff_avg_qpel16_mc32_old_c @192
-    ff_avg_qpel16_mc33_old_c @193
-    ff_avg_qpel8_mc11_old_c @194
-    ff_avg_qpel8_mc12_old_c @195
-    ff_avg_qpel8_mc13_old_c @196
-    ff_avg_qpel8_mc31_old_c @197
-    ff_avg_qpel8_mc32_old_c @198
-    ff_avg_qpel8_mc33_old_c @199
-    ff_avg_vc1_mspel_mc00_mmx2 @200
-    ff_block_permute @201
-    ff_bone @202 DATA
-    ff_check_alignment @203
-    ff_combine_frame @204
-    ff_copy_bits @205
-    ff_copy_pce_data @206
-    ff_cos_1024 @207 DATA
-    ff_cos_1024_fixed @208 DATA
-    ff_cos_128 @209 DATA
-    ff_cos_128_fixed @210 DATA
-    ff_cos_16 @211 DATA
-    ff_cos_16384 @212 DATA
-    ff_cos_16384_fixed @213 DATA
-    ff_cos_16_fixed @214 DATA
-    ff_cos_2048 @215 DATA
-    ff_cos_2048_fixed @216 DATA
-    ff_cos_256 @217 DATA
-    ff_cos_256_fixed @218 DATA
-    ff_cos_32 @219 DATA
-    ff_cos_32768 @220 DATA
-    ff_cos_32768_fixed @221 DATA
-    ff_cos_32_fixed @222 DATA
-    ff_cos_4096 @223 DATA
-    ff_cos_4096_fixed @224 DATA
-    ff_cos_512 @225 DATA
-    ff_cos_512_fixed @226 DATA
-    ff_cos_64 @227 DATA
-    ff_cos_64_fixed @228 DATA
-    ff_cos_65536 @229 DATA
-    ff_cos_65536_fixed @230 DATA
-    ff_cos_8192 @231 DATA
-    ff_cos_8192_fixed @232 DATA
-    ff_cos_tabs @233 DATA
-    ff_cos_tabs_fixed @234 DATA
-    ff_cropTbl @235 DATA
-    ff_dcadsp_init @236
-    ff_decode_sbr_extension @237
-    ff_dnxhd_init_mmx @238
-    ff_eac3_apply_spectral_extension @239
-    ff_eac3_bits_vs_hebap @240 DATA
-    ff_eac3_decode_transform_coeffs_aht_ch @241
-    ff_eac3_default_chmap @242 DATA
-    ff_eac3_default_cpl_band_struct @243 DATA
-    ff_eac3_default_spx_band_struct @244 DATA
-    ff_eac3_frm_expstr @245 DATA
-    ff_eac3_gaq_remap_1 @246 DATA
-    ff_eac3_gaq_remap_2_4_a @247 DATA
-    ff_eac3_gaq_remap_2_4_b @248 DATA
-    ff_eac3_hebap_tab @249 DATA
-    ff_eac3_mantissa_vq @250 DATA
-    ff_eac3_parse_header @251
-    ff_eac3_spx_atten_tab @252 DATA
-    ff_emulated_edge_mc_10 @253
-    ff_emulated_edge_mc_8 @254
-    ff_emulated_edge_mc_9 @255
-    ff_faanidct @256
-    ff_faanidct_add @257
-    ff_faanidct_put @258
-    ff_fdct_mmx @259
-    ff_fdct_mmx2 @260
-    ff_fdct_sse2 @261
-    ff_fetch_timestamp @262
-    ff_fft_end @263
-    ff_fft_end_fixed @264
-    ff_fft_init @265
-    ff_fft_init_fixed @266
-    ff_fft_init_mmx @267
-    ff_find_pix_fmt @268
-    ff_flac_blocksize_table @269 DATA
-    ff_flac_decode_frame_header @270
-    ff_flac_get_max_frame_size @271
-    ff_flac_is_extradata_valid @272
-    ff_flac_parse_block_header @273
-    ff_flac_parse_streaminfo @274
-    ff_flac_sample_rate_table @275 DATA
-    ff_float_interleave_c @276
-    ff_fmt_convert_init @277
-    ff_fmt_convert_init_x86 @278
-    ff_gmc_c @279
-    ff_golomb_vlc_len @280 DATA
-    ff_idct_xvid_mmx @281
-    ff_idct_xvid_mmx2 @282
-    ff_idct_xvid_sse2 @283
-    ff_idct_xvid_sse2_add @284
-    ff_idct_xvid_sse2_put @285
-    ff_imdct_calc_c @286
-    ff_imdct_calc_c_fixed @287
-    ff_imdct_half_c @288
-    ff_imdct_half_c_fixed @289
-    ff_init_ff_cos_tabs @290
-    ff_init_ff_cos_tabs_fixed @291
-    ff_init_ff_sine_windows @292
-    ff_init_scantable @293
-    ff_interleaved_dirac_golomb_vlc_code @294 DATA
-    ff_interleaved_golomb_vlc_len @295 DATA
-    ff_interleaved_se_golomb_vlc_code @296 DATA
-    ff_interleaved_ue_golomb_vlc_code @297 DATA
-    ff_inverse @298 DATA
-    ff_is_hwaccel_pix_fmt @299
-    ff_kbd_window_init @300
-    ff_log2_run @301 DATA
-    ff_match_2uint16 @302
-    ff_mdct_calc_c @303
-    ff_mdct_calc_c_fixed @304
-    ff_mdct_calcw_c @305
-    ff_mdct_end @306
-    ff_mdct_end_fixed @307
-    ff_mdct_init @308
-    ff_mdct_init_fixed @309
-    ff_mlp_calculate_parity @310
-    ff_mlp_checksum16 @311
-    ff_mlp_checksum8 @312
-    ff_mlp_huffman_tables @313 DATA
-    ff_mlp_init @314
-    ff_mlp_init_crc @315
-    ff_mlp_init_x86 @316
-    ff_mlp_layout @317 DATA
-    ff_mlp_read_major_sync @318
-    ff_mlp_restart_checksum @319
-    ff_mpeg4audio_channels @320 DATA
-    ff_mpeg4audio_get_config @321
-    ff_mpeg4audio_sample_rates @322 DATA
-    ff_mpeg4video_split @323
-    ff_parse1_close @324
-    ff_parse_close @325
-    ff_pb_0 @326 DATA
-    ff_pb_1 @327 DATA
-    ff_pb_1F @328 DATA
-    ff_pb_3 @329 DATA
-    ff_pb_3F @330 DATA
-    ff_pb_4 @331 DATA
-    ff_pb_7 @332 DATA
-    ff_pb_80 @333 DATA
-    ff_pb_81 @334 DATA
-    ff_pb_A1 @335 DATA
-    ff_pb_F8 @336 DATA
-    ff_pb_FC @337 DATA
-    ff_pb_FE @338 DATA
-    ff_pd_1 @339 DATA
-    ff_pd_2 @340 DATA
-    ff_pdw_80000000 @341 DATA
-    ff_ps_apply @342
-    ff_ps_ctx_init @343
-    ff_ps_init @344
-    ff_ps_read_data @345
-    ff_put_cavs_qpel16_mc00_mmx2 @346
-    ff_put_cavs_qpel8_mc00_mmx2 @347
-    ff_put_no_rnd_qpel16_mc11_old_c @348
-    ff_put_no_rnd_qpel16_mc12_old_c @349
-    ff_put_no_rnd_qpel16_mc13_old_c @350
-    ff_put_no_rnd_qpel16_mc31_old_c @351
-    ff_put_no_rnd_qpel16_mc32_old_c @352
-    ff_put_no_rnd_qpel16_mc33_old_c @353
-    ff_put_no_rnd_qpel8_mc11_old_c @354
-    ff_put_no_rnd_qpel8_mc12_old_c @355
-    ff_put_no_rnd_qpel8_mc13_old_c @356
-    ff_put_no_rnd_qpel8_mc31_old_c @357
-    ff_put_no_rnd_qpel8_mc32_old_c @358
-    ff_put_no_rnd_qpel8_mc33_old_c @359
-    ff_put_pixels16x16_10_c @360
-    ff_put_pixels16x16_8_c @361
-    ff_put_pixels16x16_9_c @362
-    ff_put_pixels8x8_10_c @363
-    ff_put_pixels8x8_8_c @364
-    ff_put_pixels8x8_9_c @365
-    ff_put_pixels_clamped_c @366
-    ff_put_pixels_clamped_mmx @367
-    ff_put_qpel16_mc11_old_c @368
-    ff_put_qpel16_mc12_old_c @369
-    ff_put_qpel16_mc13_old_c @370
-    ff_put_qpel16_mc31_old_c @371
-    ff_put_qpel16_mc32_old_c @372
-    ff_put_qpel16_mc33_old_c @373
-    ff_put_qpel8_mc11_old_c @374
-    ff_put_qpel8_mc12_old_c @375
-    ff_put_qpel8_mc13_old_c @376
-    ff_put_qpel8_mc31_old_c @377
-    ff_put_qpel8_mc32_old_c @378
-    ff_put_qpel8_mc33_old_c @379
-    ff_put_signed_pixels_clamped_c @380
-    ff_put_signed_pixels_clamped_mmx @381
-    ff_put_string @382
-    ff_put_vc1_mspel_mc00_mmx @383
-    ff_pw_1 @384 DATA
-    ff_pw_128 @385 DATA
-    ff_pw_15 @386 DATA
-    ff_pw_16 @387 DATA
-    ff_pw_17 @388 DATA
-    ff_pw_18 @389 DATA
-    ff_pw_2 @390 DATA
-    ff_pw_20 @391 DATA
-    ff_pw_255 @392 DATA
-    ff_pw_27 @393 DATA
-    ff_pw_28 @394 DATA
-    ff_pw_3 @395 DATA
-    ff_pw_32 @396 DATA
-    ff_pw_4 @397 DATA
-    ff_pw_42 @398 DATA
-    ff_pw_5 @399 DATA
-    ff_pw_53 @400 DATA
-    ff_pw_63 @401 DATA
-    ff_pw_64 @402 DATA
-    ff_pw_8 @403 DATA
-    ff_pw_9 @404 DATA
-    ff_pw_96 @405 DATA
-    ff_raw_pix_fmt_tags @406 DATA
-    ff_sbr_apply @407
-    ff_se_golomb_vlc_code @408 DATA
-    ff_set_cmp @409
-    ff_shrink22 @410
-    ff_shrink44 @411
-    ff_shrink88 @412
-    ff_simple_idct @413
-    ff_simple_idct248_put @414
-    ff_simple_idct44_add @415
-    ff_simple_idct48_add @416
-    ff_simple_idct84_add @417
-    ff_simple_idct_add @418
-    ff_simple_idct_add_mmx @419
-    ff_simple_idct_mmx @420
-    ff_simple_idct_put @421
-    ff_simple_idct_put_mmx @422
-    ff_sine_1024 @423 DATA
-    ff_sine_128 @424 DATA
-    ff_sine_2048 @425 DATA
-    ff_sine_256 @426 DATA
-    ff_sine_32 @427 DATA
-    ff_sine_4096 @428 DATA
-    ff_sine_512 @429 DATA
-    ff_sine_64 @430 DATA
-    ff_sine_window_init @431
-    ff_sine_windows @432 DATA
-    ff_split_xiph_headers @433
-    ff_squareTbl @434 DATA
-    ff_swb_offset_1024 @435 DATA
-    ff_swb_offset_128 @436 DATA
-    ff_synth_filter_init @437
-    ff_thread_await_progress @438
-    ff_thread_finish_setup @439
-    ff_thread_get_buffer @440
-    ff_thread_init @441
-    ff_thread_release_buffer @442
-    ff_thread_report_progress @443
-    ff_tns_max_bands_1024 @444 DATA
-    ff_tns_max_bands_128 @445 DATA
-    ff_toupper4 @446
-    ff_truehd_layout @447
-    ff_ue_golomb_len @448 DATA
-    ff_ue_golomb_vlc_code @449 DATA
-    ff_vorbis_channel_layout_offsets @450 DATA
-    ff_vorbis_channel_layouts @451 DATA
-    ff_vorbis_encoding_channel_layout_offsets @452 DATA
-    ff_vorbis_floor1_inverse_db_table @453 DATA
-    ff_vorbis_floor1_render_list @454
-    ff_vorbis_len2vlc @455
-    ff_vorbis_nth_root @456
-    ff_vorbis_ready_floor1_list @457
-    ff_vorbis_vwin @458 DATA
-    ff_wmv2_idct_c @459
-    ff_wtwo @460 DATA
-    ff_zigzag248_direct @461 DATA
-    ff_zigzag_direct @462 DATA
-    float_interleave @463
-    float_interleave_noscale @464
-    free_vlc @465
-    img_get_alpha_info @466
-    init_vlc_sparse @467
-    inv_zigzag_direct16 @468 DATA
-    j_rev_dct @469
-    j_rev_dct1 @470
-    j_rev_dct2 @471
-    j_rev_dct4 @472
-    vorbis_inverse_coupling @473
+    avcodec_encode_audio2 @83
+    avcodec_encode_subtitle @84
+    avcodec_encode_video @85
+    avcodec_fill_audio_frame @86
+    avcodec_find_best_pix_fmt @87
+    avcodec_find_best_pix_fmt2 @88
+    avcodec_find_decoder @89
+    avcodec_find_decoder_by_name @90
+    avcodec_find_encoder @91
+    avcodec_find_encoder_by_name @92
+    avcodec_flush_buffers @93
+    avcodec_get_channel_layout @94
+    avcodec_get_channel_layout_string @95
+    avcodec_get_chroma_sub_sample @96
+    avcodec_get_class @97
+    avcodec_get_context_defaults @98
+    avcodec_get_context_defaults2 @99
+    avcodec_get_context_defaults3 @100
+    avcodec_get_edge_width @101
+    avcodec_get_frame_class @102
+    avcodec_get_frame_defaults @103
+    avcodec_get_name @104
+    avcodec_get_pix_fmt_loss @105
+    avcodec_get_pix_fmt_name @106
+    avcodec_get_sample_fmt @107
+    avcodec_get_sample_fmt_name @108
+    avcodec_get_type @109
+    avcodec_guess_channel_layout @110
+    avcodec_init @111
+    avcodec_is_open @112
+    avcodec_license @113
+    avcodec_open @114
+    avcodec_open2 @115
+    avcodec_pix_fmt_to_codec_tag @116
+    avcodec_register @117
+    avcodec_register_all @118
+    avcodec_sample_fmt_string @119
+    avcodec_set_dimensions @120
+    avcodec_string @121
+    avcodec_thread_init @122
+    avcodec_version @123
+    avpicture_alloc @124
+    avpicture_deinterlace @125
+    avpicture_fill @126
+    avpicture_free @127
+    avpicture_get_size @128
+    avpicture_layout @129
+    avpriv_aac_parse_header @130
+    avpriv_ac3_channel_layout_tab @131 DATA
+    avpriv_ac3_parse_header @132
+    avpriv_align_put_bits @133
+    avpriv_copy_bits @134
+    avpriv_copy_pce_data @135
+    avpriv_flac_is_extradata_valid @136
+    avpriv_flac_parse_block_header @137
+    avpriv_flac_parse_streaminfo @138
+    avpriv_lock_avformat @139
+    avpriv_mpeg4audio_get_config @140
+    avpriv_mpeg4audio_sample_rates @141 DATA
+    avpriv_split_xiph_headers @142
+    avpriv_toupper4 @143
+    avpriv_unlock_avformat @144
+    avsubtitle_free @145
+    dsputil_init @146
+    ff_faanidct @147
+    ff_faanidct_add @148
+    ff_faanidct_put @149
+    ff_fdct_mmx @150
+    ff_fdct_mmx2 @151
+    ff_fdct_sse2 @152
+    ff_fft_end @153
+    ff_fft_end_fixed @154
+    ff_fft_init @155
+    ff_fft_init_fixed @156
+    ff_fft_init_mmx @157
+    ff_find_pix_fmt @158
+    ff_idct_xvid_mmx @159
+    ff_idct_xvid_mmx2 @160
+    ff_idct_xvid_sse2 @161
+    ff_idct_xvid_sse2_add @162
+    ff_idct_xvid_sse2_put @163
+    ff_mdct_calc_c @164
+    ff_mdct_calc_c_fixed @165
+    ff_mdct_calcw_c @166
+    ff_mdct_end @167
+    ff_mdct_end_fixed @168
+    ff_mdct_init @169
+    ff_mdct_init_fixed @170
+    ff_raw_pix_fmt_tags @171 DATA
+    ff_simple_idct248_put @172
+    ff_simple_idct44_add @173
+    ff_simple_idct48_add @174
+    ff_simple_idct84_add @175
+    ff_simple_idct_10 @176
+    ff_simple_idct_8 @177
+    ff_simple_idct_add_10 @178
+    ff_simple_idct_add_8 @179
+    ff_simple_idct_add_mmx @180
+    ff_simple_idct_mmx @181
+    ff_simple_idct_put_10 @182
+    ff_simple_idct_put_8 @183
+    ff_simple_idct_put_mmx @184
+    img_get_alpha_info @185
+    j_rev_dct @186
