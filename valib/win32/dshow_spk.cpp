@@ -2,6 +2,14 @@
 #include "winspk.h"
 #include "guids.h"
 
+struct VORBISFORMAT2  //matroska.org
+{
+  DWORD channels;
+  DWORD samplesPerSec;
+  DWORD bitsPerSample;
+  DWORD headerSize[3];
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // Speakers class format can be converted to DirectShow media type in number
 // of ways because of media type redundancy and ambiguity. But each media type
@@ -42,12 +50,13 @@ bool mt2spk(CMediaType mt, Speakers &spk)
 {
   const GUID type = *mt.Type();
   const GUID subtype = *mt.Subtype();
+  const GUID formattype = *mt.FormatType();
 
   WAVEFORMAT *wf = 0;
   size_t wf_size = 0;
   int sample_rate = 0;
 
-  if ((*mt.FormatType() == FORMAT_WaveFormatEx) &&
+  if ((formattype == FORMAT_WaveFormatEx) &&
       (mt.FormatLength() > sizeof(WAVEFORMAT)))
   {
     wf = (WAVEFORMAT *)mt.Format();
@@ -112,6 +121,25 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   if (subtype == MEDIASUBTYPE_DOLBY_AC3_SPDIF)
   {
     spk = Speakers(FORMAT_SPDIF, 0, sample_rate);
+    return true;
+  }
+/*
+  if (subtype == MEDIASUBTYPE_Vorbis &&
+      formattype == FORMAT_Vorbis && 
+      mt.FormatLength() > sizeof(VORBISFORMAT))
+  {
+    VORBISFORMAT *format = (VORBISFORMAT *)mt.Format();
+    spk = Speakers(FORMAT_VORBIS, 0, format->samplesPerSec);
+    spk.set_format_data(mt.Format(), mt.FormatLength());
+  }
+*/
+  if (subtype == MEDIASUBTYPE_Vorbis2 &&
+      formattype == FORMAT_Vorbis2 &&
+      mt.FormatLength() > sizeof(VORBISFORMAT2))
+  {
+    VORBISFORMAT2 *format = (VORBISFORMAT2 *)mt.Format();
+    spk = Speakers(FORMAT_VORBIS, 0, format->samplesPerSec);
+    spk.set_format_data(mt.Format(), mt.FormatLength());
     return true;
   }
 
