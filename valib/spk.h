@@ -272,6 +272,7 @@ using std::string;
 #define FORMAT_AAC_ADTS   20
 
 #define FORMAT_FLAC       21
+#define FORMAT_VORBIS     22
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format masks

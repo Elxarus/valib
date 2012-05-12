@@ -1115,6 +1115,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="vorbis"
+				>
+				<File
+					RelativePath="..\valib\parsers\vorbis\vorbis_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\vorbis\vorbis_parser.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="sink"

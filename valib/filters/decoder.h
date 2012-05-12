@@ -14,6 +14,7 @@
 #include "../parsers/dts/dts_parser.h"
 #include "../parsers/eac3/eac3_parser.h"
 #include "../parsers/flac/flac_parser.h"
+#include "../parsers/vorbis/vorbis_parser.h"
 #include "../parsers/mpa/mpa_mpg123.h"
 
 class AudioDecoder : public ParserFilter
@@ -25,6 +26,7 @@ public:
   DTSParser    dts;
   EAC3Parser   eac3;
   FlacParser   flac;
+  VorbisParser vorbis;
   MPG123Parser mpa;
 
   AudioDecoder()
@@ -36,6 +38,7 @@ public:
     add(&uni_frame_parser.ac3_eac3);
     add(&aac);
     add(&flac);
+    add(&vorbis);
   }
 };
 
