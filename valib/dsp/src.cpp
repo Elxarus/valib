@@ -493,7 +493,7 @@ SRCImpl::flush()
   ///////////////////////////////////////////////////////
   // Zero the tail of the stage 1 buffer
 
-  int n = core->stage1_size - pos1;
+  int n = (int)core->stage1_size - pos1;
   zero_samples(buf1 + pos1, n);
   post_samples -= n;
   pos1 += n;
