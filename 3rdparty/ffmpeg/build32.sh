@@ -10,7 +10,7 @@ cd build_x86
 --extra-cflags='-Dstrtod=__strtod' \
 --disable-doc --disable-ffmpeg --disable-ffplay --disable-ffprobe \
 --disable-ffserver --disable-avdevice --disable-avformat \
---disable-swscale --disable-postproc --disable-avfilter --disable-network \
+--disable-swscale --disable-postproc --disable-avfilter --disable-network --disable-swresample \
 --disable-yasm \
 --disable-everything \
 --enable-parser=ac3 --enable-parser=mlp \

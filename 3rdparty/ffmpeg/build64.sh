@@ -9,7 +9,7 @@ cd build_x64
 --enable-shared --disable-static --enable-memalign-hack --enable-runtime-cpudetect --disable-debug \
 --disable-doc --disable-ffmpeg --disable-ffplay --disable-ffprobe \
 --disable-ffserver --disable-avdevice --disable-avformat \
---disable-swscale --disable-postproc --disable-avfilter --disable-network \
+--disable-swscale --disable-postproc --disable-avfilter --disable-network --disable-swresample \
 --disable-yasm \
 --disable-everything \
 --enable-parser=ac3 --enable-parser=mlp \
