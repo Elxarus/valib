@@ -175,7 +175,7 @@ Mixer::info() const
   {
     s << "Input:" ;
     for (ch_name = 0; ch_name < CH_NAMES; ch_name++)
-      if (CH_MASK(ch_name) & out_spk.mask)
+      if (CH_MASK(ch_name) & spk.mask)
         s << " " << ch_name_short(ch_name);
     s << nl;
   }
