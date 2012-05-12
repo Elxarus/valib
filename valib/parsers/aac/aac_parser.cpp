@@ -69,6 +69,13 @@ AACParser::can_open(Speakers spk) const
 bool
 AACParser::init_decoder()
 {
+  uint8_t *format_data = spk.format_data.get();
+
+  // faad does not support AAC SSR
+  int object_type = format_data[0] >> 3;
+  if (object_type == 3) // AAC_SSR
+    return false;
+
   unsigned long freq = 0;
   unsigned char channels = 0;
 
@@ -81,7 +88,7 @@ AACParser::init_decoder()
   NeAACDecSetConfiguration(h_aac, c);
 
   if (spk.data_size)
-    NeAACDecInit2(h_aac, spk.format_data.get(), (unsigned long)spk.data_size, &freq, &channels);
+    NeAACDecInit2(h_aac, format_data, (unsigned long)spk.data_size, &freq, &channels);
   // This allows not to drop the first frame
   NeAACDecPostSeekReset(h_aac, 1);
 
