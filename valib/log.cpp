@@ -95,6 +95,10 @@ void LogDispatcher::vlog_impl(int level, const std::string &module, const char *
     buf.resize(buf.size() * 2);
   }
 
+  // Drop newline from the end of the line
+  while (len && (buf[len-1] == '\n' || buf[len-1] == '\r' || buf[len-1] == 0))
+    len--;
+
   // Do not include trailing zero! (test will fail)
   log(LogEntry(local_time(), level, module, string(&buf.front(), len)));
 }
