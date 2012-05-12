@@ -1,5 +1,6 @@
 #include <sstream>
 #include "ffmpeg_decoder.h"
+#include "../log.h"
 
 extern "C"
 {
@@ -17,10 +18,10 @@ public:
     av_log_set_callback(avlog);
   }
 
-  static void avlog(void *, int level, const char *fmt, va_list valist)
+  static void avlog(void *, int level, const char *fmt, va_list args)
   {
-    char msg[1024];
-    vsprintf(msg, fmt, valist);
+    static string log_module = "ffmpeg";
+    valib_vlog(log_event, log_module, fmt, args);
   }
 };
 
@@ -73,35 +74,57 @@ FfmpegDecoder::FfmpegDecoder(CodecID ffmpeg_codec_id_, int format_)
   buf.allocate(AVCODEC_MAX_AUDIO_FRAME_SIZE);
   ffmpeg_codec_id = ffmpeg_codec_id_;
   format  = format_;
-  avctx   = avcodec_alloc_context();
   avcodec = avcodec_find_decoder(ffmpeg_codec_id);
-  if (avcodec_open(avctx, avcodec) < 0)
-  {
-    if (avctx) av_free(avctx);
-    avctx = 0;
-    return;
-  }
+  avctx   = 0;
 }
 
 FfmpegDecoder::~FfmpegDecoder()
 {
-  if (avctx)
-  {
-    avcodec_close(avctx);
-    av_free(avctx);
-  }
+  uninit();
 }
 
 bool
 FfmpegDecoder::can_open(Speakers spk) const
 {
-  return avctx && spk.format == format;
+  return avcodec && spk.format == format;
+}
+
+
+bool
+FfmpegDecoder::init_context(AVCodecContext *avctx)
+{
+  if (spk.data_size)
+  {
+    avctx->extradata = spk.format_data.get();
+    avctx->extradata_size = spk.data_size;
+  }
+  return true;
 }
 
 bool
 FfmpegDecoder::init()
 {
+  if (avctx) av_free(avctx);
+  avctx = avcodec_alloc_context();
+  if (!avctx) return false;
+
+  if (!init_context(avctx) ||
+      avcodec_open(avctx, avcodec) < 0)
+  {
+    av_free(avctx);
+    avctx = 0;
+    return false;
+  }
+
   return true;
+}
+
+void
+FfmpegDecoder::uninit()
+{
+  if (avctx)
+    av_free(avctx);
+  avctx = 0;
 }
 
 void

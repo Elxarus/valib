@@ -23,6 +23,7 @@ public:
 
   bool can_open(Speakers spk) const;
   bool init();
+  void uninit();
 
   void reset();
   bool process(Chunk &in, Chunk &out);
@@ -34,6 +35,8 @@ public:
   { return out_spk; }
 
 protected:
+  virtual bool init_context(AVCodecContext *avctx);
+
   Rawdata buf;      // output buffer
   Speakers out_spk; // output format
   bool new_stream_flag;

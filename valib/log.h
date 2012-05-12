@@ -346,10 +346,17 @@ inline void valib_log(int level, const std::string &module, const char *format, 
   }
 }
 
+inline void valib_vlog(int level, const std::string &module, const char *format, va_list args)
+{
+  if (level <= valib_log_dispatcher.get_max_log_level())
+    valib_log_dispatcher.vlog(level, module, format, args);
+}
+
 #else
 
 inline void valib_log(int, const std::string &, const std::string &) {}
 inline void valib_log(int, const std::string &, const char *, ...) {}
+inline void valib_vlog(int level, const std::string &module, const char *format, va_list args) {}
 
 #endif
 
