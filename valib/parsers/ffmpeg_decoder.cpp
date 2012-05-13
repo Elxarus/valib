@@ -1,3 +1,6 @@
+#ifdef _MSC_VER
+#include <excpt.h>
+#endif
 #include <sstream>
 #include "ffmpeg_decoder.h"
 #include "../log.h"
@@ -8,24 +11,52 @@ extern "C"
 #include "../../3rdparty/ffmpeg/include/libavcodec/avcodec.h"
 }
 
-class FFMPEG
+static const string module = "FfmpegDecoder";
+
+static void ffmpeg_log(void *, int level, const char *fmt, va_list args)
 {
-public:
-  FFMPEG()
+  // Here we use separate module name to distinguish ffmpeg and FfmpegDecoder messages.
+  static string module = "ffmpeg";
+  valib_vlog(log_event, module, fmt, args);
+}
+
+static bool init_ffmpeg()
+{
+  static bool ffmpeg_initialized = false;
+  static bool ffmpeg_failed = false;
+
+  if (!ffmpeg_initialized && !ffmpeg_failed)
   {
+#ifdef _MSC_VER
+    // Delayed ffmpeg dll loading support and gracefull error handling.
+    // Works for any: static linking, dynamic linking, delayed linking.
+    // No need to know actual ffmpeg dll name, so need to patch it here
+    // after upgrade.
+    const unsigned long CODE_MOD_NOT_FOUND  = 0xC06D007E; // = VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND)
+    const unsigned long CODE_PROC_NOT_FOUND = 0xC06D007f; // = VcppException(ERROR_SEVERITY_ERROR, ERROR_PROC_NOT_FOUND)
+    __try {
+      avcodec_init();
+      avcodec_register_all();
+      av_log_set_callback(ffmpeg_log);
+      ffmpeg_initialized = true;
+    }
+    __except ((GetExceptionCode() == CODE_MOD_NOT_FOUND ||
+               GetExceptionCode() == CODE_PROC_NOT_FOUND)?
+               EXCEPTION_EXECUTE_HANDLER:
+               EXCEPTION_CONTINUE_SEARCH)
+    {
+      ffmpeg_failed = true;
+      return false;
+    }
+#else
     avcodec_init();
     avcodec_register_all();
-    av_log_set_callback(avlog);
+    av_log_set_callback(ffmpeg_log);
+    ffmpeg_initialized = true;
+#endif
   }
-
-  static void avlog(void *, int level, const char *fmt, va_list args)
-  {
-    static string log_module = "ffmpeg";
-    valib_vlog(log_event, log_module, fmt, args);
-  }
-};
-
-volatile static const FFMPEG ffmpeg;
+  return !ffmpeg_failed;
+}
 
 static const Speakers get_format(AVCodecContext *avctx)
 {
@@ -71,10 +102,9 @@ static const Speakers get_format(AVCodecContext *avctx)
 
 FfmpegDecoder::FfmpegDecoder(CodecID ffmpeg_codec_id_, int format_)
 {
-  buf.allocate(AVCODEC_MAX_AUDIO_FRAME_SIZE);
   ffmpeg_codec_id = ffmpeg_codec_id_;
   format  = format_;
-  avcodec = avcodec_find_decoder(ffmpeg_codec_id);
+  avcodec = 0;
   avctx   = 0;
 }
 
@@ -86,9 +116,8 @@ FfmpegDecoder::~FfmpegDecoder()
 bool
 FfmpegDecoder::can_open(Speakers spk) const
 {
-  return avcodec && spk.format == format;
+  return spk.format == format;
 }
-
 
 bool
 FfmpegDecoder::init_context(AVCodecContext *avctx)
@@ -104,9 +133,29 @@ FfmpegDecoder::init_context(AVCodecContext *avctx)
 bool
 FfmpegDecoder::init()
 {
+  if (!init_ffmpeg())
+  {
+    valib_log(log_error, module, "Cannot load ffmpeg library");
+    return false;
+  }
+
+  if (!avcodec)
+  {
+    avcodec = avcodec_find_decoder(ffmpeg_codec_id);
+    if (!avcodec)
+    {
+      valib_log(log_error, module, "avcodec_find_decoder(%i) failed", ffmpeg_codec_id);
+      return false;
+    }
+  }
+
   if (avctx) av_free(avctx);
   avctx = avcodec_alloc_context();
-  if (!avctx) return false;
+  if (!avctx)
+  {
+    valib_log(log_error, module, "avcodec_alloc_context() failed");
+    return false;
+  }
 
   if (!init_context(avctx) ||
       avcodec_open(avctx, avcodec) < 0)
@@ -116,6 +165,7 @@ FfmpegDecoder::init()
     return false;
   }
 
+  buf.allocate(AVCODEC_MAX_AUDIO_FRAME_SIZE);
   return true;
 }
 
