@@ -71,10 +71,13 @@ AACParser::init_decoder()
 {
   uint8_t *format_data = spk.format_data.get();
 
-  // faad does not support AAC SSR
-  int object_type = format_data[0] >> 3;
-  if (object_type == 3) // AAC_SSR
-    return false;
+  if (format_data && spk.data_size > 1)
+  {
+    // faad does not support AAC SSR
+    int object_type = format_data[0] >> 3;
+    if (object_type == 3) // AAC_SSR
+      return false;
+  }
 
   unsigned long freq = 0;
   unsigned char channels = 0;
