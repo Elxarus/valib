@@ -275,7 +275,7 @@ waveformat2spk(WAVEFORMAT *wf, size_t size, Speakers &spk)
   switch (wf->wFormatTag)
   {
     case WAVE_FORMAT_AVI_AC3:
-      format = FORMAT_AC3_EAC3;
+      format = FORMAT_DOLBY;
       break;
 
     case WAVE_FORMAT_AVI_DTS:

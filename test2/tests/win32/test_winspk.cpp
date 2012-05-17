@@ -278,7 +278,7 @@ wf2spk_tbl[] =
   { (WAVEFORMAT *)&wfe_spdif_48000, wfe_size,   wf_size-1,    Speakers(FORMAT_SPDIF, 0, 48000) },
   { (WAVEFORMAT *)&wfx_spdif_6_48000, wfx_size, wfx_size-1,   Speakers(FORMAT_SPDIF, MODE_5_1, 48000) },
   // Compressed formats
-  { (WAVEFORMAT *)&wfe_ac3_48000, wf_size, wf_size-1, Speakers(FORMAT_AC3_EAC3, 0, 48000) },
+  { (WAVEFORMAT *)&wfe_ac3_48000, wf_size, wf_size-1, Speakers(FORMAT_DOLBY, 0, 48000) },
   { (WAVEFORMAT *)&wfe_dts_48000, wf_size, wf_size-1, Speakers(FORMAT_DTS, 0, 48000) },
   { (WAVEFORMAT *)&wfe_mpa_48000, wf_size, wf_size-1, Speakers(FORMAT_MPA, 0, 48000) },
   { (WAVEFORMAT *)&wfe_mp3_48000, wf_size, wf_size-1, Speakers(FORMAT_MPA, 0, 48000) },

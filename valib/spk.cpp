@@ -113,7 +113,7 @@ int sample_size(int format)
     // Packed formats
     case FORMAT_AAC_FRAME:
     case FORMAT_AC3:
-    case FORMAT_AC3_EAC3:
+    case FORMAT_DOLBY:
     case FORMAT_EAC3:
     case FORMAT_DTS:
     case FORMAT_MPA:
@@ -161,7 +161,7 @@ format_text(int format)
     case FORMAT_AAC_FRAME:   return "AAC";
     case FORMAT_AC3:         return "AC3";
     case FORMAT_EAC3:        return "EAC3";
-    case FORMAT_AC3_EAC3:    return "AC3/EAC3";
+    case FORMAT_DOLBY:       return "Dolby";
     case FORMAT_MPA:         return "MPEG Audio";
     case FORMAT_DTS:         return "DTS";
     case FORMAT_FLAC:        return "Flac";
