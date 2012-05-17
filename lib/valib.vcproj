@@ -1056,18 +1056,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="ac3_eac3"
-				>
-				<File
-					RelativePath="..\valib\parsers\ac3_eac3\ac3_eac3_header.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\valib\parsers\ac3_eac3\ac3_eac3_header.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="uni"
 				>
 				<File
@@ -1124,6 +1112,18 @@
 				</File>
 				<File
 					RelativePath="..\valib\parsers\vorbis\vorbis_parser.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="dolby"
+				>
+				<File
+					RelativePath="..\valib\parsers\dolby\dolby_header.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\valib\parsers\dolby\dolby_header.h"
 					>
 				</File>
 			</Filter>

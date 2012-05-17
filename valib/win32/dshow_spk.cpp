@@ -100,7 +100,7 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   if (subtype == MEDIASUBTYPE_DOLBY_AC3 || 
       subtype == MEDIASUBTYPE_AVI_AC3)
   {
-    spk = Speakers(FORMAT_AC3_EAC3, 0, sample_rate);
+    spk = Speakers(FORMAT_DOLBY, 0, sample_rate);
     return true;
   }
 
