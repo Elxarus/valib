@@ -8,17 +8,20 @@
 #include "../dts/dts_header.h"
 #include "../eac3/eac3_header.h"
 #include "../mpa/mpa_header.h"
+#include "../mlp/mlp_header.h"
 #include "../spdif/spdif_header.h"
 
 class UniFrameParser : public MultiFrameParser
 {
 public:
-  ADTSFrameParser  adts;
-  AC3FrameParser   ac3;
-  DTSFrameParser   dts;
-  EAC3FrameParser  eac3;
-  MPAFrameParser   mpa;
-  SPDIFFrameParser spdif;
+  ADTSFrameParser   adts;
+  AC3FrameParser    ac3;
+  DTSFrameParser    dts;
+  EAC3FrameParser   eac3;
+  MPAFrameParser    mpa;
+  MlpFrameParser    mlp;
+  TruehdFrameParser truehd;
+  SPDIFFrameParser  spdif;
 
   // Composite parsers.
   // It's possible to use existing parsers (maybe later).
@@ -26,7 +29,7 @@ public:
 
   UniFrameParser()
   {
-    FrameParser *parsers[] = { &adts, &ac3, &dts, &eac3, &mpa, &spdif, &dolby};
+    FrameParser *parsers[] = { &adts, &ac3, &dts, &eac3, &mpa, &mlp, &spdif, &dolby};
     set_parsers(parsers, array_size(parsers));
   }
 

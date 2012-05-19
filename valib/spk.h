@@ -273,6 +273,8 @@ using std::string;
 #define FORMAT_FLAC       21
 #define FORMAT_VORBIS     22
 
+#define FORMAT_MLP        23
+#define FORMAT_TRUEHD     24
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format masks
@@ -313,6 +315,13 @@ using std::string;
 // DVD LPCM
 #define FORMAT_MASK_LPCM20       FORMAT_MASK(FORMAT_LPCM20)
 #define FORMAT_MASK_LPCM24       FORMAT_MASK(FORMAT_LPCM24)
+
+#define FORMAT_MASK_EAC3         FORMAT_MASK(FORMAT_EAC3)
+#define FORMAT_MASK_DOLBY        FORMAT_MASK(FORMAT_DOLBY)
+#define FORMAT_MASK_MLP          FORMAT_MASK(FORMAT_MLP)
+#define FORMAT_MASK_TRUEHD       FORMAT_MASK(FORMAT_TRUEHD)
+#define FORMAT_MASK_AAC          FORMAT_MASK(FORMAT_AAC_FRAME)
+#define FORMAT_MASK_ADTS         FORMAT_MASK(FORMAT_ADTS)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Format classes (bitmasks)
