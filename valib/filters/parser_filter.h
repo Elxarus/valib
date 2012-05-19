@@ -6,6 +6,7 @@
 #ifndef VALIB_PARSER_FILTER_H
 #define VALIB_PARSER_FILTER_H
 
+#include <vector>
 #include "filter_graph.h"
 #include "filter_switch.h"
 #include "frame_splitter.h"
@@ -36,34 +37,51 @@
 class ParserFilter : public FilterGraph
 {
 public:
-  ParserFilter()
-  {}
+  ParserFilter();
+  ParserFilter(FrameParser *frame_parser, Filter *filter);
 
-  ParserFilter(FrameParser *new_header, Filter *new_filter)
-  { add(new_header, new_filter); }
-
-  void add(FrameParser *new_header, Filter *new_filter);
-  void add(FrameParser *new_header);
-  void add(Filter *new_filter);
+  void add(FrameParser *frame_parser, Filter *filter);
+  void add(Filter *filter);
   void release();
+
+  /////////////////////////////////////////////////////////
+  // Filter overrides
+
+  bool can_open(Speakers spk) const;
+  bool open(Speakers spk);
 
   /////////////////////////////////////////////////////////
   // FrameSplitter wrapper
 
   int get_frames() const         { return sync.get_frames();  }
   string stream_info() const     { return sync.stream_info(); }
-  FrameInfo frame_info() const   { return sync.frame_info(); }
+  FrameInfo frame_info() const   { return sync.frame_info();  }
 
 protected:
-  MultiFrameParser parser;
-  FrameSplitter sync;
-  FilterSwitch filter;
-
   enum state_t
   {
     node_sync,
     node_filter,
-  };            
+  };
+
+  struct Entry
+  {
+    FrameParser *frame_parser;
+    Filter *filter;
+
+    Entry():
+    frame_parser(0), filter(0)
+    {}
+
+    Entry(FrameParser *frame_parser_, Filter *filter_):
+    frame_parser(frame_parser_), filter(filter_)
+    {}
+  };
+
+  std::vector<Entry> list;
+  FrameSplitter sync;
+  FrameParser *frame_parser;
+  Filter *filter;
 
   /////////////////////////////////////////////////////////
   // FilterGraph overrides
