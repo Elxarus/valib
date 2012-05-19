@@ -166,6 +166,8 @@ format_text(int format)
     case FORMAT_DTS:         return "DTS";
     case FORMAT_FLAC:        return "Flac";
     case FORMAT_VORBIS:      return "Vorbis";
+    case FORMAT_MLP:         return "MLP";
+    case FORMAT_TRUEHD:      return "TrueHD";
 
     case FORMAT_LPCM20:      return "LPCM 20bit";
     case FORMAT_LPCM24:      return "LPCM 24bit";

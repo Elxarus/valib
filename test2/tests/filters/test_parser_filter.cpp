@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(add_release)
 BOOST_AUTO_TEST_CASE(decode)
 {
   // Test chain: RAWSource -> ParserFilter(AC3Parser)
-  RAWSource raw(Speakers(FORMAT_RAWDATA, 0, 0), "a.ac3.03f.ac3");
+  RAWSource raw(Speakers(FORMAT_AC3, 0, 0), "a.ac3.03f.ac3");
   BOOST_REQUIRE(raw.is_open());
   AC3FrameParser ac3_frame_parser;
   AC3Parser ac3_decoder;

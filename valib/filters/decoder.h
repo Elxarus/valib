@@ -16,6 +16,7 @@
 #include "../parsers/flac/flac_parser.h"
 #include "../parsers/vorbis/vorbis_parser.h"
 #include "../parsers/mpa/mpa_mpg123.h"
+#include "../parsers/mlp/mlp_parser.h"
 
 class AudioDecoder : public ParserFilter
 {
@@ -28,14 +29,21 @@ public:
   FlacParser   flac;
   VorbisParser vorbis;
   MPG123Parser mpa;
+  MlpParser    mlp;
+  TruehdParser truehd;
+  FilterSwitch dolby;
 
   AudioDecoder()
   {
-    add(&uni_frame_parser.ac3,  &ac3);
-    add(&uni_frame_parser.eac3, &eac3);
-    add(&uni_frame_parser.dts,  &dts);
-    add(&uni_frame_parser.mpa,  &mpa);
-    add(&uni_frame_parser.dolby);
+    dolby.add_filter(&ac3);
+    dolby.add_filter(&eac3);
+    add(&uni_frame_parser.ac3,    &ac3);
+    add(&uni_frame_parser.eac3,   &eac3);
+    add(&uni_frame_parser.dts,    &dts);
+    add(&uni_frame_parser.mpa,    &mpa);
+    add(&uni_frame_parser.mlp,    &mlp);
+    add(&uni_frame_parser.truehd, &truehd);
+    add(&uni_frame_parser.dolby,  &dolby);
     add(&aac);
     add(&flac);
     add(&vorbis);

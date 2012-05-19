@@ -1,6 +1,7 @@
 #include "dshow_spk.h"
 #include "winspk.h"
 #include "guids.h"
+#include "wmcodecdsp.h"
 
 struct VORBISFORMAT2  //matroska.org
 {
@@ -100,11 +101,25 @@ bool mt2spk(CMediaType mt, Speakers &spk)
   if (subtype == MEDIASUBTYPE_DOLBY_AC3 || 
       subtype == MEDIASUBTYPE_AVI_AC3)
   {
+    // It may be AC3 or EAC3
     spk = Speakers(FORMAT_DOLBY, 0, sample_rate);
     return true;
   }
 
+  if (subtype == MEDIASUBTYPE_DOLBY_DDPLUS)
+  {
+    spk = Speakers(FORMAT_EAC3, 0, sample_rate);
+    return true;
+  }
+
+  if (subtype == MEDIASUBTYPE_DOLBY_TRUEHD)
+  {
+    spk = Speakers(FORMAT_TRUEHD, 0, sample_rate);
+    return true;
+  }
+
   if (subtype == MEDIASUBTYPE_DTS || 
+      subtype == MEDIASUBTYPE_DTS_HD ||
       subtype == MEDIASUBTYPE_AVI_DTS)
   {
     spk = Speakers(FORMAT_DTS, 0, sample_rate);

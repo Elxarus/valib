@@ -490,6 +490,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="mlp"
+				>
+				<File
+					RelativePath=".\tests\parsers\mlp\test_mlp_frame_parser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\tests\parsers\mlp\test_mlp_parser.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="filters"
