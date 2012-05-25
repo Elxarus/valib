@@ -42,11 +42,11 @@ public:
     add(&uni_frame_parser.dts,    &dts);
     add(&uni_frame_parser.mpa,    &mpa);
     add(&uni_frame_parser.mlp,    &mlp);
-    add(&uni_frame_parser.truehd, &truehd);
     add(&uni_frame_parser.dolby,  &dolby);
     add(&aac);
     add(&flac);
     add(&vorbis);
+    add(&truehd);
   }
 };
 
