@@ -29,7 +29,9 @@ public:
 
   UniFrameParser()
   {
-    FrameParser *parsers[] = { &adts, &ac3, &dts, &eac3, &mpa, &mlp, &spdif, &dolby};
+    // mlp & truehd are not included into 'all parsers' because
+    // parser becomes too complicated.
+    FrameParser *parsers[] = { &adts, &ac3, &dts, &eac3, &mpa, &spdif, &dolby};
     set_parsers(parsers, array_size(parsers));
   }
 
@@ -45,6 +47,8 @@ public:
       case FORMAT_EAC3:    return &eac3;
       case FORMAT_MPA:     return &mpa;
       case FORMAT_SPDIF:   return &spdif;
+      case FORMAT_MLP:     return &mlp;
+      case FORMAT_TRUEHD:  return &truehd;
     }
     return 0;
   }
