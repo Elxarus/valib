@@ -52,6 +52,8 @@ ParserFilter::open(Speakers spk)
       return FilterGraph::open(spk);
     }
 
+  if (is_open())
+    close();
   return false;
 }
 
