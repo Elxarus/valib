@@ -23,6 +23,12 @@ BOOST_AUTO_TEST_CASE(constructor)
   AACParser aac;
 }
 
+BOOST_AUTO_TEST_CASE(open_no_format_data)
+{
+  AACParser aac;
+  BOOST_CHECK(aac.open(Speakers(FORMAT_AAC_FRAME, MODE_STEREO, 48000)));
+}
+
 BOOST_AUTO_TEST_CASE(decode)
 {
   // Test chain:
