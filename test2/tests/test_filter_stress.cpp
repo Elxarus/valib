@@ -234,7 +234,7 @@ void filter_stress_test(Filter *f, Source *src)
   };
 
   Chunk chunk;
-  f->open(src->get_output());
+  BOOST_REQUIRE(f->open(src->get_output()));
   filter_stress_test(f, src, chunk, ops, array_size(ops));
 }
 
@@ -342,16 +342,16 @@ BOOST_AUTO_TEST_CASE(audio_decoder_ac3)
 {
   AudioDecoder filter;
   open_stress_test(&filter);
-  filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3");
-  noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
+  filter_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter, "a.ac3.03f.ac3");
+  noise_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(decoder_graph_spdif)
 {
   DecoderGraph filter;
   open_stress_test(&filter);
-  filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.dts.03f.spdif");
-  noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
+  filter_stress_test(Speakers(FORMAT_SPDIF, 0, 0), &filter, "a.dts.03f.spdif");
+  noise_stress_test(Speakers(FORMAT_SPDIF, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(dejitter)
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(parser_filter_ac3)
   filter.add(&ac3_frame_parser, &ac3_parser);
 
   open_stress_test(&filter);
-  filter_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter, "a.ac3.03f.ac3");
+  filter_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter, "a.ac3.03f.ac3");
   noise_stress_test(Speakers(FORMAT_AC3, 0, 0), &filter);
 }
 
@@ -507,7 +507,6 @@ BOOST_AUTO_TEST_CASE(spdifer)
   noise_stress_test(Speakers(FORMAT_AC3,     0, 0), &filter);
   noise_stress_test(Speakers(FORMAT_MPA,     0, 0), &filter);
   noise_stress_test(Speakers(FORMAT_DTS,     0, 0), &filter);
-  noise_stress_test(Speakers(FORMAT_RAWDATA, 0, 0), &filter);
 }
 
 BOOST_AUTO_TEST_CASE(despdifer)
