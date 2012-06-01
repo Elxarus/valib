@@ -429,11 +429,13 @@ using std::string;
 
 #define MODE_2_0_2     (MODE_2_0   | CH_MASK_BL | CH_MASK_BR)
 #define MODE_3_0_2     (MODE_3_0   | CH_MASK_BL | CH_MASK_BR)
+#define MODE_3_0_3     (MODE_3_0   | CH_MASK_BL | CH_MASK_BC | CH_MASK_BR)
 #define MODE_5_0_2     (MODE_5_0   | CH_MASK_BL | CH_MASK_BR)
 #define MODE_3_2_1     (MODE_3_2   | CH_MASK_BC)
 #define MODE_3_2_2     (MODE_3_2   | CH_MASK_BL | CH_MASK_BR)
 #define MODE_2_0_2_LFE (MODE_2_0_2 | CH_MASK_LFE)
 #define MODE_3_0_2_LFE (MODE_3_0_2 | CH_MASK_LFE)
+#define MODE_3_0_3_LFE (MODE_3_0_3 | CH_MASK_LFE)
 #define MODE_5_0_2_LFE (MODE_5_0_2 | CH_MASK_LFE)
 #define MODE_3_2_1_LFE (MODE_3_2_1 | CH_MASK_LFE)
 #define MODE_3_2_2_LFE (MODE_3_2_2 | CH_MASK_LFE)
