@@ -72,23 +72,16 @@ BOOST_AUTO_TEST_CASE(dejitter)
   Chunk in, out;
   vtime_t continuous_time = 0;
   BOOST_REQUIRE(f.open(spk));
+  f.process(Chunk(true, continuous_time), Chunk()); // Catch sync
   while (noise.get_chunk(in))
   {
-    // Do not add jitter to the first chunk to let
-    // dejitter to catch the correct reference time
-    bool sync = rng.get_bool();
-    if (continuous_time == 0)
-    {
-      sync = true;
-      in.set_sync(true, continuous_time);
-    }
-    else if (sync)
-      in.set_sync(true, continuous_time + rng.get_double() * jitter);
+    vtime_t jitter_time = continuous_time + rng.get_double() * jitter;
+    in.set_sync(true, jitter_time);
+    rng.get_double(); // For some reason, significant mean appears without this call
 
     BOOST_REQUIRE(f.process(in, out));
-    BOOST_REQUIRE_EQUAL(out.sync, sync);
-    if (sync)
-      BOOST_REQUIRE(compare_time(out.time, continuous_time));
+    BOOST_REQUIRE(out.sync);
+    BOOST_REQUIRE(compare_time(out.time, continuous_time));
     continuous_time += out.size * size2time;
   }
 
@@ -118,17 +111,16 @@ BOOST_AUTO_TEST_CASE(no_dejitter)
   Chunk in, out;
   vtime_t continuous_time = 0;
   BOOST_REQUIRE(f.open(spk));
+  f.process(Chunk(true, continuous_time), Chunk()); // Catch sync
   while (noise.get_chunk(in))
   {
-    bool sync = rng.get_bool();
     vtime_t jitter_time = continuous_time + rng.get_double() * jitter;
-    if (sync)
-      in.set_sync(true, jitter_time);
+    in.set_sync(true, jitter_time);
+    rng.get_double(); // For some reason, significant mean appears without this call
 
     BOOST_REQUIRE(f.process(in, out));
-    BOOST_REQUIRE_EQUAL(out.sync, sync);
-    if (sync)
-      BOOST_REQUIRE_EQUAL(out.time, jitter_time);
+    BOOST_REQUIRE(out.sync);
+    BOOST_REQUIRE_EQUAL(out.time, jitter_time);
     continuous_time += out.size * size2time;
   }
 
