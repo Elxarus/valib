@@ -157,6 +157,11 @@ Dejitter::process(Chunk &in, Chunk &out)
   // ignore non-sync chunks
   if (!out.sync)
   {
+    // Timestamp every output chunk (continuous time scale).
+    // Some players have problems with untimed chunks.
+    // WMP freezes when it receives an unstamped chunk
+    // immediately after pause.
+    out.set_sync(continuous_sync, continuous_time * time_factor + time_shift);
     continuous_time += out.size * size2time;
     return true;
   }
