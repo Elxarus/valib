@@ -154,8 +154,8 @@ WAVEFORMATEX *spdif2waveformatextensible(Speakers spk)
 WAVEFORMATEX *
 spdif2wfe(Speakers spk, int i)
 {
-  if (i == 0) return spdif2waveformatextensible(spk);
-  if (i == 1) return spdif2waveformatex(spk);
+  if (i == 0) return spdif2waveformatex(spk);
+  if (i == 1) return spdif2waveformatextensible(spk);
   return 0;
 }
 

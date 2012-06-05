@@ -195,26 +195,35 @@ bool mt2spk(CMediaType mt, Speakers &spk)
 
 bool spk2mt(Speakers spk, CMediaType &mt, int i)
 {
-  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, i));
-  if (!wfe.get())
-    return false;
-
   if (spk.format == FORMAT_SPDIF)
   {
     // SPDIF media types
-    if (wfe->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
-      mt.SetSubtype(&MEDIASUBTYPE_PCM);
-    else
-      mt.SetSubtype(&MEDIASUBTYPE_DOLBY_AC3_SPDIF);
+    if (i < 0 || i >= 2)
+      return false;
+
+    std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, 0));
+    if (!wfe.get())
+      return false;
+
+    mt.SetType(&MEDIATYPE_Audio);
+    mt.SetSubtype(i == 0? &MEDIASUBTYPE_DOLBY_AC3_SPDIF: &MEDIASUBTYPE_PCM);
+    mt.SetFormatType(&FORMAT_WaveFormatEx);
+    mt.SetFormat((BYTE*)wfe.get(), sizeof(WAVEFORMATEX) + wfe->cbSize);
+    return true;
   }
   else if (FORMAT_MASK(spk.format) & FORMAT_CLASS_PCM)
-    // PCM Media types
+  {
+    // PCM media types
+    std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, i));
+    if (!wfe.get())
+      return false;
+
+    mt.SetType(&MEDIATYPE_Audio);
     mt.SetSubtype(&MEDIASUBTYPE_PCM);
+    mt.SetFormatType(&FORMAT_WaveFormatEx);
+    mt.SetFormat((BYTE*)wfe.get(), sizeof(WAVEFORMATEX) + wfe->cbSize);
+    return true;
+  }
   else
     return false;
-
-  mt.SetType(&MEDIATYPE_Audio);
-  mt.SetFormatType(&FORMAT_WaveFormatEx);
-  mt.SetFormat((BYTE*)wfe.get(), sizeof(WAVEFORMATEX) + wfe->cbSize);
-  return true;
 }
