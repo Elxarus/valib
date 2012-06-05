@@ -112,7 +112,7 @@ SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT, KSDATAFORMAT_SUBTYPE_PCM };
 
 static WAVEFORMATEX wfe_spdif_48000 = 
 { WAVE_FORMAT_DOLBY_AC3_SPDIF, 2, 48000, 192000, 4, 16, 0 };
-static WAVEFORMATEXTENSIBLE wfx_spdif_6_48000 =
+static WAVEFORMATEXTENSIBLE wfx_spdif_48000 =
 { { WAVE_FORMAT_EXTENSIBLE, 2, 48000, 192000, 4, 16, 22 }, 16,
 SPEAKER_FRONT_LEFT | SPEAKER_FRONT_CENTER | SPEAKER_FRONT_RIGHT | SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT | SPEAKER_LOW_FREQUENCY, GUID_DOLBY_AC3_SPDIF };
 
@@ -214,8 +214,8 @@ static struct {
   { Speakers(FORMAT_PCM16, MODE_STEREO, 32000), 0, (WAVEFORMATEX *)&wfe_pcm16_2_32000 },
   { Speakers(FORMAT_PCM16, MODE_STEREO, 32000), 1, 0 },
   // SPDIF
-  { Speakers(FORMAT_SPDIF, MODE_5_1, 48000), 0, (WAVEFORMATEX *)&wfx_spdif_6_48000 },
-  { Speakers(FORMAT_SPDIF, MODE_5_1, 48000), 1, (WAVEFORMATEX *)&wfe_spdif_48000 },
+  { Speakers(FORMAT_SPDIF, MODE_5_1, 48000), 0, (WAVEFORMATEX *)&wfe_spdif_48000 },
+  { Speakers(FORMAT_SPDIF, MODE_5_1, 48000), 1, (WAVEFORMATEX *)&wfx_spdif_48000 },
   { Speakers(FORMAT_SPDIF, MODE_5_1, 48000), 2, 0 },
 };
 
@@ -276,7 +276,7 @@ wf2spk_tbl[] =
   // SPDIF
   { (WAVEFORMAT *)&wfe_spdif_48000, wf_size,    wf_size-1,    Speakers(FORMAT_SPDIF, 0, 48000) },
   { (WAVEFORMAT *)&wfe_spdif_48000, wfe_size,   wf_size-1,    Speakers(FORMAT_SPDIF, 0, 48000) },
-  { (WAVEFORMAT *)&wfx_spdif_6_48000, wfx_size, wfx_size-1,   Speakers(FORMAT_SPDIF, MODE_5_1, 48000) },
+  { (WAVEFORMAT *)&wfx_spdif_48000, wfx_size, wfx_size-1,   Speakers(FORMAT_SPDIF, MODE_5_1, 48000) },
   // Compressed formats
   { (WAVEFORMAT *)&wfe_ac3_48000, wf_size, wf_size-1, Speakers(FORMAT_DOLBY, 0, 48000) },
   { (WAVEFORMAT *)&wfe_dts_48000, wf_size, wf_size-1, Speakers(FORMAT_DTS, 0, 48000) },
