@@ -8,7 +8,7 @@ DVDGraph::DVDGraph(int _nsamples, const Sink *_sink)
 
   use_spdif = false;
   use_detector = false;
-  spdif_pt = FORMAT_MASK_AC3;
+  spdif_pt = FORMAT_MASK_AC3 | FORMAT_MASK_EAC3 | FORMAT_MASK_DOLBY;
   spdif_as_pcm = false;
   spdif_encode = true;
   spdif_stereo_pt = true;
