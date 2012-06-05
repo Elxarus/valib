@@ -2,20 +2,20 @@
 #define VALIB_SPDIFABLE_HEADER_H
 
 #include "../multi_header.h"
-#include "../ac3/ac3_header.h"
+#include "../dolby/dolby_header.h"
 #include "../dts/dts_header.h"
 #include "../mpa/mpa_header.h"
 
 class SpdifableFrameParser : public MultiFrameParser
 {
 public:
-  AC3FrameParser   ac3;
+  DolbyFrameParser dolby;
   DTSFrameParser   dts;
   MPAFrameParser   mpa;
 
   SpdifableFrameParser()
   {
-    FrameParser *parsers[] = { &ac3, &dts, &mpa };
+    FrameParser *parsers[] = { &dolby, &dts, &mpa };
     set_parsers(parsers, array_size(parsers));
   }
 
@@ -24,7 +24,7 @@ public:
     switch (spdif_type)
     {
       // AC3
-      case 1: return &ac3;
+      case 1: return &dolby;
       // MPA
       case 4: // MPEG1 Layer I
       case 5: // MPEG1 Layer II/Layer III
@@ -45,7 +45,7 @@ public:
     switch (spdif_type)
     {
       // AC3
-      case 1: return &ac3;
+      case 1: return &dolby;
       // MPA
       case 4:
       case 5:
