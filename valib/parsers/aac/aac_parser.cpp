@@ -216,6 +216,10 @@ AACParser::info() const
   if (spk.format != FORMAT_AAC_FRAME)
     return string("No sync");
 
+  if (spk.data_size == 0)
+    // No AudioSpecificConfig
+    return string();
+
   uint8_t *format_data = spk.format_data.get();
   std::stringstream result;
 
@@ -224,12 +228,20 @@ AACParser::info() const
     result << ' ' << digit[format_data[i] >> 4] << digit[format_data[i] & 0xf];
   result << nl;
 
+  if (spk.data_size < 2)
+    // Bad AudioSpecificConfig
+    return result.str();
+
   ReadBS bs(format_data, 0, spk.data_size * 8);
   int object_type = bs.get(5);
   int sampling_frequency_index = bs.get(4);
   int sampling_frequency = sampling_frequency_tbl[sampling_frequency_index];
   if (sampling_frequency_index == 15)
-    sampling_frequency = bs.get(24);
+    if (spk.data_size < 5)
+      // Bad AudioSpecificConfig
+      return result.str();
+    else
+      sampling_frequency = bs.get(24);
   int channel_configuration = bs.get(4);
 
   result << "Audio Specific Config:" << nl;
