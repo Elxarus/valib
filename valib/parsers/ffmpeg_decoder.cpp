@@ -63,10 +63,10 @@ static const Speakers get_format(AVCodecContext *avctx)
   int format;
   switch (avctx->sample_fmt)
   {
-    case SAMPLE_FMT_S16: format = FORMAT_PCM16;     break;
-    case SAMPLE_FMT_S32: format = FORMAT_PCM32;     break;
-    case SAMPLE_FMT_FLT: format = FORMAT_PCMFLOAT;  break;
-    case SAMPLE_FMT_DBL: format = FORMAT_PCMDOUBLE; break;
+    case AV_SAMPLE_FMT_S16: format = FORMAT_PCM16;     break;
+    case AV_SAMPLE_FMT_S32: format = FORMAT_PCM32;     break;
+    case AV_SAMPLE_FMT_FLT: format = FORMAT_PCMFLOAT;  break;
+    case AV_SAMPLE_FMT_DBL: format = FORMAT_PCMDOUBLE; break;
     default: return Speakers();
   }
   int mask = 0;
@@ -122,11 +122,29 @@ FfmpegDecoder::can_open(Speakers spk) const
 bool
 FfmpegDecoder::init_context(AVCodecContext *avctx)
 {
-  if (spk.data_size)
+  static const AVSampleFormat sample_fmts[] =
+  {
+    AV_SAMPLE_FMT_S16,
+    AV_SAMPLE_FMT_S32,
+    AV_SAMPLE_FMT_FLT,
+#ifndef FLOAT_SAMPLE
+    // Do not request double if sample_t is float
+    AV_SAMPLE_FMT_DBL,
+#endif
+  };
+
+  if (spk.data_size && spk.format_data.get())
   {
     avctx->extradata = spk.format_data.get();
     avctx->extradata_size = (int)spk.data_size;
   }
+
+  if (avcodec->sample_fmts)
+    for (int i = 0; i < array_size(sample_fmts); i++)
+      for (int j = 0; avcodec->sample_fmts[j] != -1; j++)
+        if (sample_fmts[i] == avcodec->sample_fmts[j])
+          avctx->request_sample_fmt = avcodec->sample_fmts[j];
+
   return true;
 }
 

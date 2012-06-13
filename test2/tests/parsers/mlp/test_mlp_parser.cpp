@@ -48,12 +48,14 @@ BOOST_AUTO_TEST_CASE(streams_frames)
   MlpFrameParser frame_parser;
   f.open_probe("test.mlp.527.mlp", &frame_parser);
   BOOST_REQUIRE(f.is_open());
+  BOOST_CHECK_EQUAL(f.get_output(), Speakers(FORMAT_MLP, MODE_3_0_2_LFE, 48000));
 
   MlpParser parser;
   parser.open(f.get_output());
   BOOST_CHECK(parser.is_open());
 
   check_streams_chunks(&f, &parser, 1, 14400);
+  BOOST_CHECK_EQUAL(parser.get_output(), Speakers(FORMAT_PCM16, MODE_3_0_2_LFE, 48000));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
