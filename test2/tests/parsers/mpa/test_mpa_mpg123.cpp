@@ -3,8 +3,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "filters/convert.h"
-#include "filters/filter_graph.h"
 #include "parsers/mpa/mpa_mpg123.h"
 #include "parsers/mpa/mpa_header.h"
 #include "source/file_parser.h"
@@ -23,7 +21,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 BOOST_AUTO_TEST_CASE(decode)
 {
   // Test chain:
-  // FileParser -> MPAParser -> Converter
+  // FileParser -> MPAParser
 
   FileParser f;
   MPAFrameParser frame_parser;
@@ -31,21 +29,14 @@ BOOST_AUTO_TEST_CASE(decode)
   BOOST_REQUIRE(f.is_open());
 
   MPG123Parser mpa;
-  Converter conv_mpa(1024);
-  conv_mpa.set_format(FORMAT_LINEAR);
-  conv_mpa.set_order(win_order);
 
   // Reference chain:
-  // WAVSource -> Converter
+  // WAVSource
 
   WAVSource wav("a.mp2.005.mp2.wav", block_size);
   BOOST_REQUIRE(wav.is_open());
 
-  Converter conv(1024);
-  conv.set_format(FORMAT_LINEAR);
-  conv.set_order(win_order);
-
-  double diff = calc_diff(&f, &FilterChain(&mpa, &conv_mpa), &wav, &conv);
+  double diff = calc_diff(&f, &mpa, &wav, 0);
   BOOST_CHECK_LE(diff, 1e-6);
 }
 

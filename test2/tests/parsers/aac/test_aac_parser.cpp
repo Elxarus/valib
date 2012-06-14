@@ -3,7 +3,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "filters/convert.h"
 #include "filters/filter_graph.h"
 #include "filters/slice.h"
 #include "parsers/aac/aac_parser.h"
@@ -46,17 +45,13 @@ BOOST_AUTO_TEST_CASE(decode)
   SliceFilter cut_1st_frame(1024);
 
   // Reference chain:
-  // WAVSource -> Converter
+  // WAVSource
 
   WAVSource wav("a.aac.03f.adts.wav", block_size);
   BOOST_REQUIRE(wav.is_open());
 
-  Converter conv(1024);
-  conv.set_format(FORMAT_LINEAR);
-  conv.set_order(win_order);
-
   // Compare
-  double diff = calc_diff(&f, &FilterChain(&adts, &aac, &cut_1st_frame), &wav, &conv);
+  double diff = calc_diff(&f, &FilterChain(&adts, &aac, &cut_1st_frame), &wav, 0);
   BOOST_CHECK_LE(diff, 1e-6);
 }
 

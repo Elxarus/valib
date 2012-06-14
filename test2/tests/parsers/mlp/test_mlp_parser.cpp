@@ -3,7 +3,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "filters/convert.h"
 #include "parsers/mlp/mlp_parser.h"
 #include "parsers/mlp/mlp_header.h"
 #include "source/file_parser.h"
