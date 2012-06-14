@@ -542,6 +542,7 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
     finfo = parser->frame_info();
     frame = sync_buf;
     frame_size = const_frame_size;
+    frames++;
     return true;
   }
 
@@ -567,6 +568,7 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
     finfo = parser->frame_info();
     frame = sync_buf;
     frame_size = temp_finfo.frame_size;
+    frames++;
     return true;
   }
 
@@ -593,6 +595,7 @@ StreamBuffer::load(uint8_t **data, uint8_t *end)
       finfo = parser->frame_info();
       frame = sync_buf;
       frame_size = pos;
+      frames++;
       return true;
     }
     pos++;
