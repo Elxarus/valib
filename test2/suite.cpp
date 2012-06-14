@@ -3,6 +3,7 @@
 
 #include "source/raw_source.h"
 #include "source/source_filter.h"
+#include "filters/convert.h"
 #include "suite.h"
 
 void compare(Source *src, Source *ref)
@@ -194,7 +195,7 @@ double calc_rms(Source *source, Filter *filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-sample_t calc_diff(Source *s1, Source *s2)
+sample_t calc_diff_linear(Source *s1, Source *s2)
 {
   assert(s1 != 0 && s2 != 0);
 
@@ -218,7 +219,7 @@ sample_t calc_diff(Source *s1, Source *s2)
     Speakers spk1 = s1->get_output();
     Speakers spk2 = s2->get_output();
     if (spk1 != spk2 || spk1.is_unknown())
-      BOOST_FAIL("Different speaker configurations");
+      BOOST_REQUIRE_EQUAL(spk1, spk2);
 
     len = MIN(chunk1.size, chunk2.size);
     for (int ch = 0; ch < spk1.nch(); ch++)
@@ -233,6 +234,21 @@ sample_t calc_diff(Source *s1, Source *s2)
   return diff;
 }
 
+sample_t calc_diff(Source *s1, Source *s2)
+{
+  assert(s1 != 0 && s2 != 0);
+
+  Converter conv1(1024), conv2(1024);
+  conv1.set_format(FORMAT_LINEAR);
+  conv1.set_order(win_order);
+  conv2.set_format(FORMAT_LINEAR);
+  conv2.set_order(win_order);
+
+  SourceFilter sf1(s1, &conv1);
+  SourceFilter sf2(s2, &conv2);
+  return calc_diff_linear(&sf1, &sf2);
+}
+
 sample_t calc_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)
 {
   assert(s1 != 0 && s2 != 0);
@@ -243,7 +259,7 @@ sample_t calc_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-double calc_rms_diff(Source *s1, Source *s2)
+double calc_rms_diff_linear(Source *s1, Source *s2)
 {
   assert(s1 != 0 && s2 != 0);
 
@@ -268,7 +284,7 @@ double calc_rms_diff(Source *s1, Source *s2)
     Speakers spk1 = s1->get_output();
     Speakers spk2 = s2->get_output();
     if (spk1 != spk2 || spk1.is_unknown())
-      BOOST_FAIL("Different speaker configurations");
+      BOOST_REQUIRE_EQUAL(spk1, spk2);
 
     len = MIN(chunk1.size, chunk2.size);
     for (int ch = 0; ch < spk1.nch(); ch++)
@@ -281,6 +297,21 @@ double calc_rms_diff(Source *s1, Source *s2)
   }
 
   return n? sqrt(sum / n): 0.0;
+}
+
+sample_t calc_rms_diff(Source *s1, Source *s2)
+{
+  assert(s1 != 0 && s2 != 0);
+
+  Converter conv1(1024), conv2(1024);
+  conv1.set_format(FORMAT_LINEAR);
+  conv1.set_order(win_order);
+  conv2.set_format(FORMAT_LINEAR);
+  conv2.set_order(win_order);
+
+  SourceFilter sf1(s1, &conv1);
+  SourceFilter sf2(s2, &conv2);
+  return calc_rms_diff_linear(&sf1, &sf2);
 }
 
 double calc_rms_diff(Source *s1, Filter *f1, Source *s2, Filter *f2)

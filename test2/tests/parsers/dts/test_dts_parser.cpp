@@ -3,7 +3,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "filters/convert.h"
 #include "parsers/dts/dts_parser.h"
 #include "parsers/dts/dts_header.h"
 #include "source/file_parser.h"
@@ -32,20 +31,15 @@ BOOST_AUTO_TEST_CASE(decode)
   DTSParser dts;
 
   // Reference chain:
-  // WAVSource -> Converter
+  // WAVSource
 
   WAVSource wav("a.dts.03f.dts.wav", block_size);
-  BOOST_REQUIRE(wav.is_open());
-
-  Converter conv(1024);
-  conv.set_format(FORMAT_LINEAR);
-  conv.set_order(win_order);
 
   // Compare
   // 32bit floating-point has 24-bit mantissa,
   // therefore noise level is about -144dB.
   // So 1e-7 (-140dB) is usable threshold value 
-  double diff = calc_diff(&f, &dts, &wav, &conv);
+  double diff = calc_diff(&f, &dts, &wav, 0);
   BOOST_CHECK_LE(diff, 1e-7);
 }
 

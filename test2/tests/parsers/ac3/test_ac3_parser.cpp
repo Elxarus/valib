@@ -3,7 +3,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include "filters/convert.h"
 #include "parsers/ac3/ac3_parser.h"
 #include "parsers/ac3/ac3_header.h"
 #include "source/file_parser.h"
@@ -32,20 +31,16 @@ BOOST_AUTO_TEST_CASE(decode)
   AC3Parser ac3;
 
   // Reference chain:
-  // WAVSource -> Converter
+  // WAVSource
 
   WAVSource wav("a.ac3.03f.ac3.wav", block_size);
   BOOST_REQUIRE(wav.is_open());
-
-  Converter conv(1024);
-  conv.set_format(FORMAT_LINEAR);
-  conv.set_order(win_order);
 
   // Compare
   // 32bit floating-point has 24-bit mantissa,
   // therefore noise level is about -144dB.
   // So 1e-7 (-140dB) is usable threshold value 
-  double diff = calc_diff(&f, &ac3, &wav, &conv);
+  double diff = calc_diff(&f, &ac3, &wav, 0);
   BOOST_CHECK_LE(diff, 1e-7);
 }
 
