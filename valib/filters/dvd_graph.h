@@ -182,12 +182,17 @@ protected:
 
 
   /////////////////////////////////////////////////////////////////////////////
-  // FilterGraph2 overrides
+  // FilterGraph overrides
 
+  virtual int next_id(int id, Speakers spk) const;
   virtual Filter *init_filter(int id, Speakers spk);
-  virtual int next_id(int is, Speakers spk) const;
 
-  // helper functions
+  virtual void on_chain_complete();
+  virtual void on_chain_truncate();
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Helper functions
+
   int check_spdif_passthrough(Speakers spk) const;
   int check_spdif_encode(Speakers spk) const;
   Speakers agree_output_pcm(Speakers spk, Speakers user_spk) const;
