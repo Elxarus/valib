@@ -89,6 +89,7 @@ protected:
   void rebuild_node(int id);
   void invalidate();
   void destroy();
+  bool chain_has_node(int id) const;
 
   /////////////////////////////////////////////////////////
   // Interface to override
@@ -109,6 +110,12 @@ protected:
   { return 0; }
 
   virtual void uninit_filter(int id)
+  {}
+
+  virtual void on_chain_complete()
+  {}
+
+  virtual void on_chain_truncate()
   {}
 
 public:

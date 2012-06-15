@@ -400,6 +400,7 @@ FilterGraph::truncate(Node *node)
     delete node;
     node = next_node;
   }
+  on_chain_truncate();
 }
 
 ///////////////////////////////////////////////////////////
@@ -442,6 +443,7 @@ FilterGraph::build_chain(Node *node)
       node->next->state = state_init;
       node->next->rebuild = no_rebuild;
       node->next->flushing = false;
+      on_chain_complete();
       return true;
     }
 
@@ -521,6 +523,15 @@ FilterGraph::destroy()
   end.state = state_init;
   end.rebuild = no_rebuild;
   end.flushing = false;
+}
+
+bool
+FilterGraph::chain_has_node(int id) const
+{
+  for (const Node *node = &start; node; node = node->next)
+    if (node->id == id)
+      return true;
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
