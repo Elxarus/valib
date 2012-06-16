@@ -118,7 +118,10 @@ DShowSink::can_open(Speakers _spk) const
 {
   if (*m_mt.FormatType() == FORMAT_WaveFormatEx)
     if (is_compatible(_spk, (WAVEFORMAT*)m_mt.Format(), m_mt.FormatLength()))
+    {
+      valib_log(log_event, log_module, "can_open(%s): Ok (compatible with the mediatype set before)", _spk.print().c_str());
       return true;
+    }
 
   CMediaType mt;
   int i = 0;
@@ -141,7 +144,10 @@ DShowSink::init()
 {
   if (*m_mt.FormatType() == FORMAT_WaveFormatEx)
     if (is_compatible(spk, (WAVEFORMAT *)m_mt.Format(), m_mt.FormatLength()))
+    {
+      valib_log(log_event, log_module, "open(%s): Ok (compatible with the mediatype set before) %s", spk.print().c_str(), send_mt? "(send mediatype)": "");
       return true;
+    }
 
   CMediaType mt;
   int i = 0;
