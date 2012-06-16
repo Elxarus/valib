@@ -91,7 +91,7 @@ EAC3FrameParser::parse_header(const uint8_t *hdr, FrameInfo *finfo) const
   finfo->frame_size = frame_size;
   finfo->nsamples = nsamples;
   finfo->bs_type = bs_type;
-  finfo->spdif_type = 1; // SPDIF Pc burst-info (data type = AC3) 
+  finfo->spdif_type = 0; // 21; // SPDIF Pc burst-info (data type = EAC3) 
   return true;
 }
 
