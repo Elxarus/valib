@@ -35,7 +35,7 @@ int test_all_filters(Log *log)
   Detector       detector;
 
   // Processing filters
-  AGC            agc(2048);
+  AGC            agc;
   Mixer          mixer_ip(2048); // inplace
   Mixer          mixer_ib(2048); // immediate
   Resample       resample_up;    // upsample
