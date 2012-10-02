@@ -62,10 +62,10 @@ public:
   /////////////////////////////////////////////////////////
   // Filter interface
 
-  virtual bool init()
+  virtual bool open(Speakers spk)
   {
     log.push_back(LogEntry(entry_open, spk));
-    return true;
+    return Passthrough::open(spk);
   }
 
   virtual void uninit()

@@ -65,10 +65,10 @@ public:
   virtual bool can_open(Speakers spk_) const
   { return true; }
 
-  virtual bool init()
+  virtual bool open(Speakers spk_)
   {
-    log.push_back(LogEntry(entry_open, spk));
-    return true;
+    log.push_back(LogEntry(entry_open, spk_));
+    return SimpleSink::open(spk_);
   }
 
   virtual void uninit()
