@@ -12,7 +12,7 @@
 
 /**************************************************************************//**
   \class FormatChangeChunk
-  \brief Complete output state of a filter of source.
+  \brief Complete output state of a filter or source.
 
   In some cases it is nessesary to hold a complete output state of a source or
   a filter. This structure extends Chunk to hold format change information.
