@@ -7,13 +7,14 @@
 class WAVSink : public SimpleSink
 {
 protected:
-  AutoFile f;
-  uint32_t header_size;  // WAV header size;
-  uint64_t data_size;    // data size written to the file
-  uint8_t *file_format;  // WAVEFORMAT *
+  AutoFile f;            //!< file we're writing to
+  string fname;          //!< open file name
+  uint32_t header_size;  //!< WAV header size;
+  uint64_t data_size;    //!< data size written to the file
+  void *file_format;     //!< WAVEFORMAT * of the open file
 
-  void init_riff();
-  void close_riff();
+  void init_riff();      //!< Writes dummy RIFF header
+  void close_riff();     //!< Updates the RIFF header before closing the file
 
 public:
   WAVSink();
@@ -23,6 +24,7 @@ public:
   bool open_file(const char *file_name);
   void close_file();
   bool is_file_open() const;
+  string filename() const;
 
   /////////////////////////////////////////////////////////
   // Sink interface

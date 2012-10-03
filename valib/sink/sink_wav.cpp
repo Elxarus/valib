@@ -106,12 +106,13 @@ WAVSink::close_riff()
 }
 
 bool
-WAVSink::open_file(const char *_file_name)
+WAVSink::open_file(const char *new_file_name)
 {
   close_file();
-  if (!f.open(_file_name, "wb"))
+  if (!f.open(new_file_name, "wb"))
     return false;
 
+  fname = new_file_name;
   data_size = 0;
   safe_delete(file_format);
   return true;
@@ -123,9 +124,13 @@ WAVSink::close_file()
   if (!f.is_open())
     return;
 
-  close_riff();
+  if (is_open())
+  {
+    close_riff();
+    close();
+  }
   f.close();
-  close();
+  fname.clear();
 
   header_size = 0;
   data_size = 0;
@@ -138,6 +143,12 @@ WAVSink::is_file_open() const
   return f.is_open();
 }
 
+string
+WAVSink::filename() const
+{
+  return fname;
+}
+
 
 ///////////////////////////////////////////////////////////
 // Sink interface
@@ -145,8 +156,11 @@ WAVSink::is_file_open() const
 bool
 WAVSink::can_open(Speakers new_spk) const
 {
+  if (!f.is_open())
+    return false;
+
   // Use first (main) WAVEFROMATEX only
-  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(spk, 0));
+  std::auto_ptr<WAVEFORMATEX> wfe(spk2wfe(new_spk, 0));
   return wfe.get() != 0;
 }
 
@@ -175,6 +189,9 @@ WAVSink::init()
 void
 WAVSink::process(const Chunk &chunk)
 {
-  f.write(chunk.rawdata, chunk.size);
-  data_size += chunk.size;
+  if (f.is_open())
+  {
+    f.write(chunk.rawdata, chunk.size);
+    data_size += chunk.size;
+  }
 }
