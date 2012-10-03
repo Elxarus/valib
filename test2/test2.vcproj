@@ -558,6 +558,10 @@
 				RelativePath=".\tests\sink\test_log_sink.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\tests\sink\test_sink_filter.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="win32"
