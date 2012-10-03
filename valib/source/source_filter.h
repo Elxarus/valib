@@ -27,7 +27,7 @@
   Provided only with a source, SourceFilter acts like a wrapper for this
   source.
 
-  Given both source and filter, SourceFilter passes each chunk fron a source
+  Given both source and filter, SourceFilter passes each chunk from a source
   through the filter. Format changes are taken in account.
 
   If output format of the source does not match the filter's input format,
