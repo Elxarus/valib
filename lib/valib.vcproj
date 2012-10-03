@@ -1168,6 +1168,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\sink\sink_filter.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\sink\sink_filter.h"
 				>
 			</File>
