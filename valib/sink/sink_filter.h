@@ -26,15 +26,25 @@ public:
   sink(0), filter(0)
   { set(sink_, filter_); }
 
-  bool set(Sink *sink_, Filter *filter_)
+  void set(Sink *sink_, Filter *filter_)
   {
-    if (!sink_)
-      return false;
+    release();
+
+    if (sink_ && filter_)
+    {
+      if (filter_->is_open())
+      {
+        Speakers filter_spk = filter_->get_output();
+        if (!filter_spk.is_unknown())
+          if (!sink_->is_open() || sink_->get_input() != filter_spk)
+            sink_->open_throw(filter_spk);
+      }
+    }
 
     sink = sink_;
     filter = filter_;
-    return true;
   }
+
   void release()
   {
     sink = 0;
@@ -62,10 +72,11 @@ public:
     if (!filter->open(spk))
       return false;
 
-    if (filter->get_output().is_unknown())
+    Speakers filter_spk = filter->get_output();
+    if (filter_spk.is_unknown())
       return true;
 
-    return sink->open(spk);
+    return sink->open(filter_spk);
   }
 
   virtual void close()
@@ -135,10 +146,10 @@ public:
     sink->flush();
   }
 
-  // Sink state
   virtual bool is_open() const
   {
     if (!sink) return false;
+    if (filter) return filter->is_open() && sink->is_open();
     return sink->is_open();
   }
 
