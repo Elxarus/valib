@@ -67,6 +67,7 @@ BOOST_AUTO_TEST_CASE(init_constructor)
 
   f.process(Chunk(), Chunk());
   f.flush(Chunk());
+  f.reset();
   f.close();
   BOOST_CHECK(!f.is_open());
 
@@ -74,6 +75,7 @@ BOOST_AUTO_TEST_CASE(init_constructor)
 "open(Linear PCM Stereo 48000)\n"
 "process(size = 0)\n"
 "flush()\n"
+"reset()\n"
 "close()";
 
   BOOST_CHECK_EQUAL(log.print(), test_log);
