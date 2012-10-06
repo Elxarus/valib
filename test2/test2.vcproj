@@ -572,6 +572,10 @@
 				RelativePath=".\tests\sink\test_sink_wav.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\tests\sink\test_sink_wrapper.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="win32"
