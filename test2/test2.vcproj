@@ -529,6 +529,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tests\filters\test_filter_wrapper.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\filters\test_frame_splitter.cpp"
 				>
 			</File>
