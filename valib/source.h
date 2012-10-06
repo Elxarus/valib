@@ -85,4 +85,50 @@ public:
   virtual string info() const { return string(); }
 };
 
+
+
+/**************************************************************************//**
+  \class SourceWrapper
+  \brief Wrapper delegating Source interface to another source.
+
+  If no delegate was set, wrapper just does nothing.
+
+  Source name is constructed from wrapper's name and delegatee's name.
+******************************************************************************/
+
+class SourceWrapper : public Source
+{
+public:
+  SourceWrapper(): source(0)
+  {}
+
+  SourceWrapper(Source *delegatee): source(delegatee)
+  {}
+
+  /////////////////////////////////////////////////////////
+  // Processing
+
+  virtual void reset()
+  { if (source) source->reset(); }
+
+  virtual bool get_chunk(Chunk &out)
+  { return source? source->get_chunk(out): false; }
+
+  virtual bool new_stream() const
+  { return source? source->new_stream(): false; }
+
+  virtual Speakers get_output() const
+  { return source? source->get_output(): spk_unknown; }
+
+  // Source info
+  virtual string name() const
+  { return source? Source::name() + "/" + source->name(): Source::name(); }
+
+  virtual string info() const
+  { return source? source->info(): string(); }
+
+protected:
+  Source *source;
+};
+
 #endif
