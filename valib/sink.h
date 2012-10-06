@@ -293,4 +293,64 @@ public:
 
 };
 
+
+
+/**************************************************************************//**
+  \class SinkWrapper
+  \brief Wrapper delegating Sink interface to another source.
+
+  If no delegate was set, wrapper just does nothing (you cannot open the sink).
+
+  Sink name is constructed from wrapper's name and delegatee's name.
+******************************************************************************/
+
+class SinkWrapper : public Sink
+{
+public:
+  SinkWrapper(): sink(0)
+  {}
+
+  SinkWrapper(Sink *delegatee): sink(delegatee)
+  {}
+
+  virtual bool can_open(Speakers spk) const
+  { return sink? sink->can_open(spk): false; }
+
+  virtual bool open(Speakers spk)
+  { return sink? sink->open(spk): false; }
+
+  virtual void close()
+  { if (sink) sink->close(); }
+
+  virtual bool is_open() const
+  { return sink? sink->is_open(): false; }
+
+  virtual Speakers get_input() const
+  { return sink? sink->get_input(): spk_unknown; }
+
+  /////////////////////////////////////////////////////////
+  // Processing
+
+  virtual void reset()
+  { if (sink) sink->reset(); }
+
+  virtual void process(const Chunk &in)
+  { if (sink) sink->process(in); }
+
+  virtual void flush()
+  { if (sink) sink->flush(); }
+
+  /////////////////////////////////////////////////////////
+  // Sink info
+
+  virtual string name() const
+  { return sink? Sink::name() + "/" + sink->name(): Sink::name(); }
+
+  virtual string info() const
+  { return sink? sink->info(): string(); }
+
+protected:
+  Sink *sink;
+};
+
 #endif
