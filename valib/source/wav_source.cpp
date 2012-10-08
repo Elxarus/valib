@@ -2,12 +2,12 @@
 #include "wav_source.h"
 #include "../win32/winspk.h"
 
-const uint32_t fcc_riff = be2int32('RIFF');
-const uint32_t fcc_rf64 = be2int32('RF64');
-const uint32_t fcc_wave = be2int32('WAVE');
-const uint32_t fcc_ds64 = be2int32('ds64');
-const uint32_t fcc_fmt  = be2int32('fmt ');
-const uint32_t fcc_data = be2int32('data');
+static const uint32_t fcc_riff = be2int32('RIFF');
+static const uint32_t fcc_rf64 = be2int32('RF64');
+static const uint32_t fcc_wave = be2int32('WAVE');
+static const uint32_t fcc_ds64 = be2int32('ds64');
+static const uint32_t fcc_fmt  = be2int32('fmt ');
+static const uint32_t fcc_data = be2int32('data');
 
 struct ChunkHeader
 {
@@ -41,15 +41,15 @@ struct FMTChunk
 
 WAVSource::WAVSource()
 {
-  block_size = 0;
+  chunk_size = 0;
   data_start = 0;
   data_size  = 0;
   data_remains = 0;
 }
 
-WAVSource::WAVSource(const char *filename_, size_t block_size_)
+WAVSource::WAVSource(const char *filename_, size_t chunk_size_)
 {
-  block_size = 0;
+  chunk_size = 0;
   data_start = 0;
   data_size  = 0;
   data_remains = 0;
@@ -57,11 +57,11 @@ WAVSource::WAVSource(const char *filename_, size_t block_size_)
   format.allocate(sizeof(WAVEFORMATEX));
   format.zero();
 
-  open(filename_, block_size_);
+  open(filename_, chunk_size_);
 }
 
 bool 
-WAVSource::open(const char *filename_, size_t block_size_)
+WAVSource::open(const char *filename_, size_t chunk_size_)
 {
   close();
   f.open(filename_);
@@ -74,12 +74,8 @@ WAVSource::open(const char *filename_, size_t block_size_)
     return false;
   }
 
-  block_size = block_size_;
-  if (!buf.allocate(block_size))
-  {
-    close();
-    return false;
-  }
+  chunk_size = chunk_size_;
+  buf.allocate(chunk_size);
 
   f.seek(data_start);
   data_remains = data_size;
@@ -188,7 +184,7 @@ void
 WAVSource::close()
 {
   spk = spk_unknown;
-  block_size = 0;
+  chunk_size = 0;
   data_start = 0;
   data_size  = 0;
   data_remains = 0;
@@ -200,6 +196,20 @@ bool
 WAVSource::is_open() const
 {
   return f.is_open();
+}
+
+void
+WAVSource::set_chunk_size(size_t chunk_size_)
+{
+  chunk_size = chunk_size_;
+  if (is_open())
+    buf.allocate(chunk_size);
+}
+
+size_t
+WAVSource::get_chunk_size() const
+{
+  return chunk_size;
 }
 
 AutoFile::fsize_t
@@ -237,8 +247,11 @@ WAVSource::wave_format() const
 void
 WAVSource::reset()
 {
-  f.seek(data_start);
-  data_remains = data_size;
+  if (f.is_open())
+  {
+    f.seek(data_start);
+    data_remains = data_size;
+  }
 }
 
 bool
@@ -247,8 +260,8 @@ WAVSource::get_chunk(Chunk &chunk)
   if (!data_remains || f.eof() || !f.is_open() )
     return false;
 
-  size_t len = block_size;
-  if (data_remains < block_size)
+  size_t len = chunk_size;
+  if (data_remains < chunk_size)
     len = f.size_cast(data_remains);
 
   size_t data_read = f.read(buf, len);
