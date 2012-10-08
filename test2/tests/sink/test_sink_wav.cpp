@@ -4,9 +4,9 @@
 
 #include <stdio.h>
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 #include "sink/sink_wav.h"
 #include "../../suite.h"
+#include "../../temp_filename.h"
 
 static const Speakers spk1(FORMAT_PCM16, MODE_STEREO, 48000);
 static const Speakers spk_bad(FORMAT_LINEAR, MODE_5_1, 48000);
@@ -36,32 +36,6 @@ static const uint8_t file_data[] =
 
 BOOST_AUTO_TEST_SUITE(wav_sink)
 
-class TempFilename
-{
-protected:
-  string fname;
-
-public:
-  TempFilename()
-  {
-    boost::filesystem::path temp_dir = boost::filesystem::temp_directory_path();
-    boost::filesystem::path full_path;
-    do {
-      full_path = temp_dir / boost::filesystem::unique_path();
-    } while (boost::filesystem::exists(full_path));
-    fname = full_path.string();
-  }
-
-  ~TempFilename()
-  { remove(fname.c_str()); }
-
-  const char *c_str() const
-  { return fname.c_str(); }
-
-  const string &string() const
-  { return fname; }
-};
-
 BOOST_AUTO_TEST_CASE(constructor)
 {
   WAVSink sink;
@@ -77,7 +51,7 @@ BOOST_AUTO_TEST_CASE(init_constructor)
   TempFilename tmp;
   WAVSink sink(tmp.c_str());
   BOOST_CHECK(sink.is_file_open());
-  BOOST_CHECK_EQUAL(sink.filename(), tmp.string());
+  BOOST_CHECK_EQUAL(sink.filename(), tmp.str());
   BOOST_CHECK(!sink.is_open());
   BOOST_CHECK(sink.can_open(spk1));
 }
@@ -90,7 +64,7 @@ BOOST_AUTO_TEST_CASE(file_open_close)
   bool result = sink.open_file(tmp.c_str());
   BOOST_CHECK(result);
   BOOST_CHECK(sink.is_file_open());
-  BOOST_CHECK_EQUAL(sink.filename(), tmp.string());
+  BOOST_CHECK_EQUAL(sink.filename(), tmp.str());
   BOOST_CHECK(!sink.is_open());
   BOOST_CHECK(sink.can_open(spk1));
 

@@ -348,6 +348,14 @@
 				RelativePath=".\suite.h"
 				>
 			</File>
+			<File
+				RelativePath=".\temp_filename.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\temp_filename.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="fir"
