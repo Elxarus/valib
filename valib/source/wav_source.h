@@ -18,7 +18,7 @@ protected:
   Speakers spk;
   Rawdata format;
   
-  size_t block_size;
+  size_t chunk_size;
 
   AutoFile::fsize_t data_start;
   uint64_t          data_size;
@@ -28,11 +28,14 @@ protected:
 
 public:
   WAVSource();
-  WAVSource(const char *filename, size_t block_size);
+  WAVSource(const char *filename, size_t chunk_size = 65536);
 
-  bool open(const char *filename, size_t block_size);
+  bool open(const char *filename, size_t chunk_size = 65536);
   void close();
   bool is_open() const;
+
+  void set_chunk_size(size_t chunk_size);
+  size_t get_chunk_size() const;
 
   AutoFile::fsize_t size() const;
   AutoFile::fsize_t pos() const;
