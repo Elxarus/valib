@@ -397,6 +397,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tests\source\test_pcmwav_source.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\source\test_source_filter.cpp"
 				>
 			</File>
@@ -578,6 +582,10 @@
 			</File>
 			<File
 				RelativePath=".\tests\sink\test_sink_filter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\sink\test_sink_pcmwav.cpp"
 				>
 			</File>
 			<File

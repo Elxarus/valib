@@ -2,7 +2,6 @@
   WAVSink test
 */
 
-#include <stdio.h>
 #include <boost/test/unit_test.hpp>
 #include "sink/sink_wav.h"
 #include "../../suite.h"
