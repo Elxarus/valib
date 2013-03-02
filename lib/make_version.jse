@@ -1,0 +1,31 @@
+// Integrating the Mercurial Revision into the Version Automatically with Native C/C++
+// http://www.zachburlingame.com/2011/02/integrating-the-mercurial-revision-into-the-version-automatically/
+// Run at pre-build step
+
+var fso   = new ActiveXObject("Scripting.FileSystemObject");
+var shell = new ActiveXObject("WScript.Shell");
+ 
+var outFile = fso.CreateTextFile("../valib/version.h", true);
+ 
+var hgRevNum               = shell.Exec("hg identify --num");
+var rev                    = hgRevNum.StdOut.ReadAll();
+var hg_revision            = String(rev).replace(/\n/g,"").replace(/\+/g,"");
+var hg_local_modifications = 0
+if( String(rev).replace(/\n/g, "").indexOf("+") != -1 )
+{
+   hg_local_modifications = 1;
+}
+outFile.WriteLine( "#define VALIB_HG_REVISION               " + hg_revision );
+outFile.WriteLine( "#define VALIB_HG_LOCAL_MODIFICATIONS    " + hg_local_modifications );
+ 
+var hgChangeset  = shell.Exec("hg parents --template \"{node}\"");
+var changeset    = hgChangeset.StdOut.ReadAll();
+var hg_changeset = String(changeset).replace(/\n/g,"");
+outFile.WriteLine( "#define VALIB_HG_CHANGESET              \"" + hg_changeset +"\"" );
+ 
+var hgChangesetShort    = shell.Exec("hg parents --template \"{node|short}\"");
+var changeset_short     = hgChangesetShort.StdOut.ReadAll();
+var hg_changeset_short  = "#define VALIB_HG_CHANGESET_SHORT        \"" + String(changeset_short).replace(/\n/g,"") + "\"";
+outFile.WriteLine( hg_changeset_short );
+ 
+outFile.Close();
