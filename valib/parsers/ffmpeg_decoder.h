@@ -6,7 +6,7 @@
 
 struct AVCodec;
 struct AVCodecContext;
-enum CodecID;
+enum AVCodecID;
 
 class FfmpegDecoder : public SimpleFilter
 {
@@ -14,7 +14,7 @@ protected:
   // This class is not intended to be used directly.
   // Make a descendant class for the specific format.
 
-  FfmpegDecoder(CodecID ffmpeg_codec_id, int format);
+  FfmpegDecoder(AVCodecID ffmpeg_codec_id, int format);
   ~FfmpegDecoder();
 
 public:
@@ -37,15 +37,20 @@ public:
 protected:
   virtual bool init_context(AVCodecContext *avctx);
 
-  Rawdata buf;      // output buffer
-  Speakers out_spk; // output format
+  Rawdata buf;         // output buffer for ffmpeg
+  Speakers ffmpeg_spk; // ffmpeg data format
+  Speakers out_spk;    // output format
   bool new_stream_flag;
 
-  CodecID ffmpeg_codec_id;
+  AVCodecID ffmpeg_codec_id;
   int format;
 
   AVCodec *avcodec;
   AVCodecContext *avctx;
+
+  SampleBuf samples;
+  void (*convert_func)(uint8_t *, samples_t, size_t);
+  void convert_to_linear(uint8_t *data, int data_size, samples_t &out_samples, size_t &out_nsamples);
 };
 
 #endif

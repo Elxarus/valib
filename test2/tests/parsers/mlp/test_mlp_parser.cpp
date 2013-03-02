@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(streams_frames)
   BOOST_CHECK(parser.is_open());
 
   check_streams_chunks(&f, &parser, 1, 14400);
-  BOOST_CHECK_EQUAL(parser.get_output(), Speakers(FORMAT_PCM16, MODE_3_0_2_LFE, 48000));
+  BOOST_CHECK_EQUAL(parser.get_output(), Speakers(FORMAT_LINEAR, MODE_3_0_2_LFE, 48000, 32767.5));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

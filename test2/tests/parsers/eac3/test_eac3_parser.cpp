@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(streams_frames)
   check_streams_chunks(&f, &parser, 1, 819);
 
   // Decoder's output must be floating point
-  BOOST_CHECK_EQUAL(parser.get_output(), Speakers(FORMAT_PCMFLOAT, MODE_5_1, 48000));
+  BOOST_CHECK_EQUAL(parser.get_output(), Speakers(FORMAT_LINEAR, MODE_5_1, 48000));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

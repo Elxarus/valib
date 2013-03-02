@@ -1,26 +1,35 @@
-#!/bin/sh
+#!/bin/bash
 
-PATH="/mingw64/bin:$PATH"
+CONFIG=\
+"--enable-runtime-cpudetect --disable-debug "\
+"--disable-all --enable-avcodec --enable-avutil "\
+"--enable-parser=ac3 --enable-parser=mlp "\
+"--enable-decoder=ac3 --enable-decoder=eac3 --enable-decoder=truehd --enable-decoder=mlp "\
+"--enable-decoder=aac --enable-decoder=dca --enable-decoder=vorbis "\
+"--enable-decoder=ape --enable-decoder=alac --enable-decoder=flac" 
 
-mkdir build_x64
-cd build_x64
+mkdir build
+cd build
 
-../configure --sysroot=/mingw64/bin --cross-prefix=x86_64-w64-mingw32- --arch=x86_64 --target-os=mingw32 --build-suffix=64 --prefix=../bin/x64 \
---enable-shared --disable-static --enable-memalign-hack --enable-runtime-cpudetect --disable-debug \
---disable-doc --disable-ffmpeg --disable-ffplay --disable-ffprobe \
---disable-ffserver --disable-avdevice --disable-avformat \
---disable-swscale --disable-postproc --disable-avfilter --disable-network --disable-swresample \
---disable-yasm \
---disable-everything \
---enable-parser=ac3 --enable-parser=mlp \
---enable-decoder=ac3 --enable-decoder=eac3 --enable-decoder=truehd --enable-decoder=mlp \
---enable-decoder=aac --enable-decoder=dca --enable-decoder=vorbis \
---enable-decoder=ape --enable-decoder=alac --enable-decoder=flac 
+###########################################################
+## 64bit shared (dll) and static lib
+
+mkdir shared_x64
+cd shared_x64
+
+../../configure --toolchain=msvc --arch=amd64 --prefix=../../bin/x64 --enable-shared $CONFIG
 
 make
-
-# 'make install' requires these files to exist
-touch libavcodec/avcodec64.lib
-touch libavutil/avutil64.lib
 make install
+cd ..
+
+mkdir static_x64
+cd static_x64
+
+../../configure --toolchain=msvc --arch=amd64 --prefix=../../bin/x64 --enable-static $CONFIG
+
+make
+make install
+cd ..
+
 cd ..
