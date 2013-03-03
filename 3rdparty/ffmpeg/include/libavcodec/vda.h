@@ -39,7 +39,7 @@
 #include <VideoDecodeAcceleration/VDADecoder.h>
 #undef Picture
 
-#include "libavcodec/version.h"
+#include "../libavcodec/version.h"
 
 #if FF_API_VDA_ASYNC
 #include <pthread.h>
