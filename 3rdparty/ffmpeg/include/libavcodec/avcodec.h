@@ -36,7 +36,7 @@
 #include "../libavutil/pixfmt.h"
 #include "../libavutil/rational.h"
 
-#include "version.h"
+#include "../libavcodec/version.h"
 /**
  * @defgroup libavc Encoding/Decoding Library
  * @{
