@@ -4,9 +4,52 @@
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
 
 ///////////////////////////////////////////////////////////////////////////////
-// Vistual C implementation
+// Visual C implementation
+
+#include "../3rdparty/utf8/utf8.h"
 
 const AutoFile::fsize_t AutoFile::bad_size = std::numeric_limits<AutoFile::fsize_t>::max();
+
+std::wstring utf8_to_wstring(const std::string &s)
+{
+  std::wstring w;
+  if (sizeof(wchar_t) == 2)
+    utf8::utf8to16(s.begin(), s.end(), std::back_inserter(w));
+  else if (sizeof(wchar_t) == 4)
+    utf8::utf8to32(s.begin(), s.end(), std::back_inserter(w));
+  else
+    assert(false);
+  return w;
+}
+
+static FILE *fopen_utf8(const char *filename, const char *mode)
+{
+  try
+  {
+    std::wstring wfilename = utf8_to_wstring(filename);
+    std::wstring wmode = utf8_to_wstring(mode);
+    return _wfopen(wfilename.c_str(), wmode.c_str());
+  }
+  catch (const utf8::exception &)
+  {
+    // Bad file name
+    return 0;
+  }
+}
+
+static int remove_utf8(const char *filename)
+{
+  try
+  {
+    std::wstring wfilename = utf8_to_wstring(filename);
+    return _wremove(wfilename.c_str());
+  }
+  catch (const utf8::exception &)
+  {
+    // Bad file name
+    return -1;
+  }
+}
 
 static int portable_seek(FILE *f, AutoFile::fsize_t pos, int origin)
 { return _fseeki64(f, pos, origin); }
@@ -21,6 +64,18 @@ static AutoFile::fsize_t portable_tell(FILE *f)
 
 const AutoFile::fsize_t AutoFile::bad_size = std::numeric_limits<long>::max();
 
+static FILE *fopen_utf8(const char *filename, const char *mode)
+{
+  // Most *nix systems use utf8 at file names
+  return fopen(filename, mode);
+}
+
+static int remove_utf8(const char *filename)
+{
+  // Most *nix systems use utf8 at file names
+  return remove(filename);
+}
+
 static int portable_seek(FILE *f, AutoFile::fsize_t pos, int origin)
 {
   assert(pos < AutoFile::bad_size);
@@ -33,13 +88,22 @@ static AutoFile::fsize_t portable_tell(FILE *f)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
+// Static functions
+
+int
+AutoFile::remove(const char *filename)
+{
+  return remove_utf8(filename);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Open/close file
 
 bool
 AutoFile::open(const char *filename, const char *mode)
 {
   if (f) close();
-  f = fopen(filename, mode);
+  f = fopen_utf8(filename, mode);
   if (f)
   {
     filesize = bad_size;
