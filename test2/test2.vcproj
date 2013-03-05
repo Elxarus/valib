@@ -45,10 +45,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="../valib"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
-				MinimalRebuild="true"
 				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -122,10 +122,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
 				AdditionalIncludeDirectories="../valib"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
-				MinimalRebuild="true"
 				ExceptionHandling="2"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -199,6 +199,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../valib"
@@ -279,6 +280,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../valib"
@@ -350,6 +352,14 @@
 				RelativePath=".\suite.h"
 				>
 			</File>
+			<File
+				RelativePath=".\temp_filename.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\temp_filename.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="fir"
@@ -391,7 +401,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tests\source\test_pcmwav_source.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\source\test_source_filter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\source\test_source_wrapper.cpp"
 				>
 			</File>
 		</Filter>
@@ -531,6 +549,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tests\filters\test_filter_wrapper.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tests\filters\test_frame_splitter.cpp"
 				>
 			</File>
@@ -560,6 +582,22 @@
 			>
 			<File
 				RelativePath=".\tests\sink\test_log_sink.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\sink\test_sink_filter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\sink\test_sink_pcmwav.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\sink\test_sink_wav.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\tests\sink\test_sink_wrapper.cpp"
 				>
 			</File>
 		</Filter>

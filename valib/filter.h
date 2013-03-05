@@ -903,7 +903,7 @@ public:
 
 /**************************************************************************//**
   \class FilterWrapper
-  \brief Wrapper that delegated the interface to another filter.
+  \brief Wrapper delegating Filter interface to another filter.
 
   Useful to make 'customized' filters that are special cases for more general
   filters. For example, Equalizer class is a specialization for Convolver.
@@ -911,8 +911,7 @@ public:
   If no delegate was set, wrapper just does not work (you cannot open the
   filter).
 
-  Filter name is not delegated. So the default behaviour is preserved, and
-  you will get wrapper's class name, not the delegate's name.
+  Filter name is constructed from wrapper's name and delegatee's name.
 
   \fn void FilterWrapper::wrap(Filter *)
     Set the filter to delegate the interface to.
