@@ -87,6 +87,9 @@ void compare(Source *src, Source *ref)
   /////////////////////////////////////////////////////////
   // Verify stream lengths
 
+  if (pos == 0)
+    BOOST_WARN("Compare zero length streams!");
+
   if (src_chunk.is_empty())
     src->get_chunk(src_chunk);
 

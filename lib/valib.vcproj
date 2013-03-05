@@ -43,8 +43,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
-				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				WarningLevel="4"
@@ -105,8 +105,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
-				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				WarningLevel="4"
@@ -167,6 +167,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="NDEBUG"
@@ -231,6 +232,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="NDEBUG"
@@ -1168,6 +1170,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\sink\sink_filter.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\sink\sink_filter.h"
 				>
 			</File>
@@ -1181,6 +1187,14 @@
 			</File>
 			<File
 				RelativePath="..\valib\sink\sink_null.h"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\sink\sink_pcmwav.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\sink\sink_pcmwav.h"
 				>
 			</File>
 			<File
@@ -1229,6 +1243,14 @@
 			</File>
 			<File
 				RelativePath="..\valib\source\list_source.h"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\source\pcmwav_source.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\source\pcmwav_source.h"
 				>
 			</File>
 			<File

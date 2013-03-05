@@ -1,13 +1,64 @@
-/*
-  SinkFilter
-  Combination of a filter and a sink, acting like a sink.
-*/
+/**************************************************************************//**
+  \file sink_filter.h
+  \brief SinkFilter class
+******************************************************************************/
 
 #ifndef VALIB_SINK_FILTER_H
 #define VALIB_SINK_FILTER_H
 
 #include "../filter.h"
 #include "../sink.h"
+
+/**************************************************************************//**
+  \class SinkFilter
+  \brief Combination of a sink and a filter, acting like a sink.
+
+  SinkFilter may be in 3 states:
+  - Uninitialized
+  - Sink only
+  - Sink with filter
+
+  Uninititalized sink can never be open.
+ 
+  Provided only with a sink, SinkFilter acts like a wrapper for this sink.
+
+  Given both sink and filter, SinkFilter passes each chunk through a filter
+  to a sink. Format changes are taken in account.
+
+  If output format of the filter does not match the sink's input format,
+  SinkFilter reopens the sink with the correct format.
+
+  EOpenFilter exception may be thrown from set() and process() functions.
+
+  \fn SinkFilter::SinkFilter();
+    Creates uninitialized object.
+
+  \fn SinkFilter(Sink *sink, Filter *filter);
+    Calls set().
+
+  \fn void SinkFilter::set(Sink *sink, Filter *filter);
+    First of all, releases sink and filter previously set. When both
+    arguments are zero, it is equivalent to release().
+
+    When only sink is given, takes this sink under control and acts as a
+    wrapper for it.
+
+    Given both sink and filter, takes control on both. If output format of
+    the filter does not match the sink's input format, reopens the sink
+    with the correct format.
+
+    May throw EOpenFilter
+
+  \fn void SinkFilter::release();
+    Releases sink and filter previously set (if any).
+
+  \fn Sink *SinkFilter::get_sink() const;
+    Returns sink currently set or null pointer.
+
+  \fn Filter *SinkFilter::get_filter() const;
+    Returns filter currently set or null pointer.
+
+******************************************************************************/
 
 class SinkFilter : public Sink
 {
@@ -16,138 +67,30 @@ protected:
   Filter *filter;
 
 public:
-  struct Error : public Sink::Error {};
+  SinkFilter();
+  SinkFilter(Sink *sink, Filter *filter);
 
-  SinkFilter():
-  sink(0), filter(0)
-  {}
-
-  SinkFilter(Sink *sink_, Filter *filter_):
-  sink(0), filter(0)
-  { set(sink_, filter_); }
-
-  bool set(Sink *sink_, Filter *filter_)
-  {
-    if (!sink_)
-      return false;
-
-    sink = sink_;
-    filter = filter_;
-    return true;
-  }
-  void release()
-  {
-    sink = 0;
-    filter = 0;
-  }
+  void set(Sink *sink, Filter *filter);
+  void release();
 
   Sink   *get_sink()   const { return sink;   }
   Filter *get_filter() const { return filter; }
 
   /////////////////////////////////////////////////////////
-  // Open/close the filter
+  // Open/close the sink
 
-  virtual bool can_open(Speakers spk) const
-  {
-    if (!sink) return false;
-    if (!filter) return sink->can_open(spk);
-    return filter->can_open(spk);
-  }
-
-  virtual bool open(Speakers spk)
-  {
-    if (!sink) return false;
-    if (!filter) return sink->open(spk);
-
-    if (!filter->open(spk))
-      return false;
-
-    if (filter->get_output().is_unknown())
-      return true;
-
-    return sink->open(spk);
-  }
-
-  virtual void close()
-  {
-    if (!sink) return;
-
-    sink->close();
-    if (filter)
-      filter->close();
-  }
+  virtual bool can_open(Speakers spk) const;
+  virtual bool open(Speakers spk);
+  virtual void close();
+  virtual bool is_open() const;
+  virtual Speakers get_input() const;
 
   /////////////////////////////////////////////////////////
   // Processing
 
-  virtual void reset()
-  {
-    if (!sink) return;
-
-    sink->reset();
-    if (filter)
-      filter->reset();
-  }
-
-  virtual void process(const Chunk &in)
-  {
-    if (!sink) return;
-    if (!filter)
-    {
-      sink->process(in);
-      return;
-    }
-
-    Chunk non_const_in = in;
-    Chunk out;
-    while (filter->process(non_const_in, out))
-    {
-      if (filter->new_stream())
-      {
-        sink->flush();
-        if (!sink->open(filter->get_output()))
-          THROW(Error());
-      }
-      sink->process(out);
-    }
-  }
-
-  virtual void flush()
-  {
-    if (!sink) return;
-    if (!filter)
-    {
-      sink->flush();
-      return;
-    }
-
-    Chunk out;
-    while (filter->flush(out))
-    {
-      if (filter->new_stream())
-      {
-        sink->flush();
-        if (!sink->open(filter->get_output()))
-          THROW(Error());
-      }
-      sink->process(out);
-    }
-    sink->flush();
-  }
-
-  // Sink state
-  virtual bool is_open() const
-  {
-    if (!sink) return false;
-    return sink->is_open();
-  }
-
-  virtual Speakers get_input() const
-  {
-    if (!sink) return spk_unknown;
-    if (!filter) return sink->get_input();
-    return filter->get_input();
-  }
+  virtual void reset();
+  virtual void process(const Chunk &in);
+  virtual void flush();
 };
 
 #endif
