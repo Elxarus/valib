@@ -42,9 +42,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC;_DEBUG"
-				MinimalRebuild="true"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC;_DEBUG;NO_ERROR"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				WarningLevel="0"
@@ -103,9 +104,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC;_DEBUG"
-				MinimalRebuild="true"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC;_DEBUG;NO_ERROR"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				WarningLevel="0"
@@ -164,9 +166,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC;NO_ERROR"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="0"
@@ -226,9 +230,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;OPT_GENERIC;NO_ERROR"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="0"

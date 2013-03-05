@@ -248,7 +248,7 @@ Converter::get_output() const
   if (spk.format == format)
     return spk;
 
-  if (convert == 0)
+  if (convert == 0 || spk.is_unknown())
     return spk_unknown;
 
   Speakers out = spk;

@@ -197,6 +197,9 @@ AC3Enc::can_open(Speakers _spk) const
     case MODE_3_1: case MODE_3_1 | CH_MASK_LFE:
     case MODE_2_2: case MODE_2_2 | CH_MASK_LFE:
     case MODE_3_2: case MODE_3_2 | CH_MASK_LFE:
+    // treat layouts with back channels as side channels.
+    case MODE_2_0_2: case MODE_2_0_2 | CH_MASK_LFE:
+    case MODE_3_0_2: case MODE_3_0_2 | CH_MASK_LFE:
       break;
     default: return false;
   }
@@ -242,6 +245,9 @@ AC3Enc::init()
     case MODE_3_1: case MODE_3_1 | CH_MASK_LFE: acmod = AC3_MODE_3_1; break;
     case MODE_2_2: case MODE_2_2 | CH_MASK_LFE: acmod = AC3_MODE_2_2; break;
     case MODE_3_2: case MODE_3_2 | CH_MASK_LFE: acmod = AC3_MODE_3_2; break;
+    // treat layouts with back channels as side channels.
+    case MODE_2_0_2: case MODE_2_0_2 | CH_MASK_LFE: acmod = AC3_MODE_2_2; break;
+    case MODE_3_0_2: case MODE_3_0_2 | CH_MASK_LFE: acmod = AC3_MODE_3_2; break;
     default: return false;
   }
   lfe     = spk.lfe();
