@@ -11,7 +11,12 @@
 
 /**************************************************************************//**
   \class AutoFile
-  \brief Simple file helper class. Supports large files >2G.
+  \brief Simple file helper class. Supports large files >2G and UTF-8 names.
+
+  UTF-8 file names is supported by calling _wfopen when using Visual Studio.
+  In all other cases usual fopen() is called (on most *nix systems it already
+  works with UTF-8). Also, use AutoFile::remove() static function to remove
+  files with UTF-8 names.
 
   AutoFile may support large files >2G (currently only in Visual C++). If you
   open a large file without large file support, file size is set to
@@ -160,6 +165,8 @@ protected:
   AutoFile(const AutoFile &);
   AutoFile &operator =(const AutoFile &);
 
+public:
+  static int remove(const char *filename);
 
 public:
   AutoFile(): f(0), filesize(0)
