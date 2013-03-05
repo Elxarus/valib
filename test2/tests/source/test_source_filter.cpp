@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(set_release)
   BOOST_CHECK(!filter.is_open());
   BOOST_CHECK_EQUAL(filter.print(), "");
 
-  // Uninitialized source and closed filter
+  // Initialized source and closed filter
   source.set(spk1, empty_list);
   src.set(&source, &filter);
   BOOST_CHECK(src.get_source() == &source);
