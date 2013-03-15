@@ -5,19 +5,50 @@
 #ifndef VALIB_VARGS_H
 #define VALIB_VARGS_H
 
+#include <vector>
+#include <string>
+
 struct enum_opt
 {
   const char *name;
   int value;
 };
 
-enum arg_type { argt_exist, argt_bool, argt_num, argt_hex, argt_text, argt_enum };
-bool is_arg(const char *arg, const char *name, arg_type type);
+enum arg_type { argt_exist, argt_bool, argt_int, argt_double, argt_text, argt_enum };
 
-bool arg_bool(const char *arg);
-double arg_num(const char *arg);
-int arg_hex(const char *arg);
-const char *arg_text(const char *arg);
-bool arg_enum(const char *arg, int &value, const enum_opt *options, size_t num_options);
+struct arg_t
+{
+  struct bad_value_e
+  {
+    std::string arg;
+    bad_value_e(const std::string &arg_): arg(arg_) {}
+  };
+
+  struct empty_arg_e {};
+
+  std::string raw;
+
+  arg_t()
+  {}
+
+  arg_t(const std::string &arg): raw(arg)
+  {}
+
+  arg_t(const char *arg): raw(arg)
+  {}
+
+  bool is_option(const std::string &name, arg_type type) const;
+
+  bool as_bool() const;
+  double as_double() const;
+  int as_int() const;
+  std::string as_text() const;
+
+  int choose(const enum_opt *options, size_t num_options) const;
+  int choose_lowcase(const enum_opt *options, size_t num_options) const;
+};
+
+typedef std::vector<arg_t> arg_list_t;
+arg_list_t args_utf8(int argc, const char *argv[]);
 
 #endif
