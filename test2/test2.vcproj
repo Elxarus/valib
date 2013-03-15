@@ -677,6 +677,10 @@
 			RelativePath=".\tests\test_syncscan.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\tests\test_vargs.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
