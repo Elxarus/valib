@@ -422,6 +422,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\valib\utf8.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\valib\utf8.h"
+				>
+			</File>
+			<File
 				RelativePath="..\valib\vargs.cpp"
 				>
 			</File>
