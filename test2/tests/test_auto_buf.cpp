@@ -10,7 +10,11 @@
 // If bad_size is larger, VC++ throws "Invalid allocation size" instead of 
 // std::bad_alloc and test fails:
 // Invalid allocation size - 7FFFFFFFFFFFFFFE (exceeded fffdefff)
-static const size_t bad_size = 0xfffdefff;
+static const size_t bad_size = 
+  (sizeof(size_t) == 4)? (size_t) 0xfffdefff:    // 3.9 GiB on 32bit system
+  (sizeof(size_t) == 8)? (size_t) 0x10000000000: // 1 TiB on 64bit system
+  std::numeric_limits<size_t>::max() / 2 - 1;    // half of the address space in all other cases
+
 static const size_t data_size  = 100;
 static const size_t data_size2 = 200;
 
