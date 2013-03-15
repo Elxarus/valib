@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(as_bool)
   BOOST_CHECK_EQUAL(arg_t("-x:nO").as_bool(), false);
   BOOST_CHECK_EQUAL(arg_t("-x:fAlSe").as_bool(), false);
 
-  BOOST_CHECK_THROW(arg_t("-x:++").as_bool(), arg_t::bad_value);
-  BOOST_CHECK_THROW(arg_t("-x:wrong").as_bool(), arg_t::bad_value);
+  BOOST_CHECK_THROW(arg_t("-x:++").as_bool(), arg_t::bad_value_e);
+  BOOST_CHECK_THROW(arg_t("-x:wrong").as_bool(), arg_t::bad_value_e);
 }
 
 BOOST_AUTO_TEST_CASE(as_int)
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(as_int)
   BOOST_CHECK_EQUAL(arg_t("-x:0xf0").as_int(), 240);
   BOOST_CHECK_EQUAL(arg_t("-x=10").as_int(), 10);
 
-  BOOST_CHECK_THROW(arg_t("-x:wrong").as_int(), arg_t::bad_value);
-  BOOST_CHECK_THROW(arg_t("-x:1.0").as_int(), arg_t::bad_value);
+  BOOST_CHECK_THROW(arg_t("-x:wrong").as_int(), arg_t::bad_value_e);
+  BOOST_CHECK_THROW(arg_t("-x:1.0").as_int(), arg_t::bad_value_e);
 }
 
 BOOST_AUTO_TEST_CASE(as_double)
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(as_double)
   BOOST_CHECK_EQUAL(arg_t("-x:+2.5e-2").as_double(), 2.5e-2);
   BOOST_CHECK_EQUAL(arg_t("-x=10.5").as_double(), 10.5);
 
-  BOOST_CHECK_THROW(arg_t("-x:wrong").as_double(), arg_t::bad_value);
-  BOOST_CHECK_THROW(arg_t("-x:1.0t").as_double(), arg_t::bad_value);
+  BOOST_CHECK_THROW(arg_t("-x:wrong").as_double(), arg_t::bad_value_e);
+  BOOST_CHECK_THROW(arg_t("-x:1.0t").as_double(), arg_t::bad_value_e);
 }
 
 BOOST_AUTO_TEST_CASE(as_text)
@@ -146,13 +146,13 @@ BOOST_AUTO_TEST_CASE(choose)
   BOOST_CHECK_EQUAL(arg_t("-x:option2").choose(options, array_size(options)), 2);
   BOOST_CHECK_EQUAL(arg_t("-x:option3").choose(options, array_size(options)), 3);
 
-  BOOST_CHECK_THROW(arg_t("-x:Option1").choose(options, array_size(options)), arg_t::bad_value);
+  BOOST_CHECK_THROW(arg_t("-x:Option1").choose(options, array_size(options)), arg_t::bad_value_e);
 
   BOOST_CHECK_EQUAL(arg_t("-x:oPtIoN1").choose_lowcase(options, array_size(options)), 1);
   BOOST_CHECK_EQUAL(arg_t("-x:OpTiOn2").choose_lowcase(options, array_size(options)), 2);
   BOOST_CHECK_EQUAL(arg_t("-x:oPtIoN3").choose_lowcase(options, array_size(options)), 3);
 
-  BOOST_CHECK_THROW(arg_t("-x:option4").choose_lowcase(options, array_size(options)), arg_t::bad_value);
+  BOOST_CHECK_THROW(arg_t("-x:option4").choose_lowcase(options, array_size(options)), arg_t::bad_value_e);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
