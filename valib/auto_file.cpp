@@ -1,4 +1,5 @@
 #include <limits>
+#include "utf8.h"
 #include "auto_file.h"
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1400)
@@ -6,21 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Visual C implementation
 
-#include "../3rdparty/utf8/utf8.h"
-
 const AutoFile::fsize_t AutoFile::bad_size = std::numeric_limits<AutoFile::fsize_t>::max();
-
-std::wstring utf8_to_wstring(const std::string &s)
-{
-  std::wstring w;
-  if (sizeof(wchar_t) == 2)
-    utf8::utf8to16(s.begin(), s.end(), std::back_inserter(w));
-  else if (sizeof(wchar_t) == 4)
-    utf8::utf8to32(s.begin(), s.end(), std::back_inserter(w));
-  else
-    assert(false);
-  return w;
-}
 
 static FILE *fopen_utf8(const char *filename, const char *mode)
 {
