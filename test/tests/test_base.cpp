@@ -205,15 +205,17 @@ TEST(base_sink_filter, "SinkFilter")
   CHECK(sink_filter.get_sink() == &null_sink);
   CHECK(sink_filter.get_filter() == &pass_filter);
 
+  // No sink and filter
+
+  sink_filter.set(0, 0);
+  CHECK(sink_filter.get_sink() == 0);
+  CHECK(sink_filter.get_filter() == 0);
+
   // Init test
 
   sink_filter.set(&zero_sink, &zero_filter);
   CHECK(sink_filter.get_sink() == &zero_sink);
   CHECK(sink_filter.get_filter() == &zero_filter);
-
-  // Fail without a sink
-
-  CHECK(sink_filter.set(0, 0) == false);
 
   // Zero source == zero (no filter)
   // Noise source != zero (no filter)
@@ -222,7 +224,7 @@ TEST(base_sink_filter, "SinkFilter")
   src_noise.get_chunk(noise_chunk);
   zero_sink.reset();
 
-  CHECK(sink_filter.set(&zero_sink, 0));
+  sink_filter.set(&zero_sink, 0);
   CHECK(sink_filter.open(spk));
 
   sink_filter.process(zero_chunk);
@@ -238,7 +240,7 @@ TEST(base_sink_filter, "SinkFilter")
   src_noise.get_chunk(noise_chunk);
   zero_sink.reset();
 
-  CHECK(sink_filter.set(&zero_sink, &pass_filter));
+  sink_filter.set(&zero_sink, &pass_filter);
   CHECK(sink_filter.open(spk));
 
   sink_filter.process(zero_chunk);
@@ -254,7 +256,7 @@ TEST(base_sink_filter, "SinkFilter")
   src_noise.get_chunk(noise_chunk);
   zero_sink.reset();
 
-  CHECK(sink_filter.set(&zero_sink, &zero_filter));
+  sink_filter.set(&zero_sink, &zero_filter);
   CHECK(sink_filter.open(spk));
 
   sink_filter.process(zero_chunk);
