@@ -30,8 +30,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)"
-				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
+				CommandLine=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -63,6 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="../3rdparty/ffmpeg/lib/libavcodec.lib ../3rdparty/ffmpeg/lib/libavutil.lib"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -100,8 +101,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\x64\*.dll $(OutDir)"
-				Outputs="$(OutDir)\avcodec64-52.dll;$(OutDir)\avutil64-50.dll"
+				CommandLine=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -134,6 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="../3rdparty/ffmpeg/lib/x64/libavcodec.lib ../3rdparty/ffmpeg/lib/x64/libavutil.lib"
 				GenerateDebugInformation="true"
 				TargetMachine="17"
 			/>
@@ -172,8 +174,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\*.dll $(OutDir)"
-				Outputs="$(OutDir)\avcodec-52.dll;$(OutDir)\avutil-50.dll"
+				CommandLine=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -205,6 +207,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="../3rdparty/ffmpeg/lib/libavcodec.lib ../3rdparty/ffmpeg/lib/libavutil.lib"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -245,8 +248,8 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy /b ..\3rdparty\ffmpeg\bin\x64\*.dll $(OutDir)"
-				Outputs="$(OutDir)\avcodec64-52.dll;$(OutDir)\avutil64-50.dll"
+				CommandLine=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -279,6 +282,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="../3rdparty/ffmpeg/lib/x64/libavcodec.lib ../3rdparty/ffmpeg/lib/x64/libavutil.lib"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

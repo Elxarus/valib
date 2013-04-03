@@ -813,29 +813,8 @@ public:
   /////////////////////////////////////////////////////////
   // Open & close the filter implementation
 
-  virtual bool open(Speakers new_spk)
-  {
-    if (!can_open(new_spk))
-      return false;
-
-    spk = new_spk;
-    if (!init())
-    {
-      spk = spk_unknown;
-      return false;
-    }
-
-    f_open = true;
-    return true;
-  }
-
-  virtual void close()
-  {
-    uninit();
-    f_open = false;
-    spk = spk_unknown;
-  }
-
+  virtual bool open(Speakers new_spk);
+  virtual void close();
   virtual bool is_open() const
   { return f_open; }
 
@@ -848,8 +827,7 @@ public:
   /////////////////////////////////////////////////////////
   // Processing implementation
 
-  virtual void reset()
-  {}
+  virtual void reset();
 
   virtual bool flush(Chunk &)
   { return false; }
