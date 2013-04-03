@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "../log.h"
 #include "filter_graph.h"
 
 using std::find;
@@ -70,17 +71,30 @@ FilterGraph::print_chain() const
 bool
 FilterGraph::open(Speakers new_spk)
 {
+  const string func = string("open(") + new_spk.print() + string(")");
+  valib_log(log_event, name(), func);
+
   if (!can_open(new_spk))
+  {
+    valib_log(log_error, name(), func + " failed because can_open() returns false");
     return false;
+  }
 
   destroy();
   start.filter->open(new_spk);
-  return build_chain(&start);
+  bool result = build_chain(&start);
+
+  if (!result)
+    valib_log(log_error, name(), func + " failed because can_open() returns false");
+  else
+    valib_log(log_event, name(), func + " succeeded");
+  return result;
 }
 
 void
 FilterGraph::close()
 {
+  valib_log(log_event, name(), "close()");
   if (is_open())
   {
     destroy();
@@ -338,6 +352,8 @@ FilterGraph::flush(Chunk &out)
 void
 FilterGraph::reset()
 {
+  valib_log(log_event, name(), "reset()");
+
   is_new_stream = false;
 
   // Reset filters and
@@ -394,6 +410,7 @@ FilterGraph::truncate(Node *node)
   {
     node->filter->close();
     uninit_filter(node->id);
+    valib_log(log_event, name(), "truncate(): node %i (%s) removed from the chain", node->id, node->filter->name().c_str());
     node->prev->next = node->next;
     node->next->prev = node->prev;
     Node *next_node = node->next;
@@ -415,6 +432,11 @@ FilterGraph::build_chain(Node *node)
   {
     Speakers next_spk = node->filter->get_output();
 
+    if (node->id == node_start)
+      valib_log(log_event, name(), "build_chain(): starting node, out_spk = %s", next_spk.print().c_str());
+    else
+      valib_log(log_event, name(), "build_chain(): node %i (%s), out_spk = %s", node->id, node->filter->name().c_str(), next_spk.print().c_str());
+
     /////////////////////////////////////////////////////////
     // if ofdd filter is in transition state then set output
     // format to spk_unknown
@@ -430,7 +452,10 @@ FilterGraph::build_chain(Node *node)
 
     int next_node_id = next_id(node->id, next_spk);
     if (next_node_id == node_err)
+    {
+      valib_log(log_error, name(), "build_chain(): next_id() returns node_err");
       return false;
+    }
 
     // truncate the chain if nessesary
     if (node->next->id != node_end)
@@ -444,6 +469,7 @@ FilterGraph::build_chain(Node *node)
       node->next->rebuild = no_rebuild;
       node->next->flushing = false;
       on_chain_complete();
+      valib_log(log_event, name(), "build_chain(): chain building complete, the resulting chain:\n%s", print_chain().c_str());
       return true;
     }
 
@@ -453,11 +479,15 @@ FilterGraph::build_chain(Node *node)
     // create & init the filter
     Filter *filter = init_filter(next_node_id, next_spk);
     if (!filter)
+    {
+      valib_log(log_error, name(), "build_chain(): cannot create the filter for the node %i", next_node_id);
       return false;
+    }
 
     if (!filter->open(next_spk))
     {
       uninit_filter(next_node_id);
+      valib_log(log_error, name(), "build_chain(): cannot open the filter %s with format %s for the node %i", filter->name().c_str(), next_spk.print().c_str(), next_node_id);
       return false;
     }
     filter->reset();
@@ -478,6 +508,7 @@ FilterGraph::build_chain(Node *node)
 
     // go down
     node = node->next;
+    valib_log(log_event, name(), "build_chain(): node %i (%s) successfully added to the chain", next_node_id, filter->name().c_str());
   }
 
   return true;

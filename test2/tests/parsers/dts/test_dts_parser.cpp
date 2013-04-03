@@ -35,12 +35,8 @@ BOOST_AUTO_TEST_CASE(decode)
 
   WAVSource wav("a.dts.03f.dts.wav", block_size);
 
-  // Compare
-  // 32bit floating-point has 24-bit mantissa,
-  // therefore noise level is about -144dB.
-  // So 1e-7 (-140dB) is usable threshold value 
   double diff = calc_diff(&f, &dts, &wav, 0);
-  BOOST_CHECK_LE(diff, 1e-7);
+  BOOST_CHECK_LE(diff, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(streams_frames)
